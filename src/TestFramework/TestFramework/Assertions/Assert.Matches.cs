@@ -39,16 +39,12 @@ public sealed partial class Assert
     /// </exception>
     public static void MatchesRegex([NotNull] Regex? pattern, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use patternExpression and valueExpression to build the message
-        _ = patternExpression;
-        _ = valueExpression;
-
         CheckParameterNotNull(value, "Assert.MatchesRegex", "value", string.Empty);
         CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern", string.Empty);
 
         if (!pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
             ThrowAssertFailed("Assert.MatchesRegex", finalMessage);
         }
@@ -119,16 +115,12 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotMatchRegex([NotNull] Regex? pattern, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use patternExpression and valueExpression to build the message
-        _ = patternExpression;
-        _ = valueExpression;
-
         CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value", string.Empty);
         CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern", string.Empty);
 
         if (pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
             ThrowAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
         }

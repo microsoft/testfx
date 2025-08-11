@@ -388,4 +388,12 @@ Actual: {2}</value>
   <data name="AssertThatDetailsPrefix" xml:space="preserve">
     <value>Details:</value>
   </data>
+  <data name="CallerArgumentExpressionTwoParametersMessage" xml:space="preserve">
+    <value>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</value>
+    <comment>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
+  </data>
+  <data name="CallerArgumentExpressionThreeParametersMessage" xml:space="preserve">
+    <value>'{0}' expression: '{1}', '{2}' expression: '{3}'.</value>
+    <comment>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
+  </data>
 </root>

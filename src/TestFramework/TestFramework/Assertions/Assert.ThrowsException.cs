@@ -38,10 +38,11 @@ public sealed partial class Assert
         {
         }
 
-        internal TException ComputeAssertion()
+        internal TException ComputeAssertion(string actionExpression)
         {
             if (_state.FailAction is not null)
             {
+                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "action", actionExpression) + " ");
                 _state.FailAction(_builder!.ToString());
             }
             else
@@ -108,10 +109,11 @@ public sealed partial class Assert
         {
         }
 
-        internal TException ComputeAssertion()
+        internal TException ComputeAssertion(string actionExpression)
         {
             if (_state.FailAction is not null)
             {
+                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "action", actionExpression) + " ");
                 _state.FailAction(_builder!.ToString());
             }
             else
@@ -227,16 +229,14 @@ public sealed partial class Assert
     public static TException Throws<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        // TODO: Use actionExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(actionExpression);
 
     /// <inheritdoc cref="Throws{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException Throws<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        // TODO: Use actionExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(actionExpression);
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -309,30 +309,25 @@ public sealed partial class Assert
     public static TException ThrowsExactly<TException>(Action action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        // TODO: Use actionExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(actionExpression);
 
     /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static TException ThrowsExactly<TException>(Func<object?> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         where TException : Exception
-        // TODO: Use actionExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(actionExpression);
 
     private static TException ThrowsException<TException>(Action action, bool isStrictType, string message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        // TODO: Use actionExpression to build the message
-        _ = actionExpression;
-
         Guard.NotNull(action);
         Guard.NotNull(message);
 
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessage(message));
+            state.FailAction(BuildUserMessageForActionExpression(message, actionExpression));
         }
         else
         {
@@ -346,16 +341,13 @@ public sealed partial class Assert
     private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        // TODO: Use actionExpression to build the message
-        _ = actionExpression;
-
         Guard.NotNull(action);
         Guard.NotNull(messageBuilder);
 
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
         {
-            state.FailAction(messageBuilder(state.ExceptionThrown));
+            state.FailAction(BuildUserMessageForActionExpression(messageBuilder(state.ExceptionThrown), actionExpression));
         }
         else
         {
@@ -485,16 +477,13 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        // TODO: Use actionExpression to build the message
-        _ = actionExpression;
-
         Guard.NotNull(action);
         Guard.NotNull(message);
 
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessage(message));
+            state.FailAction(BuildUserMessageForActionExpression(message, actionExpression));
         }
         else
         {
@@ -508,16 +497,13 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        // TODO: Use actionExpression to build the message
-        _ = actionExpression;
-
         Guard.NotNull(action);
         Guard.NotNull(messageBuilder);
 
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
         {
-            state.FailAction(messageBuilder(state.ExceptionThrown));
+            state.FailAction(BuildUserMessageForActionExpression(messageBuilder(state.ExceptionThrown), actionExpression));
         }
         else
         {

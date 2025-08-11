@@ -43,10 +43,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion(string assertionName)
+        internal void ComputeAssertion(string assertionName, string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
             }
         }
@@ -110,10 +111,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertIsNotEmptyFailed(_builder.ToString());
             }
         }
@@ -181,8 +183,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use collectionExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(collectionExpression);
 
     /// <summary>
     /// Tests that the collection is not empty.
@@ -196,15 +197,12 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use collectionExpression to build the message
-        _ = collectionExpression;
-
         if (collection.Any())
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertIsNotEmptyFailed(userMessage);
     }
 
@@ -226,8 +224,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use collectionExpression to build the message
-        => message.ComputeAssertion("HasCount");
+        => message.ComputeAssertion("HasCount", collectionExpression);
 
     /// <summary>
     /// Tests whether the collection has the expected count/length.
@@ -260,8 +257,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use collectionExpression to build the message
-        => message.ComputeAssertion("IsEmpty");
+        => message.ComputeAssertion("IsEmpty", collectionExpression);
 
     /// <summary>
     /// Tests that the collection is empty.
@@ -280,16 +276,13 @@ public sealed partial class Assert
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string message, string collectionExpression)
     {
-        // TODO: Use collectionExpression to build the message
-        _ = collectionExpression;
-
         int actualCount = collection.Count();
         if (actualCount == expected)
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
     }
 

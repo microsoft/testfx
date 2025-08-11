@@ -34,10 +34,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string valueExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
             }
         }
@@ -93,10 +94,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string valueExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
@@ -154,10 +156,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string valueExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
             }
         }
@@ -213,10 +216,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string valueExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
@@ -286,11 +290,9 @@ public sealed partial class Assert
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use valueExpression to build the message.
-        _ = valueExpression;
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessage(message));
+            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -299,8 +301,7 @@ public sealed partial class Assert
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        // TODO: Use valueExpression to build the message.
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(valueExpression);
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -321,8 +322,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
     {
-        // TODO: Use valueExpression to build the message.
-        message.ComputeAssertion();
+        message.ComputeAssertion(valueExpression);
         return (T)value!;
     }
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
@@ -374,12 +374,9 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use valueExpression to build the message.
-        _ = valueExpression;
-
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessage(message));
+            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -388,8 +385,7 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
-        // TODO: Use valueExpression to build the message.
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(valueExpression);
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
@@ -405,8 +401,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use valueExpression to build the message.
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(valueExpression);
 
     private static bool IsNotInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
         => wrongType is null ||

@@ -34,10 +34,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string expectedExpression, string actualExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
                 ThrowAssertAreSameFailed(_expected, _actual, _builder.ToString());
             }
         }
@@ -89,10 +90,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string notExpectedExpression, string actualExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
                 ThrowAssertAreNotSameFailed(_builder.ToString());
             }
         }
@@ -134,8 +136,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreSame<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreSameInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use expectedExpression and actualExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
@@ -171,16 +172,12 @@ public sealed partial class Assert
     /// </exception>
     public static void AreSame<T>(T? expected, T? actual, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        // TODO: Use expectedExpression and actualExpression to build the message
-        _ = expectedExpression;
-        _ = actualExpression;
-
         if (!IsAreSameFailing(expected, actual))
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
         ThrowAssertAreSameFailed(expected, actual, userMessage);
     }
 
@@ -206,8 +203,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotSame<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotSameInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use notExpectedExpression and actualExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
@@ -242,13 +238,9 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        // TODO: Use notExpectedExpression and actualExpression to build the message
-        _ = notExpectedExpression;
-        _ = actualExpression;
-
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            ThrowAssertAreNotSameFailed(BuildUserMessage(message));
+            ThrowAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
         }
     }
 

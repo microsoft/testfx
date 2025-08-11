@@ -44,16 +44,12 @@ public sealed partial class Assert
     public static void IsGreaterThan<T>(T lowerBound, T value, string message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
-        // TODO: Use lowerBoundExpression and valueExpression to build the message.
-        _ = lowerBoundExpression;
-        _ = valueExpression;
-
         if (value.CompareTo(lowerBound) > 0)
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
         ThrowAssertIsGreaterThanFailed(lowerBound, value, userMessage);
     }
 
@@ -93,16 +89,12 @@ public sealed partial class Assert
     public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
-        // TODO: Use lowerBoundExpression and valueExpression to build the message.
-        _ = lowerBoundExpression;
-        _ = valueExpression;
-
         if (value.CompareTo(lowerBound) >= 0)
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
         ThrowAssertIsGreaterThanOrEqualToFailed(lowerBound, value, userMessage);
     }
 
@@ -142,16 +134,12 @@ public sealed partial class Assert
     public static void IsLessThan<T>(T upperBound, T value, string message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
-        // TODO: Use upperBoundExpression and valueExpression to build the message.
-        _ = upperBoundExpression;
-        _ = valueExpression;
-
         if (value.CompareTo(upperBound) < 0)
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
         ThrowAssertIsLessThanFailed(upperBound, value, userMessage);
     }
 
@@ -191,16 +179,12 @@ public sealed partial class Assert
     public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
-        // TODO: Use upperBoundExpression and valueExpression to build the message.
-        _ = upperBoundExpression;
-        _ = valueExpression;
-
         if (value.CompareTo(upperBound) <= 0)
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
         ThrowAssertIsLessThanOrEqualToFailed(upperBound, value, userMessage);
     }
 
@@ -232,22 +216,19 @@ public sealed partial class Assert
     public static void IsPositive<T>(T value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        // TODO: Use valueExpression to build the message.
-        _ = valueExpression;
-
         var zero = default(T);
 
         // Handle special case for floating point NaN values
         if (value is float.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
 
         if (value is double.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
@@ -257,7 +238,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessage(message);
+        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
         ThrowAssertIsPositiveFailed(value, userMessage2);
     }
 
@@ -289,21 +270,19 @@ public sealed partial class Assert
     public static void IsNegative<T>(T value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        // TODO: Use valueExpression to build the message.
-        _ = valueExpression;
         var zero = default(T);
 
         // Handle special case for floating point NaN values
         if (value is float.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
 
         if (value is double.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
@@ -313,7 +292,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessage(message);
+        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
         ThrowAssertIsNegativeFailed(value, userMessage2);
     }
 

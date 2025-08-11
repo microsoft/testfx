@@ -72,15 +72,11 @@ public sealed partial class Assert
     /// </exception>
     public static void EndsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use substringExpression and valueExpression to build the message
-        _ = substringExpression;
-        _ = valueExpression;
-
         CheckParameterNotNull(value, "Assert.EndsWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.EndsWith", "substring", string.Empty);
         if (!value.EndsWith(substring, comparisonType))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.EndsWith", finalMessage);
         }
@@ -150,15 +146,11 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use substringExpression and valueExpression to build the message
-        _ = substringExpression;
-        _ = valueExpression;
-
         CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.DoesNotEndWith", "substring", string.Empty);
         if (value.EndsWith(substring, comparisonType))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotEndWithFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
         }

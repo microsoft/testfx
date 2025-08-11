@@ -35,10 +35,11 @@ public sealed partial class Assert
             }
         }
 
-        internal TItem ComputeAssertion()
+        internal TItem ComputeAssertion(string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertContainsSingleFailed(_actualCount, _builder.ToString());
             }
 
@@ -102,8 +103,7 @@ public sealed partial class Assert
 #pragma warning disable IDE0060 // Remove unused parameter
     public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        // TODO: Use the collectionExpression to build the message
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(collectionExpression);
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
@@ -122,16 +122,13 @@ public sealed partial class Assert
     /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use the collectionExpression to build the message
-        _ = collectionExpression;
-
         int actualCount = collection.Count();
         if (actualCount == 1)
         {
             return collection.First();
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertContainsSingleFailed(actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
@@ -156,10 +153,6 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use the predicateExpression and collectionExpression to build the message
-        _ = predicateExpression;
-        _ = collectionExpression;
-
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
 
@@ -168,7 +161,7 @@ public sealed partial class Assert
             return matchingElements[0];
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
         ThrowAssertSingleMatchFailed(actualCount, userMessage);
 
         // Unreachable code but compiler cannot work it out
@@ -215,13 +208,9 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use the expectedExpression and collectionExpression to build the message
-        _ = expectedExpression;
-        _ = collectionExpression;
-
         if (!collection.Contains(expected, comparer))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
             ThrowAssertContainsItemFailed(userMessage);
         }
     }
@@ -243,13 +232,9 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use the predicateExpression and collectionExpression to build the message
-        _ = predicateExpression;
-        _ = collectionExpression;
-
         if (!collection.Any(predicate))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
             ThrowAssertContainsPredicateFailed(userMessage);
         }
     }
@@ -318,17 +303,13 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use the substringExpression and valueExpression to build the message
-        _ = substringExpression;
-        _ = valueExpression;
-
 #if NETFRAMEWORK || NETSTANDARD
         if (value.IndexOf(substring, comparisonType) < 0)
 #else
         if (!value.Contains(substring, comparisonType))
 #endif
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.Contains", finalMessage);
         }
@@ -374,13 +355,9 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use the expectedExpression and collectionExpression to build the message
-        _ = expectedExpression;
-        _ = collectionExpression;
-
         if (collection.Contains(expected, comparer))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
             ThrowAssertDoesNotContainItemFailed(userMessage);
         }
     }
@@ -402,12 +379,9 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // TODO: Use the predicateExpression and collectionExpression to build the message
-        _ = predicateExpression;
-        _ = collectionExpression;
         if (collection.Any(predicate))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
             ThrowAssertDoesNotContainPredicateFailed(userMessage);
         }
     }
@@ -476,17 +450,13 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use the substringExpression and valueExpression to build the message
-        _ = substringExpression;
-        _ = valueExpression;
-
 #if NETFRAMEWORK || NETSTANDARD
         if (value.IndexOf(substring, comparisonType) >= 0)
 #else
         if (value.Contains(substring, comparisonType))
 #endif
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
         }
@@ -520,11 +490,6 @@ public sealed partial class Assert
     public static void IsInRange<T>(T minValue, T maxValue, T value, string message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        // TODO: Use the minValueExpression, maxValueExpression, and valueExpression to build the message
-        _ = minValueExpression;
-        _ = maxValueExpression;
-        _ = valueExpression;
-
         if (maxValue.CompareTo(minValue) <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than the minimum value.");
@@ -532,7 +497,7 @@ public sealed partial class Assert
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
             ThrowAssertFailed("IsInRange", finalMessage);
         }

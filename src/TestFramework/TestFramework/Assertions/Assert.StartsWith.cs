@@ -72,15 +72,11 @@ public sealed partial class Assert
     /// </exception>
     public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use substringExpression and valueExpression to build the message
-        _ = substringExpression;
-        _ = valueExpression;
-
         CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.StartsWith", "substring", string.Empty);
         if (!value.StartsWith(substring, comparisonType))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.StartsWith", finalMessage);
         }
@@ -148,15 +144,11 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        // TODO: Use substringExpression and valueExpression to build the message
-        _ = substringExpression;
-        _ = valueExpression;
-
         CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.DoesNotStartWith", "substring", string.Empty);
         if (value.StartsWith(substring, comparisonType))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
         }
