@@ -68,6 +68,11 @@ namespace MSTest.Analyzers;
 /// </item>
 /// <item>
 /// <description>
+/// <code>Assert.IsTrue(myCollection.[Count|Length] [&gt;|!=] 0)</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
 /// <code>Assert.AreEqual([0|X], myCollection.[Count|Length])</code>
 /// </description>
 /// </item>
