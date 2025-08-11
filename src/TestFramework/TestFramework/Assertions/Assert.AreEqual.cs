@@ -44,10 +44,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string expectedExpression, string actualExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
                 ThrowAssertAreEqualFailed(_expected, _actual, _builder.ToString());
             }
         }
@@ -110,10 +111,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string notExpectedExpression, string actualExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
                 ThrowAssertAreNotEqualFailed(_notExpected, _actual, _builder.ToString());
             }
         }
@@ -215,8 +217,14 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
-            => _failAction?.Invoke(_builder!.ToString());
+        internal void ComputeAssertion(string expectedExpression, string actualExpression)
+        {
+            if (_failAction is not null)
+            {
+                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
+                _failAction.Invoke(_builder!.ToString());
+            }
+        }
 
         public void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -315,8 +323,14 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
-            => _failAction?.Invoke(_builder!.ToString());
+        internal void ComputeAssertion(string notExpectedExpression, string actualExpression)
+        {
+            if (_failAction is not null)
+            {
+                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
+                _failAction.Invoke(_builder!.ToString());
+            }
+        }
 
         public void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -375,12 +389,20 @@ public sealed partial class Assert
     /// is not equal to <paramref name="expected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, string message = "")
-        => AreEqual(expected, actual, EqualityComparer<T>.Default, message);
+    public static void AreEqual<T>(T? expected, T? actual, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEqual(expected, actual, EqualityComparer<T>.Default, message, expectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -401,20 +423,28 @@ public sealed partial class Assert
     /// is not equal to <paramref name="expected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message)
+    public static void AreEqual<T>(T? expected, T? actual, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual))] ref AssertAreEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreEqual{T}(T, T, IEqualityComparer{T}?, string?)" />
+    /// <inheritdoc cref="AreEqual{T}(T, T, IEqualityComparer{T}?, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(comparer))] ref AssertAreEqualInterpolatedStringHandler<T> message)
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(comparer))] ref AssertAreEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -439,18 +469,26 @@ public sealed partial class Assert
     /// is not equal to <paramref name="expected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer, string message = "")
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (!AreEqualFailing(expected, actual, comparer))
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
         ThrowAssertAreEqualFailed(expected, actual, userMessage);
     }
 
@@ -685,23 +723,31 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, string message = "")
-        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message);
+    public static void AreNotEqual<T>(T? notExpected, T? actual, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message, notExpectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreNotEqual{T}(T, T, string?)" />
+    /// <inheritdoc cref="AreNotEqual{T}(T, T, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
+    public static void AreNotEqual<T>(T? notExpected, T? actual, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual))] ref AssertAreNotEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreNotEqual{T}(T, T, string?)" />
+    /// <inheritdoc cref="AreNotEqual{T}(T, T, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message)
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(comparer))] ref AssertAreNotEqualInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -727,25 +773,33 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, string message = "")
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (!AreNotEqualFailing(notExpected, actual, comparer))
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
         ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage);
     }
 
-    /// <inheritdoc cref="AreEqual(float, float, float, string?)"/>
+    /// <inheritdoc cref="AreEqual(float, float, float, string, string, string)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual(float expected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+    public static void AreEqual(float expected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified floats are equal and throws an exception
@@ -767,24 +821,32 @@ public sealed partial class Assert
     /// is different than <paramref name="expected"/> by more than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(float expected, float actual, float delta, string message = "")
+    public static void AreEqual(float expected, float actual, float delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
 
-    /// <inheritdoc cref="AreNotEqual(float, float, float, string?)" />
+    /// <inheritdoc cref="AreNotEqual(float, float, float, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual(float notExpected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+    public static void AreNotEqual(float notExpected, float actual, float delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified floats are unequal and throws an exception
@@ -807,14 +869,22 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/> or different by less than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(float notExpected, float actual, float delta, string message = "")
+    public static void AreNotEqual(float notExpected, float actual, float delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
             ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
         }
     }
@@ -840,11 +910,11 @@ public sealed partial class Assert
         return Math.Abs(notExpected - actual) <= delta;
     }
 
-    /// <inheritdoc cref="AreEqual(decimal, decimal, decimal, string?)" />
+    /// <inheritdoc cref="AreEqual(decimal, decimal, decimal, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual(decimal expected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+    public static void AreEqual(decimal expected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -866,24 +936,32 @@ public sealed partial class Assert
     /// is different than <paramref name="expected"/> by more than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(decimal expected, decimal actual, decimal delta, string message = "")
+    public static void AreEqual(decimal expected, decimal actual, decimal delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
 
-    /// <inheritdoc cref="AreNotEqual(decimal, decimal, decimal, string?)" />
+    /// <inheritdoc cref="AreNotEqual(decimal, decimal, decimal, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified decimals are unequal and throws an exception
@@ -906,14 +984,22 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/> or different by less than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message = "")
+    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
             ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
         }
     }
@@ -921,11 +1007,11 @@ public sealed partial class Assert
     private static bool AreNotEqualFailing(decimal notExpected, decimal actual, decimal delta)
         => Math.Abs(notExpected - actual) <= delta;
 
-    /// <inheritdoc cref="AreEqual(long, long, long, string?)" />
+    /// <inheritdoc cref="AreEqual(long, long, long, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual(long expected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+    public static void AreEqual(long expected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified longs are equal and throws an exception
@@ -947,24 +1033,32 @@ public sealed partial class Assert
     /// is different than <paramref name="expected"/> by more than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(long expected, long actual, long delta, string message = "")
+    public static void AreEqual(long expected, long actual, long delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
 
-    /// <inheritdoc cref="AreNotEqual(long, long, long, string?)" />
+    /// <inheritdoc cref="AreNotEqual(long, long, long, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual(long notExpected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+    public static void AreNotEqual(long notExpected, long actual, long delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified longs are unequal and throws an exception
@@ -987,14 +1081,22 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/> or different by less than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(long notExpected, long actual, long delta, string message = "")
+    public static void AreNotEqual(long notExpected, long actual, long delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
             ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
         }
     }
@@ -1002,11 +1104,11 @@ public sealed partial class Assert
     private static bool AreNotEqualFailing(long notExpected, long actual, long delta)
         => Math.Abs(notExpected - actual) <= delta;
 
-    /// <inheritdoc cref="AreEqual(double, double, double, string?)" />
+    /// <inheritdoc cref="AreEqual(double, double, double, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual(double expected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+    public static void AreEqual(double expected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(delta))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified doubles are equal and throws an exception
@@ -1028,23 +1130,31 @@ public sealed partial class Assert
     /// is different than <paramref name="expected"/> by more than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(double expected, double actual, double delta, string message = "")
+    public static void AreEqual(double expected, double actual, double delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
             ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
         }
     }
 
-    /// <inheritdoc cref="AreNotEqual(double, double, double, string?)" />
+    /// <inheritdoc cref="AreNotEqual(double, double, double, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual(double notExpected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+    public static void AreNotEqual(double notExpected, double actual, double delta, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(delta))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether the specified doubles are unequal and throws an exception
@@ -1067,14 +1177,22 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/> or different by less than
     /// <paramref name="delta"/>. The message is shown in test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta, string message = "")
+    public static void AreNotEqual(double notExpected, double actual, double delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
             ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
         }
     }
@@ -1133,26 +1251,34 @@ public sealed partial class Assert
     /// is not equal to <paramref name="expected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string message = "")
-        => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message);
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, expectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreEqual(string?, string?, bool, string?)" />
+    /// <inheritdoc cref="AreEqual(string?, string?, bool, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(expectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreEqual(string?, string?, bool, CultureInfo, string?)" />
+    /// <inheritdoc cref="AreEqual(string?, string?, bool, CultureInfo, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreEqual(string? expected, string? actual, bool ignoreCase,
 #pragma warning restore IDE0060 // Remove unused parameter
-        CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message)
+        CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture), string.Empty);
-        message.ComputeAssertion();
+        message.ComputeAssertion(expectedExpression, actualExpression);
     }
 
     /// <summary>
@@ -1177,10 +1303,18 @@ public sealed partial class Assert
     /// is not equal to <paramref name="expected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string message = "")
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
@@ -1188,7 +1322,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
         ThrowAssertAreEqualFailed(expected, actual, ignoreCase, culture, userMessage);
     }
 
@@ -1212,26 +1346,34 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string message = "")
-        => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message);
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, notExpectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreNotEqual(string?, string?, bool, string?)" />
+    /// <inheritdoc cref="AreNotEqual(string?, string?, bool, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(notExpectedExpression, actualExpression);
 
-    /// <inheritdoc cref="AreNotEqual(string?, string?, bool, CultureInfo, string?)" />
+    /// <inheritdoc cref="AreNotEqual(string?, string?, bool, CultureInfo, string, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
 #pragma warning restore IDE0060 // Remove unused parameter
-        CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message)
+        CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture), string.Empty);
-        message.ComputeAssertion();
+        message.ComputeAssertion(notExpectedExpression, actualExpression);
     }
 
     /// <summary>
@@ -1257,10 +1399,18 @@ public sealed partial class Assert
     /// is equal to <paramref name="notExpected"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string message = "")
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))
@@ -1268,7 +1418,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
         ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage);
     }
 

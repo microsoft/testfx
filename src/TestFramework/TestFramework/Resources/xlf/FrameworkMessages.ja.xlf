@@ -123,6 +123,16 @@
         <target state="new">'{0}' expression: '{1}'.</target>
         <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
       </trans-unit>
+      <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
+        <target state="new">'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</target>
+        <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
+        <target state="new">'{0}' expression: '{1}', '{2}' expression: '{3}'.</target>
+        <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
+      </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
         <target state="translated">{0}。{1}</target>

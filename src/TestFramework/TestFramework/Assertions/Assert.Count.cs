@@ -43,10 +43,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion(string assertionName)
+        internal void ComputeAssertion(string assertionName, string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
             }
         }
@@ -110,10 +111,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertIsNotEmptyFailed(_builder.ToString());
             }
         }
@@ -174,10 +176,14 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message)
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(collectionExpression);
 
     /// <summary>
     /// Tests that the collection is not empty.
@@ -185,14 +191,18 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, string message = "")
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Any())
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertIsNotEmptyFailed(userMessage);
     }
 
@@ -207,10 +217,14 @@ public sealed partial class Assert
     /// <param name="expected">The expected count.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message)
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion("HasCount");
+        => message.ComputeAssertion("HasCount", collectionExpression);
 
     /// <summary>
     /// Tests whether the collection has the expected count/length.
@@ -219,8 +233,12 @@ public sealed partial class Assert
     /// <param name="expected">The expected count.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, string message = "")
-        => HasCount("HasCount", expected, collection, message);
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("HasCount", expected, collection, message, collectionExpression);
 
     #endregion // HasCount
 
@@ -232,10 +250,14 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message)
+    public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion("IsEmpty");
+        => message.ComputeAssertion("IsEmpty", collectionExpression);
 
     /// <summary>
     /// Tests that the collection is empty.
@@ -243,12 +265,16 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void IsEmpty<T>(IEnumerable<T> collection, string message = "")
-        => HasCount("IsEmpty", 0, collection, message);
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("IsEmpty", 0, collection, message, collectionExpression);
 
     #endregion // IsEmpty
 
-    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string message)
+    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string message, string collectionExpression)
     {
         int actualCount = collection.Count();
         if (actualCount == expected)
@@ -256,7 +282,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
     }
 
