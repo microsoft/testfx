@@ -75,12 +75,14 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
 
     private static List<DiscoveredTestMessage> ReadDiscoveredTestMessagesPayload(Stream stream)
     {
-        List<DiscoveredTestMessage> discoveredTestMessages = [];
-
         int length = ReadInt(stream);
+        var discoveredTestMessages = new List<DiscoveredTestMessage>(length);
         for (int i = 0; i < length; i++)
         {
-            string? uid = null, displayName = null;
+            string? uid = null;
+            string? displayName = null;
+            string? filePath = null;
+            int? lineNumber = null;
 
             int fieldCount = ReadShort(stream);
 
@@ -99,13 +101,21 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
                         displayName = ReadStringValue(stream, fieldSize);
                         break;
 
+                    case DiscoveredTestMessageFieldsId.FilePath:
+                        filePath = ReadStringValue(stream, fieldSize);
+                        break;
+
+                    case DiscoveredTestMessageFieldsId.LineNumber:
+                        lineNumber = ReadInt(stream);
+                        break;
+
                     default:
                         SetPosition(stream, stream.Position + fieldSize);
                         break;
                 }
             }
 
-            discoveredTestMessages.Add(new DiscoveredTestMessage(uid, displayName));
+            discoveredTestMessages.Add(new DiscoveredTestMessage(uid, displayName, filePath, lineNumber));
         }
 
         return discoveredTestMessages;
@@ -145,6 +155,8 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
 
             WriteField(stream, DiscoveredTestMessageFieldsId.Uid, discoveredTestMessage.Uid);
             WriteField(stream, DiscoveredTestMessageFieldsId.DisplayName, discoveredTestMessage.DisplayName);
+            WriteField(stream, DiscoveredTestMessageFieldsId.FilePath, discoveredTestMessage.FilePath);
+            WriteField(stream, DiscoveredTestMessageFieldsId.LineNumber, discoveredTestMessage.LineNumber);
         }
 
         // NOTE: We are able to seek only if we are using a MemoryStream
@@ -159,5 +171,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
 
     private static ushort GetFieldCount(DiscoveredTestMessage discoveredTestMessage) =>
         (ushort)((discoveredTestMessage.Uid is null ? 0 : 1) +
-        (discoveredTestMessage.DisplayName is null ? 0 : 1));
+        (discoveredTestMessage.DisplayName is null ? 0 : 1) +
+        (discoveredTestMessage.FilePath is null ? 0 : 1) +
+        (discoveredTestMessage.LineNumber is null ? 0 : 1));
 }

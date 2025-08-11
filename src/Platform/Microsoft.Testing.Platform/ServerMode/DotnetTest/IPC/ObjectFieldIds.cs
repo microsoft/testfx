@@ -51,6 +51,8 @@ internal static class DiscoveredTestMessageFieldsId
 {
     public const ushort Uid = 1;
     public const ushort DisplayName = 2;
+    public const ushort FilePath = 3;
+    public const ushort LineNumber = 4;
 }
 
 internal static class TestResultMessagesFieldsId

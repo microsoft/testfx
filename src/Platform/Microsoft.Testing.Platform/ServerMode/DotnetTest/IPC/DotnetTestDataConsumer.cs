@@ -56,13 +56,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
+                        TestFileLocationProperty? testFileLocationProperty = null;
+                        if (_dotnetTestConnection.IsIDE)
+                        {
+                            testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
+                        }
+
                         DiscoveredTestMessages discoveredTestMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
                             [
                                 new DiscoveredTestMessage(
                                     testNodeUpdateMessage.TestNode.Uid.Value,
-                                    testNodeUpdateMessage.TestNode.DisplayName)
+                                    testNodeUpdateMessage.TestNode.DisplayName,
+                                    testFileLocationProperty?.FilePath,
+                                    testFileLocationProperty?.LineSpan.Start.Line)
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);
@@ -70,6 +78,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
                     case TestStates.Passed:
                     case TestStates.Skipped:
+                    case TestStates.InProgress when _dotnetTestConnection.IsIDE:
                         TestResultMessages testResultMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
@@ -228,6 +237,10 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
+                break;
+
+            case InProgressTestNodeStateProperty:
+                state = TestStates.InProgress;
                 break;
         }
 
