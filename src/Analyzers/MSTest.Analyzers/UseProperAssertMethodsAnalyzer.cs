@@ -877,6 +877,19 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return CollectionEmptinessCheckStatus.IsNotEmpty;
         }
 
+        // Check for 0 != collection.Count or 0 != collection.Length (reverse order)
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef3 } &&
+            propertyRef3.Property.Name is "Count" or "Length" &&
+            propertyRef3.Instance?.Type is not null &&
+            IsBCLCollectionType(propertyRef3.Property.ContainingType, objectTypeSymbol))
+        {
+            collectionExpression = propertyRef3.Instance.Syntax;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        // Note: We don't handle 0 > collection.Count because that would be equivalent to collection.Count < 0,
+        // which is not the same as checking if collection is not empty
+
         return CollectionEmptinessCheckStatus.Unknown;
     }
 
