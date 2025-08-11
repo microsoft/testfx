@@ -13,8 +13,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-using TestSessionContext = Microsoft.Testing.Platform.TestHost.TestSessionContext;
-
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 /// <summary>
