@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Xml.Linq;
+
 using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
@@ -25,7 +27,7 @@ public partial class AssertTests : TestContainer
         try
         {
             // This call is expected to throw when _builder is not null.
-            _ = handler.ComputeAssertion();
+            _ = handler.ComputeAssertion("<collection arg expression placeholder>");
         }
         catch (Exception ex)
         {
@@ -51,7 +53,7 @@ public partial class AssertTests : TestContainer
         shouldAppend.Should().BeFalse();
 
         // Act
-        int result = handler.ComputeAssertion();
+        int result = handler.ComputeAssertion("<collection arg expression placeholder>");
 
         // Assert
         result.Should().Be(singleItem);
@@ -308,7 +310,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection, ref handler);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). ");
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'collection'. ");
     }
 
     #endregion
