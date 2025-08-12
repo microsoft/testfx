@@ -300,7 +300,7 @@ internal abstract class BaseSerializer
 
         WriteShort(stream, id);
         WriteSize<int>(stream);
-        WriteLong(stream, value.Value);
+        WriteInt(stream, value.Value);
     }
 
     protected static void WriteField(Stream stream, string? value)

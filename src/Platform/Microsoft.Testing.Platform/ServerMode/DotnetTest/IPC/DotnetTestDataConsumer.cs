@@ -57,9 +57,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 {
                     case TestStates.Discovered:
                         TestFileLocationProperty? testFileLocationProperty = null;
+                        TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
+                        TestMetadataProperty[] traits = [];
                         if (_dotnetTestConnection.IsIDE)
                         {
                             testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
+                            testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+                            traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
                         }
 
                         DiscoveredTestMessages discoveredTestMessages = new(
@@ -70,7 +74,11 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                     testNodeUpdateMessage.TestNode.Uid.Value,
                                     testNodeUpdateMessage.TestNode.DisplayName,
                                     testFileLocationProperty?.FilePath,
-                                    testFileLocationProperty?.LineSpan.Start.Line)
+                                    testFileLocationProperty?.LineSpan.Start.Line,
+                                    testMethodIdentifierProperty?.Namespace,
+                                    testMethodIdentifierProperty?.TypeName,
+                                    testMethodIdentifierProperty?.MethodName,
+                                    traits)
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);

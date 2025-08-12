@@ -53,6 +53,16 @@ internal static class DiscoveredTestMessageFieldsId
     public const ushort DisplayName = 2;
     public const ushort FilePath = 3;
     public const ushort LineNumber = 4;
+    public const ushort Namespace = 5;
+    public const ushort TypeName = 6;
+    public const ushort MethodName = 7;
+    public const ushort Traits = 8;
+}
+
+internal static class TraitMessageFieldsId
+{
+    public const ushort Key = 1;
+    public const ushort Value = 2;
 }
 
 internal static class TestResultMessagesFieldsId
