@@ -33,7 +33,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Act
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"))),
+            new RunTestExecutionRequest(new(new("id"), cancellationToken)),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
@@ -65,7 +65,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Act
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"))),
+            new RunTestExecutionRequest(new(new("id"), cancellationToken)),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
