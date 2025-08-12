@@ -117,15 +117,23 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
         DebugEx.Assert(properties != null, "properties is not null");
 
         _stringWriter = stringWriter;
-        _properties = testMethod is null
-            ? new Dictionary<string, object?>(properties)
-            : new Dictionary<string, object?>(properties)
+        if (testMethod is null)
+        {
+            _properties = new Dictionary<string, object?>(properties);
+        }
+        else
+        {
+            _properties = new Dictionary<string, object?>(properties.Count + 4);
+            foreach (KeyValuePair<string, object?> kvp in properties)
             {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
-            };
+                _properties[kvp.Key] = kvp.Value;
+            }
+
+            _properties[FullyQualifiedTestClassNameLabel] = testMethod.FullClassName;
+            _properties[ManagedTypeLabel] = testMethod.ManagedTypeName;
+            _properties[ManagedMethodLabel] = testMethod.ManagedMethodName;
+            _properties[TestNameLabel] = testMethod.Name;
+        }
     }
 
     internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
