@@ -155,10 +155,7 @@ namespace MSTestSdkTest
             yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
                 "<EnableMicrosoftTestingExtensionsCodeCoverage>true</EnableMicrosoftTestingExtensionsCodeCoverage>",
                 "--coverage",
-                "--crashdump"))
-            {
-                IgnoreMessage = "Re-enable back after CC releases a version for MTP v2",
-            };
+                "--crashdump"));
 
             yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>",
