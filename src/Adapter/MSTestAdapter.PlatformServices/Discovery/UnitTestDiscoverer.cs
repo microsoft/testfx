@@ -109,7 +109,7 @@ internal class UnitTestDiscoverer
             foreach (UnitTestElement testElement in testElements)
             {
                 var testCase = testElement.ToTestCase();
-                bool hasFixtureTraits = testCase.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait);
+                bool hasFixtureTraits = testElement.Traits?.Any(t => t.Name == EngineConstants.FixturesTestTrait) == true;
 
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
