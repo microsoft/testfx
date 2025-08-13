@@ -17,6 +17,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal sealed class TestAssemblyInfo
 {
+    internal readonly struct MethodInfoWithTimeoutInfo
+    {
+        public MethodInfoWithTimeoutInfo(MethodInfo methodInfo, TimeoutInfo? timeoutInfo)
+        {
+            MethodInfo = methodInfo;
+            TimeoutInfo = timeoutInfo;
+        }
+
+        public MethodInfo MethodInfo { get; }
+
+        public TimeoutInfo? TimeoutInfo { get; }
+
+        public void Deconstruct(out MethodInfo methodInfo, out TimeoutInfo? timeoutInfo)
+        {
+            methodInfo = MethodInfo;
+            timeoutInfo = TimeoutInfo;
+        }
+    }
+
     private readonly Lock _assemblyInfoExecuteSyncObject = new();
 
     /// <summary>
@@ -26,9 +45,9 @@ internal sealed class TestAssemblyInfo
     internal TestAssemblyInfo(Assembly assembly)
         => Assembly = assembly;
 
-    internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestInitializations { get; } = [];
+    internal List<MethodInfoWithTimeoutInfo> GlobalTestInitializations { get; } = [];
 
-    internal List<(MethodInfo Method, TimeoutInfo? TimeoutInfo)> GlobalTestCleanups { get; } = [];
+    internal List<MethodInfoWithTimeoutInfo> GlobalTestCleanups { get; } = [];
 
     /// <summary>
     /// Gets or sets <c>AssemblyInitialize</c> method for the assembly.
