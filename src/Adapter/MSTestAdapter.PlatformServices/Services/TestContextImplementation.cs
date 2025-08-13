@@ -46,23 +46,22 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     /// <summary>
-    /// List of result files associated with the test.
-    /// </summary>
-    private readonly List<string> _testResultFiles;
-
-    /// <summary>
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
-    private readonly CancellationTokenRegistration? _cancellationTokenRegistration;
+
+    private CancellationTokenRegistration? _cancellationTokenRegistration;
+
+    /// <summary>
+    /// List of result files associated with the test.
+    /// </summary>
+    private List<string>? _testResultFiles;
 
     private SynchronizedStringBuilder? _stdOutStringBuilder;
     private SynchronizedStringBuilder? _stdErrStringBuilder;
     private SynchronizedStringBuilder? _traceStringBuilder;
     private StringBuilder? _testContextMessageStringBuilder;
-
-    private bool _isDisposed;
 
     /// <summary>
     /// Unit test outcome.
@@ -109,19 +108,29 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-        _properties = new Dictionary<string, object?>(properties);
         testClassFullName ??= testMethod?.FullClassName;
-        if (testClassFullName is not null)
+        if (testClassFullName is null && testMethod is null)
         {
-            _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+            _properties = new Dictionary<string, object?>(properties);
         }
-
-        if (testMethod is not null)
+        else
         {
-            _properties.Add(TestNameLabel, testMethod.Name);
-        }
+            _properties = new Dictionary<string, object?>(properties.Count + 2);
+            foreach (KeyValuePair<string, object?> kvp in properties)
+            {
+                _properties[kvp.Key] = kvp.Value;
+            }
 
-        _testResultFiles = [];
+            if (testClassFullName is not null)
+            {
+                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+            }
+
+            if (testMethod is not null)
+            {
+                _properties.Add(TestNameLabel, testMethod.Name);
+            }
+        }
     }
 
     internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
@@ -155,7 +164,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
-        _testResultFiles.Add(Path.GetFullPath(fileName));
+        (_testResultFiles ??= []).Add(Path.GetFullPath(fileName));
     }
 
     /// <summary>
@@ -275,7 +284,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-        if (_testResultFiles.Count == 0)
+        if (_testResultFiles is null || _testResultFiles.Count == 0)
         {
             return null;
         }
@@ -313,25 +322,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <inheritdoc/>
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// The dispose pattern.
-    /// </summary>
-    /// <param name="disposing">Whether to dispose managed state.</param>
-    private void Dispose(bool disposing)
-    {
-        if (!_isDisposed)
-        {
-            _isDisposed = true;
-
-            if (disposing)
-            {
-                _cancellationTokenRegistration?.Dispose();
-            }
-        }
+        _cancellationTokenRegistration?.Dispose();
+        _cancellationTokenRegistration = null;
     }
 
     internal readonly struct ScopedTestContextSetter : IDisposable
