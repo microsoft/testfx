@@ -299,7 +299,7 @@ public class MethodInfoExtensionsTests : TestContainer
     public void GetAsyncTypeNameShouldReturnStateMachineTypeNameForAsyncMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod")!;
-        Verify(methodInfo.GetAsyncTypeName()!.StartsWith("MSTest.TestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>", StringComparison.Ordinal));
+        Verify(methodInfo.GetAsyncTypeName()!.StartsWith("MSTest.PlatformServices.Extensions.UnitTests.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>", StringComparison.Ordinal));
     }
 
     #endregion
@@ -356,7 +356,7 @@ public class MethodInfoExtensionsTests : TestContainer
         catch (TestFailedException ex)
         {
             Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
-            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "MSTest.TestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
+            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "MSTest.PlatformServices.Extensions.UnitTests.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
         }
     }
 
@@ -383,10 +383,10 @@ public class MethodInfoExtensionsTests : TestContainer
             Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
 
             // Error in English is:
-            //    Cannot run test method 'MSTest.TestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
+            //    Cannot run test method 'MSTest.PlatformServices.Extensions.UnitTests.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
             //    Test expected 2 parameter(s), with types 'Int32, Int32',
             //    but received 1 argument(s), with types 'Int32'.
-            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "MSTest.TestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
+            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "MSTest.PlatformServices.Extensions.UnitTests.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
                 2, "Int32, Int32",
                 1, "Int32"));
         }
@@ -406,10 +406,10 @@ public class MethodInfoExtensionsTests : TestContainer
             Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
 
             // Error in English is:
-            //    Cannot run test method 'MSTest.TestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
+            //    Cannot run test method 'MSTest.PlatformServices.Extensions.UnitTests.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
             //    Test expected 2 parameter(s), with types 'Int32, Int32',
             //    but received 2 argument(s), with types 'String, String'.
-            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "MSTest.TestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
+            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "MSTest.PlatformServices.Extensions.UnitTests.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
                 2, "Int32, Int32",
                 2, "String, String"));
         }
