@@ -4,7 +4,6 @@
 #if NETFRAMEWORK
 namespace Microsoft.CodeAnalysis
 {
-    [AttributeUsage(AttributeTargets.All)]
     internal sealed partial class EmbeddedAttribute : Attribute
     {
     }
@@ -12,7 +11,7 @@ namespace Microsoft.CodeAnalysis
 
 namespace System.Runtime.InteropServices
 {
-    [Embedded]
+    [Microsoft.CodeAnalysis.Embedded]
     internal static class RuntimeInformation
     {
         public static bool IsOSPlatform(OSPlatform osPlatform)
