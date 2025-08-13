@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
-using System.Collections.Generic;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -670,6 +669,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 }
             }
         }
+
         return System.Buffers.SearchValues.Create(controlChars.ToArray());
     }
 #else
@@ -689,7 +689,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 }
             }
         }
-        return controlChars.ToArray();
+
+        return [.. controlChars];
     }
 #endif
 
