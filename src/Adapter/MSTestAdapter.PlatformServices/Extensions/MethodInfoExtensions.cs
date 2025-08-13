@@ -10,32 +10,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 internal static class MethodInfoExtensions
 {
-    private readonly struct ParameterTypeAndSubstitution(Type ParameterType, Type Substitution)
-    {
-        public Type ParameterType { get; } = ParameterType;
-
-        public Type Substitution { get; } = Substitution;
-
-        public void Deconstruct(out Type parameterType, out Type substitution)
-        {
-            parameterType = ParameterType;
-            substitution = Substitution;
-        }
-    }
-
-    private readonly struct GenericDefinitionAndSubstitution(Type GenericDefinition, Type? Substitution)
-    {
-        public Type GenericDefinition { get; } = GenericDefinition;
-
-        public Type? Substitution { get; } = Substitution;
-
-        public void Deconstruct(out Type genericDefinition, out Type? substitution)
-        {
-            genericDefinition = GenericDefinition;
-            substitution = Substitution;
-        }
-    }
-
     /// <summary>
     /// Verifies that the class initialize has the correct signature.
     /// </summary>
@@ -241,12 +215,12 @@ internal static class MethodInfoExtensions
         invokeResult?.GetAwaiter().GetResult();
     }
 
-    private static void InferGenerics(Type parameterType, Type argumentType, List<ParameterTypeAndSubstitution> result)
+    private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)
     {
         if (parameterType.IsGenericMethodParameter())
         {
             // We found a generic parameter. The argument type should be the substitution for it.
-            result.Add(new(parameterType, argumentType));
+            result.Add((parameterType, argumentType));
             return;
         }
 
@@ -297,10 +271,10 @@ internal static class MethodInfoExtensions
         }
 
         Type[] genericDefinitions = methodInfo.GetGenericArguments();
-        var map = new GenericDefinitionAndSubstitution[genericDefinitions.Length];
+        var map = new (Type GenericDefinition, Type? Substitution)[genericDefinitions.Length];
         for (int i = 0; i < map.Length; i++)
         {
-            map[i] = new(genericDefinitions[i], null);
+            map[i] = (genericDefinitions[i], null);
         }
 
         ParameterInfo[] parameters = methodInfo.GetParameters();
@@ -312,7 +286,7 @@ internal static class MethodInfoExtensions
                 continue;
             }
 
-            var result = new List<ParameterTypeAndSubstitution>();
+            var result = new List<(Type ParameterType, Type Substitution)>();
             InferGenerics(parameterType, arguments[i]!/*Very strange nullability warning*/.GetType(), result);
             foreach ((Type genericParameterType, Type substitution) in result)
             {
@@ -321,7 +295,7 @@ internal static class MethodInfoExtensions
 
                 if (existingSubstitution is null || substitution.IsAssignableFrom(existingSubstitution))
                 {
-                    map[mapIndexForParameter] = new(genericParameterType, substitution);
+                    map[mapIndexForParameter] = (genericParameterType, substitution);
                 }
                 else if (existingSubstitution.IsAssignableFrom(substitution))
                 {
@@ -356,7 +330,7 @@ internal static class MethodInfoExtensions
         }
     }
 
-    private static int GetMapIndexForParameterType(Type parameterType, GenericDefinitionAndSubstitution[] map)
+    private static int GetMapIndexForParameterType(Type parameterType, (Type GenericDefinition, Type? Substitution)[] map)
     {
         for (int i = 0; i < map.Length; i++)
         {
