@@ -110,7 +110,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object?>()));
 
         TypeInspectionException exception = VerifyThrows<TypeInspectionException>(Action);
-        Verify(exception.Message.StartsWith("Cannot find a valid constructor for test class 'MSTest.TestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithNoDefaultConstructor'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.", StringComparison.Ordinal));
+        Verify(exception.Message.StartsWith("Cannot find a valid constructor for test class 'MSTest.PlatformServices.Execution.UnitTests.TypeCacheTests+DummyTestClassWithNoDefaultConstructor'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.", StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()

@@ -140,7 +140,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UTF.UnitTestOutcome.InProgress);
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
