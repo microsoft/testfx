@@ -21,8 +21,8 @@
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>17.13.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.54.0</MicrosoftPlaywrightVersion>
+    <MicrosoftNETTestSdkVersion>17.14.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftPlaywrightVersion>1.55.0-beta-4</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.14.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
@@ -88,6 +88,6 @@
     This allows dependabot to suggest updates.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" />
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="$(MicrosoftPlaywrightVersion)" />
   </ItemGroup>
 </Project>
