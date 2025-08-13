@@ -2,11 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace System.Runtime.InteropServices;
-
-internal static class RuntimeInformation
+namespace Microsoft.CodeAnalysis
 {
-    public static bool IsOSPlatform(OSPlatform osPlatform)
-        => osPlatform == OSPlatform.Windows;
+    [AttributeUsage(AttributeTargets.All)]
+    internal sealed partial class EmbeddedAttribute : Attribute
+    {
+    }
+}
+
+namespace System.Runtime.InteropServices
+{
+    [Embedded]
+    internal static class RuntimeInformation
+    {
+        public static bool IsOSPlatform(OSPlatform osPlatform)
+            => osPlatform == OSPlatform.Windows;
+    }
 }
 #endif
