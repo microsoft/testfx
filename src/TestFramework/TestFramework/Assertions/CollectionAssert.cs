@@ -433,7 +433,7 @@ public sealed class CollectionAssert
                 returnedSubsetValueMessage = returnedSubsetValueMessage.TrimEnd(',').Trim();
             }
 
-            returnedSubsetValueMessage = "value(s) {" + returnedSubsetValueMessage.Trim() + "} is/are not a subset of the superset";
+            returnedSubsetValueMessage = "Element(s) {" + returnedSubsetValueMessage.Trim() + "} is/are not a subset of the superset";
             Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
         }
     }
