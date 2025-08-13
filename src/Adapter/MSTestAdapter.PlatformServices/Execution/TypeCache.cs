@@ -314,7 +314,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // which is used to decide whether TestInitialize/TestCleanup methods
         // present in the base type should be used or not. They are not used if
         // the method is overridden in the derived type.
-        var instanceMethods = new Dictionary<string, string?>();
+        HashSet<string>? instanceMethods = classType.BaseType == typeof(object) ? null : [];
 
         foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(classType))
         {
@@ -621,16 +621,16 @@ internal sealed class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        Dictionary<string, string?> instanceMethods)
+        HashSet<string>? instanceMethods)
     {
         bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
         bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
-            if (methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature())
             {
-                instanceMethods[methodInfo.Name] = null;
+                instanceMethods.Add(methodInfo.Name);
             }
 
             return;
@@ -655,7 +655,7 @@ internal sealed class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
                     classInfo.BaseTestInitializeMethodsQueue.Enqueue(methodInfo);
                 }
@@ -675,14 +675,14 @@ internal sealed class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
                     classInfo.BaseTestCleanupMethodsQueue.Enqueue(methodInfo);
                 }
             }
         }
 
-        instanceMethods[methodInfo.Name] = null;
+        instanceMethods?.Add(methodInfo.Name);
     }
 
     /// <summary>
@@ -747,7 +747,10 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodBase? methodBase = null;
         try
         {
-            methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+            // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
+            // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
+            // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+            methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
         {
@@ -773,6 +776,16 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
+        // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
+        // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
+        // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+        // Note: This whole GetMethodInfoUsingRuntimeMethods is likely never reachable.
+        // It's called if HasManagedMethodAndTypeProperties is false, but it should always be true per the current implementation.
+        if (testMethod.MethodInfo is { } methodInfo)
+        {
+            return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
+        }
+
         IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
             .Where(method => method.Name == testMethod.Name &&
                              method.HasCorrectTestMethodSignature(true, discoverInternals));

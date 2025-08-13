@@ -149,12 +149,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
-        <target state="new">Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</target>
+        <target state="translated">既定の自動検出動作を使用するには、'DynamicDataSourceType' 引数を削除してください</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
         <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
-        <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
+        <target state="translated">明示的な 'DynamicDataSourceType' を渡さず、既定の自動検出動作を使用してください</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">

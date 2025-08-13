@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.10.2" />[3.10.2] - 2025-08-12
+
+See full log [of v3.10.1...v3.10.2](https://github.com/microsoft/testfx/compare/v3.10.1...v3.10.2)
+
+### Fixed
+
+* Revert Assert.That obsoletion by @Youssef1313 in [#6323](https://github.com/microsoft/testfx/pull/6323)
+
+### Artifacts
+
+* MSTest: [3.10.2](https://www.nuget.org/packages/MSTest/3.10.2)
+* MSTest.TestFramework: [3.10.2](https://www.nuget.org/packages/MSTest.TestFramework/3.10.2)
+* MSTest.TestAdapter: [3.10.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.2)
+* MSTest.Analyzers: [3.10.2](https://www.nuget.org/packages/MSTest.Analyzers/3.10.2)
+* MSTest.Sdk: [3.10.2](https://www.nuget.org/packages/MSTest.Sdk/3.10.2)
+* MSTest.SourceGeneration: [1.0.0-alpha.25411.2](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25411.2)
+* MSTest.Engine: [1.0.0-alpha.25411.2](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25411.2)
+
+## <a name="3.10.1" />[3.10.1] - 2025-08-05
+
+See full log [of v3.10.0...v3.10.1](https://github.com/microsoft/testfx/compare/v3.10.0...v3.10.1)
+
+### Fixed
+
+* Add compat overload for GetPipeName by @Youssef1313 in [#6227](https://github.com/microsoft/testfx/pull/6227)
+* Fix race in TestContextImplementation by @Youssef1313 in [#6249](https://github.com/microsoft/testfx/pull/6249)
+* Fix codefix of analyzer for flowing cancellation token by @Copilot in [#6239](https://github.com/microsoft/testfx/pull/6239)
+* Don't return null types from AssemblyEnumerator when ReflectionTypeLoadException is encountered by @Youssef1313 in [#6276](https://github.com/microsoft/testfx/pull/6276)
+* Fix analyzer false positives for collection asserts by @Youssef1313 in [#6300](https://github.com/microsoft/testfx/pull/6300)
+
+### Artifacts
+
+* MSTest: [3.10.1](https://www.nuget.org/packages/MSTest/3.10.1)
+* MSTest.TestFramework: [3.10.1](https://www.nuget.org/packages/MSTest.TestFramework/3.10.1)
+* MSTest.TestAdapter: [3.10.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.1)
+* MSTest.Analyzers: [3.10.1](https://www.nuget.org/packages/MSTest.Analyzers/3.10.1)
+* MSTest.Sdk: [3.10.1](https://www.nuget.org/packages/MSTest.Sdk/3.10.1)
+* MSTest.SourceGeneration: [1.0.0-alpha.25405.1](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25405.1)
+* MSTest.Engine: [1.0.0-alpha.25405.1](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25405.1)
+
 ## <a name="3.10.0" />[3.10.0] - 2025-07-29
 
 See full log [of v3.9.3...v3.10.0](https://github.com/microsoft/testfx/compare/v3.9.3...v3.10.0)
