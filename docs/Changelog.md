@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.10.2" />[3.10.2] - 2025-08-12
+
+See full log [of v3.10.1...v3.10.2](https://github.com/microsoft/testfx/compare/v3.10.1...v3.10.2)
+
+### Fixed
+
+* Revert Assert.That obsoletion by @Youssef1313 in [#6323](https://github.com/microsoft/testfx/pull/6323)
+
+### Artifacts
+
+* MSTest: [3.10.2](https://www.nuget.org/packages/MSTest/3.10.2)
+* MSTest.TestFramework: [3.10.2](https://www.nuget.org/packages/MSTest.TestFramework/3.10.2)
+* MSTest.TestAdapter: [3.10.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.2)
+* MSTest.Analyzers: [3.10.2](https://www.nuget.org/packages/MSTest.Analyzers/3.10.2)
+* MSTest.Sdk: [3.10.2](https://www.nuget.org/packages/MSTest.Sdk/3.10.2)
+* MSTest.SourceGeneration: [1.0.0-alpha.25411.2](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25411.2)
+* MSTest.Engine: [1.0.0-alpha.25411.2](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25411.2)
+
 ## <a name="3.10.1" />[3.10.1] - 2025-08-05
 
 See full log [of v3.10.0...v3.10.1](https://github.com/microsoft/testfx/compare/v3.10.0...v3.10.1)
