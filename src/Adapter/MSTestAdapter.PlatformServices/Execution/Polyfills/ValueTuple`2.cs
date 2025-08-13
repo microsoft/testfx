@@ -27,6 +27,7 @@ internal interface ITupleInternal
     string ToStringEnd();
 }
 
+[Microsoft.CodeAnalysis.Embedded]
 [StructLayout(LayoutKind.Auto)]
 internal struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructuralEquatable, IStructuralComparable, IComparable, IComparable<ValueTuple<T1, T2>>, ITupleInternal
 {
