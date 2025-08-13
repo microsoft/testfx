@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 namespace System.Runtime.CompilerServices;
 
+[Microsoft.CodeAnalysis.Embedded]
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Event)]
 internal sealed class TupleElementNamesAttribute : Attribute
 {
