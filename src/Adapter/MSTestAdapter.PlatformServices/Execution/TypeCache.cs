@@ -436,12 +436,12 @@ internal sealed class TypeCache : MarshalByRefObject
 
                             if (isValid && isGlobalTestInitialize)
                             {
-                                assemblyInfo.GlobalTestInitializations.Add(new(methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
                             }
 
                             if (isValid && isGlobalTestCleanup)
                             {
-                                assemblyInfo.GlobalTestCleanups.Add(new(methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
                             }
                         }
                     }
