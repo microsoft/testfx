@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 namespace System.Runtime.InteropServices;
 
+[Microsoft.CodeAnalysis.Embedded]
 internal readonly struct OSPlatform : IEquatable<OSPlatform>
 {
     public static OSPlatform Windows { get; } = new OSPlatform("WINDOWS");
