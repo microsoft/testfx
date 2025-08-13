@@ -3,9 +3,10 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+using MSTest.PlatformServices;
+
+namespace MSTest.TestAdapter;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopTestExecutionCapability
