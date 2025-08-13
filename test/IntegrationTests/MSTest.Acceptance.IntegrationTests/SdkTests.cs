@@ -495,8 +495,6 @@ public class IntegrationTest1
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Ensures that dotnet test uses VSTest so we can run tests with the 2 platforms -->
-    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
     <!-- Disable all extensions by default -->
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnablePlaywright>true</EnablePlaywright>
@@ -505,6 +503,7 @@ public class IntegrationTest1
   <ItemGroup>
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
 </Project>
 
