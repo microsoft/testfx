@@ -68,7 +68,7 @@ public class TestExecutionManager
         if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            TaskCompletionSource<int> tcs = new();
+            TaskCompletionSource<int> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
             Thread entryPointThread = new(() =>
             {
                 try
@@ -91,7 +91,7 @@ public class TestExecutionManager
         else
         {
             // NOTE: If you replace this with `return taskGetter()`, you will break parallel tests.
-            return Task.Run(taskGetter);
+            return Task.Factory.StartNew(taskGetter, TaskCreationOptions.LongRunning).Unwrap();
         }
     }
 
