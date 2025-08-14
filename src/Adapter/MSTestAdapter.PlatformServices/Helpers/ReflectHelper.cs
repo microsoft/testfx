@@ -272,7 +272,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// <typeparam name="TAttributeType">The attribute type.</typeparam>
     /// <typeparam name="TState">The type of state to be passed to Action.</typeparam>
     /// <param name="attributeProvider">The member to inspect.</param>
-    /// <param name="inherit">Look at inheritance chain.</param>
     /// <param name="action">The action to perform.</param>
     /// <param name="state">The state to pass to action.</param>
     internal void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
