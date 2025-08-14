@@ -511,7 +511,7 @@ public class TestExecutionManager
         bool usesAppDomains)
     {
         bool hasAnyRunnableTests = false;
-        var fixtureTests = new List<TestCase>();
+        List<TestCase>? fixtureTests = null;
 
         IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
@@ -535,7 +535,7 @@ public class TestExecutionManager
             // It is executed by test itself.
             if (currentTest.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
             {
-                fixtureTests.Add(currentTest);
+                (fixtureTests ??= []).Add(currentTest);
                 continue;
             }
 
@@ -578,6 +578,11 @@ public class TestExecutionManager
         }
 
         // Once all tests have been executed, update the status of fixture tests.
+        if (fixtureTests is null)
+        {
+            return;
+        }
+
         foreach (TestCase currentTest in fixtureTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
