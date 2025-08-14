@@ -801,17 +801,26 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.MethodInfo);
-        DebugEx.Assert(attributes != null, "attributes is null");
+        // Avoid calling GetAttributes<T> to prevent iterator state machine allocations.
+        _ = ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo), testMethodInfo, testContext) &&
+            ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.Parent.ClassType), testMethodInfo, testContext);
 
-        attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType));
-
-        foreach (TestPropertyAttribute attribute in attributes)
+        static bool ValidateAttributes(Attribute[] attributes, TestMethodInfo testMethodInfo, ITestContext testContext)
         {
-            if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
+            foreach (Attribute attribute in attributes)
             {
-                break;
+                if (attribute is not TestPropertyAttribute testPropertyAttribute)
+                {
+                    continue;
+                }
+
+                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, testPropertyAttribute.Name, testPropertyAttribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
+                {
+                    return false;
+                }
             }
+
+            return true;
         }
     }
 
