@@ -159,8 +159,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
                 // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-                _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
-                _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
+                if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests)
+                {
+                    _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
+                    _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
+                }
 
                 testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
