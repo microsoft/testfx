@@ -20,7 +20,7 @@ internal class FileUtility
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(directory), "directory");
 
-        if (!Directory.Exists(directory))
+        if (!DoesDirectoryExist(directory))
         {
             Directory.CreateDirectory(directory);    // Creates subdir chain if necessary.
         }
@@ -59,7 +59,7 @@ internal class FileUtility
                 : string.Format(CultureInfo.InvariantCulture, "{0}[{1}]", originalDirectoryName, iteration.ToString(CultureInfo.InvariantCulture));
             string tryMePath = Path.Combine(parentDirectoryName, tryMe);
 
-            if (!File.Exists(tryMePath) && !Directory.Exists(tryMePath))
+            if (!DoesFileExist(tryMePath) && !DoesDirectoryExist(tryMePath))
             {
                 return tryMePath;
             }
@@ -92,7 +92,7 @@ internal class FileUtility
         try
         {
             string? destinationDirectory = Path.GetDirectoryName(destination);
-            if (!StringEx.IsNullOrEmpty(destinationDirectory) && File.Exists(source) && !Directory.Exists(destinationDirectory))
+            if (!StringEx.IsNullOrEmpty(destinationDirectory) && DoesFileExist(source) && !DoesDirectoryExist(destinationDirectory))
             {
                 Directory.CreateDirectory(destinationDirectory);
             }
@@ -253,7 +253,7 @@ internal class FileUtility
     /// <param name="path">path to symbols file.</param>
     /// <returns>Pdb file name or null if non-existent.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private static string? GetSymbolsFileName(string? path)
+    private string? GetSymbolsFileName(string? path)
     {
         if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {
@@ -266,7 +266,7 @@ internal class FileUtility
         }
 
         string pdbFile = Path.ChangeExtension(path, ".pdb");
-        if (File.Exists(pdbFile))
+        if (DoesFileExist(pdbFile))
         {
             if (EqtTrace.IsInfoEnabled)
             {

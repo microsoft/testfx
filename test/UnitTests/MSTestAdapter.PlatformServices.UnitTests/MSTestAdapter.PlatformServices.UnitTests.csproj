@@ -16,14 +16,6 @@
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 
-  <!-- Keep the property DebugType as some tests rely on specific pdb type -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" Condition=" '$(IsNetCoreApp)' != 'true' " />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
@@ -40,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Include="StrongNamer" />
     <!-- Fixes "Could not load file or assembly 'System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' or one of its dependencies." -->
