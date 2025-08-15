@@ -68,6 +68,11 @@ namespace MSTest.Analyzers;
 /// </item>
 /// <item>
 /// <description>
+/// <code>Assert.IsTrue(myCollection.[Count|Length] [&gt;|!=] 0)</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
 /// <code>Assert.AreEqual([0|X], myCollection.[Count|Length])</code>
 /// </description>
 /// </item>
@@ -118,6 +123,12 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         Unknown,
         IsEmpty,
         HasCount,
+    }
+
+    private enum CollectionEmptinessCheckStatus
+    {
+        Unknown,
+        IsNotEmpty,
     }
 
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
@@ -409,19 +420,15 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             invocation.Arguments.Length == 1)
         {
             string methodName = invocation.TargetMethod.Name;
-            if (methodName is "StartsWith" or "EndsWith" or "Contains")
+            stringExpression = invocation.Instance?.Syntax;
+            substringExpression = invocation.Arguments[0].Value.Syntax;
+            return methodName switch
             {
-                stringExpression = invocation.Instance?.Syntax;
-                substringExpression = invocation.Arguments[0].Value.Syntax;
-
-                return methodName switch
-                {
-                    "StartsWith" => StringMethodCheckStatus.StartsWith,
-                    "EndsWith" => StringMethodCheckStatus.EndsWith,
-                    "Contains" => StringMethodCheckStatus.Contains,
-                    _ => StringMethodCheckStatus.Unknown,
-                };
-            }
+                "StartsWith" => StringMethodCheckStatus.StartsWith,
+                "EndsWith" => StringMethodCheckStatus.EndsWith,
+                "Contains" => StringMethodCheckStatus.Contains,
+                _ => StringMethodCheckStatus.Unknown,
+            };
         }
 
         stringExpression = null;
@@ -459,11 +466,11 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
         // Check if the type implements IEnumerable<T> (but is not string)
         // Note: Assert.Contains/IsEmpty/HasCount for collections accept IEnumerable<T>, but not IEnumerable.
-        => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
-            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T) &&
-            // object is coming from BCL and it's expected to always have a public key.
-            type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
-            type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
+        => type.SpecialType != SpecialType.System_String &&
+        (type.SpecialType == SpecialType.System_Array || type.AllInterfaces.Any(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)) &&
+        // object is coming from BCL and it's expected to always have a public key.
+        type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
+        type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
 
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
@@ -614,6 +621,42 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                         "IsFalse"));
                     return;
                 }
+            }
+        }
+
+        // Check for collection emptiness patterns: myCollection.Count > 0 or myCollection.Count != 0
+        CollectionEmptinessCheckStatus emptinessStatus = RecognizeCollectionEmptinessCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? collectionEmptinessExpr);
+        if (emptinessStatus != CollectionEmptinessCheckStatus.Unknown)
+        {
+            if (isTrueInvocation && emptinessStatus == CollectionEmptinessCheckStatus.IsNotEmpty)
+            {
+                string properAssertMethod = "IsNotEmpty";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeSimple);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), collectionEmptinessExpr!.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    "IsTrue"));
+                return;
+            }
+            else
+            {
+                string properAssertMethod = "IsEmpty";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeSimple);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), collectionEmptinessExpr!.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    "IsFalse"));
+                return;
             }
         }
 
@@ -823,6 +866,48 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    private static CollectionEmptinessCheckStatus RecognizeCollectionEmptinessCheck(
+        IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
+        out SyntaxNode? collectionExpression)
+    {
+        collectionExpression = null;
+
+        // Check for collection.Count > 0 or collection.Length > 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.GreaterThan, LeftOperand: IPropertyReferenceOperation propertyRef, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef, objectTypeSymbol) is { } expression)
+        {
+            collectionExpression = expression;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        // Check for 0 < collection.Count or 0 < collection.Length
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.LessThan, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef2 } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
+        {
+            collectionExpression = expression2;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        // Check for collection.Count != 0 or collection.Length != 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: IPropertyReferenceOperation propertyRef3, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef3, objectTypeSymbol) is { } expression3)
+        {
+            collectionExpression = expression3;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        // Check for 0 != collection.Count or 0 != collection.Length (reverse order)
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef4 } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef4, objectTypeSymbol) is { } expression4)
+        {
+            collectionExpression = expression4;
+            return CollectionEmptinessCheckStatus.IsNotEmpty;
+        }
+
+        return CollectionEmptinessCheckStatus.Unknown;
+    }
+
     private static CountCheckStatus RecognizeCountCheck(
         IOperation expectedArgument,
         IOperation actualArgument,
@@ -836,11 +921,9 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             expectedArgument.ConstantValue.Value is int expectedValue &&
             expectedValue >= 0 &&
             actualArgument is IPropertyReferenceOperation propertyRef &&
-            propertyRef.Property.Name is "Count" or "Length" &&
-            propertyRef.Instance?.Type is not null &&
-            IsBCLCollectionType(propertyRef.Property.ContainingType, objectTypeSymbol))
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef, objectTypeSymbol) is { } expression)
         {
-            collectionExpression = propertyRef.Instance.Syntax;
+            collectionExpression = expression;
             countExpression = propertyRef.Syntax;
             countValue = expectedValue;
             return expectedValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
@@ -851,11 +934,9 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             actualArgument.ConstantValue.Value is int actualValue &&
             actualValue >= 0 &&
             expectedArgument is IPropertyReferenceOperation propertyRef2 &&
-            propertyRef2.Property.Name is "Count" or "Length" &&
-            propertyRef2.Instance?.Type is not null &&
-            IsBCLCollectionType(propertyRef2.Property.ContainingType, objectTypeSymbol))
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
         {
-            collectionExpression = propertyRef2.Instance.Syntax;
+            collectionExpression = expression2;
             countExpression = propertyRef2.Syntax;
             countValue = actualValue;
             return actualValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
@@ -866,6 +947,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         countValue = 0;
         return CountCheckStatus.Unknown;
     }
+
+    private static SyntaxNode? TryGetCollectionExpressionIfBCLCollectionLengthOrCount(IPropertyReferenceOperation propertyReference, INamedTypeSymbol objectTypeSymbol)
+        => propertyReference.Property.Name is "Count" or "Length"
+        && propertyReference.Instance?.Type is not null
+        && IsBCLCollectionType(propertyReference.Property.ContainingType, objectTypeSymbol)
+            ? propertyReference.Instance.Syntax
+            : null;
 
     private static bool TryGetFirstArgumentValue(IInvocationOperation operation, [NotNullWhen(true)] out IOperation? argumentValue)
         => TryGetArgumentValueForParameterOrdinal(operation, 0, out argumentValue);
