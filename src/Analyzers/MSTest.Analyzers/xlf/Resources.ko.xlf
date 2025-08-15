@@ -132,6 +132,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">값 형식에 'Assert.AreSame' 또는 'Assert.AreNotSame'을 사용하지 마세요.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="new">Avoid using Assert methods with format parameters</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">예상되는 호출만 예상되는 예외를 던지도록 하기 위해 '[ExpectedException]보다 'Assert.ThrowsExactly' 또는 'Assert.ThrowsExactlyAsync'를 사용하는 것이 좋습니다. 또한 어설션 API는 더 많은 유연성을 제공하고 예외의 추가 속성을 어설션할 수 있습니다.</target>

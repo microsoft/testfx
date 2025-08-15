@@ -132,6 +132,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">不要在值類型中使用 'Assert.AreSame' 或 'Assert.AreNotSame'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="new">Avoid using Assert methods with format parameters</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">偏好 'Assert.ThrowsExactly' 或 'Assert.ThrowsExactlyAsync' 而不是 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您判斷提示例外狀況的額外屬性。</target>
