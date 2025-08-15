@@ -42,7 +42,9 @@
       <_MSTestEngineVersionSuffix>$(_MSTestEnginePreReleaseVersionLabel)$(_BuildNumberLabels)</_MSTestEngineVersionSuffix>
       <_MSTestEngineVersion>$(MSTestEngineVersionPrefix)</_MSTestEngineVersion>
       <_MSTestEngineVersion Condition="'$(_MSTestEngineVersionSuffix)' != ''">$(_MSTestEngineVersion)-$(_MSTestEngineVersionSuffix)</_MSTestEngineVersion>
-      <_TemplateProperties>MSTestEngineVersion=$(_MSTestEngineVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
+      <_MTPVersion>$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))</_MTPVersion>
+      <_MTPVersion Condition="'$(_MTPVersion)'!='2.0.0-ci'">2.0.0-preview.25411.5</_MTPVersion>
+      <_TemplateProperties>MSTestEngineVersion=$(_MSTestEngineVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(_MTPVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--
