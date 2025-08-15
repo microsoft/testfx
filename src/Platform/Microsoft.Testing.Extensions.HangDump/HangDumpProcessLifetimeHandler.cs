@@ -103,19 +103,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     public async Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
-        if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTimeoutOptionName, out string[]? timeout))
+        if (_commandLineOptions.TryGetOptionArgument(HangDumpCommandLineProvider.HangDumpTimeoutOptionName, out string? timeout))
         {
-            _activityTimerValue = TimeSpanParser.Parse(timeout[0]);
+            _activityTimerValue = TimeSpanParser.Parse(timeout);
         }
 
-        if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTypeOptionName, out string[]? dumpType))
+        if (_commandLineOptions.TryGetOptionArgument(HangDumpCommandLineProvider.HangDumpTypeOptionName, out string? dumpType))
         {
-            _dumpType = dumpType[0];
+            _dumpType = dumpType;
         }
 
-        if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpFileNameOptionName, out string[]? fileName))
+        if (_commandLineOptions.TryGetOptionArgument(HangDumpCommandLineProvider.HangDumpFileNameOptionName, out string? fileName))
         {
-            _dumpFileNamePattern = fileName[0];
+            _dumpFileNamePattern = fileName;
         }
 
         await _logger.LogInformationAsync($"Hang dump timeout setup {_activityTimerValue}.").ConfigureAwait(false);
