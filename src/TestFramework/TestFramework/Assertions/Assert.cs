@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -54,8 +56,25 @@ public sealed partial class Assert
     /// </param>
     [DoesNotReturn]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
+    {
+        // Check if debugger launch on failure is enabled via environment variable
+        if (ShouldLaunchDebuggerOnFailure())
+        {
+            Debugger.Launch();
+        }
+        
+        throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
+    }
+
+    /// <summary>
+    /// Determines whether the debugger should be launched on test failure based on configuration.
+    /// </summary>
+    /// <returns>True if debugger should be launched, false otherwise.</returns>
+    private static bool ShouldLaunchDebuggerOnFailure()
+    {
+        return DebuggerLaunchSettings.ShouldLaunchForCurrentTest();
+    }
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
