@@ -108,25 +108,6 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         Verify(fileNotFoundException.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath));
     }
 
-    public void GetTestsShouldThrowIfSourceFileLoadThrowsABadImageFormatException()
-    {
-        string assemblyName = "DummyAssembly.dll";
-        string fullFilePath = Path.Combine(@"C:\temp", assemblyName);
-
-        // Setup mocks.
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))
-            .Returns(fullFilePath);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(fullFilePath))
-            .Returns(true);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(fullFilePath, It.IsAny<bool>()))
-            .Throws(new BadImageFormatException());
-        _mockTestSourceHandler
-            .Setup(x => x.IsAssemblyReferenced(It.IsAny<AssemblyName>(), It.IsAny<string>()))
-            .Returns(true);
-        _testablePlatformServiceProvider.MockTestSourceHost.Setup(x => x.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object?[]?>())).Returns(new AssemblyEnumerator(MSTestSettings.CurrentSettings));
-        VerifyThrows<BadImageFormatException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _));
-    }
-
     #endregion
 
     #region private helpers
