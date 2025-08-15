@@ -194,7 +194,7 @@ internal static class ObjectModelConverters
                     testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
                 }
 
-                (standardErrorMessages ??= new()).Add(message);
+                (standardErrorMessages ??= []).Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
@@ -205,7 +205,7 @@ internal static class ObjectModelConverters
                     testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
                 }
 
-                (standardOutputMessages ??= new()).Add(message);
+                (standardOutputMessages ??= []).Add(message);
             }
         }
 
