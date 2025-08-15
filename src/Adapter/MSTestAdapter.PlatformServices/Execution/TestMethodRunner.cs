@@ -199,14 +199,15 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
     {
-        IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>()?.OfType<UTF.ITestDataSource>();
-        if (testDataSources?.Any() != true)
+        bool hasTestDataSource = false;
+        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
-            return false;
-        }
+            if (attribute is not UTF.ITestDataSource testDataSource)
+            {
+                continue;
+            }
 
-        foreach (UTF.ITestDataSource testDataSource in testDataSources)
-        {
+            hasTestDataSource = true;
             if (testDataSource is ITestDataSourceIgnoreCapability { IgnoreMessage: { } ignoreMessage })
             {
                 results.Add(TestResult.CreateIgnoredResult(ignoreMessage));
@@ -249,7 +250,7 @@ internal sealed class TestMethodRunner
             }
         }
 
-        return true;
+        return hasTestDataSource;
     }
 
     private async Task ExecuteTestFromDataSourceAttributeAsync(List<TestResult> results)
