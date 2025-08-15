@@ -132,6 +132,11 @@
         <target state="translated">'{0}' kullan</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferTestContextWriteTitle">
+        <source>Use 'TestContext.WriteLine' instead</source>
+        <target state="translated">Bunun yerine 'TestContext.WriteLine' kullanın</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
