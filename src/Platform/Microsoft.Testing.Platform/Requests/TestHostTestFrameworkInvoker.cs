@@ -54,7 +54,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         await HandleTestSessionResultAsync(createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
 
         ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
-        TestExecutionRequest request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId)).ConfigureAwait(false);
+        TestExecutionRequest request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
