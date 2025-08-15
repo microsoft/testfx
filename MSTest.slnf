@@ -9,6 +9,7 @@
       "src\\Analyzers\\MSTest.Analyzers.CodeFixes\\MSTest.Analyzers.CodeFixes.csproj",
       "src\\Analyzers\\MSTest.Analyzers.Package\\MSTest.Analyzers.Package.csproj",
       "src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj",
+      "src\\Analyzers\\MSTest.GlobalConfigsGenerator\\MSTest.GlobalConfigsGenerator.csproj",
       "src\\Package\\MSTest.Sdk\\MSTest.Sdk.csproj",
       "src\\Package\\MSTest\\MSTest.csproj",
       "src\\TestFramework\\TestFramework.Extensions\\TestFramework.Extensions.csproj",
