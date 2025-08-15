@@ -26,6 +26,18 @@ public class FileOperationsTests : TestContainer
 #endif
     }
 
+    public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters2()
+    {
+        string filePath = "temp=txt";
+        void A() => _fileOperations.LoadAssembly(filePath, false);
+
+#if NETCOREAPP
+        VerifyThrows<FileNotFoundException>(A);
+#else
+        VerifyThrows<ArgumentException>(A);
+#endif
+    }
+
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound() =>
         VerifyThrows<FileNotFoundException>(() => _fileOperations.LoadAssembly("temptxt", false));
 
