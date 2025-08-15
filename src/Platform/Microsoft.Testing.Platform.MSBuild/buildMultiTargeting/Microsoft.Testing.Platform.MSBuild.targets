@@ -255,7 +255,7 @@
   </PropertyGroup>
 
   <Target Name="_MTPVSTestError" BeforeTargets="VSTest">
-    <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform. If you use dotnet test, you should opt-in to the new dotnet test experience in .NET 10 SDK via dotnet.config. For more information, see ..."
+    <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform. If you use dotnet test, you should opt-in to the new dotnet test experience in .NET 10 SDK via dotnet.config. For more information, see https://aka.ms/dotnet-test-mtp-error"
            Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(TargetFramework)'!=''" />
   </Target>
 
