@@ -122,6 +122,11 @@
         <target state="translated">Utilisez 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
+        <source>Use 'DisplayName' property instead of string argument</source>
+        <target state="new">Use 'DisplayName' property instead of string argument</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseNewerAssertThrows">
         <source>Use '{0}'</source>
         <target state="translated">Utiliser « {0} »</target>

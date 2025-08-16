@@ -1,5 +1,11 @@
 ; Unshipped analyzer release
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+MSTEST0053 | `<Undetected>` | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer
+
 ### Changed Rules
 
 Rule ID | New Category | New Severity | Old Category | Old Severity | Notes
