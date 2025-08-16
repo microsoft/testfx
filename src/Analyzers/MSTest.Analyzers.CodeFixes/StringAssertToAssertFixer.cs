@@ -93,6 +93,9 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
         newInvocationExpr = newInvocationExpr.WithExpression(newMemberAccess);
 
+        // Preserve leading trivia (including empty lines) from the original invocation
+        newInvocationExpr = newInvocationExpr.WithLeadingTrivia(invocationExpr.GetLeadingTrivia());
+
         editor.ReplaceNode(invocationExpr, newInvocationExpr);
         return editor.GetChangedDocument();
     }

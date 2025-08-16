@@ -308,4 +308,65 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenStringAssertContains_ShouldPreserveEmptyLines()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldNotRemoveEmptyLine()
+                {
+                    WrappedMethodCall(
+                        1,
+                        2,
+                        3);
+
+                    {|#0:StringAssert.Contains("value", "v")|};
+
+                    {|#1:StringAssert.Contains("value", "v")|};
+                }
+
+                private void WrappedMethodCall(int a, int b, int c) { }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldNotRemoveEmptyLine()
+                {
+                    WrappedMethodCall(
+                        1,
+                        2,
+                        3);
+
+                    Assert.Contains("v", "value");
+
+                    Assert.Contains("v", "value");
+                }
+
+                private void WrappedMethodCall(int a, int b, int c) { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            new[]
+            {
+                // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(14,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("Contains", "Contains"),
+            },
+            fixedCode);
+    }
 }
