@@ -73,7 +73,7 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixer : CodeFixProvider
         // If this is the only argument, remove the entire argument list
         if (argumentList.Arguments.Count == 1)
         {
-            SyntaxNode newRoot = root.RemoveNode(argumentList, SyntaxRemoveOptions.KeepNoTrivia);
+            SyntaxNode newRoot = root.RemoveNode(argumentList, SyntaxRemoveOptions.KeepNoTrivia)!;
             return document.WithSyntaxRoot(newRoot);
         }
 
