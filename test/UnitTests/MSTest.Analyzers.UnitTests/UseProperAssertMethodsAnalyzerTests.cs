@@ -2078,7 +2078,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var list = new List<int> { 1, 2, 3 };
-                    Assert.IsFalse(list.Count != 0);
+                    {|#0:Assert.IsFalse(list.Count != 0)|};
                 }
             }
             """;
