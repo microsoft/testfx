@@ -394,12 +394,6 @@ interface TestNode {
     // Example: "time.duration-ms": 45.8143,
     'time.duration-ms'?: number;
 
-    // Example: "time.start-utc": "2023-06-20T11:09:41.6882661+00:00"
-    'time.start-utc'?: string;
-
-    // Example: "time.stop-utc": "2023-06-20T11:09:41.6882661+00:00"
-    'time.stop-utc'?: string;
-
     // Note: The error consists of the stacktrace, error message and also the assertion properties.
     // If assertion properties are missing the exception would show in the UI as:
     // Message:
