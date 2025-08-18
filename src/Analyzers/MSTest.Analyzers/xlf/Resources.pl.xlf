@@ -159,12 +159,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
-        <target state="new">Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</target>
+        <target state="translated">Usuń argument „DynamicDataSourceType”, aby użyć domyślnego zachowania wykrywania automatycznego</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
         <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
-        <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
+        <target state="translated">Unikaj przekazywania jawnego elementu „DynamicDataSourceType” i użyj domyślnego zachowania wykrywania automatycznego</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">

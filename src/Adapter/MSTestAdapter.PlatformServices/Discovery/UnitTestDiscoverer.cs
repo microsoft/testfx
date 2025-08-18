@@ -85,13 +85,6 @@ internal class UnitTestDiscoverer
         SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
     }
 
-#pragma warning disable IDE0028 // Collection initialization can be simplified - cannot be done for all TFMs. So suppressing.
-    private static readonly ConditionalWeakTable<TestCase, object?[]> TestCaseToDataDictionary = new();
-#pragma warning restore IDE0028 // Collection initialization can be simplified
-
-    internal static bool TryGetActualData(TestCase testCase, [NotNullWhen(true)] out object?[]? actualData)
-        => TestCaseToDataDictionary.TryGetValue(testCase, out actualData);
-
     internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
         bool shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
@@ -116,7 +109,7 @@ internal class UnitTestDiscoverer
             foreach (UnitTestElement testElement in testElements)
             {
                 var testCase = testElement.ToTestCase();
-                bool hasFixtureTraits = testCase.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait);
+                bool hasFixtureTraits = testElement.Traits?.Any(t => t.Name == EngineConstants.FixturesTestTrait) == true;
 
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
@@ -128,11 +121,6 @@ internal class UnitTestDiscoverer
                     }
 
                     continue;
-                }
-
-                if (testElement.TestMethod.ActualData is { } actualData)
-                {
-                    TestCaseToDataDictionary.Add(testCase, actualData);
                 }
 
                 if (!hasAnyRunnableTests)

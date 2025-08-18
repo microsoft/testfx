@@ -12,6 +12,7 @@ internal static class TestStates
     internal const byte Error = 4;
     internal const byte Timeout = 5;
     internal const byte Cancelled = 6;
+    internal const byte InProgress = 7;
 }
 
 internal static class SessionEventTypes
@@ -31,6 +32,7 @@ internal static class HandshakeMessagePropertyNames
     internal const byte ModulePath = 6;
     internal const byte ExecutionId = 7;
     internal const byte InstanceId = 8;
+    internal const byte IsIDE = 9;
 }
 
 internal static class ProtocolConstants

@@ -70,6 +70,11 @@ internal static class TestCaseExtensions
     /// <returns> The converted <see cref="UnitTestElement"/>. </returns>
     internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
     {
+        if (testCase.LocalExtensionData is UnitTestElement unitTestElement)
+        {
+            return unitTestElement;
+        }
+
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
         string name = testCase.GetTestName(testClassName);
         var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
@@ -86,10 +91,6 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
-            if (UnitTestDiscoverer.TryGetActualData(testCase, out object?[]? actualData))
-            {
-                testMethod.ActualData = actualData;
-            }
 
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
         }

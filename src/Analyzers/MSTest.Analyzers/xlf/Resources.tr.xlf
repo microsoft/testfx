@@ -159,12 +159,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
-        <target state="new">Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</target>
+        <target state="translated">Varsayılan otomatik algılama davranışını kullanmak için ‘DynamicDataSourceType’ bağımsız değişkenini kaldırın</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
         <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
-        <target state="new">Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</target>
+        <target state="translated">Açık bir ‘DynamicDataSourceType’ geçirmeyin ve varsayılan otomatik algılama davranışını kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">

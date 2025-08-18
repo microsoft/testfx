@@ -303,7 +303,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             string methodName = GetMethodName(methodInfo);
             string[] hierarchy = [null!, assemblyName, EngineConstants.AssemblyFixturesHierarchyClassName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
+            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
         }
 
         static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
@@ -311,7 +311,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             string methodName = GetMethodName(methodInfo);
             string[] hierarchy = [null!, classFullName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
+            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
         }
 
         static string GetMethodName(MethodInfo methodInfo)
@@ -322,12 +322,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 : methodInfo.Name;
         }
 
-        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
+        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy, MethodInfo methodInfo)
         {
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null, TestIdGenerationStrategy.FullyQualified);
+            string displayName = $"[{fixtureType}] {methodName}";
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, displayName, TestIdGenerationStrategy.FullyQualified)
+            {
+                MethodInfo = methodInfo,
+            };
             return new UnitTestElement(method)
             {
-                DisplayName = $"[{fixtureType}] {methodName}",
+                DisplayName = displayName,
                 Traits = [new Trait(EngineConstants.FixturesTestTrait, fixtureType)],
             };
         }
@@ -423,7 +427,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
             discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-
+            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
             tests.Add(discoveredTest);
 
             return true;
@@ -464,6 +468,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
 
             // Merge test categories from the test data row with the existing categories
             if (testCategoriesFromTestDataRow is { Count: > 0 })

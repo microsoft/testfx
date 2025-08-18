@@ -153,6 +153,9 @@ public sealed class TestMethod : ITestMethod
     [field: NonSerialized]
     internal object?[]? ActualData { get; set; }
 
+    [field: NonSerialized]
+    internal MethodInfo? MethodInfo { get; set; }
+
     /// <summary>
     /// Gets or sets the test data source ignore message.
     /// </summary>
@@ -167,9 +170,9 @@ public sealed class TestMethod : ITestMethod
     internal string? TestGroup { get; set; }
 
     /// <summary>
-    /// Gets the display name set during discovery.
+    /// Gets or sets the display name set during discovery.
     /// </summary>
-    internal string DisplayName { get; }
+    internal string DisplayName { get; set; }
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 }

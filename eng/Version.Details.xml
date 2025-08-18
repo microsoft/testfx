@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25401.2">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25415.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>40693ae2ee51e447f6ca96d07bc1ba779dcb9b9c</Sha>
+      <Sha>e58b086a85a1df5762c8980308f7e4e330edd0aa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.25401.2">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.25415.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>40693ae2ee51e447f6ca96d07bc1ba779dcb9b9c</Sha>
+      <Sha>e58b086a85a1df5762c8980308f7e4e330edd0aa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.25401.2">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.25415.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>40693ae2ee51e447f6ca96d07bc1ba779dcb9b9c</Sha>
+      <Sha>e58b086a85a1df5762c8980308f7e4e330edd0aa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.0.0-preview.25401.1">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.0.0-preview.25414.4">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>3897080c69443cb675380bb3ac72cb9881dd5c87</Sha>
+      <Sha>dd3e010148361acad26e2ed22061ab61b1c9c976</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="3.11.0-preview.25401.13">
+    <Dependency Name="MSTest" Version="3.11.0-preview.25415.13">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>a309c8fc8b7cf2a0bc7e411ac5506b0d2ce93d5a</Sha>
+      <Sha>5182881d93b55c942460dc43ebbcfa87a2fb84bd</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.9.0-preview.25401.13">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.9.0-preview.25415.13">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>a309c8fc8b7cf2a0bc7e411ac5506b0d2ce93d5a</Sha>
+      <Sha>5182881d93b55c942460dc43ebbcfa87a2fb84bd</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
