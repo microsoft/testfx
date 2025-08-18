@@ -2187,6 +2187,166 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertAreEqualWithVariableExpectedCountAndArrayLength_ShouldSuggestHasCount()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    var array = new int[] { 1, 2, 3 };
+
+                    // This should work (currently works)
+                    {|#0:Assert.AreEqual(3, array.Length)|};
+
+                    // This should also work but currently doesn't
+                    int expectedLength = 3;
+                    {|#1:Assert.AreEqual(expectedLength, array.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    var array = new int[] { 1, 2, 3 };
+
+                    // This should work (currently works)
+                    Assert.HasCount(3, array);
+
+                    // This should also work but currently doesn't
+                    int expectedLength = 3;
+                    Assert.HasCount(expectedLength, array);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithReversedArgumentOrderAndVariable_ShouldSuggestHasCount()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    var list = new List<int> { 1, 2 };
+
+                    // Reversed order: collection.Count, expected constant
+                    {|#0:Assert.AreEqual(list.Count, 2)|};
+
+                    // Reversed order: collection.Count, expected variable
+                    int expected = 2;
+                    {|#1:Assert.AreEqual(list.Count, expected)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    var list = new List<int> { 1, 2 };
+
+                    // Reversed order: collection.Count, expected constant
+                    Assert.HasCount(2, list);
+
+                    // Reversed order: collection.Count, expected variable
+                    int expected = 2;
+                    Assert.HasCount(expected, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithVariableZeroCount_ShouldSuggestHasCount()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    var list = new List<int>();
+
+                    // Variable that happens to contain zero - we can't know at compile time
+                    // so we suggest HasCount instead of IsEmpty
+                    int expectedCount = 0;
+                    {|#0:Assert.AreEqual(expectedCount, list.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    var list = new List<int>();
+
+                    // Variable that happens to contain zero - we can't know at compile time
+                    // so we suggest HasCount instead of IsEmpty
+                    int expectedCount = 0;
+                    Assert.HasCount(expectedCount, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreEqualWithCollectionCountUsingNonGenericCollection()
     {
         string code = """
