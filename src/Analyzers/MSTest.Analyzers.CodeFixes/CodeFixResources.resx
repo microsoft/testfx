@@ -198,4 +198,7 @@
   <data name="UseDisplayNamePropertyInsteadOfStringArgumentFix" xml:space="preserve">
     <value>Use 'DisplayName' property instead of string argument</value>
   </data>
+  <data name="AddCallerInfoParametersFix" xml:space="preserve">
+    <value>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</value>
+  </data>
 </root>

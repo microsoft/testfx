@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestMethodAttributeShouldPropagateSourceInformationAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.TestMethodAttributeShouldPropagateSourceInformationFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -26,7 +26,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -45,7 +45,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -64,7 +64,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -119,7 +119,29 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using System.Runtime.CompilerServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -147,7 +169,29 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -175,7 +219,29 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber: callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -208,7 +274,34 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                public [|MyTestMethodAttribute|](string displayName, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -241,11 +334,38 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                public [|MyTestMethodAttribute|](string displayName, int i, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+
+                public [|MyTestMethodAttribute|]([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
-    public async Task WhenAbstractDerivedTestMethodAttribute_NoDiagnostic()
+    public async Task WhenAbstractDerivedTestMethodAttribute_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -255,7 +375,19 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using System.Runtime.CompilerServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class MyTestMethodAttribute : TestMethodAttribute
+            {
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1) : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -273,7 +405,20 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using System.Runtime.CompilerServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                private MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -290,7 +435,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -307,7 +452,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -334,6 +479,6 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }

@@ -21,6 +21,11 @@ public sealed class TestExecutionContextPropagationFromTestMethodAttributeToTest
 
     private sealed class MyTestMethodAttribute : TestMethodAttribute
     {
+        public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+            : base(callerFilePath, callerLineNumber)
+        {
+        }
+
         public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         {
             State.Value = "In Execute";
