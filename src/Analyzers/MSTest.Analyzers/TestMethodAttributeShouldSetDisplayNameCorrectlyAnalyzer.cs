@@ -10,7 +10,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
-using MSTest.Analyzers.Helpers.Lightup;
 
 namespace MSTest.Analyzers;
 
@@ -25,7 +24,7 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : D
         title: new LocalizableResourceString(nameof(Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyTitle), Resources.ResourceManager, typeof(Resources)),
         messageFormat: new LocalizableResourceString(nameof(Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat), Resources.ResourceManager, typeof(Resources)),
         description: null,
-        Category.Design,
+        Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 

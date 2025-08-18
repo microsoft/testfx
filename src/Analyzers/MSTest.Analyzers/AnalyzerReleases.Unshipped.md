@@ -4,7 +4,7 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0053 | `<Undetected>` | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer
+MSTEST0053 | Usage | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer
 
 ### Changed Rules
 
