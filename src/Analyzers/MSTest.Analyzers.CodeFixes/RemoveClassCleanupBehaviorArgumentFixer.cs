@@ -38,7 +38,7 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixer : CodeFixProvider
         foreach (Diagnostic diagnostic in context.Diagnostics)
         {
             // Only handle CS0103 errors for "ClassCleanupBehavior"
-            if (!diagnostic.GetMessage().Contains("ClassCleanupBehavior"))
+            if (!diagnostic.GetMessage(CultureInfo.InvariantCulture).Contains("ClassCleanupBehavior"))
             {
                 continue;
             }
@@ -78,7 +78,7 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixer : CodeFixProvider
         }
 
         // Otherwise, just remove this specific argument
-        AttributeArgumentListSyntax newArgumentList = argumentList.RemoveNode(attributeArgument, SyntaxRemoveOptions.KeepNoTrivia);
+        AttributeArgumentListSyntax newArgumentList = argumentList.RemoveNode(attributeArgument, SyntaxRemoveOptions.KeepNoTrivia)!;
         if (newArgumentList is not null)
         {
             SyntaxNode newRoot = root.ReplaceNode(argumentList, newArgumentList);
