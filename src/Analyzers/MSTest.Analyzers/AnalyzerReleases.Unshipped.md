@@ -5,6 +5,7 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0053 | Usage | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer
+MSTEST0054 | Usage | Warning | TestMethodAttributeShouldPropagateSourceInformationAnalyzer
 
 ### Changed Rules
 

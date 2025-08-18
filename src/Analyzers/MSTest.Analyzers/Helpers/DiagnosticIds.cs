@@ -58,4 +58,5 @@ internal static class DiagnosticIds
     public const string AssertThrowsShouldContainSingleStatementRuleId = "MSTEST0051";
     public const string AvoidExplicitDynamicDataSourceTypeRuleId = "MSTEST0052";
     public const string TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId = "MSTEST0053";
+    public const string TestMethodAttributeShouldPropagateSourceInformationRuleId = "MSTEST0054";
 }
