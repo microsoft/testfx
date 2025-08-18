@@ -459,8 +459,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
         // Check if the type implements IEnumerable<T> (but is not string)
         // Note: Assert.Contains/IsEmpty/HasCount for collections accept IEnumerable<T>, but not IEnumerable.
-        => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
-            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T) &&
+        => type.SpecialType != SpecialType.System_String &&
+            (type.SpecialType == SpecialType.System_Array || type.AllInterfaces.Any(i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)) &&
             // object is coming from BCL and it's expected to always have a public key.
             type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
             type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
@@ -749,7 +749,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     {
                         // Assert.HasCount(expectedCount, collection)
                         properties.Add(CodeFixModeKey, CodeFixModeCollectionCount);
-                        
+
                         // Determine which argument is the count expression
                         // If expectedArgument is an integer type and actualArgumentValue is a property reference, use expectedArgument
                         // If actualArgumentValue is an integer type and expectedArgument is a property reference, use actualArgumentValue
@@ -857,7 +857,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             collectionExpression = propertyRef.Instance.Syntax;
             countExpression = propertyRef.Syntax;
-            
+
             // For constant values, we can determine if it's zero for IsEmpty vs HasCount
             if (expectedArgument.ConstantValue.HasValue &&
                 expectedArgument.ConstantValue.Value is int expectedValue &&
@@ -883,7 +883,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             collectionExpression = propertyRef2.Instance.Syntax;
             countExpression = propertyRef2.Syntax;
-            
+
             // For constant values, we can determine if it's zero for IsEmpty vs HasCount
             if (actualArgument.ConstantValue.HasValue &&
                 actualArgument.ConstantValue.Value is int actualValue &&
@@ -909,8 +909,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static bool IsIntegerExpression(IOperation operation)
     {
         // Check if the operation represents an integer expression
-        var type = operation.Type;
-        return type is not null && 
+        ITypeSymbol? type = operation.Type;
+        return type is not null &&
                (type.SpecialType == SpecialType.System_Int32 ||
                 type.SpecialType == SpecialType.System_UInt32 ||
                 type.SpecialType == SpecialType.System_Int16 ||

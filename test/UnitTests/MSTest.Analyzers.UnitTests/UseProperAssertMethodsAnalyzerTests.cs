@@ -2179,10 +2179,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
-            // /0/Test0.cs(17,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            [
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+                // /0/Test0.cs(17,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            ],
             fixedCode);
     }
 
@@ -2233,10 +2235,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
-            // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            ],
             fixedCode);
     }
 
@@ -2289,10 +2293,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
-            // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            ],
             fixedCode);
     }
 
