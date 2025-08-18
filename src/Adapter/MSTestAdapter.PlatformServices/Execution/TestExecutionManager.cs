@@ -511,7 +511,7 @@ public class TestExecutionManager
         bool usesAppDomains)
     {
         bool hasAnyRunnableTests = false;
-        var fixtureTests = new List<TestCase>();
+        List<TestCase>? fixtureTests = null;
 
         IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
@@ -535,7 +535,7 @@ public class TestExecutionManager
             // It is executed by test itself.
             if (currentTest.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
             {
-                fixtureTests.Add(currentTest);
+                (fixtureTests ??= []).Add(currentTest);
                 continue;
             }
 
@@ -549,7 +549,7 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
             // Run single test passing test context properties to it.
-            IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
+            IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
 
             TestTools.UnitTesting.TestResult[] unitTestResult;
@@ -578,6 +578,11 @@ public class TestExecutionManager
         }
 
         // Once all tests have been executed, update the status of fixture tests.
+        if (fixtureTests is null)
+        {
+            return;
+        }
+
         foreach (TestCase currentTest in fixtureTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -618,9 +623,14 @@ public class TestExecutionManager
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?> tcmProperties,
+        IDictionary<TestProperty, object?>? tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
+        if (tcmProperties is null)
+        {
+            return new Dictionary<string, object?>(sourceLevelParameters!);
+        }
+
         // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
         // which were originally calculated from TestDeployment.GetDeploymentInformation.
         var testContextProperties = new Dictionary<string, object?>(capacity: 8);
