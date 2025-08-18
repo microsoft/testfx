@@ -2131,6 +2131,62 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertAreEqualWithVariableExpectedCount_ShouldSuggestHasCount()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    ICollection<int> collection = new List<int>();
+
+                    // This should work (currently works)
+                    {|#0:Assert.AreEqual(2, collection.Count)|};
+
+                    // This should also work but currently doesn't
+                    int expected = 2;
+                    {|#1:Assert.AreEqual(expected, collection.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void ShouldSuggestHasCount()
+                {
+                    ICollection<int> collection = new List<int>();
+
+                    // This should work (currently works)
+                    Assert.HasCount(2, collection);
+
+                    // This should also work but currently doesn't
+                    int expected = 2;
+                    Assert.HasCount(expected, collection);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            // /0/Test0.cs(17,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreEqualWithCollectionCountUsingNonGenericCollection()
     {
         string code = """

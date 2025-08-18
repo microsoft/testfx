@@ -749,8 +749,25 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     {
                         // Assert.HasCount(expectedCount, collection)
                         properties.Add(CodeFixModeKey, CodeFixModeCollectionCount);
-                        SyntaxNode expectedCountExpr = expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int ?
-                            expectedArgument.Syntax : actualArgumentValue.Syntax;
+                        
+                        // Determine which argument is the count expression
+                        // If expectedArgument is an integer type and actualArgumentValue is a property reference, use expectedArgument
+                        // If actualArgumentValue is an integer type and expectedArgument is a property reference, use actualArgumentValue
+                        SyntaxNode expectedCountExpr;
+                        if (IsIntegerExpression(expectedArgument) && actualArgumentValue is IPropertyReferenceOperation)
+                        {
+                            expectedCountExpr = expectedArgument.Syntax;
+                        }
+                        else if (IsIntegerExpression(actualArgumentValue) && expectedArgument is IPropertyReferenceOperation)
+                        {
+                            expectedCountExpr = actualArgumentValue.Syntax;
+                        }
+                        else
+                        {
+                            // Fallback to the old logic for safety
+                            expectedCountExpr = expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int ?
+                                expectedArgument.Syntax : actualArgumentValue.Syntax;
+                        }
 
                         context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                             Rule,
@@ -831,10 +848,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         out SyntaxNode? countExpression,
         out int countValue)
     {
-        // Check if expectedArgument is a literal and actualArgument is a count/length property
-        if (expectedArgument.ConstantValue.HasValue &&
-            expectedArgument.ConstantValue.Value is int expectedValue &&
-            expectedValue >= 0 &&
+        // Check if expectedArgument is an integer (constant or variable) and actualArgument is a count/length property
+        if (IsIntegerExpression(expectedArgument) &&
             actualArgument is IPropertyReferenceOperation propertyRef &&
             propertyRef.Property.Name is "Count" or "Length" &&
             propertyRef.Instance?.Type is not null &&
@@ -842,14 +857,25 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             collectionExpression = propertyRef.Instance.Syntax;
             countExpression = propertyRef.Syntax;
-            countValue = expectedValue;
-            return expectedValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
+            
+            // For constant values, we can determine if it's zero for IsEmpty vs HasCount
+            if (expectedArgument.ConstantValue.HasValue &&
+                expectedArgument.ConstantValue.Value is int expectedValue &&
+                expectedValue >= 0)
+            {
+                countValue = expectedValue;
+                return expectedValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
+            }
+            else
+            {
+                // For non-constant values, assume HasCount (we can't know if it's zero at compile time)
+                countValue = -1; // Use -1 to indicate non-constant
+                return CountCheckStatus.HasCount;
+            }
         }
 
-        // Check if actualArgument is a literal and expectedArgument is a count/length property
-        if (actualArgument.ConstantValue.HasValue &&
-            actualArgument.ConstantValue.Value is int actualValue &&
-            actualValue >= 0 &&
+        // Check if actualArgument is an integer (constant or variable) and expectedArgument is a count/length property
+        if (IsIntegerExpression(actualArgument) &&
             expectedArgument is IPropertyReferenceOperation propertyRef2 &&
             propertyRef2.Property.Name is "Count" or "Length" &&
             propertyRef2.Instance?.Type is not null &&
@@ -857,14 +883,42 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             collectionExpression = propertyRef2.Instance.Syntax;
             countExpression = propertyRef2.Syntax;
-            countValue = actualValue;
-            return actualValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
+            
+            // For constant values, we can determine if it's zero for IsEmpty vs HasCount
+            if (actualArgument.ConstantValue.HasValue &&
+                actualArgument.ConstantValue.Value is int actualValue &&
+                actualValue >= 0)
+            {
+                countValue = actualValue;
+                return actualValue == 0 ? CountCheckStatus.IsEmpty : CountCheckStatus.HasCount;
+            }
+            else
+            {
+                // For non-constant values, assume HasCount (we can't know if it's zero at compile time)
+                countValue = -1; // Use -1 to indicate non-constant
+                return CountCheckStatus.HasCount;
+            }
         }
 
         collectionExpression = null;
         countExpression = null;
         countValue = 0;
         return CountCheckStatus.Unknown;
+    }
+
+    private static bool IsIntegerExpression(IOperation operation)
+    {
+        // Check if the operation represents an integer expression
+        var type = operation.Type;
+        return type is not null && 
+               (type.SpecialType == SpecialType.System_Int32 ||
+                type.SpecialType == SpecialType.System_UInt32 ||
+                type.SpecialType == SpecialType.System_Int16 ||
+                type.SpecialType == SpecialType.System_UInt16 ||
+                type.SpecialType == SpecialType.System_Byte ||
+                type.SpecialType == SpecialType.System_SByte ||
+                type.SpecialType == SpecialType.System_Int64 ||
+                type.SpecialType == SpecialType.System_UInt64);
     }
 
     private static bool TryGetFirstArgumentValue(IInvocationOperation operation, [NotNullWhen(true)] out IOperation? argumentValue)
