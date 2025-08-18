@@ -360,13 +360,12 @@ public sealed class StringAssertToAssertAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            new[]
-            {
+            [
                 // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
                 // /0/Test0.cs(14,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("Contains", "Contains"),
-            },
+            ],
             fixedCode);
     }
 }
