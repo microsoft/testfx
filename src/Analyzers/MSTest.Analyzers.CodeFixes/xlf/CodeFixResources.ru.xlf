@@ -52,6 +52,11 @@
         <target state="translated">Передайте аргумент "TestContext.CancellationTokenSource.Token" вызов метода</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="new">Remove 'ClassCleanupBehavior' argument</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Удалите параметр "DynamicDataSourceType", чтобы использовать значение по умолчанию "AutoDetect"</target>

@@ -52,6 +52,11 @@
         <target state="translated">Passe o argumento 'TestContext.CancellationTokenSource.Token' para a chamada do método</target>
         <note />
       </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="new">Remove 'ClassCleanupBehavior' argument</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Remover o parâmetro "DynamicDataSourceType" para usar o padrão "AutoDetect"</target>
