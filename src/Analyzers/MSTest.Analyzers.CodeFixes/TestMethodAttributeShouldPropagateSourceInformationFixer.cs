@@ -55,7 +55,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationFixer : C
         }
         else if (identifierToken.Parent is BaseTypeDeclarationSyntax typeDeclarationSyntax)
         {
-            // There is no explicit constructor. We only have the implicit parameterless constructor. We will the constructor.
+            // There is no explicit constructor. We only have the implicit parameterless constructor. We will add the constructor with the needed parameters.
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: CodeFixResources.AddCallerInfoParametersFix,
