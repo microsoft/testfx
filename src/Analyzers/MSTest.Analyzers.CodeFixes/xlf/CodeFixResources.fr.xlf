@@ -27,6 +27,11 @@
         <target state="translated">Utiliser « {0} »</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="new">Use assignment instead of 'out' parameter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Remplacer l’accessibilité de la méthode par « privé »</target>
@@ -55,6 +60,11 @@
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
         <target state="translated">Passer l’argument « TestContext.CancellationTokenSource.Token » à l’appel de méthode</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="new">Remove 'ClassCleanupBehavior' argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
