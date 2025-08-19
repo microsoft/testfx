@@ -201,4 +201,7 @@
   <data name="UseDisplayNamePropertyInsteadOfStringArgumentFix" xml:space="preserve">
     <value>Use 'DisplayName' property instead of string argument</value>
   </data>
+  <data name="AvoidOutParameterOnAssertIsInstanceOfTypeFix" xml:space="preserve">
+    <value>Use assignment instead of 'out' parameter</value>
+  </data>
 </root>
