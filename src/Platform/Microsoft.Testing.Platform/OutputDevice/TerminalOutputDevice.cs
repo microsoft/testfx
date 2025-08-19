@@ -134,8 +134,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         // This works but is NOT USED, we prefer to have the same experience of not showing passed tests in hotReload mode as in normal mode.
         // Func<bool> showPassed = () => _runtimeFeature.IsHotReloadEnabled;
         Func<bool> showPassed = () => false;
-        bool outputOption = _commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? arguments);
-        if (outputOption && arguments?.Length > 0 && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        bool outputOption = _commandLineOptions.TryGetOptionArgument(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string? argument);
+        if (outputOption && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(argument, StringComparison.OrdinalIgnoreCase))
         {
             showPassed = () => true;
         }

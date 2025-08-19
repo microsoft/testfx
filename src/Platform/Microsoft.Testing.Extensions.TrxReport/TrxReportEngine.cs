@@ -163,9 +163,9 @@ internal sealed partial class TrxReportEngine
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
             bool isFileNameExplicitlyProvided;
             string trxFileName;
-            if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
+            if (_commandLineOptionsService.TryGetOptionArgument(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string? fileName))
             {
-                trxFileName = ReplaceInvalidFileNameChars(fileName[0]);
+                trxFileName = ReplaceInvalidFileNameChars(fileName);
                 isFileNameExplicitlyProvided = true;
             }
             else

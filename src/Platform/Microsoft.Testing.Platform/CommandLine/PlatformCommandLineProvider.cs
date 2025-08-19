@@ -150,8 +150,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return 0;
         }
 
-        ApplicationStateGuard.Ensure(commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
-        return int.Parse(arguments[0], CultureInfo.InvariantCulture);
+        ApplicationStateGuard.Ensure(commandLineOptions.TryGetOptionArgument(MinimumExpectedTestsOptionKey, out string? argument));
+        return int.Parse(argument, CultureInfo.InvariantCulture);
     }
 
     private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, string[] arguments)
@@ -183,10 +183,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
         if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
-            _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
+            _ = commandLineOptions.TryGetOptionArgument(ExitOnProcessExitOptionKey, out string? pid);
             ApplicationStateGuard.Ensure(pid is not null);
-            RoslynDebug.Assert(pid.Length == 1);
-            int parentProcessPid = int.Parse(pid[0], CultureInfo.InvariantCulture);
+            int parentProcessPid = int.Parse(pid, CultureInfo.InvariantCulture);
             try
             {
                 // We let the api to do the validity check before to go down the subscription path.

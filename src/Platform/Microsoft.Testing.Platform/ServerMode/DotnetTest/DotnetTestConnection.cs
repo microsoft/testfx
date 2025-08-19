@@ -46,7 +46,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
         if (_commandLineHandler.HasDotnetTestServerOption() &&
-            _commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+            _commandLineHandler.TryGetOptionArgument(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string? argument))
         {
             // The execution id is used to identify the test execution
             // We are storing it as an env var so that it can be read by the test host, test host controller and the test host orchestrator
@@ -56,7 +56,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
                 _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
             }
 
-            _dotnetTestPipeClient = new(arguments[0]);
+            _dotnetTestPipeClient = new(argument);
             _dotnetTestPipeClient.RegisterAllSerializers();
 
             await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);

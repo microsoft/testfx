@@ -88,10 +88,9 @@ internal sealed class AzureDevOpsReporter :
             return Task.FromResult(false);
         }
 
-        bool found = _commandLine.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, out string[]? arguments);
-        if (found && arguments?.Length > 0)
+        if (_commandLine.TryGetOptionArgument(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, out string? argument))
         {
-            _severity = arguments[0].ToLowerInvariant();
+            _severity = argument.ToLowerInvariant();
             if (_logger.IsEnabled(LogLevel.Trace))
             {
                 _logger.LogTrace($"Severity is set to '{_severity}', by --report-azdo-severity parameter.");

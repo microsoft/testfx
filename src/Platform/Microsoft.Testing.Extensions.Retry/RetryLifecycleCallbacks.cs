@@ -46,7 +46,7 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {
-        if (!_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName, out string[]? pipeName))
+        if (!_commandLineOptions.TryGetOptionArgument(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName, out string? pipeName))
         {
             throw ApplicationStateGuard.Unreachable();
         }
@@ -55,9 +55,9 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,
 
         Guard.NotNull(pipeName);
         ArgumentGuard.Ensure(pipeName.Length == 1, nameof(pipeName), "Pipe name expected");
-        logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
+        logger.LogDebug($"Connecting to pipe '{pipeName}'");
 
-        Client = new(pipeName[0]);
+        Client = new(pipeName);
         Client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         Client.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
         Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));

@@ -14,12 +14,12 @@ internal sealed partial class ServerModeManager
         ICommandLineOptions commandLineService = serviceProvider.GetCommandLineOptions();
 
         int? clientPort;
-        clientPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientPortOptionKey, out string[]? clientPortArgs)
-            ? int.Parse(clientPortArgs[0], CultureInfo.InvariantCulture)
+        clientPort = commandLineService.TryGetOptionArgument(PlatformCommandLineProvider.ClientPortOptionKey, out string? clientPortArg)
+            ? int.Parse(clientPortArg, CultureInfo.InvariantCulture)
             : throw new InvalidOperationException(PlatformResources.MissingClientPortFoJsonRpc);
 
-        string clientHostName = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientHostOptionKey, out string[]? clientHostArgs)
-            ? clientHostArgs[0]
+        string clientHostName = commandLineService.TryGetOptionArgument(PlatformCommandLineProvider.ClientHostOptionKey, out string? clientHostArg)
+            ? clientHostArg
             : "localhost";
 
         return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice());

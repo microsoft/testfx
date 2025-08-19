@@ -23,3 +23,24 @@ public interface ICommandLineOptions
     /// <returns>True if the argument list is found; otherwise, false.</returns>
     bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments);
 }
+
+internal static class CommandLineOptionsExtensions
+{
+    public static bool TryGetOptionArgument(this ICommandLineOptions options, string optionName, [NotNullWhen(true)] out string? argument)
+    {
+        if (!options.TryGetOptionArgumentList(optionName, out string[]? arguments) ||
+            arguments.Length == 0)
+        {
+            argument = null;
+            return false;
+        }
+
+        if (arguments.Length > 1)
+        {
+            throw new($"Multiple options named '{optionName}' are not supported.");
+        }
+
+        argument = arguments[0];
+        return true;
+    }
+}

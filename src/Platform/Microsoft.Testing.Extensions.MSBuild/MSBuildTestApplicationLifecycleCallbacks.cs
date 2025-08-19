@@ -44,17 +44,17 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {
-        if (!_commandLineOptions.TryGetOptionArgumentList(MSBuildConstants.MSBuildNodeOptionKey, out string[]? msbuildInfo))
+        if (!_commandLineOptions.TryGetOptionArgument(MSBuildConstants.MSBuildNodeOptionKey, out string? msbuildInfo))
         {
             throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing {MSBuildConstants.MSBuildNodeOptionKey}");
         }
 
-        if (msbuildInfo is null || msbuildInfo.Length != 1 || string.IsNullOrEmpty(msbuildInfo[0]))
+        if (msbuildInfo is null || string.IsNullOrEmpty(msbuildInfo))
         {
             throw new InvalidOperationException($"MSBuild pipe name not found in the command line, missing argument for {MSBuildConstants.MSBuildNodeOptionKey}");
         }
 
-        PipeClient = new(msbuildInfo[0]);
+        PipeClient = new(msbuildInfo);
         PipeClient.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
         PipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         PipeClient.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));

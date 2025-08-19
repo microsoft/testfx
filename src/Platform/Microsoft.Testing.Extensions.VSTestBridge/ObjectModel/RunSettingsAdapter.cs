@@ -40,12 +40,10 @@ internal sealed class RunSettingsAdapter : IRunSettings
     {
         string? runSettingsXml = string.Empty;
 
-        if (commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? fileNames)
-             && fileNames is not null
-            && fileNames.Length == 1
-            && fileSystem.ExistFile(fileNames[0]))
+        if (commandLineOptions.TryGetOptionArgument(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string? fileName)
+            && fileSystem.ExistFile(fileName))
         {
-            runSettingsXml = fileSystem.ReadAllText(fileNames[0]);
+            runSettingsXml = fileSystem.ReadAllText(fileName);
         }
         else
         {

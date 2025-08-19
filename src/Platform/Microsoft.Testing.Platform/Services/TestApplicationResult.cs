@@ -95,18 +95,18 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCodes.Success && _policiesService.IsAbortTriggered ? ExitCodes.TestSessionAborted : exitCode;
         exitCode = exitCode == ExitCodes.Success && _totalRanTests == 0 ? ExitCodes.ZeroTests : exitCode;
 
-        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
+        if (_commandLineOptions.TryGetOptionArgument(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string? argument))
         {
-            exitCode = exitCode == ExitCodes.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
+            exitCode = exitCode == ExitCodes.Success && _totalRanTests < int.Parse(argument, CultureInfo.InvariantCulture) ? ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
         }
 
         // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
         string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
         if (RoslynString.IsNullOrEmpty(exitCodeToIgnore))
         {
-            if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
+            if (_commandLineOptions.TryGetOptionArgument(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string? commandLineExitCode))
             {
-                exitCodeToIgnore = commandLineExitCodes[0];
+                exitCodeToIgnore = commandLineExitCode;
             }
         }
 
