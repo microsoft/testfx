@@ -22,6 +22,11 @@
         <target state="translated">Usar '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="new">Use assignment instead of 'out' parameter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Alterar a acessibilidade do método para 'privado'</target>
