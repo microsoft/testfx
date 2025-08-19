@@ -78,13 +78,15 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
         // Create new argument list with swapped first two arguments
-        ArgumentSyntax[] newArguments = [.. arguments];
-        (newArguments[0], newArguments[1]) = (newArguments[1], newArguments[0]);
+        // We keep the existing separators in case there is trivia attached to them.
+        var newArguments = arguments.GetWithSeparators().ToList();
+        // NOTE: Index 1 has the "separator" (comma) between the first and second arguments.
+        (newArguments[0], newArguments[2]) = (newArguments[2], newArguments[0]);
 
-        ArgumentListSyntax newArgumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments));
+        ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList<ArgumentSyntax>(newArguments));
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
 
         // Replace StringAssert with Assert in the member access expression
@@ -96,7 +98,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         // Preserve leading trivia (including empty lines) from the original invocation
         newInvocationExpr = newInvocationExpr.WithLeadingTrivia(invocationExpr.GetLeadingTrivia());
 
-        editor.ReplaceNode(invocationExpr, newInvocationExpr);
-        return editor.GetChangedDocument();
+        return document.WithSyntaxRoot(root.ReplaceNode(invocationExpr, newInvocationExpr));
     }
 }

@@ -329,6 +329,10 @@ public sealed class StringAssertToAssertAnalyzerTests
                     {|#0:StringAssert.Contains("value", "v")|};
 
                     {|#1:StringAssert.Contains("value", "v")|};
+
+                    {|#2:StringAssert.Contains(
+                        "value",
+                        "v")|};
                 }
 
                 private void WrappedMethodCall(int a, int b, int c) { }
@@ -352,6 +356,10 @@ public sealed class StringAssertToAssertAnalyzerTests
                     Assert.Contains("v", "value");
 
                     Assert.Contains("v", "value");
+
+                    Assert.Contains(
+                        "v",
+                        "value");
                 }
 
                 private void WrappedMethodCall(int a, int b, int c) { }
@@ -362,9 +370,11 @@ public sealed class StringAssertToAssertAnalyzerTests
             code,
             [
                 // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains", "Contains"),
                 // /0/Test0.cs(14,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("Contains", "Contains"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(16,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.Diagnostic().WithLocation(2).WithArguments("Contains", "Contains"),
             ],
             fixedCode);
     }
