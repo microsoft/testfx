@@ -248,11 +248,16 @@ internal sealed class UnitTestElement
         // The 4 most significant bits of the value (interpreted as **short**, which is relevant for endianness) are the version.
         // So we set those 4 MSBs to be 0001.
         short* addressOfC = (short*)((byte*)&guid + 6);
-        *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b0001_0000_0000_0000);
+        *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b1000_0000_0000_0000);
+
+        // Here we set our "own" version to "1". We are using the custom_a part of the guid to store that.
+        // We reserved 4-bits for that.
+        int* addressOfA = (int*)(byte*)&guid;
+        *addressOfA = (*addressOfA & 0b0000_1111_1111_1111_1111_1111_1111_1111) | 0b0001_0000_0000_0000;
 
 #if NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
-        Debug.Assert(guid.Version == 1, "Expected Guid version to be 1");
+        Debug.Assert(guid.Version == 8, "Expected Guid version to be 8");
 #endif
         return guid;
     }
