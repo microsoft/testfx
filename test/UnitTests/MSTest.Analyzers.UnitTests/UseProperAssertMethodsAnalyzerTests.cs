@@ -2558,6 +2558,50 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithWhereCountGreaterThanZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Where(x => x > 0).Count() > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.Contains(x => x > 0, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.Contains' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
     #endregion
     #endregion
 }

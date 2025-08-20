@@ -754,7 +754,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 // Check left side for predicate pattern
                 PredicatePatternStatus leftPredicateStatus = RecognizePredicatePattern(binaryOp.LeftOperand, objectTypeSymbol, out SyntaxNode? leftPredicateExpr, out SyntaxNode? leftCollectionExpr);
                 if (leftPredicateStatus is PredicatePatternStatus.CountPredicate or PredicatePatternStatus.WhereCount &&
-                    binaryOp.RightOperand.ConstantValue.HasValue && binaryOp.RightOperand.ConstantValue.Value is 0)
+                    binaryOp.RightOperand.ConstantValue.HasValue && binaryOp.RightOperand.ConstantValue.Value is int rightValue && rightValue == 0)
                 {
                     // collection.Count(predicate) > 0 -> Contains(predicate, collection)
                     string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
@@ -786,7 +786,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 // Check right side for predicate pattern  
                 PredicatePatternStatus rightPredicateStatus = RecognizePredicatePattern(binaryOp.RightOperand, objectTypeSymbol, out SyntaxNode? rightPredicateExpr, out SyntaxNode? rightCollectionExpr);
                 if (rightPredicateStatus is PredicatePatternStatus.CountPredicate or PredicatePatternStatus.WhereCount &&
-                    binaryOp.LeftOperand.ConstantValue.HasValue && binaryOp.LeftOperand.ConstantValue.Value is 0)
+                    binaryOp.LeftOperand.ConstantValue.HasValue && binaryOp.LeftOperand.ConstantValue.Value is int leftValue && leftValue == 0)
                 {
                     // 0 < collection.Count(predicate) -> Contains(predicate, collection)
                     string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
