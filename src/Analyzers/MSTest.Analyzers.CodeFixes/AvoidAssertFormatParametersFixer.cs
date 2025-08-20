@@ -43,7 +43,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             if (root.FindNode(diagnostic.Location.SourceSpan) is InvocationExpressionSyntax invocation)
             {
                 RegisterStringFormatCodeFix(context, diagnostic, root, invocation);
-                RegisterInterpolatedStringCodeFix(context, diagnostic, root, invocation);
+                await RegisterInterpolatedStringCodeFix(context, diagnostic, root, invocation);
             }
         }
     }
@@ -58,10 +58,10 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         context.RegisterCodeFix(codeAction, diagnostic);
     }
 
-    private static void RegisterInterpolatedStringCodeFix(CodeFixContext context, Diagnostic diagnostic, SyntaxNode root, InvocationExpressionSyntax invocation)
+    private static async Task RegisterInterpolatedStringCodeFix(CodeFixContext context, Diagnostic diagnostic, SyntaxNode root, InvocationExpressionSyntax invocation)
     {
         // Only offer interpolated string fix for simple cases
-        if (CanConvertToInterpolatedString(invocation))
+        if (await CanConvertToInterpolatedStringAsync(context.Document, invocation))
         {
             var codeAction = CodeAction.Create(
                 title: CodeFixResources.AvoidAssertFormatParametersUseInterpolatedString,
@@ -72,19 +72,24 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
     }
 
-    private static Task<Document> CreateStringFormatFixAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocation)
+    private static async Task<Document> CreateStringFormatFixAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocation)
     {
         ArgumentListSyntax argumentList = invocation.ArgumentList;
         SeparatedSyntaxList<ArgumentSyntax> arguments = argumentList.Arguments;
 
         if (arguments.Count < 2)
         {
-            return Task.FromResult(document);
+            return document;
         }
 
-        // Find the format string and params arguments
-        ArgumentSyntax formatArgument = arguments[^2];
-        IEnumerable<ArgumentSyntax> paramsArguments = arguments.Skip(arguments.Count - 1);
+        // Use semantic analysis to find the correct format string and params arguments
+        if (!await TryGetFormatParameterPositionsAsync(document, invocation, out int formatIndex, out int paramsStartIndex))
+        {
+            return document;
+        }
+
+        ArgumentSyntax formatArgument = arguments[formatIndex];
+        IEnumerable<ArgumentSyntax> paramsArguments = arguments.Skip(paramsStartIndex);
 
         // Create string.Format call
         InvocationExpressionSyntax stringFormatInvocation = SyntaxFactory.InvocationExpression(
@@ -98,48 +103,53 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
                         new[] { formatArgument }.Concat(paramsArguments))));
 
         // Replace the format string + params with the string.Format call
-        IEnumerable<ArgumentSyntax> newArguments = arguments.Take(arguments.Count - 2)
+        IEnumerable<ArgumentSyntax> newArguments = arguments.Take(formatIndex)
             .Append(SyntaxFactory.Argument(stringFormatInvocation));
 
         ArgumentListSyntax newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
         InvocationExpressionSyntax newInvocation = invocation.WithArgumentList(newArgumentList);
 
         SyntaxNode newRoot = root.ReplaceNode(invocation, newInvocation);
-        return Task.FromResult(document.WithSyntaxRoot(newRoot));
+        return document.WithSyntaxRoot(newRoot);
     }
 
-    private static Task<Document> CreateInterpolatedStringFixAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocation)
+    private static async Task<Document> CreateInterpolatedStringFixAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocation)
     {
         ArgumentListSyntax argumentList = invocation.ArgumentList;
         SeparatedSyntaxList<ArgumentSyntax> arguments = argumentList.Arguments;
 
         if (arguments.Count < 2)
         {
-            return Task.FromResult(document);
+            return document;
         }
 
-        // Find the format string and params arguments
-        ArgumentSyntax formatArgument = arguments[^2];
-        ArgumentSyntax[] paramsArguments = [.. arguments.Skip(arguments.Count - 1)];
+        // Use semantic analysis to find the correct format string and params arguments
+        if (!await TryGetFormatParameterPositionsAsync(document, invocation, out int formatIndex, out int paramsStartIndex))
+        {
+            return document;
+        }
+
+        ArgumentSyntax formatArgument = arguments[formatIndex];
+        ArgumentSyntax[] paramsArguments = [.. arguments.Skip(paramsStartIndex)];
 
         // Try to convert to interpolated string
         if (TryCreateInterpolatedString(formatArgument, paramsArguments, out InterpolatedStringExpressionSyntax? interpolatedString))
         {
             // Replace the format string + params with the interpolated string
-            IEnumerable<ArgumentSyntax> newArguments = arguments.Take(arguments.Count - 2)
+            IEnumerable<ArgumentSyntax> newArguments = arguments.Take(formatIndex)
                 .Append(SyntaxFactory.Argument(interpolatedString));
 
             ArgumentListSyntax newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
             InvocationExpressionSyntax newInvocation = invocation.WithArgumentList(newArgumentList);
 
             SyntaxNode newRoot = root.ReplaceNode(invocation, newInvocation);
-            return Task.FromResult(document.WithSyntaxRoot(newRoot));
+            return document.WithSyntaxRoot(newRoot);
         }
 
-        return Task.FromResult(document);
+        return document;
     }
 
-    private static bool CanConvertToInterpolatedString(InvocationExpressionSyntax invocation)
+    private static async Task<bool> CanConvertToInterpolatedStringAsync(Document document, InvocationExpressionSyntax invocation)
     {
         SeparatedSyntaxList<ArgumentSyntax> arguments = invocation.ArgumentList.Arguments;
         if (arguments.Count < 2)
@@ -147,7 +157,13 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             return false;
         }
 
-        ArgumentSyntax formatArgument = arguments[^2];
+        // Use semantic analysis to find the correct format string position
+        if (!await TryGetFormatParameterPositionsAsync(document, invocation, out int formatIndex, out _))
+        {
+            return false;
+        }
+
+        ArgumentSyntax formatArgument = arguments[formatIndex];
 
         // Check if the format string is a simple string literal
         return formatArgument.Expression is LiteralExpressionSyntax literal &&
@@ -217,6 +233,52 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             SyntaxFactory.Token(SyntaxKind.InterpolatedStringStartToken),
             SyntaxFactory.List(interpolatedContents),
             SyntaxFactory.Token(SyntaxKind.InterpolatedStringEndToken));
+
+        return true;
+    }
+
+    private static async Task<bool> TryGetFormatParameterPositionsAsync(Document document, InvocationExpressionSyntax invocation, out int formatIndex, out int paramsStartIndex)
+    {
+        formatIndex = -1;
+        paramsStartIndex = -1;
+
+        SemanticModel? semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(false);
+        if (semanticModel is null)
+        {
+            return false;
+        }
+
+        SymbolInfo symbolInfo = semanticModel.GetSymbolInfo(invocation);
+        if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
+        {
+            return false;
+        }
+
+        ImmutableArray<IParameterSymbol> parameters = methodSymbol.Parameters;
+        if (parameters.Length < 2)
+        {
+            return false;
+        }
+
+        // Find the format string parameter (second-to-last with StringSyntax attribute)
+        IParameterSymbol formatParameter = parameters[parameters.Length - 2];
+        if (formatParameter.Type?.SpecialType != SpecialType.System_String)
+        {
+            return false;
+        }
+
+        // Find the params parameter (last parameter with params object[])
+        IParameterSymbol paramsParameter = parameters[parameters.Length - 1];
+        if (!paramsParameter.IsParams || 
+            paramsParameter.Type is not IArrayTypeSymbol arrayType ||
+            arrayType.ElementType.SpecialType != SpecialType.System_Object)
+        {
+            return false;
+        }
+
+        // Map parameter indices to argument indices
+        formatIndex = parameters.Length - 2;
+        paramsStartIndex = parameters.Length - 1;
 
         return true;
     }
