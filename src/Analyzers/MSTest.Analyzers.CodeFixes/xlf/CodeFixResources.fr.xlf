@@ -132,6 +132,11 @@
         <target state="translated">Ajouter « [TestMethod] »</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseContainsKeyInsteadOfContainsFix">
+        <source>Use 'ContainsKey' instead of 'Contains'</source>
+        <target state="new">Use 'ContainsKey' instead of 'Contains'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
         <target state="translated">Utilisez 'CooperativeCancellation = true'</target>

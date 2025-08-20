@@ -207,4 +207,7 @@
   <data name="AvoidOutParameterOnAssertIsInstanceOfTypeFix" xml:space="preserve">
     <value>Use assignment instead of 'out' parameter</value>
   </data>
+  <data name="UseContainsKeyInsteadOfContainsFix" xml:space="preserve">
+    <value>Use 'ContainsKey' instead of 'Contains'</value>
+  </data>
 </root>
