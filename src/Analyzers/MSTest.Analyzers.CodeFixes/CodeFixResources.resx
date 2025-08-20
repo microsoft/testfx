@@ -210,4 +210,7 @@
   <data name="UseContainsKeyInsteadOfContainsFix" xml:space="preserve">
     <value>Use 'ContainsKey' instead of 'Contains'</value>
   </data>
+  <data name="TransformExecuteToExecuteAsyncFix" xml:space="preserve">
+    <value>Transform 'Execute' override to 'ExecuteAsync'</value>
+  </data>
 </root>
