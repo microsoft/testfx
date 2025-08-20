@@ -253,7 +253,7 @@ internal sealed class UnitTestElement
         // Here we set our "own" version to "1". We are using the custom_a part of the guid to store that.
         // We reserved 4-bits for that.
         int* addressOfA = (int*)(byte*)&guid;
-        *addressOfA = (*addressOfA & 0b0000_1111_1111_1111_1111_1111_1111_1111) | 0b0001_0000_0000_0000;
+        *addressOfA = (*addressOfA & 0b0000_1111_1111_1111_1111_1111_1111_1111) | 0b0001_0000_0000_0000_0000_0000_0000_0000;
 
 #if NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
