@@ -120,6 +120,15 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         HasCount,
     }
 
+    private enum PredicatePatternStatus
+    {
+        Unknown,
+        WhereCount,       // collection.Where(predicate).Count()
+        WhereAny,         // collection.Where(predicate).Any()
+        CountPredicate,   // collection.Count(predicate)
+        AnyPredicate,     // collection.Any(predicate)
+    }
+
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
 
     /// <summary>
@@ -191,6 +200,18 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <para>Example: For <c>Assert.AreEqual(3, list.Count)</c>, it will become <c>Assert.HasCount(3, list)</c>.</para>
     /// </summary>
     internal const string CodeFixModeCollectionCount = nameof(CodeFixModeCollectionCount);
+
+    /// <summary>
+    /// This mode means the codefix operation is as follows for predicate-based patterns:
+    /// <list type="number">
+    /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
+    /// <item>Replace the identifier syntax for the invocation with the right assert method name.</item>
+    /// <item>Transform arguments based on the predicate pattern, with predicate first and collection second.</item>
+    /// </list>
+    /// <para>Example: For <c>Assert.IsTrue(list.Any(x => x > 0))</c>, it will become <c>Assert.Contains(x => x > 0, list)</c>.</para>
+    /// <para>Example: For <c>Assert.AreEqual(1, list.Where(x => x > 0).Count())</c>, it will become <c>Assert.ContainsSingle(x => x > 0, list)</c>.</para>
+    /// </summary>
+    internal const string CodeFixModePredicatePattern = nameof(CodeFixModePredicatePattern);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseProperAssertMethodsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseProperAssertMethodsMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -491,6 +512,83 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return ComparisonCheckStatus.Unknown;
     }
 
+    private static PredicatePatternStatus RecognizePredicatePattern(
+        IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
+        out SyntaxNode? predicateExpression,
+        out SyntaxNode? collectionExpression)
+    {
+        if (operation is IInvocationOperation invocation)
+        {
+            // Check for collection.Any(predicate) pattern
+            if (invocation.TargetMethod.Name == "Any" &&
+                invocation.Arguments.Length == 1 &&
+                IsLinqMethod(invocation.TargetMethod) &&
+                invocation.Instance?.Type is not null &&
+                IsBCLCollectionType(invocation.Instance.Type, objectTypeSymbol))
+            {
+                predicateExpression = invocation.Arguments[0].Value.Syntax;
+                collectionExpression = invocation.Instance.Syntax;
+                return PredicatePatternStatus.AnyPredicate;
+            }
+
+            // Check for collection.Count(predicate) pattern
+            if (invocation.TargetMethod.Name == "Count" &&
+                invocation.Arguments.Length == 1 &&
+                IsLinqMethod(invocation.TargetMethod) &&
+                invocation.Instance?.Type is not null &&
+                IsBCLCollectionType(invocation.Instance.Type, objectTypeSymbol))
+            {
+                predicateExpression = invocation.Arguments[0].Value.Syntax;
+                collectionExpression = invocation.Instance.Syntax;
+                return PredicatePatternStatus.CountPredicate;
+            }
+
+            // Check for collection.Where(predicate).Any() pattern
+            if (invocation.TargetMethod.Name == "Any" &&
+                invocation.Arguments.Length == 0 &&
+                IsLinqMethod(invocation.TargetMethod) &&
+                invocation.Instance is IInvocationOperation whereInvocation &&
+                whereInvocation.TargetMethod.Name == "Where" &&
+                whereInvocation.Arguments.Length == 1 &&
+                IsLinqMethod(whereInvocation.TargetMethod) &&
+                whereInvocation.Instance?.Type is not null &&
+                IsBCLCollectionType(whereInvocation.Instance.Type, objectTypeSymbol))
+            {
+                predicateExpression = whereInvocation.Arguments[0].Value.Syntax;
+                collectionExpression = whereInvocation.Instance.Syntax;
+                return PredicatePatternStatus.WhereAny;
+            }
+
+            // Check for collection.Where(predicate).Count() pattern
+            if (invocation.TargetMethod.Name == "Count" &&
+                invocation.Arguments.Length == 0 &&
+                IsLinqMethod(invocation.TargetMethod) &&
+                invocation.Instance is IInvocationOperation whereInvocationForCount &&
+                whereInvocationForCount.TargetMethod.Name == "Where" &&
+                whereInvocationForCount.Arguments.Length == 1 &&
+                IsLinqMethod(whereInvocationForCount.TargetMethod) &&
+                whereInvocationForCount.Instance?.Type is not null &&
+                IsBCLCollectionType(whereInvocationForCount.Instance.Type, objectTypeSymbol))
+            {
+                predicateExpression = whereInvocationForCount.Arguments[0].Value.Syntax;
+                collectionExpression = whereInvocationForCount.Instance.Syntax;
+                return PredicatePatternStatus.WhereCount;
+            }
+        }
+
+        predicateExpression = null;
+        collectionExpression = null;
+        return PredicatePatternStatus.Unknown;
+    }
+
+    private static bool IsLinqMethod(IMethodSymbol method)
+    {
+        // Check if the method is from System.Linq.Enumerable
+        return method.ContainingType?.Name == "Enumerable" &&
+               method.ContainingNamespace?.ToDisplayString() == "System.Linq";
+    }
+
     private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
@@ -617,8 +715,109 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             }
         }
 
+        // Check for predicate patterns: collection.Any(predicate), collection.Where(predicate).Any(), etc.
+        PredicatePatternStatus predicateStatus = RecognizePredicatePattern(conditionArgument, objectTypeSymbol, out SyntaxNode? predicateExpr, out SyntaxNode? collectionExpr);
+        if (predicateStatus != PredicatePatternStatus.Unknown)
+        {
+            string properAssertMethod;
+            if (predicateStatus is PredicatePatternStatus.AnyPredicate or PredicatePatternStatus.WhereAny)
+            {
+                // Any(predicate) patterns: IsTrue -> Contains, IsFalse -> DoesNotContain
+                properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+            }
+            else
+            {
+                // Count(predicate) patterns would be handled in AreEqual analysis for count comparisons
+                // But if used directly in IsTrue/IsFalse, treat as Contains/DoesNotContain based on > 0 logic
+                properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+            }
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModePredicatePattern);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), predicateExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
         ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        if (comparisonStatus != ComparisonCheckStatus.Unknown)
+        {
+            // Check if we have a predicate pattern in comparison with 0
+            if (conditionArgument is IBinaryOperation binaryOp)
+            {
+                // Check left side for predicate pattern
+                PredicatePatternStatus leftPredicateStatus = RecognizePredicatePattern(binaryOp.LeftOperand, objectTypeSymbol, out SyntaxNode? leftPredicateExpr, out SyntaxNode? leftCollectionExpr);
+                if (leftPredicateStatus is PredicatePatternStatus.CountPredicate or PredicatePatternStatus.WhereCount &&
+                    binaryOp.RightOperand.ConstantValue.HasValue && binaryOp.RightOperand.ConstantValue.Value is 0)
+                {
+                    // collection.Count(predicate) > 0 -> Contains(predicate, collection)
+                    string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
+                    {
+                        (true, ComparisonCheckStatus.GreaterThan) => "Contains",
+                        (true, ComparisonCheckStatus.GreaterThanOrEqual) => "Contains", 
+                        (false, ComparisonCheckStatus.GreaterThan) => "DoesNotContain",
+                        (false, ComparisonCheckStatus.GreaterThanOrEqual) => "DoesNotContain",
+                        (true, ComparisonCheckStatus.LessThanOrEqual) => "DoesNotContain",
+                        (false, ComparisonCheckStatus.LessThanOrEqual) => "Contains",
+                        _ => null,
+                    };
+
+                    if (properAssertMethod is not null)
+                    {
+                        ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                        properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                        properties.Add(CodeFixModeKey, CodeFixModePredicatePattern);
+                        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                            Rule,
+                            additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), leftPredicateExpr!.GetLocation(), leftCollectionExpr!.GetLocation()),
+                            properties: properties.ToImmutable(),
+                            properAssertMethod,
+                            isTrueInvocation ? "IsTrue" : "IsFalse"));
+                        return;
+                    }
+                }
+
+                // Check right side for predicate pattern  
+                PredicatePatternStatus rightPredicateStatus = RecognizePredicatePattern(binaryOp.RightOperand, objectTypeSymbol, out SyntaxNode? rightPredicateExpr, out SyntaxNode? rightCollectionExpr);
+                if (rightPredicateStatus is PredicatePatternStatus.CountPredicate or PredicatePatternStatus.WhereCount &&
+                    binaryOp.LeftOperand.ConstantValue.HasValue && binaryOp.LeftOperand.ConstantValue.Value is 0)
+                {
+                    // 0 < collection.Count(predicate) -> Contains(predicate, collection)
+                    string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
+                    {
+                        (true, ComparisonCheckStatus.LessThan) => "Contains",
+                        (true, ComparisonCheckStatus.LessThanOrEqual) => "Contains",
+                        (false, ComparisonCheckStatus.LessThan) => "DoesNotContain", 
+                        (false, ComparisonCheckStatus.LessThanOrEqual) => "DoesNotContain",
+                        (true, ComparisonCheckStatus.GreaterThanOrEqual) => "DoesNotContain",
+                        (false, ComparisonCheckStatus.GreaterThanOrEqual) => "Contains",
+                        _ => null,
+                    };
+
+                    if (properAssertMethod is not null)
+                    {
+                        ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                        properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                        properties.Add(CodeFixModeKey, CodeFixModePredicatePattern);
+                        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                            Rule,
+                            additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), rightPredicateExpr!.GetLocation(), rightCollectionExpr!.GetLocation()),
+                            properties: properties.ToImmutable(),
+                            properAssertMethod,
+                            isTrueInvocation ? "IsTrue" : "IsFalse"));
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Continue with general comparison patterns if not predicate-based
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
         {
             string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
@@ -764,6 +963,70 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                             "AreEqual"));
                     }
 
+                    return;
+                }
+            }
+        }
+
+        // Check for predicate-based count patterns before other checks
+        if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue))
+        {
+            // Check if actualArgument is a predicate-based count expression
+            PredicatePatternStatus predicateStatus = RecognizePredicatePattern(
+                actualArgumentValue, 
+                objectTypeSymbol, 
+                out SyntaxNode? predicateExpr, 
+                out SyntaxNode? collectionExpr);
+
+            if (predicateStatus is PredicatePatternStatus.CountPredicate or PredicatePatternStatus.WhereCount)
+            {
+                // Handle count-based predicate patterns
+                if (isAreEqualInvocation && expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int expectedCount)
+                {
+                    string properAssertMethod = expectedCount switch
+                    {
+                        0 => "DoesNotContain",
+                        1 => "ContainsSingle",
+                        _ => "Contains", // For any positive count > 1, use Contains (though ContainsSingle is more specific for 1)
+                    };
+
+                    // Special case: if expected count is 1, use ContainsSingle
+                    if (expectedCount == 1)
+                    {
+                        properAssertMethod = "ContainsSingle";
+                    }
+
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                    properties.Add(CodeFixModeKey, CodeFixModePredicatePattern);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(
+                            expectedArgument.Syntax.GetLocation(),
+                            actualArgumentValue.Syntax.GetLocation(),
+                            predicateExpr!.GetLocation(),
+                            collectionExpr!.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        "AreEqual"));
+                    return;
+                }
+                else if (!isAreEqualInvocation && expectedArgument.ConstantValue.HasValue && expectedArgument.ConstantValue.Value is int expectedCountNotEqual && expectedCountNotEqual == 0)
+                {
+                    // AreNotEqual(0, collection.Count(predicate)) -> Contains(predicate, collection)
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, "Contains");
+                    properties.Add(CodeFixModeKey, CodeFixModePredicatePattern);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(
+                            expectedArgument.Syntax.GetLocation(),
+                            actualArgumentValue.Syntax.GetLocation(),
+                            predicateExpr!.GetLocation(),
+                            collectionExpr!.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        "Contains",
+                        "AreNotEqual"));
                     return;
                 }
             }
