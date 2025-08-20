@@ -5,6 +5,7 @@
 //       As such, we have two separate implementations for the serialization code.
 #if !NETCOREAPP
 using Jsonite;
+
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
