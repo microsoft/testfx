@@ -347,30 +347,6 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
-    /// Tests the Contains method (value overload) when the expected item is present.
-    /// </summary>
-    public void Contains_ValueExpected_ItemExists_DoesNotThrow1()
-    {
-        // Arrange
-        // var collection = new List<int> { 5, 10, 15 };
-        // var collection = new Hashtable()
-        // {
-        //    { "key1", "value1" }, { "key2", "value2" }, { 123, "numeric key" }, { "mixed", 456 },
-        // };
-        var collection = new Stack();
-
-        collection.Push("Hello");
-        collection.Push(42);
-        collection.Push(true);
-
-        // Act
-        Action action = () => Assert.Contains("Hello", collection, "No failure expected", null);
-
-        // Assert
-        action.Should().NotThrow<AssertFailedException>();
-    }
-
-    /// <summary>
     /// Tests the Contains method (value overload) when the expected item is not present.
     /// Expects an exception.
     /// </summary>
@@ -384,6 +360,36 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*20*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemDoesNotExist_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(20, collection, "Item {0} not found", 20);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*20*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+
+        // Act
+        Action action = () => Assert.Contains("a", collection, "No failure expected", null);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
     }
 
     /// <summary>
