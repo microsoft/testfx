@@ -122,6 +122,11 @@
         <target state="translated">テスト メソッドのシグネチャを修正する</target>
         <note />
       </trans-unit>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="new">Transform 'Execute' override to 'ExecuteAsync'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
         <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
         <target state="translated">'[ExpectedException]' 属性の代わりに 'Assert.ThrowsException&lt;T&gt;' を使用してください</target>

@@ -122,6 +122,11 @@
         <target state="translated">Correggi la firma del metodo di test</target>
         <note />
       </trans-unit>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="new">Transform 'Execute' override to 'ExecuteAsync'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
         <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
         <target state="translated">Usare l'attributo 'Assert.ThrowsException&lt;T&gt;' anziché '[ExpectedException]</target>
