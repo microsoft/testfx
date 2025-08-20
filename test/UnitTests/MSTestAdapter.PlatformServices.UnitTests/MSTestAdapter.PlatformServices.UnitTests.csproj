@@ -7,7 +7,6 @@
     <UseInternalTestFramework>true</UseInternalTestFramework>
     <OutputType>Exe</OutputType>
     <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- Properties specific to WinUI -->

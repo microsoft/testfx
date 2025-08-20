@@ -177,23 +177,15 @@ public class UnitTestElementTests : TestContainer
             Guid expectedId = GuidFromString("MyAssemblyMyProduct.MyNamespace.MyClass.MyMethod" + (dataType == DynamicDataType.None ? string.Empty : "[0]"));
             Verify(expectedTestCase.Id != testCase.Id);
             Verify(expectedId == testCase.Id);
-            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "1cd77ae5-d290-858e-2240-056ef4253f19" : "10fb34b8-d5d2-86a1-0620-918822cdc63a", out Guid expectedId2));
+            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "acd77a15-d290-058e-2240-056ef4253f19" : "10fb3418-d5d2-0681-0620-918822cdc63a", out Guid expectedId2));
             Verify(expectedId == expectedId2);
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 
-        unsafe static Guid GuidFromString(string data)
+        static Guid GuidFromString(string data)
         {
             byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
-            var guid = new Guid(hash);
-
-            short* addressOfC = (short*)((byte*)&guid + 6);
-            *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b1000_0000_0000_0000);
-
-            int* addressOfA = (int*)(byte*)&guid;
-            *addressOfA = (*addressOfA & 0b0000_1111_1111_1111_1111_1111_1111_1111) | 0b0001_0000_0000_0000_0000_0000_0000_0000;
-
-            return guid;
+            return UnitTestElement.VersionedGuidFromHash(hash, hashVersion: 1);
         }
     }
 

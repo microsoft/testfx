@@ -201,7 +201,7 @@ internal sealed class UnitTestElement
     private void SetTestCaseId(TestCase testCase, string testFullName)
         => testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
 
-    private unsafe Guid GenerateSerializedDataStrategyTestId(string testFullName)
+    private Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
         // Below comment is copied over from Test Platform.
         // If source is a file name then just use the filename for the identifier since the file might have moved between
@@ -223,6 +223,7 @@ internal sealed class UnitTestElement
             // In case path contains invalid characters.
         }
 
+        byte hashVersion = 1; // Increment when changing the hashing algorithm.
         var hash = new TestFx.Hashing.XxHash128();
         hash.Append(Encoding.Unicode.GetBytes(fileNameOrFilePath));
         hash.Append(Encoding.Unicode.GetBytes(testFullName));
@@ -242,19 +243,25 @@ internal sealed class UnitTestElement
 
         byte[] hashBytes = hash.GetCurrentHash();
 
-        // https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-8
+        return VersionedGuidFromHash(hashBytes, hashVersion);
+    }
+
+    internal /* for testing */ static Guid VersionedGuidFromHash(byte[] hashBytes, byte hashVersion)
+    {
+        const int firstByte = 0;
+        const int versionByte = 6;
+
+        // We set first 4 bits to 0001, which is our version. Increase this when we change the hashing algorithm.
+        //
+        // Note: The logic below is operating on int32, because bitwise operators are not defined for byte in C#. But casting
+        // does not affect endianness, so we can safely assume the byte data are at the end of the int.
+        // We also don't care to specify the whole expansion of the int in the bit masks, which effectively ignores all the data in the int
+        // before the last byte data, but that is okay, they will always be zero.
+        hashBytes[firstByte] = (byte)((hashBytes[firstByte] & 0b0000_1111) | (hashVersion << 4));
+        // We set first 4bits 7th byte to 8 to indicate that this is a version 8 UUID. https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-8
+        hashBytes[versionByte] = (byte)((hashBytes[versionByte] & 0b0000_1111) | 0b1000_0000);
+
         var guid = new Guid(hashBytes);
-        // We get the address of the 6th byte (_c in Guid) which stores the version.
-        // The 4 most significant bits of the value (interpreted as **short**, which is relevant for endianness) are the version.
-        // So we set those 4 MSBs to be 0001.
-        short* addressOfC = (short*)((byte*)&guid + 6);
-        *addressOfC = (short)((*addressOfC & 0b0000_1111_1111_1111) | 0b1000_0000_0000_0000);
-
-        // Here we set our "own" version to "1". We are using the custom_a part of the guid to store that.
-        // We reserved 4-bits for that.
-        int* addressOfA = (int*)(byte*)&guid;
-        *addressOfA = (*addressOfA & 0b0000_1111_1111_1111_1111_1111_1111_1111) | 0b0001_0000_0000_0000_0000_0000_0000_0000;
-
 #if NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
         Debug.Assert(guid.Version == 8, "Expected Guid version to be 8");
