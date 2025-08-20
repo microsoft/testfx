@@ -81,6 +81,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             case UseProperAssertMethodsAnalyzer.CodeFixModeCollectionCount:
                 createChangedDocument = ct => FixAssertMethodForCollectionCountModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModePredicatePattern:
+                createChangedDocument = ct => FixAssertMethodForPredicatePatternModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
             default:
                 break;
         }
@@ -276,6 +279,78 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 // Fallback: something went wrong, don't apply the fix
                 return document;
             }
+        }
+
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForPredicatePatternModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Handle predicate-based transformations:
+        // Assert.IsTrue(list.Any(predicate)) -> Assert.Contains(predicate, list)
+        // Assert.AreEqual(1, list.Count(predicate)) -> Assert.ContainsSingle(predicate, list)
+        // etc.
+        
+        // additionalLocations[0] = original condition/expression to be replaced
+        // additionalLocations[1] = predicate expression 
+        // additionalLocations[2] = collection expression
+        // additionalLocations[3] = count expression (for count-based patterns, may not exist)
+
+        if (additionalLocations.Count < 3)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax originalConditionArgument ||
+            originalConditionArgument.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[1].SourceSpan) is not ExpressionSyntax predicateExpression ||
+            root.FindNode(additionalLocations[2].SourceSpan) is not ExpressionSyntax collectionExpression)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        // Preserve any additional arguments beyond the one we're replacing
+        var otherArguments = argumentList.Arguments.Where(arg => arg != originalConditionArgument).ToList();
+
+        ArgumentListSyntax newArgumentList;
+
+        if (properAssertMethodName == "ContainsSingle" && additionalLocations.Count >= 4)
+        {
+            // For ContainsSingle from count patterns, we might need to handle the count value
+            // but since ContainsSingle doesn't take a count parameter, we just use predicate and collection
+            var newArguments = new List<ArgumentSyntax>
+            {
+                SyntaxFactory.Argument(predicateExpression).WithAdditionalAnnotations(Formatter.Annotation),
+                SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
+            };
+            newArguments.AddRange(otherArguments);
+            newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
+        }
+        else
+        {
+            // For Contains and DoesNotContain: predicate first, collection second
+            var newArguments = new List<ArgumentSyntax>
+            {
+                SyntaxFactory.Argument(predicateExpression).WithAdditionalAnnotations(Formatter.Annotation),
+                SyntaxFactory.Argument(collectionExpression).WithAdditionalAnnotations(Formatter.Annotation),
+            };
+            newArguments.AddRange(otherArguments);
+            newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments));
         }
 
         editor.ReplaceNode(argumentList, newArgumentList);
