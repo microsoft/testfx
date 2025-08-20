@@ -532,49 +532,24 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         if (stringMethodStatus != StringMethodCheckStatus.Unknown)
         {
             // Handle both IsTrue and IsFalse cases with string methods
-            if (isTrueInvocation)
+            string properAssertMethod = stringMethodStatus switch
             {
-                string properAssertMethod = stringMethodStatus switch
-                {
-                    StringMethodCheckStatus.StartsWith => "StartsWith",
-                    StringMethodCheckStatus.EndsWith => "EndsWith",
-                    StringMethodCheckStatus.Contains => "Contains",
-                    _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value."),
-                };
+                StringMethodCheckStatus.StartsWith => isTrueInvocation ? "StartsWith" : "DoesNotStartWith",
+                StringMethodCheckStatus.EndsWith => isTrueInvocation ? "EndsWith" : "DoesNotEndWith",
+                StringMethodCheckStatus.Contains => isTrueInvocation ? "Contains" : "DoesNotContain",
+                _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value."),
+            };
 
-                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
-                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                    Rule,
-                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()),
-                    properties: properties.ToImmutable(),
-                    properAssertMethod,
-                    "IsTrue"));
-                return;
-            }
-            else
-            {
-                // For IsFalse with string methods, suggest the negative assertions
-                string properAssertMethod = stringMethodStatus switch
-                {
-                    StringMethodCheckStatus.StartsWith => "DoesNotStartWith",
-                    StringMethodCheckStatus.EndsWith => "DoesNotEndWith",
-                    StringMethodCheckStatus.Contains => "DoesNotContain",
-                    _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value."),
-                };
-
-                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
-                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                    Rule,
-                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()),
-                    properties: properties.ToImmutable(),
-                    properAssertMethod,
-                    "IsFalse"));
-                return;
-            }
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()),
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
         }
 
         // Check for collection method patterns: myCollection.Contains(...)
@@ -583,37 +558,18 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             if (collectionMethodStatus == CollectionCheckStatus.Contains)
             {
-                if (isTrueInvocation)
-                {
-                    string properAssertMethod = "Contains";
+                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 
-                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
-                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                        Rule,
-                        additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
-                        properties: properties.ToImmutable(),
-                        properAssertMethod,
-                        "IsTrue"));
-                    return;
-                }
-                else
-                {
-                    // For IsFalse with collection Contains, suggest DoesNotContain
-                    string properAssertMethod = "DoesNotContain";
-
-                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
-                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                        Rule,
-                        additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
-                        properties: properties.ToImmutable(),
-                        properAssertMethod,
-                        "IsFalse"));
-                    return;
-                }
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    isTrueInvocation ? "IsTrue" : "IsFalse"));
+                return;
             }
         }
 
