@@ -83,7 +83,8 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
 
         // Use semantic analysis to find the correct format string and params arguments
-        if (!await TryGetFormatParameterPositionsAsync(document, invocation, out int formatIndex, out int paramsStartIndex))
+        (bool success, int formatIndex, int paramsStartIndex) = await TryGetFormatParameterPositionsAsync(document, invocation);
+        if (!success)
         {
             return document;
         }
@@ -124,7 +125,8 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
 
         // Use semantic analysis to find the correct format string and params arguments
-        if (!await TryGetFormatParameterPositionsAsync(document, invocation, out int formatIndex, out int paramsStartIndex))
+        (bool success, int formatIndex, int paramsStartIndex) = await TryGetFormatParameterPositionsAsync(document, invocation);
+        if (!success)
         {
             return document;
         }
@@ -158,7 +160,8 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
 
         // Use semantic analysis to find the correct format string position
-        if (!await TryGetFormatParameterPositionsAsync(document, invocation, out int formatIndex, out _))
+        (bool success, int formatIndex, _) = await TryGetFormatParameterPositionsAsync(document, invocation);
+        if (!success)
         {
             return false;
         }
@@ -237,34 +240,31 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         return true;
     }
 
-    private static async Task<bool> TryGetFormatParameterPositionsAsync(Document document, InvocationExpressionSyntax invocation, out int formatIndex, out int paramsStartIndex)
+    private static async Task<(bool success, int formatIndex, int paramsStartIndex)> TryGetFormatParameterPositionsAsync(Document document, InvocationExpressionSyntax invocation)
     {
-        formatIndex = -1;
-        paramsStartIndex = -1;
-
         SemanticModel? semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(false);
         if (semanticModel is null)
         {
-            return false;
+            return (false, -1, -1);
         }
 
         SymbolInfo symbolInfo = semanticModel.GetSymbolInfo(invocation);
         if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
         {
-            return false;
+            return (false, -1, -1);
         }
 
         ImmutableArray<IParameterSymbol> parameters = methodSymbol.Parameters;
         if (parameters.Length < 2)
         {
-            return false;
+            return (false, -1, -1);
         }
 
         // Find the format string parameter (second-to-last with StringSyntax attribute)
         IParameterSymbol formatParameter = parameters[parameters.Length - 2];
         if (formatParameter.Type?.SpecialType != SpecialType.System_String)
         {
-            return false;
+            return (false, -1, -1);
         }
 
         // Find the params parameter (last parameter with params object[])
@@ -273,13 +273,13 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             paramsParameter.Type is not IArrayTypeSymbol arrayType ||
             arrayType.ElementType.SpecialType != SpecialType.System_Object)
         {
-            return false;
+            return (false, -1, -1);
         }
 
         // Map parameter indices to argument indices
-        formatIndex = parameters.Length - 2;
-        paramsStartIndex = parameters.Length - 1;
+        int formatIndex = parameters.Length - 2;
+        int paramsStartIndex = parameters.Length - 1;
 
-        return true;
+        return (true, formatIndex, paramsStartIndex);
     }
 }
