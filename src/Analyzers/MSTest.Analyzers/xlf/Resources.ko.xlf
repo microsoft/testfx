@@ -637,6 +637,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'TestContext' 속성은 유효해야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
+        <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
+        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
+        <source>TestMethodAttribute derived class should propagate source information</source>
+        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
         <target state="new">Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</target>

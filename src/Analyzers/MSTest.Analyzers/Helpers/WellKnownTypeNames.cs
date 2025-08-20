@@ -49,6 +49,7 @@ internal static class WellKnownTypeNames
     public const string SystemIDisposable = "System.IDisposable";
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesCallerFilePathAttribute = "System.Runtime.CompilerServices.CallerFilePathAttribute";
+    public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
     public const string SystemThreadingCancellationToken = "System.Threading.CancellationToken";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
     public const string SystemThreadingTasksTask1 = "System.Threading.Tasks.Task`1";

@@ -684,4 +684,10 @@ The type declaring these methods should also respect the following rules:
   <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat" xml:space="preserve">
     <value>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</value>
   </data>
+  <data name="TestMethodAttributeShouldPropagateSourceInformationTitle" xml:space="preserve">
+    <value>TestMethodAttribute derived class should propagate source information</value>
+  </data>
+  <data name="TestMethodAttributeShouldPropagateSourceInformationMessageFormat" xml:space="preserve">
+    <value>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</value>
+  </data>
 </root>
