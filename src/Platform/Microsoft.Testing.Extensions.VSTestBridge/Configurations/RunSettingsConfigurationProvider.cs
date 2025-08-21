@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -37,7 +38,7 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     /// <inheritdoc />
     public bool TryGet(string key, out string? value)
     {
-        if (_runSettingsFileContent is null)
+        if (RoslynString.IsNullOrEmpty(_runSettingsFileContent))
         {
             value = null;
             return false;
@@ -58,16 +59,9 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     }
 
     /// <inheritdoc />
-    public async Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
+    public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
     {
-        if (commandLineParseResult.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runSettingsFilePath))
-        {
-            if (_fileSystem.ExistFile(runSettingsFilePath[0]))
-            {
-                _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]).ConfigureAwait(false);
-            }
-        }
-
-        return this;
+        _runSettingsFileContent = RunSettingsHelpers.ReadRunSettings(commandLineParseResult, _fileSystem);
+        return Task.FromResult<IConfigurationProvider>(this);
     }
 }
