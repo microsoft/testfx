@@ -177,7 +177,7 @@ public class UnitTestElementTests : TestContainer
             Guid expectedId = GuidFromString("MyAssemblyMyProduct.MyNamespace.MyClass.MyMethod" + (dataType == DynamicDataType.None ? string.Empty : "[0]"));
             Verify(expectedTestCase.Id != testCase.Id);
             Verify(expectedId == testCase.Id);
-            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "acd77a15-d290-058e-2240-056ef4253f19" : "10fb3418-d5d2-0681-0620-918822cdc63a", out Guid expectedId2));
+            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "157ad7ac-90d2-8e05-a240-056ef4253f19" : "1834fb10-d2d5-8106-8620-918822cdc63a", out Guid expectedId2));
             Verify(expectedId == expectedId2);
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known

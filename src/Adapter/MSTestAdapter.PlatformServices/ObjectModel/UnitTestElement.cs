@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers.Binary;
+using System.Security.Policy;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -248,8 +251,47 @@ internal sealed class UnitTestElement
 
     internal /* for testing */ static Guid VersionedGuidFromHash(byte[] hashBytes, byte hashVersion)
     {
-        const int firstByte = 0;
-        const int versionByte = 6;
+        int firstByte = 0;
+        int versionByte = 6;
+
+        if (BitConverter.IsLittleEndian)
+        {
+            // The data provided by xxhash128 are big endian, but the Guid constructor overload that allows us to explicitly specify the data as
+            // big endian is not available in .NET Framework. So we need to manipulate the bytes to ensure consistency on little and big endian systems.
+            // Guid is internally represented by int, short, short, byte, byte... byte, and the default constructor needs to get the data in the endianness
+            // of the system. Endianness matters only for the int, and short values.
+            // So we on little endian system we swap them:
+
+            // The first 4 bytes are int:
+            byte i0 = hashBytes[0];
+            byte i1 = hashBytes[1];
+            byte i2 = hashBytes[2];
+            byte i3 = hashBytes[3];
+
+            hashBytes[0] = i3;
+            hashBytes[1] = i2;
+            hashBytes[2] = i1;
+            hashBytes[3] = i0;
+
+            // The next 2 bytes are short:
+            byte j0 = hashBytes[4];
+            byte j1 = hashBytes[5];
+
+            hashBytes[4] = j1;
+            hashBytes[5] = j0;
+
+            // The next 2 bytes are also short:
+            byte k0 = hashBytes[6];
+            byte k1 = hashBytes[7];
+
+            hashBytes[6] = k1;
+            hashBytes[7] = k0;
+
+            // The bytes will get swapped in the constructor. So the first byte of the int is read from index 3.
+            // The 6th byte, is read from the second byte of the short, which is at index 7.
+            firstByte = 3;
+            versionByte = 7;
+        }
 
         // We set first 4 bits to 0001, which is our version. Increase this when we change the hashing algorithm.
         //
@@ -260,6 +302,10 @@ internal sealed class UnitTestElement
         hashBytes[firstByte] = (byte)((hashBytes[firstByte] & 0b0000_1111) | (hashVersion << 4));
         // We set first 4bits 7th byte to 8 to indicate that this is a version 8 UUID. https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-8
         hashBytes[versionByte] = (byte)((hashBytes[versionByte] & 0b0000_1111) | 0b1000_0000);
+
+        // This data is stored as byte in Guid, so no endianness issues here.
+        int variantByte = 8;
+        hashBytes[variantByte] = (byte)((hashBytes[variantByte] & 0b0011_1111) | 0b1000_0000);
 
         var guid = new Guid(hashBytes);
 #if NET9_0_OR_GREATER
