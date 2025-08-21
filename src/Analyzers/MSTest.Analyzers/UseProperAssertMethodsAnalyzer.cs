@@ -854,8 +854,8 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return CountCheckStatus.IsEmpty;
         }
 
-        // Check for 0 != collection.Count or 0 != collection.Length (reverse order)
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef6 } &&
+        // Check for 0 == collection.Count or 0 == collection.Length (reverse order)
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef6 } &&
             TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef6, objectTypeSymbol) is { } expression6)
         {
             collectionExpression = expression6;

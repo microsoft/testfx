@@ -2537,14 +2537,19 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 {
                     var list = new List<int> { 1, 2, 3 };
                     Assert.IsNotEmpty(list);
+                    Assert.IsNotEmpty(list);
                 }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsFalse'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsFalse"),
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsFalse"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsNotEmpty", "IsFalse"),
+            ],
             fixedCode);
     }
 
