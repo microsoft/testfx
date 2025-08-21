@@ -265,25 +265,25 @@ internal sealed class UnitTestElement
         int variantByte = 8;
         hashBytes[variantByte] = (byte)((hashBytes[variantByte] & 0b0011_1111) | 0b1000_0000);
 
-#if !NET8_0_OR_GREATER
-
-        if (!BitConverter.IsLittleEndian)
+        Guid guid;
+        if (BitConverter.IsLittleEndian)
         {
-            // On .NET Framework and UWP this always returns true, so unless we add more runtimes we should never reach this place.
-            ApplicationStateGuard.Unreachable();
+            // On .NET Framework we cannot specify the endianness of the Guid constructor, that takes the byte array and it will assume little endianness.
+            // Instead we construct the int and short values manually to keep the order of bytes. This is what .NET Framework constructor does, but in opposite order.
+            guid = new Guid(
+                (hashBytes[0] << 24) | (hashBytes[1] << 16) | (hashBytes[2] << 8) | hashBytes[3],
+                (short)((hashBytes[4] << 8) | hashBytes[5]),
+                (short)((hashBytes[6] << 8) | hashBytes[7]),
+                hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11], hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]);
         }
-
-        // On .NET Framework we cannot specify the endianness of the Guid constructor, that takes the byte array and it will assume little endianness.
-        // Instead we construct the int and short values manually to keep the order of bytes. This is what .NET Framework constructor does, but in opposite order.
-        var guid = new Guid(
-            (hashBytes[0] << 24) | (hashBytes[1] << 16) | (hashBytes[2] << 8) | hashBytes[3],
-            (short)((hashBytes[4] << 8) | hashBytes[5]),
-            (short)((hashBytes[6] << 8) | hashBytes[7]),
-            hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11], hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]
-        );
-#else
-        var guid = new Guid(hashBytes, bigEndian: true);
-#endif
+        else
+        {
+            guid = new Guid(
+                (hashBytes[3] << 24) | (hashBytes[2] << 16) | (hashBytes[1] << 8) | hashBytes[0],
+                (short)((hashBytes[5] << 8) | hashBytes[4]),
+                (short)((hashBytes[7] << 8) | hashBytes[6]),
+                hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11], hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]);
+        }
 
 #if NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
