@@ -2248,6 +2248,52 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertIsTrueWithCollectionCountEqualsZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Count == 0)|};
+                    {|#1:Assert.IsTrue(0 == list.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.IsEmpty(list);
+                    Assert.IsEmpty(list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+            // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertIsTrueWithArrayLengthGreaterThanZero()
     {
         string code = """
@@ -2324,6 +2370,50 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             code,
             // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsTrue'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithArrayLengthEqualToZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(array.Length == 0)|};
+                    {|#1:Assert.IsTrue(0 == array.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var array = new int[] { 1, 2, 3 };
+                    Assert.IsEmpty(array);
+                    Assert.IsEmpty(array);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
             fixedCode);
     }
 
@@ -2408,6 +2498,49 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             code,
             // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsFalse'
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithCollectionCountEqualZero()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsFalse(list.Count == 0)|};
+                    {|#1:Assert.IsFalse(0 == list.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.IsNotEmpty(list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsNotEmpty' instead of 'Assert.IsFalse'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsFalse"),
             fixedCode);
     }
 
