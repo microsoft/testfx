@@ -2286,10 +2286,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
-            // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
+            ]
             fixedCode);
     }
 
@@ -2410,10 +2412,12 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
+            [
+                // /0/Test0.cs(10,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
+            ],
             fixedCode);
     }
 
@@ -2644,7 +2648,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var list = new List<int> { 1, 2, 3 };
-                    // This should use the generic equality logic, not IsNotEmpty
                     {|#0:Assert.IsTrue(list.Count != 5)|};
                 }
             }
@@ -2661,7 +2664,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var list = new List<int> { 1, 2, 3 };
-                    // This should use the generic equality logic, not IsNotEmpty
                     Assert.AreNotEqual(5, list.Count);
                 }
             }
@@ -2753,5 +2755,4 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
-
 }
