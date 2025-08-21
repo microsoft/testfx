@@ -251,45 +251,6 @@ internal sealed class UnitTestElement
         int firstByte = 0;
         int versionByte = 6;
 
-        if (BitConverter.IsLittleEndian)
-        {
-            // The data provided by xxhash128 are big endian, but the Guid constructor overload that allows us to explicitly specify the data as
-            // big endian is not available in .NET Framework. So we need to manipulate the bytes to ensure consistency on little and big endian systems.
-            // Guid is internally represented by int, short, short, byte, byte... byte, and the default constructor needs to get the data in the endianness
-            // of the system. Endianness matters only for the int, and short values.
-            // So we on little endian system we swap them:
-
-            // The first 4 bytes are int:
-            byte i0 = hashBytes[0];
-            byte i1 = hashBytes[1];
-            byte i2 = hashBytes[2];
-            byte i3 = hashBytes[3];
-
-            hashBytes[0] = i3;
-            hashBytes[1] = i2;
-            hashBytes[2] = i1;
-            hashBytes[3] = i0;
-
-            // The next 2 bytes are short:
-            byte j0 = hashBytes[4];
-            byte j1 = hashBytes[5];
-
-            hashBytes[4] = j1;
-            hashBytes[5] = j0;
-
-            // The next 2 bytes are also short:
-            byte k0 = hashBytes[6];
-            byte k1 = hashBytes[7];
-
-            hashBytes[6] = k1;
-            hashBytes[7] = k0;
-
-            // The bytes will get swapped in the constructor. So the first byte of the int is read from index 3.
-            // The 6th byte, is read from the second byte of the short, which is at index 7.
-            firstByte = 3;
-            versionByte = 7;
-        }
-
         // We set first 4 bits to 0001, which is our version. Increase this when we change the hashing algorithm.
         //
         // Note: The logic below is operating on int32, because bitwise operators are not defined for byte in C#. But casting
@@ -300,11 +261,30 @@ internal sealed class UnitTestElement
         // We set first 4bits 7th byte to 8 to indicate that this is a version 8 UUID. https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-8
         hashBytes[versionByte] = (byte)((hashBytes[versionByte] & 0b0000_1111) | 0b1000_0000);
 
-        // This data is stored as byte in Guid, so no endianness issues here.
+        // We set the first 2 bits of nineth byte to 0b10. In the guid this is stored as byte, so we don't care about endiannes.
         int variantByte = 8;
         hashBytes[variantByte] = (byte)((hashBytes[variantByte] & 0b0011_1111) | 0b1000_0000);
 
-        var guid = new Guid(hashBytes);
+#if !NET8_0_OR_GREATER
+
+        if (!BitConverter.IsLittleEndian)
+        {
+            // On .NET Framework and UWP this always returns true, so unless we add more runtimes we should never reach this place.
+            ApplicationStateGuard.Unreachable();
+        }
+
+        // On .NET Framework we cannot specify the endianness of the Guid constructor, that takes the byte array and it will assume little endianness.
+        // Instead we construct the int and short values manually to keep the order of bytes. This is what .NET Framework constructor does, but in opposite order.
+        var guid = new Guid(
+            (hashBytes[0] << 24) | (hashBytes[1] << 16) | (hashBytes[2] << 8) | hashBytes[3],
+            (short)((hashBytes[4] << 8) | hashBytes[5]),
+            (short)((hashBytes[6] << 8) | hashBytes[7]),
+            hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11], hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]
+        );
+#else
+        var guid = new Guid(hashBytes, bigEndian: true);
+#endif
+
 #if NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
         Debug.Assert(guid.Version == 8, "Expected Guid version to be 8");
