@@ -2291,7 +2291,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
                 // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.IsTrue'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "IsTrue"),
-            ]
+            ],
             fixedCode);
     }
 
