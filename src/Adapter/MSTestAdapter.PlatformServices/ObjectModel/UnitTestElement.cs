@@ -277,7 +277,8 @@ internal sealed class UnitTestElement
 
 #if NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
-        Debug.Assert(guid.Version == 8, "Expected Guid version to be 8");
+        Debug.Assert(guid.Version == 8, $"Expected Guid version to be 8, but it was {guid.Version}");
+        Debug.Assert(guid.Variant == 8, $"Expected Guid variant to be 8, but it was {guid.Variant}");
 #endif
         return guid;
     }
