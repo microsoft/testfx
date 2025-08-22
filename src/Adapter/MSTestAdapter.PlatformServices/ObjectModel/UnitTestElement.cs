@@ -203,12 +203,6 @@ internal sealed class UnitTestElement
     private void SetTestCaseId(TestCase testCase, string testFullName)
         => testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
 
-    internal static Guid GuidFromString(string data)
-    {
-        byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
-        return new Guid(hash);
-    }
-
     private Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
         // Below comment is copied over from Test Platform.
@@ -231,6 +225,7 @@ internal sealed class UnitTestElement
             // In case path contains invalid characters.
         }
 
+        byte hashVersion = 1; // Increment when changing the hashing algorithm.
         var hash = new TestFx.Hashing.XxHash128();
         hash.Append(Encoding.Unicode.GetBytes(fileNameOrFilePath));
         hash.Append(Encoding.Unicode.GetBytes(testFullName));
@@ -248,7 +243,49 @@ internal sealed class UnitTestElement
             hash.Append(CloseBracket);
         }
 
-        return new Guid(hash.GetCurrentHash());
+        byte[] hashBytes = hash.GetCurrentHash();
+
+        return VersionedGuidFromHash(hashBytes, hashVersion);
+    }
+
+    internal /* for testing */ static Guid VersionedGuidFromHash(byte[] hashBytes, byte hashVersion)
+    {
+        int firstByte = 0;
+        int versionByte = 6;
+
+        // We set first 4 bits to 0001, which is our version. Increase this when we change the hashing algorithm.
+        //
+        // Note: The logic below is operating on int32, because bitwise operators are not defined for byte in C#. But casting
+        // does not affect endianness, so we can safely assume the byte data are at the end of the int.
+        // We also don't care to specify the whole expansion of the int in the bit masks, which effectively ignores all the data in the int
+        // before the last byte data, but that is okay, they will always be zero.
+        hashBytes[firstByte] = (byte)((hashBytes[firstByte] & 0b0000_1111) | (hashVersion << 4));
+        // We set first 4bits 7th byte to 8 to indicate that this is a version 8 UUID. https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-8
+        hashBytes[versionByte] = (byte)((hashBytes[versionByte] & 0b0000_1111) | 0b1000_0000);
+
+        // We set the first 2 bits of nineth byte to 0b10. In the guid this is stored as byte, so we don't care about endiannes.
+        int variantByte = 8;
+        hashBytes[variantByte] = (byte)((hashBytes[variantByte] & 0b0011_1111) | 0b1000_0000);
+
+        Guid guid;
+
+        // On .NET Framework we cannot specify the endianness of the Guid because the new Guid(hashBytes, bigEndian: true); api is not available.
+        // Instead we construct the int and short values manually, doing what the constructor would do, to put the bytes in big-endian order.
+        guid = new Guid(
+            (hashBytes[0] << 24) | (hashBytes[1] << 16) | (hashBytes[2] << 8) | hashBytes[3],
+            (short)((hashBytes[4] << 8) | hashBytes[5]),
+            (short)((hashBytes[6] << 8) | hashBytes[7]),
+            hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11], hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]);
+
+#if DEBUG && NET9_0_OR_GREATER
+        // Version property is only available on .NET 9 and later.
+        Debug.Assert(guid.Version == 8, $"Expected Guid version to be 8, but it was {guid.Version}");
+        // The field represents the 4 bit value, but according to the specification only the first 2 bits are used for UUID v8.
+        // So we shift 2 bits to the right to get the actual variant value.
+        int variant = guid.Variant >> 2;
+        Debug.Assert(variant == 2, $"Expected Guid variant to be 2, but it was {variant}");
+#endif
+        return guid;
     }
 
     private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
