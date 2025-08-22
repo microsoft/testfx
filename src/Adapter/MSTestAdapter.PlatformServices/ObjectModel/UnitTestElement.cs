@@ -275,10 +275,13 @@ internal sealed class UnitTestElement
             (short)((hashBytes[6] << 8) | hashBytes[7]),
             hashBytes[8], hashBytes[9], hashBytes[10], hashBytes[11], hashBytes[12], hashBytes[13], hashBytes[14], hashBytes[15]);
 
-#if NET9_0_OR_GREATER
+#if DEBUG && NET9_0_OR_GREATER
         // Version property is only available on .NET 9 and later.
         Debug.Assert(guid.Version == 8, $"Expected Guid version to be 8, but it was {guid.Version}");
-        Debug.Assert(guid.Variant == 8, $"Expected Guid variant to be 8, but it was {guid.Variant}");
+        // The field represents the 4 bit value, but according to the specification only the first 2 bits are used for UUID v8.
+        // So we shift 2 bits to the right to get the actual variant value.
+        int variant = guid.Variant >> 2;
+        Debug.Assert(variant == 2, $"Expected Guid variant to be 2, but it was {variant}");
 #endif
         return guid;
     }
