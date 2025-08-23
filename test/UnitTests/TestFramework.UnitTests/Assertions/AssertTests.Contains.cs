@@ -378,6 +378,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsKey method (value overload) when the expected key is present.
+    /// </summary>
+    public void ContainsKey_InNonGenericKeyValueCollection_KeyExpected_KeyExists_DoesNotThrow2()
+    {
+        // Arrange
+        var collection = new Hashtable { { "key1", "value1" }, { "key2", "value2" }, { 3, "value3" } };
+
+        // Act
+        Action action = () => Assert.ContainsKey(3, collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
     /// Tests the ContainsKey method (value overload) when the expected key is not present.
     /// Expects an exception.
     /// </summary>
@@ -392,6 +407,52 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expectedKey} not found*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsValue method (value overload) when the expected value is present.
+    /// </summary>
+    public void ContainsValue_InNonGenericKeyValueCollection_ValueExpected_ValueExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new Hashtable { { "key1", 1 }, { "key2", "value2" }, { 3, "value3" } };
+
+        // Act
+        Action action = () => Assert.ContainsValue("value2", collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the ContainsValue method (value overload) when the expected value is present.
+    /// </summary>
+    public void ContainsValue_InNonGenericKeyValueCollection_ValueExpected_ValueExists_DoesNotThrow2()
+    {
+        // Arrange
+        var collection = new Hashtable { { "key1", 1 }, { "key2", "value2" }, { 3, "value3" } };
+
+        // Act
+        Action action = () => Assert.ContainsValue(1, collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the ContainsValue method (value overload) when the expected value is not present.
+    /// </summary>
+    public void ContainsValue_InNonGenericKeyValueCollection_ValueExpected_ValueDoesNotExists_ThrowException()
+    {
+        // Arrange
+        var collection = new Hashtable { { "key1", 1 }, { "key2", "value2" }, { 3, "value3" } };
+        object expectedValue = "value1";
+
+        // Act
+        Action action = () => Assert.ContainsValue(expectedValue, collection, $"Item {expectedValue} not found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expectedValue} not found*");
     }
 
     /// <summary>
