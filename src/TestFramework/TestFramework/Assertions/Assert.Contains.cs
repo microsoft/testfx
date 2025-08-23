@@ -179,6 +179,14 @@ public sealed partial class Assert
         => Contains(expected, collection, string.Empty, null);
 
     /// <summary>
+    /// Tests whether the specified non-generic collection contains the given element.
+    /// </summary>
+    /// <param name="expectedKey">The expected item.</param>
+    /// <param name="collection">The non-generic collection (like ArrayList).</param>
+    public static void ContainsKey(object expectedKey, IEnumerable collection)
+        => ContainsKey(expectedKey, collection, string.Empty);
+
+    /// <summary>
     /// Tests whether the specified collection contains the given element.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -240,6 +248,36 @@ public sealed partial class Assert
         if (!collection.Contains(expected, comparer))
         {
             string userMessage = BuildUserMessage(message, parameters);
+            ThrowAssertContainsItemFailed(userMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given key.
+    /// Specifically for non-generic key/value pair collections like Hashtable.
+    /// </summary>
+    /// <param name="expectedKey">The expected key.</param>
+    /// <param name="collection">The key/value collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    public static void ContainsKey(object expectedKey, IEnumerable collection, string? message)
+    {
+        bool isFound = false;
+
+        foreach (object? item in collection)
+        {
+            if (item is DictionaryEntry dictEntry)
+            {
+                if (object.Equals(expectedKey, dictEntry.Key))
+                {
+                    isFound = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isFound)
+        {
+            string userMessage = BuildUserMessage(message);
             ThrowAssertContainsItemFailed(userMessage);
         }
     }

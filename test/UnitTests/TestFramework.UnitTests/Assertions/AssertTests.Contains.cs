@@ -363,6 +363,38 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsKey method (value overload) when the expected key is present.
+    /// </summary>
+    public void ContainsKey_InNonGenericKeyValueCollection_KeyExpected_KeyExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new Hashtable { { "key1", "value1" }, { "key2", "value2" }, { 3, "value3" } };
+
+        // Act
+        Action action = () => Assert.ContainsKey("key2", collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the ContainsKey method (value overload) when the expected key is not present.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsKey_InNonGenericKeyValueCollection_KeyExpected_KeyDoesNotExists_ThrowException()
+    {
+        // Arrange
+        var collection = new Hashtable { { "key1", "value1" }, { "key2", "value2" }, { 3, "value3" } };
+        object expectedKey = "key3";
+
+        // Act
+        Action action = () => Assert.ContainsKey(expectedKey, collection, $"Item {expectedKey} not found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expectedKey} not found*");
+    }
+
+    /// <summary>
     /// Tests the Contains method with a comparer when the expected item is present.
     /// </summary>
     public void Contains_WithComparer_ItemExists_DoesNotThrow()
