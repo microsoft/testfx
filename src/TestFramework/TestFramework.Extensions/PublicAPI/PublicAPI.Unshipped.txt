@@ -1,2 +1,2 @@
 #nullable enable
-virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
