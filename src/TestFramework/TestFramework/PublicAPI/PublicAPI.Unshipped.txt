@@ -1,7 +1,7 @@
 #nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Field = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object! expected, System.Collections.IEnumerable! collection) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object! expected, System.Collections.IEnumerable! collection, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object! expected, System.Collections.IEnumerable! collection, string? message) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!

@@ -184,7 +184,7 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The non-generic collection (like ArrayList).</param>
     public static void Contains(object expected, IEnumerable collection)
-        => Contains(expected, collection, string.Empty, null);
+        => Contains(expected, collection, string.Empty);
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -219,8 +219,7 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void Contains(object expected, IEnumerable collection, string? message, params object?[]? parameters)
+    public static void Contains(object expected, IEnumerable collection, string? message)
     {
         bool isFound = false;
         foreach (object? item in collection)
@@ -234,7 +233,7 @@ public sealed partial class Assert
 
         if (!isFound)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessage(message);
             ThrowAssertContainsItemFailed(userMessage);
         }
     }

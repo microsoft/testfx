@@ -369,12 +369,13 @@ public partial class AssertTests : TestContainer
     {
         // Arrange
         var collection = new ArrayList { 5, 10, "a" };
+        object expected = 20;
 
         // Act
-        Action action = () => Assert.Contains(20, collection, "Item {0} not found", 20);
+        Action action = () => Assert.Contains(expected, collection, $"Item {expected} not found");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*20*");
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expected} not found*");
     }
 
     /// <summary>
@@ -386,7 +387,7 @@ public partial class AssertTests : TestContainer
         var collection = new ArrayList { 5, 10, "a" };
 
         // Act
-        Action action = () => Assert.Contains("a", collection, "No failure expected", null);
+        Action action = () => Assert.Contains("a", collection, "No failure expected");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
