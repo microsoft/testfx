@@ -59,7 +59,9 @@ public abstract class TestContext
     /// <summary>
     /// Gets the cancellation token. This token is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
     public CancellationToken CancellationToken => CancellationTokenSource.Token;
+#pragma warning restore CS0618 // Type or member is obsolete
 
     /// <summary>
     /// Gets or sets the test data for the test method being executed.
