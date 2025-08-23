@@ -149,6 +149,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <para>The value for ProperAssertMethodNameKey is "IsNull".</para>
     /// <para>The first additional location will point to the "x == null" node.</para>
     /// <para>The second additional location will point to the "x" node.</para>
+    /// <para>Optionally, more additional locations will also be interpreted as "replace" operations.</para>
     /// </summary>
     internal const string CodeFixModeSimple = nameof(CodeFixModeSimple);
 
