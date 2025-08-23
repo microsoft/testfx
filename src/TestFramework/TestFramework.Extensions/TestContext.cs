@@ -59,7 +59,7 @@ public abstract class TestContext
     /// <summary>
     /// Gets the cancellation token. This token is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
-    public virtual CancellationToken CancellationToken => CancellationTokenSource.Token;
+    public CancellationToken CancellationToken => CancellationTokenSource.Token;
 
     /// <summary>
     /// Gets or sets the test data for the test method being executed.
