@@ -1831,6 +1831,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 {
                     var list = new List<int>();
                     {|#0:Assert.AreEqual(0, list.Count)|};
+                    {|#1:Assert.AreEqual(list.Count, 0)|};
                 }
             }
             """;
@@ -1847,14 +1848,19 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 {
                     var list = new List<int>();
                     Assert.IsEmpty(list);
+                    Assert.IsEmpty(list);
                 }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "AreEqual"),
+            ],
             fixedCode);
     }
 
@@ -1872,7 +1878,11 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var list = new List<int> { 1, 2, 3 };
+                    int x = 3;
                     {|#0:Assert.AreEqual(3, list.Count)|};
+                    {|#1:Assert.AreEqual(list.Count, 3)|};
+                    {|#2:Assert.AreEqual(x, list.Count)|};
+                    {|#3:Assert.AreEqual(list.Count, x)|};
                 }
             }
             """;
@@ -1888,15 +1898,27 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var list = new List<int> { 1, 2, 3 };
+                    int x = 3;
                     Assert.HasCount(3, list);
+                    Assert.HasCount(3, list);
+                    Assert.HasCount(x, list);
+                    Assert.HasCount(x, list);
                 }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            [
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("HasCount", "AreEqual"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("HasCount", "AreEqual"),
+            ],
             fixedCode);
     }
 
