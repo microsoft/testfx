@@ -5,9 +5,24 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestSessionContext(CancellationToken cancellationToken) : ITestSessionContext
+/// <summary>
+/// Represents the context of a test session.
+/// </summary>
+public sealed class TestSessionContext : ITestSessionContext
 {
-    public SessionUid SessionUid { get; } = new(Guid.NewGuid().ToString());
+    internal TestSessionContext(SessionUid sessionUid, CancellationToken cancellationToken)
+    {
+        SessionUid = sessionUid;
+        CancellationToken = cancellationToken;
+    }
 
-    public CancellationToken CancellationToken { get; } = cancellationToken;
+    /// <summary>
+    /// Gets the unique identifier of the test session.
+    /// </summary>
+    public SessionUid SessionUid { get; }
+
+    /// <summary>
+    /// Gets the cancellation token associated with the test session.
+    /// </summary>
+    public CancellationToken CancellationToken { get; }
 }
