@@ -346,7 +346,9 @@ public class TestMethodInfoTests : TestContainer
         testContext.Setup(tc => tc.GetResultFiles()).Returns(["C:\\temp.txt"]);
         var mockInnerContext = new Mock<TestContext>();
         testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
+#pragma warning disable CS0618 // Type or member is obsolete
         mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
+#pragma warning restore CS0618 // Type or member is obsolete
 
         var method = new TestMethodInfo(_methodInfo, _testClassInfo, testContext.Object)
         {
@@ -1564,7 +1566,9 @@ public class TestMethodInfoTests : TestContainer
 
             Verify(result.Outcome == UTF.UnitTestOutcome.Timeout);
             Verify(result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal));
+#pragma warning disable CS0618 // Type or member is obsolete
             Verify(_testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
+#pragma warning restore CS0618 // Type or member is obsolete
         });
     }
 
@@ -1588,7 +1592,9 @@ public class TestMethodInfoTests : TestContainer
                  }
              });
 
+#pragma warning disable CS0618 // Type or member is obsolete
             _testContextImplementation.CancellationTokenSource.CancelAfter(100);
+#pragma warning restore CS0618 // Type or member is obsolete
             var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
             {
                 TimeoutInfo = TimeoutInfo.FromTimeout(100000),
@@ -1598,7 +1604,9 @@ public class TestMethodInfoTests : TestContainer
 
             Verify(result.Outcome == UTF.UnitTestOutcome.Timeout);
             Verify(result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' was canceled", StringComparison.Ordinal));
+#pragma warning disable CS0618 // Type or member is obsolete
             Verify(_testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
+#pragma warning restore CS0618 // Type or member is obsolete
         });
     }
 
