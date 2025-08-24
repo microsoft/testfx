@@ -979,6 +979,18 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Assert.Throws debe contener solo una única instrucción o expresión</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="needs-translation">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="needs-translation">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="needs-translation">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

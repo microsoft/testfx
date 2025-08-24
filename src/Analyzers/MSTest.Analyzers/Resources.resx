@@ -634,10 +634,10 @@ The type declaring these methods should also respect the following rules:
     <value>Flow TestContext.CancellationToken to async operations</value>
   </data>
   <data name="FlowTestContextCancellationTokenMessageFormat" xml:space="preserve">
-    <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</value>
+    <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</value>
   </data>
   <data name="FlowTestContextCancellationTokenDescription" xml:space="preserve">
-    <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</value>
+    <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</value>
   </data>
   <data name="AssertThrowsShouldContainSingleStatementTitle" xml:space="preserve">
     <value>Assert.Throws should contain only a single statement/expression</value>

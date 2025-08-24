@@ -132,6 +132,10 @@
         <target state="translated">'{0}' を使用します</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="needs-translation">Use 'TestContext.CancellationToken' instead</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
