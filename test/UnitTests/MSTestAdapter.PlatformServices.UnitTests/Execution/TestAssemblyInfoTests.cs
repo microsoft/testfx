@@ -26,9 +26,7 @@ public class TestAssemblyInfoTests : TestContainer
         _dummyMethodInfo = typeof(TestAssemblyInfoTests).GetMethods().First();
 
         var testContext = new Mock<TestContext>();
-#pragma warning disable CS0618 // Type or member is obsolete
         testContext.SetupGet(x => x.CancellationTokenSource).Returns(new CancellationTokenSource());
-#pragma warning restore CS0618 // Type or member is obsolete
         _testContext = testContext.Object;
     }
 

@@ -678,4 +678,13 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
   </data>
+  <data name="UseCancellationTokenPropertyTitle" xml:space="preserve">
+    <value>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</value>
+  </data>
+  <data name="UseCancellationTokenPropertyMessageFormat" xml:space="preserve">
+    <value>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</value>
+  </data>
+  <data name="UseCancellationTokenPropertyDescription" xml:space="preserve">
+    <value>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</value>
+  </data>
 </root>

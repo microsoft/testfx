@@ -77,9 +77,7 @@ public class TestClassInfoTests : TestContainer
             _testAssemblyInfo);
 
         var testContext = new Mock<TestContext>();
-#pragma warning disable CS0618 // Type or member is obsolete
         testContext.SetupGet(x => x.CancellationTokenSource).Returns(new CancellationTokenSource());
-#pragma warning restore CS0618 // Type or member is obsolete
         _testContext = testContext.Object;
 
         // Prevent leaking init/cleanup methods between classes

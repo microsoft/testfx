@@ -235,7 +235,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [ClassInitialize]
                 public static async Task ClassInit(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationToken);
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
                 }
             }
             """;
@@ -273,7 +273,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [ClassCleanup]
                 public static async Task ClassCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationToken);
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
                 }
             }
             """;
@@ -312,8 +312,8 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [ClassCleanup]
                 public static async Task ClassCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationToken);
-                    await Task.Delay(1000, testContext.CancellationToken);
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
                 }
             }
             """;
@@ -419,7 +419,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestMethod]
                 public async Task Test1()
                 {
-                    await Task.Delay(1000, _testContext.CancellationToken);
+                    await Task.Delay(1000, _testContext.CancellationTokenSource.Token);
                 }
             }
             """;
@@ -731,7 +731,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [AssemblyCleanup]
                 public static async Task AssemblyCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationToken);
+                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
                 }
             }
             """;
