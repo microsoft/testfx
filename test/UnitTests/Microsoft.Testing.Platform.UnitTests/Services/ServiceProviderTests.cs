@@ -71,7 +71,7 @@ public sealed class ServiceProviderTests
 
         var clonedServiceProvider = (ServiceProvider)_serviceProvider.Clone();
 
-        Assert.AreEqual(_serviceProvider.Services.Count, clonedServiceProvider.Services.Count);
+        Assert.HasCount(_serviceProvider.Services.Count, clonedServiceProvider.Services);
         for (int i = 0; i < _serviceProvider.Services.Count; i++)
         {
             Assert.AreEqual(_serviceProvider.Services.ToArray()[i], clonedServiceProvider.Services.ToArray()[i]);
