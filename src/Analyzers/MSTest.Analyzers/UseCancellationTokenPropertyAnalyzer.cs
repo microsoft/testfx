@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0053: <inheritdoc cref="Resources.UseCancellationTokenPropertyTitle"/>.
+/// MSTEST0054: <inheritdoc cref="Resources.UseCancellationTokenPropertyTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseCancellationTokenPropertyAnalyzer : DiagnosticAnalyzer
