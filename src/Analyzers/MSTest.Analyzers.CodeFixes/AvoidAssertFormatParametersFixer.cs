@@ -4,6 +4,8 @@
 using System.Collections.Immutable;
 using System.Composition;
 
+using Analyzer.Utilities;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -32,19 +34,12 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
     /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        SyntaxNode? root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        if (root is null)
+        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+        Diagnostic diagnostic = context.Diagnostics[0];
+        if (root.FindNode(context.Span) is InvocationExpressionSyntax invocation)
         {
-            return;
-        }
-
-        foreach (Diagnostic diagnostic in context.Diagnostics.Where(d => FixableDiagnosticIds.Contains(d.Id)))
-        {
-            if (root.FindNode(diagnostic.Location.SourceSpan) is InvocationExpressionSyntax invocation)
-            {
-                RegisterStringFormatCodeFix(context, diagnostic, root, invocation);
-                await RegisterInterpolatedStringCodeFix(context, diagnostic, root, invocation);
-            }
+            RegisterStringFormatCodeFix(context, diagnostic, root, invocation);
+            await RegisterInterpolatedStringCodeFixAsync(context, diagnostic, root, invocation).ConfigureAwait(false);
         }
     }
 
@@ -58,10 +53,10 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         context.RegisterCodeFix(codeAction, diagnostic);
     }
 
-    private static async Task RegisterInterpolatedStringCodeFix(CodeFixContext context, Diagnostic diagnostic, SyntaxNode root, InvocationExpressionSyntax invocation)
+    private static async Task RegisterInterpolatedStringCodeFixAsync(CodeFixContext context, Diagnostic diagnostic, SyntaxNode root, InvocationExpressionSyntax invocation)
     {
         // Only offer interpolated string fix for simple cases
-        if (await CanConvertToInterpolatedStringAsync(context.Document, invocation))
+        if (await CanConvertToInterpolatedStringAsync(context.Document, invocation).ConfigureAwait(false))
         {
             var codeAction = CodeAction.Create(
                 title: CodeFixResources.AvoidAssertFormatParametersUseInterpolatedString,
@@ -83,7 +78,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
 
         // Use semantic analysis to find the correct format string and params arguments
-        (bool success, int formatIndex, int paramsStartIndex) = await TryGetFormatParameterPositionsAsync(document, invocation);
+        (bool success, int formatIndex, int paramsStartIndex) = await TryGetFormatParameterPositionsAsync(document, invocation).ConfigureAwait(false);
         if (!success)
         {
             return document;
@@ -125,7 +120,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
 
         // Use semantic analysis to find the correct format string and params arguments
-        (bool success, int formatIndex, int paramsStartIndex) = await TryGetFormatParameterPositionsAsync(document, invocation);
+        (bool success, int formatIndex, int paramsStartIndex) = await TryGetFormatParameterPositionsAsync(document, invocation).ConfigureAwait(false);
         if (!success)
         {
             return document;
@@ -160,7 +155,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         }
 
         // Use semantic analysis to find the correct format string position
-        (bool success, int formatIndex, _) = await TryGetFormatParameterPositionsAsync(document, invocation);
+        (bool success, int formatIndex, _) = await TryGetFormatParameterPositionsAsync(document, invocation).ConfigureAwait(false);
         if (!success)
         {
             return false;
@@ -240,7 +235,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         return true;
     }
 
-    private static async Task<(bool success, int formatIndex, int paramsStartIndex)> TryGetFormatParameterPositionsAsync(Document document, InvocationExpressionSyntax invocation)
+    private static async Task<(bool Success, int FormatIndex, int ParamsStartIndex)> TryGetFormatParameterPositionsAsync(Document document, InvocationExpressionSyntax invocation)
     {
         SemanticModel? semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(false);
         if (semanticModel is null)
@@ -269,7 +264,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
 
         // Find the params parameter (last parameter with params object[])
         IParameterSymbol paramsParameter = parameters[parameters.Length - 1];
-        if (!paramsParameter.IsParams || 
+        if (!paramsParameter.IsParams ||
             paramsParameter.Type is not IArrayTypeSymbol arrayType ||
             arrayType.ElementType.SpecialType != SpecialType.System_Object)
         {

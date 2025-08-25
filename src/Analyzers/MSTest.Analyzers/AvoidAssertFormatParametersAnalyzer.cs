@@ -80,38 +80,7 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
 
         // Look for the pattern: ([other params...], string message, params object[] parameters)
         // The last two parameters should be string message and params object[]
-        if (parameters.Length < 2)
-        {
-            return false;
-        }
-
-        IParameterSymbol lastParam = parameters[parameters.Length - 1];
-        IParameterSymbol secondLastParam = parameters[parameters.Length - 2];
-
-        // Check if last parameter is params object[]
-        bool hasParamsArray = lastParam.IsParams &&
-                             lastParam.Type is IArrayTypeSymbol arrayType &&
-                             arrayType.ElementType.SpecialType == SpecialType.System_Object;
-
-        // Check if second-to-last parameter is string with StringSyntax attribute
-        bool hasFormatString = secondLastParam.Type?.SpecialType == SpecialType.System_String &&
-                              HasStringFormatSyntaxAttribute(secondLastParam);
-
-        return hasParamsArray && hasFormatString;
-    }
-
-    private static bool HasStringFormatSyntaxAttribute(IParameterSymbol parameter)
-    {
-        foreach (AttributeData attribute in parameter.GetAttributes())
-        {
-            if (attribute.AttributeClass?.Name == "StringSyntaxAttribute" &&
-                attribute.ConstructorArguments.Length > 0 &&
-                attribute.ConstructorArguments[0].Value?.ToString() == "CompositeFormat")
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return parameters.Length >= 2 &&
+            parameters[parameters.Length - 1] is { IsParams: true, Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } };
     }
 }
