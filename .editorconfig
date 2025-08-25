@@ -5,7 +5,6 @@ root = true
 # All files
 [*]
 indent_style = space
-insert_final_newline = true
 trim_trailing_whitespace = true
 # (Please don't specify an indent_size here; that has too many unintended consequences.)
 
@@ -63,6 +62,7 @@ indent_size = 4
 charset = utf-8-bom
 indent_size = 4
 tab_width = 4
+insert_final_newline = true
 
 # Dotnet code style settings:
 [*.{cs,vb}]
