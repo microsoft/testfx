@@ -198,4 +198,10 @@
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
   </data>
+  <data name="AvoidAssertFormatParametersUseStringFormat" xml:space="preserve">
+    <value>Use 'string.Format' instead of format parameters</value>
+  </data>
+  <data name="AvoidAssertFormatParametersUseInterpolatedString" xml:space="preserve">
+    <value>Use interpolated string instead of format parameters</value>
+  </data>
 </root>
