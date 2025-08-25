@@ -453,13 +453,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationTokenSource.Token でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="needs-review-translation">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationTokenSource.Token でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">CancellationToken を受け取り、'TestContext.CancellationTokenSource.Token' を渡すオーバーロードの使用を検討してください</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="needs-review-translation">CancellationToken を受け取り、'TestContext.CancellationTokenSource.Token' を渡すオーバーロードの使用を検討してください</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -978,18 +978,6 @@ The type declaring these methods should also respect the following rules:
         <source>Assert.Throws should contain only a single statement/expression</source>
         <target state="translated">Assert.Throws には 1 つのステートメントまたは式のみを含める必要があります</target>
         <note />
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyTitle">
-        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="needs-translation">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
-        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="needs-translation">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyDescription">
-        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="needs-translation">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
       </trans-unit>
     </body>
   </file>

@@ -459,13 +459,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">При вызове асинхронных методов с перегрузками, принимающими параметр CancellationToken, рекомендуется использовать перегрузку с TestContext.CancellationTokenSource.Token, чтобы обеспечить кооперативную отмену и учитывать времена ожидания теста.</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="needs-review-translation">При вызове асинхронных методов с перегрузками, принимающими параметр CancellationToken, рекомендуется использовать перегрузку с TestContext.CancellationTokenSource.Token, чтобы обеспечить кооперативную отмену и учитывать времена ожидания теста.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">Рассмотрите возможность использования перегрузки, которая принимает CancellationToken, и передавайте "TestContext.CancellationTokenSource.Token"</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="needs-review-translation">Рассмотрите возможность использования перегрузки, которая принимает CancellationToken, и передавайте "TestContext.CancellationTokenSource.Token"</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -990,18 +990,6 @@ The type declaring these methods should also respect the following rules:
         <source>Assert.Throws should contain only a single statement/expression</source>
         <target state="translated">Assert.Throws должен содержать только одну инструкцию/выражение</target>
         <note />
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyTitle">
-        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="needs-translation">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
-        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="needs-translation">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyDescription">
-        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="needs-translation">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
       </trans-unit>
     </body>
   </file>

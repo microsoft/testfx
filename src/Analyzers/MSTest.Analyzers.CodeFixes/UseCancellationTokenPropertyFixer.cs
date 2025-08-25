@@ -1,15 +1,16 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
 using System.Composition;
+
+using Analyzer.Utilities;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Editing;
 
 using MSTest.Analyzers.Helpers;
 
@@ -55,18 +56,15 @@ public sealed class UseCancellationTokenPropertyFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseCancellationTokenPropertyFix,
-                createChangedDocument: async c =>
+                createChangedDocument: c =>
                 {
-                    DocumentEditor editor = await DocumentEditor.CreateAsync(context.Document, c).ConfigureAwait(false);
-                    
                     // Replace testContext.CancellationTokenSource.Token with testContext.CancellationToken
                     MemberAccessExpressionSyntax newExpression = SyntaxFactory.MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
                         parentMemberAccess.Expression, // testContext part
                         SyntaxFactory.IdentifierName("CancellationToken"));
-                    
-                    editor.ReplaceNode(memberAccessExpression, newExpression);
-                    return editor.GetChangedDocument();
+
+                    return Task.FromResult(context.Document.WithSyntaxRoot(root.ReplaceNode(memberAccessExpression, newExpression)));
                 },
                 equivalenceKey: nameof(UseCancellationTokenPropertyFixer)),
             diagnostic);

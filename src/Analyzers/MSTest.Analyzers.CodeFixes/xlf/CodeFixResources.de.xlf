@@ -48,8 +48,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
-        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="translated">Argument „TestContext.CancellationTokenSource.Token“ an den Methodenaufruf übergeben</target>
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="needs-review-translation">Argument „TestContext.CancellationTokenSource.Token“ an den Methodenaufruf übergeben</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -117,6 +117,11 @@
         <target state="translated">„[TestMethod]“ hinzufügen</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="new">Use 'TestContext.CancellationToken' instead</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
         <target state="translated">Verwenden Sie „CooperativeCancellation = true“.</target>
@@ -131,10 +136,6 @@
         <source>Use '{0}'</source>
         <target state="translated">"{0}" verwenden</target>
         <note />
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyFix">
-        <source>Use 'TestContext.CancellationToken' instead</source>
-        <target state="needs-translation">Use 'TestContext.CancellationToken' instead</target>
       </trans-unit>
     </body>
   </file>

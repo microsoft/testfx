@@ -453,13 +453,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">在呼叫接受 CancellationToken 參數的多載非同步方法時，建議使用 TestContext.CancellationTokenSource.Token 的多載，以啟用共同取消並遵守測試逾時。</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="needs-review-translation">在呼叫接受 CancellationToken 參數的多載非同步方法時，建議使用 TestContext.CancellationTokenSource.Token 的多載，以啟用共同取消並遵守測試逾時。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">請考慮使用接受 CancellationToken 的多載，並傳遞 'TestContext.CancellationTokenSource.Token'</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="needs-review-translation">請考慮使用接受 CancellationToken 的多載，並傳遞 'TestContext.CancellationTokenSource.Token'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -978,18 +978,6 @@ The type declaring these methods should also respect the following rules:
         <source>Assert.Throws should contain only a single statement/expression</source>
         <target state="translated">Assert.Throws 應該只包含單一陳述式/運算式</target>
         <note />
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyTitle">
-        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="needs-translation">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
-        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="needs-translation">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
-      </trans-unit>
-      <trans-unit id="UseCancellationTokenPropertyDescription">
-        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="needs-translation">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
       </trans-unit>
     </body>
   </file>

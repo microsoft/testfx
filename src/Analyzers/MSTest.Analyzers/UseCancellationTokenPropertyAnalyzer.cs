@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -28,7 +28,7 @@ public sealed class UseCancellationTokenPropertyAnalyzer : DiagnosticAnalyzer
         Title,
         MessageFormat,
         Description,
-        Category.Performance,
+        Category.Usage,
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
@@ -63,7 +63,7 @@ public sealed class UseCancellationTokenPropertyAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol cancellationTokenSourceSymbol)
     {
         var propertyReferenceOperation = (IPropertyReferenceOperation)context.Operation;
-        
+
         // Check if this is accessing the Token property on CancellationTokenSource
         if (propertyReferenceOperation.Property.Name != "Token" ||
             !SymbolEqualityComparer.Default.Equals(propertyReferenceOperation.Property.ContainingType, cancellationTokenSourceSymbol))
