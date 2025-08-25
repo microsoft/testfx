@@ -5,12 +5,16 @@ root = true
 # All files
 [*]
 indent_style = space
+insert_final_newline = true
 trim_trailing_whitespace = true
 # (Please don't specify an indent_size here; that has too many unintended consequences.)
 
 vsspell_dictionary_languages = en-US
 vsspell_section_id = 842f80e2d4aa4288afdcd0e42833eeaf
 vsspell_ignored_words_842f80e2d4aa4288afdcd0e42833eeaf = runsettings|nullable|args|testhost|mutex|trx|vstest|arity|async|bool|inlined|json|jsonite|jsonrpc|localhost|readonly|xml|stylecop|indices|dotnet|lifecycle
+
+[*.{xlf,resx}]
+insert_final_newline = unset
 
 # Xml localization files
 [*.xlf]
@@ -62,7 +66,6 @@ indent_size = 4
 charset = utf-8-bom
 indent_size = 4
 tab_width = 4
-insert_final_newline = true
 
 # Dotnet code style settings:
 [*.{cs,vb}]
