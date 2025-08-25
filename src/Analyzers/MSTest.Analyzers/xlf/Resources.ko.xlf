@@ -464,12 +464,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="needs-review-translation">CancellationToken 매개변수를 허용하는 오버로드가 있는 비동기 메서드를 호출할 때는 협력적 취소를 활성화하고 테스트 시간 제한을 준수하기 위해 TestContext.CancellationTokenSource.Token이 있는 오버로드를 사용하는 것이 좋습니다.</target>
+        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="needs-review-translation">CancellationToken을 수락하고 'TestContext.CancellationTokenSource.Token'을 전달하는 오버로드를 사용하는 것이 좋습니다.</target>
+        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">

@@ -470,12 +470,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="needs-review-translation">При вызове асинхронных методов с перегрузками, принимающими параметр CancellationToken, рекомендуется использовать перегрузку с TestContext.CancellationTokenSource.Token, чтобы обеспечить кооперативную отмену и учитывать времена ожидания теста.</target>
+        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="needs-review-translation">Рассмотрите возможность использования перегрузки, которая принимает CancellationToken, и передавайте "TestContext.CancellationTokenSource.Token"</target>
+        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">

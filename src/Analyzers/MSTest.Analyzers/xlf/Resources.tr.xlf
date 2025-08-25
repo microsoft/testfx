@@ -464,12 +464,12 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="needs-review-translation">CancellationToken parametresini kabul eden aşırı yüklemeleri olan asenkron yöntemleri çağırırken, işbirliğine dayalı iptal işlemini etkinleştirmek ve test zaman aşımlarını dikkate almak için TestContext.CancellationTokenSource.Token ile aşırı yüklemeyi kullanmayı tercih edin.</target>
+        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="needs-review-translation">CancellationToken'ı kabul eden aşırı yüklemeyi kullanmayı düşünün ve 'TestContext.CancellationTokenSource.Token'i geçirin.</target>
+        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
