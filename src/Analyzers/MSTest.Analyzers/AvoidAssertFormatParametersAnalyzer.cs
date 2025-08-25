@@ -81,6 +81,11 @@ public sealed class AvoidAssertFormatParametersAnalyzer : DiagnosticAnalyzer
         // Look for the pattern: ([other params...], string message, params object[] parameters)
         // The last two parameters should be string message and params object[]
         return parameters.Length >= 2 &&
-            parameters[parameters.Length - 1] is { IsParams: true, Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } };
+            parameters[parameters.Length - 1] is { IsParams: true, Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } } &&
+            invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == parameters.Length - 1) is not IArgumentOperation
+            {
+                ArgumentKind: ArgumentKind.ParamArray,
+                Value: IArrayCreationOperation { Initializer.ElementValues.Length: 0 }
+            };
     }
 }

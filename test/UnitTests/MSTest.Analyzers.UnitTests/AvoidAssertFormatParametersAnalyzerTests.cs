@@ -16,6 +16,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
     public async Task WhenAssertMethodWithoutFormatParameters_NoDiagnostic()
     {
         const string code = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -28,6 +29,8 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                     Assert.IsTrue(true, "Simple message");
                     Assert.AreEqual(1, 2);
                     Assert.AreEqual(1, 2, "Simple message");
+                    Assert.Throws<Exception>(() => { });
+                    Assert.Throws<Exception>(() => { }, "message");
                 }
             }
             """;
