@@ -82,15 +82,11 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             return document;
         }
 
-        // Use semantic analysis to find the correct format string and params arguments
-        (bool success, int formatIndex, int paramsStartIndex) = TryGetFormatParameterPositions(invocationOperation.TargetMethod);
-        if (!success)
+        if (!TryGetMessageAndMessageArgsArguments(invocationOperation, out IArgumentOperation? messageArgumentOperation, out IArgumentOperation? paramsArgumentOperation))
         {
             return document;
         }
 
-        IArgumentOperation? paramsArgumentOperation = invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == paramsStartIndex);
-        IArgumentOperation? messageArgumentOperation = invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == formatIndex);
         if (paramsArgumentOperation is null || messageArgumentOperation is null)
         {
             return document;
@@ -149,16 +145,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             return document;
         }
 
-        // Use semantic analysis to find the correct format string and params arguments
-        (bool success, int formatIndex, int paramsStartIndex) = TryGetFormatParameterPositions(invocationOperation.TargetMethod);
-        if (!success)
-        {
-            return document;
-        }
-
-        IArgumentOperation? paramsArgumentOperation = invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == paramsStartIndex);
-        IArgumentOperation? messageArgumentOperation = invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == formatIndex);
-        if (paramsArgumentOperation is null || messageArgumentOperation is null)
+        if (!TryGetMessageAndMessageArgsArguments(invocationOperation, out IArgumentOperation? messageArgumentOperation, out IArgumentOperation? paramsArgumentOperation))
         {
             return document;
         }
@@ -201,10 +188,9 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             return false;
         }
 
-        (bool success, int formatIndex, int paramsIndex) = TryGetFormatParameterPositions(invocationOperation.TargetMethod);
-        if (!success ||
-            invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == paramsIndex) is not IArgumentOperation { ArgumentKind: ArgumentKind.ParamArray } ||
-            invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == formatIndex)?.Syntax is not ArgumentSyntax formatArgument)
+        if (!TryGetMessageAndMessageArgsArguments(invocationOperation, out IArgumentOperation? messageArgumentOperation, out IArgumentOperation? paramsArgumentOperation) ||
+            paramsArgumentOperation.ArgumentKind != ArgumentKind.ParamArray ||
+            messageArgumentOperation.Syntax is not ArgumentSyntax formatArgument)
         {
             return false;
         }
@@ -281,24 +267,22 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         return true;
     }
 
-    private static (bool Success, int FormatIndex, int ParamsStartIndex) TryGetFormatParameterPositions(IMethodSymbol methodSymbol)
+    private static bool TryGetMessageAndMessageArgsArguments(
+        IInvocationOperation invocationOperation,
+        [NotNullWhen(true)] out IArgumentOperation? messageArgument,
+        [NotNullWhen(true)] out IArgumentOperation? messageArgsArgument)
     {
-        ImmutableArray<IParameterSymbol> parameters = methodSymbol.Parameters;
-        if (parameters.Length < 2)
+        ImmutableArray<IParameterSymbol> parameters = invocationOperation.TargetMethod.Parameters;
+        if (parameters.Length < 2 ||
+            parameters.SingleOrDefault(p => p.Name == "message" && p.Type.SpecialType == SpecialType.System_String) is not IParameterSymbol messageParameter)
         {
-            return (false, -1, -1);
+            messageArgument = null;
+            messageArgsArgument = null;
+            return false;
         }
 
-        IParameterSymbol? formatParameter = parameters.SingleOrDefault(p => p.Name == "message" && p.Type.SpecialType == SpecialType.System_String);
-        if (formatParameter is null)
-        {
-            return (false, -1, -1);
-        }
-
-        // Map parameter indices to argument indices
-        int formatIndex = formatParameter.Ordinal;
-        int paramsStartIndex = parameters.Length - 1;
-
-        return (true, formatIndex, paramsStartIndex);
+        messageArgument = invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == messageParameter.Ordinal);
+        messageArgsArgument = invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == invocationOperation.TargetMethod.Parameters.Length - 1);
+        return messageArgument is not null && messageArgsArgument is not null;
     }
 }
