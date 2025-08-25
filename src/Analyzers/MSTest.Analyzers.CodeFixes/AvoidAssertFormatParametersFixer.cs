@@ -36,7 +36,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         Diagnostic diagnostic = context.Diagnostics[0];
-        if (root.FindNode(context.Span) is InvocationExpressionSyntax invocation)
+        if (root.FindNode(context.Span, getInnermostNodeForTie: true) is InvocationExpressionSyntax invocation)
         {
             RegisterStringFormatCodeFix(context, diagnostic, root, invocation);
             await RegisterInterpolatedStringCodeFixAsync(context, diagnostic, root, invocation).ConfigureAwait(false);
