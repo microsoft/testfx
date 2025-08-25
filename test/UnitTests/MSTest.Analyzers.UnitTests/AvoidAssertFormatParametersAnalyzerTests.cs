@@ -273,6 +273,49 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertWithArrayFormatParameters_FixWithStringFormat()
+    {
+        const string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Assert.AreEqual(1, 2, "Expected {0} but got {1}", new object[] { 1, 2 })|};
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Assert.AreEqual(1, 2, string.Format("Expected {0} but got {1}", new object[] { 1, 2 }));
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            CodeActionIndex = 0, // Use first code fix (string.Format)
+            TestCode = code,
+            FixedCode = fixedCode,
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual"),
+            },
+        }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenAssertWithMultipleFormatParameters_FixWithInterpolatedString()
     {
         const string code = """
