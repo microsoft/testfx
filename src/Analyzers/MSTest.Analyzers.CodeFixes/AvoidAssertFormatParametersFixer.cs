@@ -186,13 +186,26 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
 
         // Use semantic analysis to find the correct format string position
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        (bool success, int formatIndex, _) = TryGetFormatParameterPositions(semanticModel, invocation, cancellationToken);
+        if (semanticModel.GetOperation(invocation, cancellationToken) is not IInvocationOperation invocationOperation)
+        {
+            return false;
+        }
+
+        (bool success, int formatIndex, int paramsIndex) = TryGetFormatParameterPositions(invocationOperation.TargetMethod);
         if (!success)
         {
             return false;
         }
 
-        ArgumentSyntax formatArgument = arguments[formatIndex];
+        if (invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == paramsIndex) is not IArgumentOperation { ArgumentKind: ArgumentKind.ParamArray })
+        {
+            return false;
+        }
+
+        if (invocationOperation.Arguments.SingleOrDefault(arg => arg.Parameter?.Ordinal == formatIndex)?.Syntax is not ArgumentSyntax formatArgument)
+        {
+            return false;
+        }
 
         // Check if the format string is a simple string literal
         return formatArgument.Expression is LiteralExpressionSyntax literal &&
