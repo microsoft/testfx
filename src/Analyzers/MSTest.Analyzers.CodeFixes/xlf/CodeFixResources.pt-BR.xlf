@@ -58,8 +58,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
-        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="translated">Passe o argumento 'TestContext.CancellationTokenSource.Token' para a chamada do método</target>
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="needs-review-translation">Passe o argumento 'TestContext.CancellationTokenSource.Token' para a chamada do método</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -125,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Adicionar ''[TestMethod]"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="new">Use 'TestContext.CancellationToken' instead</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

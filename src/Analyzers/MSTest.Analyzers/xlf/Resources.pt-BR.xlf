@@ -463,13 +463,13 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">Ao chamar métodos assíncronos que tenham sobrecargas que aceitam um parâmetro CancellationToken, prefira usar a sobrecarga com TestContext.CancellationTokenSource.Token para habilitar o cancelamento cooperativo e respeitar os tempos limite do teste.</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="needs-review-translation">Ao chamar métodos assíncronos que tenham sobrecargas que aceitam um parâmetro CancellationToken, prefira usar a sobrecarga com TestContext.CancellationTokenSource.Token para habilitar o cancelamento cooperativo e respeitar os tempos limite do teste.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">Considere usar a sobrecarga que aceita um CancellationToken e passar "TestContext.CancellationTokenSource.Token"</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="needs-review-translation">Considere usar a sobrecarga que aceita um CancellationToken e passar "TestContext.CancellationTokenSource.Token"</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -650,6 +650,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">A assinatura "{0}" do método de teste é inválida</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="new">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="new">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="new">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

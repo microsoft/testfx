@@ -190,10 +190,13 @@
     <value>Use 'Assert.{0}' instead of 'StringAssert'</value>
   </data>
   <data name="PassCancellationTokenFix" xml:space="preserve">
-    <value>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</value>
+    <value>Pass 'TestContext.CancellationToken' argument to method call</value>
   </data>
   <data name="RemoveDynamicDataSourceTypeFix" xml:space="preserve">
     <value>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</value>
+  </data>
+  <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
+    <value>Use 'TestContext.CancellationToken' instead</value>
   </data>
   <data name="AvoidAssertFormatParametersUseStringFormat" xml:space="preserve">
     <value>Use 'string.Format' instead of format parameters</value>
