@@ -6,6 +6,8 @@ using System.Data;
 using System.Data.Common;
 #endif
 
+using System.ComponentModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -49,6 +51,7 @@ public abstract class TestContext
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
     // Disposing isn't important per https://github.com/dotnet/runtime/issues/29970#issuecomment-717840778
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public virtual CancellationTokenSource CancellationTokenSource { get; protected internal set; } = new();
 
     /// <summary>

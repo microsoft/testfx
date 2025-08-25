@@ -37,22 +37,21 @@ public sealed class UseCancellationTokenPropertyFixer : CodeFixProvider
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         Diagnostic diagnostic = context.Diagnostics[0];
 
-        // Find the member access expression identified by the diagnostic
+        // The node here is a the node accessing CancellationTokenSource property on testContext.
         SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
         if (node is not MemberAccessExpressionSyntax memberAccessExpression)
         {
             return;
         }
 
-        // Verify this is the pattern we expect: testContext.CancellationTokenSource.Token
-        if (memberAccessExpression.Expression is not MemberAccessExpressionSyntax parentMemberAccess ||
-            memberAccessExpression.Name.Identifier.ValueText != "Token" ||
-            parentMemberAccess.Name.Identifier.ValueText != "CancellationTokenSource")
+        // We are looking for testContext.CancellationTokenSource.Token.
+        // We already have testContext.CancellationTokenSource, so we get the parent, and check if it's accessing 'Token'.
+        if (memberAccessExpression.Parent is not MemberAccessExpressionSyntax parentMemberAccess ||
+            parentMemberAccess.Name is not IdentifierNameSyntax { Identifier.ValueText: "Token" })
         {
             return;
         }
 
-        // Register a code action that will invoke the fix
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseCancellationTokenPropertyFix,
@@ -61,10 +60,10 @@ public sealed class UseCancellationTokenPropertyFixer : CodeFixProvider
                     // Replace testContext.CancellationTokenSource.Token with testContext.CancellationToken
                     MemberAccessExpressionSyntax newExpression = SyntaxFactory.MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
-                        parentMemberAccess.Expression, // testContext part
+                        memberAccessExpression.Expression, // testContext part
                         SyntaxFactory.IdentifierName("CancellationToken"));
 
-                    return Task.FromResult(context.Document.WithSyntaxRoot(root.ReplaceNode(memberAccessExpression, newExpression)));
+                    return Task.FromResult(context.Document.WithSyntaxRoot(root.ReplaceNode(parentMemberAccess, newExpression)));
                 },
                 equivalenceKey: nameof(UseCancellationTokenPropertyFixer)),
             diagnostic);

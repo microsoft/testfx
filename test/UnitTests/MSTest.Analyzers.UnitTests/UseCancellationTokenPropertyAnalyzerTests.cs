@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Testing;
-
-using MSTest.Analyzers.Helpers;
-
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseCancellationTokenPropertyAnalyzer,
     MSTest.Analyzers.UseCancellationTokenPropertyFixer>;
@@ -15,8 +10,6 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class UseCancellationTokenPropertyAnalyzerTests
 {
-    private static DiagnosticDescriptor Rule => UseCancellationTokenPropertyAnalyzer.UseCancellationTokenPropertyRule;
-
     [TestMethod]
     public async Task WhenUsingCancellationTokenSourceToken_ShouldReportDiagnostic()
     {
@@ -33,7 +26,7 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
                 [TestMethod]
                 public async Task MyTest()
                 {
-                    await SomeAsyncOperation({|#0:TestContext.CancellationTokenSource.Token|});
+                    await SomeAsyncOperation([|TestContext.CancellationTokenSource|].Token);
                 }
 
                 private static Task SomeAsyncOperation(CancellationToken cancellationToken)
@@ -62,10 +55,7 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic(Rule).WithLocation(0),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -85,7 +75,7 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
                 public async Task MyTest()
                 {
                     var context = TestContext;
-                    await SomeAsyncOperation({|#0:context.CancellationTokenSource.Token|});
+                    await SomeAsyncOperation([|context.CancellationTokenSource|].Token);
                 }
 
                 private static Task SomeAsyncOperation(CancellationToken cancellationToken)
@@ -115,10 +105,7 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic(Rule).WithLocation(0),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]

@@ -44,42 +44,20 @@ public sealed class UseCancellationTokenPropertyAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            // Get the required symbols
-            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol) ||
-                !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingCancellationTokenSource, out INamedTypeSymbol? cancellationTokenSourceSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol) &&
+                testContextSymbol.GetMembers("CancellationTokenSource") is [IPropertySymbol cancellationTokenSourcePropertySymbol])
             {
-                return;
+                context.RegisterOperationAction(context => AnalyzePropertyReference(context, cancellationTokenSourcePropertySymbol), OperationKind.PropertyReference);
             }
-
-            context.RegisterOperationAction(
-                context => AnalyzePropertyReference(context, testContextSymbol, cancellationTokenSourceSymbol),
-                OperationKind.PropertyReference);
         });
     }
 
-    private static void AnalyzePropertyReference(
-        OperationAnalysisContext context,
-        INamedTypeSymbol testContextSymbol,
-        INamedTypeSymbol cancellationTokenSourceSymbol)
+    private static void AnalyzePropertyReference(OperationAnalysisContext context, IPropertySymbol cancellationTokenSourcePropertySymbol)
     {
         var propertyReferenceOperation = (IPropertyReferenceOperation)context.Operation;
-
-        // Check if this is accessing the Token property on CancellationTokenSource
-        if (propertyReferenceOperation.Property.Name != "Token" ||
-            !SymbolEqualityComparer.Default.Equals(propertyReferenceOperation.Property.ContainingType, cancellationTokenSourceSymbol))
+        if (propertyReferenceOperation.Property.Equals(cancellationTokenSourcePropertySymbol, SymbolEqualityComparer.Default))
         {
-            return;
+            context.ReportDiagnostic(propertyReferenceOperation.Syntax.CreateDiagnostic(UseCancellationTokenPropertyRule));
         }
-
-        // Check if the instance being accessed is the CancellationTokenSource property of TestContext
-        if (propertyReferenceOperation.Instance is not IPropertyReferenceOperation parentPropertyReference ||
-            parentPropertyReference.Property.Name != "CancellationTokenSource" ||
-            !SymbolEqualityComparer.Default.Equals(parentPropertyReference.Property.ContainingType, testContextSymbol))
-        {
-            return;
-        }
-
-        // Report the diagnostic
-        context.ReportDiagnostic(propertyReferenceOperation.Syntax.CreateDiagnostic(UseCancellationTokenPropertyRule));
     }
 }
