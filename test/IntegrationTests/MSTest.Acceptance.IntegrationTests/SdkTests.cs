@@ -446,6 +446,95 @@ namespace MSTestSdkTest
         Assert.IsFalse(binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType").Any(p => p.Value == "Exe"));
     }
 
+    [TestMethod]
+    public async Task ImplicitMSTestUsings_WhenDisabled_DoesNotIncludeImplicitUsing()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SingleTestSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+               .PatchCodeWithReplace("$ExtraProperties$", "<ImplicitMSTestUsings>false</ImplicitMSTestUsings>")
+               .PatchCodeWithReplace("using Microsoft.VisualStudio.TestTools.UnitTesting;", "// Explicit using removed to test implicit usings"));
+
+        // When ImplicitMSTestUsings is disabled, the compilation should fail because Microsoft.VisualStudio.TestTools.UnitTesting is not available
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c Debug {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+
+        // Should fail to compile because TestClass and TestMethod are not available without the implicit using
+        compilationResult.AssertExitCodeIsNot(0);
+        compilationResult.AssertOutputContains("TestClass");
+    }
+
+    [TestMethod]
+    public async Task ImplicitMSTestUsings_WhenEnabled_IncludesImplicitUsing()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SingleTestSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+               .PatchCodeWithReplace("$ExtraProperties$", "<ImplicitMSTestUsings>true</ImplicitMSTestUsings>")
+               .PatchCodeWithReplace("using Microsoft.VisualStudio.TestTools.UnitTesting;", "// Explicit using removed to test implicit usings"));
+
+        // When ImplicitMSTestUsings is enabled, the compilation should succeed because Microsoft.VisualStudio.TestTools.UnitTesting should be implicitly available
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c Debug {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+
+        compilationResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    public async Task ImplicitMSTestUsings_WhenEmpty_DefaultsToEnabled()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SingleTestSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty) // No ImplicitMSTestUsings property set
+               .PatchCodeWithReplace("using Microsoft.VisualStudio.TestTools.UnitTesting;", "// Explicit using removed to test implicit usings"));
+
+        // When ImplicitMSTestUsings is not set, it should default to enabled and compilation should succeed
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c Debug {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+
+        compilationResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    public async Task ImplicitMSTestUsings_WhenSetToDisable_DoesNotIncludeImplicitUsing()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SingleTestSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+               .PatchCodeWithReplace("$ExtraProperties$", "<ImplicitMSTestUsings>disable</ImplicitMSTestUsings>")
+               .PatchCodeWithReplace("using Microsoft.VisualStudio.TestTools.UnitTesting;", "// Explicit using removed to test implicit usings"));
+
+        // When ImplicitMSTestUsings is disabled, the compilation should fail because Microsoft.VisualStudio.TestTools.UnitTesting is not available
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c Debug {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+
+        // Should fail to compile because TestClass and TestMethod are not available without the implicit using
+        compilationResult.AssertExitCodeIsNot(0);
+        compilationResult.AssertOutputContains("TestClass");
+    }
+
+    [TestMethod]
+    public async Task ImplicitMSTestUsings_WhenSetToEnable_IncludesImplicitUsing()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SingleTestSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+               .PatchCodeWithReplace("$ExtraProperties$", "<ImplicitMSTestUsings>enable</ImplicitMSTestUsings>")
+               .PatchCodeWithReplace("using Microsoft.VisualStudio.TestTools.UnitTesting;", "// Explicit using removed to test implicit usings"));
+
+        // When ImplicitMSTestUsings is set to 'enable', the compilation should succeed because Microsoft.VisualStudio.TestTools.UnitTesting should be implicitly available
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c Debug {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+
+        compilationResult.AssertExitCodeIs(0);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string AspireProjectName = "AspireProject";
