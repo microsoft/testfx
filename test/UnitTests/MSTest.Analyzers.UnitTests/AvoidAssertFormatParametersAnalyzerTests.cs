@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis.Testing;
-
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidAssertFormatParametersAnalyzer,
     MSTest.Analyzers.CodeFixes.AvoidAssertFormatParametersFixer>;
@@ -50,13 +48,12 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.IsTrue(true, "Value: {0}", 42)|};
+                    [|Assert.IsTrue(true, "Value: {0}", 42)|];
                 }
             }
             """;
 
-        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -71,13 +68,12 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.IsFalse(false, "Value: {0}", 42)|};
+                    [|Assert.IsFalse(false, "Value: {0}", 42)|];
                 }
             }
             """;
 
-        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsFalse");
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -92,13 +88,12 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.AreEqual(1, 2, "Expected {0} but got {1}", 1, 2)|};
+                    [|Assert.AreEqual(1, 2, "Expected {0} but got {1}", 1, 2)|];
                 }
             }
             """;
 
-        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -116,13 +111,12 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 {
                     var list1 = new List<int> { 1, 2, 3 };
                     var list2 = new List<int> { 1, 2, 3 };
-                    {|#0:CollectionAssert.AreEqual(list1, list2, "Collections differ: {0}", "details")|};
+                    [|CollectionAssert.AreEqual(list1, list2, "Collections differ: {0}", "details")|];
                 }
             }
             """;
 
-        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual");
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -137,13 +131,12 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:StringAssert.Contains("hello", "world", "String '{0}' not found in '{1}'", "hello", "world")|};
+                    [|StringAssert.Contains("hello", "world", "String '{0}' not found in '{1}'", "hello", "world")|];
                 }
             }
             """;
 
-        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains");
-        await VerifyCS.VerifyAnalyzerAsync(code, expected);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -158,7 +151,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.IsTrue(true, "Value: {0}", 42)|};
+                    [|Assert.IsTrue(true, "Value: {0}", 42)|];
                 }
             }
             """;
@@ -182,10 +175,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             CodeActionIndex = 0, // Use first code fix (string.Format)
             TestCode = code,
             FixedCode = fixedCode,
-            ExpectedDiagnostics =
-            {
-                VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue"),
-            },
         }.RunAsync();
     }
 
@@ -201,7 +190,8 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.IsTrue(true, "Value: {0}", 42)|};
+                    [|Assert.IsTrue(true, "Value: {0}", 42)|];
+                    [|Assert.IsTrue(true, "Value: {0} {2} {1} {3}", 42, 44, 43, true ? "True" : "False")|];
                 }
             }
             """;
@@ -216,6 +206,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 public void MyTestMethod()
                 {
                     Assert.IsTrue(true, $"Value: {42}");
+                    Assert.IsTrue(true, $"Value: {42} {43} {44} {(true ? "True" : "False")}");
                 }
             }
             """;
@@ -225,10 +216,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             CodeActionIndex = 1, // Use second code fix (interpolated string)
             TestCode = code,
             FixedCode = fixedCode,
-            ExpectedDiagnostics =
-            {
-                VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue"),
-            },
         }.RunAsync();
     }
 
@@ -244,7 +231,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.AreEqual(1, 2, "Expected {0} but got {1}", 1, 2)|};
+                    [|Assert.AreEqual(1, 2, "Expected {0} but got {1}", 1, 2)|];
                 }
             }
             """;
@@ -268,10 +255,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             CodeActionIndex = 0, // Use first code fix (string.Format)
             TestCode = code,
             FixedCode = fixedCode,
-            ExpectedDiagnostics =
-            {
-                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual"),
-            },
         }.RunAsync();
     }
 
@@ -287,7 +270,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.AreEqual(1, 2, "Expected {0} but got {1}", new object[] { 1, 2 })|};
+                    [|Assert.AreEqual(1, 2, "Expected {0} but got {1}", new object[] { 1, 2 })|];
                 }
             }
             """;
@@ -311,10 +294,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             CodeActionIndex = 0, // Use first code fix (string.Format)
             TestCode = code,
             FixedCode = fixedCode,
-            ExpectedDiagnostics =
-            {
-                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual"),
-            },
         }.RunAsync();
     }
 
@@ -330,7 +309,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Assert.AreEqual(1, 2, "Expected {0} but got {1}", 1, 2)|};
+                    [|Assert.AreEqual(1, 2, "Expected {0} but got {1}", 1, 2)|];
                 }
             }
             """;
@@ -354,10 +333,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             CodeActionIndex = 1, // Use second code fix (interpolated string)
             TestCode = code,
             FixedCode = fixedCode,
-            ExpectedDiagnostics =
-            {
-                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AreEqual"),
-            },
         }.RunAsync();
     }
 
@@ -373,7 +348,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:StringAssert.Contains("hello", "world", "String '{0}' not found", "hello")|};
+                    [|StringAssert.Contains("hello", "world", "String '{0}' not found", "hello")|];
                 }
             }
             """;
@@ -397,10 +372,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             CodeActionIndex = 0, // Use first code fix (string.Format)
             TestCode = code,
             FixedCode = fixedCode,
-            ExpectedDiagnostics =
-            {
-                VerifyCS.Diagnostic().WithLocation(0).WithArguments("Contains"),
-            },
         }.RunAsync();
     }
 
@@ -417,7 +388,7 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
                 public void MyTestMethod()
                 {
                     string format = "Value: {0}";
-                    {|#0:Assert.IsTrue(true, format, 42)|};
+                    [|Assert.IsTrue(true, format, 42)|];
                 }
             }
             """;
@@ -437,7 +408,6 @@ public sealed class AvoidAssertFormatParametersAnalyzerTests
             }
             """;
 
-        DiagnosticResult expected = VerifyCS.Diagnostic().WithLocation(0).WithArguments("IsTrue");
-        await VerifyCS.VerifyCodeFixAsync(code, expected, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

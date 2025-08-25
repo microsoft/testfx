@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.CodeAnalysis.Simplification;
 
 using MSTest.Analyzers.Helpers;
 
@@ -232,7 +233,9 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
                 if (int.TryParse(placeholder, out int paramIndex) && paramIndex < paramsArguments.Length)
                 {
                     // Create interpolation expression
-                    InterpolationSyntax interpolation = SyntaxFactory.Interpolation(paramsArguments[paramIndex].Expression);
+                    InterpolationSyntax interpolation = SyntaxFactory.Interpolation(
+                        SyntaxFactory.ParenthesizedExpression(
+                            paramsArguments[paramIndex].Expression).WithAdditionalAnnotations(Simplifier.Annotation));
                     interpolatedContents.Add(interpolation);
                 }
                 else
