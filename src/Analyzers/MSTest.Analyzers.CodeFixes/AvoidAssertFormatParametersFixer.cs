@@ -195,10 +195,12 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
                literal.Token.IsKind(SyntaxKind.StringLiteralToken);
     }
 
-    private static bool TryCreateInterpolatedString(ArgumentSyntax formatArgument, ArgumentSyntax[] paramsArguments, out InterpolatedStringExpressionSyntax interpolatedString)
+    private static bool TryCreateInterpolatedString(
+        ArgumentSyntax formatArgument,
+        ArgumentSyntax[] paramsArguments,
+        [NotNullWhen(true)] out InterpolatedStringExpressionSyntax? interpolatedString)
     {
-        interpolatedString = null!;
-
+        interpolatedString = null;
         if (formatArgument.Expression is not LiteralExpressionSyntax literal ||
             !literal.Token.IsKind(SyntaxKind.StringLiteralToken))
         {
@@ -230,7 +232,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
 
                 // Extract the placeholder index
                 string placeholder = formatString.Substring(i + 1, closeIndex - i - 1);
-                if (int.TryParse(placeholder, out int paramIndex) && paramIndex < paramsArguments.Length)
+                if (int.TryParse(placeholder, NumberStyles.Integer, CultureInfo.InvariantCulture, out int paramIndex) && paramIndex < paramsArguments.Length)
                 {
                     // Create interpolation expression
                     InterpolationSyntax interpolation = SyntaxFactory.Interpolation(
