@@ -91,7 +91,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         InvocationExpressionSyntax stringFormatInvocation = SyntaxFactory.InvocationExpression(
             SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName("string"),
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)),
                 SyntaxFactory.IdentifierName("Format")))
             .WithArgumentList(
                 SyntaxFactory.ArgumentList(
