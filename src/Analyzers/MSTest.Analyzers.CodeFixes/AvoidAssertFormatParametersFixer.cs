@@ -48,7 +48,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
         var codeAction = CodeAction.Create(
             title: CodeFixResources.AvoidAssertFormatParametersUseStringFormat,
             createChangedDocument: _ => CreateStringFormatFixAsync(context.Document, root, invocation),
-            equivalenceKey: "StringFormat");
+            equivalenceKey: $"{nameof(AvoidAssertFormatParametersFixer)}_StringFormat");
 
         context.RegisterCodeFix(codeAction, diagnostic);
     }
@@ -61,7 +61,7 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             var codeAction = CodeAction.Create(
                 title: CodeFixResources.AvoidAssertFormatParametersUseInterpolatedString,
                 createChangedDocument: _ => CreateInterpolatedStringFixAsync(context.Document, root, invocation),
-                equivalenceKey: "InterpolatedString");
+                equivalenceKey: $"{nameof(AvoidAssertFormatParametersFixer)}_InterpolatedString");
 
             context.RegisterCodeFix(codeAction, diagnostic);
         }
