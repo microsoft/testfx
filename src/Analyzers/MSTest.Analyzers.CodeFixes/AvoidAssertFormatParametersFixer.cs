@@ -156,7 +156,6 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
 
         var formatArgument = (ArgumentSyntax)messageArgumentOperation.Syntax;
 
-        // Try to convert to interpolated string
         if (TryCreateInterpolatedString(formatArgument, paramsArguments, out InterpolatedStringExpressionSyntax? interpolatedString))
         {
             newArgumentList = newArgumentList.ReplaceNode(formatArgument, formatArgument.WithExpression(interpolatedString));
@@ -181,21 +180,16 @@ public sealed class AvoidAssertFormatParametersFixer : CodeFixProvider
             return false;
         }
 
-        // Use semantic analysis to find the correct format string position
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        if (semanticModel.GetOperation(invocation, cancellationToken) is not IInvocationOperation invocationOperation)
-        {
-            return false;
-        }
-
-        if (!TryGetMessageAndMessageArgsArguments(invocationOperation, out IArgumentOperation? messageArgumentOperation, out IArgumentOperation? paramsArgumentOperation) ||
+        if (semanticModel.GetOperation(invocation, cancellationToken) is not IInvocationOperation invocationOperation ||
+            !TryGetMessageAndMessageArgsArguments(invocationOperation, out IArgumentOperation? messageArgumentOperation, out IArgumentOperation? paramsArgumentOperation) ||
             paramsArgumentOperation.ArgumentKind != ArgumentKind.ParamArray ||
             messageArgumentOperation.Syntax is not ArgumentSyntax formatArgument)
         {
             return false;
         }
 
-        // Check if the format string is a simple string literal
+        // We can only offer a fix if the message is a string literal already.
         return formatArgument.Expression is LiteralExpressionSyntax literal &&
                literal.Token.IsKind(SyntaxKind.StringLiteralToken);
     }
