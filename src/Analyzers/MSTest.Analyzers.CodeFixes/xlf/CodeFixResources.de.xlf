@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
-        <target state="needs-review-translation">Argument „TestContext.CancellationTokenSource.Token“ an den Methodenaufruf übergeben</target>
+        <target state="new">Pass 'TestContext.CancellationToken' argument to method call</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
