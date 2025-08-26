@@ -37,6 +37,8 @@
     </PackageDescription>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5127;NU5128;NU5100</NoWarn>
+
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -89,26 +91,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <!-- Version templating -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
-  </ItemGroup>
-  <Target Name="GenerateMSTestVersionSourceFile" AfterTargets="PrepareForBuild">
-    <PropertyGroup>
-      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
-    </PropertyGroup>
-    <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/MSTestVersion.cs.template" Destination="$(IntermediateOutputPath)/MSTestVersion.cs" />
-    </ItemGroup>
-    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
-      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
-    </GenerateFileFromTemplate>
-
-    <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)/MSTestVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <Using Include="Polyfills" />
