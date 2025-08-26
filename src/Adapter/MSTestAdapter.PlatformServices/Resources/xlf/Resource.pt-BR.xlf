@@ -236,17 +236,17 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="needs-review-translation">Valor inválido '{0}' especificado para 'ClassCleanupLifecycle'. Os escopos suportados são {1}.</target>
+        <target state="translated">Valor inválido '{0}' especificado para 'ClassCleanupLifecycle'. Os escopos suportados são {1}.</target>
         <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="needs-review-translation">Valor inválido '{0}' especificado para 'Scope'. Os escopos compatíveis são {1}.</target>
+        <target state="translated">Valor inválido '{0}' especificado para 'Scope'. Os escopos compatíveis são {1}.</target>
         <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="needs-review-translation">Valor inválido '{0}' especificado para 'Workers'. O valor deve ser um inteiro não negativo.</target>
+        <target state="translated">Valor inválido '{0}' especificado para 'Workers'. O valor deve ser um inteiro não negativo.</target>
         <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
@@ -351,7 +351,7 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="needs-review-translation">Paralelização de Teste habilitada para {0} (Trabalhos: {1}, Escopo: {2})</target>
+        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
         <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">

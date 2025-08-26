@@ -236,17 +236,17 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="needs-review-translation">'ClassCleanupLifecycle'에 대해 '{0}' 잘못된 값이 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
+        <target state="translated">'ClassCleanupLifecycle'에 대해 '{0}' 잘못된 값이 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
         <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="needs-review-translation">'Scope'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
+        <target state="translated">'Scope'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 지원되는 범위는 {1}입니다.</target>
         <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="needs-review-translation">'Workers'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 이 값은 음수가 아닌 정수여야 합니다.</target>
+        <target state="translated">'Workers'에 대해 잘못된 값 '{0}'이(가) 지정되었습니다. 이 값은 음수가 아닌 정수여야 합니다.</target>
         <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
@@ -351,7 +351,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="needs-review-translation">{0}에 대해 테스트 병렬 처리를 사용합니다(Workers: {1}, Scope: {2}).</target>
+        <target state="translated">{0}에 대해 테스트 병렬 처리를 사용합니다(Workers: {1}, Scope: {2}).</target>
         <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">

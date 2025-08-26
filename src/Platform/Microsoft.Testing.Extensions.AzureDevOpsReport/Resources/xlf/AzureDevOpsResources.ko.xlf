@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="needs-review-translation">보고된 이벤트에 사용할 심각도입니다. 옵션은 오류(기본값)와 경고, 두 가지입니다.</target>
+        <target state="new">Severity to use for the reported event. Options are: error (default) and warning.</target>
         <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
     </body>
