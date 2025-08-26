@@ -28,8 +28,8 @@
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
-        <source>Severity to use for the reported event. Options are: <g id="1" translate="no">error</g> (default) and <g id="2" translate="no">warning</g>.</source>
-        <target state="translated">Gravedad que se va a usar para el evento notificado. Las opciones son: <g id="1" translate="no">error</g> (valor predeterminado) y <g id="2" translate="no">warning</g>.</target>
+        <source>Severity to use for the reported event. Options are: {Locked="error"} (default) and {Locked="warning"}.</source>
+        <target state="translated">Gravedad que se va a usar para el evento notificado. Las opciones son: {Locked="error"} (valor predeterminado) y {Locked="warning"}.</target>
         <note />
       </trans-unit>
     </body>

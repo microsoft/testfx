@@ -28,8 +28,8 @@
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
-        <source>Severity to use for the reported event. Options are: <g id="1" translate="no">error</g> (default) and <g id="2" translate="no">warning</g>.</source>
-        <target state="translated">보고된 이벤트에 사용할 심각도입니다. 옵션은 <g id="1" translate="no">error</g>(기본값)와 <g id="2" translate="no">warning</g>, 두 가지입니다.</target>
+        <source>Severity to use for the reported event. Options are: {Locked="error"} (default) and {Locked="warning"}.</source>
+        <target state="translated">보고된 이벤트에 사용할 심각도입니다. 옵션은 {Locked="error"}(기본값)와 {Locked="warning"}, 두 가지입니다.</target>
         <note />
       </trans-unit>
     </body>

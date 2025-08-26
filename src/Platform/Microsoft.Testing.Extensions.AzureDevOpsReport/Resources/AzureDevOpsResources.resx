@@ -133,6 +133,6 @@
     <value>Eanble Azure DevOps report generator to write errors to the output in a way that AzureDev Ops understands.</value>
   </data>
   <data name="SeverityOptionDescription" xml:space="preserve">
-    <value>Severity to use for the reported event. Options are: <g id="1" translate="no">error</g> (default) and <g id="2" translate="no">warning</g>.</value>
+    <value>Severity to use for the reported event. Options are: {Locked="error"} (default) and {Locked="warning"}.</value>
   </data>
 </root>

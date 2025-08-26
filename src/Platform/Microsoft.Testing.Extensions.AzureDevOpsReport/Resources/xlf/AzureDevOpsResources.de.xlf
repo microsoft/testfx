@@ -28,8 +28,8 @@
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
-        <source>Severity to use for the reported event. Options are: <g id="1" translate="no">error</g> (default) and <g id="2" translate="no">warning</g>.</source>
-        <target state="translated">Schweregrad, der für das gemeldete Ereignis verwendet werden soll. Optionen sind: <g id="1" translate="no">error</g> (Standard) und <g id="2" translate="no">warning</g>.</target>
+        <source>Severity to use for the reported event. Options are: {Locked="error"} (default) and {Locked="warning"}.</source>
+        <target state="translated">Schweregrad, der für das gemeldete Ereignis verwendet werden soll. Optionen sind: {Locked="error"} (Standard) und {Locked="warning"}.</target>
         <note />
       </trans-unit>
     </body>
