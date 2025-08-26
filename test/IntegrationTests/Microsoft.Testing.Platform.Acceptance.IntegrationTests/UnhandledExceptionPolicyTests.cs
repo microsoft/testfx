@@ -38,7 +38,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
         string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
-        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationTokenSource.Token);
+        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationToken);
 
         TestHostResult? testHostResult;
         switch (mode)
@@ -95,7 +95,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
         string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
-        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationTokenSource.Token);
+        string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationToken);
 
         TestHostResult? testHostResult;
         switch (mode)
