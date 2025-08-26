@@ -235,19 +235,19 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
-        <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="translated">Valor inválido '{0}' especificado para 'ClassCleanupLifecycle'. Os escopos suportados são {1}.</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <source>Invalid value '{0}' specified for {Locked="ClassCleanupLifecycle"}. Supported scopes are {1}.</source>
+        <target state="translated">Invalid value \'{0}\' specified for {Locked="ClassCleanupLifecycle"}. Supported scopes are {1}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
-        <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="translated">Valor inválido '{0}' especificado para 'Scope'. Os escopos compatíveis são {1}.</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <source>Invalid value '{0}' specified for {Locked="Scope"}. Supported scopes are {1}.</source>
+        <target state="translated">Invalid value \'{0}\' specified for {Locked="Scope"}. Supported scopes are {1}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
-        <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="translated">Valor inválido '{0}' especificado para 'Workers'. O valor deve ser um inteiro não negativo.</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <source>Invalid value '{0}' specified for {Locked="Workers"}. The value should be a non-negative integer.</source>
+        <target state="translated">Invalid value \'{0}\' specified for {Locked="Workers"}. The value should be a non-negative integer.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -350,9 +350,9 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
-        <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">Paralelização de Teste habilitada para {0} (Trabalhos: {1}, Escopo: {2})</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <source>Test Parallelization enabled for {0} ({Locked="Workers"}: {1}, {Locked="Scope"}: {2})</source>
+        <target state="translated">Test Parallelization enabled for {0} ({Locked="Workers"}: {1}, {Locked="Scope"}: {2})</target>
+        <note />
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>

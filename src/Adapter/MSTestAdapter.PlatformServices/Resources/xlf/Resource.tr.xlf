@@ -235,19 +235,19 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
-        <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="translated">'ClassCleanupLifecycle' için geçersiz '{0}' değeri belirtildi. Desteklenen kapsamlar {1}'dir.</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <source>Invalid value '{0}' specified for {Locked="ClassCleanupLifecycle"}. Supported scopes are {1}.</source>
+        <target state="translated">Invalid value \'{0}\' specified for {Locked="ClassCleanupLifecycle"}. Supported scopes are {1}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
-        <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="translated">'Scope' için geçersiz '{0}' değeri belirtildi. Desteklenen kapsamlar {1}.</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <source>Invalid value '{0}' specified for {Locked="Scope"}. Supported scopes are {1}.</source>
+        <target state="translated">Invalid value \'{0}\' specified for {Locked="Scope"}. Supported scopes are {1}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
-        <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="translated">'Workers' için geçersiz '{0}' değeri belirtildi. Değer negatif olmayan bir tamsayı olmalıdır.</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <source>Invalid value '{0}' specified for {Locked="Workers"}. The value should be a non-negative integer.</source>
+        <target state="translated">Invalid value \'{0}\' specified for {Locked="Workers"}. The value should be a non-negative integer.</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -350,9 +350,9 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
-        <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">{0} için Test Paralelleştirme etkin (Çalışanlar: {1}, Kapsam: {2}).</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <source>Test Parallelization enabled for {0} ({Locked="Workers"}: {1}, {Locked="Scope"}: {2})</source>
+        <target state="translated">Test Parallelization enabled for {0} ({Locked="Workers"}: {1}, {Locked="Scope"}: {2})</target>
+        <note />
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>

@@ -291,16 +291,13 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
   </data>
   <data name="InvalidClassCleanupLifecycleValue" xml:space="preserve">
-    <value>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</value>
-    <comment>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</comment>
+    <value>Invalid value '{0}' specified for {Locked="ClassCleanupLifecycle"}. Supported scopes are {1}.</value>
   </data>
   <data name="InvalidParallelScopeValue" xml:space="preserve">
-    <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>
-    <comment>'Scope' is a setting name that shouldn't be localized.</comment>
+    <value>Invalid value '{0}' specified for {Locked="Scope"}. Supported scopes are {1}.</value>
   </data>
   <data name="InvalidParallelWorkersValue" xml:space="preserve">
-    <value>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</value>
-    <comment>`Workers` is a setting name that shouldn't be localized.</comment>
+    <value>Invalid value '{0}' specified for {Locked="Workers"}. The value should be a non-negative integer.</value>
   </data>
   <data name="InvalidSettingsXmlAttribute" xml:space="preserve">
     <value>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</value>
@@ -348,8 +345,7 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Test method {0} was not found.</value>
   </data>
   <data name="TestParallelizationBanner" xml:space="preserve">
-    <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>
-    <comment>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</comment>
+    <value>Test Parallelization enabled for {0} ({Locked="Workers"}: {1}, {Locked="Scope"}: {2})</value>
   </data>
   <data name="TypeLoadFailed" xml:space="preserve">
     <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
