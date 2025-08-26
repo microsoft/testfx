@@ -31,7 +31,7 @@
         <source>Use assignment instead of 'out' parameter</source>
         <target state="new">Use assignment instead of 'out' parameter</target>
         <note />
-      <trans-unit>
+      </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
         <source>Use interpolated string instead of format parameters</source>
         <target state="new">Use interpolated string instead of format parameters</target>
