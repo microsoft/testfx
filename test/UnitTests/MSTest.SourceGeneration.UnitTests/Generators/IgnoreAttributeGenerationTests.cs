@@ -64,7 +64,7 @@ public sealed class IgnoreAttributeGenerationTests : TestBase
         SyntaxTree? testClassTree = generatorResult.GeneratedTrees.FirstOrDefault(r => r.FilePath.EndsWith("TestClass.g.cs", StringComparison.OrdinalIgnoreCase));
         testClassTree.Should().NotBeNull();
 
-        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationTokenSource.Token);
+        SourceText testClass = await testClassTree!.GetTextAsync(TestContext.CancellationToken);
 
         testClass.Should().ContainSourceCode("""StableUid = "TestAssembly.MyNamespace.TestClass.TestMethod1()",""");
 
