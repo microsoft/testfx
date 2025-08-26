@@ -236,17 +236,17 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="needs-review-translation">Pro classCleanupLifecycle byla zadána neplatná hodnota {0}. Podporované obory jsou {1}.</target>
+        <target state="new">Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</target>
         <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="needs-review-translation">Pro Obor je zadaná neplatná hodnota {0}. Podporované obory jsou {1}.</target>
+        <target state="new">Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</target>
         <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="needs-review-translation">Pro Pracovní procesy je zadaná neplatná hodnota {0}. Hodnota by měla být nezáporné celé číslo.</target>
+        <target state="new">Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</target>
         <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
@@ -351,7 +351,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="needs-review-translation">Je povolená paralelizace testu pro {0} (pracovní procesy: {1}, obor: {2}).</target>
+        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
         <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">

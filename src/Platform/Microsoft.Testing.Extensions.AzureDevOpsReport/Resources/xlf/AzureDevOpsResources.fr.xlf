@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="needs-review-translation">Gravité à utiliser pour l’événement signalé. Les options sont : erreur (par défaut) et avertissement.</target>
+        <target state="new">Severity to use for the reported event. Options are: error (default) and warning.</target>
         <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
     </body>
