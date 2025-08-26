@@ -28,9 +28,9 @@
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
-        <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="translated">要用於所報告事件的嚴重性。選項為: 錯誤 (預設) 警告。</target>
-        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+        <source>Severity to use for the reported event. Options are: <g id="1" translate="no">error</g> (default) and <g id="2" translate="no">warning</g>.</source>
+        <target state="translated">要用於所報告事件的嚴重性。選項為: <g id="1" translate="no">error</g> (預設) <g id="2" translate="no">warning</g>。</target>
+        <note />
       </trans-unit>
     </body>
   </file>

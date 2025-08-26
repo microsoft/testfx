@@ -28,9 +28,9 @@
         <note />
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
-        <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
+        <source>Severity to use for the reported event. Options are: <g id="1" translate="no">error</g> (default) and <g id="2" translate="no">warning</g>.</source>
         <target state="translated">A gravidade que será usada para o evento relatado. As opções são: erro (padrão) e aviso.</target>
-        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+        <note></note>
       </trans-unit>
     </body>
   </file>
