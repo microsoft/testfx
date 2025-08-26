@@ -244,17 +244,17 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
         <target state="translated">Il valore '{0}', specificato per 'ClassCleanupLifecycle', non è valido. I valori supportati per Scope sono {1}.</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">Il valore '{0}', specificato per 'Scope', non è valido. I valori supportati per Scope sono {1}.</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">Il valore '{0}', specificato per 'Workers', non è valido. Il valore deve essere un numero intero non negativo.</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -358,8 +358,8 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">Parallelizzazione test abilitata per {0} (Processi di lavoro: {1}. Ambito: {2}).</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>

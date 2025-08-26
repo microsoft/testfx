@@ -49,7 +49,7 @@ public sealed class ProtocolTests
         Assert.IsNotNull(deserialized);
         Assert.AreEqual(message.ExecutionId, deserialized.ExecutionId);
         Assert.AreEqual(message.InstanceId, deserialized.InstanceId);
-        Assert.AreEqual(message.DiscoveredMessages.Length, deserialized.DiscoveredMessages.Length);
+        Assert.HasCount(message.DiscoveredMessages.Length, deserialized.DiscoveredMessages);
         for (int i = 0; i < message.DiscoveredMessages.Length; i++)
         {
             DiscoveredTestMessage expected = message.DiscoveredMessages[i];
@@ -61,7 +61,7 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.Namespace, actual.Namespace);
             Assert.AreEqual(expected.TypeName, actual.TypeName);
             Assert.AreEqual(expected.MethodName, actual.MethodName);
-            Assert.AreEqual(expected.Traits.Length, actual.Traits.Length);
+            Assert.HasCount(expected.Traits.Length, actual.Traits);
             for (int j = 0; j < expected.Traits.Length; j++)
             {
                 Assert.AreEqual(expected.Traits[j].Key, actual.Traits[j].Key);

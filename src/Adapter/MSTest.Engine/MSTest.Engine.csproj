@@ -13,6 +13,8 @@
     <!-- Temporarly disable missing XML documentation on public APIs -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <IsPackable>true</IsPackable>
+
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -27,19 +29,6 @@
     <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsTrimmable>
     <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
   </PropertyGroup>
-
-  <!-- Insert the RepositoryVersion.cs -->
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
-  </ItemGroup>
-  <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild">
-    <ItemGroup>
-      <Compile Include="$(Compile);$(IntermediateOutputPath)/RepositoryVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <!-- NuGet properties -->
   <PropertyGroup>
@@ -82,23 +71,6 @@ This package provides a new experimental engine for MSTest test framework.]]>
       <PackagePath>build/$(TargetFramework)</PackagePath>
     </TfmSpecificPackageFile>
   </ItemGroup>
-
-  <!-- Version templating -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
-  </ItemGroup>
-  <Target Name="GenerateRepositoryVersionSourceFile" AfterTargets="PrepareForBuild" Condition=" Exists('$(MSBuildProjectDirectory)/RepositoryVersion.cs.template') ">
-    <PropertyGroup>
-      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
-    </PropertyGroup>
-    <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(IntermediateOutputPath)/RepositoryVersion.cs" />
-    </ItemGroup>
-
-    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
-      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
-    </GenerateFileFromTemplate>
-  </Target>
 
   <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
   <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' ">
