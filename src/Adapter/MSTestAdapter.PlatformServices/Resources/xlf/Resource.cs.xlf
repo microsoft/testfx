@@ -236,18 +236,18 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="translated">Pro classCleanupLifecycle byla zadána neplatná hodnota {0}. Podporované obory jsou {1}.</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Pro classCleanupLifecycle byla zadána neplatná hodnota {0}. Podporované obory jsou {1}.</target>
+        <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="translated">Pro Obor je zadaná neplatná hodnota {0}. Podporované obory jsou {1}.</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Pro Obor je zadaná neplatná hodnota {0}. Podporované obory jsou {1}.</target>
+        <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="translated">Pro Pracovní procesy je zadaná neplatná hodnota {0}. Hodnota by měla být nezáporné celé číslo.</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Pro Pracovní procesy je zadaná neplatná hodnota {0}. Hodnota by měla být nezáporné celé číslo.</target>
+        <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -351,8 +351,8 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">Je povolená paralelizace testu pro {0} (pracovní procesy: {1}, obor: {2}).</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Je povolená paralelizace testu pro {0} (pracovní procesy: {1}, obor: {2}).</target>
+        <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>

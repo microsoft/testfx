@@ -338,8 +338,6 @@ internal static class SerializerUtilities
 
                     if (property is TimingProperty timingProperty)
                     {
-                        properties["time.start-utc"] = timingProperty.GlobalTiming.StartTime;
-                        properties["time.stop-utc"] = timingProperty.GlobalTiming.EndTime;
                         properties["time.duration-ms"] = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
                         continue;
                     }

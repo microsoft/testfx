@@ -17,35 +17,36 @@ internal static class TcmTestPropertiesProvider
     /// </summary>
     /// <param name="testCase">Test case.</param>
     /// <returns>Tcm properties.</returns>
-    public static IDictionary<TestPlatformObjectModel.TestProperty, object?> GetTcmProperties(TestPlatformObjectModel.TestCase? testCase)
+    public static IDictionary<TestPlatformObjectModel.TestProperty, object?>? GetTcmProperties(TestPlatformObjectModel.TestCase? testCase)
     {
-        var tcmProperties = new Dictionary<TestPlatformObjectModel.TestProperty, object?>();
-
         // Return empty properties when testCase is null or when test case id is zero.
         if (testCase == null ||
             testCase.GetPropertyValue<int>(EngineConstants.TestCaseIdProperty, default) == 0)
         {
-            return tcmProperties;
+            return null;
         }
 
-        // Step 1: Add common properties.
-        tcmProperties[EngineConstants.TestRunIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestRunIdProperty, default);
-        tcmProperties[EngineConstants.TestPlanIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestPlanIdProperty, default);
-        tcmProperties[EngineConstants.BuildConfigurationIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.BuildConfigurationIdProperty, default);
-        tcmProperties[EngineConstants.BuildDirectoryProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildDirectoryProperty, default);
-        tcmProperties[EngineConstants.BuildFlavorProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildFlavorProperty, default);
-        tcmProperties[EngineConstants.BuildNumberProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildNumberProperty, default);
-        tcmProperties[EngineConstants.BuildPlatformProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildPlatformProperty, default);
-        tcmProperties[EngineConstants.BuildUriProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildUriProperty, default);
-        tcmProperties[EngineConstants.TfsServerCollectionUrlProperty] = testCase.GetPropertyValue<string>(EngineConstants.TfsServerCollectionUrlProperty, default);
-        tcmProperties[EngineConstants.TfsTeamProjectProperty] = testCase.GetPropertyValue<string>(EngineConstants.TfsTeamProjectProperty, default);
-        tcmProperties[EngineConstants.IsInLabEnvironmentProperty] = testCase.GetPropertyValue<bool>(EngineConstants.IsInLabEnvironmentProperty, default);
+        var tcmProperties = new Dictionary<TestPlatformObjectModel.TestProperty, object?>(capacity: 15)
+        {
+            // Step 1: Add common properties.
+            [EngineConstants.TestRunIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestRunIdProperty, default),
+            [EngineConstants.TestPlanIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestPlanIdProperty, default),
+            [EngineConstants.BuildConfigurationIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.BuildConfigurationIdProperty, default),
+            [EngineConstants.BuildDirectoryProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildDirectoryProperty, default),
+            [EngineConstants.BuildFlavorProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildFlavorProperty, default),
+            [EngineConstants.BuildNumberProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildNumberProperty, default),
+            [EngineConstants.BuildPlatformProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildPlatformProperty, default),
+            [EngineConstants.BuildUriProperty] = testCase.GetPropertyValue<string>(EngineConstants.BuildUriProperty, default),
+            [EngineConstants.TfsServerCollectionUrlProperty] = testCase.GetPropertyValue<string>(EngineConstants.TfsServerCollectionUrlProperty, default),
+            [EngineConstants.TfsTeamProjectProperty] = testCase.GetPropertyValue<string>(EngineConstants.TfsTeamProjectProperty, default),
+            [EngineConstants.IsInLabEnvironmentProperty] = testCase.GetPropertyValue<bool>(EngineConstants.IsInLabEnvironmentProperty, default),
 
-        // Step 2: Add test case specific properties.
-        tcmProperties[EngineConstants.TestCaseIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIdProperty, default);
-        tcmProperties[EngineConstants.TestConfigurationIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestConfigurationIdProperty, default);
-        tcmProperties[EngineConstants.TestConfigurationNameProperty] = testCase.GetPropertyValue<string>(EngineConstants.TestConfigurationNameProperty, default);
-        tcmProperties[EngineConstants.TestPointIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestPointIdProperty, default);
+            // Step 2: Add test case specific properties.
+            [EngineConstants.TestCaseIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIdProperty, default),
+            [EngineConstants.TestConfigurationIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestConfigurationIdProperty, default),
+            [EngineConstants.TestConfigurationNameProperty] = testCase.GetPropertyValue<string>(EngineConstants.TestConfigurationNameProperty, default),
+            [EngineConstants.TestPointIdProperty] = testCase.GetPropertyValue<int>(EngineConstants.TestPointIdProperty, default),
+        };
 
         return tcmProperties;
     }

@@ -45,7 +45,11 @@ public class FileOperations : IFileOperations
         }
 #endif
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
-        Assembly assembly = _assemblyCache.GetOrAdd(fileNameWithoutExtension, fileNameWithoutExtension => Assembly.Load(new AssemblyName(fileNameWithoutExtension)));
+        // Do NOT use `new AssemblyName(fileNameWithoutExtension)` here. The provided string is a FullName of assembly and needs to be properly escaped (but there is no utility for it).
+        // To correctly construct AssemblyName from file name, we need to just set the Name, and it will be escaped correct when constructing FullName.
+        // https://github.com/dotnet/runtime/blob/da322a2260bcb07347df3082fca211987ec8f2fc/src/libraries/Common/src/System/Reflection/AssemblyNameFormatter.cs#L120
+        // When we did it wrong the exception thrown is "The given assembly name was invalid." for files that have `=` or any other special characters in their names (see the AssemblyNameFormatter.cs code).
+        Assembly assembly = _assemblyCache.GetOrAdd(fileNameWithoutExtension, fileNameWithoutExtension => Assembly.Load(new AssemblyName { Name = fileNameWithoutExtension }));
 
         return assembly;
 #elif NETFRAMEWORK

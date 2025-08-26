@@ -9,9 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
 
 public class CollectionAssertTests : TestContainer
 {
-    public void InstanceShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.Instance is not null);
+    public void InstanceShouldReturnAnInstanceOfCollectionAssert() => Verify(CollectionAssert.That is not null);
 
-    public void InstanceShouldCacheCollectionAssertInstance() => Verify(CollectionAssert.Instance == CollectionAssert.Instance);
+    public void InstanceShouldCacheCollectionAssertInstance() => Verify(CollectionAssert.That == CollectionAssert.That);
 
     public void CollectionAssertContainsNullabilityPostConditions()
     {

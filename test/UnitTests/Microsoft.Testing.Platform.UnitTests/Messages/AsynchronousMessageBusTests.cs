@@ -126,10 +126,10 @@ public sealed class AsynchronousMessageBusTests
 
         await proxy.DrainDataAsync();
 
-        Assert.AreEqual(totalConsumers, dummyConsumers.Count);
+        Assert.HasCount(totalConsumers, dummyConsumers);
         foreach (DummyConsumer consumer in dummyConsumers)
         {
-            Assert.AreEqual(totalPayloads, consumer.DummyDataList.Count);
+            Assert.HasCount(totalPayloads, consumer.DummyDataList);
 
             int i = 1;
             foreach (DummyConsumer.DummyData payload in consumer.DummyDataList.OrderBy(x => x.Data))

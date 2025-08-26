@@ -236,18 +236,18 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="translated">Dla ustawienia „ClassCleanupLifecycle” określono nieprawidłową wartość „{0}”. Obsługiwane zakresy to {1}.</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Dla ustawienia „ClassCleanupLifecycle” określono nieprawidłową wartość „{0}”. Obsługiwane zakresy to {1}.</target>
+        <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="translated">Określono nieprawidłową wartość „{0}” dla właściwości „Scope”. Obsługiwane zakresy to {1}.</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Określono nieprawidłową wartość „{0}” dla właściwości „Scope”. Obsługiwane zakresy to {1}.</target>
+        <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="translated">Określono nieprawidłową wartość „{0}” dla właściwości „Workers”. Wartość musi być nieujemną liczbą całkowitą.</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Określono nieprawidłową wartość „{0}” dla właściwości „Workers”. Wartość musi być nieujemną liczbą całkowitą.</target>
+        <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -351,8 +351,8 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">Przetwarzanie równoległe testów włączono dla {0} (procesy robocze: {1}, zakres: {2})</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <target state="needs-review-translation">Przetwarzanie równoległe testów włączono dla {0} (procesy robocze: {1}, zakres: {2})</target>
+        <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>

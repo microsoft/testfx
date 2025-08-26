@@ -719,7 +719,10 @@ public class TestMethodInfo : ITestMethod
     {
         DebugEx.Assert(result != null, "result != null");
 
-        if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked)
+        if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked ||
+            // Fast check to see if we can return early.
+            // This avoids the code below that allocates CancellationTokenSource
+            !HasCleanupsToInvoke())
         {
 #if NET6_0_OR_GREATER
             return;
@@ -813,6 +816,15 @@ public class TestMethodInfo : ITestMethod
         return Task.CompletedTask;
 #endif
     }
+
+    private bool HasCleanupsToInvoke() =>
+        Parent.TestCleanupMethod is not null ||
+        Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
+        _classInstance is IDisposable ||
+#if NET6_0_OR_GREATER
+        _classInstance is IAsyncDisposable ||
+#endif
+        Parent.Parent.GlobalTestCleanups is { Count: > 0 };
 
     /// <summary>
     /// Runs TestInitialize methods of parent TestClass and the base classes.

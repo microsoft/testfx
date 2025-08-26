@@ -270,8 +270,6 @@ internal sealed class Json
 
                 if (property is TimingProperty timingProperty)
                 {
-                    properties.Add(("time.start-utc", timingProperty.GlobalTiming.StartTime));
-                    properties.Add(("time.stop-utc", timingProperty.GlobalTiming.EndTime));
                     properties.Add(("time.duration-ms", timingProperty.GlobalTiming.Duration.TotalMilliseconds));
                     continue;
                 }

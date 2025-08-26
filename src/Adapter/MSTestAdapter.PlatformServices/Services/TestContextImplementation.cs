@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #else
 [Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
-public class TestContextImplementation : TestContext, ITestContext, IDisposable
+public sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
     internal sealed class SynchronizedStringBuilder
     {
@@ -50,11 +50,6 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
 
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
-    /// <summary>
-    /// List of result files associated with the test.
-    /// </summary>
-    private readonly List<string> _testResultFiles;
-
     // This should be removed. Don't rely on it.
     // We only keep it for public constructor, but we don't pass it by the adapter.
     private readonly StringWriter? _stringWriter;
@@ -64,14 +59,18 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
-    private readonly CancellationTokenRegistration? _cancellationTokenRegistration;
+
+    private CancellationTokenRegistration? _cancellationTokenRegistration;
+
+    /// <summary>
+    /// List of result files associated with the test.
+    /// </summary>
+    private List<string>? _testResultFiles;
 
     private SynchronizedStringBuilder? _stdOutStringBuilder;
     private SynchronizedStringBuilder? _stdErrStringBuilder;
     private SynchronizedStringBuilder? _traceStringBuilder;
     private StringBuilder? _testContextMessageStringBuilder;
-
-    private bool _isDisposed;
 
     /// <summary>
     /// Unit test outcome.
@@ -118,17 +117,23 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
         DebugEx.Assert(properties != null, "properties is not null");
 
         _stringWriter = stringWriter;
-        _properties = testMethod is null
-            ? new Dictionary<string, object?>(properties)
-            : new Dictionary<string, object?>(properties)
+        if (testMethod is null)
+        {
+            _properties = new Dictionary<string, object?>(properties);
+        }
+        else
+        {
+            _properties = new Dictionary<string, object?>(properties.Count + 4);
+            foreach (KeyValuePair<string, object?> kvp in properties)
             {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
-            };
+                _properties[kvp.Key] = kvp.Value;
+            }
 
-        _testResultFiles = [];
+            _properties[FullyQualifiedTestClassNameLabel] = testMethod.FullClassName;
+            _properties[ManagedTypeLabel] = testMethod.ManagedTypeName;
+            _properties[ManagedMethodLabel] = testMethod.ManagedMethodName;
+            _properties[TestNameLabel] = testMethod.Name;
+        }
     }
 
     internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
@@ -193,7 +198,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
-        _testResultFiles.Add(Path.GetFullPath(fileName));
+        (_testResultFiles ??= []).Add(Path.GetFullPath(fileName));
     }
 
     /// <summary>
@@ -317,7 +322,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-        if (_testResultFiles.Count == 0)
+        if (_testResultFiles is null || _testResultFiles.Count == 0)
         {
             return null;
         }
@@ -358,25 +363,8 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// The dispose pattern.
-    /// </summary>
-    /// <param name="disposing">Whether to dispose managed state.</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_isDisposed)
-        {
-            _isDisposed = true;
-
-            if (disposing)
-            {
-                _cancellationTokenRegistration?.Dispose();
-            }
-        }
+        _cancellationTokenRegistration?.Dispose();
+        _cancellationTokenRegistration = null;
     }
 
     internal readonly struct ScopedTestContextSetter : IDisposable

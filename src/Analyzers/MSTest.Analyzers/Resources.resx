@@ -634,10 +634,10 @@ The type declaring these methods should also respect the following rules:
     <value>Flow TestContext.CancellationToken to async operations</value>
   </data>
   <data name="FlowTestContextCancellationTokenMessageFormat" xml:space="preserve">
-    <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</value>
+    <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</value>
   </data>
   <data name="FlowTestContextCancellationTokenDescription" xml:space="preserve">
-    <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</value>
+    <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</value>
   </data>
   <data name="AssertThrowsShouldContainSingleStatementTitle" xml:space="preserve">
     <value>Assert.Throws should contain only a single statement/expression</value>
@@ -677,5 +677,20 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
+  </data>
+  <data name="UseCancellationTokenPropertyTitle" xml:space="preserve">
+    <value>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</value>
+  </data>
+  <data name="UseCancellationTokenPropertyMessageFormat" xml:space="preserve">
+    <value>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</value>
+  </data>
+  <data name="UseCancellationTokenPropertyDescription" xml:space="preserve">
+    <value>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</value>
+  </data>
+  <data name="AvoidAssertFormatParametersTitle" xml:space="preserve">
+    <value>Avoid using Assert methods with format parameters</value>
+  </data>
+  <data name="AvoidAssertFormatParametersMessageFormat" xml:space="preserve">
+    <value>Replace '{0}' with format parameters with string.Format or string interpolation</value>
   </data>
 </root>

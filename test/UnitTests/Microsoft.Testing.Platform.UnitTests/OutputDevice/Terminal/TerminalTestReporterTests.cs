@@ -596,4 +596,163 @@ public sealed class TerminalTestReporterTests
 
         public override string? StackTrace { get; }
     }
+
+    // Test data for all C0 control characters (U+0000-U+001F) that are normalized
+    [DataRow('\x0000', '\x2400', "NULL")]
+    [DataRow('\x0001', '\x2401', "START OF HEADING")]
+    [DataRow('\x0002', '\x2402', "START OF TEXT")]
+    [DataRow('\x0003', '\x2403', "END OF TEXT")]
+    [DataRow('\x0004', '\x2404', "END OF TRANSMISSION")]
+    [DataRow('\x0005', '\x2405', "ENQUIRY")]
+    [DataRow('\x0006', '\x2406', "ACKNOWLEDGE")]
+    [DataRow('\x0007', '\x2407', "BELL")]
+    [DataRow('\x0008', '\x2408', "BACKSPACE")]
+    [DataRow('\t', '\x2409', "TAB")]
+    [DataRow('\n', '\x240A', "LINE FEED")]
+    [DataRow('\x000B', '\x240B', "VERTICAL TAB")]
+    [DataRow('\x000C', '\x240C', "FORM FEED")]
+    [DataRow('\r', '\x240D', "CARRIAGE RETURN")]
+    [DataRow('\x000E', '\x240E', "SHIFT OUT")]
+    [DataRow('\x000F', '\x240F', "SHIFT IN")]
+    [DataRow('\x0010', '\x2410', "DATA LINK ESCAPE")]
+    [DataRow('\x0011', '\x2411', "DEVICE CONTROL ONE")]
+    [DataRow('\x0012', '\x2412', "DEVICE CONTROL TWO")]
+    [DataRow('\x0013', '\x2413', "DEVICE CONTROL THREE")]
+    [DataRow('\x0014', '\x2414', "DEVICE CONTROL FOUR")]
+    [DataRow('\x0015', '\x2415', "NEGATIVE ACKNOWLEDGE")]
+    [DataRow('\x0016', '\x2416', "SYNCHRONOUS IDLE")]
+    [DataRow('\x0017', '\x2417', "END OF TRANSMISSION BLOCK")]
+    [DataRow('\x0018', '\x2418', "CANCEL")]
+    [DataRow('\x0019', '\x2419', "END OF MEDIUM")]
+    [DataRow('\x001A', '\x241A', "SUBSTITUTE")]
+    [DataRow('\x001B', '\x241B', "ESCAPE")]
+    [DataRow('\x001C', '\x241C', "FILE SEPARATOR")]
+    [DataRow('\x001D', '\x241D', "GROUP SEPARATOR")]
+    [DataRow('\x001E', '\x241E', "RECORD SEPARATOR")]
+    [DataRow('\x001F', '\x241F', "UNIT SEPARATOR")]
+    [TestMethod]
+    public void TestDisplayNames_WithControlCharacters_AreNormalized(char controlChar, char expectedChar, string charName)
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            UseAnsi = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+
+        terminalReporter.AssemblyRunStarted();
+
+        // Test display name with the specific control character
+        string testDisplayName = $"Test{controlChar}Name";
+        terminalReporter.TestCompleted(testNodeUid: "Test1", testDisplayName, TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // Verify that the control character is replaced with its Unicode control picture
+        string normalizedDisplayName = $"Test{expectedChar}Name";
+        Assert.Contains(normalizedDisplayName, output, $"{charName} should be replaced with {expectedChar}");
+
+        // Verify that the literal control character is not present in the test display name
+        // Note: We skip this assertion for whitespace characters (\t, \n, \r) because these
+        // characters naturally appear in console output formatting (e.g., line breaks between tests)
+        // and asserting their complete absence would cause false positives
+        string literalDisplayName = $"Test{controlChar}Name";
+        bool isWhitespaceChar = controlChar is '\t' or '\n' or '\r';
+        if (!isWhitespaceChar)
+        {
+            Assert.DoesNotContain(literalDisplayName, output, $"Literal {charName} should not be present in test display name");
+        }
+    }
+
+    // Test data for all C0 control characters (U+0000-U+001F) that are normalized
+    [DataRow('\x0000', '\x2400', "NULL")]
+    [DataRow('\x0001', '\x2401', "START OF HEADING")]
+    [DataRow('\x0002', '\x2402', "START OF TEXT")]
+    [DataRow('\x0003', '\x2403', "END OF TEXT")]
+    [DataRow('\x0004', '\x2404', "END OF TRANSMISSION")]
+    [DataRow('\x0005', '\x2405', "ENQUIRY")]
+    [DataRow('\x0006', '\x2406', "ACKNOWLEDGE")]
+    [DataRow('\x0007', '\x2407', "BELL")]
+    [DataRow('\x0008', '\x2408', "BACKSPACE")]
+    [DataRow('\t', '\x2409', "TAB")]
+    [DataRow('\n', '\x240A', "LINE FEED")]
+    [DataRow('\x000B', '\x240B', "VERTICAL TAB")]
+    [DataRow('\x000C', '\x240C', "FORM FEED")]
+    [DataRow('\r', '\x240D', "CARRIAGE RETURN")]
+    [DataRow('\x000E', '\x240E', "SHIFT OUT")]
+    [DataRow('\x000F', '\x240F', "SHIFT IN")]
+    [DataRow('\x0010', '\x2410', "DATA LINK ESCAPE")]
+    [DataRow('\x0011', '\x2411', "DEVICE CONTROL ONE")]
+    [DataRow('\x0012', '\x2412', "DEVICE CONTROL TWO")]
+    [DataRow('\x0013', '\x2413', "DEVICE CONTROL THREE")]
+    [DataRow('\x0014', '\x2414', "DEVICE CONTROL FOUR")]
+    [DataRow('\x0015', '\x2415', "NEGATIVE ACKNOWLEDGE")]
+    [DataRow('\x0016', '\x2416', "SYNCHRONOUS IDLE")]
+    [DataRow('\x0017', '\x2417', "END OF TRANSMISSION BLOCK")]
+    [DataRow('\x0018', '\x2418', "CANCEL")]
+    [DataRow('\x0019', '\x2419', "END OF MEDIUM")]
+    [DataRow('\x001A', '\x241A', "SUBSTITUTE")]
+    [DataRow('\x001B', '\x241B', "ESCAPE")]
+    [DataRow('\x001C', '\x241C', "FILE SEPARATOR")]
+    [DataRow('\x001D', '\x241D', "GROUP SEPARATOR")]
+    [DataRow('\x001E', '\x241E', "RECORD SEPARATOR")]
+    [DataRow('\x001F', '\x241F', "UNIT SEPARATOR")]
+    [TestMethod]
+    public void TestDiscovery_WithControlCharacters_AreNormalized(char controlChar, char expectedChar, string charName)
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            UseAnsi = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true);
+
+        terminalReporter.AssemblyRunStarted();
+
+        // Test discovery with the specific control character
+        string testDisplayName = $"Test{controlChar}Name";
+        terminalReporter.TestDiscovered(testDisplayName);
+
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // Verify that the control character is replaced with its Unicode control picture
+        string normalizedDisplayName = $"Test{expectedChar}Name";
+        Assert.Contains(normalizedDisplayName, output, $"{charName} should be replaced with {expectedChar} in discovery");
+
+        // Verify that the literal control character is not present in the test display name
+        // Note: We skip this assertion for whitespace characters (\t, \n, \r) because these
+        // characters naturally appear in console output formatting (e.g., line breaks between tests)
+        // and asserting their complete absence would cause false positives
+        string literalDisplayName = $"Test{controlChar}Name";
+        bool isWhitespaceChar = controlChar is '\t' or '\n' or '\r';
+        if (!isWhitespaceChar)
+        {
+            Assert.DoesNotContain(literalDisplayName, output, $"Literal {charName} should not be present in test display name");
+        }
+    }
 }

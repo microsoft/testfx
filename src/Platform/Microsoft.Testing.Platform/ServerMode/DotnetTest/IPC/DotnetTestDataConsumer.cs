@@ -56,13 +56,29 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
+                        TestFileLocationProperty? testFileLocationProperty = null;
+                        TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
+                        TestMetadataProperty[] traits = [];
+                        if (_dotnetTestConnection.IsIDE)
+                        {
+                            testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
+                            testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+                            traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
+                        }
+
                         DiscoveredTestMessages discoveredTestMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
                             [
                                 new DiscoveredTestMessage(
                                     testNodeUpdateMessage.TestNode.Uid.Value,
-                                    testNodeUpdateMessage.TestNode.DisplayName)
+                                    testNodeUpdateMessage.TestNode.DisplayName,
+                                    testFileLocationProperty?.FilePath,
+                                    testFileLocationProperty?.LineSpan.Start.Line,
+                                    testMethodIdentifierProperty?.Namespace,
+                                    testMethodIdentifierProperty?.TypeName,
+                                    testMethodIdentifierProperty?.MethodName,
+                                    traits)
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);
@@ -70,6 +86,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
                     case TestStates.Passed:
                     case TestStates.Skipped:
+                    case TestStates.InProgress when _dotnetTestConnection.IsIDE:
                         TestResultMessages testResultMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
@@ -228,6 +245,10 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
+                break;
+
+            case InProgressTestNodeStateProperty:
+                state = TestStates.InProgress;
                 break;
         }
 
