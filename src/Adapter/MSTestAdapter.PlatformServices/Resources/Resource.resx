@@ -349,7 +349,7 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="TestParallelizationBanner" xml:space="preserve">
     <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>
-    <comment>{Locked="Workers,Scope"}</comment>
+    <comment>{Locked="Workers"}{Locked="Scope"}</comment>
   </data>
   <data name="TypeLoadFailed" xml:space="preserve">
     <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.

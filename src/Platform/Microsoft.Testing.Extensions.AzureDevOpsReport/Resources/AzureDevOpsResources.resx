@@ -134,6 +134,6 @@
   </data>
   <data name="SeverityOptionDescription" xml:space="preserve">
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>
-    <comment>{Locked="error,warning"}</comment>
+    <comment>{Locked="error"}{Locked="warning"}</comment>
   </data>
 </root>
