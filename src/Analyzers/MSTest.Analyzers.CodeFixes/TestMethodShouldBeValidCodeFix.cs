@@ -130,7 +130,7 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         if (asyncModifier && newMethodDeclaration.ReturnType != null && newMethodDeclaration.ReturnType.IsVoid())
         {
             // Change the return type to Task. We have a space after Task to ensure we have a trailing trivia (space) after Task.
-            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.ParseTypeName("Task "));
+            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.IdentifierName("Task"));
         }
 
         // Apply changes.
