@@ -421,11 +421,13 @@ public sealed class CollectionAssert
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (!isSubsetValue.Item1)
         {
-            string returnedSubsetValueMessage = string.Empty;
+            var sb = new StringBuilder();
             foreach (object? item in isSubsetValue.Item2)
             {
-                returnedSubsetValueMessage = returnedSubsetValueMessage + " " + Convert.ToString(item, CultureInfo.InvariantCulture) + ",";
+                sb.Append(' ').Append(Convert.ToString(item, CultureInfo.InvariantCulture)).Append(',');
             }
+
+            string returnedSubsetValueMessage = sb.ToString();
 
             // Remove the last trailing comma
             if (!string.IsNullOrEmpty(returnedSubsetValueMessage))
@@ -433,7 +435,7 @@ public sealed class CollectionAssert
                 returnedSubsetValueMessage = returnedSubsetValueMessage.TrimEnd(',').Trim();
             }
 
-            returnedSubsetValueMessage = "Element(s) {" + returnedSubsetValueMessage.Trim() + "} is/are not a subset of the superset";
+            returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage.Trim());
             Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
         }
     }
