@@ -237,17 +237,17 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
         <target state="translated">為 'ClassCleanupLifecycle' 指定的值 '{0}' 無效。支援的範圍為 {1}。</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">為 'Scope' 指定的值 '{0}' 無效。支援的範圍為 {1}。</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">為 'Workers' 的值 '{0}' 無效。值應為非負整數。</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -351,8 +351,8 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">已為 {0} 啟用平行測試 (背景工作角色: {1}，範圍: {2})</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>

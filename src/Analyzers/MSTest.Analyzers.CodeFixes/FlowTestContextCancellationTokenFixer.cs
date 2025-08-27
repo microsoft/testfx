@@ -130,14 +130,11 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         // Find the containing method to determine the context
         MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
 
-        // Create the TestContext.CancellationTokenSource.Token expression
+        // Create the TestContext.CancellationToken expression
         MemberAccessExpressionSyntax testContextExpression = SyntaxFactory.MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
-            SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(testContextMemberName),
-                SyntaxFactory.IdentifierName("CancellationTokenSource")),
-            SyntaxFactory.IdentifierName("Token"));
+            SyntaxFactory.IdentifierName(testContextMemberName),
+            SyntaxFactory.IdentifierName("CancellationToken"));
 
         editor.ReplaceNode(invocationExpression, (node, _) =>
         {
