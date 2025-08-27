@@ -57,7 +57,7 @@ internal static class DiagnosticIds
     public const string GlobalTestFixtureShouldBeValidRuleId = "MSTEST0050";
     public const string AssertThrowsShouldContainSingleStatementRuleId = "MSTEST0051";
     public const string AvoidExplicitDynamicDataSourceTypeRuleId = "MSTEST0052";
-    public const string AvoidAssertFormatParametersRuleId = "MSTEST0053";
+    // public const string AvoidAssertFormatParametersRuleId = "MSTEST0053"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseCancellationTokenPropertyRuleId = "MSTEST0054";
     public const string TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId = "MSTEST0055";
     public const string TestMethodAttributeShouldPropagateSourceInformationRuleId = "MSTEST0056";
