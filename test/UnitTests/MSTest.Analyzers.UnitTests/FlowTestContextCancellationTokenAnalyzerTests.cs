@@ -44,7 +44,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestMethod]
                 public async Task MyTestMethod()
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
                 }
             }
             """;
@@ -68,7 +68,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestMethod]
                 public async Task MyTestMethod()
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
                 }
             }
             """;
@@ -155,7 +155,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestInitialize]
                 public async Task TestInit()
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
                 }
             }
             """;
@@ -197,7 +197,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestCleanup]
                 public async Task TestCleanup()
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
                 }
             }
             """;
@@ -235,7 +235,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [ClassInitialize]
                 public static async Task ClassInit(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, testContext.CancellationToken);
                 }
             }
             """;
@@ -273,7 +273,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [ClassCleanup]
                 public static async Task ClassCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, testContext.CancellationToken);
                 }
             }
             """;
@@ -312,8 +312,8 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [ClassCleanup]
                 public static async Task ClassCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
-                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, testContext.CancellationToken);
+                    await Task.Delay(1000, testContext.CancellationToken);
                 }
             }
             """;
@@ -360,7 +360,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestMethod]
                 public async Task Test1()
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
                 }
 
                 [TestMethod]
@@ -368,8 +368,8 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [DataRow(1)]
                 public async Task Test2(int _)
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
+                    await Task.Delay(1000, TestContext.CancellationToken);
                 }
 
                 public TestContext TestContext { get; set; }
@@ -419,7 +419,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestMethod]
                 public async Task Test1()
                 {
-                    await Task.Delay(1000, _testContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, _testContext.CancellationToken);
                 }
             }
             """;
@@ -459,7 +459,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 public async Task Test1()
                 {
                     _ = MyTestContext;
-                    await Task.Delay(1000, MyTestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, MyTestContext.CancellationToken);
                 }
             }
             """;
@@ -529,7 +529,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 public async Task MyTestMethod()
                 {
                     using var client = new HttpClient();
-                    var response = await client.GetAsync("https://example.com", TestContext.CancellationTokenSource.Token);
+                    var response = await client.GetAsync("https://example.com", TestContext.CancellationToken);
                 }
             }
             """;
@@ -574,14 +574,14 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [TestMethod]
                 public async Task Test1()
                 {
-                    await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
-                    await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, TestContext.CancellationToken);
+                    await Task.Delay(2000, TestContext.CancellationToken);
                 }
 
                 [TestMethod]
                 public async Task Test2()
                 {
-                    await Task.Delay(3000, TestContext.CancellationTokenSource.Token);
+                    await Task.Delay(3000, TestContext.CancellationToken);
                 }
 
                 public TestContext TestContext { get; set; }
@@ -660,14 +660,14 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                         [TestMethod]
                         public async Task Test1()
                         {
-                            await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
-                            await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
+                            await Task.Delay(1000, TestContext.CancellationToken);
+                            await Task.Delay(2000, TestContext.CancellationToken);
                         }
                     
                         [TestMethod]
                         public async Task Test2()
                         {
-                            await Task.Delay(3000, TestContext.CancellationTokenSource.Token);
+                            await Task.Delay(3000, TestContext.CancellationToken);
                         }
 
                         public TestContext TestContext { get; set; }
@@ -683,14 +683,14 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                         [TestMethod]
                         public async Task Test3()
                         {
-                            await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
-                            await Task.Delay(2000, TestContext.CancellationTokenSource.Token);
+                            await Task.Delay(1000, TestContext.CancellationToken);
+                            await Task.Delay(2000, TestContext.CancellationToken);
                         }
 
                         [TestMethod]
                         public async Task Test4()
                         {
-                            await Task.Delay(3000, TestContext.CancellationTokenSource.Token);
+                            await Task.Delay(3000, TestContext.CancellationToken);
                         }
                     }
                     """,
@@ -731,7 +731,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 [AssemblyCleanup]
                 public static async Task AssemblyCleanup(TestContext testContext)
                 {
-                    await Task.Delay(1000, testContext.CancellationTokenSource.Token);
+                    await Task.Delay(1000, testContext.CancellationToken);
                 }
             }
             """;

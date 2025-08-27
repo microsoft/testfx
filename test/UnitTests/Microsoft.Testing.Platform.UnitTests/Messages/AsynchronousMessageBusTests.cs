@@ -107,7 +107,7 @@ public sealed class AsynchronousMessageBusTests
         Random random = new();
         for (int i = 0; i < totalConsumers; i++)
         {
-            DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80), TestContext.CancellationTokenSource.Token));
+            DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80), TestContext.CancellationToken));
             dummyConsumers.Add(dummyConsumer);
         }
 
@@ -122,14 +122,14 @@ public sealed class AsynchronousMessageBusTests
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
         DummyConsumer.DummyProducer producer = new();
-        await Task.WhenAll([.. Enumerable.Range(1, totalPayloads).Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i }), TestContext.CancellationTokenSource.Token))]);
+        await Task.WhenAll([.. Enumerable.Range(1, totalPayloads).Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i }), TestContext.CancellationToken))]);
 
         await proxy.DrainDataAsync();
 
-        Assert.AreEqual(totalConsumers, dummyConsumers.Count);
+        Assert.HasCount(totalConsumers, dummyConsumers);
         foreach (DummyConsumer consumer in dummyConsumers)
         {
-            Assert.AreEqual(totalPayloads, consumer.DummyDataList.Count);
+            Assert.HasCount(totalPayloads, consumer.DummyDataList);
 
             int i = 1;
             foreach (DummyConsumer.DummyData payload in consumer.DummyDataList.OrderBy(x => x.Data))

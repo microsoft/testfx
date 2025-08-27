@@ -238,17 +238,17 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
         <target state="translated">'ClassCleanupLifecycle' に無効な値 '{0}' が指定されました。サポートされているスコープは {1} です。</target>
-        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="ClassCleanupLifecycle"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">無効な値 '{0}' が 'Scope' に指定されました。サポートされているスコープは {1} です。</target>
-        <note>'Scope' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">無効な値 '{0}' が 'Workers' に指定されました。値は負ではない整数である必要があります。</target>
-        <note>`Workers` is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
@@ -353,7 +353,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
         <target state="translated">{0} でテスト並列処理が有効にされています (Workers: {1}、Scope: {2})。</target>
-        <note>`Workers` is a setting name that shouldn't be localized. 'Scope' is a setting name that shouldn't be localized.</note>
+        <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>
