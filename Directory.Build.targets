@@ -20,4 +20,44 @@
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
+  <Target Name="_GenerateVersionSourceFileCache">
+    <PropertyGroup>
+      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
+      <_TemplatePropertiesCacheFile>$(IntermediateOutputPath)$(MSBuildProjectFile).GenerateVersionSourceFile.cache</_TemplatePropertiesCacheFile>
+    </PropertyGroup>
+
+    <Hash ItemsToHash="@(_TemplateProperties)">
+      <Output TaskParameter="HashResult" PropertyName="_TemplatePropertiesHash" />
+    </Hash>
+
+    <WriteLinesToFile Lines="$(_TemplatePropertiesHash)" File="$(_TemplatePropertiesCacheFile)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_TemplatePropertiesCacheFile)" />
+    </ItemGroup>
+
+  </Target>
+
+  <!-- See https://github.com/dotnet/arcade/issues/16019 -->
+  <!-- This can be simplified if Arcade implemented WriteOnlyWhenDifferent -->
+  <Target Name="GenerateVersionSourceFile"
+          AfterTargets="PrepareForBuild"
+          DependsOnTargets="_GenerateVersionSourceFileCache"
+          Inputs="$(_TemplatePropertiesCacheFile)"
+          Outputs="$(IntermediateOutputPath)BuildInfo.cs"
+          Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <ItemGroup>
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/BuildInfo.cs.template" Destination="$(IntermediateOutputPath)BuildInfo.cs" />
+    </ItemGroup>
+    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)BuildInfo.cs" />
+    </ItemGroup>
+  </Target>
 </Project>

@@ -132,6 +132,16 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Değer türleriyle 'Assert.AreSame' veya 'Assert.AreNotSame' kullanma</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="new">Avoid using Assert methods with format parameters</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">Yalnızca beklenen çağrının beklenen özel durumu oluşturmasını sağladığı için '[ExpectedException]' yerine 'Assert.ThrowsExactly' veya 'Assert.ThrowsExceptionAsync' tercih edin. Onaylama API'leri de daha fazla esneklik sağlar ve özel durumun ek özelliklerini onaylamanıza izin verir.</target>
@@ -453,13 +463,13 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">CancellationToken parametresini kabul eden aşırı yüklemeleri olan asenkron yöntemleri çağırırken, işbirliğine dayalı iptal işlemini etkinleştirmek ve test zaman aşımlarını dikkate almak için TestContext.CancellationTokenSource.Token ile aşırı yüklemeyi kullanmayı tercih edin.</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">CancellationToken'ı kabul eden aşırı yüklemeyi kullanmayı düşünün ve 'TestContext.CancellationTokenSource.Token'i geçirin.</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -660,6 +670,21 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">'{0}' test yöntemi imzası geçersiz</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="new">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="new">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="new">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
