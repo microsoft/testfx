@@ -9,6 +9,9 @@
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <OutputType>Exe</OutputType>
+    <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
+    <_SupportsDotnetConfig Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsDotnetConfig>
+    <TestingPlatformDotnetTestSupport Condition=" '$(TestingPlatformDotnetTestSupport)' == '' AND '$(_SupportsDotnetConfig)' == 'true' ">true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <Target Name="_MSTestSDKValidateTestingExtensionsProfile" BeforeTargets="Build">
