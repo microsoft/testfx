@@ -358,7 +358,7 @@
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
   </Target>
 
-  <Target Name="_ValidateVSTestProperties" Condition=" '$(AllowVSTestOptionsIgnoredInMicrosoftTestingPlatform)' != 'true' ">
+  <Target Name="_ValidateVSTestProperties">
     <PropertyGroup>
       <_VSTestPropertiesFound></_VSTestPropertiesFound>
       <_VSTestPropertiesFound Condition=" '$(VSTestSetting)' != '' ">$(_VSTestPropertiesFound)VSTestSetting; </_VSTestPropertiesFound>
@@ -373,8 +373,9 @@
       <_VSTestPropertiesFound Condition=" '$(VSTestBlameCrash)' != '' ">$(_VSTestPropertiesFound)VSTestBlameCrash; </_VSTestPropertiesFound>
       <_VSTestPropertiesFound Condition=" '$(VSTestBlameHang)' != '' ">$(_VSTestPropertiesFound)VSTestBlameHang; </_VSTestPropertiesFound>
     </PropertyGroup>
-    <Error Condition=" '$(_VSTestPropertiesFound)' != '' " 
-           Text="VSTest-specific properties are set but will be ignored when using Microsoft Testing Platform. The following properties are set: $(_VSTestPropertiesFound). To suppress this error, set AllowVSTestOptionsIgnoredInMicrosoftTestingPlatform to true. For more information about migrating from VSTest to Microsoft Testing Platform, see: https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-with-dotnet-test" />
+    <Warning Code="MTP0001" Condition=" '$(_VSTestPropertiesFound)' != '' " 
+             Text="VSTest-specific properties are set but will be ignored when using Microsoft.Testing.Platform. The following properties are set: $(_VSTestPropertiesFound)."
+             HelpLink="https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-dotnet-test" />
   </Target>
 
   <Target Name="_TestRunStart" />
