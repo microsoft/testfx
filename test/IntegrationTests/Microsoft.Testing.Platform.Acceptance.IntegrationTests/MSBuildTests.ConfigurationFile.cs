@@ -65,7 +65,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         // After we insert a new SDK version that ships with a working MSBuild, the DoesNotContain assert will fail.
         // Then, remove the DoesNotContain line, and uncomment the Contains line.
         // Assert.Contains("Target \"_GenerateTestingPlatformConfigurationFileCore\" skipped, due to false condition;", compilationResult.StandardOutput);
-        Assert.DoesNotContain("_GenerateTestingPlatformConfigurationFileCore", compilationResult.StandardOutput)
+        Assert.DoesNotContain("_GenerateTestingPlatformConfigurationFileCore", compilationResult.StandardOutput);
         
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
         Assert.IsFalse(File.Exists(generatedConfigurationFile));
