@@ -271,10 +271,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false);
 
         Assert.AreEqual(1, result.ExitCode);
-        result.AssertOutputContains("VSTest-specific properties are set but will be ignored when using Microsoft Testing Platform");
+        result.AssertOutputContains("VSTest-specific properties are set but will be ignored when using Microsoft.Testing.Platform.");
         result.AssertOutputContains("VSTestTestCaseFilter");
         result.AssertOutputContains("VSTestLogger");
-        result.AssertOutputContains("AllowVSTestOptionsIgnoredInMicrosoftTestingPlatform");
     }
 
     [TestMethod]
