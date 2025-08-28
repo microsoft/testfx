@@ -83,21 +83,29 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
             return;
         }
 
-        if (actualArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } actualSymbol)
+        // Only apply name-based heuristics when neither argument is a constant.
+        // If one argument is a constant, trust that the developer has placed it correctly.
+        bool expectedIsConstant = IsConstant(expectedArgument);
+        bool actualIsConstant = IsConstant(actualArgument);
+        
+        if (!expectedIsConstant && !actualIsConstant)
         {
-            if (actualSymbol.Name.StartsWith("expected", StringComparison.Ordinal)
-                || actualSymbol.Name.StartsWith("_expected", StringComparison.Ordinal)
-                || actualSymbol.Name.StartsWith("Expected", StringComparison.Ordinal))
+            if (actualArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } actualSymbol)
+            {
+                if (actualSymbol.Name.StartsWith("expected", StringComparison.Ordinal)
+                    || actualSymbol.Name.StartsWith("_expected", StringComparison.Ordinal)
+                    || actualSymbol.Name.StartsWith("Expected", StringComparison.Ordinal))
+                {
+                    context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+                    return;
+                }
+            }
+
+            if (expectedArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } expectedSymbol
+                && expectedSymbol.Name.StartsWith("actual", StringComparison.Ordinal))
             {
                 context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
-                return;
             }
-        }
-
-        if (expectedArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } expectedSymbol
-            && expectedSymbol.Name.StartsWith("actual", StringComparison.Ordinal))
-        {
-            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
         }
     }
 
