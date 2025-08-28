@@ -248,7 +248,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task VSTestProperties_Should_Cause_Error_When_Set()
+    public async Task VSTestProperties_Should_Produce_Warning_When_Set()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             "VSTestPropertiesValidation",
