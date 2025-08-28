@@ -842,6 +842,8 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreEqual("value1", obj.ExpectedValue);
                     Assert.AreEqual(42, obj.expectedCount);
                     Assert.AreEqual(true, obj._expectedFlag);
+                    Assert.AreEqual<object>(obj._expectedFlag, obj._expectedFlag);
+                    Assert.AreEqual<object>(obj.ExpectedValue, obj._expectedFlag);
 
                     Assert.AreNotEqual("value2", obj.ExpectedValue);
                     Assert.AreNotEqual(24, obj.expectedCount);
