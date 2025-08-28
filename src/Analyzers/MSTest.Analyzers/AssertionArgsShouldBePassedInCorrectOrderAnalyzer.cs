@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -74,38 +74,51 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
             return;
         }
 
+        // If "expected" is already constant, we shouldn't report any diagnostics and we don't care about "actual".
+        if (IsConstant(expectedArgument))
+        {
+            return;
+        }
+
         // If the actual value is a constant or a literal and expected is not, then the arguments are in the wrong order.
         // Note that we don't report if both are literals or constants, as there is no real fix for this.
         // If both are literals or constants, the assert will always pass or always fail.
-        if (IsConstant(actualArgument) && !IsConstant(expectedArgument))
+        if (IsConstant(actualArgument))
         {
             context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
             return;
         }
 
-        // Only apply name-based heuristics when neither argument is a constant.
-        // If one argument is a constant, trust that the developer has placed it correctly.
-        bool expectedIsConstant = IsConstant(expectedArgument);
-        bool actualIsConstant = IsConstant(actualArgument);
-        
-        if (!expectedIsConstant && !actualIsConstant)
-        {
-            if (actualArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } actualSymbol)
-            {
-                if (actualSymbol.Name.StartsWith("expected", StringComparison.Ordinal)
-                    || actualSymbol.Name.StartsWith("_expected", StringComparison.Ordinal)
-                    || actualSymbol.Name.StartsWith("Expected", StringComparison.Ordinal))
-                {
-                    context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
-                    return;
-                }
-            }
+        ISymbol? actualSymbol = actualArgument.Value.GetReferencedMemberOrLocalOrParameter();
+        ISymbol? expectedSymbol = expectedArgument.Value.GetReferencedMemberOrLocalOrParameter();
+        bool actualIsExpected = actualSymbol is not null && NameIsExpected(actualSymbol.Name);
+        bool expectedIsExpected = expectedSymbol is not null && NameIsExpected(expectedSymbol.Name);
 
-            if (expectedArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } expectedSymbol
-                && expectedSymbol.Name.StartsWith("actual", StringComparison.Ordinal))
-            {
-                context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
-            }
+        // If both arguments have names indicating it's "expected", don't report a diagnostic.
+        if (actualIsExpected && !expectedIsExpected)
+        {
+            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+            return;
+        }
+
+        bool expectedIsActual = expectedSymbol is not null && NameIsActual(expectedSymbol.Name);
+        bool actualIsActual = actualSymbol is not null && NameIsActual(actualSymbol.Name);
+
+        // If both arguments have names indicating it's "actual", don't report a diagnostic.
+        if (expectedIsActual && !actualIsActual)
+        {
+            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+            return;
+        }
+
+        static bool NameIsExpected(string name)
+            => name.StartsWith("expected", StringComparison.Ordinal) ||
+                name.StartsWith("_expected", StringComparison.Ordinal) ||
+                name.StartsWith("Expected", StringComparison.Ordinal);
+
+
+        static bool NameIsActual(string name)
+            => name.StartsWith("actual", StringComparison.Ordinal);
         }
     }
 
