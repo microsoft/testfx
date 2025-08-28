@@ -119,7 +119,6 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
 
         static bool NameIsActual(string name)
             => name.StartsWith("actual", StringComparison.Ordinal);
-        }
     }
 
     private static (IArgumentOperation ExpectedArgument, IArgumentOperation ActualArgument)? FindExpectedAndActualArguments(IInvocationOperation invocationOperation)
