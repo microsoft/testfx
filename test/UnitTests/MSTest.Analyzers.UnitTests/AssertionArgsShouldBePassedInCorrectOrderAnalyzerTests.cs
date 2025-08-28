@@ -855,4 +855,36 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task ConstantWithExpectedNamedProperty_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const string EXPECTED_CONSTANT = "test";
+                
+                public class TestObject
+                {
+                    public string ExpectedValue { get; set; } = "";
+                    public string expectedResult { get; set; } = "";
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    var obj = new TestObject();
+            
+                    // These should NOT be flagged - comparing constants to properties with "expected" names is correct
+                    Assert.AreEqual(EXPECTED_CONSTANT, obj.ExpectedValue);
+                    Assert.AreNotEqual(EXPECTED_CONSTANT, obj.expectedResult);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
