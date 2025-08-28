@@ -116,7 +116,6 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
                 name.StartsWith("_expected", StringComparison.Ordinal) ||
                 name.StartsWith("Expected", StringComparison.Ordinal);
 
-
         static bool NameIsActual(string name)
             => name.StartsWith("actual", StringComparison.Ordinal);
     }
