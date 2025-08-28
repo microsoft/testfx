@@ -66,7 +66,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         // Then, remove the DoesNotContain line, and uncomment the Contains line.
         // Assert.Contains("Target \"_GenerateTestingPlatformConfigurationFileCore\" skipped, due to false condition;", compilationResult.StandardOutput);
         Assert.DoesNotContain("_GenerateTestingPlatformConfigurationFileCore", compilationResult.StandardOutput);
-        
+
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
         Assert.IsFalse(File.Exists(generatedConfigurationFile));
     }
