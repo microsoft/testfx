@@ -60,7 +60,13 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:diagnostic -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
-        Assert.Contains("Target \"_GenerateTestingPlatformConfigurationFileCore\" skipped, due to false condition;", compilationResult.StandardOutput);
+
+        // Working around MSBuild regression: waiting for fix https://github.com/dotnet/msbuild/pull/12431
+        // After we insert a new SDK version that ships with a working MSBuild, the DoesNotContain assert will fail.
+        // Then, remove the DoesNotContain line, and uncomment the Contains line.
+        // Assert.Contains("Target \"_GenerateTestingPlatformConfigurationFileCore\" skipped, due to false condition;", compilationResult.StandardOutput);
+        Assert.DoesNotContain("_GenerateTestingPlatformConfigurationFileCore", compilationResult.StandardOutput)
+        
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
         Assert.IsFalse(File.Exists(generatedConfigurationFile));
     }
