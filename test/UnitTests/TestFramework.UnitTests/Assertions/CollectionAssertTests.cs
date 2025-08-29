@@ -3,6 +3,8 @@
 
 using System.Collections.ObjectModel;
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
@@ -128,6 +130,45 @@ public class CollectionAssertTests : TestContainer
         CollectionAssert.IsSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
         _ = collection.Count; // no warning
         _ = superset.Count; // no warning
+    }
+
+    public void CollectionAssertIsSubsetOf_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubsetCollection();
+        ICollection? superset = GetSuperSetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not a subset of the superset");
+    }
+
+    public void CollectionAssertIsSubsetOf_WithMessageParams_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubsetCollection();
+        ICollection? superset = GetSuperSetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not a subset of the superset");
+    }
+
+    public void CollectionAssertIsSubsetOf_WithMessage_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubsetCollection();
+        ICollection? superset = GetSuperSetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not a subset of the superset");
     }
 
     public void CollectionAssertIsNotSubsetOfNullabilityPostConditions()
@@ -502,11 +543,15 @@ public class CollectionAssertTests : TestContainer
 
     private ICollection? GetCollection() => new[] { "item" };
 
+    private ICollection? GetSubsetCollection() => new[] { "iem", "a", "b" };
+
     private object? GetMatchingElement() => "item";
 
     private object? GetNotMatchingElement() => "not found";
 
     private ICollection? GetMatchingSuperSet() => new[] { "item", "item2" };
+
+    private ICollection? GetSuperSetCollection() => new[] { "item", "item2", "c", "d" };
 
     private ICollection? GetLettersCaseMismatchingSuperSet() => new[] { "Item", "iTem2" };
 
