@@ -11,8 +11,6 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-using TestSessionContext = Microsoft.Testing.Platform.TestHost.TestSessionContext;
-
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 /// <summary>
