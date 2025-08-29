@@ -183,7 +183,7 @@ public sealed partial class Assert
     /// </summary>
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The non-generic collection (like ArrayList).</param>
-    public static void Contains(object expected, IEnumerable collection)
+    public static void Contains(object? expected, IEnumerable collection)
         => Contains(expected, collection, string.Empty);
 
     /// <summary>
@@ -219,7 +219,7 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void Contains(object expected, IEnumerable collection, string? message)
+    public static void Contains(object? expected, IEnumerable collection, string? message)
     {
         bool isFound = false;
         foreach (object? item in collection)
