@@ -184,8 +184,6 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             // Prepare the process start
             ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments)
             {
-                // The default is true on .NET Framework and false on .NET Core
-                // However, don't wrap this in '#if !NETCOREAPP', it will be a bug if .NET Core is consuming us via netstandard2.0!
                 UseShellExecute = false,
             };
 
