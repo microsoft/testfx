@@ -24,12 +24,12 @@
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
         <source>Use interpolated string instead of format parameters</source>
-        <target state="new">Use interpolated string instead of format parameters</target>
+        <target state="translated">Interpolierte Zeichenfolge anstelle von Formatparametern verwenden</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
         <source>Use 'string.Format' instead of format parameters</source>
-        <target state="new">Use 'string.Format' instead of format parameters</target>
+        <target state="translated">„string.Format“ anstelle von Formatparametern verwenden</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
-        <target state="new">Pass 'TestContext.CancellationToken' argument to method call</target>
+        <target state="translated">Argument „TestContext.CancellationToken“ an den Methodenaufruf übergeben</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
         <source>Use 'TestContext.CancellationToken' instead</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead</target>
+        <target state="translated">Stattdessen „TestContext.CancellationToken“ verwenden</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
