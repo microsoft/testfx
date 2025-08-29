@@ -169,23 +169,25 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
-            // Prepare the process start
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = executableInfo.FilePath,
-#if !NETCOREAPP
-                UseShellExecute = false,
-#endif
-            };
-
-            foreach (string argument in finalArguments)
-            {
-#if !NETCOREAPP
-                processStartInfo.Arguments += argument + " ";
+#if NET8_0_OR_GREATER
+            List<string> arguments = finalArguments;
 #else
-                processStartInfo.ArgumentList.Add(argument);
-#endif
+            var builder = new StringBuilder();
+            foreach (string arg in finalArguments)
+            {
+                PasteArguments.AppendArgument(builder, arg);
             }
+
+            string arguments = builder.ToString();
+#endif
+
+            // Prepare the process start
+            ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments)
+            {
+                // The default is true on .NET Framework and false on .NET Core
+                // However, don't wrap this in '#if !NETCOREAPP', it will be a bug if .NET Core is consuming us via netstandard2.0!
+                UseShellExecute = false,
+            };
 
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)

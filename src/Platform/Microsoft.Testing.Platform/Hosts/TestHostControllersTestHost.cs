@@ -104,7 +104,13 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 #if NET8_0_OR_GREATER
             IEnumerable<string> arguments = partialCommandLine;
 #else
-            string arguments = string.Join(' ', partialCommandLine);
+            var builder = new StringBuilder();
+            foreach (string arg in partialCommandLine)
+            {
+                PasteArguments.AppendArgument(builder, arg);
+            }
+
+            string arguments = builder.ToString();
 #endif
 
 #pragma warning disable CA1416 // Validate platform compatibility
@@ -119,9 +125,10 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPid}", "1" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPid}", testHostControllerIpc.PipeName.Name },
                 },
-#if !NETCOREAPP
+
+                // The default is true on .NET Framework and false on .NET Core
+                // However, don't wrap this in '#if !NETCOREAPP', it will be a bug if .NET Core is consuming us via netstandard2.0!
                 UseShellExecute = false,
-#endif
             };
 #pragma warning restore CA1416
 
