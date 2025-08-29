@@ -73,7 +73,7 @@ public partial class AssertTests
         Task t = Assert.ThrowsExceptionAsync<ArgumentException>(
             async () => await Task.Delay(5).ConfigureAwait(false));
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         ex.InnerException!.Should().BeOfType<AssertFailedException>();
@@ -89,7 +89,7 @@ public partial class AssertTests
                 throw new FormatException();
             });
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         ex.InnerException!.Should().BeOfType<AssertFailedException>();
@@ -102,7 +102,7 @@ public partial class AssertTests
             async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire.");
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         ex.InnerException!.Should().BeOfType<AssertFailedException>();
@@ -119,7 +119,7 @@ public partial class AssertTests
             },
             "Happily ever after.");
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         ex.InnerException!.Should().BeOfType<AssertFailedException>();
@@ -135,7 +135,7 @@ public partial class AssertTests
         }
 
         Action action = A;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         ex.InnerException!.Should().BeOfType<ArgumentNullException>();
@@ -150,7 +150,7 @@ public partial class AssertTests
         }
 
         Action action = A;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         ex.InnerException!.Should().BeOfType<ArgumentNullException>();
@@ -165,7 +165,7 @@ public partial class AssertTests
             "da",
             123);
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         Assert.AreEqual(typeof(AssertFailedException), ex.InnerException.GetType());
@@ -184,7 +184,7 @@ public partial class AssertTests
             "The",
             "End");
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
 
         ex.InnerException.Should().NotBeNull();
         Assert.AreEqual(typeof(AssertFailedException), ex.InnerException.GetType());
@@ -243,7 +243,7 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsAsync<ArgumentException>(() => throw new Exception());
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
         ex.InnerException.Should().BeOfType<AssertFailedException>();
         ex.InnerException!.Message.Should().Be("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.Exception>. ");
     }
@@ -252,7 +252,7 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsExactlyAsync<ArgumentException>(() => throw new ArgumentNullException());
         Action action = t.Wait;
-        Exception ex = action.Should().Throw<Exception>().Which;
+        AggregateException ex = action.Should().Throw<AggregateException>().Which;
         ex.InnerException.Should().BeOfType<AssertFailedException>();
         ex.InnerException!.Message.Should().Be("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.ArgumentNullException>. ");
     }

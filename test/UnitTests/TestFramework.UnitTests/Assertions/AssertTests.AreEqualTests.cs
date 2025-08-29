@@ -1408,7 +1408,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringDifferenceAtBeginning()
     {
         Action action = () => Assert.AreEqual("baaa", "aaaa");
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 4 but differ at index 0.
             Expected: "baaa"
@@ -1420,19 +1420,19 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringDifferenceAtEnd()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab");
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 4 but differ at index 3.
             Expected: "aaaa"
             But was:  "aaab"
-            -----------^
+            --------------^
             """);
     }
 
     public void AreEqualStringWithSpecialCharactersShouldEscape()
     {
         Action action = () => Assert.AreEqual("aa\ta", "aa a");
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 4 but differ at index 2.
             Expected: "aa␉a"
@@ -1447,7 +1447,7 @@ public partial class AssertTests : TestContainer
         string actual = new string('a', 100) + "d" + new string('c', 100);
 
         Action action = () => Assert.AreEqual(expected, actual);
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 201 but differ at index 100.
             Expected: "...aaaaaaaaaaaaaaaaaabcccccccccccccccc..."
@@ -1471,7 +1471,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithDifferentLength()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaa");
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. Expected string length 4 but was 3.
             Expected: "aaaa"
@@ -1483,7 +1483,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualShorterExpectedString()
     {
         Action action = () => Assert.AreEqual("aaa", "aaab");
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. Expected string length 3 but was 4.
             Expected: "aaa"
@@ -1495,7 +1495,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithUserMessage()
     {
         Action action = () => Assert.AreEqual("aaaa", "aaab", "My custom message");
-        action.Should().Throw<Exception>()
+        action.Should().Throw<AssertFailedException>()
             .And.Message.Should().Be("""
             Assert.AreEqual failed. String lengths are both 4 but differ at index 3. My custom message
             Expected: "aaaa"
@@ -1507,7 +1507,7 @@ public partial class AssertTests : TestContainer
     public void AreEqualStringWithEmojis()
     {
         Action action = () => Assert.AreEqual("🥰", "aaab");
-        action.Should().Throw<Exception>().And
+        action.Should().Throw<AssertFailedException>().And
             .Message.Should().Be("""
             Assert.AreEqual failed. Expected string length 2 but was 4.
             Expected: "🥰"
