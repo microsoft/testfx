@@ -283,6 +283,11 @@ Real: {2}</target>
         <target state="translated">Número diferente de elementos.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not a subset of the superset</source>
+        <target state="new">Element(s) &lt;{0}&gt; is/are not a subset of the superset</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">A cadeia de caracteres “{0}” não começa com a cadeia de caracteres “{1}”. {2}</target>

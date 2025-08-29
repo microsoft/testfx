@@ -283,6 +283,11 @@ Actual: {2}</source>
         <target state="translated">不同数量的元素。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not a subset of the superset</source>
+        <target state="new">Element(s) &lt;{0}&gt; is/are not a subset of the superset</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">字符串 '{0}' 不以字符串 '{1}' 开头。{2}</target>
