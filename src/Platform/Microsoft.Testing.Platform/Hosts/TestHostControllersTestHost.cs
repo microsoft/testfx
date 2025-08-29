@@ -125,9 +125,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPid}", "1" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPid}", testHostControllerIpc.PipeName.Name },
                 },
-
-                // The default is true on .NET Framework and false on .NET Core
-                // However, don't wrap this in '#if !NETCOREAPP', it will be a bug if .NET Core is consuming us via netstandard2.0!
                 UseShellExecute = false,
             };
 #pragma warning restore CA1416
