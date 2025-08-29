@@ -363,6 +363,84 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemDoesNotExist_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+        object expected = 20;
+
+        // Act
+        Action action = () => Assert.Contains(expected, collection, $"Item {expected} not found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expected} not found*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+
+        // Act
+        Action action = () => Assert.Contains("a", collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemExists_DoesNotThrowException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(5, collection);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is not present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_NullableValueExpected_ItemDoesNotExist_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+        object? expected = null;
+
+        // Act
+        Action action = () => Assert.Contains(expected, collection, $"Item {expected} not found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expected} not found*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_NullableValueExpected_ItemExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { null, 10, "a" };
+        object? expected = null;
+
+        // Act
+        Action action = () => Assert.Contains(expected, collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
     /// Tests the Contains method with a comparer when the expected item is present.
     /// </summary>
     public void Contains_WithComparer_ItemExists_DoesNotThrow()
@@ -874,6 +952,21 @@ public partial class AssertTests : TestContainer
     {
         // Arrange
         var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.Contains(5, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified item*");
+    }
+
+    /// <summary>
+    /// Tests that Contains (item) failure shows specific error message.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ItemNotFound_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 2, 3 };
 
         // Act
         Action action = () => Assert.Contains(5, collection);
