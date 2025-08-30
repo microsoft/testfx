@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace UnitTestFramework.Tests;
@@ -19,17 +21,18 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// </summary>
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertFailure()
     {
-        void A() => _sut.RethrowIfAssertException(new AssertFailedException());
-
-        Exception ex = VerifyThrows(A);
-        Verify(ex is AssertFailedException);
+        Action action = () => _sut.RethrowIfAssertException(new AssertFailedException());
+        action.Should().Throw<AssertFailedException>();
     }
 
     /// <summary>
     /// RethrowIfAssertException function will throw AssertFailedException if we pass AssertInconclusiveException as parameter in it.
     /// </summary>
-    public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive() =>
-        VerifyThrows<AssertInconclusiveException>(() => _sut.RethrowIfAssertException(new AssertInconclusiveException()));
+    public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
+    {
+        Action action = () => _sut.RethrowIfAssertException(new AssertInconclusiveException());
+        action.Should().Throw<AssertInconclusiveException>();
+    }
 
     public void VerifyCorrectMessageIsGettingSetInVariableNoExceptionMessage()
     {
@@ -38,7 +41,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 
         string result = _sut.GetNoExceptionMessage();
 
-        Verify(expected == result);
+        result.Should().Be(expected);
     }
 
     public void VerifyEmptyMessageIsGettingSetInVariableNoExceptionMessage()
@@ -47,7 +50,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 
         string result = _sut.GetNoExceptionMessage();
 
-        Verify(string.IsNullOrEmpty(result));
+        result.Should().BeNullOrEmpty();
     }
 }
 

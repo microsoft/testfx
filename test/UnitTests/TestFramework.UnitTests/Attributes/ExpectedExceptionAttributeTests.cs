@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace UnitTestFramework.Tests;
@@ -15,17 +17,19 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// </summary>
     public void ExpectedExceptionAttributeConstructorShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
     {
-        static void A() => _ = new ExpectedExceptionAttribute(null!, "Dummy");
+        Action action = () => _ = new ExpectedExceptionAttribute(null!, "Dummy");
 
-        Exception ex = VerifyThrows(A);
-        Verify(ex is ArgumentNullException);
+        action.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>
     /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = typeof(AnyClassNotDerivedFromExceptionClass).
     /// </summary>
-    public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException() =>
-        VerifyThrows<ArgumentException>(() => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy"));
+    public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException()
+    {
+        Action action = () => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
+        action.Should().Throw<ArgumentException>();
+    }
 
     /// <summary>
     /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass).
@@ -38,7 +42,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception ex = new("Dummy Exception");
         string actualMessage = UtfHelper.GetExceptionMsg(ex);
         string expectedMessage = "System.Exception: Dummy Exception";
-        Verify(expectedMessage == actualMessage);
+        actualMessage.Should().Be(expectedMessage);
     }
 
     public void GetExceptionMsgShouldReturnInnerExceptionMessageAsWellIfPresent()
@@ -47,7 +51,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception ex = new("Dummy Exception", innerException);
         string actualMessage = UtfHelper.GetExceptionMsg(ex);
         string expectedMessage = "System.Exception: Dummy Exception ---> System.DivideByZeroException: Attempted to divide by zero.";
-        Verify(expectedMessage == actualMessage);
+        actualMessage.Should().Be(expectedMessage);
     }
 
     public void GetExceptionMsgShouldReturnInnerExceptionMessageRecursivelyIfPresent()
@@ -57,7 +61,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception ex = new("FirstLevelException", innerException);
         string actualMessage = UtfHelper.GetExceptionMsg(ex);
         string expectedMessage = "System.Exception: FirstLevelException ---> System.DivideByZeroException: SecondLevel Exception ---> System.IndexOutOfRangeException: ThirdLevelException";
-        Verify(expectedMessage == actualMessage);
+        actualMessage.Should().Be(expectedMessage);
     }
 }
 
