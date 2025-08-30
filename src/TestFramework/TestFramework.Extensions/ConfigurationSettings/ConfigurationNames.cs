@@ -43,5 +43,15 @@ internal static class ConfigurationNames
     /// Attribute name for 'DataTable'.
     /// </summary>
     internal const string DataTableAttributeName = "dataTableName";
+
+    /// <summary>
+    /// Attribute name for 'LaunchDebuggerOnFailure'.
+    /// </summary>
+    internal const string LaunchDebuggerOnFailureAttributeName = "launchDebuggerOnFailure";
+
+    /// <summary>
+    /// Attribute name for 'DebuggerLaunchTestFilter'.
+    /// </summary>
+    internal const string DebuggerLaunchTestFilterAttributeName = "debuggerLaunchTestFilter";
 }
 #endif
