@@ -563,6 +563,7 @@ internal sealed partial class TrxReportEngine
 
             XElement? properties = null;
             XElement? owners = null;
+            XElement? description = null;
             foreach (TestMetadataProperty property in testNode.Properties.OfType<TestMetadataProperty>())
             {
                 switch (property.Key)
@@ -577,6 +578,10 @@ internal sealed partial class TrxReportEngine
                             unitTest.SetAttributeValue("priority", property.Value);
                         }
 
+                        break;
+
+                    case "Description":
+                        description ??= new XElement("Description", property.Value);
                         break;
 
                     default:
@@ -614,6 +619,11 @@ internal sealed partial class TrxReportEngine
             if (owners is not null)
             {
                 unitTest.Add(owners);
+            }
+
+            if (description is not null)
+            {
+                unitTest.Add(description);
             }
 
             if (properties is not null)

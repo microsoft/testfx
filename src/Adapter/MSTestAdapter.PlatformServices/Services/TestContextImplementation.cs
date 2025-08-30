@@ -39,6 +39,14 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             => _builder.Append(buffer, index, count);
 
         [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void AppendLine(string? value)
+            => _builder.AppendLine(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Clear()
+            => _builder.Clear();
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public override string ToString()
             => _builder.ToString();
     }
@@ -61,7 +69,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     private SynchronizedStringBuilder? _stdOutStringBuilder;
     private SynchronizedStringBuilder? _stdErrStringBuilder;
     private SynchronizedStringBuilder? _traceStringBuilder;
-    private StringBuilder? _testContextMessageStringBuilder;
+    private SynchronizedStringBuilder? _testContextMessageStringBuilder;
 
     /// <summary>
     /// Unit test outcome.
@@ -380,7 +388,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         return _traceStringBuilder;
     }
 
-    private StringBuilder GetTestContextMessagesStringBuilder()
+    private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
     {
         // Prefer writing to the current test context instead of 'this'.
         // This is just a hack to preserve backward compatibility.
@@ -388,7 +396,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // Then, they write to the "wrong" test context.
         // Here, we are correcting user's fault by finding out the correct TestContext that should receive the message.
         TestContextImplementation @this = CurrentTestContext ?? this;
-        _ = @this._testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref @this._testContextMessageStringBuilder, new StringBuilder(), null)!;
+        _ = @this._testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref @this._testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
         return @this._testContextMessageStringBuilder;
     }
 
