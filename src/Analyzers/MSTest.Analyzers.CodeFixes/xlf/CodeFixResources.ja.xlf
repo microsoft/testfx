@@ -34,12 +34,12 @@
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
         <source>Use interpolated string instead of format parameters</source>
-        <target state="new">Use interpolated string instead of format parameters</target>
+        <target state="translated">書式設定パラメーターの代わりに補間された文字列を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
         <source>Use 'string.Format' instead of format parameters</source>
-        <target state="new">Use 'string.Format' instead of format parameters</target>
+        <target state="translated">書式設定パラメーターの代わりに 'string.Format' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
-        <target state="new">Pass 'TestContext.CancellationToken' argument to method call</target>
+        <target state="translated">'TestContext.CancellationToken' 引数をメソッド呼び出しに渡す</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
         <source>Use 'TestContext.CancellationToken' instead</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead</target>
+        <target state="translated">代わりに 'TestContext.CancellationToken' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

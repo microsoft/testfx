@@ -134,12 +134,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersMessageFormat">
         <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <target state="translated">'{0}' を string.Format または文字列の補間で書式設定パラメーターに置き換える</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersTitle">
         <source>Avoid using Assert methods with format parameters</source>
-        <target state="new">Avoid using Assert methods with format parameters</target>
+        <target state="translated">書式設定パラメーターで Assert メソッドを使用しないようにする</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -464,12 +464,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationToken でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
+        <target state="translated">CancellationToken を受け取り、'TestContext.CancellationToken' を渡すオーバーロードの使用を検討してください</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -674,17 +674,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="new">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
+        <target state="translated">TestContext.CancellationToken は、TestContext.CancellationTokenSource.Token と比較して、より直接的に取り消しトークンにアクセスできます。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyMessageFormat">
         <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
+        <target state="translated">'TestContext.CancellationTokenSource.Token' の代わりに 'TestContext.CancellationToken' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="new">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
+        <target state="translated">TestContext.CancellationTokenSource.Token の代わりに TestContext.CancellationToken を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

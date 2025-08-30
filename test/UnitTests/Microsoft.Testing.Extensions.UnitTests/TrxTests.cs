@@ -511,6 +511,7 @@ public class TrxTests
             new(
                 new PassedTestNodeStateProperty(),
                 new TestMetadataProperty("Owner", "ValueOfOwner"),
+                new TestMetadataProperty("Description", "Description of my test"),
                 new TestMetadataProperty("Priority", "5"),
                 new TestMetadataProperty("MyProperty1", "MyValue1"),
                 new TestMetadataProperty("MyProperty2", "MyValue2")), memoryStream);
@@ -531,6 +532,7 @@ public class TrxTests
       <Owners>
         <Owner name=""ValueOfOwner"" />
       </Owners>
+      <Description>Description of my test</Description>
       <Properties>
         <Property>
           <Key>MyProperty2</Key>

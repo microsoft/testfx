@@ -100,9 +100,20 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             testHostControllerIpc.RegisterAllSerializers();
 
 #if NET8_0_OR_GREATER
+            // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
+            // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
             IEnumerable<string> arguments = partialCommandLine;
 #else
-            string arguments = string.Join(' ', partialCommandLine);
+            // Current target framework (.NET Framework and .NET Standard 2.0) only supports arguments as a single string.
+            // In this case, escaping is essential. For example, one of the arguments could already contain spaces.
+            // PasteArguments is borrowed from dotnet/runtime.
+            var builder = new StringBuilder();
+            foreach (string arg in partialCommandLine)
+            {
+                PasteArguments.AppendArgument(builder, arg);
+            }
+
+            string arguments = builder.ToString();
 #endif
 
 #pragma warning disable CA1416 // Validate platform compatibility
@@ -117,9 +128,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPid}", "1" },
                     { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPid}", testHostControllerIpc.PipeName.Name },
                 },
-#if !NETCOREAPP
                 UseShellExecute = false,
-#endif
             };
 #pragma warning restore CA1416
 
