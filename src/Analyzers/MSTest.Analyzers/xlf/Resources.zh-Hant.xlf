@@ -134,12 +134,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersMessageFormat">
         <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <target state="translated">將 '{0}' 取代為具有 string.Format 或字串內插補點的格式參數</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersTitle">
         <source>Avoid using Assert methods with format parameters</source>
-        <target state="new">Avoid using Assert methods with format parameters</target>
+        <target state="translated">避免使用 Assert 方法搭配格式參數</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -464,12 +464,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">在呼叫接受 CancellationToken 參數的多載非同步方法時，建議使用 TestContext.CancellationToken 的多載，以啟用共同取消並遵守測試逾時。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
+        <target state="translated">考慮使用接受 CancellationToken 的多載，並傳遞 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -654,17 +654,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="new">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
+        <target state="translated">相較於 TestContext.CancellationTokenSource.Token，TestContext.CancellationToken 提供存取取消權杖更直接的方法。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyMessageFormat">
         <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
+        <target state="translated">使用 'TestContext.CancellationToken' 而不是 'TestContext.CancellationTokenSource.Token'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="new">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
+        <target state="translated">使用 TestContext.CancellationToken 而不是 TestContext.CancellationTokenSource.Token</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
