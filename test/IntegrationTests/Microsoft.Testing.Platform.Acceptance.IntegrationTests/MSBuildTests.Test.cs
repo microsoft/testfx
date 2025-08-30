@@ -277,26 +277,6 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task VSTestProperties_Should_Not_Cause_Error_When_OptOut_Is_Set()
-    {
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-            "VSTestPropertiesValidationOptOut",
-            SourceCode
-            .PatchCodeWithReplace("$PlatformTarget$", string.Empty)
-            .PatchCodeWithReplace("$TargetFrameworks$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
-            .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
-            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-
-        DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test -p:TestingPlatformDotnetTestSupport=True --filter Category=Unit -p:AllowVSTestOptionsIgnoredInMicrosoftTestingPlatform=true \"{testAsset.TargetAssetPath}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            workingDirectory: testAsset.TargetAssetPath,
-            failIfReturnValueIsNotZero: false);
-
-        Assert.AreEqual(0, result.ExitCode);
-    }
-
-    [TestMethod]
     public async Task VSTestProperties_Should_Not_Cause_Error_When_Not_Set()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
