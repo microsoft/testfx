@@ -159,7 +159,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         else if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
         {
             await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'").ConfigureAwait(false);
-            _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName);
+            _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
             _namedPipeClient.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
