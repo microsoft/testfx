@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Linq;
 
 using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+
+using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
@@ -48,7 +49,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeExpressionStatement(OperationAnalysisContext context)
     {
         var expressionStatementOperation = (IExpressionStatementOperation)context.Operation;
-        
+
         if (expressionStatementOperation.Operation is not IInvocationOperation invocationOperation)
         {
             return;
@@ -64,7 +65,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule, methodName));
     }
 
-    private static bool IsStringMethodCall(IInvocationOperation invocationOperation, INamedTypeSymbol stringSymbol)
+    private static bool IsStringMethodCall(IInvocationOperation invocationOperation)
     {
         if (invocationOperation.TargetMethod.ContainingType?.SpecialType == SpecialType.System_String)
         {
