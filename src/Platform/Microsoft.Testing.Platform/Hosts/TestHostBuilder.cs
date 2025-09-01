@@ -545,7 +545,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         environment.SetEnvironmentVariable(pipeEnvironmentVariable, string.Empty);
 
         // Create client to connect to the monitor
-        NamedPipeClient client = new(pipeName);
+        NamedPipeClient client = new(pipeName, environment);
         client.RegisterAllSerializers();
 
         // Connect to the monitor
