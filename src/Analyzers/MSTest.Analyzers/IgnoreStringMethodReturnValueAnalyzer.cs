@@ -67,7 +67,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
 
     private static bool IsStringMethodCall(IInvocationOperation invocationOperation)
     {
-        if (invocationOperation.TargetMethod.ContainingType?.SpecialType == SpecialType.System_String)
+        if (invocationOperation.TargetMethod.ContainingType?.SpecialType != SpecialType.System_String)
         {
             return false;
         }
