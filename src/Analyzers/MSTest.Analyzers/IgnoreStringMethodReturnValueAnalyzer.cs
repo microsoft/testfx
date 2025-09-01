@@ -42,15 +42,10 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-        {
-            INamedTypeSymbol stringSymbol = context.Compilation.GetSpecialType(SpecialType.System_String);
-            context.RegisterOperationAction(context => AnalyzeExpressionStatement(context, stringSymbol), OperationKind.ExpressionStatement);
-        });
+        context.RegisterOperationAction(AnalyzeExpressionStatement, OperationKind.ExpressionStatement);
     }
 
-    private static void AnalyzeExpressionStatement(OperationAnalysisContext context, INamedTypeSymbol stringSymbol)
+    private static void AnalyzeExpressionStatement(OperationAnalysisContext context)
     {
         var expressionStatementOperation = (IExpressionStatementOperation)context.Operation;
         
@@ -60,7 +55,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
         }
 
         // Check if this is a call to a string method we care about
-        if (!IsStringMethodCall(invocationOperation, stringSymbol))
+        if (!IsStringMethodCall(invocationOperation))
         {
             return;
         }
@@ -71,8 +66,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
 
     private static bool IsStringMethodCall(IInvocationOperation invocationOperation, INamedTypeSymbol stringSymbol)
     {
-        if (invocationOperation.TargetMethod.ContainingType is null 
-            || !SymbolEqualityComparer.Default.Equals(invocationOperation.TargetMethod.ContainingType, stringSymbol))
+        if (invocationOperation.TargetMethod.ContainingType?.SpecialType == SpecialType.System_String)
         {
             return false;
         }
