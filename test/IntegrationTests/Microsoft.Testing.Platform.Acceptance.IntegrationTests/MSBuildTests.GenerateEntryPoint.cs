@@ -22,8 +22,18 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
-        SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
+
+        IEnumerable<SL.Target> generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint");
+
+        // Working around MSBuild regression: waiting for fix https://github.com/dotnet/msbuild/pull/12431
+        // After we insert a new SDK version that ships with a working MSBuild, the IsEmpty assert will fail.
+        // Then, remove the IsEmpty line, and bring back the code in #if false.
+        Assert.IsEmpty(generateTestingPlatformEntryPointTargets);
+#if false
+        SL.Target generateTestingPlatformEntryPoint = generateTestingPlatformEntryPointTargets.Single();
         Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'true' ) was evaluated as ( 'False' == 'true' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
+#endif
+
         SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_IncludeGenerateTestingPlatformEntryPointIntoCompilation");
         Assert.IsEmpty(includeGenerateTestingPlatformEntryPointIntoCompilation.Children);
         compilationResult.AssertExitCodeIsNot(0);

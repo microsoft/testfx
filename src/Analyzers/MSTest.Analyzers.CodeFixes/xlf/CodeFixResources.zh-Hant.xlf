@@ -34,12 +34,12 @@
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
         <source>Use interpolated string instead of format parameters</source>
-        <target state="new">Use interpolated string instead of format parameters</target>
+        <target state="translated">請使用差補字串而不是格式參數</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
         <source>Use 'string.Format' instead of format parameters</source>
-        <target state="new">Use 'string.Format' instead of format parameters</target>
+        <target state="translated">請使用 'string.Format' 而不是格式參數</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
-        <target state="new">Pass 'TestContext.CancellationToken' argument to method call</target>
+        <target state="translated">將 'TestContext.CancellationToken' 引數傳遞給方法呼叫</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
         <source>Use 'TestContext.CancellationToken' instead</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead</target>
+        <target state="translated">請改為使用 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

@@ -34,12 +34,12 @@
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
         <source>Use interpolated string instead of format parameters</source>
-        <target state="new">Use interpolated string instead of format parameters</target>
+        <target state="translated">형식 매개 변수 대신 보간된 문자열 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
         <source>Use 'string.Format' instead of format parameters</source>
-        <target state="new">Use 'string.Format' instead of format parameters</target>
+        <target state="translated">형식 매개 변수 대신 'string.Format' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
-        <target state="new">Pass 'TestContext.CancellationToken' argument to method call</target>
+        <target state="translated">메서드 호출에 'TestContext.CancellationToken' 인수 전달</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
         <source>Use 'TestContext.CancellationToken' instead</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead</target>
+        <target state="translated">대신 'TestContext.CancellationToken' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
