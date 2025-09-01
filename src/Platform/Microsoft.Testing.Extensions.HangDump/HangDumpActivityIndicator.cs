@@ -65,7 +65,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             string pipeNameEnvironmentVariable = $"{HangDumpConfiguration.PipeName}_{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{namedPipeSuffix}";
             string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
                 ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
-            _namedPipeClient = new NamedPipeClient(namedPipeName);
+            _namedPipeClient = new NamedPipeClient(namedPipeName, _environment);
             _namedPipeClient.RegisterSerializer(new ActivityIndicatorMutexNameRequestSerializer(), typeof(ActivityIndicatorMutexNameRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _namedPipeClient.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
