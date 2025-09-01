@@ -62,32 +62,24 @@ public sealed class TestClassShouldBeValidFixer : CodeFixProvider
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Get the SemanticModel and Compilation
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
         bool canDiscoverInternals = semanticModel.Compilation.CanDiscoverInternals();
 
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        var generator = SyntaxGenerator.GetGenerator(document);
 
-        // Remove the static modifier if it exists
-        SyntaxTokenList modifiers = SyntaxFactory.TokenList(
-            typeDeclaration.Modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.StaticKeyword)));
+        Accessibility existingAccessibility = generator.GetAccessibility(typeDeclaration);
+        bool isGoodAccessibility = existingAccessibility == Accessibility.Public ||
+            (canDiscoverInternals && existingAccessibility == Accessibility.Internal);
 
-        if (!typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
+        SyntaxNode newTypeDeclaration = generator
+            .WithModifiers(typeDeclaration, generator.GetModifiers(typeDeclaration).WithIsStatic(false));
+
+        if (!isGoodAccessibility)
         {
-            // Determine the visibility modifier
-            SyntaxToken visibilityModifier = canDiscoverInternals
-                ? SyntaxFactory.Token(SyntaxKind.InternalKeyword)
-                : SyntaxFactory.Token(SyntaxKind.PublicKeyword);
-
-            modifiers = SyntaxFactory.TokenList(
-                modifiers.Where(modifier => !modifier.IsKind(SyntaxKind.PrivateKeyword) && !modifier.IsKind(SyntaxKind.InternalKeyword))).Add(visibilityModifier);
+            newTypeDeclaration = generator.WithAccessibility(newTypeDeclaration, Accessibility.Public);
         }
 
-        // Create a new class declaration with the updated modifiers.
-        TypeDeclarationSyntax newTypeDeclaration = typeDeclaration.WithModifiers(modifiers);
-        editor.ReplaceNode(typeDeclaration, newTypeDeclaration);
-        SyntaxNode newRoot = editor.GetChangedRoot();
-
-        return document.WithSyntaxRoot(newRoot);
+        return document.WithSyntaxRoot(root.ReplaceNode(typeDeclaration, newTypeDeclaration));
     }
 }
