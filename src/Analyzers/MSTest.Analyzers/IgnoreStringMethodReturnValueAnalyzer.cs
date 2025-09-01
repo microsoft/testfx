@@ -10,8 +10,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
-using MSTest.Analyzers.Helpers;
-
 namespace MSTest.Analyzers;
 
 /// <summary>
@@ -47,10 +45,8 @@ public sealed class IgnoreStringMethodReturnValueAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemString, out INamedTypeSymbol? stringSymbol))
-            {
-                context.RegisterOperationAction(context => AnalyzeExpressionStatement(context, stringSymbol), OperationKind.ExpressionStatement);
-            }
+            INamedTypeSymbol stringSymbol = context.Compilation.GetSpecialType(SpecialType.System_String);
+            context.RegisterOperationAction(context => AnalyzeExpressionStatement(context, stringSymbol), OperationKind.ExpressionStatement);
         });
     }
 
