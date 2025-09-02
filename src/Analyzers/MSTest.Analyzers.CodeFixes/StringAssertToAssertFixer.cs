@@ -84,9 +84,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         ArgumentSyntax[] newArguments = [.. arguments];
         (newArguments[0], newArguments[1]) = (newArguments[1], newArguments[0]);
 
-<<<<<<< HEAD
-        ArgumentListSyntax newArgumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(newArguments));
-=======
         // StringAssert has overloads with parameter types (string, string, string, StringComparison)
         // In Assert class, these are (string, string, StringComparison, string)
         // So we need to do the swap.
@@ -103,7 +100,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         }
 
         ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList<ArgumentSyntax>(newArguments));
->>>>>>> Fix StringAssertToAssertFixer to swap StringComparison and message arguments
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
 
         // Replace StringAssert with Assert in the member access expression
