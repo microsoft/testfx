@@ -4,8 +4,8 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0055 | Usage | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0055)
-MSTEST0056 | Usage | Warning | TestMethodAttributeShouldPropagateSourceInformationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0056)
+MSTEST0056 | Usage | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0056)
+MSTEST0057 | Usage | Warning | TestMethodAttributeShouldPropagateSourceInformationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0057)
 
 ### Changed Rules
 
@@ -31,3 +31,4 @@ Rule ID | Category | Severity | Notes
 MSTEST0051 | Usage | Info | AssertThrowsShouldContainSingleStatementAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0051)
 MSTEST0052 | Usage | Warning | PreferDynamicDataSourceTypeAutoDetectAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0052)
 MSTEST0054 | Usage | Info | UseCancellationTokenPropertyAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0054)
+MSTEST0055 | Usage | Warning | IgnoreStringMethodReturnValueAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0055)

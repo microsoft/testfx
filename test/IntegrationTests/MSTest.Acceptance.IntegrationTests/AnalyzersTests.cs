@@ -10,6 +10,62 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task MSTEST0001(bool isMTP, bool isAdapterReferenced)
+    {
+        string code = $$"""
+#file TestForMSTEST0001.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFrameworks$</TargetFramework>
+    <RunAnalyzers>true</RunAnalyzers>
+    <MSTestAnalysisMode>all</MSTestAnalysisMode>
+
+    {{(isMTP ? """
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+    """ : string.Empty)}}
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    {{(isAdapterReferenced ? "<PackageReference Include=\"MSTest.TestAdapter\" Version=\"$MSTestVersion$\" />" : string.Empty)}}
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+}
+""".PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+    .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("TestForMSTEST0001", code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        if (isAdapterReferenced)
+        {
+            result.AssertOutputContains("warning MSTEST0001");
+        }
+        else
+        {
+            result.AssertOutputDoesNotContain("warning MSTEST0001");
+        }
+    }
+
+    [TestMethod]
     public async Task AnalyzersShouldBeEnabledWhenUsingMetapackage()
     {
         string code = """

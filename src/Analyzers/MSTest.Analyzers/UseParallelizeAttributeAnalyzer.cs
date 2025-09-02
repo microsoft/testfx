@@ -47,7 +47,10 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeCompilation(CompilationAnalysisContext context)
     {
-        bool hasTestAdapter = context.Compilation.ReferencedAssemblyNames.Any(asm => asm.Name == "MSTest.TestAdapter");
+        bool hasTestAdapter = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.IsMSTestTestAdapterReferenced", out string? isAdapterReferenced) &&
+            bool.TryParse(isAdapterReferenced, out bool isAdapterReferencedValue) &&
+            isAdapterReferencedValue;
+
         if (!hasTestAdapter)
         {
             // We shouldn't produce a diagnostic if only the test framework is referenced, but not the adapter.
