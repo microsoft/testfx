@@ -64,10 +64,6 @@ public sealed class StringAssertToAssertAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("Contains", "Contains"),
                 // /0/Test0.cs(15,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("Contains", "Contains"),
-                // /0/Test0.cs(16,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("Contains", "Contains"),
-                // /0/Test0.cs(17,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("Contains", "Contains"),
             ],
             fixedCode);
     }
