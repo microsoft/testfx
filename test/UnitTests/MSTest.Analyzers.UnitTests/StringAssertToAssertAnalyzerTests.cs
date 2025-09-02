@@ -28,9 +28,7 @@ public sealed class StringAssertToAssertAnalyzerTests
                     {|#0:StringAssert.Contains(value, substring)|};
                     {|#1:StringAssert.Contains(value, substring, "message")|};
                     {|#2:StringAssert.Contains(value, substring, StringComparison.Ordinal)|};
-                    {|#3:StringAssert.Contains(value, substring, "message", StringComparison.Ordinal)|};
-                    {|#4:StringAssert.Contains(value, substring, "message {0}", "arg")|};
-                    {|#5:StringAssert.Contains(value, substring, "message {0}", StringComparison.Ordinal, "arg")|};
+                    {|#3:StringAssert.Contains(value, substring, StringComparison.Ordinal, "message")|};
                 }
             }
             """;
@@ -51,8 +49,6 @@ public sealed class StringAssertToAssertAnalyzerTests
                     Assert.Contains(substring, value, "message");
                     Assert.Contains(substring, value, StringComparison.Ordinal);
                     Assert.Contains(substring, value, StringComparison.Ordinal, "message");
-                    Assert.Contains(substring, value, "message {0}", "arg");
-                    Assert.Contains(substring, value, StringComparison.Ordinal, "message {0}", "arg");
                 }
             }
             """;
