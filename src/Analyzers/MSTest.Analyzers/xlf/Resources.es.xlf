@@ -522,6 +522,21 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Los métodos GlobalTestInitialize y GlobalTestCleanup deben tener un diseño válido</target>
         <note />
       </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueDescription">
+        <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
+        <target state="new">Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
+        <source>The return value of '{0}' should not be ignored</source>
+        <target state="new">The return value of '{0}' should not be ignored</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueTitle">
+        <source>Do not ignore the return value of string methods</source>
+        <target state="new">Do not ignore the return value of string methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Usar "Assert.Fail" en lugar de una aserción 'Assert.{0}' que siempre tiene errores</target>
