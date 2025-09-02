@@ -14,6 +14,7 @@ public sealed class StringAssertToAssertAnalyzerTests
     public async Task WhenStringAssertContains()
     {
         string code = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -25,11 +26,17 @@ public sealed class StringAssertToAssertAnalyzerTests
                     string value = "Hello World";
                     string substring = "World";
                     {|#0:StringAssert.Contains(value, substring)|};
+                    {|#1:StringAssert.Contains(value, substring, "message")|};
+                    {|#2:StringAssert.Contains(value, substring, StringComparison.Ordinal)|};
+                    {|#3:StringAssert.Contains(value, substring, "message", StringComparison.Ordinal)|};
+                    {|#4:StringAssert.Contains(value, substring, "message {0}", "arg")|};
+                    {|#5:StringAssert.Contains(value, substring, "message {0}", StringComparison.Ordinal, "arg")|};
                 }
             }
             """;
 
         string fixedCode = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -41,14 +48,31 @@ public sealed class StringAssertToAssertAnalyzerTests
                     string value = "Hello World";
                     string substring = "World";
                     Assert.Contains(substring, value);
+                    Assert.Contains(substring, value, "message");
+                    Assert.Contains(substring, value, StringComparison.Ordinal);
+                    Assert.Contains(substring, value, StringComparison.Ordinal, "message");
+                    Assert.Contains(substring, value, "message {0}", "arg");
+                    Assert.Contains(substring, value, StringComparison.Ordinal, "message {0}", "arg");
                 }
             }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            // /0/Test0.cs(11,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
+            [
+                // /0/Test0.cs(12,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(13,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(14,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(15,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(16,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("Contains", "Contains"),
+                // /0/Test0.cs(17,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("Contains", "Contains"),
+            ],
             fixedCode);
     }
 
