@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,
@@ -23,10 +21,13 @@ public class UseParallelizeAttributeAnalyzerTests
 
         if (includeTestAdapter)
         {
-            // NOTE: Test constructor already adds TestFramework refs.
-#pragma warning disable CS0618 // Type or member is obsolete
-            test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(MSTestExecutor).Assembly.Location));
-#pragma warning restore CS0618 // Type or member is obsolete
+            test.TestState.AnalyzerConfigFiles.Add((
+                "/.globalconfig",
+                """
+                is_global = true
+
+                build_property.IsMSTestTestAdapterReferenced = true
+                """));
         }
 
         test.ExpectedDiagnostics.AddRange(expected);
