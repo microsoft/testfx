@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Editing;
 
 using MSTest.Analyzers.Helpers;
 
@@ -78,11 +77,13 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             return document;
         }
 
-        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
         // Create new argument list with swapped first two arguments
-        ArgumentSyntax[] newArguments = [.. arguments];
-        (newArguments[0], newArguments[1]) = (newArguments[1], newArguments[0]);
+        // We keep the existing separators in case there is trivia attached to them.
+        var newArguments = arguments.GetWithSeparators().ToList();
+        // NOTE: Index 1 has the "separator" (comma) between the first and second arguments.
+        (newArguments[0], newArguments[2]) = (newArguments[2], newArguments[0]);
 
         // StringAssert has overloads with parameter types (string, string, string, StringComparison)
         // In Assert class, these are (string, string, StringComparison, string)
@@ -108,7 +109,9 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
             .WithName(SyntaxFactory.IdentifierName(properAssertMethodName));
         newInvocationExpr = newInvocationExpr.WithExpression(newMemberAccess);
 
-        editor.ReplaceNode(invocationExpr, newInvocationExpr);
-        return editor.GetChangedDocument();
+        // Preserve leading trivia (including empty lines) from the original invocation
+        newInvocationExpr = newInvocationExpr.WithLeadingTrivia(invocationExpr.GetLeadingTrivia());
+
+        return document.WithSyntaxRoot(root.ReplaceNode(invocationExpr, newInvocationExpr));
     }
 }
