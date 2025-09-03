@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -33,7 +35,7 @@ public class MSTestExecutorTests : TestContainer
 
         var extensionUriString = (ExtensionUriAttribute)testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single();
 
-        Verify(extensionUriString.ExtensionUri == EngineConstants.ExecutorUriString);
+        extensionUriString.ExtensionUri.Should().Be(EngineConstants.ExecutorUriString);
     }
 
     public async Task RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
@@ -140,7 +142,7 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
-        Verify(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
+        MSTestSettings.RunConfigurationSettings.CollectSourceInformation.Should().BeTrue();
     }
 
     public async Task RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
@@ -158,6 +160,6 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
 
-        Verify(!MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
+        MSTestSettings.RunConfigurationSettings.CollectSourceInformation.Should().BeFalse();
     }
 }

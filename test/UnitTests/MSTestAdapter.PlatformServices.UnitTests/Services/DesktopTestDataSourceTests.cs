@@ -4,6 +4,8 @@
 #if NET462
 using System.Data;
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -41,7 +43,7 @@ public class DesktopTestDataSourceTests : TestContainer
 
         foreach (DataRow dataRow in dataRows.Cast<DataRow>())
         {
-            Verify("v1".Equals(dataRow[3]));
+            dataRow[3].Should().Be("v1");
         }
     }
 
@@ -70,13 +72,14 @@ public class DesktopTestDataSourceTests : TestContainer
         [TestMethod]
         public void PassingTest()
         {
-            Verify(TestContext.DataRow!["adapter"].ToString() == "v1");
-            Verify(TestContext.DataRow["targetPlatform"].ToString() == "x86");
+            TestContext.DataRow!["adapter"].ToString().Should().Be("v1");
+            TestContext.DataRow["targetPlatform"].ToString().Should().Be("x86");
             TestContext.AddResultFile("C:\\temp.txt");
         }
 
         [TestMethod]
-        public void FailingTest() => Verify(TestContext.DataRow!["configuration"].ToString() == "Release");
+        public void FailingTest()
+            => TestContext.DataRow!["configuration"].ToString().Should().Be("Release");
     }
 
     #endregion

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -19,7 +21,7 @@ public class TestResultExtensionsTests : TestContainer
         var result = new TestResult { TestFailureException = new Exception() };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Outcome == VSTestTestOutcome.Failed);
+        convertedResult.Outcome.Should().Be(VSTestTestOutcome.Failed);
     }
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
@@ -27,7 +29,7 @@ public class TestResultExtensionsTests : TestContainer
         var result = new TestResult { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Outcome == VSTestTestOutcome.Skipped);
+        convertedResult.Outcome.Should().Be(VSTestTestOutcome.Skipped);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
@@ -45,16 +47,16 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new() { DisplayName = result.DisplayName }, default, default, string.Empty, new());
         VSTestTestResultMessage[] stdOutMessages = [.. convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory)];
-        Verify(stdOutMessages[0].Text == "logOutput");
-        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text == "logError");
-        Verify(convertedResult.DisplayName == "displayName (Data Row 1)");
-        Verify(stdOutMessages[1].Text == """
+        stdOutMessages[0].Text.Should().Be("logOutput");
+        convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text.Should().Be("logError");
+        convertedResult.DisplayName.Should().Be("displayName (Data Row 1)");
+        stdOutMessages[1].Text.Should().Be("""
 
 
             Debug Trace:
             debugTrace
             """);
-        Verify(timespan == convertedResult.Duration);
+        convertedResult.Duration.Should().Be(timespan);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
@@ -66,7 +68,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text == "logOutput");
+        convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text.Should().Be("logOutput");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardError()
@@ -78,7 +80,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text == "logError");
+        convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text.Should().Be("logError");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDebugTrace()
@@ -90,7 +92,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text == """
+        convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text.Should().Be("""
 
 
             Debug Trace:
@@ -107,7 +109,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text == """
+        convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardOutCategory).Text.Should().Be("""
 
 
             TestContext Messages:
@@ -125,7 +127,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(timespan == convertedResult.Duration);
+        convertedResult.Duration.Should().Be(timespan);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDisplayName()
@@ -137,7 +139,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.DisplayName == "displayName");
+        convertedResult.DisplayName.Should().Be("displayName");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
@@ -149,7 +151,7 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(convertedResult.DisplayName == " (Data Row 1)");
+        convertedResult.DisplayName.Should().Be(" (Data Row 1)");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
@@ -167,9 +169,9 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        Verify(executionId == (Guid)convertedResult.GetPropertyValue(EngineConstants.ExecutionIdProperty)!);
-        Verify(parentExecId == (Guid)convertedResult.GetPropertyValue(EngineConstants.ParentExecIdProperty)!);
-        Verify(innerResultsCount == (int)convertedResult.GetPropertyValue(EngineConstants.InnerResultsCountProperty)!);
+        ((Guid)convertedResult.GetPropertyValue(EngineConstants.ExecutionIdProperty)!).Should().Be(executionId);
+        ((Guid)convertedResult.GetPropertyValue(EngineConstants.ParentExecIdProperty)!).Should().Be(parentExecId);
+        ((int)convertedResult.GetPropertyValue(EngineConstants.InnerResultsCountProperty)!).Should().Be(innerResultsCount);
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
@@ -180,6 +182,6 @@ public class TestResultExtensionsTests : TestContainer
 
         var result = new TestResult { ResultFiles = [resultFile] };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-        Verify(convertedResult.Attachments[0].Attachments[0].Description == resultFile);
+        convertedResult.Attachments[0].Attachments[0].Description.Should().Be(resultFile);
     }
 }

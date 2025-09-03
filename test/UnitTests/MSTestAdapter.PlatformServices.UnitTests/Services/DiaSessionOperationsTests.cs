@@ -3,6 +3,8 @@
 
 #if !NET462
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -22,8 +24,8 @@ public class DiaSessionOperationsTests : TestContainer
         {
             DiaSessionOperations.Initialize(typeof(MockDiaSession).AssemblyQualifiedName!, typeof(MockDiaNavigationData).AssemblyQualifiedName!);
 
-            Verify(_fileOperations.CreateNavigationSession(null!) is null);
-            Verify(MockDiaSession.IsConstructorInvoked);
+            _fileOperations.CreateNavigationSession(null!).Should().BeNull();
+            MockDiaSession.IsConstructorInvoked.Should().BeTrue();
         }
         finally
         {
@@ -37,8 +39,8 @@ public class DiaSessionOperationsTests : TestContainer
         {
             DiaSessionOperations.Initialize(string.Empty, string.Empty);
 
-            Verify(_fileOperations.CreateNavigationSession(null!) is null);
-            Verify(!MockDiaSession.IsConstructorInvoked);
+            _fileOperations.CreateNavigationSession(null!).Should().BeNull();
+            MockDiaSession.IsConstructorInvoked.Should().BeFalse();
         }
         finally
         {
@@ -56,7 +58,7 @@ public class DiaSessionOperationsTests : TestContainer
 
             object? diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).Assembly.Location);
 
-            Verify(diaSession is MockDiaSession);
+            diaSession.Should().BeOfType<MockDiaSession>();
         }
         finally
         {
@@ -82,9 +84,9 @@ public class DiaSessionOperationsTests : TestContainer
                 out int minLineNumber,
                 out string? fileName);
 
-            Verify(navigationData.MinLineNumber == minLineNumber);
-            Verify(navigationData.FileName == fileName);
-            Verify(MockDiaSession.IsGetNavigationDataInvoked);
+            minLineNumber.Should().Be(navigationData.MinLineNumber);
+            fileName.Should().Be(navigationData.FileName);
+            MockDiaSession.IsGetNavigationDataInvoked.Should().BeTrue();
         }
         finally
         {
@@ -103,8 +105,8 @@ public class DiaSessionOperationsTests : TestContainer
         out int minLineNumber,
         out string? fileName);
 
-        Verify(minLineNumber == -1);
-        Verify(fileName is null);
+        minLineNumber.Should().Be(-1);
+        fileName.Should().BeNull();
     }
 
     public void GetNavigationDataShouldNotThrowOnMissingFileNameField()
@@ -125,8 +127,8 @@ public class DiaSessionOperationsTests : TestContainer
             out int minLineNumber,
             out string? fileName);
 
-            Verify(minLineNumber == 86);
-            Verify(fileName is null);
+            minLineNumber.Should().Be(86);
+            fileName.Should().BeNull();
         }
         finally
         {
@@ -152,8 +154,8 @@ public class DiaSessionOperationsTests : TestContainer
                 out int minLineNumber,
                 out string? fileName);
 
-            Verify(minLineNumber == -1);
-            Verify(navigationData.FileName == fileName);
+            minLineNumber.Should().Be(-1);
+            fileName.Should().Be(navigationData.FileName);
         }
         finally
         {
@@ -172,7 +174,7 @@ public class DiaSessionOperationsTests : TestContainer
             object? diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).Assembly.Location);
             _fileOperations.DisposeNavigationSession(diaSession);
 
-            Verify(MockDiaSession.IsDisposeInvoked);
+            MockDiaSession.IsDisposeInvoked.Should().BeTrue();
         }
         finally
         {

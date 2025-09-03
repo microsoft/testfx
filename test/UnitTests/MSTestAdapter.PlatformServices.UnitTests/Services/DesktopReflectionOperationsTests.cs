@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using MSTestAdapter.PlatformServices.UnitTests.Utilities;
@@ -22,11 +24,11 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
-        Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
+        expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)).Should().BeTrue();
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
@@ -35,11 +37,11 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Length.Should().Be(1);
 
         string[] expectedAttributes = ["DummyA : ba"];
-        Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
+        expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)).Should().BeTrue();
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
@@ -48,11 +50,11 @@ public class DesktopReflectionOperationsTests : TestContainer
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(ReflectionUtilityTests.DummyAAttribute));
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
-        Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
+        expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)).Should().BeTrue();
     }
 }
 #endif

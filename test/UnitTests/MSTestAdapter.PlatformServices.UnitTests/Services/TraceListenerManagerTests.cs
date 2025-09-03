@@ -3,6 +3,8 @@
 
 #if !WIN_UI
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -22,8 +24,8 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Add(traceListener);
         int newCount = Trace.Listeners.Count;
 
-        Verify(originalCount + 1 == newCount);
-        Verify(Trace.Listeners.Contains(traceListener));
+        newCount.Should().Be(originalCount + 1);
+        Trace.Listeners.Contains(traceListener).Should().BeTrue();
     }
 
     public void RemoveShouldRemoveTraceListenerFromListOfTraceListeners()
@@ -39,9 +41,9 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Remove(traceListener);
         int countAfterRemoving = Trace.Listeners.Count;
 
-        Verify(originalCount + 1 == countAfterAdding);
-        Verify(countAfterAdding - 1 == countAfterRemoving);
-        Verify(!Trace.Listeners.Contains(traceListener));
+        countAfterAdding.Should().Be(originalCount + 1);
+        countAfterRemoving.Should().Be(countAfterAdding - 1);
+        Trace.Listeners.Contains(traceListener).Should().BeFalse();
     }
 
     public void DisposeShouldCallDisposeOnCorrespondingTraceListener()
@@ -55,7 +57,7 @@ public class TraceListenerManagerTests : TestContainer
         traceListenerManager.Dispose(traceListener);
 
         // Trying to write after closing textWriter should throw exception
-        VerifyThrows<ObjectDisposedException>(() => writer.WriteLine("Try to write something"));
+        new Action(() => writer.WriteLine("Try to write something")).Should().Throw<ObjectDisposedException>();
     }
 }
 

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -25,12 +27,12 @@ public class TestCaseExtensionsTests : TestContainer
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Verify(resultUnitTestElement.Priority == 2);
-        Verify(testCategories == resultUnitTestElement.TestCategory);
-        Verify(resultUnitTestElement.DisplayName == "DummyDisplayName");
-        Verify(resultUnitTestElement.TestMethod.Name == "DummyMethod");
-        Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
-        Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName is null);
+        resultUnitTestElement.Priority.Should().Be(2);
+        resultUnitTestElement.TestCategory.Should().Equal(testCategories);
+        resultUnitTestElement.DisplayName.Should().Be("DummyDisplayName");
+        resultUnitTestElement.TestMethod.Name.Should().Be("DummyMethod");
+        resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
+        resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().BeNull();
     }
 
     public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
@@ -41,8 +43,8 @@ public class TestCaseExtensionsTests : TestContainer
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
         // These are set for testCase by default by ObjectModel.
-        Verify(resultUnitTestElement.Priority == 0);
-        Verify(resultUnitTestElement.TestCategory is null);
+        resultUnitTestElement.Priority.Should().Be(0);
+        resultUnitTestElement.TestCategory.Should().BeNull();
     }
 
     public void ToUnitTestElementShouldAddDeclaringClassNameToTestElementWhenAvailable()
@@ -53,7 +55,7 @@ public class TestCaseExtensionsTests : TestContainer
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
-        Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName == "DummyDeclaringClassName");
+        resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
+        resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().Be("DummyDeclaringClassName");
     }
 }

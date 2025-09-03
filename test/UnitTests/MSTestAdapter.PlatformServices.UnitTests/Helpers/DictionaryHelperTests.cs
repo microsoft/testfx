@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
@@ -20,7 +22,7 @@ public class DictionaryHelperTests : TestContainer
 
         actual.ToList().Sort();
         expected.ToList().Sort();
-        Verify(actual.SequenceEqual(expected));
+        actual.SequenceEqual(expected).Should().BeTrue();
     }
 
     public void ConcatenatingDictionariesReturnsSourceSideWhenOverwriteIsNullOrEmpty()
@@ -37,7 +39,7 @@ public class DictionaryHelperTests : TestContainer
 
         IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key select entry;
         IOrderedEnumerable<KeyValuePair<string, string>> sortedSource = from entry in source orderby entry.Key select entry;
-        Verify(sortedActual.SequenceEqual(sortedSource));
+        sortedActual.SequenceEqual(sortedSource).Should().BeTrue();
     }
 
     public void ConcatenatingDictionariesReturnsOverwriteSideWhenSourceIsNullOrEmpty()
@@ -54,7 +56,7 @@ public class DictionaryHelperTests : TestContainer
 
         IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key select entry;
         IOrderedEnumerable<KeyValuePair<string, string>> sortedOverwrite = from entry in overwrite orderby entry.Key select entry;
-        Verify(sortedActual.SequenceEqual(sortedOverwrite));
+        sortedActual.SequenceEqual(sortedOverwrite).Should().BeTrue();
     }
 
     public void ConcatenatingDictionariesShouldMergeThemAndTakeDuplicateKeysFromOverwrite()
@@ -86,6 +88,6 @@ public class DictionaryHelperTests : TestContainer
 
         IOrderedEnumerable<KeyValuePair<string, string>> sortedActual = from entry in actual orderby entry.Key select entry;
         IOrderedEnumerable<KeyValuePair<string, string>> sortedExpected = from entry in expected orderby entry.Key select entry;
-        Verify(sortedActual.SequenceEqual(sortedExpected));
+        sortedActual.SequenceEqual(sortedExpected).Should().BeTrue();
     }
 }

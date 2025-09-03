@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
@@ -16,7 +18,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetExceptionMessageShouldReturnExceptionMessage()
     {
         Exception ex = new("something bad happened");
-        Verify(ex.GetExceptionMessage() == "something bad happened");
+        ex.GetExceptionMessage().Should().Be("something bad happened");
     }
 
     public void GetExceptionMessageShouldReturnInnerExceptionMessageAsWell()
@@ -29,7 +31,7 @@ public class ExceptionExtensionsTests : TestContainer
             Environment.NewLine,
             "the real exception");
 
-        Verify(expectedMessage == ex.GetExceptionMessage());
+        ex.GetExceptionMessage().Should().Be(expectedMessage);
     }
 
     #region TryGetExceptionMessage scenarios
@@ -38,14 +40,14 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new Exception("dummyMessage");
 
-        Verify(exception.TryGetMessage() == "dummyMessage");
+        exception.TryGetMessage().Should().Be("dummyMessage");
     }
 
     public void ExceptionTryGetMessageReturnsEmptyStringIfExceptionMessageIsNull()
     {
         var exception = new DummyException(() => null!);
 
-        Verify(exception.TryGetMessage() == string.Empty);
+        exception.TryGetMessage().Should().Be(string.Empty);
     }
 
     public void ExceptionTryGetMessageReturnsErrorMessageIfExceptionIsNull()
@@ -54,14 +56,15 @@ public class ExceptionExtensionsTests : TestContainer
 
         var exception = (Exception?)null;
 
-        Verify(errorMessage == exception.TryGetMessage());
+        exception.TryGetMessage().Should().Be(errorMessage);
     }
 
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
         var exception = new DummyException(() => throw new NotImplementedException());
 
-        VerifyThrows<NotImplementedException>(() => exception.TryGetMessage());
+        Action action = () => exception.TryGetMessage();
+        action.Should().Throw<NotImplementedException>();
     }
 
     #endregion
@@ -72,7 +75,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new DummyExceptionForStackTrace(() => null!);
 
-        Verify(exception.TryGetStackTraceInformation() is null);
+        exception.TryGetStackTraceInformation().Should().BeNull();
     }
 
     public void TryGetStackTraceInformationReturnsStackTraceForAnException()
@@ -81,16 +84,17 @@ public class ExceptionExtensionsTests : TestContainer
 
         StackTraceInformation? stackTraceInformation = exception.TryGetStackTraceInformation();
 
-        Verify(stackTraceInformation!.ErrorStackTrace.StartsWith("   at A()", StringComparison.Ordinal));
-        Verify(stackTraceInformation.ErrorFilePath is null);
-        Verify(stackTraceInformation.ErrorLineNumber == 0);
+        stackTraceInformation!.ErrorStackTrace.Should().StartWith("   at A()");
+        stackTraceInformation.ErrorFilePath.Should().BeNull();
+        stackTraceInformation.ErrorLineNumber.Should().Be(0);
     }
 
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
     {
         var exception = new DummyExceptionForStackTrace(() => throw new NotImplementedException());
 
-        VerifyThrows<NotImplementedException>(() => exception.TryGetStackTraceInformation());
+        Action action = () => exception.TryGetStackTraceInformation();
+        action.Should().Throw<NotImplementedException>();
     }
 
 #pragma warning disable CA1710 // Identifiers should have correct suffix
@@ -120,13 +124,13 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionReturnsTrueIfExceptionIsAssertException()
     {
         var exception = new AssertInconclusiveException();
-        Verify(exception.TryGetUnitTestAssertException(out _, out _, out _));
+        exception.TryGetUnitTestAssertException(out _, out _, out _).Should().BeTrue();
     }
 
     public void IsUnitTestAssertExceptionReturnsFalseIfExceptionIsNotAssertException()
     {
         var exception = new NotImplementedException();
-        Verify(!exception.TryGetUnitTestAssertException(out _, out _, out _));
+        exception.TryGetUnitTestAssertException(out _, out _, out _).Should().BeFalse();
     }
 
     public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
@@ -134,8 +138,8 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
         exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out _);
 
-        Verify(outcome == UTF.UnitTestOutcome.Inconclusive);
-        Verify(exceptionMessage == "Dummy Message");
+        outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        exceptionMessage.Should().Be("Dummy Message");
     }
 
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
@@ -143,8 +147,8 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
         exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out _);
 
-        Verify(outcome == UTF.UnitTestOutcome.Failed);
-        Verify(exceptionMessage == "Dummy Message");
+        outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exceptionMessage.Should().Be("Dummy Message");
     }
     #endregion
 
@@ -154,7 +158,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new InvalidOperationException();
         Exception actual = exception.GetRealException();
 
-        Verify(actual is InvalidOperationException);
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTargetInvocation()
@@ -162,7 +166,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(new InvalidOperationException());
         Exception actual = exception.GetRealException();
 
-        Verify(actual is InvalidOperationException);
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheTargetInvocationExceptionWhenTargetInvocationIsProvidedWithNullInnerException()
@@ -170,7 +174,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(null);
         Exception actual = exception.GetRealException();
 
-        Verify(actual is TargetInvocationException);
+        actual.Should().BeOfType<TargetInvocationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostRealException()
@@ -178,7 +182,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException(new InvalidOperationException())));
         Exception actual = exception.GetRealException();
 
-        Verify(actual is InvalidOperationException);
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostTargetInvocationException()
@@ -186,8 +190,8 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException("inner most", null)));
         Exception actual = exception.GetRealException();
 
-        Verify(actual is TargetInvocationException);
-        Verify(actual.Message == "inner most");
+        actual.Should().BeOfType<TargetInvocationException>();
+        actual.Message.Should().Be("inner most");
     }
 
     public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTypeInitialization()
@@ -195,7 +199,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", new InvalidOperationException());
         Exception actual = exception.GetRealException();
 
-        Verify(actual is InvalidOperationException);
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheTypeInitializationExceptionWhenTypeInitializationIsProvidedWithNullInnerException()
@@ -203,7 +207,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", null);
         Exception actual = exception.GetRealException();
 
-        Verify(actual is TypeInitializationException);
+        actual.Should().BeOfType<TypeInitializationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostRealExceptionOfTypeInitialization()
@@ -211,7 +215,7 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("some type", new InvalidOperationException())));
         Exception actual = exception.GetRealException();
 
-        Verify(actual is InvalidOperationException);
+        actual.Should().BeOfType<InvalidOperationException>();
     }
 
     public void GetRealExceptionGetsTheInnerMostTypeInitializationException()
@@ -219,8 +223,8 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("inner most", null)));
         Exception actual = exception.GetRealException();
 
-        Verify(actual is TypeInitializationException);
-        Verify(actual.Message == "The type initializer for 'inner most' threw an exception.");
+        actual.Should().BeOfType<TypeInitializationException>();
+        actual.Message.Should().Be("The type initializer for 'inner most' threw an exception.");
     }
     #endregion
 }

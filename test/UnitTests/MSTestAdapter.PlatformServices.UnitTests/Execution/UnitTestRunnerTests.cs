@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -67,21 +69,25 @@ public sealed class UnitTestRunnerTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, [], null);
 
-        Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
-        Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
+        MSTestSettings.CurrentSettings.ForcedLegacyMode.Should().BeTrue();
+        MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
     }
 
     #endregion
 
     #region RunSingleTest tests
 
-    public async Task RunSingleTestShouldThrowIfTestMethodIsNull() =>
-        await VerifyThrowsAsync<ArgumentNullException>(async () => await _unitTestRunner.RunSingleTestAsync(null!, null!, null!));
+    public async Task RunSingleTestShouldThrowIfTestMethodIsNull()
+    {
+        Func<Task> func = () => _unitTestRunner.RunSingleTestAsync(null!, null!, null!);
+        await func.Should().ThrowAsync<ArgumentNullException>();
+    }
 
     public async Task RunSingleTestShouldThrowIfTestRunParametersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        await VerifyThrowsAsync<ArgumentNullException>(async () => await _unitTestRunner.RunSingleTestAsync(testMethod, null!, null!));
+        Func<Task> func = () => _unitTestRunner.RunSingleTestAsync(testMethod, null!, null!);
+        await func.Should().ThrowAsync<ArgumentNullException>();
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
@@ -93,10 +99,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.NotFound);
-        Verify(results[0].IgnoreReason == "Test method M was not found.");
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.NotFound);
+        results[0].IgnoreReason.Should().Be("Test method M was not found.");
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
@@ -116,10 +122,10 @@ public sealed class UnitTestRunnerTests : TestContainer
             methodInfo.DeclaringType!.FullName,
             methodInfo.Name);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.NotRunnable);
-        Verify(expectedMessage == results[0].IgnoreReason);
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.NotRunnable);
+        results[0].IgnoreReason.Should().Be(expectedMessage);
     }
 
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
@@ -133,10 +139,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].IgnoreReason == "IgnoreTestClassMessage");
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].IgnoreReason.Should().Be("IgnoreTestClassMessage");
     }
 
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
@@ -150,10 +156,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].IgnoreReason == string.Empty);
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].IgnoreReason.Should().Be(string.Empty);
     }
 
     public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
@@ -167,10 +173,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].IgnoreReason == "IgnoreTestMessage");
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].IgnoreReason.Should().Be("IgnoreTestMessage");
     }
 
     public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
@@ -184,10 +190,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].IgnoreReason == string.Empty);
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].IgnoreReason.Should().Be(string.Empty);
     }
 
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
@@ -201,10 +207,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].IgnoreReason == "IgnoreTestClassMessage");
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].IgnoreReason.Should().Be("IgnoreTestClassMessage");
     }
 
     public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
@@ -218,10 +224,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Ignored);
-        Verify(results[0].IgnoreReason == "IgnoreTestMessage");
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].IgnoreReason.Should().Be("IgnoreTestMessage");
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
@@ -240,10 +246,10 @@ public sealed class UnitTestRunnerTests : TestContainer
             testMethod.FullClassName,
             testMethod.Name);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(expectedMessage == results[0].IgnoreReason);
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        results[0].IgnoreReason.Should().Be(expectedMessage);
     }
 
     public async Task RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
@@ -257,10 +263,10 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
-        Verify(results[0].IgnoreReason is null);
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        results[0].IgnoreReason.Should().BeNull();
     }
 
     public async Task RunSingleTestShouldSetTestsAsInProgressInTestContext()
@@ -275,9 +281,9 @@ public sealed class UnitTestRunnerTests : TestContainer
         // Asserting in the test method execution flow itself.
         TestResult[] results = await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(results is not null);
-        Verify(results.Length == 1);
-        Verify(results[0].Outcome == UTF.UnitTestOutcome.Passed);
+        results.Should().NotBeNull();
+        results.Length.Should().Be(1);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
     }
 
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
@@ -301,7 +307,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         await _unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
 
-        Verify(validator == 1);
+        validator.Should().Be(1);
     }
 
     #endregion
