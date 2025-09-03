@@ -50,7 +50,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputMatchesRegexLines("""
             MSTest *
               TestDataRowSingleParameterFolded
@@ -73,7 +73,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             """);
 
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
-        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress");
+        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
@@ -460,4 +460,6 @@ public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

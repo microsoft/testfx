@@ -18,7 +18,7 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Test1");
@@ -33,7 +33,7 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Test1");
@@ -105,4 +105,6 @@ public class TestClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

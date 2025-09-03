@@ -28,10 +28,12 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
         string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
         File.WriteAllText(fileCreationPath, string.Empty);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["FILE_DIRECTORY"] = fileCreationPath,
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["FILE_DIRECTORY"] = fileCreationPath,
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
@@ -159,4 +161,6 @@ public class UnitTest1
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }
