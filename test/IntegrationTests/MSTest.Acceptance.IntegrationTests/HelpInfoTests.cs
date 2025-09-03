@@ -28,6 +28,8 @@ Execute a .NET Test Application.
 Options:
     --config-file
         Specifies a testconfig.json file.
+    --debug-attach
+        Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
