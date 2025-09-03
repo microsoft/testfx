@@ -29,7 +29,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
     public const string FilterUidOptionKey = "filter-uid";
-    public const string DebugAttachOptionKey = "debug-attach";
+    public const string DebugAttachOptionKey = "debug-wait-attach";
 
     public const string ServerOptionKey = "server";
     public const string ClientPortOptionKey = "client-port";
