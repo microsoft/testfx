@@ -18,6 +18,12 @@ namespace Microsoft.Testing.Platform.IPC;
 #pragma warning disable CA1416 // Validate platform compatibility
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
+    private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
+#if NET
+        | PipeOptions.CurrentUserOnly
+#endif
+        ;
+
     private readonly NamedPipeClientStream _namedPipeClientStream;
     private readonly SemaphoreSlim _lock = new(1, 1);
 
@@ -36,7 +42,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
     public NamedPipeClient(string name, IEnvironment environment)
     {
         Guard.NotNull(name);
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut);
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;
     }
