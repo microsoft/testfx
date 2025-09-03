@@ -40,9 +40,10 @@ public sealed class CommandLine : IDisposable
 
     public async Task RunAsync(
         string commandLine,
-        IDictionary<string, string?>? environmentVariables = null)
+        IDictionary<string, string?>? environmentVariables = null,
+        CancellationToken cancellationToken = default)
     {
-        int exitCode = await RunAsyncAndReturnExitCodeAsync(commandLine, environmentVariables);
+        int exitCode = await RunAsyncAndReturnExitCodeAsync(commandLine, environmentVariables, cancellationToken: cancellationToken);
         if (exitCode != 0)
         {
             throw new InvalidOperationException(
@@ -71,9 +72,10 @@ public sealed class CommandLine : IDisposable
         string commandLine,
         IDictionary<string, string?>? environmentVariables = null,
         string? workingDirectory = null,
-        bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
+        bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
+        CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingCommands_semaphore.WaitAsync();
+        await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
         try
         {
             Interlocked.Increment(ref s_totalProcessesAttempt);
@@ -90,7 +92,8 @@ public sealed class CommandLine : IDisposable
             };
             _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
-            return await _process.WaitForExitAsync();
+            using CancellationTokenRegistration registration = cancellationToken.Register(() => _process.Kill());
+            return await _process.WaitForExitAsync(cancellationToken);
         }
         finally
         {

@@ -19,7 +19,7 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
         // Users shouldn't need to reference adapter, nor do anything
         // special, to be able to call DynamicData.GetData.
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains("""
             1,2
             3,4
@@ -93,4 +93,6 @@ public class UnitTest1
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

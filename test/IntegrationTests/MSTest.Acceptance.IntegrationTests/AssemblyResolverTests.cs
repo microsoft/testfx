@@ -23,7 +23,7 @@ public class AssemblyResolverTests : AcceptanceTestBase<AssemblyResolverTests.Te
 
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0]);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
@@ -101,4 +101,6 @@ namespace RecursiveResourceLookupCrash
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

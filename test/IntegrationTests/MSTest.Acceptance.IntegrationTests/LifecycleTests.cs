@@ -15,7 +15,7 @@ public sealed class LifecycleTests : AcceptanceTestBase<LifecycleTests.TestAsset
     public async Task LifecycleTest(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
@@ -246,4 +246,6 @@ public class TestClass2 : IDisposable
 </RunSettings>
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

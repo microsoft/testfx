@@ -24,7 +24,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -50,7 +50,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -76,7 +76,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
@@ -105,7 +105,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.TimeoutTargetAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -131,7 +131,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.TimeoutTargetAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -157,7 +157,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.TimeoutTargetAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
@@ -186,7 +186,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutTargetAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -212,7 +212,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutTargetAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -238,7 +238,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
 
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutTargetAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
@@ -512,4 +512,6 @@ public static class ThreadAssert
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

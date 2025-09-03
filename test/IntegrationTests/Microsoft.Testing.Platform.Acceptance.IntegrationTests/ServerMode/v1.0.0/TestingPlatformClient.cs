@@ -50,9 +50,9 @@ public sealed class TestingPlatformClient : IDisposable
 
     public int ExitCode => _processHandler.ExitCode;
 
-    public async Task<int> WaitServerProcessExit()
+    public async Task<int> WaitServerProcessExit(CancellationToken cancellationToken)
     {
-        await _processHandler.WaitForExitAsync();
+        await _processHandler.WaitForExitAsync(cancellationToken);
         return _processHandler.ExitCode;
     }
 

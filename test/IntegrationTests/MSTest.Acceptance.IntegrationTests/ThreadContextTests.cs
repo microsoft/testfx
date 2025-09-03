@@ -14,7 +14,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_WhenCultureIsNotSet_TestMethodFails(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 2, passed: 0, skipped: 0);
     }
 
@@ -46,7 +46,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_CurrentCultureFlowsBetweenMethods(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -57,7 +57,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -68,7 +68,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -79,7 +79,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -89,7 +89,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_Inheritance_CurrentCultureFlowsBetweenMethods(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -100,7 +100,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -111,7 +111,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -122,7 +122,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -797,4 +797,6 @@ public class DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithout
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }
