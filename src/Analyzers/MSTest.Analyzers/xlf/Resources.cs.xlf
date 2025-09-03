@@ -134,12 +134,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersMessageFormat">
         <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="new">Replace '{0}' with format parameters with string.Format or string interpolation</target>
+        <target state="translated">Nahraďte {0} parametry formátu pomocí string.Format nebo interpolace řetězce.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersTitle">
         <source>Avoid using Assert methods with format parameters</source>
-        <target state="new">Avoid using Assert methods with format parameters</target>
+        <target state="translated">Vyhněte se použití metod Assert s parametry formátu</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -464,12 +464,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">Při volání asynchronních metod, které mají přetížení akceptující parametr CancellationToken, upřednostňujte použití přetížení s TestContext.CancellationToken, aby se umožnilo kooperativní rušení a dodržování časových limitů testů.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="new">Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</target>
+        <target state="translated">Zvažte použití přetížení, které přijímá CancellationToken a předejte TestContext.CancellationToken.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -689,17 +689,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="new">TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</target>
+        <target state="translated">TestContext.CancellationToken poskytuje přímější způsob přístupu k tokenu zrušení v porovnání s TestContext.CancellationTokenSource.Token.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyMessageFormat">
         <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="new">Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</target>
+        <target state="translated">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="new">Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</target>
+        <target state="translated">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
