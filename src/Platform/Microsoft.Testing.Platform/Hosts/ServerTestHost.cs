@@ -132,6 +132,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
     {
+        using IActivity? activity = ServiceProvider.GetPlatformOTelService()?.StartActivity("ServerTestHost");
+
         try
         {
             await _logger.LogDebugAsync("Starting server mode").ConfigureAwait(false);
@@ -152,6 +154,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         }
         finally
         {
+            // IMPORTANT: Dispose the activity before disposing the service provider to ensure all events are flushed.
+            activity?.Dispose();
+
             // Cleanup all services but special one because in the per-call mode we needed to keep them alive for reuse
             await DisposeServiceProviderAsync(ServiceProvider).ConfigureAwait(false);
         }

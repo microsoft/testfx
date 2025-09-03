@@ -6,12 +6,21 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
+
 #if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
 #endif
+
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 namespace Playground;
 
@@ -38,13 +47,27 @@ public class Program
             // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyAdapter());
 
             // Custom test host controller extension
-            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
+            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
 
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
+
+            // Enable OTel
+            testApplicationBuilder.AddOpenTelemetryProvider(
+                tracing =>
+                {
+                    tracing.AddTestingPlatformInstrumentation();
+                    tracing.AddOtlpExporter();
+                },
+                metrics =>
+                {
+                    metrics.AddTestingPlatformInstrumentation();
+                    metrics.AddOtlpExporter();
+                });
+
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
             return await testApplication.RunAsync();
         }

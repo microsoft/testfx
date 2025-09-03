@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -42,6 +43,14 @@ public interface ITestApplicationBuilder
     /// </summary>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ILoggingManager Logging { get; }
+
+    /// <summary>
+    /// Gets the telemetry manager used to collect and report diagnostic data for the testing platform.
+    /// </summary>
+    /// <remarks>Telemetry functionality is experimental and may change in future releases. Use this property
+    /// to access diagnostic metrics and events related to test execution and platform health.</remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    ITelemetryManager Telemetry { get; }
 
     /// <summary>
     /// Registers a test framework with the application builder.

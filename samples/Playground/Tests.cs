@@ -16,6 +16,8 @@ public class TestClass
     [DynamicData(nameof(Data))]
     public void Test3(int a, int b)
     {
+        Thread.Sleep(5000);
+        Assert.IsPositive(a);
     }
 
     public static IEnumerable<(int A, int B)> Data
