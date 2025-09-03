@@ -78,6 +78,11 @@ public sealed class TestApplication : ITestApplication
         // First step is to parse the command line from where we get the second input layer.
         // The first one should be the env vars handled autonomously by extensions and part of the test platform.
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
+        if (parseResult.IsOptionSet(PlatformCommandLineProvider.DebugAttachOptionKey))
+        {
+            WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
+        }
+
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
 
@@ -230,16 +235,21 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            using IProcess currentProcess = systemProcess.GetCurrentProcess();
-            console.WriteLine($"Waiting for debugger to attach... Process Id: {environment.ProcessId}, Name: {currentProcess.Name}");
-
-            while (!Debugger.IsAttached)
-            {
-                Thread.Sleep(1000);
-            }
-
-            Debugger.Break();
+            WaitForDebuggerToAttach(environment, console, systemProcess);
         }
+    }
+
+    private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
+    {
+        using IProcess currentProcess = systemProcess.GetCurrentProcess();
+        console.WriteLine($"Waiting for debugger to attach... Process Id: {environment.ProcessId}, Name: {currentProcess.Name}");
+
+        while (!Debugger.IsAttached)
+        {
+            Thread.Sleep(1000);
+        }
+
+        Debugger.Break();
     }
 
     /*
