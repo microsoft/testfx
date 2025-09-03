@@ -14,7 +14,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -29,7 +29,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -42,7 +42,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     public async Task WhenSpecificDataSourceIsIgnoredViaIgnoreMessageProperty()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -297,4 +297,6 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

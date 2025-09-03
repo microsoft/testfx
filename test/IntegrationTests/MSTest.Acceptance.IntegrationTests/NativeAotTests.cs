@@ -108,18 +108,22 @@ public class UnitTest1
                 await DotnetCli.RunAsync(
                     $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    retryCount: 0);
+                    retryCount: 0,
+                    cancellationToken: TestContext.CancellationToken);
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
                     $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    retryCount: 0);
+                    retryCount: 0,
+                    cancellationToken: TestContext.CancellationToken);
                 compilationResult.AssertOutputContains("Generating native code");
 
                 var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
-                TestHostResult result = await testHost.ExecuteAsync();
+                TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
                 result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
                 result.AssertExitCodeIs(0);
             }, times: 15, every: TimeSpan.FromSeconds(5));
     }
+
+    public TestContext TestContext { get; set; }
 }

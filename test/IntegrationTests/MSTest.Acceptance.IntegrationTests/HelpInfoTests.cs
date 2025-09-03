@@ -17,7 +17,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
     public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -93,7 +93,7 @@ Extension options:
     public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -166,4 +166,6 @@ public class TestClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

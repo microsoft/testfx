@@ -25,7 +25,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
             // .NET Framework will isolate the run into appdomain, there we did not write the warnings out
             // so before running the discovery, we want to ensure that the tests do run in appdomain.
             // We check for appdomain directly in the test, so if tests fail we did not run in appdomain.
-            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings");
+            TestHostResult testHostSuccessResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings", cancellationToken: TestContext.CancellationToken);
 
             testHostSuccessResult.AssertExitCodeIs(ExitCodes.Success);
         }
@@ -34,7 +34,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
         // because the type won't be loaded on runtime, and mstest will write warning.
         File.Delete(Path.Combine(testHost.DirectoryName, $"{BaseClassAssetName}.dll"));
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
         if (isNetFx)
@@ -152,4 +152,6 @@ public class BaseClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

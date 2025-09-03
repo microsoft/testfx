@@ -35,7 +35,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "METHOD1", "1" },
                 { "FAIL", failOnly ? "1" : "0" },
                 { "RESULTDIR", resultDirectory },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         if (!failOnly)
         {
@@ -80,7 +81,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "RESULTDIR", resultDirectory },
                 { "METHOD1", "1" },
                 { fail ? "METHOD2" : "UNUSED", "1" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         string retriesPath = Path.Combine(resultDirectory, "Retries");
         Assert.IsTrue(Directory.Exists(retriesPath));
@@ -122,7 +124,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "RESULTDIR", resultDirectory },
                 { "METHOD1", "1" },
                 { fail ? "METHOD2" : "UNUSED", "1" },
-            });
+            }, cancellationToken: TestContext.CancellationToken);
 
         if (fail)
         {
@@ -163,7 +165,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                         { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
                         { "RESULTDIR", resultDirectory },
                         { "CRASH", "1" },
-                    });
+                    },
+                    cancellationToken: TestContext.CancellationToken);
 
                 testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
@@ -195,7 +198,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build \"{AssetFixture.TargetAssetPath}\" -t:Test -p:TestingPlatformCommandLineArguments=\"--retry-failed-tests 1 --results-directory %22{resultDirectory}%22\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            workingDirectory: AssetFixture.TargetAssetPath);
+            workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCodes.Success);
 
@@ -412,4 +415,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

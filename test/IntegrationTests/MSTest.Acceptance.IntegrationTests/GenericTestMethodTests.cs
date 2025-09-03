@@ -15,7 +15,7 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath("GenericTestMethodTests"), "GenericTestMethodTests", TargetFrameworks.NetCurrent);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
@@ -174,4 +174,6 @@ public class TestClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

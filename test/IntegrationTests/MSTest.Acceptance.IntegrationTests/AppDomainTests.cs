@@ -91,7 +91,7 @@ namespace AppDomainTests
             null => string.Empty,
         };
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputContains(@"Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
@@ -116,7 +116,9 @@ namespace AppDomainTests
             null => string.Empty,
         };
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath} --list-tests{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath} --list-tests{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, compilationResult.ExitCode);
     }
+
+    public TestContext TestContext { get; set; }
 }
