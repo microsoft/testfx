@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -12,10 +14,10 @@ public class TestDataRowTests : TestContainer
         string value = "test_value";
         var testDataRow = new TestDataRow<string>(value);
 
-        Verify(testDataRow.Value == value);
-        Verify(testDataRow.IgnoreMessage == null);
-        Verify(testDataRow.DisplayName == null);
-        Verify(testDataRow.TestCategories == null);
+        testDataRow.Value.Should().Be(value);
+        testDataRow.IgnoreMessage.Should().BeNull();
+        testDataRow.DisplayName.Should().BeNull();
+        testDataRow.TestCategories.Should().BeNull();
     }
 
     public void TestDataRowShouldAllowSettingTestCategories()
@@ -26,10 +28,10 @@ public class TestDataRowTests : TestContainer
 
         testDataRow.TestCategories = testCategories;
 
-        Verify(testDataRow.TestCategories == testCategories);
-        Verify(testDataRow.TestCategories.Count == 2);
-        Verify(testDataRow.TestCategories.Contains("Category1"));
-        Verify(testDataRow.TestCategories.Contains("Category2"));
+        testDataRow.TestCategories.Should().BeSameAs(testCategories);
+        testDataRow.TestCategories.Should().HaveCount(2);
+        testDataRow.TestCategories.Should().Contain("Category1");
+        testDataRow.TestCategories.Should().Contain("Category2");
     }
 
     public void TestDataRowShouldImplementITestDataRowForTestCategories()
@@ -41,10 +43,10 @@ public class TestDataRowTests : TestContainer
 
         ITestDataRow dataRow = testDataRow;
 
-        Verify(dataRow.TestCategories != null);
-        Verify(dataRow.TestCategories.Count == 2);
-        Verify(dataRow.TestCategories.Contains("Integration"));
-        Verify(dataRow.TestCategories.Contains("Unit"));
+        dataRow.TestCategories.Should().NotBeNull();
+        dataRow.TestCategories.Should().HaveCount(2);
+        dataRow.TestCategories.Should().Contain("Integration");
+        dataRow.TestCategories.Should().Contain("Unit");
     }
 
     public void TestDataRowShouldAllowNullTestCategories()
@@ -55,10 +57,10 @@ public class TestDataRowTests : TestContainer
             TestCategories = null,
         };
 
-        Verify(testDataRow.TestCategories == null);
+        testDataRow.TestCategories.Should().BeNull();
 
         ITestDataRow dataRow = testDataRow;
-        Verify(dataRow.TestCategories == null);
+        dataRow.TestCategories.Should().BeNull();
     }
 
     public void TestDataRowShouldAllowEmptyTestCategories()
@@ -69,11 +71,11 @@ public class TestDataRowTests : TestContainer
 
         testDataRow.TestCategories = emptyCategories;
 
-        Verify(testDataRow.TestCategories == emptyCategories);
-        Verify(testDataRow.TestCategories.Count == 0);
+        testDataRow.TestCategories.Should().BeSameAs(emptyCategories);
+        testDataRow.TestCategories.Should().HaveCount(0);
 
         ITestDataRow dataRow = testDataRow;
-        Verify(dataRow.TestCategories != null);
-        Verify(dataRow.TestCategories.Count == 0);
+        dataRow.TestCategories.Should().NotBeNull();
+        dataRow.TestCategories.Should().HaveCount(0);
     }
 }
