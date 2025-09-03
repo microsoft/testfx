@@ -11,7 +11,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -79,7 +79,7 @@ Extension options:
     public async Task HelpShortName_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -100,7 +100,7 @@ Options:
         const string UnknownOption = "aaa";
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
@@ -120,7 +120,7 @@ Options:
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -274,7 +274,7 @@ Registered tools:
     public async Task Help_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -375,7 +375,7 @@ Extension options:
     public async Task HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("-?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("-?", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -394,7 +394,7 @@ Options:
     public async Task Info_WithAllExtensionsRegistered_OutputFullInfoContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -665,7 +665,7 @@ Registered tools:
             Directory.Delete(testResultsPath, recursive: true);
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -687,7 +687,7 @@ Registered tools:
             Directory.Delete(testResultsPath, recursive: true);
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -709,7 +709,7 @@ Registered tools:
             Directory.Delete(testResultsPath, recursive: true);
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -863,4 +863,6 @@ public class DummyTestFramework : ITestFramework
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

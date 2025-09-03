@@ -64,7 +64,7 @@ namespace MSTestSdkTest
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
@@ -91,7 +91,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
@@ -118,12 +118,12 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync();
+            TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }
@@ -139,12 +139,12 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync();
+            TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }
@@ -199,15 +199,15 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", msbuildExtensionEnableFragment));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: enableCommandLineArg);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: enableCommandLineArg, cancellationToken: TestContext.CancellationToken);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
 
-            testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg);
+            testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg, cancellationToken: TestContext.CancellationToken);
             Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
         }
     }
@@ -223,12 +223,12 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo");
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo", cancellationToken: TestContext.CancellationToken);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }
@@ -253,12 +253,12 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx");
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx", cancellationToken: TestContext.CancellationToken);
             if (enableDefaultExtensions)
             {
                 testHostResult.AssertOutputContainsSummary(0, 1, 0);
@@ -281,7 +281,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(1);
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
@@ -316,12 +316,12 @@ namespace MSTestSdkTest
                     $"publish -r {RID} -f net9.0 {testAsset.TargetAssetPath}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
-                    retryCount: 0);
+                    retryCount: 0, cancellationToken: TestContext.CancellationToken);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputDoesNotContain("warning");
 
                 var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, "net9.0", verb: Verb.publish);
-                TestHostResult testHostResult = await testHost.ExecuteAsync();
+                TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
                 testHostResult.AssertExitCodeIs(ExitCodes.Success);
                 testHostResult.AssertOutputContainsSummary(0, 1, 0);
@@ -332,7 +332,7 @@ namespace MSTestSdkTest
     public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         // Depending on the machine, the test might fail due to the browser not being installed.
         // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
@@ -366,7 +366,8 @@ namespace MSTestSdkTest
             workingDirectory: AssetFixture.PlaywrightProjectPath,
             failIfReturnValueIsNotZero: false,
             warnAsError: false,
-            suppressPreviewDotNetMessage: false);
+            suppressPreviewDotNetMessage: false,
+            cancellationToken: TestContext.CancellationToken);
 
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
@@ -393,7 +394,7 @@ namespace MSTestSdkTest
     public async Task EnableAspireProperty_WhenUsingRunner_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(0, 1, 0);
     }
 
@@ -409,7 +410,8 @@ namespace MSTestSdkTest
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: AssetFixture.AspireProjectPath,
             warnAsError: false,
-            suppressPreviewDotNetMessage: false);
+            suppressPreviewDotNetMessage: false,
+            cancellationToken: TestContext.CancellationToken);
         dotnetTestResult.AssertExitCodeIs(0);
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("VSTest version");
@@ -426,7 +428,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                .PatchCodeWithReplace("$ExtraProperties$", "<IsTestApplication>false</IsTestApplication>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertExitCodeIs(0);
 
@@ -560,4 +562,6 @@ name= "VSTest"
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

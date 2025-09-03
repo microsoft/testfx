@@ -18,7 +18,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -46,7 +46,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false);
+            disableTelemetry: false, TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -74,7 +74,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false);
+            disableTelemetry: false, TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -96,7 +96,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
@@ -212,4 +212,6 @@ public class DummyTestFramework : ITestFramework
                 .PatchCodeWithReplace("$TelemetryArg$", ", new TestApplicationOptions() { EnableTelemetry = false }"));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

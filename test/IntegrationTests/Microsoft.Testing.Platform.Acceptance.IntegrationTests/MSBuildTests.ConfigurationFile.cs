@@ -17,7 +17,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
                 .PatchCodeWithReplace("$JsonContent$", ConfigurationContent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
         string generatedConfigurationFile = Path.Combine(testHost.DirectoryName, "MSBuildTests.testconfig.json");
@@ -25,7 +25,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
         Assert.Contains("Microsoft Testing Platform configuration file written", compilationResult.StandardOutput);
 
-        compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
         Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
         // Assert is failing, probably the MSBuild regression which is being fixed in https://github.com/dotnet/msbuild/pull/12431 ?
@@ -36,7 +36,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 \s*_GenerateTestingPlatformConfigurationFileCore:
 \s*Skipping target "_GenerateTestingPlatformConfigurationFileCore" because all output files are up\-to\-date with respect to the input files\.
 """));
-        await DotnetCli.RunAsync($"clean -c {compilationMode} -v:normal {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"clean -c {compilationMode} -v:normal {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         // dotnet clean doesn't clean the publish output folder
         if (verb == Verb.build)
@@ -58,7 +58,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 
         File.Delete(Path.Combine(testAsset.TargetAssetPath, "testconfig.json"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:diagnostic -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:diagnostic -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, "MSBuildTests", tfm, verb: verb, buildConfiguration: compilationMode);
 
@@ -142,4 +142,6 @@ public class DummyTestFramework : ITestFramework
     }
 }
 """;
+
+    public TestContext TestContext { get; set; }
 }

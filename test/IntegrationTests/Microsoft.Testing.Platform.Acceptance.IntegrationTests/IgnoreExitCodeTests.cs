@@ -100,16 +100,19 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         string assetPath = generator.TargetAssetPath;
         string globalPackagesPath = AcceptanceFixture.NuGetGlobalPackagesFolder.Path;
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath);
-        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath);
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath, cancellationToken: TestContext.CancellationToken);
         var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
         TestHostResult hostResult = await host.ExecuteAsync(
             command: commandLine,
             environmentVariables: new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE, environmentVariable },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
         hostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
         Assert.AreEqual(0, hostResult.ExitCode);
     }
+
+    public TestContext TestContext { get; set; }
 }

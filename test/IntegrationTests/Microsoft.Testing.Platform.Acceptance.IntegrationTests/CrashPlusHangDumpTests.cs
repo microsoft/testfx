@@ -24,7 +24,8 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
                         { "SHOULDCRASH", "true" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputMatchesRegex(@"Test host process with PID \'.+\' crashed, a dump file was generated");
@@ -52,7 +53,8 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
                         { "SHOULDCRASH", "false" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputDoesNotMatchRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
@@ -171,4 +173,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -82,7 +82,7 @@ name= "VSTest"
     public static async Task ClassInitialize(TestContext testContext)
     {
         AssetFixture = new();
-        await AssetFixture.InitializeAsync();
+        await AssetFixture.InitializeAsync(testContext.CancellationToken);
     }
 
     [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
@@ -145,17 +145,17 @@ name= "VSTest"
     }
 
     // https://github.com/NuGet/NuGet.Client/blob/c5934bdcbc578eec1e2921f49e6a5d53481c5099/test/NuGet.Core.FuncTests/Msbuild.Integration.Test/MsbuildIntegrationTestFixture.cs#L65-L94
-    private protected static async Task<string> FindMsbuildWithVsWhereAsync()
+    private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
     {
         string vswherePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
         var commandLine = new TestInfrastructure.CommandLine();
-        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe");
+        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken: cancellationToken);
 
         string? path = null;
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync()) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
             {
                 if (path != null)
                 {

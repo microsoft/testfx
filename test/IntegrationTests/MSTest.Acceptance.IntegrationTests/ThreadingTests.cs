@@ -14,7 +14,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     public async Task TestMethodThreading_WhenMainIsNotSTA_NoRunsettingsProvided_ThreadIsNotSTA(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -31,10 +31,13 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
 
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--settings {runSettingsFilePath}",
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -54,7 +57,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "0",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -70,7 +73,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "0",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -88,10 +91,12 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         }
 
         var testHost = TestHost.LocateFrom(AssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -112,7 +117,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -133,7 +138,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "0",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -153,7 +158,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -173,7 +178,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -193,7 +198,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -213,7 +218,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
             ["MSTEST_THREAD_STATE_IS_STA"] = "1",
-        });
+        }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
@@ -752,4 +757,6 @@ public class LifecycleAttributesValueTaskTests
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

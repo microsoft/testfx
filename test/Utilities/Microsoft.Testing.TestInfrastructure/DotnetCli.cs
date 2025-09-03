@@ -58,9 +58,10 @@ public static class DotnetCli
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
-        [CallerMemberName] string callerMemberName = "")
+        [CallerMemberName] string callerMemberName = "",
+        CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingCommands_semaphore.WaitAsync();
+        await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
         try
         {
             environmentVariables ??= [];
@@ -109,7 +110,7 @@ public static class DotnetCli
 
             if (DoNotRetry)
             {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName);
+                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
             }
             else
             {
@@ -117,7 +118,7 @@ public static class DotnetCli
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName));
+                    .ExecuteAsync(async ct => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, ct), cancellationToken);
             }
         }
         finally
@@ -130,13 +131,13 @@ public static class DotnetCli
         => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
 
     // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
             .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
-            .ExecuteAsync(async () => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName));
+            .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
+    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
@@ -160,7 +161,7 @@ public static class DotnetCli
         }
 
         using DotnetMuxer dotnet = new(environmentVariables);
-        int exitCode = await dotnet.ExecuteAsync(args, workingDirectory);
+        int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, cancellationToken);
 
         if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
         {
