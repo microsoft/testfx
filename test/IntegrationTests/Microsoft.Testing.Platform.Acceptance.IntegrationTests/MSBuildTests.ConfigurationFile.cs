@@ -28,7 +28,7 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")} -v:normal -nodeReuse:false {testAsset.TargetAssetPath} -c {compilationMode}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.IsTrue(File.Exists(generatedConfigurationFile));
         Assert.AreEqual(ConfigurationContent.Trim(), File.ReadAllText(generatedConfigurationFile).Trim());
-        compilationResult.StandardOutput.Contains("Microsoft Testing Platform configuration file written");
+        compilationResult.AssertOutputContains("Microsoft Testing Platform configuration file written");
         Assert.IsTrue(Regex.IsMatch(
             compilationResult.StandardOutput,
             """
