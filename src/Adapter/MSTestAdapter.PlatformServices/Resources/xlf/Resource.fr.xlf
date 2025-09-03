@@ -241,7 +241,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="new">Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</target>
+        <target state="translated">Valeur non valide « {0} » spécifiée pour « Scope ». Les étendues prises en charge sont {1}.</target>
         <note>{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
@@ -351,7 +351,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="new">Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</target>
+        <target state="translated">Parallélisation des tests activée pour {0} (Workers : {1}, Scope : {2})</target>
         <note>{Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
