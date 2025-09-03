@@ -375,7 +375,7 @@
     </PropertyGroup>
     <Warning Code="MTP0001" Condition=" '$(_VSTestPropertiesFound)' != '' " 
              Text="VSTest-specific properties are set but will be ignored when using Microsoft.Testing.Platform. The following properties are set: $(_VSTestPropertiesFound)."
-             HelpLink="https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-dotnet-test" />
+             HelpLink="https://aka.ms/mtp0001" />
   </Target>
 
   <Target Name="_TestRunStart" />
