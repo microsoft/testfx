@@ -92,5 +92,4 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Be($"Assert.IsNotNull failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
-
 }

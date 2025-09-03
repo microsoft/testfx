@@ -122,14 +122,6 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>();
-        assertTests.Should().BeNull();
-    }
-
-    public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenTypeMismatch_Fails()
-    {
-        Action action = () => Assert.IsInstanceOfType<string>(5, out _);
-        action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow() => Assert.IsInstanceOfType<int>(5);

@@ -343,7 +343,7 @@ public partial class AssertTests : TestContainer
 
         // This one doesn't work, because we call the Equals override of "expected".
         // The Equals override of 'A' will return false.
-        Action action = () => Assert.AreEqual(instanceOfA, instanceOfB);
+        Action action = () => Assert.AreEqual<object>(instanceOfA, instanceOfB);
         action.Should().Throw<Exception>();
     }
 
@@ -390,7 +390,7 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotEqual(0, 0, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be(ex.Message == $"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. 'notExpected' expression: '0', 'actual' expression: '0'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .And.Message.Should().Be($"Assert.AreNotEqual failed. Expected any value except:<0>. Actual:<0>. 'notExpected' expression: '0', 'actual' expression: '0'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
