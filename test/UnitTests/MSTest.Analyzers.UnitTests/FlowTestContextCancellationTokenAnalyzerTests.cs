@@ -846,4 +846,46 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTaskDelayStillWorksAsExpected_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Task.Delay(1000, TestContext.CancellationToken);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
