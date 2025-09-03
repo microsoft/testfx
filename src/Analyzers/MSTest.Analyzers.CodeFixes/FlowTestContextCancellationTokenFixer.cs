@@ -127,22 +127,99 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         InvocationExpressionSyntax invocationExpression,
         string testContextMemberName)
     {
-        // Find the containing method to determine the context
-        MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-
         // Create the TestContext.CancellationToken expression
         MemberAccessExpressionSyntax testContextExpression = SyntaxFactory.MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
             SyntaxFactory.IdentifierName(testContextMemberName),
             SyntaxFactory.IdentifierName("CancellationToken"));
 
-        editor.ReplaceNode(invocationExpression, (node, _) =>
+        editor.ReplaceNode(invocationExpression, (node, generator) =>
         {
             var invocationExpression = (InvocationExpressionSyntax)node;
             ArgumentListSyntax currentArguments = invocationExpression.ArgumentList;
-            SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(testContextExpression));
-            return invocationExpression.WithArgumentList(currentArguments.WithArguments(newArguments));
+
+            // Get the method symbol to determine the CancellationToken parameter name
+            if (editor.SemanticModel.GetSymbolInfo(invocationExpression).Symbol is IMethodSymbol methodSymbol)
+            {
+                // Get CancellationToken type
+                if (editor.SemanticModel.Compilation.GetTypeByMetadataName("System.Threading.CancellationToken") is INamedTypeSymbol cancellationTokenType)
+                {
+                    // Find the CancellationToken parameter
+                    IParameterSymbol? cancellationTokenParameter = null;
+                    for (int i = methodSymbol.Parameters.Length - 1; i >= 0; i--)
+                    {
+                        if (SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[i].Type, cancellationTokenType))
+                        {
+                            cancellationTokenParameter = methodSymbol.Parameters[i];
+                            break;
+                        }
+                    }
+
+                    // Check if we should use a named argument
+                    bool shouldUseNamedArgument = ShouldUseNamedArgument(currentArguments, methodSymbol, cancellationTokenParameter);
+
+                    ArgumentSyntax newArgument = shouldUseNamedArgument && cancellationTokenParameter is not null
+                        ? SyntaxFactory.Argument(SyntaxFactory.NameColon(cancellationTokenParameter.Name), SyntaxFactory.Token(SyntaxKind.None), testContextExpression)
+                        : SyntaxFactory.Argument(testContextExpression);
+
+                    SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(newArgument);
+                    return invocationExpression.WithArgumentList(currentArguments.WithArguments(newArguments));
+                }
+            }
+
+            // Fallback: just add without named argument if we can't get symbol info
+            SeparatedSyntaxList<ArgumentSyntax> fallbackArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(testContextExpression));
+            return invocationExpression.WithArgumentList(currentArguments.WithArguments(fallbackArguments));
         });
+    }
+
+    private static bool ShouldUseNamedArgument(ArgumentListSyntax currentArguments, IMethodSymbol methodSymbol, IParameterSymbol? cancellationTokenParameter)
+    {
+        if (cancellationTokenParameter is null)
+        {
+            return false;
+        }
+
+        // If any existing arguments use named syntax, we should use named arguments
+        foreach (ArgumentSyntax arg in currentArguments.Arguments)
+        {
+            if (arg.NameColon is not null)
+            {
+                return true;
+            }
+        }
+
+        // If there are optional parameters before the CancellationToken parameter and we're not providing all of them,
+        // we should use named arguments
+        int cancellationTokenParameterIndex = -1;
+        for (int i = 0; i < methodSymbol.Parameters.Length; i++)
+        {
+            if (SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[i], cancellationTokenParameter))
+            {
+                cancellationTokenParameterIndex = i;
+                break;
+            }
+        }
+
+        if (cancellationTokenParameterIndex == -1)
+        {
+            return false;
+        }
+
+        int currentArgumentCount = currentArguments.Arguments.Count;
+
+        // Check if there are optional parameters between current argument count and cancellation token parameter
+        for (int i = currentArgumentCount; i < cancellationTokenParameterIndex; i++)
+        {
+            if (!methodSymbol.Parameters[i].HasExplicitDefaultValue)
+            {
+                // There's a required parameter we're not providing, so we can't skip to the cancellation token
+                return false;
+            }
+        }
+
+        // If we're skipping optional parameters, use named argument
+        return currentArgumentCount < cancellationTokenParameterIndex;
     }
 
     internal static MethodDeclarationSyntax AddTestContextParameterToMethod(MethodDeclarationSyntax method)
