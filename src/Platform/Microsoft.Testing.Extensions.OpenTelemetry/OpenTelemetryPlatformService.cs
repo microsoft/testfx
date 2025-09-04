@@ -14,7 +14,6 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     private readonly ActivitySource _activitySource = new(ActivitySourceName, PlatformVersion.Version);
     private readonly Meter _meter = new(MeterName, PlatformVersion.Version);
-    private bool _isDisposed;
 
     public IActivity? TestFrameworkActivity { get; set; }
 
