@@ -630,7 +630,7 @@ internal sealed class Json
             }
             catch (KeyNotFoundException ex)
             {
-                throw new KeyNotFoundException($"BuilderHostTypeOTelKey '{property}' was not found in the dictionary.", ex);
+                throw new KeyNotFoundException($"Key '{property}' was not found in the dictionary.", ex);
             }
         }
 
