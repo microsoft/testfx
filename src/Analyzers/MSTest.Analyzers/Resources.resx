@@ -702,4 +702,13 @@ The type declaring these methods should also respect the following rules:
   <data name="IgnoreStringMethodReturnValueDescription" xml:space="preserve">
     <value>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</value>
   </data>
+  <data name="EmptyTestMethodTitle" xml:space="preserve">
+    <value>Test methods should not be empty</value>
+  </data>
+  <data name="EmptyTestMethodDescription" xml:space="preserve">
+    <value>Empty test methods are useless and should either be implemented or removed. Consider adding assertions or implementation to make the test meaningful.</value>
+  </data>
+  <data name="EmptyTestMethodMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' is empty and should be implemented or removed</value>
+  </data>
 </root>

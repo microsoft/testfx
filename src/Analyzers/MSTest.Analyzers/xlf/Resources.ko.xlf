@@ -462,6 +462,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">DynamicData는 유효해야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="EmptyTestMethodDescription">
+        <source>Empty test methods are useless and should either be implemented or removed. Consider adding assertions or implementation to make the test meaningful.</source>
+        <target state="new">Empty test methods are useless and should either be implemented or removed. Consider adding assertions or implementation to make the test meaningful.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EmptyTestMethodMessageFormat">
+        <source>Test method '{0}' is empty and should be implemented or removed</source>
+        <target state="new">Test method '{0}' is empty and should be implemented or removed</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EmptyTestMethodTitle">
+        <source>Test methods should not be empty</source>
+        <target state="new">Test methods should not be empty</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
         <target state="translated">CancellationToken 매개변수를 허용하는 오버로드가 있는 비동기 메서드를 호출할 때는 협력적 취소를 활성화하고 테스트 시간 제한을 준수하기 위해 TestContext.CancellationToken이 있는 오버로드를 사용하는 것이 좋습니다.</target>
