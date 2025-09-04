@@ -28,15 +28,7 @@ internal sealed class OpenTelemetryProvider : IOpenTelemetryProvider
 
     public void Dispose()
     {
-#pragma warning disable CA1513 // Use ObjectDisposedException throw helper - not supported for netstandard2.0
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(OpenTelemetryProvider));
-        }
-#pragma warning restore CA1513 // Use ObjectDisposedException throw helper
-
         _tracerProvider.Dispose();
         _meterProvider.Dispose();
-        _isDisposed = true;
     }
 }
