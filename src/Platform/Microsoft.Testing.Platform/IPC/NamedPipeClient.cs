@@ -3,11 +3,11 @@
 
 #if NETCOREAPP
 using System.Buffers;
-
-using Microsoft.Testing.Platform.Helpers;
 #endif
 
 using System.IO.Pipes;
+
+using Microsoft.Testing.Platform.Helpers;
 
 #if NET
 using Microsoft.Testing.Platform.Resources;
@@ -18,20 +18,33 @@ namespace Microsoft.Testing.Platform.IPC;
 #pragma warning disable CA1416 // Validate platform compatibility
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
+    private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
+#if NET
+        | PipeOptions.CurrentUserOnly
+#endif
+        ;
+
     private readonly NamedPipeClientStream _namedPipeClientStream;
     private readonly SemaphoreSlim _lock = new(1, 1);
 
     private readonly MemoryStream _serializationBuffer = new();
     private readonly MemoryStream _messageBuffer = new();
     private readonly byte[] _readBuffer = new byte[250000];
+    private readonly IEnvironment _environment;
 
     private bool _disposed;
 
     public NamedPipeClient(string name)
+        : this(name, new SystemEnvironment())
+    {
+    }
+
+    public NamedPipeClient(string name, IEnvironment environment)
     {
         Guard.NotNull(name);
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut);
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
         PipeName = name;
+        _environment = environment;
     }
 
     public string PipeName { get; }
@@ -143,6 +156,16 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 #else
                 int currentReadBytes = await _namedPipeClientStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
 #endif
+
+                if (currentReadBytes == 0)
+                {
+                    // We are reading a message response.
+                    // If we cannot get a response, there is no way we can recover and continue executing.
+                    // This can happen if the other processes gets killed or crashes while while it's sending the response.
+                    // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
+                    // In that case, we want the MTP process to also die.
+                    _environment.FailFast("[NamedPipeClient] Connection lost with the other side.");
+                }
 
                 // Reset the current chunk size
                 int missingBytesToReadOfCurrentChunk = currentReadBytes;
