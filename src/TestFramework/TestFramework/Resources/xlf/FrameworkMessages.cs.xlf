@@ -285,7 +285,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection</source>
-        <target state="new">Element(s) &lt;{0}&gt; is/are not a subset of the superset</target>
+        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection</target>
         <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">

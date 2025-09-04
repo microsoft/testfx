@@ -421,19 +421,7 @@ public sealed class CollectionAssert
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (!isSubsetValue.Item1)
         {
-            var sb = new StringBuilder();
-            foreach (object? item in isSubsetValue.Item2)
-            {
-                sb.Append(' ').Append(Convert.ToString(item, CultureInfo.InvariantCulture)).Append(',');
-            }
-
-            string returnedSubsetValueMessage = sb.ToString();
-
-            // Remove the last trailing comma
-            if (!string.IsNullOrEmpty(returnedSubsetValueMessage))
-            {
-                returnedSubsetValueMessage = returnedSubsetValueMessage.TrimEnd(',').Trim();
-            }
+            string returnedSubsetValueMessage = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
 
             returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage.Trim());
             Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
