@@ -22,7 +22,7 @@ Execute a .NET Test Application.
 Options:
     --config-file
         Specifies a testconfig.json file.
-    --debug-wait-attach
+    --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
@@ -154,7 +154,7 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig\.json file\.
-      --debug-wait-attach
+      --debug
         Arity: 0
         Hidden: False
         Description: Allows to pause execution in order to attach to the process for debug purposes.
@@ -285,7 +285,7 @@ Execute a .NET Test Application.
 Options:
     --config-file
         Specifies a testconfig.json file.
-    --debug-wait-attach
+    --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
@@ -428,7 +428,7 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig.json file.
-      --debug-wait-attach
+      --debug
         Arity: 0
         Hidden: False
         Description: Allows to pause execution in order to attach to the process for debug purposes.
