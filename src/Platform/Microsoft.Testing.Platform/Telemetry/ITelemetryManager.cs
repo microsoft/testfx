@@ -3,28 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-/// <summary>
-/// Defines a contract for managing telemetry providers within a diagnostics or monitoring system.
-/// </summary>
-/// <remarks>Implementations of this interface allow registration and management of OpenTelemetry providers,
-/// enabling integration with distributed tracing and metrics collection frameworks. This interface is experimental and
-/// may be subject to change.</remarks>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public interface ITelemetryManager
-{
-    /// <summary>
-    /// Registers an OpenTelemetry provider factory.
-    /// </summary>
-    /// <param name="openTelemetryProviderFactory">The OpenTelemetry provider factory.</param>
-    void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory);
-}
-
-/// <summary>
-/// Defines internal operations for managing telemetry collectors within the telemetry system.
-/// </summary>
-/// <remarks>This interface extends <see cref="ITelemetryManager"/> to provide additional functionality intended
-/// for internal use. Members of this interface are not intended to be used directly by application code.</remarks>
-internal interface IInternalTelemetryManager : ITelemetryManager
+internal interface ITelemetryManager
 {
     void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryCollectorFactory);
+
+    void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory);
 }

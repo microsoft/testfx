@@ -26,7 +26,7 @@ public static class OpenTelemetryProviderExtensions
     /// <param name="withTracing">An optional delegate to configure the tracing provider. If null, default tracing configuration is applied.</param>
     /// <param name="withMetrics">An optional delegate to configure the metrics provider. If null, default metrics configuration is applied.</param>
     public static void AddOpenTelemetryProvider(this ITestApplicationBuilder builder, Action<TracerProviderBuilder>? withTracing = null, Action<MeterProviderBuilder>? withMetrics = null)
-        => builder.Telemetry.AddOpenTelemetryProvider(serviceProvider =>
+        => ((TestApplicationBuilder)builder).Telemetry.AddOpenTelemetryProvider(serviceProvider =>
         {
             ((ServiceProvider)serviceProvider).AddService(new OpenTelemetryPlatformService());
             return new OpenTelemetryProvider(withTracing, withMetrics);

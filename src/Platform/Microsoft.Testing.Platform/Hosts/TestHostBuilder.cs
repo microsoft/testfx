@@ -45,7 +45,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, testApplicationModuleInfo);
 
-    public IInternalTelemetryManager Telemetry { get; } = new TelemetryManager();
+    public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
     public ITestHostControllersManager TestHostControllers { get; } = new TestHostControllersManager();
 

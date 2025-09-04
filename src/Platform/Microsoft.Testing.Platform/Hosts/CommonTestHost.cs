@@ -103,7 +103,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         {
             ConsoleTestHost => "TestHost",
             TestHostControllersTestHost => "TestHostController",
-            _ => throw new InvalidOperationException("Unknown host type"),
+            ServerTestHost => "ServerTestHost",
+            _ => throw new InvalidOperationException($"Unknown host type '{GetType().FullName}'"),
         };
         return hostType;
     }

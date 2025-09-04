@@ -31,7 +31,7 @@ internal interface ITestHostBuilder
 
     ITestHostOrchestratorManager TestHostOrchestratorManager { get; }
 
-    IInternalTelemetryManager Telemetry { get; }
+    ITelemetryManager Telemetry { get; }
 
     IToolsManager Tools { get; }
 

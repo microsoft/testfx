@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal sealed class TelemetryManager : IInternalTelemetryManager, IOutputDeviceDataProducer
+internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataProducer
 {
     private Func<IServiceProvider, ITelemetryCollector>? _telemetryFactory;
     private Func<IServiceProvider, IOpenTelemetryProvider>? _openTelemetryProviderFactory;
