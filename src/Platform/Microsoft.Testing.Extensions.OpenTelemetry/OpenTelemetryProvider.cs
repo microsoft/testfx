@@ -13,8 +13,6 @@ internal sealed class OpenTelemetryProvider : IOpenTelemetryProvider
 {
     private readonly TracerProvider _tracerProvider;
     private readonly MeterProvider _meterProvider;
-    private bool _isDisposed;
-
     public OpenTelemetryProvider(Action<TracerProviderBuilder>? withTracing = null, Action<MeterProviderBuilder>? withMetrics = null)
     {
         TracerProviderBuilder tracerProviderBuilder = Sdk.CreateTracerProviderBuilder();
