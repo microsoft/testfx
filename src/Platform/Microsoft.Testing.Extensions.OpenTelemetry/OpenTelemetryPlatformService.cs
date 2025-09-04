@@ -31,15 +31,5 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
         => new HistogramWrapper<T>(_meter.CreateHistogram<T>(name, unit, description, tags));
 
     public void Dispose()
-    {
-#pragma warning disable CA1513 // Use ObjectDisposedException throw helper - not supported for netstandard2.0
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(OpenTelemetryPlatformService));
-        }
-#pragma warning restore CA1513 // Use ObjectDisposedException throw helper
-
-        _activitySource.Dispose();
-        _isDisposed = true;
-    }
+        => _activitySource.Dispose();
 }
