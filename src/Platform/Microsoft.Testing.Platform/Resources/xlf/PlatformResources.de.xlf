@@ -468,7 +468,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
-        <target state="new">Allows to pause execution in order to attach to the process for debug purposes.</target>
+        <target state="translated">Ermöglicht das Anhalten der Ausführung zum Anfügen an den Prozess zum Debuggen.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
