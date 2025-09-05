@@ -57,7 +57,9 @@ public sealed class EmptyTestMethodAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeMethodBody(OperationAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol)
     {
         var methodBodyOperation = (IMethodBodyOperation)context.Operation;
-        IMethodSymbol method = methodBodyOperation.SemanticModel.GetDeclaredSymbol(methodBodyOperation.Syntax) as IMethodSymbol;
+        
+        // Get the method symbol from the semantic model
+        IMethodSymbol? method = methodBodyOperation.SemanticModel.GetDeclaredSymbol(methodBodyOperation.Syntax, context.CancellationToken) as IMethodSymbol;
 
         if (method is null)
         {
@@ -102,13 +104,14 @@ public sealed class EmptyTestMethodAnalyzer : DiagnosticAnalyzer
     {
         return operation.Kind switch
         {
-            // Skip implicit return statements
+            // Skip implicit return statements and labeled operations (like in the existing analyzer)
             OperationKind.Return when operation.IsImplicit => false,
+            OperationKind.Labeled when operation.IsImplicit => false,
             
-            // Skip labeled statements that are just wrappers
+            // Skip labeled statements that are just wrappers (check the wrapped operation)
             OperationKind.Labeled => IsMeaningfulOperation(((ILabeledOperation)operation).Operation),
             
-            // Skip empty statements and expression statements with no side effects
+            // Skip empty statements
             OperationKind.Empty => false,
             
             // All other operations are considered meaningful
