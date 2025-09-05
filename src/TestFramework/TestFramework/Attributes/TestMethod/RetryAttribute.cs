@@ -43,7 +43,7 @@ public sealed class RetryAttribute : RetryBaseAttribute
     /// </summary>
     public DelayBackoffType BackoffType
     {
-        get => field;
+        get;
         set
         {
             if (value is < DelayBackoffType.Constant or > DelayBackoffType.Exponential)
