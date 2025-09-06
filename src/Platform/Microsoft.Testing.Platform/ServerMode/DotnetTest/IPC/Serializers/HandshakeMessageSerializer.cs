@@ -13,7 +13,7 @@ internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSer
     {
         Dictionary<byte, string> properties = [];
 
-        ushort fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadUShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
@@ -34,7 +34,7 @@ internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSer
             return;
         }
 
-        WriteShort(stream, (ushort)handshakeMessage.Properties.Count);
+        WriteUShort(stream, (ushort)handshakeMessage.Properties.Count);
         foreach ((byte key, string value) in handshakeMessage.Properties)
         {
             WriteField(stream, key);

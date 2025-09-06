@@ -45,11 +45,11 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         string? moduleName = null;
         List<CommandLineOptionMessage>? commandLineOptionMessages = null;
 
-        ushort fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadUShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
-            int fieldId = ReadShort(stream);
+            int fieldId = ReadUShort(stream);
             int fieldSize = ReadInt(stream);
 
             switch (fieldId)
@@ -82,11 +82,11 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
             string? name = null, description = null;
             bool? isHidden = null, isBuiltIn = null;
 
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -125,7 +125,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
         var commandLineOptionMessages = (CommandLineOptionMessages)objectToSerialize;
 
-        WriteShort(stream, GetFieldCount(commandLineOptionMessages));
+        WriteUShort(stream, GetFieldCount(commandLineOptionMessages));
 
         WriteField(stream, CommandLineOptionMessagesFieldsId.ModulePath, commandLineOptionMessages.ModulePath);
         WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
@@ -138,7 +138,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
             return;
         }
 
-        WriteShort(stream, CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList);
+        WriteUShort(stream, CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -148,7 +148,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         WriteInt(stream, commandLineOptionMessageList.Length);
         foreach (CommandLineOptionMessage commandLineOptionMessage in commandLineOptionMessageList)
         {
-            WriteShort(stream, GetFieldCount(commandLineOptionMessage));
+            WriteUShort(stream, GetFieldCount(commandLineOptionMessage));
 
             WriteField(stream, CommandLineOptionMessageFieldsId.Name, commandLineOptionMessage.Name);
             WriteField(stream, CommandLineOptionMessageFieldsId.Description, commandLineOptionMessage.Description);
