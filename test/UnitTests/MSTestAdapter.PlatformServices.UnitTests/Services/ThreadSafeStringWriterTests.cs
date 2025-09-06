@@ -5,6 +5,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
+using AwesomeAssertions;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
@@ -64,7 +65,7 @@ public class ThreadSafeStringWriterTests : TestContainer
                 {
                     // there was no output in the current task, the output should be empty
                     string content = stringWriter.ToString();
-                    Verify(string.IsNullOrWhiteSpace(content));
+                    string.IsNullOrWhiteSpace(content).Should().BeTrue();
                 }
                 catch (Exception ex)
                 {
@@ -73,13 +74,13 @@ public class ThreadSafeStringWriterTests : TestContainer
                 }
 
                 // task1 and task2 should output into their respective buckets
-                Verify(!string.IsNullOrWhiteSpace(task1Output));
-                Verify(!string.IsNullOrWhiteSpace(task2Output));
+                task1Output.Should().NotBeNullOrWhiteSpace();
+                task2Output.Should().NotBeNullOrWhiteSpace();
 
                 string[] task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                Verify(task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
+                task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)).Should().BeTrue();
                 string[] task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                Verify(task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)));
+                task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)).Should().BeTrue();
             }
         }
         while (exception != null && currentAttempt++ < 3);
@@ -117,14 +118,14 @@ public class ThreadSafeStringWriterTests : TestContainer
             }).GetAwaiter().GetResult();
 
             // task1 and task2 should output into their respective buckets
-            Verify(!string.IsNullOrWhiteSpace(result.Out));
-            Verify(!string.IsNullOrWhiteSpace(result.Debug));
+            result.Out.Should().NotBeNullOrWhiteSpace();
+            result.Debug.Should().NotBeNullOrWhiteSpace();
 
             string[] output = result.Out.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(output.SequenceEqual(["out", "out"]));
+            output.SequenceEqual(["out", "out"]).Should().BeTrue();
 
             string[] debug = result.Debug.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            Verify(debug.SequenceEqual(["debug", "debug"]));
+            debug.SequenceEqual(["debug", "debug"]).Should().BeTrue();
         }
     }
 }
