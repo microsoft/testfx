@@ -60,4 +60,5 @@ internal static class DiagnosticIds
     public const string AvoidAssertFormatParametersRuleId = "MSTEST0053";
     public const string UseCancellationTokenPropertyRuleId = "MSTEST0054";
     public const string IgnoreStringMethodReturnValueRuleId = "MSTEST0055";
+    public const string EmptyTestMethodRuleId = "MSTEST0056";
 }
