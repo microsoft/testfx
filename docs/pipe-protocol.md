@@ -4,7 +4,7 @@ This document outlines the protocol used by 'dotnet test' CLI when communicating
 
 > [!NOTE]
 > Through the document, .NET CLI will be referred to for easy interpretation, but it's not necessarily ".NET CLI".
->
+
 > [!IMPORTANT]
 > This document is intended to be used only for internal purposes only. The protocol is not for public usages and we reserve any right to adjust or break as needed.
 
