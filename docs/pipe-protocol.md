@@ -6,7 +6,7 @@ This document outlines the protocol used by 'dotnet test' CLI when communicating
 > Through the document, .NET CLI will be referred to for easy interpretation, but it's not necessarily ".NET CLI".
 >
 > [!IMPORTANT]
-> This document is intended to be used only for internal purposes only. The protocol isn't yet open for public usage.
+> This document is intended to be used only for internal purposes only. The protocol is not for public usages and we reserve any right to adjust or break as needed.
 
 ## General flow
 
@@ -217,6 +217,27 @@ This message denotes test events. Currently, there are two events, start and end
             - If the value is an "array":
                 - array length (4 bytes)
                 - each array element follows again the message payload format (id, size, and value).
+
+```mermaid
+graph TD
+    A[Message] --> B["Message Size (4 bytes)"]
+    A --> C["Serializer ID (4 bytes)"]
+    A --> D["Message Payload (x bytes)"]
+
+    D --> D1["Property/Field Count (2 bytes)"]
+    D --> D2[Property/Field]
+
+    D2 --> D2a["Property/Field ID (2 bytes)"]
+    D2 --> D2b["Property/Field Size (4 bytes)"]
+    D2 --> D2c["Property/Field Value (n bytes)"]
+
+    D2c --> E{Is Array?}
+    E -->|Yes| F["Array Length (4 bytes)"]
+    F --> G[Array Element]
+    G --> G1["Element ID (2 bytes)"]
+    G --> G2["Element Size (4 bytes)"]
+    G --> G3["Element Value (n bytes)"]
+```
 
 ## Future considerations
 
