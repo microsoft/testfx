@@ -22,6 +22,8 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         ;
 #pragma warning restore CA1416 // Validate platform compatibility
 
+    private static bool IsUnix => Path.DirectorySeparatorChar == '/';
+
     private readonly Func<IRequest, Task<IResponse>> _callback;
     private readonly IEnvironment _environment;
     private readonly NamedPipeServerStream _namedPipeServerStream;
@@ -277,31 +279,23 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
     // Without it, MissingMethodException will be thrown at runtime.
     public static PipeNameDescription GetPipeName(string name)
-        => GetPipeName(name, new SystemEnvironment());
-
-    public static PipeNameDescription GetPipeName(string name, IEnvironment environment)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (!IsUnix)
         {
-            return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}", false);
+            return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}");
         }
 
-#pragma warning disable RS0030 // Do not use banned APIs - We are using IEnvironment, but we still need the enum from the Environment class in BCL. This is safe.
-        string directoryId = Path.Combine(environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.None), name);
-#pragma warning disable RS0030 // Do not use banned APIs
-        Directory.CreateDirectory(directoryId);
-        return new PipeNameDescription(
-            !Directory.Exists(directoryId)
-                ? throw new DirectoryNotFoundException(string.Format(
-                    CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                    $"Directory: {directoryId} doesn't exist.",
-#else
-                    PlatformResources.CouldNotFindDirectoryErrorMessage,
-#endif
-                    directoryId))
-                : Path.Combine(directoryId, ".p"), true);
+        // Similar to https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42
+        return new PipeNameDescription(Path.Combine("/tmp", name));
     }
+
+    // For compatibility only.
+    // Old versions of MTP used to have this overload without IEnvironment.
+    // Extensions (e.g, TRX) calls into this overload.
+    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
+    // Without it, MissingMethodException will be thrown at runtime.
+    public static PipeNameDescription GetPipeName(string name, IEnvironment _)
+        => GetPipeName(name);
 
     public void Dispose()
     {
