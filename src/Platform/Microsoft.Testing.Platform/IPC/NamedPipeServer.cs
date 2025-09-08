@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET
-using System.Buffers;
-#endif
 using System.IO.Pipes;
 
 using Microsoft.Testing.Platform.Helpers;
@@ -17,6 +14,14 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
+#pragma warning disable CA1416 // Validate platform compatibility
+    private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
+#if NET
+        | PipeOptions.CurrentUserOnly
+#endif
+        ;
+#pragma warning restore CA1416 // Validate platform compatibility
+
     private readonly Func<IRequest, Task<IResponse>> _callback;
     private readonly IEnvironment _environment;
     private readonly NamedPipeServerStream _namedPipeServerStream;
@@ -26,6 +31,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     private readonly MemoryStream _serializationBuffer = new();
     private readonly MemoryStream _messageBuffer = new();
     private readonly byte[] _readBuffer = new byte[250000];
+#if NET
+    private readonly byte[] _sizeOfIntArray = new byte[sizeof(int)];
+#endif
     private Task? _loopTask;
     private bool _disposed;
 
@@ -62,7 +70,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     {
         Guard.NotNull(pipeNameDescription);
 #pragma warning disable CA1416 // Validate platform compatibility
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
 #pragma warning restore CA1416
         _callback = callback;
         _environment = environment;
@@ -142,6 +150,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             if (currentMessageSize == 0)
             {
                 // We need to read the message size, first 4 bytes
+                if (currentReadBytes < sizeof(int))
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
                 missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
                 missingBytesToReadOfWholeMessage = currentMessageSize;
@@ -157,6 +170,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
 #endif
                 missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
+            }
+
+            if (missingBytesToReadOfWholeMessage < 0)
+            {
+                throw ApplicationStateGuard.Unreachable();
             }
 
             // If we have read all the message, we can deserialize it
@@ -196,34 +214,20 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
                 // Write the message size
 #if NET
-                byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
-                try
-                {
-                    ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
-
-                    await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(bytes);
-                }
+                byte[] bytes = _sizeOfIntArray;
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
+                await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
 #else
                 await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
 #endif
 
                 // Write the serializer id
 #if NET
-                bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
-                try
-                {
-                    ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                bytes = _sizeOfIntArray;
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
-                    await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(bytes);
-                }
+                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
 #else
                 await _messageBuffer.WriteAsync(BitConverter.GetBytes(responseNamedPipeSerializer.Id), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
 #endif
