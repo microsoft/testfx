@@ -33,7 +33,7 @@
     "rollForward": "latestFeature"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25455.5",
+    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25457.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }
