@@ -13,7 +13,7 @@ internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSer
     {
         Dictionary<byte, string> properties = [];
 
-        ushort fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadUShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
@@ -31,7 +31,7 @@ internal sealed class HandshakeMessageSerializer : BaseSerializer, INamedPipeSer
 
         // Deserializer always expected fieldCount to be present.
         // We must write the count even if Properties is null or empty.
-        WriteShort(stream, (ushort)(handshakeMessage.Properties?.Count ?? 0));
+        WriteUShort(stream, (ushort)(handshakeMessage.Properties?.Count ?? 0));
 
         if (handshakeMessage.Properties is null)
         {

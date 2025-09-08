@@ -62,7 +62,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private bool WasCancelled
     {
         get => field || _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested;
-        set => field = value;
+        set;
     }
 
     private bool? _shouldShowPassedTests;

@@ -78,11 +78,11 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
         string? instanceId = null;
         DiscoveredTestMessage[]? discoveredTestMessages = [];
 
-        ushort fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadUShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
-            int fieldId = ReadShort(stream);
+            int fieldId = ReadUShort(stream);
             int fieldSize = ReadInt(stream);
 
             switch (fieldId)
@@ -124,11 +124,11 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
             string? methodName = null;
             TestMetadataProperty[] traits = [];
 
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -185,11 +185,11 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
         {
             string? key = null;
             string? value = null;
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -222,7 +222,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
 
         var discoveredTestMessages = (DiscoveredTestMessages)objectToSerialize;
 
-        WriteShort(stream, GetFieldCount(discoveredTestMessages));
+        WriteUShort(stream, GetFieldCount(discoveredTestMessages));
 
         WriteField(stream, DiscoveredTestMessagesFieldsId.ExecutionId, discoveredTestMessages.ExecutionId);
         WriteField(stream, DiscoveredTestMessagesFieldsId.InstanceId, discoveredTestMessages.InstanceId);
@@ -236,7 +236,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
             return;
         }
 
-        WriteShort(stream, DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList);
+        WriteUShort(stream, DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -246,7 +246,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
         WriteInt(stream, discoveredTestMessageList.Length);
         foreach (DiscoveredTestMessage discoveredTestMessage in discoveredTestMessageList)
         {
-            WriteShort(stream, GetFieldCount(discoveredTestMessage));
+            WriteUShort(stream, GetFieldCount(discoveredTestMessage));
 
             WriteField(stream, DiscoveredTestMessageFieldsId.Uid, discoveredTestMessage.Uid);
             WriteField(stream, DiscoveredTestMessageFieldsId.DisplayName, discoveredTestMessage.DisplayName);
@@ -271,7 +271,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
             return;
         }
 
-        WriteShort(stream, DiscoveredTestMessageFieldsId.Traits);
+        WriteUShort(stream, DiscoveredTestMessageFieldsId.Traits);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -281,7 +281,7 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
         WriteInt(stream, traits.Length);
         foreach (TestMetadataProperty trait in traits)
         {
-            WriteShort(stream, GetFieldCount(trait));
+            WriteUShort(stream, GetFieldCount(trait));
 
             WriteField(stream, TraitMessageFieldsId.Key, trait.Key);
             WriteField(stream, TraitMessageFieldsId.Value, trait.Value);

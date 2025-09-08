@@ -524,17 +524,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
         <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
-        <target state="new">Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</target>
+        <target state="translated">Metody jako Contains, StartsWith a EndsWith vracejí logické hodnoty, které označují, jestli byla podmínka splněna. Ignorování těchto vrácených hodnot je pravděpodobně chyba.</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
         <source>The return value of '{0}' should not be ignored</source>
-        <target state="new">The return value of '{0}' should not be ignored</target>
+        <target state="translated">Návratová hodnota {0} by neměla být ignorována</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueTitle">
         <source>Do not ignore the return value of string methods</source>
-        <target state="new">Do not ignore the return value of string methods</target>
+        <target state="translated">Neignorovat návratovou hodnotu řetězcových metod</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
