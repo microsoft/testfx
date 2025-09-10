@@ -133,8 +133,8 @@ This message contains the following properties:
   - Reason (optional)
   - List of exceptions (optional). Each exception has:
     - message (optional or required?)
-      - type (optional or required?)
-      - stack trace (optional or required?)
+    - type (optional or required?)
+    - stack trace (optional or required?)
   - Standard output (optional)
   - Standard error (optional)
   - SessionUid (optional or required?)
