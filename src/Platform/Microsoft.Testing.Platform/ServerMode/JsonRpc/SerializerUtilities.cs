@@ -224,7 +224,7 @@ internal static class SerializerUtilities
                             : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
 
                         properties["location.method"] = testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
-                            ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
+                            ? $"{testMethodIdentifierProperty.MethodName}({string.Join(',', testMethodIdentifierProperty.ParameterTypeFullNames)})"
                             : testMethodIdentifierProperty.MethodName;
 
                         properties["location.method-arity"] = testMethodIdentifierProperty.MethodArity;
@@ -338,8 +338,6 @@ internal static class SerializerUtilities
 
                     if (property is TimingProperty timingProperty)
                     {
-                        properties["time.start-utc"] = timingProperty.GlobalTiming.StartTime;
-                        properties["time.stop-utc"] = timingProperty.GlobalTiming.EndTime;
                         properties["time.duration-ms"] = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
                         continue;
                     }
@@ -354,10 +352,7 @@ internal static class SerializerUtilities
                     }
                 }
 
-                if (!properties.ContainsKey("node-type"))
-                {
-                    properties["node-type"] = "group";
-                }
+                properties.TryAdd("node-type", "group");
 
                 return properties;
             });

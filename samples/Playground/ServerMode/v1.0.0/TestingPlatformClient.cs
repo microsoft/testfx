@@ -64,14 +64,9 @@ public sealed class TestingPlatformClient : IDisposable
         {
             await func();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (_disconnectionReason.Length > 0)
         {
-            if (_disconnectionReason.Length > 0)
-            {
-                throw new InvalidOperationException($"{ex.Message}\n{_disconnectionReason}", ex);
-            }
-
-            throw;
+            throw new InvalidOperationException($"{ex.Message}\n{_disconnectionReason}", ex);
         }
     }
 

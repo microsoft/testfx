@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -315,7 +314,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // which is used to decide whether TestInitialize/TestCleanup methods
         // present in the base type should be used or not. They are not used if
         // the method is overridden in the derived type.
-        var instanceMethods = new Dictionary<string, string?>();
+        HashSet<string>? instanceMethods = classType.BaseType == typeof(object) ? null : [];
 
         foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(classType))
         {
@@ -420,6 +419,30 @@ internal sealed class TypeCache : MarshalByRefObject
                         {
                             assemblyInfo.AssemblyCleanupMethod = methodInfo;
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
+                        }
+
+                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo, inherit: true);
+                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo, inherit: true);
+
+                        if (isGlobalTestInitialize || isGlobalTestCleanup)
+                        {
+                            // Only try to validate the method if it already has the needed attribute.
+                            // This avoids potential type load exceptions when the return type cannot be resolved.
+                            // NOTE: Users tend to load assemblies in AssemblyInitialize after finishing the discovery.
+                            // We want to avoid loading types early as much as we can.
+                            bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
+                                methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
+                                methodInfo.IsValidReturnType();
+
+                            if (isValid && isGlobalTestInitialize)
+                            {
+                                assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                            }
+
+                            if (isValid && isGlobalTestCleanup)
+                            {
+                                assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                            }
                         }
                     }
                 }
@@ -598,16 +621,16 @@ internal sealed class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        Dictionary<string, string?> instanceMethods)
+        HashSet<string>? instanceMethods)
     {
         bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
         bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
-            if (methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature())
             {
-                instanceMethods[methodInfo.Name] = null;
+                instanceMethods.Add(methodInfo.Name);
             }
 
             return;
@@ -632,7 +655,7 @@ internal sealed class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
                     classInfo.BaseTestInitializeMethodsQueue.Enqueue(methodInfo);
                 }
@@ -652,14 +675,14 @@ internal sealed class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
                     classInfo.BaseTestCleanupMethodsQueue.Enqueue(methodInfo);
                 }
             }
         }
 
-        instanceMethods[methodInfo.Name] = null;
+        instanceMethods?.Add(methodInfo.Name);
     }
 
     /// <summary>
@@ -724,7 +747,10 @@ internal sealed class TypeCache : MarshalByRefObject
         MethodBase? methodBase = null;
         try
         {
-            methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+            // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
+            // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
+            // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+            methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
         {
@@ -750,6 +776,16 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
+        // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
+        // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
+        // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+        // Note: This whole GetMethodInfoUsingRuntimeMethods is likely never reachable.
+        // It's called if HasManagedMethodAndTypeProperties is false, but it should always be true per the current implementation.
+        if (testMethod.MethodInfo is { } methodInfo)
+        {
+            return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
+        }
+
         IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
             .Where(method => method.Name == testMethod.Name &&
                              method.HasCorrectTestMethodSignature(true, discoverInternals));
@@ -779,17 +815,26 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
 
-        IEnumerable<TestPropertyAttribute> attributes = _reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.MethodInfo, inherit: true);
-        DebugEx.Assert(attributes != null, "attributes is null");
+        // Avoid calling GetAttributes<T> to prevent iterator state machine allocations.
+        _ = ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo, inherit: true), testMethodInfo, testContext) &&
+            ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.Parent.ClassType, inherit: true), testMethodInfo, testContext);
 
-        attributes = attributes.Concat(_reflectionHelper.GetAttributes<TestPropertyAttribute>(testMethodInfo.Parent.ClassType, inherit: true));
-
-        foreach (TestPropertyAttribute attribute in attributes)
+        static bool ValidateAttributes(Attribute[] attributes, TestMethodInfo testMethodInfo, ITestContext testContext)
         {
-            if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
+            foreach (Attribute attribute in attributes)
             {
-                break;
+                if (attribute is not TestPropertyAttribute testPropertyAttribute)
+                {
+                    continue;
+                }
+
+                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, testPropertyAttribute.Name, testPropertyAttribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
+                {
+                    return false;
+                }
             }
+
+            return true;
         }
     }
 

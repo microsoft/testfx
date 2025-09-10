@@ -154,7 +154,7 @@ internal sealed class Json
                         : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
 
                     properties.Add(("location.method", testMethodIdentifierProperty.ParameterTypeFullNames.Length > 0
-                        ? $"{testMethodIdentifierProperty.MethodName}({string.Join(",", testMethodIdentifierProperty.ParameterTypeFullNames)})"
+                        ? $"{testMethodIdentifierProperty.MethodName}({string.Join(',', testMethodIdentifierProperty.ParameterTypeFullNames)})"
                         : testMethodIdentifierProperty.MethodName));
 
                     properties.Add(("location.method-arity", testMethodIdentifierProperty.MethodArity));
@@ -270,8 +270,6 @@ internal sealed class Json
 
                 if (property is TimingProperty timingProperty)
                 {
-                    properties.Add(("time.start-utc", timingProperty.GlobalTiming.StartTime));
-                    properties.Add(("time.stop-utc", timingProperty.GlobalTiming.EndTime));
                     properties.Add(("time.duration-ms", timingProperty.GlobalTiming.Duration.TotalMilliseconds));
                     continue;
                 }

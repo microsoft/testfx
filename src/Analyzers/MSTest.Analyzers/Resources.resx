@@ -251,7 +251,10 @@ The type declaring these methods should also respect the following rules:
     <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
-    <value>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</value>
+    <value>DataRow argument types do not match method parameter types. {0}</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_ParameterMismatch" xml:space="preserve">
+    <value>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>DataRow should only be set on a test method</value>
@@ -426,6 +429,9 @@ The type declaring these methods should also respect the following rules:
   <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test methods do not require the 'Async' suffix</value>
   </data>
+  <data name="UnusedParameterSuppressorJustification" xml:space="preserve">
+    <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
   </data>
@@ -445,10 +451,10 @@ The type declaring these methods should also respect the following rules:
     <value>Type containing '[TestMethod]' should be marked with '[TestClass]'</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassDescription" xml:space="preserve">
-    <value>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
+    <value>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
-    <value>Class '{0}' contains test methods and should be marked with '[TestClass]'</value>
+    <value>Type '{0}' contains test methods and should be marked with '[TestClass]'</value>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</value>
@@ -504,6 +510,9 @@ The type declaring these methods should also respect the following rules:
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</value>
   </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeField" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</value>
+  </data>
   <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
     <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
   </data>
@@ -534,6 +543,12 @@ The type declaring these methods should also respect the following rules:
   <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
   </data>
+  <data name="StringAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert' instead of 'StringAssert'</value>
+  </data>
+  <data name="StringAssertToAssertMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'StringAssert.{1}'</value>
+  </data>
   <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" xml:space="preserve">
     <value>The type of the generic parameter '{0}' could not be inferred.</value>
   </data>
@@ -542,6 +557,9 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</value>
+  </data>
+  <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField" xml:space="preserve">
+    <value>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</value>
   </data>
   <data name="UseNewerAssertThrowsTitle" xml:space="preserve">
     <value>Use newer methods to assert exceptions</value>
@@ -602,5 +620,86 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
     <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
+  </data>
+  <data name="TestContextPropertyUsageTitle" xml:space="preserve">
+    <value>TestContext property cannot be accessed in this context</value>
+  </data>
+  <data name="TestContextPropertyUsageMessageFormat" xml:space="preserve">
+    <value>TestContext property '{0}' cannot be accessed in '{1}' method</value>
+  </data>
+  <data name="TestContextPropertyUsageDescription" xml:space="preserve">
+    <value>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</value>
+  </data>
+  <data name="FlowTestContextCancellationTokenTitle" xml:space="preserve">
+    <value>Flow TestContext.CancellationToken to async operations</value>
+  </data>
+  <data name="FlowTestContextCancellationTokenMessageFormat" xml:space="preserve">
+    <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</value>
+  </data>
+  <data name="FlowTestContextCancellationTokenDescription" xml:space="preserve">
+    <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</value>
+  </data>
+  <data name="AssertThrowsShouldContainSingleStatementTitle" xml:space="preserve">
+    <value>Assert.Throws should contain only a single statement/expression</value>
+  </data>
+  <data name="AssertThrowsShouldContainSingleStatementMessageFormat" xml:space="preserve">
+    <value>Assert.Throws should contain only a single statement/expression</value>
+  </data>
+  <data name="AssertThrowsShouldContainSingleStatementDescription" xml:space="preserve">
+    <value>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</value>
+  </data>
+  <data name="GlobalTestFixtureShouldBeValidTitle" xml:space="preserve">
+    <value>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</value>
+  </data>
+  <data name="GlobalTestFixtureShouldBeValidMessageFormat" xml:space="preserve">
+    <value>Global test fixture method '{0}' signature is invalid</value>
+  </data>
+  <data name="GlobalTestFixtureShouldBeValidDescription" xml:space="preserve">
+    <value>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</value>
+  </data>
+  <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
+    <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
+  </data>
+  <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
+    <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
+  </data>
+  <data name="UseCancellationTokenPropertyTitle" xml:space="preserve">
+    <value>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</value>
+  </data>
+  <data name="UseCancellationTokenPropertyMessageFormat" xml:space="preserve">
+    <value>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</value>
+  </data>
+  <data name="UseCancellationTokenPropertyDescription" xml:space="preserve">
+    <value>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</value>
+  </data>
+  <data name="AvoidAssertFormatParametersTitle" xml:space="preserve">
+    <value>Avoid using Assert methods with format parameters</value>
+  </data>
+  <data name="AvoidAssertFormatParametersMessageFormat" xml:space="preserve">
+    <value>Replace '{0}' with format parameters with string.Format or string interpolation</value>
+  </data>
+  <data name="IgnoreStringMethodReturnValueTitle" xml:space="preserve">
+    <value>Do not ignore the return value of string methods</value>
+  </data>
+  <data name="IgnoreStringMethodReturnValueMessageFormat" xml:space="preserve">
+    <value>The return value of '{0}' should not be ignored</value>
+  </data>
+  <data name="IgnoreStringMethodReturnValueDescription" xml:space="preserve">
+    <value>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</value>
   </data>
 </root>

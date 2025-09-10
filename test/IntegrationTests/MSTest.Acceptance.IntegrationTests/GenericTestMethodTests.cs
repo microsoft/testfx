@@ -15,60 +15,60 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath("GenericTestMethodTests"), "GenericTestMethodTests", TargetFrameworks.NetCurrent);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             """
-            failed AMethodWithBadConstraints \(0\) \(\d+ms\)
+            failed AMethodWithBadConstraints \(0\) \((\d+s )?\d+ms\)
               GenericArguments\[0], 'System\.Int32', on 'Void AMethodWithBadConstraints\[T]\(T\)' violates the constraint of type 'T'\.
                 .+?
-            failed NonParameterizedTestMethod \(\d+ms\)
+            failed NonParameterizedTestMethod \((\d+s )?\d+ms\)
               The generic test method 'NonParameterizedTestMethod' doesn't have arguments, so the generic parameter cannot be inferred\.
                 .+?
-            failed ParameterizedMethodSimple \(1\) \(\d+ms\)
+            failed ParameterizedMethodSimple \(1\) \((\d+s )?\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '1' and type 'System\.Byte'\.
                 .+?
-            failed ParameterizedMethodSimple \(2\) \(\d+ms\)
+            failed ParameterizedMethodSimple \(2\) \((\d+s )?\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '2' and type 'System\.Int32'\.
                 .+?
-            failed ParameterizedMethodSimple \("Hello world"\) \(\d+ms\)
+            failed ParameterizedMethodSimple \("Hello world"\) \((\d+s )?\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter 'Hello world' and type 'System\.String'\.
                 .+?
-            failed ParameterizedMethodSimple \(null\) \(\d+ms\)
+            failed ParameterizedMethodSimple \(null\) \((\d+s )?\d+ms\)
               Test method TestClass\.ParameterizedMethodSimple threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T' could not be inferred\.
-            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(1,"Hello world",2,3\) \(\d+ms\)
+            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(1,"Hello world",2,3\) \((\d+s )?\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: Found two conflicting types for generic parameter 'T2'\. The conflicting types are 'System\.Byte' and 'System\.Int32'\.
-            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,"Hello world","Hello again",3\) \(\d+ms\)
+            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,"Hello world","Hello again",3\) \((\d+s )?\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '<null>', 'Hello world', 'Hello again', '3' and generic types 'System\.Int32', 'System\.String'\.
                 .+?
-            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \("Hello hello","Hello world",null,null\) \(\d+ms\)
+            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \("Hello hello","Hello world",null,null\) \((\d+s )?\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
-            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,null,null,null\) \(\d+ms\)
+            failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,null,null,null\) \((\d+s )?\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception: 
               System\.InvalidOperationException: The type of the generic parameter 'T1' could not be inferred\.
-            failed ParameterizedMethodSimpleParams \(1\) \(\d+ms\)
+            failed ParameterizedMethodSimpleParams \(1\) \((\d+s )?\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
-            failed ParameterizedMethodSimpleParams \(1,2\) \(\d+ms\)
+            failed ParameterizedMethodSimpleParams \(1,2\) \((\d+s )?\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
-            failed ParameterizedMethodSimpleParams \("Hello world"\) \(\d+ms\)
+            failed ParameterizedMethodSimpleParams \("Hello world"\) \((\d+s )?\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
-            failed ParameterizedMethodSimpleParams \(null\) \(\d+ms\)
+            failed ParameterizedMethodSimpleParams \(null\) \((\d+s )?\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
-            failed ParameterizedMethodSimpleParams \(null,"Hello world"\) \(\d+ms\)
+            failed ParameterizedMethodSimpleParams \(null,"Hello world"\) \((\d+s )?\d+ms\)
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
-            failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.String],System\.Collections\.Generic\.List`1\[System.String]\) \(\d+ms\)
+            failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.String],System\.Collections\.Generic\.List`1\[System.String]\) \((\d+s )?\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[Hello, World] and second list \[Unit, Testing]
                 .+?
-            failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.Int32],System\.Collections\.Generic\.List`1\[System.Int32]\) \(\d+ms\)
+            failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.Int32],System\.Collections\.Generic\.List`1\[System.Int32]\) \((\d+s )?\d+ms\)
               Assert\.Fail failed\. Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[0, 1] and second list \[2, 3]
                 .+?
             """, RegexOptions.Singleline);
@@ -170,4 +170,6 @@ public class TestClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

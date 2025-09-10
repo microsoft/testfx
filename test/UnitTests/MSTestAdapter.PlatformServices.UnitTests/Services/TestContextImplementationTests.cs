@@ -7,6 +7,7 @@ using System.Data.Common;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
@@ -406,5 +407,23 @@ public class TestContextImplementationTests : TestContainer
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Informational, "InfoMessage"), Times.Once);
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Warning, "WarningMessage"), Times.Once);
         messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
+    }
+
+    public void WritesFromBackgroundThreadShouldNotThrow()
+    {
+        var testContextImplementation = new TestContextImplementation(_testMethod.Object, _properties, new Mock<IMessageLogger>().Object, testRunCancellationToken: null);
+        var t = new Thread(() =>
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                testContextImplementation.WriteConsoleOut(new string('a', 1000000));
+                testContextImplementation.WriteConsoleErr(new string('b', 1000000));
+            }
+        });
+
+        t.Start();
+        _ = testContextImplementation.GetOut();
+        _ = testContextImplementation.GetErr();
+        t.Join();
     }
 }

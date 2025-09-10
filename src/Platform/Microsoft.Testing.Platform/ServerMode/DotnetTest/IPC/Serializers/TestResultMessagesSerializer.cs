@@ -114,11 +114,11 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         List<SuccessfulTestResultMessage>? successfulTestResultMessages = null;
         List<FailedTestResultMessage>? failedTestResultMessages = null;
 
-        ushort fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadUShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
-            int fieldId = ReadShort(stream);
+            int fieldId = ReadUShort(stream);
             int fieldSize = ReadInt(stream);
 
             switch (fieldId)
@@ -164,11 +164,11 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             byte? state = null;
             long? duration = null;
 
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -229,11 +229,11 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             byte? state = null;
             long? duration = null;
 
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -293,7 +293,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         int length = ReadInt(stream);
         for (int i = 0; i < length; i++)
         {
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             string? errorMessage = null;
             string? errorType = null;
@@ -301,7 +301,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -332,7 +332,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
 
         var testResultMessages = (TestResultMessages)objectToSerialize;
 
-        WriteShort(stream, GetFieldCount(testResultMessages));
+        WriteUShort(stream, GetFieldCount(testResultMessages));
 
         WriteField(stream, TestResultMessagesFieldsId.ExecutionId, testResultMessages.ExecutionId);
         WriteField(stream, TestResultMessagesFieldsId.InstanceId, testResultMessages.InstanceId);
@@ -347,7 +347,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             return;
         }
 
-        WriteShort(stream, TestResultMessagesFieldsId.SuccessfulTestMessageList);
+        WriteUShort(stream, TestResultMessagesFieldsId.SuccessfulTestMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -357,7 +357,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         WriteInt(stream, successfulTestResultMessages.Length);
         foreach (SuccessfulTestResultMessage successfulTestResultMessage in successfulTestResultMessages)
         {
-            WriteShort(stream, GetFieldCount(successfulTestResultMessage));
+            WriteUShort(stream, GetFieldCount(successfulTestResultMessage));
 
             WriteField(stream, SuccessfulTestResultMessageFieldsId.Uid, successfulTestResultMessage.Uid);
             WriteField(stream, SuccessfulTestResultMessageFieldsId.DisplayName, successfulTestResultMessage.DisplayName);
@@ -381,7 +381,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             return;
         }
 
-        WriteShort(stream, TestResultMessagesFieldsId.FailedTestMessageList);
+        WriteUShort(stream, TestResultMessagesFieldsId.FailedTestMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -391,7 +391,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         WriteInt(stream, failedTestResultMessages.Length);
         foreach (FailedTestResultMessage failedTestResultMessage in failedTestResultMessages)
         {
-            WriteShort(stream, GetFieldCount(failedTestResultMessage));
+            WriteUShort(stream, GetFieldCount(failedTestResultMessage));
 
             WriteField(stream, FailedTestResultMessageFieldsId.Uid, failedTestResultMessage.Uid);
             WriteField(stream, FailedTestResultMessageFieldsId.DisplayName, failedTestResultMessage.DisplayName);
@@ -416,7 +416,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
             return;
         }
 
-        WriteShort(stream, FailedTestResultMessageFieldsId.ExceptionMessageList);
+        WriteUShort(stream, FailedTestResultMessageFieldsId.ExceptionMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -426,7 +426,7 @@ internal sealed class TestResultMessagesSerializer : BaseSerializer, INamedPipeS
         WriteInt(stream, exceptionMessages.Length);
         foreach (ExceptionMessage exceptionMessage in exceptionMessages)
         {
-            WriteShort(stream, GetFieldCount(exceptionMessage));
+            WriteUShort(stream, GetFieldCount(exceptionMessage));
 
             WriteField(stream, ExceptionMessageFieldsId.ErrorMessage, exceptionMessage.ErrorMessage);
             WriteField(stream, ExceptionMessageFieldsId.ErrorType, exceptionMessage.ErrorType);

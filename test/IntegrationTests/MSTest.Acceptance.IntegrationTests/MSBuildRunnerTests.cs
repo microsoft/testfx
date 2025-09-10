@@ -28,7 +28,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrix), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrix))]
     public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm, string command)
     {
         // Get the template project
@@ -64,10 +64,10 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
         }
 
         // Build the solution
-        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         if (isMultiTfm)
         {
@@ -85,4 +85,6 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
             testResult.AssertOutputMatchesRegex($@"Tests succeeded: '.*TestProject2\..*' \[{singleTfmOrMultiTfm}\|x64\]");
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

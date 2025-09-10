@@ -8,22 +8,24 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TaskExtensionsTests
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task TimeoutAfterAsync_Succeeds()
         => await Assert.ThrowsAsync<TimeoutException>(async () =>
-            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(TimeSpan.FromSeconds(2)));
+            await Task.Delay(TimeSpan.FromSeconds(60), TestContext.CancellationToken).TimeoutAfterAsync(TimeSpan.FromSeconds(2)));
 
     [TestMethod]
     public async Task TimeoutAfterAsync_CancellationToken_Succeeds()
         => await Assert.ThrowsAsync<OperationCanceledException>(async () =>
-            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
+            await Task.Delay(TimeSpan.FromSeconds(60), TestContext.CancellationToken).TimeoutAfterAsync(
                 TimeSpan.FromSeconds(30),
                 new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token));
 
     [TestMethod]
     public async Task TimeoutAfterAsync_CancellationTokenNone_Succeeds()
         => await Assert.ThrowsAsync<TimeoutException>(async () =>
-            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
+            await Task.Delay(TimeSpan.FromSeconds(60), TestContext.CancellationToken).TimeoutAfterAsync(
                 TimeSpan.FromSeconds(2),
                 CancellationToken.None));
 
@@ -75,16 +77,17 @@ public sealed class TaskExtensionsTests
             {
                 ManualResetEvent waitException = new(false);
                 await Assert.ThrowsAsync<OperationCanceledException>(async ()
-                    => await Task.Run(async () =>
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(10));
-                        waitException.Set();
-                        throw new InvalidOperationException();
-                    }).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
+                    => await Task.Run(
+                        async () =>
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken);
+                            waitException.Set();
+                            throw new InvalidOperationException();
+                        }, TestContext.CancellationToken).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
 
                 waitException.WaitOne();
-                await Task.Delay(TimeSpan.FromSeconds(4));
-            }, 3, TimeSpan.FromSeconds(3), _ => true);
+                await Task.Delay(TimeSpan.FromSeconds(4), TestContext.CancellationToken);
+            }, 3, TimeSpan.FromSeconds(3));
 
     [TestMethod]
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
@@ -95,7 +98,7 @@ public sealed class TaskExtensionsTests
                 await Assert.ThrowsAsync<OperationCanceledException>(async ()
                     => await Task.Run(async () =>
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(10));
+                        await Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken);
                         try
                         {
                             return 2;
@@ -110,8 +113,8 @@ public sealed class TaskExtensionsTests
                     }).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
 
                 waitException.WaitOne();
-                await Task.Delay(TimeSpan.FromSeconds(4));
-            }, 3, TimeSpan.FromSeconds(3), _ => true);
+                await Task.Delay(TimeSpan.FromSeconds(4), TestContext.CancellationToken);
+            }, 3, TimeSpan.FromSeconds(3));
 
     private static async Task<string> DoSomething()
     {

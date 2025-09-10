@@ -403,7 +403,8 @@ public partial class TypeEnumeratorTests : TestContainer
 
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(testElement.Description == "Dummy description");
+        Verify(testElement.Traits is not null);
+        Verify(testElement.Traits.Any(t => t.Name == "Description" && t.Value == "Dummy description"));
     }
 
     public void GetTestFromMethodShouldSetWorkItemIds()

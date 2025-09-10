@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 
@@ -176,7 +174,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNode))
         {
-            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -188,7 +186,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(TestNodeUpdateMessage))
         {
-            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.start-utc":"2023-01-01T01:01:01.0000000+00:00","time.stop-utc":"2023-01-01T01:01:01.0000000+00:00","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"node":{"uid":"uid","display-name":"DisplayName","traits":[{"testmetadata-key":"testmetadata-value"}],"standardError":"textProperty2","standardOutput":"textProperty","time.duration-ms":0,"location.type":"namespace.typeName","location.method":"methodName(param1,param2)","location.method-arity":0,"location.file":"filePath","location.line-start":1,"location.line-end":2,"key":"value","node-type":"action","execution-state":"failed","error.message":"sample","error.stacktrace":"","assert.actual":"","assert.expected":""},"parent":"parent-uid"}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 

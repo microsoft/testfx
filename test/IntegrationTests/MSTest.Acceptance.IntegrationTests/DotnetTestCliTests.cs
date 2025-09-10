@@ -12,7 +12,7 @@ public class DotnetTestCliTests : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSTestProject";
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetBuildMatrixTfmBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task DotnetTest_Should_Execute_Tests(string tfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -25,9 +25,11 @@ public class DotnetTestCliTests : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$OutputType$", string.Empty)
             .PatchCodeWithReplace("$Extra$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         // There is whitespace difference in output in parent and public repo that depends on the version of the dotnet SDK used.
         compilationResult.AssertOutputMatchesRegex(@"Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,\s+Skipped:\s+0,\s+Total:\s+1");
     }
+
+    public TestContext TestContext { get; set; }
 }

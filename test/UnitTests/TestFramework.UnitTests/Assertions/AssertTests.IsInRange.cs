@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
 
@@ -55,8 +55,9 @@ public partial class AssertTests : TestContainer
         int value = 3;
 
         // Act & Assert
-        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
-        Verify(ex.Message.Contains("Value '3' is not within the expected range [5, 10]"));
+        Action action = () => Assert.IsInRange(minValue, maxValue, value);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("Value '3' is not within the expected range [5, 10]");
     }
 
     public void IsInRange_WithValueAboveRange_ThrowsAssertFailedException()
@@ -67,8 +68,9 @@ public partial class AssertTests : TestContainer
         int value = 8;
 
         // Act & Assert
-        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, value));
-        Verify(ex.Message.Contains("Value '8' is not within the expected range [1, 5]"));
+        Action action = () => Assert.IsInRange(minValue, maxValue, value);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("Value '8' is not within the expected range [1, 5]");
     }
 
     public void IsInRange_WithCustomMessage_IncludesCustomMessage()
@@ -115,8 +117,9 @@ public partial class AssertTests : TestContainer
 
         // Act & Assert
         Assert.IsInRange(minValue, maxValue, valueInRange);
-        Exception ex = VerifyThrows(() => Assert.IsInRange(minValue, maxValue, valueOutOfRange));
-        Verify(ex.Message.Contains("Value '6' is not within the expected range [1.5, 5.5]"));
+        Action action = () => Assert.IsInRange(minValue, maxValue, valueOutOfRange);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("Value '6' is not within the expected range [1.5, 5.5]");
     }
 
     public void IsInRange_WithDateTimeValues_WorksCorrectly()

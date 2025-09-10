@@ -154,7 +154,10 @@ internal static class ObjectModelConverters
 
         if (isTrxEnabled)
         {
-            testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
+            {
+                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            }
 
             if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
             {
@@ -178,8 +181,8 @@ internal static class ObjectModelConverters
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
-        var standardErrorMessages = new List<string>();
-        var standardOutputMessages = new List<string>();
+        List<string>? standardErrorMessages = null;
+        List<string>? standardOutputMessages = null;
         bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
         foreach (TestResultMessage testResultMessage in testResult.Messages)
         {
@@ -191,7 +194,7 @@ internal static class ObjectModelConverters
                     testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
                 }
 
-                standardErrorMessages.Add(message);
+                (standardErrorMessages ??= []).Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
@@ -202,7 +205,7 @@ internal static class ObjectModelConverters
                     testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
                 }
 
-                standardOutputMessages.Add(message);
+                (standardOutputMessages ??= []).Add(message);
             }
         }
 
@@ -214,12 +217,12 @@ internal static class ObjectModelConverters
             }
         }
 
-        if (standardErrorMessages.Count > 0)
+        if (standardErrorMessages is { Count: > 0 })
         {
             testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
-        if (standardOutputMessages.Count > 0)
+        if (standardOutputMessages is { Count: > 0 })
         {
             testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }

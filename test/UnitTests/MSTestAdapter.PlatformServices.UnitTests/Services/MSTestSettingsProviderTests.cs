@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using TestFramework.ForTestingMSTest;
@@ -69,5 +70,33 @@ public class DesktopSettingsProviderTests : TestContainer
         reader.Read();
         _settingsProvider.Load(reader);
         Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+    }
+
+    public void LoadShouldReadAndFillInSettingsFromIConfiguration()
+    {
+        Verify(MSTestSettingsProvider.Settings.DeploymentEnabled);
+
+        MSTestSettingsProvider.Load(new MockConfiguration(
+            new Dictionary<string, string?>()
+            {
+                ["mstest:deployment:enabled"] = "false",
+            }, null));
+
+        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+    }
+
+    private sealed class MockConfiguration : IConfiguration
+    {
+        private readonly Dictionary<string, string?> _values;
+        private readonly string? _defaultValue;
+
+        public MockConfiguration(Dictionary<string, string?> values, string? defaultValue)
+        {
+            _values = values;
+            _defaultValue = defaultValue;
+        }
+
+        public string? this[string key]
+            => _values.TryGetValue(key, out string? value) ? value : _defaultValue;
     }
 }

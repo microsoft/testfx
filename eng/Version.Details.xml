@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25326.3">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.25459.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0e335649fe2d2f98ea51e55cc1a0899af3617eba</Sha>
+      <Sha>4bb350073ab630245b80473c78b8c9d14d8236c8</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="10.0.0-beta.25326.3">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.25459.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0e335649fe2d2f98ea51e55cc1a0899af3617eba</Sha>
+      <Sha>4bb350073ab630245b80473c78b8c9d14d8236c8</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="10.0.0-beta.25326.3">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.25459.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0e335649fe2d2f98ea51e55cc1a0899af3617eba</Sha>
+      <Sha>4bb350073ab630245b80473c78b8c9d14d8236c8</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.15.0-preview.25327.4">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.0.0-preview.25459.1">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>90b433bee335be4224f0e2b5106027181b4af52b</Sha>
+      <Sha>d71460dce5bbe5fce378c510bddeec7cd50d865f</Sha>
+    </Dependency>
+    <Dependency Name="MSTest" Version="3.11.0-preview.25459.2">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>bc9e0f634673e28205bc777027a78af065bed5c2</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.9.0-preview.25459.2">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>bc9e0f634673e28205bc777027a78af065bed5c2</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

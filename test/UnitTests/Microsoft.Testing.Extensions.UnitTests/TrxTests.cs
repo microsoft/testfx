@@ -47,7 +47,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsFalse(trxContent.Contains(@"className="));
+        Assert.DoesNotContain(@"className=", trxContent);
     }
 
     [TestMethod]
@@ -68,7 +68,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsTrue(trxContent.Contains(@"notExecuted=""1"""));
+        Assert.Contains(@"notExecuted=""1""", trxContent);
     }
 
     [TestMethod]
@@ -89,7 +89,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsTrue(trxContent.Contains(@"timeout=""1"""));
+        Assert.Contains(@"timeout=""1""", trxContent);
     }
 
     [TestMethod]
@@ -122,7 +122,7 @@ public class TrxTests
         _ = _commandLineOptionsMock.Setup(_ => _.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out argumentTrxReportFileName)).Returns(true);
         PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(1, 0, propertyBag, memoryStream, isExplicitFileName: true);
-        _ = _fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync();
@@ -405,7 +405,7 @@ stdout trx message</StdOut>
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.IsTrue(trxContent.Contains(@"className=""TrxFullyQualifiedTypeName"), trxContent);
+        Assert.Contains(@"className=""TrxFullyQualifiedTypeName", trxContent, trxContent);
     }
 
     [TestMethod]
@@ -512,6 +512,7 @@ stdout trx message</StdOut>
             new(
                 new PassedTestNodeStateProperty(),
                 new TestMetadataProperty("Owner", "ValueOfOwner"),
+                new TestMetadataProperty("Description", "Description of my test"),
                 new TestMetadataProperty("Priority", "5"),
                 new TestMetadataProperty("MyProperty1", "MyValue1"),
                 new TestMetadataProperty("MyProperty2", "MyValue2")), memoryStream);
@@ -532,6 +533,7 @@ stdout trx message</StdOut>
       <Owners>
         <Owner name=""ValueOfOwner"" />
       </Owners>
+      <Description>Description of my test</Description>
       <Properties>
         <Property>
           <Key>MyProperty2</Key>
@@ -561,7 +563,7 @@ stdout trx message</StdOut>
     }
 
     private static void AssertExpectedTrxFileName(string fileName)
-           => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.000.trx", StringComparison.Ordinal));
+           => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.0000000.trx", StringComparison.Ordinal));
 
     private TrxReportEngine GenerateTrxReportEngine(int passedTestsCount, int failedTestsCount, PropertyBag propertyBag, MemoryFileStream memoryStream,
            bool? adapterSupportTrxCapability = null, int notExecutedTestsCount = 0, int timeoutTestsCount = 0,
@@ -576,7 +578,7 @@ stdout trx message</StdOut>
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;
 
-        _ = _fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
+        _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
         _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), isExplicitFileName ? FileMode.Create : FileMode.CreateNew))
             .Returns(memoryStream);
 

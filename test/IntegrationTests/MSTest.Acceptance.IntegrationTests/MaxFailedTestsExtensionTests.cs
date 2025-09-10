@@ -18,7 +18,7 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 3");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--maximum-failed-tests 3", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestExecutionStoppedForMaxFailedTests);
 
         int total = int.Parse(Regex.Match(testHostResult.StandardOutput, @"total: (\d+)").Groups[1].Value, CultureInfo.InvariantCulture);
@@ -26,10 +26,10 @@ public sealed class MaxFailedTestsExtensionTests : AcceptanceTestBase<MaxFailedT
         // We can't know the number of tests that will be executed exactly due to the async
         // nature of publish/consume on the platform side. But we expect the cancellation to
         // happen "fast" enough that we don't execute all tests.
-        Assert.IsTrue(total < 12);
-        Assert.IsTrue(total >= 5);
+        Assert.IsLessThan(12, total);
+        Assert.IsGreaterThanOrEqualTo(5, total);
 
-        testHostResult = await testHost.ExecuteAsync();
+        testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
         total = int.Parse(Regex.Match(testHostResult.StandardOutput, @"total: (\d+)").Groups[1].Value, CultureInfo.InvariantCulture);
@@ -144,4 +144,6 @@ public class UnitTest1
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

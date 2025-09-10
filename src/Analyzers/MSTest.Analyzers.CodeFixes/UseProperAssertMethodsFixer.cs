@@ -70,13 +70,16 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         switch (mode)
         {
             case UseProperAssertMethodsAnalyzer.CodeFixModeSimple:
-                createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], root, simpleNameSyntax, properAssertMethodName, ct);
+                createChangedDocument = ct => FixAssertMethodForSimpleModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
                 createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
+                break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgumentAndReplaceArgument:
+                createChangedDocument = ct => FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
             default:
                 break;
@@ -93,25 +96,29 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         }
     }
 
-    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, Location conditionLocationToBeReplaced, Location replacementExpressionLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    private static async Task<Document> FixAssertMethodForSimpleModeAsync(Document document, IReadOnlyList<Location> additionalLocations, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
     {
-        // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
-        // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
-        // Or: Assert.IsNull(x, "My message")
-        // For now this is not handled.
-        if (root.FindNode(conditionLocationToBeReplaced.SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
-        {
-            return document;
-        }
-
-        if (root.FindNode(replacementExpressionLocation.SourceSpan) is not ExpressionSyntax replacementExpressionNode)
-        {
-            return document;
-        }
-
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
-        editor.ReplaceNode(conditionNodeToBeReplaced, SyntaxFactory.Argument(replacementExpressionNode).WithAdditionalAnnotations(Formatter.Annotation));
+
+        for (int i = 0; i < additionalLocations.Count; i += 2)
+        {
+            // This doesn't properly handle cases like Assert.IsTrue(message: "My message", condition: x == null)
+            // The proper handling of this may be Assert.IsNull(message: "My message", value: x)
+            // Or: Assert.IsNull(x, "My message")
+            // For now this is not handled.
+            if (root.FindNode(additionalLocations[i].SourceSpan) is not ArgumentSyntax conditionNodeToBeReplaced)
+            {
+                return document;
+            }
+
+            if (root.FindNode(additionalLocations[i + 1].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax replacementExpressionNode)
+            {
+                return document;
+            }
+
+            editor.ReplaceNode(conditionNodeToBeReplaced, SyntaxFactory.Argument(replacementExpressionNode).WithAdditionalAnnotations(Formatter.Annotation));
+        }
 
         return editor.GetChangedDocument();
     }
@@ -132,7 +139,8 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
-        if (root.FindNode(expectedLocation.SourceSpan) is not ExpressionSyntax expectedNode)
+        if (root.FindNode(expectedLocation.SourceSpan) is not { } expectedNode
+            || expectedNode is not ArgumentSyntax and not ExpressionSyntax)
         {
             return document;
         }
@@ -146,7 +154,13 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
         ArgumentListSyntax newArgumentList = argumentList;
-        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedNode).WithAdditionalAnnotations(Formatter.Annotation));
+        ExpressionSyntax expectedExpression = expectedNode switch
+        {
+            ArgumentSyntax argument => argument.Expression,
+            ExpressionSyntax expression => expression,
+            _ => throw new InvalidOperationException($"Unexpected node type for expected argument: {expectedNode.GetType()}"),
+        };
+        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedExpression).WithAdditionalAnnotations(Formatter.Annotation));
         int insertionIndex = argumentList.Arguments.IndexOf(conditionNode) + 1;
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(insertionIndex, SyntaxFactory.Argument(actualNode).WithAdditionalAnnotations(Formatter.Annotation)));
 
@@ -198,6 +212,44 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             newArgumentList = argumentList.WithArguments(argumentList.Arguments.RemoveAt(argumentIndexToRemove));
         }
 
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Handle collection count transformations:
+        // Assert.AreEqual(0, list.Count) -> Assert.IsEmpty(list)
+        // Assert.AreEqual(list.Count, 0) -> Assert.IsEmpty(list)
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax expectedArgumentToRemove)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[1].SourceSpan) is not ArgumentSyntax argumentToBeReplaced ||
+            root.FindNode(additionalLocations[2].SourceSpan) is not ExpressionSyntax replacement)
+        {
+            return document;
+        }
+
+        if (expectedArgumentToRemove.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
+        ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, argumentToBeReplaced.WithExpression(replacement));
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
         editor.ReplaceNode(argumentList, newArgumentList);
 
         return editor.GetChangedDocument();

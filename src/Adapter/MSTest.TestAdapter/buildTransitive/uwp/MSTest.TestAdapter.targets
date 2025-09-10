@@ -27,6 +27,10 @@
     <None Include="@(TestAdapterContent)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
+  </ItemGroup>
+
   <Target Name="GetMSTestV2CultureHierarchy">
     <!--
       Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient

@@ -50,4 +50,14 @@ internal static class DiagnosticIds
     public const string UseRetryWithTestMethodRuleId = "MSTEST0043";
     public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044";
     public const string UseCooperativeCancellationForTimeoutRuleId = "MSTEST0045";
+    public const string StringAssertToAssertRuleId = "MSTEST0046";
+    public const string UnusedParameterSuppressorRuleId = "MSTEST0047";
+    public const string TestContextPropertyUsageRuleId = "MSTEST0048";
+    public const string FlowTestContextCancellationTokenRuleId = "MSTEST0049";
+    public const string GlobalTestFixtureShouldBeValidRuleId = "MSTEST0050";
+    public const string AssertThrowsShouldContainSingleStatementRuleId = "MSTEST0051";
+    public const string AvoidExplicitDynamicDataSourceTypeRuleId = "MSTEST0052";
+    public const string AvoidAssertFormatParametersRuleId = "MSTEST0053";
+    public const string UseCancellationTokenPropertyRuleId = "MSTEST0054";
+    public const string IgnoreStringMethodReturnValueRuleId = "MSTEST0055";
 }

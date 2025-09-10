@@ -33,13 +33,11 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
             new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
@@ -67,13 +65,11 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         await adapter.ExecuteRequestAsync(new(
             new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
@@ -81,14 +77,13 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
         Platform.Extensions.Messages.TestNode lastNode = nodeStateChanges.Last().TestNode;
         _ = lastNode.Properties.Single<ErrorTestNodeStateProperty>();
         Assert.AreEqual("Oh no!", lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.Message);
-        Assert.IsTrue(
-            lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!
-            .Contains(nameof(ExecutableNode_ThatThrows_ShouldReportError)), "lastNode properties should contain the name of the test");
+        Assert.Contains(
+            nameof(ExecutableNode_ThatThrows_ShouldReportError), lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
         TimingProperty timingProperty = lastNode.Properties.Single<TimingProperty>();
         Assert.AreEqual(fakeClock.UsedTimes[0], timingProperty.GlobalTiming.StartTime);
         Assert.IsTrue(timingProperty.GlobalTiming.StartTime <= timingProperty.GlobalTiming.EndTime, "start time is before (or the same as) stop time");
         Assert.AreEqual(fakeClock.UsedTimes[1], timingProperty.GlobalTiming.EndTime);
-        Assert.IsTrue(timingProperty.GlobalTiming.Duration.TotalMilliseconds > 0, $"duration should be greater than 0");
+        Assert.IsGreaterThan(0, timingProperty.GlobalTiming.Duration.TotalMilliseconds, $"duration should be greater than 0");
     }
 
     private sealed class FakeClock : IClock
@@ -115,9 +110,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             ServiceProvider.AddService(new LoggerFactory());
             ServiceProvider.AddService(new FakeClock());
             ServiceProvider.AddService(new SystemTask());
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             ServiceProvider.AddService(new AggregatedConfiguration([], new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()), new SystemFileSystem(), new(null, [], [])));
-#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         }
 
         public MessageBus MessageBus { get; }

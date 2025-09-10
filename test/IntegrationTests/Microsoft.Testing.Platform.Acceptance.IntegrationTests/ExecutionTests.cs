@@ -14,7 +14,7 @@ public class ExecutionTests : AcceptanceTestBase<ExecutionTests.TestAssetFixture
     public async Task Exec_WhenListTestsIsSpecified_AllTestsAreFound(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -32,7 +32,7 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
     public async Task Exec_WhenOnlyAssetNameIsSpecified_AllTestsAreRun(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -42,10 +42,64 @@ Test discovery summary: found 2 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Exec_WhenUsingUidFilterForRun(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter-uid NonExistingUid", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+
+        testHostResult = await testHost.ExecuteAsync("--filter-uid 0", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+
+        testHostResult = await testHost.ExecuteAsync("--filter-uid 1", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+
+        testHostResult = await testHost.ExecuteAsync("--filter-uid 0 --filter-uid 1", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Exec_WhenUsingUidFilterForDiscovery(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid NonExistingUid", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+
+        testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid 0", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputMatchesRegex("""
+              Test1
+            Test discovery summary: found 1 test\(s\)
+            """);
+
+        testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid 1", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputMatchesRegex("""
+              Test2
+            Test discovery summary: found 1 test\(s\)
+            """);
+
+        testHostResult = await testHost.ExecuteAsync("--list-tests --filter-uid 0 --filter-uid 1", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputMatchesRegex("""
+              Test1
+              Test2
+            Test discovery summary: found 2 test\(s\)
+            """);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenListTestsAndFilterAreSpecified_OnlyFilteredTestsAreFound(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"<whatever>\"");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"<whatever>\"", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -62,7 +116,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
     public async Task Exec_WhenFilterIsSpecified_OnlyFilteredTestsAreRun(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"<whatever>\"");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"<whatever>\"", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -75,7 +129,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndEnoughTestsRun_ResultIsOk(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 2");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 2", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -88,7 +142,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndNotEnoughTestsRun_ResultIsNotOk(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 3");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 3", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
@@ -101,7 +155,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
     public async Task Exec_WhenListTestsAndMinimumExpectedTestsAreSpecified_DiscoveryFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 2");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 2", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--list-tests' and '--minimum-expected-tests' are incompatible options");
@@ -113,10 +167,10 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath2, AssetName2, tfm);
         var stopwatch = Stopwatch.StartNew();
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         stopwatch.Stop();
         Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
-        Assert.IsTrue(stopwatch.Elapsed.TotalSeconds > 3);
+        Assert.IsGreaterThan(3, stopwatch.Elapsed.TotalSeconds);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -138,12 +192,14 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 </Project>
 
 #file Program.cs
+using System.Linq;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -205,17 +261,25 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         // Simulate that here.
         bool isDiscovery = _sp.GetCommandLineOptions().TryGetOptionArgumentList("--list-tests", out _);
 
-        
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+        var uidListFilter = ((TestExecutionRequest)context.Request).Filter as TestNodeUidListFilter;
 
-        if (!isDiscovery)
+        // If --filter-uid is used, but it doesn't contain a given Uid, then don't publish TestNodeUpdateMessage for that Uid.
+        var excludeUid0 = uidListFilter is not null && !uidListFilter.TestNodeUids.Any(n => n.Value == "0");
+        var excludeUid1 = uidListFilter is not null && !uidListFilter.TestNodeUids.Any(n => n.Value == "1");
+
+        if (!excludeUid0)
+        {
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+        }
+
+        if (!isDiscovery && !excludeUid0)
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
         }
 
-        if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _))
+        if (!_sp.GetCommandLineOptions().TryGetOptionArgumentList("--treenode-filter", out _) && !excludeUid1)
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
@@ -322,4 +386,6 @@ internal class Capabilities : ITestFrameworkCapabilities
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

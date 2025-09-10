@@ -12,7 +12,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
     [TestMethod]
     public async Task AssemblyResolution_WhenNotSpecified_TestFails()
     {
-        TestHostResult testHostResult = await AssetFixture.TestHost.ExecuteAsync();
+        TestHostResult testHostResult = await AssetFixture.TestHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
@@ -39,7 +39,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
             """);
 
         // Act
-        TestHostResult testHostResult = await AssetFixture.TestHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await AssetFixture.TestHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -65,11 +65,11 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
             MainDllFolder?.Dispose();
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(CancellationToken cancellationToken)
         {
             VSSolution solution = CreateTestAsset();
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-            Assert.AreEqual(0, result.ExitCode);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: cancellationToken);
+            result.AssertExitCodeIs(0);
 
             TestHost = TestHost.LocateFrom(solution.Projects.Skip(1).Single().FolderPath, TestProjectName, TargetFramework);
             MainDllFolder = MoveMainDllToDifferentTempDirectory();
@@ -159,4 +159,6 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
             return tempDirectory2;
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

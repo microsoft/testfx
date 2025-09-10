@@ -17,11 +17,13 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IFileSystem _fileSystem;
 
     public RetryOrchestrator(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
+        _fileSystem = _serviceProvider.GetFileSystem();
     }
 
     public string Uid => nameof(RetryOrchestrator);
@@ -35,21 +37,21 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName));
 
-    private static string CreateRetriesDirectory(string resultDirectory)
+    private string CreateRetriesDirectory(string resultDirectory)
     {
         Exception? lastException = null;
         // Quite arbitrary. Keep trying to create the directory for 10 times.
         for (int i = 0; i < 10; i++)
         {
             string retryRootFolder = Path.Combine(resultDirectory, "Retries", RandomId.Next());
-            if (Directory.Exists(retryRootFolder))
+            if (_fileSystem.ExistDirectory(retryRootFolder))
             {
                 continue;
             }
 
             try
             {
-                Directory.CreateDirectory(retryRootFolder);
+                _fileSystem.CreateDirectory(retryRootFolder);
                 return retryRootFolder;
             }
             catch (IOException ex)
@@ -73,10 +75,13 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInServerModeErrorMessage);
         }
 
-        if (IsHotReloadEnabled(_serviceProvider.GetEnvironment()))
+        IEnvironment environment = _serviceProvider.GetEnvironment();
+        if (IsHotReloadEnabled(environment))
         {
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInHotReloadErrorMessage);
         }
+
+        environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID, Guid.NewGuid().ToString("N"));
 
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryOrchestrator>();
         IConfiguration configuration = _serviceProvider.GetConfiguration();
@@ -164,23 +169,28 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
-            // Prepare the process start
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = executableInfo.FilePath,
-#if !NETCOREAPP
-                UseShellExecute = false,
-#endif
-            };
-
-            foreach (string argument in finalArguments)
-            {
-#if !NETCOREAPP
-                processStartInfo.Arguments += argument + " ";
+#if NET8_0_OR_GREATER
+            // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
+            // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
+            List<string> arguments = finalArguments;
 #else
-                processStartInfo.ArgumentList.Add(argument);
-#endif
+            // Current target framework (.NET Framework and .NET Standard 2.0) only supports arguments as a single string.
+            // In this case, escaping is essential. For example, one of the arguments could already contain spaces.
+            // PasteArguments is borrowed from dotnet/runtime.
+            var builder = new StringBuilder();
+            foreach (string arg in finalArguments)
+            {
+                PasteArguments.AppendArgument(builder, arg);
             }
+
+            string arguments = builder.ToString();
+#endif
+
+            // Prepare the process start
+            ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments)
+            {
+                UseShellExecute = false,
+            };
 
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
@@ -298,7 +308,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 
-        string[] filesToMove = Directory.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
+        string[] filesToMove = _fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
         if (filesToMove.Length > 0)
         {
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles)).ConfigureAwait(false);
@@ -309,14 +319,14 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                 string finalFileLocation = file.Replace(currentTryResultFolder, resultDirectory);
 
                 // Create the directory if missing
-                Directory.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
+                fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation))).ConfigureAwait(false);
 #if NETCOREAPP
-                File.Move(file, finalFileLocation, overwrite: true);
+                fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
 #else
-                File.Copy(file, finalFileLocation, overwrite: true);
-                File.Delete(file);
+                fileSystem.CopyFile(file, finalFileLocation, overwrite: true);
+                fileSystem.DeleteFile(file);
 #endif
             }
         }

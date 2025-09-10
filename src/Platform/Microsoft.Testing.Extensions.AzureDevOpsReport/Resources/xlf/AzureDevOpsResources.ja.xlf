@@ -29,8 +29,8 @@
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="translated">報告されたイベントに使用する重大度。オプションは、エラー (既定) と警告です。</target>
-        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+        <target state="translated">報告されたイベントに使用する重大度。オプションは、error (既定) と warning です。</target>
+        <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
     </body>
   </file>

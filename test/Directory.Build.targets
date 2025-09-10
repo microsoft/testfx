@@ -3,31 +3,33 @@
 
   <Import Project="../Directory.Build.targets" />
 
-  <PropertyGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
-    <UseMSTest Condition=" '$(UseMSTest)' == '' ">true</UseMSTest>
+  <PropertyGroup>
     <GenerateProgramFile>false</GenerateProgramFile>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
     <Architecture Condition=" '$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu' ">x64</Architecture>
     <ModuleName>$(MSBuildProjectName)_$(TargetFramework)_$(Configuration)_$(Architecture)</ModuleName>
 
-    <!-- Arcade runner settings -->
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-output-fileprefix $(ModuleName) --diagnostic-verbosity trace</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestRunnerAdditionalArguments) --crashdump</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --hangdump --hangdump-timeout 15m</TestRunnerAdditionalArguments>
-    <TestRunnerAdditionalArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestRunnerAdditionalArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestRunnerAdditionalArguments>
-    <!-- /Arcade runner settings -->
+    <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
 
-    <!-- dotnet test runner settings - most duplicate from Arcade to have parity -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-output-fileprefix $(ModuleName) --diagnostic-verbosity trace</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UsingDotNetTest)'=='true'">
+    <!-- By default, Arcade already adds report-trx, report-trx-filename, and results-directory -->
+    <!-- However, when we run with dotnet test, we need to add these options, but still don't duplicate them on Arcade -->
+    <!-- So we detect when running with dotnet test and only add them there. That's unfortunate because any invocation of dotnet test will need to be done with -p:UsingDotNetTest=true -->
+    <!-- An alternative is that we always add those options here, and introduce a property in Arcade so that Arcade doesn't add the options again -->
+
+    <!-- This usage is bad. See https://github.com/dotnet/arcade/issues/16003 -->
     <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
     <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
-
-    <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
-    <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
-    <_TestResultTrxFileName>$([System.IO.Path]::GetFileName('$(ResultsTrxPath)'))</_TestResultTrxFileName>
-    <_TestResultDirectory>$([System.IO.Path]::GetDirectoryName('$(ResultsTrxPath)'))</_TestResultDirectory>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" --report-azdo $(TestRunnerAdditionalArguments)</TestingPlatformCommandLineArguments>
-    <!-- /dotnet test runner settings -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).trx --results-directory $(ArtifactsTestResultsDir)</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
@@ -47,7 +49,6 @@
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.targets" Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' " />
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true' AND '$(UseMSTestFromSource)' != 'true' ">
-    <PackageReference Include="MSTest.Analyzers" />
     <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="MSTest.TestAdapter" />
   </ItemGroup>
@@ -57,8 +58,7 @@
     <Using Include="Microsoft.Testing.Platform.Extensions" />
     <Using Include="Microsoft.Testing.TestInfrastructure"
            Condition="'$(UseInternalTestFramework)' != 'true'" />
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting"
-           Condition="'$(UseMSTest)' == 'true'" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">

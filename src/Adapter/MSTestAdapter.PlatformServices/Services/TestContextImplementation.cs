@@ -25,14 +25,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #else
 [Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
-public class TestContextImplementation : TestContext, ITestContext, IDisposable
+public sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
-    private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
+    internal sealed class SynchronizedStringBuilder
+    {
+        private readonly StringBuilder _builder = new();
 
-    /// <summary>
-    /// List of result files associated with the test.
-    /// </summary>
-    private readonly List<string> _testResultFiles;
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(char value)
+            => _builder.Append(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(string? value)
+            => _builder.Append(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(char[] buffer, int index, int count)
+            => _builder.Append(buffer, index, count);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void AppendLine(string? value)
+            => _builder.AppendLine(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Clear()
+            => _builder.Clear();
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public override string ToString()
+            => _builder.ToString();
+    }
+
+    private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     // This should be removed. Don't rely on it.
     // We only keep it for public constructor, but we don't pass it by the adapter.
@@ -43,14 +67,18 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
-    private readonly CancellationTokenRegistration? _cancellationTokenRegistration;
 
-    private StringBuilder? _stdOutStringBuilder;
-    private StringBuilder? _stdErrStringBuilder;
-    private StringBuilder? _traceStringBuilder;
-    private StringBuilder? _testContextMessageStringBuilder;
+    private CancellationTokenRegistration? _cancellationTokenRegistration;
 
-    private bool _isDisposed;
+    /// <summary>
+    /// List of result files associated with the test.
+    /// </summary>
+    private List<string>? _testResultFiles;
+
+    private SynchronizedStringBuilder? _stdOutStringBuilder;
+    private SynchronizedStringBuilder? _stdErrStringBuilder;
+    private SynchronizedStringBuilder? _traceStringBuilder;
+    private SynchronizedStringBuilder? _testContextMessageStringBuilder;
 
     /// <summary>
     /// Unit test outcome.
@@ -97,17 +125,23 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
         DebugEx.Assert(properties != null, "properties is not null");
 
         _stringWriter = stringWriter;
-        _properties = testMethod is null
-            ? new Dictionary<string, object?>(properties)
-            : new Dictionary<string, object?>(properties)
+        if (testMethod is null)
+        {
+            _properties = new Dictionary<string, object?>(properties);
+        }
+        else
+        {
+            _properties = new Dictionary<string, object?>(properties.Count + 4);
+            foreach (KeyValuePair<string, object?> kvp in properties)
             {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
-            };
+                _properties[kvp.Key] = kvp.Value;
+            }
 
-        _testResultFiles = [];
+            _properties[FullyQualifiedTestClassNameLabel] = testMethod.FullClassName;
+            _properties[ManagedTypeLabel] = testMethod.ManagedTypeName;
+            _properties[ManagedMethodLabel] = testMethod.ManagedMethodName;
+            _properties[TestNameLabel] = testMethod.Name;
+        }
     }
 
     internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
@@ -172,7 +206,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
-        _testResultFiles.Add(Path.GetFullPath(fileName));
+        (_testResultFiles ??= []).Add(Path.GetFullPath(fileName));
     }
 
     /// <summary>
@@ -296,7 +330,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-        if (_testResultFiles.Count == 0)
+        if (_testResultFiles is null || _testResultFiles.Count == 0)
         {
             return null;
         }
@@ -337,25 +371,8 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// The dispose pattern.
-    /// </summary>
-    /// <param name="disposing">Whether to dispose managed state.</param>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_isDisposed)
-        {
-            _isDisposed = true;
-
-            if (disposing)
-            {
-                _cancellationTokenRegistration?.Dispose();
-            }
-        }
+        _cancellationTokenRegistration?.Dispose();
+        _cancellationTokenRegistration = null;
     }
 
     internal readonly struct ScopedTestContextSetter : IDisposable
@@ -394,25 +411,25 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
     internal void WriteTrace(string? value)
         => GetTraceStringBuilder().Append(value);
 
-    private StringBuilder GetOutStringBuilder()
+    private SynchronizedStringBuilder GetOutStringBuilder()
     {
-        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new StringBuilder(), null)!;
+        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _stdOutStringBuilder;
     }
 
-    private StringBuilder GetErrStringBuilder()
+    private SynchronizedStringBuilder GetErrStringBuilder()
     {
-        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new StringBuilder(), null)!;
+        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _stdErrStringBuilder;
     }
 
-    private StringBuilder GetTraceStringBuilder()
+    private SynchronizedStringBuilder GetTraceStringBuilder()
     {
-        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new StringBuilder(), null)!;
+        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _traceStringBuilder;
     }
 
-    private StringBuilder GetTestContextMessagesStringBuilder()
+    private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
     {
         // Prefer writing to the current test context instead of 'this'.
         // This is just a hack to preserve backward compatibility.
@@ -420,7 +437,7 @@ public class TestContextImplementation : TestContext, ITestContext, IDisposable
         // Then, they write to the "wrong" test context.
         // Here, we are correcting user's fault by finding out the correct TestContext that should receive the message.
         TestContextImplementation @this = CurrentTestContext ?? this;
-        _ = @this._testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref @this._testContextMessageStringBuilder, new StringBuilder(), null)!;
+        _ = @this._testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref @this._testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
         return @this._testContextMessageStringBuilder;
     }
 

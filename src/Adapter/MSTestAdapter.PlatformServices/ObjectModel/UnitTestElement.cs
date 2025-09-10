@@ -62,6 +62,7 @@ internal sealed class UnitTestElement
     /// <summary>
     /// Gets or sets the DisplayName.
     /// </summary>
+    // TODO: Remove this property and simply use TestMethod.DisplayName
     public string? DisplayName { get; set; }
 
     /// <summary>
@@ -104,13 +105,14 @@ internal sealed class UnitTestElement
     {
         // This causes compatibility problems with older runners.
         // string testFullName = this.TestMethod.HasManagedMethodAndTypeProperties
-        //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
-        //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
-        string testFullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
+        //     ? $"{TestMethod.ManagedTypeName}.{TestMethod.ManagedMethodName}"
+        //     : $"{TestMethod.FullClassName}.{TestMethod.Name}";
+        string testFullName = $"{TestMethod.FullClassName}.{TestMethod.Name}";
 
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, TestMethod.AssemblyName)
         {
             DisplayName = GetDisplayName(),
+            LocalExtensionData = this,
         };
 
         if (TestMethod.HasManagedMethodAndTypeProperties)
@@ -161,11 +163,6 @@ internal sealed class UnitTestElement
         if (!StringEx.IsNullOrEmpty(CssProjectStructure))
         {
             testCase.SetPropertyValue(EngineConstants.CssProjectStructureProperty, CssProjectStructure);
-        }
-
-        if (!StringEx.IsNullOrEmpty(Description))
-        {
-            testCase.SetPropertyValue(EngineConstants.DescriptionProperty, Description);
         }
 
         if (WorkItemIds != null)

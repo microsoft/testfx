@@ -28,14 +28,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--retry-failed-tests 3 --results-directory {resultDirectory}",
+            $"--retry-failed-tests 3 --results-directory {resultDirectory} --report-trx",
             new()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
                 { "METHOD1", "1" },
                 { "FAIL", failOnly ? "1" : "0" },
                 { "RESULTDIR", resultDirectory },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         if (!failOnly)
         {
@@ -43,6 +44,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
+
+            string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
+            Assert.HasCount(2, trxFiles);
+            string trxContents1 = File.ReadAllText(trxFiles[0]);
+            string trxContents2 = File.ReadAllText(trxFiles[1]);
+            Assert.AreNotEqual(trxContents1, trxContents2);
+            string id1 = Regex.Match(trxContents1, "<TestRun id=\"(.+?)\"").Groups[1].Value;
+            string id2 = Regex.Match(trxContents2, "<TestRun id=\"(.+?)\"").Groups[1].Value;
+            Assert.AreEqual(id1, id2);
         }
         else
         {
@@ -71,12 +81,13 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "RESULTDIR", resultDirectory },
                 { "METHOD1", "1" },
                 { fail ? "METHOD2" : "UNUSED", "1" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         string retriesPath = Path.Combine(resultDirectory, "Retries");
         Assert.IsTrue(Directory.Exists(retriesPath));
         string[] retriesDirectories = Directory.GetDirectories(retriesPath);
-        Assert.AreEqual(1, retriesDirectories.Length);
+        Assert.HasCount(1, retriesDirectories);
         string createdDirName = Path.GetFileName(retriesDirectories[0]);
 
         // Asserts that we are not using long names, to reduce long path issues.
@@ -113,7 +124,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 { "RESULTDIR", resultDirectory },
                 { "METHOD1", "1" },
                 { fail ? "METHOD2" : "UNUSED", "1" },
-            });
+            }, cancellationToken: TestContext.CancellationToken);
 
         if (fail)
         {
@@ -154,7 +165,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                         { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
                         { "RESULTDIR", resultDirectory },
                         { "CRASH", "1" },
-                    });
+                    },
+                    cancellationToken: TestContext.CancellationToken);
 
                 testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
@@ -186,13 +198,13 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"test \"{AssetFixture.TargetAssetPath}\" -- --retry-failed-tests 1 --results-directory \"{resultDirectory}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            workingDirectory: AssetFixture.TargetAssetPath);
+            workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(ExitCodes.Success, result.ExitCode);
+        result.AssertExitCodeIs(ExitCodes.Success);
 
         // File names are on the form: RetryFailedTests_tfm_architecture.log
         string[] logFilesFromInvokeTestingPlatformTask = Directory.GetFiles(resultDirectory, "RetryFailedTests_*_*.log");
-        Assert.AreEqual(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask.Length);
+        Assert.HasCount(TargetFrameworks.All.Length, logFilesFromInvokeTestingPlatformTask);
         foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
         {
             string logFileContents = File.ReadAllText(logFile);
@@ -404,4 +416,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

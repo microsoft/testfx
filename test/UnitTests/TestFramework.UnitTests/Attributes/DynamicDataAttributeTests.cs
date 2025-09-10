@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Resources;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
@@ -23,8 +27,9 @@ public class DynamicDataAttributeTests : TestContainer
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
     {
         _dynamicDataAttribute = new DynamicDataAttribute("ABC");
-        InvalidOperationException ex = VerifyThrows<InvalidOperationException>(() => _dynamicDataAttribute.GetData(_testMethodInfo));
-        Verify(ex.Message == string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType!.FullName));
+        Action action = () => _dynamicDataAttribute.GetData(_testMethodInfo);
+        action.Should().Throw<InvalidOperationException>()
+            .And.Message.Should().Be(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType!.FullName));
     }
 
     public void GetDataShouldReadDataFromProperty()
@@ -32,8 +37,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
     }
 
     public void GetDataShouldReadDataFromPropertyInDifferentClass()
@@ -41,8 +46,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
     }
 
     public void GetDataShouldReadDataFromMethod()
@@ -50,8 +55,8 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
     }
 
     public void GetDataShouldReadDataFromMethodInDifferentClass()
@@ -59,17 +64,20 @@ public class DynamicDataAttributeTests : TestContainer
         MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
-        Verify(data is not null);
-        Verify(data.ToList().Count == 2);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
     }
 
-    public void GetDataShouldThrowExceptionIfPropertyReturnsNull() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
+    {
+        Action action = () =>
         {
             MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod4")!;
             _dynamicDataAttribute = new DynamicDataAttribute("NullProperty", typeof(DummyTestClass));
             _dynamicDataAttribute.GetData(methodInfo);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
     public void GetDataShouldNotThrowExceptionIfPropertyReturnsEmpty()
     {
@@ -78,23 +86,26 @@ public class DynamicDataAttributeTests : TestContainer
         IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
         // The callers in AssemblyEnumerator and TestMethodRunner are responsible
         // for throwing an exception if data is empty and ConsiderEmptyDataSourceAsInconclusive is false.
-        Verify(!data.Any());
+        data.Should().BeEmpty();
     }
 
-    public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
+    {
+        Action action = () =>
         {
             MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod3")!;
             _dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeProperty", typeof(DummyTestClass));
             _dynamicDataAttribute.GetData(methodInfo);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
     public void GetDisplayNameShouldReturnDisplayName()
     {
         object[] data = [1, 2, 3];
 
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify("TestMethod1 (1,2,3)".SequenceEqual(displayName!));
+        displayName.Should().Be("TestMethod1 (1,2,3)");
     }
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayName()
@@ -103,7 +114,7 @@ public class DynamicDataAttributeTests : TestContainer
 
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
+        displayName.Should().Be("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
     }
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayNameInDifferentClass()
@@ -113,76 +124,97 @@ public class DynamicDataAttributeTests : TestContainer
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
         _dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
+        displayName.Should().Be("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters");
     }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
-    public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod() =>
-        VerifyThrows<ArgumentNullException>(() =>
+    public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
+    {
+        Action action = () =>
         {
             object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        });
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
 
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, null);
-        Verify(displayName is null);
+        displayName.Should().BeNull();
     }
 
     public void GetDisplayNameHandlesNullValues()
@@ -192,43 +224,43 @@ public class DynamicDataAttributeTests : TestContainer
         string?[] data2 = ["value1", null, "value2"];
 
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Verify(displayName == "TestMethod1 (\"value1\",\"value2\",null)");
+        displayName.Should().Be("TestMethod1 (\"value1\",\"value2\",null)");
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data1);
-        Verify(displayName == "TestMethod1 (null,\"value1\",\"value2\")");
+        displayName.Should().Be("TestMethod1 (null,\"value1\",\"value2\")");
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data2);
-        Verify(displayName == "TestMethod1 (\"value1\",null,\"value2\")");
+        displayName.Should().Be("TestMethod1 (\"value1\",null,\"value2\")");
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a", "b", "c" }]);
-        Verify(displayName == "TestMethod1 ([\"a\",\"b\",\"c\"])");
+        displayName.Should().Be("TestMethod1 ([\"a\",\"b\",\"c\"])");
     }
 
     public void GetDisplayNameForMultipleArraysOfOneItem()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a" }, new[] { "1" }]);
-        Verify(displayName == "TestMethod1 ([\"a\"],[\"1\"])");
+        displayName.Should().Be("TestMethod1 ([\"a\"],[\"1\"])");
     }
 
     public void GetDisplayNameForMultipleArraysOfMultipleItems()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { "a", "b", "c" }, new[] { "1", "2", "3" }]);
-        Verify(displayName == "TestMethod1 ([\"a\",\"b\",\"c\"],[\"1\",\"2\",\"3\"])");
+        displayName.Should().Be("TestMethod1 ([\"a\",\"b\",\"c\"],[\"1\",\"2\",\"3\"])");
     }
 
     public void GetDisplayNameForMultipleArraysOfMultipleItemsValueTypes()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { 1, 2, 3 }, new[] { 4, 5, 6 }]);
-        Verify(displayName == "TestMethod1 ([1,2,3],[4,5,6])");
+        displayName.Should().Be("TestMethod1 ([1,2,3],[4,5,6])");
     }
 
     public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
     {
         string? displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, [new[] { ["a", "b", "c"], ["d", "e", "f"], new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { ["1", "2", "3"], ["4", "5", "6"], new[] { "7", "8", "9" } }]);
-        Verify(displayName == "TestMethod1 ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
+        displayName.Should().Be("TestMethod1 ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
     }
 
     public void DynamicDataSource_WithTuple_Works()
@@ -261,10 +293,81 @@ public class DynamicDataAttributeTests : TestContainer
         dynamicDataAttribute.GetData(testMethodInfo);
     }
 
+    public void GetDataShouldReadDataFromField()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataField", DynamicDataSourceType.Field);
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
+    }
+
+    public void GetDataShouldReadDataFromFieldInDifferentClass()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataField2", typeof(DummyTestClass2), DynamicDataSourceType.Field);
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
+    }
+
+    public void GetDataShouldReadDataFromFieldInAutoDetectMode()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataField");
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        data.Should().NotBeNull();
+        data.ToList().Should().HaveCount(2);
+    }
+
+    public void GetDataShouldThrowExceptionIfFieldReturnsNull()
+    {
+        Action action = () =>
+        {
+            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+            _dynamicDataAttribute = new DynamicDataAttribute("NullField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+            _dynamicDataAttribute.GetData(methodInfo);
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
+
+    public void GetDataShouldNotThrowExceptionIfFieldReturnsEmpty()
+    {
+        MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+        _dynamicDataAttribute = new DynamicDataAttribute("EmptyField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+        IEnumerable<object[]> data = _dynamicDataAttribute.GetData(methodInfo);
+        // The callers in AssemblyEnumerator and TestMethodRunner are responsible
+        // for throwing an exception if data is empty and ConsiderEmptyDataSourceAsInconclusive is false.
+        data.Should().BeEmpty();
+    }
+
+    public void GetDataShouldThrowExceptionIfFieldDoesNotReturnCorrectType()
+    {
+        Action action = () =>
+        {
+            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+            _dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+            _dynamicDataAttribute.GetData(methodInfo);
+        };
+        action.Should().Throw<ArgumentNullException>();
+    }
+
+    public void GetDataShouldThrowExceptionIfFieldIsNotStatic()
+    {
+        Action action = () =>
+        {
+            MethodInfo methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
+            _dynamicDataAttribute = new DynamicDataAttribute("NonStaticField", typeof(DummyTestClass), DynamicDataSourceType.Field);
+            _dynamicDataAttribute.GetData(methodInfo);
+        };
+        action.Should().Throw<NotSupportedException>();
+    }
+
     /// <summary>
     /// The dummy test class.
     /// </summary>
     [TestClass]
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "Test use case")]
     internal class DummyTestClass
     {
         /// <summary>
@@ -287,6 +390,32 @@ public class DynamicDataAttributeTests : TestContainer
         /// expected data type of <see cref="IEnumerable{T}"/>.
         /// </summary>
         public static string WrongDataTypeProperty => "Dummy";
+
+        /// <summary>
+        /// The reusable test data field.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataField = [[1, 2, 3], [4, 5, 6]];
+
+        /// <summary>
+        /// The null test data field.
+        /// </summary>
+        public static IEnumerable<object[]> NullField = null!;
+
+        /// <summary>
+        /// The empty test data field.
+        /// </summary>
+        public static IEnumerable<object[]> EmptyField = [];
+
+        /// <summary>
+        /// The wrong test data field i.e. Field returning something other than
+        /// expected data type of <see cref="IEnumerable{T}"/>.
+        /// </summary>
+        public static string WrongDataTypeField = "Dummy";
+
+        /// <summary>
+        /// Non-static field that should cause an error.
+        /// </summary>
+        public IEnumerable<object[]> NonStaticField = [[1, 2, 3]];
 
         /// <summary>
         /// The reusable test data method.
@@ -438,6 +567,8 @@ public class DynamicDataAttributeTests : TestContainer
         private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
     }
 
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1401:Fields should be private", Justification = "For testing the use case")]
+    [SuppressMessage("Usage", "CA2211:Non-constant fields should not be visible", Justification = "For testing the use case")]
     public class DummyTestClass2
     {
         /// <summary>
@@ -452,6 +583,11 @@ public class DynamicDataAttributeTests : TestContainer
         /// The <see cref="IEnumerable"/>.
         /// </returns>
         public static IEnumerable<object[]> ReusableTestDataMethod2() => [[1, 2, 3], [4, 5, 6]];
+
+        /// <summary>
+        /// The reusable test data field.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataField2 = [[1, 2, 3], [4, 5, 6]];
 
         /// <summary>
         /// The custom display name method.

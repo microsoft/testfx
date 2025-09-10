@@ -102,12 +102,15 @@ num1,num2,expectedSum
         await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -c Release",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            retryCount: 0);
+            retryCount: 0,
+            cancellationToken: TestContext.CancellationToken);
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "DataSourceTests", "net472");
 
-        TestHostResult result = await testHost.ExecuteAsync();
+        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         result.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
     }
+
+    public TestContext TestContext { get; set; }
 }

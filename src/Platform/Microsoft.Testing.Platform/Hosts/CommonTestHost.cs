@@ -14,7 +14,11 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestHost
+/// <summary>
+/// This represents either a test host (console or server), or a test host controller.
+/// This doesn't represent an orchestrator host.
+/// </summary>
+internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 {
     public ServiceProvider ServiceProvider => serviceProvider;
 
@@ -45,7 +49,6 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
             {
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
-                ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(GetHostType()).ConfigureAwait(false);
 
                 exitCode = isValidProtocol
@@ -86,7 +89,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
     private string GetHostType()
     {
-        // For now, we don't  inherit TestHostOrchestratorHost from CommonTestHost one so we don't connect when we orchestrate
+        // For now, we don't  inherit TestHostOrchestratorHost from CommonHost one so we don't connect when we orchestrate
         string hostType = this switch
         {
             ConsoleTestHost => "TestHost",

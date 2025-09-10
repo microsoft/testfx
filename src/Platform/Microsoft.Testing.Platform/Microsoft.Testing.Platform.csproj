@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <ItemGroup>
@@ -75,10 +76,6 @@ This package provides the core platform and the .NET implementation of the proto
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\PlatformResources.resx" GenerateSource="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->
     <!-- See https://github.com/dotnet/sdk/blob/cb459ebc2d9374b2bc5ce944cc633a6e79ed8275/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.SupportedPlatforms.props -->
     <SupportedPlatform Include="android" />
@@ -88,26 +85,9 @@ This package provides the core platform and the .NET implementation of the proto
     <SupportedPlatform Include="wasi" />
   </ItemGroup>
 
-  <!-- Version templating -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
-  <Target Name="GeneratePlatformVersionSourceFile" AfterTargets="PrepareForBuild">
-    <PropertyGroup>
-      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
-    </PropertyGroup>
-    <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/PlatformVersion.cs.template" Destination="$(IntermediateOutputPath)/PlatformVersion.cs" />
-    </ItemGroup>
-    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
-      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
-    </GenerateFileFromTemplate>
-
-    <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)/PlatformVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <!-- NuGet package layout -->
   <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->

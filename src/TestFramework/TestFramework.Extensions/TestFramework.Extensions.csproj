@@ -88,6 +88,7 @@
 
   <ItemGroup>
     <Using Include="Polyfills" />
+    <Using Include="$(RootNamespace).Resources" />
   </ItemGroup>
 
   <ItemGroup>

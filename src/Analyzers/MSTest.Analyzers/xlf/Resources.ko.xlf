@@ -132,6 +132,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">값 형식에 'Assert.AreSame' 또는 'Assert.AreNotSame'을 사용하지 마세요.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="translated">'{0}'을(를) string.Format이나 문자열 보간을 사용하는 포맷 매개변수로 변경하기</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="translated">형식 매개 변수를 사용하여 Assert 메서드는 사용하지 마세요</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">예상되는 호출만 예상되는 예외를 던지도록 하기 위해 '[ExpectedException]보다 'Assert.ThrowsExactly' 또는 'Assert.ThrowsExactlyAsync'를 사용하는 것이 좋습니다. 또한 어설션 API는 더 많은 유연성을 제공하고 예외의 추가 속성을 어설션할 수 있습니다.</target>
@@ -145,6 +155,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
         <target state="translated">'[ExpectedException]' 사용 지양</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
+        <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
+        <target state="translated">기본 자동 검색 동작을 사용하려면 'DynamicDataSourceType' 인수를 제거합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
+        <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
+        <target state="translated">명시적 'DynamicDataSourceType'을 전달하지 말고 기본 자동 검색 동작을 사용합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
@@ -277,8 +297,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">DataRow 인수 형식은 메서드 매개 변수 형식과 일치해야 합니다. 인덱스에서 불일치 발생: {0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="translated">DataRow 인수 형식이 메서드 매개 변수 형식과 일치하지 않습니다. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="translated">'{0}' 매개 변수에는 '{1}' 형식이 필요한데 제공된 값의 형식은 '{2}'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -402,9 +427,19 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'[DynamicData]'는 테스트 메서드에서만 설정해야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
+        <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">'[DynamicData]' 구성원 '{0}.{1}'은(는) 필드이므로 'DynamicDataSourceType.AutoDetect' 또는 'DynamicDataSourceType.Field'를 사용해야 합니다(명시적으로 지정하지 않은 경우 자동 검색이 기본값이며 권장됨).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' 멤버 '{0}.{1}'은(는) 'DynamicDataSourceType.AutoDetect' 또는 'DynamicDataSourceType.Method'를 사용해야 하는 메서드입니다.(명시적으로 지정하지 않은 경우 자동 검색이 기본값이며 권장)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
+        <target state="translated">'[DynamicData]' 구성원 '{0}.{1}'은(는) 속성, 메서드 또는 필드가 아닙니다. 속성, 메서드 및 필드만 지원됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
@@ -425,6 +460,81 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
         <target state="translated">DynamicData는 유효해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenDescription">
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">CancellationToken 매개변수를 허용하는 오버로드가 있는 비동기 메서드를 호출할 때는 협력적 취소를 활성화하고 테스트 시간 제한을 준수하기 위해 TestContext.CancellationToken이 있는 오버로드를 사용하는 것이 좋습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="translated">CancellationToken을 수락하고 'TestContext.CancellationToken'을 전달하는 오버로드를 사용하는 것이 좋습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenTitle">
+        <source>Flow TestContext.CancellationToken to async operations</source>
+        <target state="translated">비동기 작업으로 TestContext.CancellationToken 흐름</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
+        <source>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">'[GlobalTestInitialize]' 또는 '[GlobalTestCleanup]'으로 표시된 메서드는 다음 레이아웃을 따라야 유효합니다.
+- 제네릭 클래스에서 선언할 수 없습니다.
+- 'public'이어야 합니다. 
+- 'static'이어야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 'TestContext' 형식의 매개 변수를 하나 사용해야 합니다.
+- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
+
+이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
+- 형식은 클래스여야 합니다.
+-클래스는 'public'이어야 합니다.
+- 클래스는 'static'이 되어서는 안 됩니다.
+- 클래스는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+- 클래스는 제네릭이 아니어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
+        <source>Global test fixture method '{0}' signature is invalid</source>
+        <target state="translated">전역 테스트 fixture 메서드 '{0}' 시그니처가 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
+        <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
+        <target state="translated">GlobalTestInitialize 및 GlobalTestCleanup 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueDescription">
+        <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
+        <target state="translated">Contains, StartsWith 및 EndsWith와 같은 메서드는 조건이 충족되었는지 여부를 나타내는 부울 값을 반환합니다. 이 반환 값을 무시하는 것은 아마 실수일 것입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
+        <source>The return value of '{0}' should not be ignored</source>
+        <target state="translated">'{0}'의 반환 값은 무시하면 안 됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueTitle">
+        <source>Do not ignore the return value of string methods</source>
+        <target state="translated">문자열 메서드의 반환 값을 무시하지 마세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -532,6 +642,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">공용 형식은 테스트 클래스여야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="translated">'StringAssert.{1}' 대신 'Assert.{0}' 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="translated">'StringAssert' 대신 'Assert' 사용</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">테스트 클래스 '{0}'은(는) 유효해야 합니다.</target>
@@ -545,6 +665,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">테스트 메서드 '{0}' 시그니처가 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="translated">TestContext.CancellationToken은 TestContext.CancellationTokenSource.Token보다 취소 토큰에 더 직접적으로 액세스할 수 있는 방법을 제공합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">'TestContext.CancellationTokenSource.Token' 대신 'TestContext.CancellationToken' 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="translated">TestContext.CancellationTokenSource.Token 대신 TestContext.CancellationToken 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
@@ -735,13 +870,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
         <target state="translated">'[TestMethod]'를 포함하는 유형은 '[TestClass]'로 표시되어야 합니다. 그렇지 않으면 테스트 메서드가 자동으로 무시됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">'{0}' 클래스에는 테스트 메서드가 포함되어 있으며 '[TestClass]'로 표시되어야 합니다.</target>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="translated">'{0}' 유형에는 테스트 메서드가 포함되어 있으며 '[TestClass]'로 표시되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -757,6 +892,11 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">비동기 테스트 메서드에는 'Async' 접미사가 필요하지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">AssemblyInitialize 및 ClassInitialize 메서드에 대해 MSTest에 의한 TestContext 매개 변수가 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
@@ -781,17 +921,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
         <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="new">Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</target>
+        <target state="translated">'CooperativeCancellation = true'를 명시적으로 설정하지 않고 '[Timeout]'을 사용하는 것은 권장되지 않습니다. 향후 버전에서는 협동 취소가 기본 동작으로 설정될 것입니다. 권장 동작을 선택하고 변경 사항으로 인한 문제를 피하려면 'CooperativeCancellation = true'를 설정하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</target>
+        <target state="translated">'[Timeout]'와 함께 'CooperativeCancellation = true'를 사용하여 협동 취소 동작을 활성화하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="new">Use 'CooperativeCancellation = true' with '[Timeout]'</target>
+        <target state="translated">'[Timeout]'와 함께 'CooperativeCancellation = true'를 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -847,6 +987,36 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">테스트 메서드에 재시도 속성 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="translated">이 컨텍스트에서 TestContext 속성에 액세스할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="translated">'{1}' 메서드에서 TestContext 속성 '{0}'에 액세스할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="translated">일부 TestContext 속성은 테스트 실행 중에만 사용할 수 있으며, 어셈블리 초기화, 클래스 초기화, 클래스 정리 또는 어셈블리 정리 메서드에서는 액세스할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="translated">Assert.Throws 메서드는 단일 문 또는 식만 포함해야 합니다. 여러 문이 있을 경우 혼란을 줄 수 있습니다. 첫 번째 문이 예외를 발생시키면 후속 문은 실행되지 않으며, 예외가 발생하지 않는 경우에는 Assert.Throws 외부로 이동해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="translated">Assert.Throws는 단일 문/식만 포함해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="translated">Assert.Throws는 단일 문/식만 포함해야 합니다.</target>
         <note />
       </trans-unit>
     </body>

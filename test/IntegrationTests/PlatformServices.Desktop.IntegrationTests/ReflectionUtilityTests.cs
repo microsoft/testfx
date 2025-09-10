@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
@@ -263,7 +263,7 @@ public class ReflectionUtilityTests : TestContainer
             }
             else if (attribute is TestCategoryAttribute categoryAttribute)
             {
-                attributeValuePairs.Add("TestCategory : " + categoryAttribute.TestCategories.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("TestCategory : " + categoryAttribute.TestCategories.Aggregate((i, j) => i + ',' + j));
             }
             else if (attribute is DurationAttribute durationAttribute)
             {
@@ -271,7 +271,7 @@ public class ReflectionUtilityTests : TestContainer
             }
             else if (attribute is CategoryArrayAttribute arrayAttribute)
             {
-                attributeValuePairs.Add("CategoryAttribute : " + arrayAttribute.Value.Aggregate((i, j) => i + "," + j));
+                attributeValuePairs.Add("CategoryAttribute : " + arrayAttribute.Value.Aggregate((i, j) => i + ',' + j));
             }
         }
 

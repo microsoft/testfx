@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
@@ -381,26 +382,4 @@ public static class WellKnownEnvironmentVariables
         // Isolate from the skip banner in case of parent, children tests
         "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER"
     ];
-}
-
-public static class RootFinder
-{
-    public static string Find()
-    {
-        string path = AppContext.BaseDirectory;
-        string dir = path;
-        while (Directory.GetDirectoryRoot(dir) != dir)
-        {
-            if (Directory.Exists(Path.Combine(dir, ".git")))
-            {
-                return dir;
-            }
-            else
-            {
-                dir = Directory.GetParent(dir)!.ToString();
-            }
-        }
-
-        throw new InvalidOperationException($"Could not find solution root, .git not found in {path} or any parent directory.");
-    }
 }

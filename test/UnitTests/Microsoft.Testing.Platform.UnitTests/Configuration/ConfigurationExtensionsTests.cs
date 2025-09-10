@@ -42,6 +42,6 @@ public sealed class ConfigurationExtensionsTests
             .Setup(configuration => configuration[key])
             .Returns(value: null);
 
-        Assert.ThrowsException<ArgumentNullException>(() => GetActualValueFromConfiguration(configuration.Object, key));
+        Assert.ThrowsExactly<ArgumentNullException>(() => GetActualValueFromConfiguration(configuration.Object, key));
     }
 }

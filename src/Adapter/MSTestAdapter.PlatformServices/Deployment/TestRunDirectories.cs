@@ -57,7 +57,7 @@ public class TestRunDirectories
     /// </summary>
     public string RootDeploymentDirectory
     {
-        get => field;
+        get;
         // TODO: Remove the setter as a breaking change and simplify the code.
         [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
         set

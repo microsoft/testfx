@@ -41,6 +41,41 @@ namespace MSTest.Analyzers;
 /// <code>Assert.[AreEqual|AreNotEqual](null, x)</code>
 /// </description>
 /// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsTrue(myString.[StartsWith|EndsWith|Contains]("..."))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsFalse(myString.[StartsWith|EndsWith|Contains]("..."))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsTrue(myCollection.Contains(...))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsFalse(myCollection.Contains(...))</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.[IsTrue|IsFalse](x [&gt;|&gt;=|&lt;|&lt;=] y)</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.AreEqual([0|X], myCollection.[Count|Length])</code>
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <code>Assert.IsTrue(myCollection.[Count|Length] [&gt;|!=|==] 0)</code>
+/// </description>
+/// </item>
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
@@ -58,6 +93,36 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         Unknown,
         Equals,
         NotEquals,
+    }
+
+    private enum StringMethodCheckStatus
+    {
+        Unknown,
+        StartsWith,
+        EndsWith,
+        Contains,
+    }
+
+    private enum ComparisonCheckStatus
+    {
+        Unknown,
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+    }
+
+    private enum CollectionCheckStatus
+    {
+        Unknown,
+        Contains,
+    }
+
+    private enum CountCheckStatus
+    {
+        Unknown,
+        IsEmpty,
+        HasCount,
     }
 
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
@@ -84,6 +149,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <para>The value for ProperAssertMethodNameKey is "IsNull".</para>
     /// <para>The first additional location will point to the "x == null" node.</para>
     /// <para>The second additional location will point to the "x" node.</para>
+    /// <para>Optionally, more additional locations will also be interpreted as "replace" operations.</para>
     /// </summary>
     internal const string CodeFixModeSimple = nameof(CodeFixModeSimple);
 
@@ -108,7 +174,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// <list type="number">
     /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
     /// <item>Replace the identifier syntax for the invocation with the right assert method name. The identifier syntax is calculated by the codefix.</item>
-    /// <item>Remove the argument which the second additional locations points to.</item>
+    /// <item>Remove the argument which the first additional location points to.</item>
     /// </list>
     /// <para>Example: For <c>Assert.AreEqual(false, x)</c>, it will become <c>Assert.IsFalse(x)</c>.</para>
     /// <para>The value for ProperAssertMethodNameKey is "IsFalse".</para>
@@ -119,6 +185,22 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// If <see cref="NeedsNullableBooleanCastKey"/> is present, then the produced code will be <c>Assert.IsFalse((bool?)x);</c>.
     /// </remarks>
     internal const string CodeFixModeRemoveArgument = nameof(CodeFixModeRemoveArgument);
+
+    /// <summary>
+    /// This mode means the codefix operation is as follows:
+    /// <list type="number">
+    /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
+    /// <item>Replace the identifier syntax for the invocation with the right assert method name. The identifier syntax is calculated by the codefix.</item>
+    /// <item>Remove the argument which the first additional location points to.</item>
+    /// <item>Replace the argument which the second additional location points to with the expression pointed to by the third additional location</item>
+    /// </list>
+    /// <para>Example: For <c>Assert.AreEqual(0, list.Count)</c>, it will become <c>Assert.IsEmpty(list)</c>.</para>
+    /// <para>The value for ProperAssertMethodNameKey is "IsEmpty".</para>
+    /// <para>The first additional location will point to the "0" node.</para>
+    /// <para>The second additional location will point to the "list.Count" node.</para>
+    /// <para>The third additional location will point to the "list" node.</para>
+    /// </summary>
+    internal const string CodeFixModeRemoveArgumentAndReplaceArgument = nameof(CodeFixModeRemoveArgumentAndReplaceArgument);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseProperAssertMethodsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseProperAssertMethodsMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -147,11 +229,13 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol), OperationKind.Invocation);
+            INamedTypeSymbol objectTypeSymbol = context.Compilation.GetSpecialType(SpecialType.System_Object);
+
+            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
@@ -168,19 +252,19 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (targetMethod.Name)
         {
             case "IsTrue":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol);
                 break;
 
             case "IsFalse":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol);
                 break;
 
             case "AreEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true, objectTypeSymbol);
                 break;
 
             case "AreNotEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol);
                 break;
         }
     }
@@ -325,7 +409,99 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         => type is null ||
             compilation.ClassifyCommonConversion(type, compilation.GetSpecialType(SpecialType.System_Object)).Exists;
 
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation)
+    private static StringMethodCheckStatus RecognizeStringMethodCheck(
+        IOperation operation,
+        out SyntaxNode? stringExpression,
+        out SyntaxNode? substringExpression)
+    {
+        if (operation is IInvocationOperation invocation &&
+            invocation.TargetMethod.ContainingType?.SpecialType == SpecialType.System_String &&
+            invocation.Arguments.Length == 1)
+        {
+            string methodName = invocation.TargetMethod.Name;
+            if (methodName is "StartsWith" or "EndsWith" or "Contains")
+            {
+                stringExpression = invocation.Instance?.Syntax;
+                substringExpression = invocation.Arguments[0].Value.Syntax;
+
+                return methodName switch
+                {
+                    "StartsWith" => StringMethodCheckStatus.StartsWith,
+                    "EndsWith" => StringMethodCheckStatus.EndsWith,
+                    "Contains" => StringMethodCheckStatus.Contains,
+                    _ => StringMethodCheckStatus.Unknown,
+                };
+            }
+        }
+
+        stringExpression = null;
+        substringExpression = null;
+        return StringMethodCheckStatus.Unknown;
+    }
+
+    private static CollectionCheckStatus RecognizeCollectionMethodCheck(
+        IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
+        out SyntaxNode? collectionExpression,
+        out SyntaxNode? itemExpression)
+    {
+        if (operation is IInvocationOperation invocation)
+        {
+            string methodName = invocation.TargetMethod.Name;
+
+            // Check for Collection.Contains(item)
+            if (methodName == "Contains" && invocation.Arguments.Length == 1)
+            {
+                if (IsBCLCollectionType(invocation.TargetMethod.ContainingType, objectTypeSymbol))
+                {
+                    collectionExpression = invocation.Instance?.Syntax;
+                    itemExpression = invocation.Arguments[0].Value.Syntax;
+                    return CollectionCheckStatus.Contains;
+                }
+            }
+        }
+
+        collectionExpression = null;
+        itemExpression = null;
+        return CollectionCheckStatus.Unknown;
+    }
+
+    private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
+        // Check if the type implements IEnumerable<T> (but is not string)
+        // Note: Assert.Contains/IsEmpty/HasCount for collections accept IEnumerable<T>, but not IEnumerable.
+        => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
+            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T) &&
+            // object is coming from BCL and it's expected to always have a public key.
+            type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
+            type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
+
+    private static ComparisonCheckStatus RecognizeComparisonCheck(
+        IOperation operation,
+        out SyntaxNode? leftExpression,
+        out SyntaxNode? rightExpression)
+    {
+        if (operation is IBinaryOperation binaryOperation &&
+            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+        {
+            leftExpression = binaryOperation.LeftOperand.Syntax;
+            rightExpression = binaryOperation.RightOperand.Syntax;
+
+            return binaryOperation.OperatorKind switch
+            {
+                BinaryOperatorKind.GreaterThan => ComparisonCheckStatus.GreaterThan,
+                BinaryOperatorKind.GreaterThanOrEqual => ComparisonCheckStatus.GreaterThanOrEqual,
+                BinaryOperatorKind.LessThan => ComparisonCheckStatus.LessThan,
+                BinaryOperatorKind.LessThanOrEqual => ComparisonCheckStatus.LessThanOrEqual,
+                _ => ComparisonCheckStatus.Unknown,
+            };
+        }
+
+        leftExpression = null;
+        rightExpression = null;
+        return ComparisonCheckStatus.Unknown;
+    }
+
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
@@ -361,6 +537,137 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // Check for string method patterns: myString.StartsWith/EndsWith/Contains(...)
+        StringMethodCheckStatus stringMethodStatus = RecognizeStringMethodCheck(conditionArgument, out SyntaxNode? stringExpr, out SyntaxNode? substringExpr);
+        if (stringMethodStatus != StringMethodCheckStatus.Unknown)
+        {
+            // Handle both IsTrue and IsFalse cases with string methods
+            string properAssertMethod = stringMethodStatus switch
+            {
+                StringMethodCheckStatus.StartsWith => isTrueInvocation ? "StartsWith" : "DoesNotStartWith",
+                StringMethodCheckStatus.EndsWith => isTrueInvocation ? "EndsWith" : "DoesNotEndWith",
+                StringMethodCheckStatus.Contains => isTrueInvocation ? "Contains" : "DoesNotContain",
+                _ => throw new InvalidOperationException("Unexpected StringMethodCheckStatus value."),
+            };
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), substringExpr!.GetLocation(), stringExpr!.GetLocation()),
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
+        // Check for collection method patterns: myCollection.Contains(...)
+        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
+        if (collectionMethodStatus != CollectionCheckStatus.Unknown)
+        {
+            if (collectionMethodStatus == CollectionCheckStatus.Contains)
+            {
+                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), itemExpr!.GetLocation(), collectionExpr!.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    isTrueInvocation ? "IsTrue" : "IsFalse"));
+                return;
+            }
+        }
+
+        // Check for collection emptiness patterns: myCollection.Count > 0, myCollection.Count != 0, or myCollection.Count == 0
+        CountCheckStatus countStatus = RecognizeCountCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? collectionEmptinessExpr);
+        if (countStatus != CountCheckStatus.Unknown)
+        {
+            string properAssertMethod = countStatus switch
+            {
+                CountCheckStatus.IsEmpty => isTrueInvocation ? "IsEmpty" : "IsNotEmpty",
+                CountCheckStatus.HasCount => isTrueInvocation ? "IsNotEmpty" : "IsEmpty",
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeSimple);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), collectionEmptinessExpr!.GetLocation()),
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
+        // Check for comparison patterns: a > b, a >= b, a < b, a <= b
+        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        if (comparisonStatus != ComparisonCheckStatus.Unknown)
+        {
+            string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
+            {
+                (true, ComparisonCheckStatus.GreaterThan) => "IsGreaterThan",
+                (true, ComparisonCheckStatus.GreaterThanOrEqual) => "IsGreaterThanOrEqualTo",
+                (true, ComparisonCheckStatus.LessThan) => "IsLessThan",
+                (true, ComparisonCheckStatus.LessThanOrEqual) => "IsLessThanOrEqualTo",
+                (false, ComparisonCheckStatus.GreaterThan) => "IsLessThanOrEqualTo",
+                (false, ComparisonCheckStatus.GreaterThanOrEqual) => "IsLessThan",
+                (false, ComparisonCheckStatus.LessThan) => "IsGreaterThanOrEqualTo",
+                (false, ComparisonCheckStatus.LessThanOrEqual) => "IsGreaterThan",
+                _ => throw new InvalidOperationException("Unexpected ComparisonCheckStatus value."),
+            };
+
+            // For Assert.IsGreaterThan, IsLessThan etc., the method signature is (lowerBound, value) or (upperBound, value)
+            // So for a > b -> Assert.IsGreaterThan(b, a) where b is the lower bound and a is the value
+            // For a < b -> Assert.IsLessThan(b, a) where b is the upper bound and a is the value
+            SyntaxNode? firstArg, secondArg;
+            switch ((isTrueInvocation, comparisonStatus))
+            {
+                // a > b -> IsGreaterThan(b, a)
+                case (true, ComparisonCheckStatus.GreaterThan):
+                // a >= b -> IsGreaterThanOrEqualTo(b, a)
+                case (true, ComparisonCheckStatus.GreaterThanOrEqual):
+                // !(a < b) -> IsGreaterThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.LessThan):
+                // !(a <= b) -> IsGreaterThan(b, a)
+                case (false, ComparisonCheckStatus.LessThanOrEqual):
+                    firstArg = rightExpr;  // b becomes first arg (lower bound)
+                    secondArg = leftExpr;  // a becomes second arg (value)
+                    break;
+                // a < b -> IsLessThan(b, a)
+                case (true, ComparisonCheckStatus.LessThan):
+                // a <= b -> IsLessThanOrEqualTo(b, a)
+                case (true, ComparisonCheckStatus.LessThanOrEqual):
+                // !(a > b) -> IsLessThanOrEqualTo(b, a)
+                case (false, ComparisonCheckStatus.GreaterThan):
+                // !(a >= b) -> IsLessThan(b, a)
+                case (false, ComparisonCheckStatus.GreaterThanOrEqual):
+                    firstArg = rightExpr;  // b becomes first arg (upper bound)
+                    secondArg = leftExpr;  // a becomes second arg (value)
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Unexpected comparison case.");
+            }
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: ImmutableArray.Create(conditionArgument.Syntax.GetLocation(), firstArg!.GetLocation(), secondArg!.GetLocation()),
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isTrueInvocation ? "IsTrue" : "IsFalse"));
+            return;
+        }
+
         EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual, out ITypeSymbol? leftType, out ITypeSymbol? rightType);
         if (equalityCheckStatus != EqualityCheckStatus.Unknown &&
             CanUseTypeAsObject(context.Compilation, leftType) &&
@@ -390,8 +697,68 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation)
+    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol)
     {
+        // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
+        if (isAreEqualInvocation)
+        {
+            if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue))
+            {
+                // Check if we're comparing a count/length property
+                CountCheckStatus countStatus = RecognizeCountCheck(
+                    expectedArgument,
+                    actualArgumentValue,
+                    objectTypeSymbol,
+                    out SyntaxNode? nodeToBeReplaced1,
+                    out SyntaxNode? replacement1,
+                    out SyntaxNode? nodeToBeReplaced2,
+                    out SyntaxNode? replacement2);
+
+                if (countStatus != CountCheckStatus.Unknown)
+                {
+                    if (nodeToBeReplaced1 is null || replacement1 is null)
+                    {
+                        throw ApplicationStateGuard.Unreachable();
+                    }
+
+                    string properAssertMethod = countStatus == CountCheckStatus.IsEmpty ? "IsEmpty" : "HasCount";
+
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+
+                    if (nodeToBeReplaced2 is not null && replacement2 is null)
+                    {
+                        // Here we suggest Assert.IsEmpty(collection)
+                        properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentAndReplaceArgument);
+                        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                            Rule,
+                            additionalLocations: ImmutableArray.Create(
+                                nodeToBeReplaced2.GetLocation(),
+                                nodeToBeReplaced1.GetLocation(),
+                                replacement1.GetLocation()),
+                            properties: properties.ToImmutable(),
+                            properAssertMethod,
+                            "AreEqual"));
+                    }
+                    else
+                    {
+                        // Here we suggest Assert.HasCount(expectedCount, collection)
+                        properties.Add(CodeFixModeKey, CodeFixModeSimple);
+                        context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                            Rule,
+                            additionalLocations: nodeToBeReplaced2 is not null && replacement2 is not null
+                                ? ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation(), nodeToBeReplaced2.GetLocation(), replacement2.GetLocation())
+                                : ImmutableArray.Create(nodeToBeReplaced1.GetLocation(), replacement1.GetLocation()),
+                            properties: properties.ToImmutable(),
+                            properAssertMethod,
+                            "AreEqual"));
+                    }
+
+                    return;
+                }
+            }
+        }
+
         // Don't flag a warning for Assert.AreNotEqual([true|false], x).
         // This is not the same as Assert.IsFalse(x).
         if (isAreEqualInvocation && expectedArgument is ILiteralOperation { ConstantValue: { HasValue: true, Value: bool expectedLiteralBoolean } })
@@ -445,6 +812,155 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
     }
+
+    private static CountCheckStatus RecognizeCountCheck(
+        IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
+        out SyntaxNode? collectionExpression)
+    {
+        collectionExpression = null;
+
+        // Check for collection.Count > 0 or collection.Length > 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.GreaterThan, LeftOperand: IPropertyReferenceOperation propertyRef, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef, objectTypeSymbol) is { } expression)
+        {
+            collectionExpression = expression;
+            return CountCheckStatus.HasCount;
+        }
+
+        // Check for 0 < collection.Count or 0 < collection.Length
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.LessThan, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef2 } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
+        {
+            collectionExpression = expression2;
+            return CountCheckStatus.HasCount;
+        }
+
+        // Check for collection.Count != 0 or collection.Length != 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: IPropertyReferenceOperation propertyRef3, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef3, objectTypeSymbol) is { } expression3)
+        {
+            collectionExpression = expression3;
+            return CountCheckStatus.HasCount;
+        }
+
+        // Check for 0 != collection.Count or 0 != collection.Length (reverse order)
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef4 } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef4, objectTypeSymbol) is { } expression4)
+        {
+            collectionExpression = expression4;
+            return CountCheckStatus.HasCount;
+        }
+
+        // Check for collection.Count == 0 or collection.Length == 0
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, LeftOperand: IPropertyReferenceOperation propertyRef5, RightOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } } } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef5, objectTypeSymbol) is { } expression5)
+        {
+            collectionExpression = expression5;
+            return CountCheckStatus.IsEmpty;
+        }
+
+        // Check for 0 == collection.Count or 0 == collection.Length (reverse order)
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, LeftOperand: ILiteralOperation { ConstantValue: { HasValue: true, Value: 0 } }, RightOperand: IPropertyReferenceOperation propertyRef6 } &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef6, objectTypeSymbol) is { } expression6)
+        {
+            collectionExpression = expression6;
+            return CountCheckStatus.IsEmpty;
+        }
+
+        return CountCheckStatus.Unknown;
+    }
+
+    private static CountCheckStatus RecognizeCountCheck(
+        IOperation expectedArgument,
+        IOperation actualArgument,
+        INamedTypeSymbol objectTypeSymbol,
+        out SyntaxNode? nodeToBeReplaced1,
+        out SyntaxNode? replacement1,
+        out SyntaxNode? nodeToBeReplaced2,
+        out SyntaxNode? replacement2)
+    {
+        // Check if actualArgument is a count/length property
+        if (actualArgument is IPropertyReferenceOperation propertyRef &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef, objectTypeSymbol) is { } expression)
+        {
+            bool isEmpty = expectedArgument.ConstantValue.HasValue &&
+                expectedArgument.ConstantValue.Value is int expectedValue &&
+                expectedValue == 0;
+
+            if (isEmpty)
+            {
+                // We have Assert.AreEqual(0, collection.Count/Length)
+                // We want Assert.IsEmpty(collection)
+                // So, only a single replacement is needed. We replace collection.Count with collection.
+                nodeToBeReplaced1 = actualArgument.Syntax; // collection.Count
+                replacement1 = expression; // collection
+                nodeToBeReplaced2 = expectedArgument.Syntax; // 0
+                replacement2 = null;
+                return CountCheckStatus.IsEmpty;
+            }
+            else
+            {
+                // We have Assert.AreEqual(expectedCount, collection.Count/Length)
+                // We want Assert.HasCount(expectedCount, collection)
+                // So, only a single replacement is needed. We replace collection.Count with collection.
+                nodeToBeReplaced1 = actualArgument.Syntax; // collection.Count
+                replacement1 = expression; // collection
+                nodeToBeReplaced2 = null;
+                replacement2 = null;
+                return CountCheckStatus.HasCount;
+            }
+        }
+
+        // Check if actualArgument is a literal and expectedArgument is a count/length property
+        if (expectedArgument is IPropertyReferenceOperation propertyRef2 &&
+            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
+        {
+            bool isEmpty = actualArgument.ConstantValue.HasValue &&
+                actualArgument.ConstantValue.Value is int actualValue &&
+                actualValue == 0;
+
+            if (isEmpty)
+            {
+                // We have Assert.AreEqual(collection.Count/Length, expectedCount)
+                // We want Assert.IsEmpty(collection)
+                // So, only two replacements are needed:
+                // 1. Replace collection.Count/Length with expectedCount
+                // 2. Replace expectedCount with collection
+                nodeToBeReplaced1 = expectedArgument.Syntax; // collection.Count/Length
+                replacement1 = expression2; // collection
+                nodeToBeReplaced2 = actualArgument.Syntax; // expectedCount
+                replacement2 = null;
+                return CountCheckStatus.IsEmpty;
+            }
+            else
+            {
+                // We have Assert.AreEqual(collection.Count/Length, expectedCount)
+                // We want Assert.HasCount(expectedCount, collection)
+                // So, only two replacements are needed:
+                // 1. Replace collection.Count/Length with expectedCount
+                // 2. Replace expectedCount with collection
+                nodeToBeReplaced1 = expectedArgument.Syntax; // collection.Count/Length
+                replacement1 = actualArgument.Syntax; // expectedCount
+                nodeToBeReplaced2 = actualArgument.Syntax; // expectedCount
+                replacement2 = expression2; // collection
+                return CountCheckStatus.HasCount;
+            }
+        }
+
+        nodeToBeReplaced1 = null;
+        replacement1 = null;
+        nodeToBeReplaced2 = null;
+        replacement2 = null;
+        return CountCheckStatus.Unknown;
+    }
+
+    private static SyntaxNode? TryGetCollectionExpressionIfBCLCollectionLengthOrCount(IPropertyReferenceOperation propertyReference, INamedTypeSymbol objectTypeSymbol)
+        => propertyReference.Property.Name is "Count" or "Length" &&
+            propertyReference.Instance?.Type is not null &&
+            (propertyReference.Instance.Type.TypeKind == TypeKind.Array || IsBCLCollectionType(propertyReference.Property.ContainingType, objectTypeSymbol))
+                ? propertyReference.Instance.Syntax
+                : null;
 
     private static bool TryGetFirstArgumentValue(IInvocationOperation operation, [NotNullWhen(true)] out IOperation? argumentValue)
         => TryGetArgumentValueForParameterOrdinal(operation, 0, out argumentValue);

@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class AsynchronousMessageBusTests
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task UnexpectedTypePublished_ShouldFail()
     {
@@ -56,7 +58,7 @@ public sealed class AsynchronousMessageBusTests
         }
         catch (InvalidOperationException ex)
         {
-            StringAssert.Contains(ex.Message, "Publisher/Consumer loop detected during the drain after");
+            Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
         }
 
         // Prevent loop to continue
@@ -88,10 +90,10 @@ public sealed class AsynchronousMessageBusTests
         await proxy.DrainDataAsync();
 
         // assert
-        Assert.AreEqual(1, consumerA.ConsumedData.Count);
+        Assert.HasCount(1, consumerA.ConsumedData);
         Assert.AreEqual(consumerBData, consumerA.ConsumedData[0]);
 
-        Assert.AreEqual(1, consumerB.ConsumedData.Count);
+        Assert.HasCount(1, consumerB.ConsumedData);
         Assert.AreEqual(consumerAData, consumerB.ConsumedData[0]);
     }
 
@@ -105,7 +107,7 @@ public sealed class AsynchronousMessageBusTests
         Random random = new();
         for (int i = 0; i < totalConsumers; i++)
         {
-            DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80)));
+            DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80), TestContext.CancellationToken));
             dummyConsumers.Add(dummyConsumer);
         }
 
@@ -120,14 +122,14 @@ public sealed class AsynchronousMessageBusTests
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
         DummyConsumer.DummyProducer producer = new();
-        await Task.WhenAll([.. Enumerable.Range(1, totalPayloads).Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i })))]);
+        await Task.WhenAll([.. Enumerable.Range(1, totalPayloads).Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData { Data = i }), TestContext.CancellationToken))]);
 
         await proxy.DrainDataAsync();
 
-        Assert.AreEqual(totalConsumers, dummyConsumers.Count);
+        Assert.HasCount(totalConsumers, dummyConsumers);
         foreach (DummyConsumer consumer in dummyConsumers)
         {
-            Assert.AreEqual(totalPayloads, consumer.DummyDataList.Count);
+            Assert.HasCount(totalPayloads, consumer.DummyDataList);
 
             int i = 1;
             foreach (DummyConsumer.DummyData payload in consumer.DummyDataList.OrderBy(x => x.Data))

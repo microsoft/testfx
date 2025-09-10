@@ -22,26 +22,10 @@ public sealed class CollectionAssert
     /// <remarks>
     /// Users can use this to plug-in custom assertions through C# extension methods.
     /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.Instance.AreEqualUnordered(list1, list2);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
-    /// </remarks>
-    public static CollectionAssert Instance { get; } = new CollectionAssert();
-
-    /// <summary>
-    /// Gets the singleton instance of the CollectionAssert functionality.
-    /// </summary>
-    /// <remarks>
-    /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
     /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
     /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
-#if NET6_0_OR_GREATER
-    [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-    [Obsolete(FrameworkConstants.ThatPropertyObsoleteMessage)]
-#endif
-    public static CollectionAssert That { get; } = Instance;
+    public static CollectionAssert That { get; } = new();
 
     #endregion
 
@@ -343,8 +327,7 @@ public sealed class CollectionAssert
             }
             else
             {
-#pragma warning disable CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
-                if (table.ContainsKey(current))
+                if (!table.TryAdd(current, true))
                 {
                     string userMessage = Assert.BuildUserMessage(message, parameters);
                     string finalMessage = string.Format(
@@ -355,11 +338,6 @@ public sealed class CollectionAssert
 
                     Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
                 }
-                else
-                {
-                    table.Add(current, true);
-                }
-#pragma warning restore CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
             }
         }
     }

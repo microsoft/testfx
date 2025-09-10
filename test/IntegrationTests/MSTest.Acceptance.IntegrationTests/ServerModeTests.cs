@@ -11,6 +11,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAssetFixture>
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DiscoverAndRun(string tfm)
@@ -35,11 +37,11 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
         Assert.AreEqual(1, discoveryCollector.TestNodeUpdates.Count(x => x.Node.NodeType == "action"), "Wrong number of discovery");
-        Assert.AreEqual(2, runCollector.TestNodeUpdates.Count, "Wrong number of updates");
+        Assert.HasCount(2, runCollector.TestNodeUpdates);
         Assert.AreNotEqual(0, logs.Count, "Logs are empty");
         Assert.IsFalse(telemetry.IsEmpty, "telemetry is empty");
         await jsonClient.Exit();
-        Assert.AreEqual(0, await jsonClient.WaitServerProcessExit());
+        Assert.AreEqual(0, await jsonClient.WaitServerProcessExit(TestContext.CancellationToken));
         Assert.AreEqual(0, jsonClient.ExitCode);
     }
 
@@ -63,7 +65,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         _ = jsonClient.DiscoverTests(Guid.NewGuid(), discoveryCollector.CollectNodeUpdates, @checked: false);
 
         await jsonClient.Exit(gracefully: false);
-        int exitCode = await jsonClient.WaitServerProcessExit();
+        int exitCode = await jsonClient.WaitServerProcessExit(TestContext.CancellationToken);
         Assert.AreEqual(3, exitCode);
     }
 

@@ -34,10 +34,10 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
 
     public NamedPipeClient? NamedPipeClient { get; private set; }
 
-    public string Uid { get; } = nameof(TrxTestApplicationLifecycleCallbacks);
+    public string Uid => nameof(TrxTestApplicationLifecycleCallbacks);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = ExtensionResources.TrxReportGeneratorDisplayName;
@@ -63,7 +63,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
             {
                 string namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
                     ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
-                NamedPipeClient = new NamedPipeClient(namedPipeName);
+                NamedPipeClient = new NamedPipeClient(namedPipeName, _environment);
                 NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
                 NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
                 NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));

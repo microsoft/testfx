@@ -1,5 +1,12 @@
 <Project>
 
+  <ItemGroup>
+    <!-- Usually, GenerateSource="true" is enough for Arcade to do the generation. -->
+    <!-- However, MSBuild.Sdk.Extras can break us by explicitly setting Generator metadata -->
+    <!-- https://github.com/novotnyllc/MSBuildSdkExtras/blob/b58e1d25b530e02ce4d1b937ccf99082019cdc47/Source/MSBuild.Sdk.Extras/DefaultItems/Platforms/Common.props#L13-L21 -->
+    <EmbeddedResource Update="**\*.resx" GenerateSource="true" Generator="MSBuild:_GenerateResxSource" />
+  </ItemGroup>
+
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <PropertyGroup Condition=" '$(UseAssemblyVersion14)' == 'true' ">
@@ -22,4 +29,44 @@
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
+  <Target Name="_GenerateVersionSourceFileCache">
+    <PropertyGroup>
+      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
+      <_TemplatePropertiesCacheFile>$(IntermediateOutputPath)$(MSBuildProjectFile).GenerateVersionSourceFile.cache</_TemplatePropertiesCacheFile>
+    </PropertyGroup>
+
+    <Hash ItemsToHash="@(_TemplateProperties)">
+      <Output TaskParameter="HashResult" PropertyName="_TemplatePropertiesHash" />
+    </Hash>
+
+    <WriteLinesToFile Lines="$(_TemplatePropertiesHash)" File="$(_TemplatePropertiesCacheFile)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_TemplatePropertiesCacheFile)" />
+    </ItemGroup>
+
+  </Target>
+
+  <!-- See https://github.com/dotnet/arcade/issues/16019 -->
+  <!-- This can be simplified if Arcade implemented WriteOnlyWhenDifferent -->
+  <Target Name="GenerateVersionSourceFile"
+          AfterTargets="PrepareForBuild"
+          DependsOnTargets="_GenerateVersionSourceFileCache"
+          Inputs="$(_TemplatePropertiesCacheFile)"
+          Outputs="$(IntermediateOutputPath)BuildInfo.cs"
+          Condition=" '$(GenerateBuildInfo)' == 'true' ">
+    <ItemGroup>
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/BuildInfo.cs.template" Destination="$(IntermediateOutputPath)BuildInfo.cs" />
+    </ItemGroup>
+    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)BuildInfo.cs" />
+    </ItemGroup>
+  </Target>
 </Project>

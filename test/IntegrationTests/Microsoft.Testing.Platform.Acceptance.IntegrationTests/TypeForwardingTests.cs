@@ -68,12 +68,14 @@ public class TypeForwardingTests : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, patchedSources);
-        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath}/ConsoleApp -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath}/ConsoleApp -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom($"{testAsset.TargetAssetPath}/ConsoleApp", "ConsoleApp", TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("MyDisplayName");
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -12,11 +12,11 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed class ToolsTestHost(
+internal sealed class ToolsHost(
     IReadOnlyList<ITool> toolsInformation,
     ServiceProvider serviceProvider,
     CommandLineHandler commandLineHandler,
-    IOutputDevice outputDevice) : ITestHost, IOutputDeviceDataProducer
+    IOutputDevice outputDevice) : IHost, IOutputDeviceDataProducer
 {
     private readonly IReadOnlyList<ITool> _toolsInformation = toolsInformation;
     private readonly ServiceProvider _serviceProvider = serviceProvider;
@@ -24,7 +24,7 @@ internal sealed class ToolsTestHost(
     private readonly IOutputDevice _outputDevice = outputDevice;
 
     /// <inheritdoc />
-    public string Uid => nameof(ToolsTestHost);
+    public string Uid => nameof(ToolsHost);
 
     /// <inheritdoc />
     public string Version => AppVersion.DefaultSemVer;

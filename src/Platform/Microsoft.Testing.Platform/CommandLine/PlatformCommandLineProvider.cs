@@ -28,6 +28,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
+    public const string FilterUidOptionKey = "filter-uid";
+    public const string DebugAttachOptionKey = "debug";
 
     public const string ServerOptionKey = "server";
     public const string ClientPortOptionKey = "client-port";
@@ -57,6 +59,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ConfigFileOptionKey, PlatformResources.PlatformCommandLineConfigFileOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(FilterUidOptionKey, PlatformResources.PlatformCommandLineFilterUidOptionDescription, ArgumentArity.OneOrMore, false, isBuiltIn: true),
+        new(DebugAttachOptionKey, PlatformResources.PlatformCommandLineDebugAttachOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
 
         // Hidden options
         new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -70,10 +74,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(PlatformCommandLineProvider);
+    public string Uid => nameof(PlatformCommandLineProvider);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.PlatformCommandLineProviderDisplayName;

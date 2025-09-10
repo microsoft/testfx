@@ -1,3 +1,2 @@
 #nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose() -> void
-virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose(bool disposing) -> void
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Dispose(bool disposing) -> void

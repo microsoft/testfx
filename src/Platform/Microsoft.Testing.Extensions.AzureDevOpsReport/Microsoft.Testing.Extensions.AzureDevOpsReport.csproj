@@ -2,11 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
-
-    <!-- Stay on 1.0.0 alpha while we are dogfooding this extension to see if it is useful. -->
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
   <!-- NuGet properties -->
@@ -40,11 +35,11 @@ This package extends Microsoft Testing Platform to provide a Azure DevOps report
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\AzureDevOpsResources.resx" GenerateSource="true" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
   <ItemGroup>

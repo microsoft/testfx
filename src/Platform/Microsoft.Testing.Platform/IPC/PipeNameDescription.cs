@@ -3,39 +3,13 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal sealed class PipeNameDescription(string name, bool isDirectory) : IDisposable
+internal sealed class PipeNameDescription(string name) : IDisposable
 {
-    private readonly bool _isDirectory = isDirectory;
-    private bool _disposed;
-
     public string Name { get; } = name;
 
-    public void Dispose() => Dispose(true);
-
-    public void Dispose(bool disposing)
+    // This is available via IVT.
+    // Avoid removing it as it can be seen as a binary breaking change when users use newer version of core MTP but older version of one of the extensions.
+    public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            // TODO: dispose managed state (managed objects).
-        }
-
-        if (_isDirectory)
-        {
-            try
-            {
-                Directory.Delete(Path.GetDirectoryName(Name)!, true);
-            }
-            catch (IOException)
-            {
-                // This folder is created inside the temp directory and will be cleaned up eventually by the OS
-            }
-        }
-
-        _disposed = true;
     }
 }

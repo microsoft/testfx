@@ -22,9 +22,24 @@
         <target state="translated">Usar '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
+        <source>Use interpolated string instead of format parameters</source>
+        <target state="translated">Use cadeia de caracteres interpolada em vez de parâmetros de formato</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
+        <source>Use 'string.Format' instead of format parameters</source>
+        <target state="translated">Use 'string.Format' em vez de parâmetros de formato</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Alterar a acessibilidade do método para 'privado'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="translated">Alterar para 'classe' e adicionar '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
@@ -40,6 +55,16 @@
       <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
         <source>Fix signature</source>
         <target state="translated">Corrigir assinatura</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassCancellationTokenFix">
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="translated">Passar o argumento 'TestContext.CancellationToken' para a chamada de método</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDynamicDataSourceTypeFix">
+        <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
+        <target state="translated">Remover o parâmetro "DynamicDataSourceType" para usar o padrão "AutoDetect"</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
@@ -72,6 +97,11 @@
         <target state="translated">Substitua o construtor pelo método TestInitialize.</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">Use 'Assert'{0}. em vez de 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">Correção da assinatura de classe do teste</target>
@@ -95,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Adicionar ''[TestMethod]"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="translated">Usar 'TestContext.CancellationToken' em vez disso</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

@@ -15,7 +15,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestConfigJson_AndRunSettingsHasMstest_Throws(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestRunSettings, TestAssetFixture.ProjectNameWithMSTestRunSettings, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
@@ -27,7 +27,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestConfigJson_AndRunSettingsHasMstestv2_Throws(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestV2RunSettings, TestAssetFixture.ProjectNameWithMSTestV2RunSettings, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
@@ -39,7 +39,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestConfigJson_AndRunSettingsWithoutMstest_OverrideRunConfigration(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -50,7 +50,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestConfigJson_WithoutRunSettings_BuildSuccess(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -60,10 +60,13 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsTrue()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_map.json", environmentVariables: new()
-        {
-            ["TestWithConfigFromCommandLine"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--config-file dummyconfigfile_map.json",
+            environmentVariables: new()
+            {
+                ["TestWithConfigFromCommandLine"] = "true",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
@@ -73,10 +76,13 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsFalse()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_doNotMap.json", environmentVariables: new()
-        {
-            ["TestWithConfigFromCommandLine"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--config-file dummyconfigfile_doNotMap.json",
+            environmentVariables: new()
+            {
+                ["TestWithConfigFromCommandLine"] = "true",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
@@ -86,10 +92,13 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
     public async Task TestWithConfigFromCommandLineWithNonExistingFile()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--config-file dummyconfigfile_not_existing_file.json", environmentVariables: new()
-        {
-            ["TestWithConfigFromCommandLine"] = "true",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--config-file dummyconfigfile_not_existing_file.json",
+            environmentVariables: new()
+            {
+                ["TestWithConfigFromCommandLine"] = "true",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertStandardErrorContains("FileNotFoundException");
         testHostResult.AssertStandardErrorContains("dummyconfigfile_not_existing_file.json");
@@ -208,13 +217,13 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
 {
   "mstest": {
     "timeout": {
-      "assemblyInitialize": 300,
-      "assemblyCleanup": 300,
-      "classInitialize": 200,
-      "classCleanup": 200,
-      "testInitialize": 100,
-      "testCleanup": 100,
-      "test": 60,
+      "assemblyInitialize": 300000,
+      "assemblyCleanup": 300000,
+      "classInitialize": 200000,
+      "classCleanup": 200000,
+      "testInitialize": 100000,
+      "testCleanup": 100000,
+      "test": 60000,
       "useCooperativeCancellation": true
     },
     "parallelism": {
@@ -280,4 +289,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

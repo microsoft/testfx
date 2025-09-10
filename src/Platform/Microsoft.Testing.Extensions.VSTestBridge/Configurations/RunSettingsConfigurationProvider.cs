@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
@@ -15,16 +16,16 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     private string? _runSettingsFileContent;
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(RunSettingsConfigurationProvider);
+    public string Uid => nameof(RunSettingsConfigurationProvider);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "VSTest Helpers: runsettings configuration";
+    public string DisplayName => "VSTest Helpers: runsettings configuration";
 
     /// <inheritdoc />
-    public string Description { get; } = "Configuration source to bridge VSTest xml runsettings configuration into Microsoft Testing Platform configuration model.";
+    public string Description => "Configuration source to bridge VSTest xml runsettings configuration into Microsoft Testing Platform configuration model.";
 
     public int Order => 2;
 
@@ -37,7 +38,7 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     /// <inheritdoc />
     public bool TryGet(string key, out string? value)
     {
-        if (_runSettingsFileContent is null)
+        if (RoslynString.IsNullOrEmpty(_runSettingsFileContent))
         {
             value = null;
             return false;
@@ -58,16 +59,9 @@ internal sealed class RunSettingsConfigurationProvider(IFileSystem fileSystem) :
     }
 
     /// <inheritdoc />
-    public async Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
+    public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
     {
-        if (commandLineParseResult.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runSettingsFilePath))
-        {
-            if (_fileSystem.Exists(runSettingsFilePath[0]))
-            {
-                _runSettingsFileContent = await _fileSystem.ReadAllTextAsync(runSettingsFilePath[0]).ConfigureAwait(false);
-            }
-        }
-
-        return this;
+        _runSettingsFileContent = RunSettingsHelpers.ReadRunSettings(commandLineParseResult, _fileSystem);
+        return Task.FromResult<IConfigurationProvider>(this);
     }
 }

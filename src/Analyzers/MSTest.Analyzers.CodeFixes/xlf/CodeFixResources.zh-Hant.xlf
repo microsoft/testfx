@@ -22,9 +22,24 @@
         <target state="translated">使用 '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
+        <source>Use interpolated string instead of format parameters</source>
+        <target state="translated">請使用差補字串而不是格式參數</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
+        <source>Use 'string.Format' instead of format parameters</source>
+        <target state="translated">請使用 'string.Format' 而不是格式參數</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">將方法協助工具變更為 'private'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChangeStructToClassAndAddTestClassFix">
+        <source>Change to 'class' and add '[TestClass]'</source>
+        <target state="translated">變更為 'class'，並新增 '[TestClass]'</target>
         <note />
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
@@ -40,6 +55,16 @@
       <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
         <source>Fix signature</source>
         <target state="translated">修正簽章</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassCancellationTokenFix">
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="translated">將 'TestContext.CancellationToken' 引數傳遞給方法呼叫</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveDynamicDataSourceTypeFix">
+        <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
+        <target state="translated">移除 'DynamicDataSourceType' 參數，以使用預設的 'AutoDetect'</target>
         <note />
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
@@ -72,6 +97,11 @@
         <target state="translated">使用 TestInitialize 方法取代建構函式</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
+        <target state="translated">使用 'Assert.{0}' 而不是 'StringAssert'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
         <target state="translated">修正測試類別簽章</target>
@@ -95,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">新增 '[TestMethod]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="translated">請改為使用 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

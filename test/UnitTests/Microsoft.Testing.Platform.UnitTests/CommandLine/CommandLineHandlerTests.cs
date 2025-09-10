@@ -38,8 +38,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Invalid command line arguments:");
-        StringAssert.Contains(result.ErrorMessage, "Unexpected argument 'a'");
+        Assert.Contains("Invalid command line arguments:", result.ErrorMessage);
+        Assert.Contains("Unexpected argument 'a'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -75,7 +75,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'");
+        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -275,8 +275,8 @@ public sealed class CommandLineHandlerTests
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             {
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Invalid command line arguments:"));
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Unexpected argument"));
+                Assert.Contains("Invalid command line arguments:", ((TextOutputDeviceData)data).Text);
+                Assert.Contains("Unexpected argument", ((TextOutputDeviceData)data).Text);
             });
 
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
@@ -294,16 +294,16 @@ public sealed class CommandLineHandlerTests
     {
         public const string HelpOption = "help";
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -322,16 +322,16 @@ public sealed class CommandLineHandlerTests
     {
         public const string Option = "option";
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -352,16 +352,16 @@ public sealed class CommandLineHandlerTests
 
         public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option") => _option = optionName;
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);

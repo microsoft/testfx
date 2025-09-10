@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Resources;
 
 using Moq;
 
@@ -532,7 +533,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public class DummyTestClassWithTestContextWithoutSetter
     {
-        public TestContext TestContext { get; } = null!;
+        public TestContext TestContext => null!;
     }
 
     public class DummyTestClassEmptyDataSource

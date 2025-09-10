@@ -21,6 +21,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         ["baseClassCleanup"] = ("TestClassBase.ClassCleanupBase", "Class cleanup", "BASE_CLASSCLEANUP", "ClassCleanupTimeout"),
         ["testInit"] = ("TestClass.TestInit", "Test initialize", "TESTINIT", "TestInitializeTimeout"),
         ["testCleanup"] = ("TestClass.TestCleanupMethod", "Test cleanup", "TESTCLEANUP", "TestCleanupTimeout"),
+        ["globalTestInit"] = ("TestClass.GlobalTestInit", "Test initialize", "GLOBALTESTINIT", "TestInitializeTimeout"),
+        ["globalTestCleanup"] = ("TestClass.GlobalTestCleanupMethod", "Test cleanup", "GLOBALTESTCLEANUP", "TestCleanupTimeout"),
     };
 
     [TestMethod]
@@ -157,6 +159,50 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInit_WhenTestContextCanceled_GlobalTestInitializeTaskIsCanceled(string tfm)
+        => await RunAndAssertTestWasCanceledAsync(AssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout,
+            tfm, "TESTCONTEXT_CANCEL_", "globalTestInit");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInit_WhenTimeoutExpires_GlobalTestInitializeTaskIsCanceled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(AssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout,
+            tfm, "LONG_WAIT_", "globalTestInit");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInit_WhenTimeoutExpiresAndTestContextTokenIsUsed_GlobalTestInitializeExits(string tfm)
+        => await RunAndAssertTestTimedOutAsync(AssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+            "TIMEOUT_", "globalTestInit");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInit_WhenTimeoutExpires_FromRunSettings_GlobalTestInitializeIsCanceled(string tfm)
+        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "globalTestInit");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestInit_WhenTimeoutExpires_GlobalTestInitializeIsCanceled_AttributeTakesPrecedence(string tfm)
+        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "globalTestInit");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestCleanup_WhenTimeoutExpires_GlobalTestCleanupTaskIsCanceled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(AssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+            "LONG_WAIT_", "globalTestCleanup");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestCleanup_WhenTimeoutExpires_FromRunSettings_GlobalTestCleanupIsCanceled(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "globalTestCleanup");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task GlobalTestCleanup_WhenTimeoutExpires_GlobalTestCleanupIsCanceled_AttributeTakesPrecedence(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "globalTestCleanup");
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestInitialize_WhenTimeoutExpires_TestInitializeTaskIsCanceled(string tfm)
         => await RunAndAssertTestTimedOutAsync(AssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "testInit");
@@ -194,7 +240,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["TASKDELAY_ASSEMBLYINIT"] = "1" });
+            new() { ["TASKDELAY_ASSEMBLYINIT"] = "1" }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("AssemblyInit started");
         testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 1000ms");
@@ -209,7 +255,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["TASKDELAY_ASSEMBLYCLEANUP"] = "1" });
+            new() { ["TASKDELAY_ASSEMBLYCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("AssemblyCleanup started");
         testHostResult.AssertOutputContains("Assembly cleanup method 'TestClass.AssemblyCleanup' timed out after 1000ms");
@@ -224,7 +271,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["TASKDELAY_CLASSINIT"] = "1" });
+            new() { ["TASKDELAY_CLASSINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("ClassInit started");
         testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 1000ms");
@@ -239,7 +287,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["TASKDELAY_CLASSCLEANUP"] = "1" });
+            new() { ["TASKDELAY_CLASSCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("ClassCleanup started");
         testHostResult.AssertOutputContains("Class cleanup method 'TestClass.ClassCleanup' timed out after 1000ms");
@@ -254,7 +303,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["TASKDELAY_TESTINIT"] = "1" });
+            new() { ["TASKDELAY_TESTINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("TestInit started");
         testHostResult.AssertOutputContains("Test initialize method 'TestClass.TestInit' timed out after 1000ms");
@@ -268,11 +318,44 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["TASKDELAY_TESTCLEANUP"] = "1" });
+            new() { ["TASKDELAY_TESTCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("TestCleanup started");
         testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenGlobalTestInitTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_GLOBALTESTINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("GlobalTestInit started");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.GlobalTestInit' timed out after 1000ms");
+        testHostResult.AssertOutputDoesNotContain("GlobalTestInit Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("GlobalTestInit completed");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenGlobalTestCleanupTimeoutExpires_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["TASKDELAY_GLOBALTESTCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("GlobalTestCleanup started");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.GlobalTestCleanup' timed out after 1000ms");
+        testHostResult.AssertOutputDoesNotContain("GlobalTestCleanup Thread.Sleep completed");
+        testHostResult.AssertOutputDoesNotContain("GlobalTestCleanup completed");
     }
 
     [TestMethod]
@@ -282,7 +365,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["CHECKTOKEN_ASSEMBLYINIT"] = "1" });
+            new() { ["CHECKTOKEN_ASSEMBLYINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("AssemblyInit started");
         testHostResult.AssertOutputContains("Assembly initialize method 'TestClass.AssemblyInit' timed out after 1000ms");
@@ -297,7 +381,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["CHECKTOKEN_ASSEMBLYCLEANUP"] = "1" });
+            new() { ["CHECKTOKEN_ASSEMBLYCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("AssemblyCleanup started");
         testHostResult.AssertOutputContains("AssemblyCleanup Thread.Sleep completed");
@@ -312,7 +397,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["CHECKTOKEN_CLASSINIT"] = "1" });
+            new() { ["CHECKTOKEN_CLASSINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("ClassInit started");
         testHostResult.AssertOutputContains("Class initialize method 'TestClass.ClassInit' timed out after 1000ms");
@@ -327,7 +413,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["CHECKTOKEN_CLASSCLEANUP"] = "1" });
+            new() { ["CHECKTOKEN_CLASSCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("ClassCleanup started");
         testHostResult.AssertOutputContains("ClassCleanup Thread.Sleep completed");
@@ -342,7 +429,8 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["CHECKTOKEN_TESTINIT"] = "1" });
+            new() { ["CHECKTOKEN_TESTINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("TestInit started");
         testHostResult.AssertOutputDoesNotContain("TestInit completed");
@@ -356,11 +444,44 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
-            new() { ["CHECKTOKEN_TESTCLEANUP"] = "1" });
+            new() { ["CHECKTOKEN_TESTCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("TestCleanup started");
         testHostResult.AssertOutputDoesNotContain("TestCleanup completed");
         testHostResult.AssertOutputContains("Test cleanup method 'TestClass.TestCleanup' timed out after 1000ms");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenGlobalTestInitTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_GLOBALTESTINIT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("GlobalTestInit started");
+        testHostResult.AssertOutputContains("GlobalTestInit Thread.Sleep completed");
+        testHostResult.AssertOutputContains("Test initialize method 'TestClass.GlobalTestInit' timed out after 1000ms");
+        testHostResult.AssertOutputDoesNotContain("GlobalTestInit completed");
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CooperativeCancellation_WhenGlobalTestCleanupTimeoutExpiresAndUserChecksToken_StepThrows(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutAssetPath, TestAssetFixture.CooperativeTimeout, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            new() { ["CHECKTOKEN_GLOBALTESTCLEANUP"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("GlobalTestCleanup started");
+        testHostResult.AssertOutputContains("GlobalTestCleanup Thread.Sleep completed");
+        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.GlobalTestCleanup' timed out after 1000ms");
+        testHostResult.AssertOutputDoesNotContain("GlobalTestCleanup completed");
     }
 
     private static async Task RunAndAssertTestWasCanceledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
@@ -406,7 +527,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 
         if (assertAttributePrecedence)
         {
-            Assert.IsTrue(stopwatch.Elapsed.TotalSeconds < 25);
+            Assert.IsLessThan(25, stopwatch.Elapsed.TotalSeconds);
         }
 
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
@@ -417,7 +538,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task TimeoutWithInvalidArg_WithoutLetterSuffix_OutputInvalidMessage(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
@@ -428,7 +549,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task TimeoutWithInvalidArg_WithInvalidLetterSuffix_OutputInvalidMessage(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
@@ -439,7 +560,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task TimeoutWithInvalidArg_WithInvalidFormat_OutputInvalidMessage(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is float");
@@ -450,7 +571,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task Timeout_WhenTimeoutValueSmallerThanTestDuration_OutputContainsCancelingMessage(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 1s", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
         testHostResult.AssertOutputContains("Canceling the test session");
@@ -461,7 +582,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task Timeout_WhenTimeoutValueGreaterThanTestDuration_OutputDoesNotContainCancelingMessage(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 30s");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 30s", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -473,10 +594,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task Timeout_WhenMethodTimeoutAndWaitInCtor_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TestMethodTimeoutAssetPath, TestAssetFixture.TestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_CTOR"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_CTOR"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
@@ -487,10 +610,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task Timeout_WhenMethodTimeoutAndWaitInTestInit_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TestMethodTimeoutAssetPath, TestAssetFixture.TestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_TESTINIT"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_TESTINIT"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
@@ -501,10 +626,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task Timeout_WhenMethodTimeoutAndWaitInTestCleanup_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TestMethodTimeoutAssetPath, TestAssetFixture.TestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_TESTCLEANUP"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_TESTCLEANUP"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
@@ -515,10 +642,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task Timeout_WhenMethodTimeoutAndWaitInTestMethod_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TestMethodTimeoutAssetPath, TestAssetFixture.TestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_TEST"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_TEST"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
@@ -529,10 +658,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInCtor_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTestMethodTimeoutAssetPath, TestAssetFixture.CooperativeTestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_CTOR"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_CTOR"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
@@ -543,10 +674,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInTestInit_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTestMethodTimeoutAssetPath, TestAssetFixture.CooperativeTestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_TESTINIT"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_TESTINIT"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test initialize method 'TimeoutTest.UnitTest1.TestInit' timed out after 1000ms");
@@ -557,10 +690,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInTestCleanup_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTestMethodTimeoutAssetPath, TestAssetFixture.CooperativeTestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_TESTCLEANUP"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_TESTCLEANUP"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test cleanup method 'TimeoutTest.UnitTest1.TestCleanup' timed out after 1000ms");
@@ -571,10 +706,12 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
     public async Task CooperativeTimeout_WhenMethodTimeoutAndWaitInTestMethod_TestGetsCanceled(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTestMethodTimeoutAssetPath, TestAssetFixture.CooperativeTestMethodTimeout, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["LONG_WAIT_TEST"] = "1",
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["LONG_WAIT_TEST"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
@@ -700,6 +837,16 @@ public class TestClass
     [TestCleanup]
     public async Task TestCleanup()
         => await DoWork("TESTCLEANUP", "TestCleanup", TestContext);
+
+    [Timeout(1000, CooperativeCancellation = true)]
+    [GlobalTestInitialize]
+    public static async Task GlobalTestInit(TestContext testContext)
+        => await DoWork("GLOBALTESTINIT", "GlobalTestInit", testContext);
+
+    [Timeout(1000, CooperativeCancellation = true)]
+    [GlobalTestCleanup]
+    public static async Task GlobalTestCleanup(TestContext testContext)
+        => await DoWork("GLOBALTESTCLEANUP", "GlobalTestCleanup", testContext);
 
     [TestMethod]
     public void TestMethod()
@@ -900,6 +1047,43 @@ public class TestClass : TestClassBase
         }
     }
 
+    $TimeoutAttribute$
+    [GlobalTestInitialize]
+    public static async Task GlobalTestInit(TestContext testContext)
+    {
+        if (Environment.GetEnvironmentVariable("TESTCONTEXT_CANCEL_GLOBALTESTINIT") == "1")
+        {
+            testContext.CancellationTokenSource.Cancel();
+            await Task.Delay(10_000);
+        }
+        else if (Environment.GetEnvironmentVariable("LONG_WAIT_GLOBALTESTINIT") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else if (Environment.GetEnvironmentVariable("TIMEOUT_GLOBALTESTINIT") == "1")
+        {
+            await Task.Delay(60_000, testContext.CancellationTokenSource.Token);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [GlobalTestCleanup]
+    public static async Task GlobalTestCleanupMethod(TestContext testContext)
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_GLOBALTESTCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_GLOBALTESTCLEANUP") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
     [TestMethod]
     public Task Test1() => Task.CompletedTask;
 }
@@ -1040,4 +1224,6 @@ public class UnitTest1
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

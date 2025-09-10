@@ -3,7 +3,6 @@
 
 using System.Security;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -218,20 +217,52 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="testPropertyProvider">The member to inspect.</param>
     /// <returns>List of traits.</returns>
-    internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
+    internal Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
     {
-        IEnumerable<TestPropertyAttribute> testPropertyAttributes = GetAttributes<TestPropertyAttribute>(testPropertyProvider, inherit: true);
-
-        if (testPropertyProvider.DeclaringType is { } testClass)
+        Attribute[] attributesFromMethod = GetCustomAttributesCached(testPropertyProvider, inherit: true);
+        Attribute[] attributesFromClass = testPropertyProvider.ReflectedType is { } testClass ? GetCustomAttributesCached(testClass, inherit: true) : [];
+        int countTestPropertyAttribute = 0;
+        foreach (Attribute attribute in attributesFromMethod)
         {
-            testPropertyAttributes = testPropertyAttributes.Concat(GetAttributes<TestPropertyAttribute>(testClass, inherit: true));
+            if (attribute is TestPropertyAttribute)
+            {
+                countTestPropertyAttribute++;
+            }
         }
 
-        foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
+        foreach (Attribute attribute in attributesFromClass)
         {
-            var testPropertyPair = new Trait(testProperty.Name, testProperty.Value);
-            yield return testPropertyPair;
+            if (attribute is TestPropertyAttribute)
+            {
+                countTestPropertyAttribute++;
+            }
         }
+
+        if (countTestPropertyAttribute == 0)
+        {
+            // This is the common case that we optimize for. This method used to be an iterator (uses yield return) which is allocating unnecessarily in common cases.
+            return [];
+        }
+
+        var traits = new Trait[countTestPropertyAttribute];
+        int index = 0;
+        foreach (Attribute attribute in attributesFromMethod)
+        {
+            if (attribute is TestPropertyAttribute testProperty)
+            {
+                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
+            }
+        }
+
+        foreach (Attribute attribute in attributesFromClass)
+        {
+            if (attribute is TestPropertyAttribute testProperty)
+            {
+                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
+            }
+        }
+
+        return traits;
     }
 
     /// <summary>
@@ -254,6 +285,30 @@ internal class ReflectHelper : MarshalByRefObject
             if (attribute is TAttributeType attributeAsAttributeType)
             {
                 yield return attributeAsAttributeType;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get attribute defined on a method which is of given type of subtype of given type.
+    /// </summary>
+    /// <typeparam name="TAttributeType">The attribute type.</typeparam>
+    /// <typeparam name="TState">The type of state to be passed to Action.</typeparam>
+    /// <param name="attributeProvider">The member to inspect.</param>
+    /// <param name="inherit">Look at inheritance chain.</param>
+    /// <param name="action">The action to perform.</param>
+    /// <param name="state">The state to pass to action.</param>
+    internal void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, bool inherit, Action<TAttributeType, TState?> action, TState? state)
+        where TAttributeType : Attribute
+    {
+        Attribute[] attributes = GetCustomAttributesCached(attributeProvider, inherit);
+        foreach (Attribute attribute in attributes)
+        {
+            DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
+
+            if (attribute is TAttributeType attributeAsAttributeType)
+            {
+                action(attributeAsAttributeType, state);
             }
         }
     }

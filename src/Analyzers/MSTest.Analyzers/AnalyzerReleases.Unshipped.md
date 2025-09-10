@@ -5,13 +5,8 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0044 | Design | Warning | PreferTestMethodOverDataTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0044)
-MSTEST0045 | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0045)
-
-
-### Changed Rules
-
-Rule ID | New Category | New Severity | Old Category | Old Severity | Notes
---------|--------------|--------------|--------------|--------------|-------
-MSTEST0006 | Design | Warning | Design | Info | AvoidExpectedExceptionAttributeAnalyzer
-MSTEST0039 | Usage | Warning | Usage | Info | UseNewerAssertThrowsAnalyzer
+MSTEST0051 | Usage | Info | AssertThrowsShouldContainSingleStatementAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0051)
+MSTEST0052 | Usage | Warning | PreferDynamicDataSourceTypeAutoDetectAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0052)
+MSTEST0053 | Usage | Warning | AvoidAssertFormatParametersAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0053)
+MSTEST0054 | Usage | Info | UseCancellationTokenPropertyAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0054)
+MSTEST0055 | Usage | Warning | IgnoreStringMethodReturnValueAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0055)

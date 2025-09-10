@@ -28,12 +28,6 @@ internal static class EngineConstants
 
 #if NETFRAMEWORK
     internal const string PhoneAppxPackageExtension = ".appx";
-
-    // These are tied to a specific VS version. Can be changed to have a list of supported version instead.
-    internal const string VisualStudioRootRegKey32ForDev14 = @"SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion;
-    internal const string VisualStudioRootRegKey64ForDev14 = @"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\" + VisualStudioVersion;
-
-    internal const string VisualStudioVersion = "14.0";
 #endif
 
     /// <summary>
@@ -72,7 +66,6 @@ internal static class EngineConstants
     internal const string TestRunParametersName = "TestRunParameters";
 
     #region Test Property registration
-    internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -155,7 +148,6 @@ internal static class EngineConstants
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string InnerResultsCountLabel = "InnerResultsCount";
-    private const string DescriptionLabel = "Description";
     private const string CssIterationLabel = "CssIteration";
     private const string CssProjectStructureLabel = "CssProjectStructure";
     private const string WorkItemIdsLabel = "WorkItemIds";

@@ -106,11 +106,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         foreach (Type type in types)
         {
-            if (type == null)
-            {
-                continue;
-            }
-
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
                 dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
@@ -150,7 +145,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            return ex.Types!;
+            // We already logged a warning or error.
+            // So don't return types that failed to load.
+            // The intent of the catch is to gracefully run the types that we could load.
+            return ex.Types is null ? [] : [.. ex.Types.Where(t => t is not null)!];
         }
     }
 
@@ -173,9 +171,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 DebugEx.Assert(loaderException != null, "loader exception should not be null.");
                 string line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
-                if (!map.ContainsKey(line))
+                if (map.TryAdd(line, null))
                 {
-                    map.Add(line, null);
                     errorDetails.AppendLine(line);
                 }
             }
@@ -306,7 +303,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             string methodName = GetMethodName(methodInfo);
             string[] hierarchy = [null!, assemblyName, EngineConstants.AssemblyFixturesHierarchyClassName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
+            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
         }
 
         static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
@@ -314,23 +311,27 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             string methodName = GetMethodName(methodInfo);
             string[] hierarchy = [null!, classFullName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
+            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
         }
 
         static string GetMethodName(MethodInfo methodInfo)
         {
             ParameterInfo[] args = methodInfo.GetParameters();
             return args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
+                ? $"{methodInfo.Name}({string.Join(',', args.Select(a => a.ParameterType.FullName))})"
                 : methodInfo.Name;
         }
 
-        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy)
+        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy, MethodInfo methodInfo)
         {
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, null, TestIdGenerationStrategy.FullyQualified);
+            string displayName = $"[{fixtureType}] {methodName}";
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, displayName, TestIdGenerationStrategy.FullyQualified)
+            {
+                MethodInfo = methodInfo,
+            };
             return new UnitTestElement(method)
             {
-                DisplayName = $"[{fixtureType}] {methodName}",
+                DisplayName = displayName,
                 Traits = [new Trait(EngineConstants.FixturesTestTrait, fixtureType)],
             };
         }
@@ -426,7 +427,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
             discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-
+            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
             tests.Add(discoveredTest);
 
             return true;
@@ -439,13 +440,43 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (object?[] dataOrTestDataRow in data)
         {
             object?[] d = dataOrTestDataRow;
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, methodInfo.GetParameters(), out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow))
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
+            }
+            else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(d, parameters))
+            {
+                // SPECIAL CASE:
+                // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+                //
+                // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
+                //
+                // public static IEnumerable<object[]> GetData()
+                // {
+                //     yield return new object[] { ("Hello", "World") };
+                // }
+                //
+                // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
+                // Note that normally, the array in this code path represents the arguments of the test method.
+                // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+            }
+            else if (d?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(d[0], parameters, out object?[] tupleExpandedToArray))
+            {
+                d = tupleExpandedToArray;
             }
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
+
+            // Merge test categories from the test data row with the existing categories
+            if (testCategoriesFromTestDataRow is { Count: > 0 })
+            {
+                discoveredTest.TestCategory = discoveredTest.TestCategory is { Length: > 0 }
+                    ? [.. testCategoriesFromTestDataRow, .. discoveredTest.TestCategory]
+                    : [.. testCategoriesFromTestDataRow];
+            }
 
             // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete

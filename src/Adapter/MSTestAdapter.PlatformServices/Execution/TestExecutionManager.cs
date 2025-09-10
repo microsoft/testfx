@@ -511,7 +511,7 @@ public class TestExecutionManager
         bool usesAppDomains)
     {
         bool hasAnyRunnableTests = false;
-        var fixtureTests = new List<TestCase>();
+        List<TestCase>? fixtureTests = null;
 
         IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
@@ -535,7 +535,7 @@ public class TestExecutionManager
             // It is executed by test itself.
             if (currentTest.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
             {
-                fixtureTests.Add(currentTest);
+                (fixtureTests ??= []).Add(currentTest);
                 continue;
             }
 
@@ -549,14 +549,19 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
             // Run single test passing test context properties to it.
-            IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
+            IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
 
             TestTools.UnitTesting.TestResult[] unitTestResult;
-            if (usesAppDomains)
+            if (usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
             {
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - We cannot do right now because we are crossing app domains.
                 // TODO: When app domains support is dropped, we can finally always be calling the async version.
+                // In addition to app domains, if we are STA thread (e.g, because runsettings setting ExecutionApartmentState to STA), we want to preserve that.
+                // If we await, we could end up in a thread pool thread, which is not what we want.
+                // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
+                // 1. A custom single threaded synchronization context that keeps us in STA.
+                // 2. Use ConfigureAwait(true).
                 unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
             }
@@ -573,6 +578,11 @@ public class TestExecutionManager
         }
 
         // Once all tests have been executed, update the status of fixture tests.
+        if (fixtureTests is null)
+        {
+            return;
+        }
+
         foreach (TestCase currentTest in fixtureTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -613,9 +623,14 @@ public class TestExecutionManager
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?> tcmProperties,
+        IDictionary<TestProperty, object?>? tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
+        if (tcmProperties is null)
+        {
+            return new Dictionary<string, object?>(sourceLevelParameters!);
+        }
+
         // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
         // which were originally calculated from TestDeployment.GetDeploymentInformation.
         var testContextProperties = new Dictionary<string, object?>(capacity: 8);

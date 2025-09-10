@@ -41,9 +41,9 @@ public sealed class TestHost
         string? command = null,
         Dictionary<string, string?>? environmentVariables = null,
         bool disableTelemetry = true,
-        int timeoutSeconds = 60)
+        CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingExecutions_semaphore.WaitAsync();
+        await s_maxOutstandingExecutions_semaphore.WaitAsync(cancellationToken);
         try
         {
             if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
@@ -84,20 +84,22 @@ public sealed class TestHost
             return await Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(delay)
-                .ExecuteAsync(async () =>
-                {
-                    CommandLine commandLine = new();
-                    // Disable ANSI rendering so tests have easier time parsing the output.
-                    // Disable progress so tests don't mix progress with overall progress, and with test process output.
-                    int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                        $"{FullName} --no-ansi --no-progress {finalArguments}",
-                        environmentVariables: environmentVariables,
-                        workingDirectory: null,
-                        cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
-                        timeoutInSeconds: timeoutSeconds);
-                    string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
-                    return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
-                });
+                .ExecuteAsync(
+                    async ct =>
+                    {
+                        CommandLine commandLine = new();
+                        // Disable ANSI rendering so tests have easier time parsing the output.
+                        // Disable progress so tests don't mix progress with overall progress, and with test process output.
+                        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+                            $"{FullName} --no-ansi --no-progress {finalArguments}",
+                            environmentVariables: environmentVariables,
+                            workingDirectory: null,
+                            cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+                            cancellationToken: ct);
+                        string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
+                        return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
+                    },
+                    cancellationToken);
         }
         finally
         {

@@ -28,7 +28,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
             public class SomeClass
             {
                 [TestMethod]
-                public async Task [|TestMethod|]() { }
+                public async Task {|#0:TestMethod|}() { }
             }
 
             """;
@@ -37,11 +37,13 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
         }.RunAsync();
 
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(true) },
         }.RunAsync();
     }
 
@@ -58,7 +60,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
             public class SomeClass
             {
                 [DataTestMethod, DataRow(0)]
-                public async Task [|TestMethod|](int arg) { }
+                public async Task {|#0:TestMethod|}(int arg) { }
             }
 
             """;
@@ -66,11 +68,13 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
         }.RunAsync();
 
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(true) },
         }.RunAsync();
     }
 

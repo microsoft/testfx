@@ -56,7 +56,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
                 _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
             }
 
-            _dotnetTestPipeClient = new(arguments[0]);
+            _dotnetTestPipeClient = new(arguments[0], _environment);
             _dotnetTestPipeClient.RegisterAllSerializers();
 
             await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
@@ -88,6 +88,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
+    public bool IsIDE { get; private set; }
+
     public async Task<bool> IsCompatibleProtocolAsync(string hostType)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
@@ -107,6 +109,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
         });
 
         HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+
+        IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
+            bool.TryParse(isIDEValue, out bool isIDE) &&
+            isIDE;
 
         return response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
             IsVersionCompatible(protocolVersion, supportedProtocolVersions);

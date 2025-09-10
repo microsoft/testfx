@@ -13,6 +13,9 @@ vsspell_dictionary_languages = en-US
 vsspell_section_id = 842f80e2d4aa4288afdcd0e42833eeaf
 vsspell_ignored_words_842f80e2d4aa4288afdcd0e42833eeaf = runsettings|nullable|args|testhost|mutex|trx|vstest|arity|async|bool|inlined|json|jsonite|jsonrpc|localhost|readonly|xml|stylecop|indices|dotnet|lifecycle
 
+[*.{xlf,resx}]
+insert_final_newline = unset
+
 # Xml localization files
 [*.xlf]
 vsspell_spell_check_as_you_type = false
@@ -464,9 +467,6 @@ dotnet_diagnostic.CA2245.severity = warning
 
 # CA2248: Provide correct enum argument to Enum.HasFlag
 dotnet_diagnostic.CA2248.severity = warning
-
-# RS0016: Only enable if API files are present
-dotnet_public_api_analyzer.require_api_files = true
 
 # RS0041: Do not use 'Obsolete' attribute
 dotnet_diagnostic.RS0041.severity = none
