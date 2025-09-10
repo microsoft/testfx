@@ -164,7 +164,8 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     // This can happen if the other processes gets killed or crashes while while it's sending the response.
                     // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
                     // In that case, we want the MTP process to also die.
-                    _environment.FailFast("[NamedPipeClient] Connection lost with the other side.");
+                    // Exit code 1 indicates abnormal termination due to IPC connection loss.
+                    _environment.Exit(1);
                 }
 
                 // Reset the current chunk size
