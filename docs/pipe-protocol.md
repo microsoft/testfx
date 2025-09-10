@@ -192,16 +192,16 @@ TODO(youssef): SessionUid shouldn't be different across different artifacts. Why
   - If handshake with different HostType is received, then it's not expected to receive command line options messages.
 - Discovery messages are only intended to be received by HostType=TestHost. It's a violation if it's received from a different host type.
 - Test result messages are only intended to be received by HostType=TestHost. It's a violation if it's received from a different host type.
-- File artifact messages can be received by either TestHost or TestHostController.
+- File artifact messages can be received by either TestHost or TestHostController. 
 - Discovery messages, test result messages, and file artifact messages can only be received after a test session event with event type start.
 - Discovery messages, test result messages, and file artifact messages cannot be received after a test session event with event type finish.
+  - TODO(youssef): Does that mean test host controllers also send test session events? 
 - Test session start/finish must not be received multiple times **per session uid**
   - TODO(youssef): Any hot reload concerns by blocking this scenario? If we don't block this scenario, what should we do?
 - Receiving a test session finish without a corresponding start is an error.
 - It's an error if the test app exited without receiving test session finish events corresponding to all received test session start events.
-- TODO(youssef): Should test session event messages be received only by HostType=TestHost?
-- Failing to receive test session start or finish message at all when HostType=TestHost is an error.
-   - TODO(youssef): this is linked to the previous TODO. What about other host types? 
+- TODO(youssef): Should test session event messages be received only by HostType=TestHost or HostType=TestHostController?
+- Failing to receive test session start or finish message at all when HostType=TestHost or HostType=TestHostController is an error.
 - Open question: For "unknown" messages? What is the best to do to preserve the max possible compatibility?
   - Today: when .NET CLI receives an "unknown serializer id", it skips reading this message, and it responds with VoidResponse.
   - If the expected response of this message on MTP side is not VoidResponse, then MTP will fail with InvalidCastException.
