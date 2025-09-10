@@ -2782,4 +2782,33 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
+
+    #region Regression tests
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithArrayLengthAndMethodCall_ShouldNotTriggerDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.IO;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var buffer = new byte[10];
+                    using (var actual = new MemoryStream())
+                    {
+                        Assert.AreEqual(buffer.Length, actual.Read(buffer, 0, buffer.Length));
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    #endregion
 }
