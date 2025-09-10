@@ -260,11 +260,11 @@
       <_SupportsDotnetConfig Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsDotnetConfig>
     </PropertyGroup>
 
-    <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later. If you use dotnet test, you should opt-in to the new dotnet test experience via dotnet.config. For more information, see https://aka.ms/dotnet-test-mtp-error"
+    <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later. If you use dotnet test, you should opt-in to the new dotnet test experience. For more information, see https://aka.ms/dotnet-test-mtp-error"
            Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(TargetFramework)'!='' AND '$(_SupportsDotnetConfig)'=='true'" />
 
     <CallTarget Condition="'$(VSTestNoBuild)' != 'true' AND '$(TargetFramework)'!=''" Targets="BuildProject" />
-    
+
   </Target>
 
   <!-- The Test target is separated so that we can conditionally define it. -->
