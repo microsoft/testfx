@@ -524,17 +524,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
         <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
-        <target state="new">Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</target>
+        <target state="translated">Contains、StartsWith 和 EndsWith 等方法会返回指示是否满足条件的布尔值。忽略这些返回值可能是一个错误。</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
         <source>The return value of '{0}' should not be ignored</source>
-        <target state="new">The return value of '{0}' should not be ignored</target>
+        <target state="translated">不应忽略 ‘{0}’ 的返回值</target>
         <note />
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueTitle">
         <source>Do not ignore the return value of string methods</source>
-        <target state="new">Do not ignore the return value of string methods</target>
+        <target state="translated">不要忽略字符串方法的返回值</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
