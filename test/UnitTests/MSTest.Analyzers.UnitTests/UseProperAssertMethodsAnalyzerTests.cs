@@ -2810,5 +2810,165 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithArrayLengthAndMethodCall_Reversed_ShouldNotTriggerDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.IO;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var buffer = new byte[10];
+                    using (var actual = new MemoryStream())
+                    {
+                        Assert.AreEqual(actual.Read(buffer, 0, buffer.Length), buffer.Length);
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountAndOtherCollectionCount_ShouldNotTriggerDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var list1 = new List<int> { 1, 2, 3 };
+                    var list2 = new List<int> { 4, 5, 6 };
+                    // This should not suggest Assert.HasCount(list2.Count, list1) as it's confusing
+                    Assert.AreEqual(list1.Count, list2.Count);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountAndLiteral_ShouldTriggerDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(list.Count, 3)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.HasCount(3, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountAndVariable_ShouldTriggerDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    int expectedCount = 3;
+                    {|#0:Assert.AreEqual(list.Count, expectedCount)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    int expectedCount = 3;
+                    Assert.HasCount(expectedCount, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountAndBinaryOperation_ShouldNotTriggerDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            [TestClass]
+            public sealed class Test1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    var list = new List<int> { 1, 2, 3 };
+                    int x = 2;
+                    int y = 1;
+                    // This should not suggest collection assertions for complex expressions
+                    Assert.AreEqual(list.Count, x + y);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     #endregion
 }
