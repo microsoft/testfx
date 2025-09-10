@@ -38,7 +38,7 @@ The test application can operate in one of three modes:
 
 ## Handshake
 
-Handshake is the first message expected to be received. During handshake, we negotiate the protocl version to be used. Note that the handshake message is the one that is expected to always be the same for all protocol versions. Future protocol versions MUST not introduce a breaking change to the handshake message. It's not anticipated that we will need to introduce a new versions of protocol though. So far, we only have version "1.0.0". New features are possible to be added to "1.0.0" without breaking changes.
+Handshake is the first message expected to be received. During handshake, we negotiate the protocol version to be used. Note that the handshake message is the one that is expected to always be the same for all protocol versions. Future protocol versions MUST not introduce a breaking change to the handshake message. It's not anticipated that we will need to introduce a new versions of protocol though. So far, we only have version "1.0.0". New features are possible to be added to "1.0.0" without breaking changes. But we can't be sure what the future will bring.
 
 Handshake is expected to happen in all modes. Help, discovery, and execution.
 Today, there is an MTP bug that we don't handshake in help mode. This will be worked around in .NET CLI. A fix needs to be done in MTP.
@@ -59,7 +59,7 @@ The handshake request contains multiple properties. Some of which are required b
 
 ### Handshake response
 
-The handshake request contains multiple properties. Some of which are required by the test application, and some of them are not required.
+The handshake response contains multiple properties. Some of which are required by the test application, and some of them are not required.
 
 - Process ID (optional): The process id of the .NET CLI.
 - Architecture (optional): The architecture of the .NET CLI.
@@ -69,6 +69,16 @@ The handshake request contains multiple properties. Some of which are required b
 - OS (optional): The operating system running the .NET CLI.
 - Supported protocol version: The final protocol version to use. This can be empty/omitted if the .NET CLI doesn't support any of the versions sent during the handshake request.
   - TODO(youssef): How should the version checks happen? Should we consider only the "major" part for deciding compatibility? In what scenarios could we need to only bump minor/patch components? What would it signify and how that info is supposed to be used? Today, we do a full exact version check.
+
+## Test session event message
+
+TODO(Youssef): Verify if this should be sent during help or discovery modes.
+
+This message denotes test events. Currently, there are two events, start and end. This message has the following properties:
+
+- Event type (required): start or end.
+- SessionUid (required)
+- ExecutionId (required)
 
 ## Command line options
 
@@ -85,6 +95,8 @@ The message has the following properties:
   - Description (optional)
   - IsHidden (optional): .NET CLI can assume "false" if it's not present.
   - IsBuiltIn: TODO(youssef) optional or required? If not present, how should we treat it?
+ 
+Generally, a handshake should be required before receiving this message, but due to MTP bug that causes MTP to not send handshake in help mode, the .NET SDK implementation will tolerate this.
 
 ## Discovery message
 
@@ -139,6 +151,8 @@ This message contains the following properties:
   - Standard error (optional)
   - SessionUid (optional or required?)
 
+TODO(youssef): SessionUid shouldn't be different across test results. Why are we adding it as part of the individual test result?
+
 ## File artifact message
 
 - When running in "discovery" mode, the test app MUST NOT send these messages.
@@ -155,21 +169,15 @@ This message contains the following properties:
   - TestDisplayName (?)
   - SessionUid (?)
 
-## Test session event message
-
-TODO(Youssef): Verify if this should be sent during help or discovery modes.
-
-This message denotes test events. Currently, there are two events, start and end. This message has the following properties:
-
-- Event type (required): start or end.
-- SessionUid (?)
-- ExecutionId (required)
+TODO(youssef): SessionUid shouldn't be different across different artifacts. Why are we adding it as part of the individual test artifact?
 
 ## Implementation guidelines
 
 - Failing to receive any "required" property in the protocol is an error that should be clearly surfaced to the user.
 - All messages coming from a single test application should have the same ExecutionId. Receiving a different ExecutionId for the same test app is an error.
 - Receiving a non-handshake message with InstanceId that wasn't seen in a previous handshake is a protocol violation.
+- Receiving any message without a previous handshake is an error.
+  - Exception: command-line options messages in help mode. It's only an exception as a "workaround" due to MTP bug, but from protocol point of view, it's an error.
 - No messages should ever be attempted to be decoded or received before the handshake message.
   - If we don't know the protocol version yet, we cannot deserialize anything other than handshake!
   - Implementations must NOT deserialize messages and *then* complaining that handshake wasn't received. The deserialization shouldn't be attempted in the first place!
@@ -187,11 +195,13 @@ This message denotes test events. Currently, there are two events, start and end
 - File artifact messages can be received by either TestHost or TestHostController.
 - Discovery messages, test result messages, and file artifact messages can only be received after a test session event with event type start.
 - Discovery messages, test result messages, and file artifact messages cannot be received after a test session event with event type finish.
-- Test session start/finish must not be received multiple times
+- Test session start/finish must not be received multiple times **per session uid**
   - TODO(youssef): Any hot reload concerns by blocking this scenario? If we don't block this scenario, what should we do?
-- test session event messages must be received by HostType=TestHost
-  - TODO(youssef): are these messages sent by other host types as well?
-- Failing to receive test session start or finish message is an error.
+- Receiving a test session finish without a corresponding start is an error.
+- It's an error if the test app exited without receiving test session finish events corresponding to all received test session start events.
+- TODO(youssef): Should test session event messages be received only by HostType=TestHost?
+- Failing to receive test session start or finish message at all when HostType=TestHost is an error.
+   - TODO(youssef): this is linked to the previous TODO. What about other host types? 
 - Open question: For "unknown" messages? What is the best to do to preserve the max possible compatibility?
   - Today: when .NET CLI receives an "unknown serializer id", it skips reading this message, and it responds with VoidResponse.
   - If the expected response of this message on MTP side is not VoidResponse, then MTP will fail with InvalidCastException.
