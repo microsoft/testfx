@@ -93,7 +93,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The output device.</returns>
     public static IOutputDevice GetOutputDevice(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IOutputDevice>();
+        => serviceProvider.GetRequiredService<IOutputDevice>();
 
     /// <summary>
     /// Gets the IClientInfo from the <see cref="IServiceProvider"/>.
@@ -102,7 +102,7 @@ public static class ServiceProviderExtensions
     /// <returns>The IClientInfo object.</returns>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public static IClientInfo GetClientInfo(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IClientInfo>();
+        => serviceProvider.GetRequiredService<IClientInfo>();
 
     // Internals extensions
     internal static TService GetRequiredServiceInternal<TService>(this IServiceProvider provider)
