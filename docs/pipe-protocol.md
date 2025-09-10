@@ -95,7 +95,7 @@ The message has the following properties:
   - Description (optional)
   - IsHidden (optional): .NET CLI can assume "false" if it's not present.
   - IsBuiltIn: TODO(youssef) optional or required? If not present, how should we treat it?
- 
+
 Generally, a handshake should be required before receiving this message, but due to MTP bug that causes MTP to not send handshake in help mode, the .NET SDK implementation will tolerate this.
 
 ## Discovery message
@@ -192,10 +192,10 @@ TODO(youssef): SessionUid shouldn't be different across different artifacts. Why
   - If handshake with different HostType is received, then it's not expected to receive command line options messages.
 - Discovery messages are only intended to be received by HostType=TestHost. It's a violation if it's received from a different host type.
 - Test result messages are only intended to be received by HostType=TestHost. It's a violation if it's received from a different host type.
-- File artifact messages can be received by either TestHost or TestHostController. 
+- File artifact messages can be received by either TestHost or TestHostController.
 - Discovery messages, test result messages, and file artifact messages can only be received after a test session event with event type start.
 - Discovery messages, test result messages, and file artifact messages cannot be received after a test session event with event type finish.
-  - TODO(youssef): Does that mean test host controllers also send test session events? 
+  - TODO(youssef): Does that mean test host controllers also send test session events?
 - Test session start/finish must not be received multiple times **per session uid**
   - TODO(youssef): Any hot reload concerns by blocking this scenario? If we don't block this scenario, what should we do?
 - Receiving a test session finish without a corresponding start is an error.
