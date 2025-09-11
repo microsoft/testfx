@@ -61,7 +61,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
 
     private static bool IsConstant(IArgumentOperation argumentOperation)
     {
-        var operation = argumentOperation.Value.WalkDownConversion();
+        IOperation operation = argumentOperation.Value.WalkDownConversion();
         return operation.ConstantValue.HasValue || operation.Kind == OperationKind.TypeOf;
     }
 
