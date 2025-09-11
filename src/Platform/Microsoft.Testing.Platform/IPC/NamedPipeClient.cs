@@ -165,7 +165,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                     // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
                     // In that case, we want the MTP process to also die.
                     // Exit code 1 indicates abnormal termination due to IPC connection loss.
-                    _environment.Exit(1);
+                    _environment.Exit(ExitCodes.GenericFailure);
                 }
 
                 // Reset the current chunk size
