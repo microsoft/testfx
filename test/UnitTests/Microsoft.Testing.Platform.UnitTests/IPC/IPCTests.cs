@@ -41,9 +41,9 @@ public sealed class IPCTests
                             new SystemEnvironment(),
                             new Mock<ILogger>().Object,
                             new SystemTask(),
-                            _testContext.CancellationTokenSource.Token);
+                            _testContext.CancellationToken);
 
-                        await singleConnectionNamedPipeServer.WaitConnectionAsync(_testContext.CancellationTokenSource.Token);
+                        await singleConnectionNamedPipeServer.WaitConnectionAsync(_testContext.CancellationToken);
                         openedPipe.Add(singleConnectionNamedPipeServer);
                     }
                 }
@@ -52,11 +52,11 @@ public sealed class IPCTests
                     exceptions.Add(ex);
                     waitException.Set();
                 }
-            }, _testContext.CancellationTokenSource.Token);
+            }, _testContext.CancellationToken);
 
         NamedPipeClient namedPipeClient1 = new(pipeNameDescription.Name);
-        await namedPipeClient1.ConnectAsync(_testContext.CancellationTokenSource.Token);
-        waitException.Wait(_testContext.CancellationTokenSource.Token);
+        await namedPipeClient1.ConnectAsync(_testContext.CancellationToken);
+        waitException.Wait(_testContext.CancellationToken);
 
         Assert.HasCount(1, openedPipe);
         Assert.HasCount(1, exceptions);
@@ -107,7 +107,7 @@ public sealed class IPCTests
                         manualResetEventSlim.Set();
                         break;
                     }
-                    catch (OperationCanceledException ct) when (ct.CancellationToken == _testContext.CancellationTokenSource.Token)
+                    catch (OperationCanceledException ct) when (ct.CancellationToken == _testContext.CancellationToken)
                     {
                         throw new OperationCanceledException("SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded cancellation during connect, testContext.CancellationTokenSource.Token");
                     }
@@ -119,7 +119,7 @@ public sealed class IPCTests
                     {
                     }
                 }
-            }, _testContext.CancellationTokenSource.Token);
+            }, _testContext.CancellationToken);
         NamedPipeServer singleConnectionNamedPipeServer = new(
             pipeNameDescription,
             request =>
@@ -136,7 +136,7 @@ public sealed class IPCTests
         singleConnectionNamedPipeServer.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         singleConnectionNamedPipeServer.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
         await singleConnectionNamedPipeServer.WaitConnectionAsync(CancellationToken.None);
-        manualResetEventSlim.Wait(_testContext.CancellationTokenSource.Token);
+        manualResetEventSlim.Wait(_testContext.CancellationToken);
 
         await clientConnected.WithCancellationAsync(CancellationToken.None);
 
@@ -184,7 +184,7 @@ public sealed class IPCTests
                 new Mock<ILogger>().Object,
                 new SystemTask(),
                 maxNumberOfServerInstances: 3,
-                _testContext.CancellationTokenSource.Token));
+                _testContext.CancellationToken));
         }
 
         IOException exception = Assert.ThrowsExactly<IOException>(() =>
@@ -195,7 +195,7 @@ public sealed class IPCTests
                 new Mock<ILogger>().Object,
                 new SystemTask(),
                 maxNumberOfServerInstances: 3,
-                _testContext.CancellationTokenSource.Token));
+                _testContext.CancellationToken));
         Assert.Contains("All pipe instances are busy.", exception.Message);
 
         List<Task> waitConnectionTask = [];
@@ -205,9 +205,9 @@ public sealed class IPCTests
             waitConnectionTask.Add(Task.Run(
                 async () =>
                 {
-                    await namedPipeServer.WaitConnectionAsync(_testContext.CancellationTokenSource.Token);
+                    await namedPipeServer.WaitConnectionAsync(_testContext.CancellationToken);
                     Interlocked.Increment(ref connectionCompleted);
-                }, _testContext.CancellationTokenSource.Token));
+                }, _testContext.CancellationToken));
         }
 
         List<NamedPipeClient> connectedClients = [];
@@ -215,7 +215,7 @@ public sealed class IPCTests
         {
             NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
             connectedClients.Add(namedPipeClient);
-            await namedPipeClient.ConnectAsync(_testContext.CancellationTokenSource.Token);
+            await namedPipeClient.ConnectAsync(_testContext.CancellationToken);
         }
 
         await Task.WhenAll([.. waitConnectionTask]);

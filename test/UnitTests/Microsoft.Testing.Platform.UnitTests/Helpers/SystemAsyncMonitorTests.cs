@@ -19,7 +19,7 @@ public sealed class SystemAsyncMonitorTests
         var stopwatch = Stopwatch.StartNew();
         for (int i = 0; i < 3; i++)
         {
-            tasks.Add(Task.Run(TestLock, TestContext.CancellationTokenSource.Token));
+            tasks.Add(Task.Run(TestLock, TestContext.CancellationToken));
         }
 
         await Task.WhenAll([.. tasks]);
@@ -39,7 +39,7 @@ public sealed class SystemAsyncMonitorTests
                 }
 
                 lockState = true;
-                await Task.Delay(1000, TestContext.CancellationTokenSource.Token);
+                await Task.Delay(1000, TestContext.CancellationToken);
                 lockState = false;
             }
         }

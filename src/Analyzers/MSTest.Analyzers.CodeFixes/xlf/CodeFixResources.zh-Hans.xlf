@@ -22,6 +22,16 @@
         <target state="translated">使用“{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
+        <source>Use interpolated string instead of format parameters</source>
+        <target state="translated">使用内插字符串而不是格式参数</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
+        <source>Use 'string.Format' instead of format parameters</source>
+        <target state="translated">使用 'string.Format' 而不是格式参数</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">将方法可访问性更改为“private”</target>
@@ -48,8 +58,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
-        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="translated">将 'TestContext.CancellationTokenSource.Token' 参数传递给方法调用</target>
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="translated">将 'TestContext.CancellationToken' 参数传递给方法调用</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -115,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">添加“[TestMethod]”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="translated">请改用 'TestContext.CancellationToken'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

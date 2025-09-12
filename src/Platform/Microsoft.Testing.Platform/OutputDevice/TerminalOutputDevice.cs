@@ -234,7 +234,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     if (_platformInformation.BuildDate is { } buildDate)
                     {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
                     }
 
                     if (_runtimeFeature.IsDynamicCodeSupported)

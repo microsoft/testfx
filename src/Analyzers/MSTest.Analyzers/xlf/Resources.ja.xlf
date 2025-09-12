@@ -132,6 +132,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">値型に 'Assert.AreSame' または 'Assert.AreNotSame' を使用しないでください</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="translated">'{0}' を string.Format または文字列の補間で書式設定パラメーターに置き換える</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="translated">書式設定パラメーターで Assert メソッドを使用しないようにする</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">'[ExpectedException]' よりも 'Assert.ThrowsExactly' または 'Assert.ThrowsExactlyAsync' を優先します。これは、予期された呼び出しのみが予期された例外をスローするようにするためです。アサート API もさらに柔軟性が高く、これにより例外の追加プロパティをアサートできます。</target>
@@ -453,13 +463,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationTokenSource.Token でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationToken でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">CancellationToken を受け取り、'TestContext.CancellationTokenSource.Token' を渡すオーバーロードの使用を検討してください</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="translated">CancellationToken を受け取り、'TestContext.CancellationToken' を渡すオーバーロードの使用を検討してください</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -510,6 +520,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
         <target state="translated">GlobalTestInitialize および GlobalTestCleanup メソッドには有効なレイアウトが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueDescription">
+        <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
+        <target state="translated">Contains、StartsWith、EndsWith などのメソッドは、条件が満たされたかどうかを示すブール値を返します。これらの戻り値を無視するのは間違いである可能性が高いです。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
+        <source>The return value of '{0}' should not be ignored</source>
+        <target state="translated">'{0}' の戻り値は無視しないでください</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueTitle">
+        <source>Do not ignore the return value of string methods</source>
+        <target state="translated">文字列メソッドの戻り値を無視しない</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -640,6 +665,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">テスト メソッド '{0}' シグネチャが無効です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="translated">TestContext.CancellationToken は、TestContext.CancellationTokenSource.Token と比較して、より直接的に取り消しトークンにアクセスできます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">'TestContext.CancellationTokenSource.Token' の代わりに 'TestContext.CancellationToken' を使用する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="translated">TestContext.CancellationTokenSource.Token の代わりに TestContext.CancellationToken を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

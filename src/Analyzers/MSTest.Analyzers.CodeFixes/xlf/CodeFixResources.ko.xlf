@@ -22,6 +22,16 @@
         <target state="translated">'{0}' 사용</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
+        <source>Use interpolated string instead of format parameters</source>
+        <target state="translated">형식 매개 변수 대신 보간된 문자열 사용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
+        <source>Use 'string.Format' instead of format parameters</source>
+        <target state="translated">형식 매개 변수 대신 'string.Format' 사용</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">메서드 접근성 '비공개'로 변경하기</target>
@@ -48,8 +58,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
-        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="translated">메서드 호출에 'TestContext.CancellationTokenSource.Token' 인수 전달</target>
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="translated">메서드 호출에 'TestContext.CancellationToken' 인수 전달</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -115,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' 추가</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="translated">대신 'TestContext.CancellationToken' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

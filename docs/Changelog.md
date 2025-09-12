@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.10.4" />[3.10.4] - 2025-09-02
+
+See full log [of v3.10.3...v3.10.4](https://github.com/microsoft/testfx/compare/v3.10.3...v3.10.4)
+
+### Fixed
+
+* Synchronize _testContextMessageStringBuilder by @Youssef1313 in [#6459](https://github.com/microsoft/testfx/pull/6459)
+* Fix MSTEST0001 (parallelization analyzer) to work with VSTest by @Youssef1313 in [#6480](https://github.com/microsoft/testfx/pull/6480)
+* Fix StringAssertToAssertFixer to swap StringComparison and message arguments by @Youssef1313 in [#6481](https://github.com/microsoft/testfx/pull/6481)
+* Fix MSTEST0002 codefix to not change modifier order by @Youssef1313 in [#6479](https://github.com/microsoft/testfx/pull/6479)
+
+### Artifacts
+
+* MSTest: [3.10.4](https://www.nuget.org/packages/MSTest/3.10.4)
+* MSTest.TestFramework: [3.10.4](https://www.nuget.org/packages/MSTest.TestFramework/3.10.4)
+* MSTest.TestAdapter: [3.10.4](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.4)
+* MSTest.Analyzers: [3.10.4](https://www.nuget.org/packages/MSTest.Analyzers/3.10.4)
+* MSTest.Sdk: [3.10.4](https://www.nuget.org/packages/MSTest.Sdk/3.10.4)
+* MSTest.SourceGeneration: [1.0.0-alpha.25452.8](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25452.8)
+* MSTest.Engine: [1.0.0-alpha.25452.8](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25452.8)
+
+## <a name="3.10.3" />[3.10.3] - 2025-08-26
+
+See full log [of v3.10.2...v3.10.3](https://github.com/microsoft/testfx/compare/v3.10.2...v3.10.3)
+
+### Fixed
+
+* No change, released to keep version aligned with Microsoft.Testing.Platform.
+
+### Artifacts
+
+* MSTest: [3.10.3](https://www.nuget.org/packages/MSTest/3.10.3)
+* MSTest.TestFramework: [3.10.3](https://www.nuget.org/packages/MSTest.TestFramework/3.10.3)
+* MSTest.TestAdapter: [3.10.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.3)
+* MSTest.Analyzers: [3.10.3](https://www.nuget.org/packages/MSTest.Analyzers/3.10.3)
+* MSTest.Sdk: [3.10.3](https://www.nuget.org/packages/MSTest.Sdk/3.10.3)
+* MSTest.SourceGeneration: [1.0.0-alpha.25425.9](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25425.9)
+* MSTest.Engine: [1.0.0-alpha.25425.9](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25425.9)
+
 ## <a name="3.10.2" />[3.10.2] - 2025-08-12
 
 See full log [of v3.10.1...v3.10.2](https://github.com/microsoft/testfx/compare/v3.10.1...v3.10.2)

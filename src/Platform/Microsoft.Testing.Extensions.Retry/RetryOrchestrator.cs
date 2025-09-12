@@ -169,23 +169,28 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
-            // Prepare the process start
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = executableInfo.FilePath,
-#if !NETCOREAPP
-                UseShellExecute = false,
-#endif
-            };
-
-            foreach (string argument in finalArguments)
-            {
-#if !NETCOREAPP
-                processStartInfo.Arguments += argument + " ";
+#if NET8_0_OR_GREATER
+            // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
+            // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
+            List<string> arguments = finalArguments;
 #else
-                processStartInfo.ArgumentList.Add(argument);
-#endif
+            // Current target framework (.NET Framework and .NET Standard 2.0) only supports arguments as a single string.
+            // In this case, escaping is essential. For example, one of the arguments could already contain spaces.
+            // PasteArguments is borrowed from dotnet/runtime.
+            var builder = new StringBuilder();
+            foreach (string arg in finalArguments)
+            {
+                PasteArguments.AppendArgument(builder, arg);
             }
+
+            string arguments = builder.ToString();
+#endif
+
+            // Prepare the process start
+            ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments)
+            {
+                UseShellExecute = false,
+            };
 
             await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)

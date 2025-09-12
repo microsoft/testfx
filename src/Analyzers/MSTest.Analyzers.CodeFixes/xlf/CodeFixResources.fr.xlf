@@ -22,6 +22,16 @@
         <target state="translated">Utiliser « {0} »</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
+        <source>Use interpolated string instead of format parameters</source>
+        <target state="translated">Utiliser une chaîne interpolée au lieu de paramètres de format</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
+        <source>Use 'string.Format' instead of format parameters</source>
+        <target state="translated">Utiliser « string.Format » au lieu des paramètres de format</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Remplacer l’accessibilité de la méthode par « privé »</target>
@@ -48,8 +58,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
-        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="translated">Passer l’argument « TestContext.CancellationTokenSource.Token » à l’appel de méthode</target>
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="translated">Transmettre l'argument « TestContext.CancellationToken » à l'appel de méthode</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -115,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Ajouter « [TestMethod] »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="translated">Utiliser plutôt « TestContext.CancellationToken »</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

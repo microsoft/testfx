@@ -13,6 +13,9 @@ vsspell_dictionary_languages = en-US
 vsspell_section_id = 842f80e2d4aa4288afdcd0e42833eeaf
 vsspell_ignored_words_842f80e2d4aa4288afdcd0e42833eeaf = runsettings|nullable|args|testhost|mutex|trx|vstest|arity|async|bool|inlined|json|jsonite|jsonrpc|localhost|readonly|xml|stylecop|indices|dotnet|lifecycle
 
+[*.{xlf,resx}]
+insert_final_newline = unset
+
 # Xml localization files
 [*.xlf]
 vsspell_spell_check_as_you_type = false

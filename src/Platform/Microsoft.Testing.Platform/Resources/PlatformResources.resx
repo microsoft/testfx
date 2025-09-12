@@ -713,4 +713,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="OnlyOneFilterSupported" xml:space="preserve">
     <value>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</value>
   </data>
+  <data name="PlatformCommandLineDebugAttachOptionDescription" xml:space="preserve">
+    <value>Allows to pause execution in order to attach to the process for debug purposes.</value>
+  </data>
 </root>

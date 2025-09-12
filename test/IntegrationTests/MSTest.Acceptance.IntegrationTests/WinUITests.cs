@@ -22,7 +22,7 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
         }
 
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, WinUITargetFramework);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -81,4 +81,6 @@ public class TestClass1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

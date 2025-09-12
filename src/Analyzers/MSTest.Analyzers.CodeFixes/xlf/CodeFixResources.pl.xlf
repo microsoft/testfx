@@ -22,6 +22,16 @@
         <target state="translated">Użyj „{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
+        <source>Use interpolated string instead of format parameters</source>
+        <target state="translated">Użyj ciągu interpolowanego zamiast parametrów formatu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
+        <source>Use 'string.Format' instead of format parameters</source>
+        <target state="translated">Użyj ciągu „string.Format” zamiast parametrów formatu</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Zmień dostępność metody na „private” (prywatna)</target>
@@ -48,8 +58,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
-        <source>Pass 'TestContext.CancellationTokenSource.Token' argument to method call</source>
-        <target state="translated">Przekaż argument „TestContext.CancellationTokenSource.Token” do wywołania metody</target>
+        <source>Pass 'TestContext.CancellationToken' argument to method call</source>
+        <target state="translated">Przekaż argument „TestContext.CancellationToken” do wywołania metody</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -115,6 +125,11 @@
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Dodaj „[TestMethod]”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyFix">
+        <source>Use 'TestContext.CancellationToken' instead</source>
+        <target state="translated">Zamiast tego użyj argumentu „TestContext.CancellationToken”</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">

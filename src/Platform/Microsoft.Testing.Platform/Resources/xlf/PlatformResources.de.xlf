@@ -466,6 +466,11 @@
         <target state="translated">Gibt eine testconfig.json-Datei an.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
+        <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
+        <target state="translated">Ermöglicht das Anhalten der Ausführung zum Anfügen an den Prozess zum Debuggen.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).

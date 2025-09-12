@@ -132,6 +132,16 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Nie używaj elementu "Assert.AreSame" ani "Assert.AreNotSame" z typami wartości</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
+        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
+        <target state="translated">Zamień „{0}” na parametry formatu za pomocą string.Format lub interpolacji ciągu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertFormatParametersTitle">
+        <source>Avoid using Assert methods with format parameters</source>
+        <target state="translated">Unikaj używania metod Assert z parametrami formatu</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
         <target state="translated">Preferuj opcję „Assert.ThrowsExactly” lub „Assert.ThrowsExactlyAsync” zamiast „[ExpectedException]”, ponieważ gwarantuje ona, że tylko oczekiwane wywołanie rzuci oczekiwany wyjątek. Interfejsy API potwierdzenia zapewniają również większą elastyczność i pozwalają na potwierdzenie dodatkowych właściwości wyjątku.</target>
@@ -453,13 +463,13 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
-        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationTokenSource.Token to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">W przypadku wywoływania metod asynchronicznych, które mają przeciążenia akceptujące parametr CancellationToken, preferuj użycie przeciążenia z elementem TestContext.CancellationTokenSource.Token, aby umożliwić współpracujące anulowanie i uwzględnić limity czasu testu.</target>
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">W przypadku wywoływania metod asynchronicznych, które mają przeciążenia akceptujące parametr CancellationToken, preferuj użycie przeciążenia z argumentem TestContext.CancellationToken, aby umożliwić anulowanie w trybie współpracy i respektowanie limitów czasu testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
-        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">Rozważ użycie przeciążenia akceptującego parametr CancellationToken i przekazanie elementu „TestContext.CancellationTokenSource.Token”</target>
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="translated">Rozważ użycie przeciążenia, które akceptuje element CancellationToken i przekaż argument „TestContext.CancellationToken”</target>
         <note />
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
@@ -510,6 +520,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
         <target state="translated">Metody GlobalTestInitialize i GlobalTestCleanup powinny mieć prawidłowy układ</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueDescription">
+        <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
+        <target state="translated">Metody takie jak Contains, StartsWith i EndsWith zwracają wartości logiczne wskazujące, czy warunek został spełniony. Ignorowanie tych wartości zwrotnych jest prawdopodobnie błędem.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
+        <source>The return value of '{0}' should not be ignored</source>
+        <target state="translated">Zwracana wartość „{0}” nie powinna być ignorowana</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueTitle">
+        <source>Do not ignore the return value of string methods</source>
+        <target state="translated">Nie ignoruj zwracanej wartości metod ciągu</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -640,6 +665,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Podpis metody testowej „{0}” jest nieprawidłowy</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="translated">Element TestContext.CancellationToken zapewnia bardziej bezpośredni sposób uzyskiwania dostępu do tokenu anulowania w porównaniu z elementem TestContext.CancellationTokenSource.Token.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">Użyj argumentu „TestContext.CancellationToken” zamiast argumentu „TestContext.CancellationTokenSource.Token”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="translated">Użyj argumentu TestContext.CancellationToken zamiast argumentu TestContext.CancellationTokenSource.Token</target>
         <note />
       </trans-unit>
       <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">

@@ -37,7 +37,8 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
             environmentVariables: new Dictionary<string, string?>
             {
                 [$"{inconclusiveStep}Inconclusive"] = "1",
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         if (inconclusiveStep >= Lifecycle.ClassCleanup)
         {
@@ -232,4 +233,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

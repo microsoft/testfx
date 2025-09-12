@@ -89,7 +89,7 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string? DeclaringAssemblyName
     {
-        get => field;
+        get;
 
         set
         {
@@ -106,7 +106,7 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string? DeclaringClassFullName
     {
-        get => field;
+        get;
 
         set
         {

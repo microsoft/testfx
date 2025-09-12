@@ -14,7 +14,7 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
     public async Task DetailedOutputIsAsExpected(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--output detailed");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertOutputContains("Assert.AreEqual failed. Expected:<1>. Actual:<2>.");
@@ -80,4 +80,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -14,7 +14,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     public async Task TestContextsAreCorrectlySet(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCtor");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCtor", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -25,7 +25,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     public async Task TestContext_TestData_PropertyContainsExpectedValue()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextData");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextData", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -36,7 +36,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     public async Task TestContext_TestException_PropertyContainsExpectedValue()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextException");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextException", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(2);
@@ -49,7 +49,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     public async Task TestContext_TestDisplayName_PropertyContainsExpectedValue()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextDisplayName");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextDisplayName", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -60,7 +60,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
     public async Task TestContext_Properties_ConsidersClassTypeCorrectly()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextTestPropertyImpl");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextTestPropertyImpl", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -452,4 +452,6 @@ public class TestContextTestPropertyImpl : TestContextTestPropertyBase
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

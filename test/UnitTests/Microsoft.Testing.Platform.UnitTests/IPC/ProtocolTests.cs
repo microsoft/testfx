@@ -49,7 +49,7 @@ public sealed class ProtocolTests
         Assert.IsNotNull(deserialized);
         Assert.AreEqual(message.ExecutionId, deserialized.ExecutionId);
         Assert.AreEqual(message.InstanceId, deserialized.InstanceId);
-        Assert.AreEqual(message.DiscoveredMessages.Length, deserialized.DiscoveredMessages.Length);
+        Assert.HasCount(message.DiscoveredMessages.Length, deserialized.DiscoveredMessages);
         for (int i = 0; i < message.DiscoveredMessages.Length; i++)
         {
             DiscoveredTestMessage expected = message.DiscoveredMessages[i];
@@ -61,12 +61,76 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.Namespace, actual.Namespace);
             Assert.AreEqual(expected.TypeName, actual.TypeName);
             Assert.AreEqual(expected.MethodName, actual.MethodName);
-            Assert.AreEqual(expected.Traits.Length, actual.Traits.Length);
+            Assert.HasCount(expected.Traits.Length, actual.Traits);
             for (int j = 0; j < expected.Traits.Length; j++)
             {
                 Assert.AreEqual(expected.Traits[j].Key, actual.Traits[j].Key);
                 Assert.AreEqual(expected.Traits[j].Value, actual.Traits[j].Value);
             }
         }
+    }
+
+    [TestMethod]
+    public void HandshakeMessageWithProperties()
+    {
+        var message = new HandshakeMessage(new Dictionary<byte, string>
+        {
+            { 10, "Ten" },
+            { 35, "ThirtyFive" },
+            { 48, "FortyEight" },
+        });
+
+        var stream = new MemoryStream();
+        new HandshakeMessageSerializer().Serialize(message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+
+        Assert.IsNotNull(actual.Properties);
+        Assert.IsNotNull(message.Properties);
+
+        Assert.HasCount(3, actual.Properties);
+        Assert.HasCount(3, message.Properties);
+
+        Assert.AreEqual("Ten", actual.Properties[10]);
+        Assert.AreEqual("Ten", message.Properties[10]);
+
+        Assert.AreEqual("ThirtyFive", actual.Properties[35]);
+        Assert.AreEqual("ThirtyFive", message.Properties[35]);
+
+        Assert.AreEqual("FortyEight", actual.Properties[48]);
+        Assert.AreEqual("FortyEight", message.Properties[48]);
+    }
+
+    [TestMethod]
+    public void HandshakeMessageWithEmptyProperties()
+    {
+        var message = new HandshakeMessage([]);
+
+        var stream = new MemoryStream();
+        new HandshakeMessageSerializer().Serialize(message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+
+        Assert.IsNotNull(actual.Properties);
+        Assert.IsNotNull(message.Properties);
+
+        Assert.IsEmpty(actual.Properties);
+        Assert.IsEmpty(message.Properties);
+    }
+
+    [TestMethod]
+    public void HandshakeMessageWithNullProperties()
+    {
+        var message = new HandshakeMessage(null);
+
+        var stream = new MemoryStream();
+        new HandshakeMessageSerializer().Serialize(message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+
+        Assert.IsNotNull(actual.Properties);
+        Assert.IsNull(message.Properties);
+
+        Assert.IsEmpty(actual.Properties);
     }
 }
