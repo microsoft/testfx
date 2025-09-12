@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+  </PropertyGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package provides Open Telemetry for the platform.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
+</Project>
