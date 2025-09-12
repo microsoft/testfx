@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -14,18 +16,18 @@ public class DesktopTestSourceTests : TestContainer
 
     public DesktopTestSourceTests() => _testSource = new TestSource();
 
-    public void ValidSourceExtensionsShouldContainDllExtensions() => Verify(_testSource.ValidSourceExtensions.Contains(".dll"));
+    public void ValidSourceExtensionsShouldContainDllExtensions() => _testSource.ValidSourceExtensions.Contains(".dll").Should().BeTrue();
 
-    public void ValidSourceExtensionsShouldContainExeExtensions() => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".exe"));
+    public void ValidSourceExtensionsShouldContainExeExtensions() => _testSource.ValidSourceExtensions.ToList().Contains(".exe").Should().BeTrue();
 
-    public void ValidSourceExtensionsShouldContainAppxExtensions() => Verify(_testSource.ValidSourceExtensions.Contains(".appx"));
+    public void ValidSourceExtensionsShouldContainAppxExtensions() => _testSource.ValidSourceExtensions.Contains(".appx").Should().BeTrue();
 
-    public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull() => Verify(_testSource.IsAssemblyReferenced(null!, "DummySource"));
+    public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull() => _testSource.IsAssemblyReferenced(null!, "DummySource").Should().BeTrue();
 
-    public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull() => Verify(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null!));
+    public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull() => _testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null!).Should().BeTrue();
 
-    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => Verify(_testSource.IsAssemblyReferenced(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
+    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => _testSource.IsAssemblyReferenced(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location).Should().BeTrue();
 
-    public void IsAssemblyReferencedShouldReturnFalseIfAnAssemblyIsNotReferencedInSource() => Verify(!_testSource.IsAssemblyReferenced(new AssemblyName("foobar"), Assembly.GetExecutingAssembly().Location));
+    public void IsAssemblyReferencedShouldReturnFalseIfAnAssemblyIsNotReferencedInSource() => _testSource.IsAssemblyReferenced(new AssemblyName("foobar"), Assembly.GetExecutingAssembly().Location).Should().BeFalse();
 }
 #endif

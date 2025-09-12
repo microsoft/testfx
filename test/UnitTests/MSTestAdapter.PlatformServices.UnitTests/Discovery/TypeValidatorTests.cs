@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
@@ -34,12 +36,12 @@ public class TypeValidatorTests : TestContainer
 
     #region Type is class, TestClassAttribute or attribute derived from TestClassAttribute
 
-    public void IsValidTestClassShouldReturnFalseForNonClassTypes() => Verify(!_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
+    public void IsValidTestClassShouldReturnFalseForNonClassTypes() => _typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings).Should().BeFalse();
 
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>(), false)).Returns(false);
-        Verify(!_typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings));
+        _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldReturnTrueForClassesMarkedByAnAttributeDerivedFromTestClass()
@@ -47,7 +49,7 @@ public class TypeValidatorTests : TestContainer
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(false);
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
-        Verify(_typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings));
+        _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeTrue();
     }
 
     #endregion
@@ -57,41 +59,41 @@ public class TypeValidatorTests : TestContainer
     public void IsValidTestClassShouldReturnFalseForNonPublicTestClasses()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings));
+        _typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldReportWarningForNonPublicTestClasses()
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings);
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName)));
+        _warnings.Count.Should().Be(1);
+        _warnings.Should().Contain(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName));
     }
 
     public void IsValidTestClassShouldReturnFalseForNestedNonPublicTestClasses()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings));
+        _typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldReportWarningsForNestedNonPublicTestClasses()
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings);
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName)));
+        _warnings.Count.Should().Be(1);
+        _warnings.Should().Contain(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName));
     }
 
     public void IsValidTestClassShouldReturnTrueForPublicTestClasses()
     {
         SetupTestClass();
-        Verify(_typeValidator.IsValidTestClass(typeof(PublicTestClass), _warnings));
+        _typeValidator.IsValidTestClass(typeof(PublicTestClass), _warnings).Should().BeTrue();
     }
 
     public void IsValidTestClassShouldReturnTrueForNestedPublicTestClasses()
     {
         SetupTestClass();
-        Verify(_typeValidator.IsValidTestClass(typeof(OuterClass.NestedPublicClass), _warnings));
+        _typeValidator.IsValidTestClass(typeof(OuterClass.NestedPublicClass), _warnings).Should().BeTrue();
     }
 
     #endregion
@@ -103,7 +105,7 @@ public class TypeValidatorTests : TestContainer
         var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         SetupTestClass();
-        Verify(typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings));
+        typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings).Should().BeTrue();
     }
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningForInternalTestClasses()
@@ -112,7 +114,7 @@ public class TypeValidatorTests : TestContainer
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings);
-        Verify(_warnings.Count == 0);
+        _warnings.Count.Should().Be(0);
     }
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForNestedInternalTestClasses()
@@ -120,7 +122,7 @@ public class TypeValidatorTests : TestContainer
         var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
         SetupTestClass();
-        Verify(typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings));
+        typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings).Should().BeTrue();
     }
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForPrivateTestClasses()
@@ -130,7 +132,7 @@ public class TypeValidatorTests : TestContainer
         Type nestedPrivateClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "NestedPrivateClass");
 
         SetupTestClass();
-        Verify(!typeValidator.IsValidTestClass(nestedPrivateClassType, _warnings));
+        typeValidator.IsValidTestClass(nestedPrivateClassType, _warnings).Should().BeFalse();
     }
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForInaccessibleTestClasses()
@@ -140,7 +142,7 @@ public class TypeValidatorTests : TestContainer
         Type inaccessibleClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "InaccessiblePublicClass");
 
         SetupTestClass();
-        Verify(!typeValidator.IsValidTestClass(inaccessibleClassType, _warnings));
+        typeValidator.IsValidTestClass(inaccessibleClassType, _warnings).Should().BeFalse();
     }
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningsForNestedInternalTestClasses()
@@ -149,7 +151,7 @@ public class TypeValidatorTests : TestContainer
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings);
-        Verify(_warnings.Count == 0);
+        _warnings.Count.Should().Be(0);
     }
 
     #endregion
@@ -159,15 +161,15 @@ public class TypeValidatorTests : TestContainer
     public void IsValidTestClassShouldReturnFalseForNonAbstractGenericTypes()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(GenericClass<>), _warnings));
+        _typeValidator.IsValidTestClass(typeof(GenericClass<>), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldReportWarningsForNonAbstractGenericTypes()
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(GenericClass<>), _warnings);
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, typeof(GenericClass<>).FullName)));
+        _warnings.Count.Should().Be(1);
+        _warnings.Should().Contain(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, typeof(GenericClass<>).FullName));
     }
 
     #endregion
@@ -177,14 +179,14 @@ public class TypeValidatorTests : TestContainer
     public void IsValidTestClassShouldReturnTrueForTestClassesWithReadOnlyTestContextSignature()
     {
         SetupTestClass();
-        Verify(_typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings));
-        Verify(_warnings.Count == 0);
+        _typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings).Should().BeTrue();
+        _warnings.Count.Should().Be(0);
     }
 
     public void IsValidTestClassShouldReturnTrueForTestClassesWithValidTestContextSignature()
     {
         SetupTestClass();
-        Verify(_typeValidator.IsValidTestClass(typeof(ClassWithTestContext), _warnings));
+        _typeValidator.IsValidTestClass(typeof(ClassWithTestContext), _warnings).Should().BeTrue();
     }
 
     #endregion
@@ -194,40 +196,40 @@ public class TypeValidatorTests : TestContainer
     public void IsValidTestClassShouldReturnFalseForAbstractTestClasses()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(AbstractTestClass), _warnings));
+        _typeValidator.IsValidTestClass(typeof(AbstractTestClass), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldNotReportWarningsForAbstractTestClasses()
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(AbstractTestClass), _warnings);
-        Verify(_warnings.Count == 0);
+        _warnings.Count.Should().Be(0);
     }
 
     public void IsValidTestClassShouldReturnFalseForGenericAbstractTestClasses()
     {
         SetupTestClass();
-        Verify(!_typeValidator.IsValidTestClass(typeof(AbstractGenericClass<>), _warnings));
-        Verify(_warnings.Count == 0);
+        _typeValidator.IsValidTestClass(typeof(AbstractGenericClass<>), _warnings).Should().BeFalse();
+        _warnings.Count.Should().Be(0);
     }
 
     #endregion
 
     #region HasCorrectTestContext tests
 
-    public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
+    public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty() => TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)).Should().BeTrue();
 
-    public void HasCorrectTestContextSignatureShouldReturnTrueForTestContextsWithNoSetters() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
+    public void HasCorrectTestContextSignatureShouldReturnTrueForTestContextsWithNoSetters() => TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)).Should().BeTrue();
 
-    public void HasCorrectTestContextSignatureShouldReturnTrueForTestContextsWithPrivateSetter() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
+    public void HasCorrectTestContextSignatureShouldReturnTrueForTestContextsWithPrivateSetter() => TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)).Should().BeTrue();
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter() => TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)).Should().BeFalse();
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter() => TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)).Should().BeFalse();
 
-    public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
+    public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties() => TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)).Should().BeTrue();
 
-    public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
+    public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext() => TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)).Should().BeTrue();
 
     #endregion
 
@@ -239,11 +241,11 @@ public class TypeValidatorTests : TestContainer
         // list of our test types, to avoid bugs caused by typos.
         string[] allTypes = [.. GetAllTestTypes().Select(t => t.Name)];
         string[] privateTypes = [.. typeof(PrivateClassNames).GetProperties().Select(n => n.Name)];
-        Verify(privateTypes.Length >= 1);
+        privateTypes.Length.Should().BeGreaterThanOrEqualTo(1);
 
         foreach (string type in privateTypes)
         {
-            Verify(allTypes.Contains(type));
+            allTypes.Should().Contain(type);
         }
     }
 
@@ -267,7 +269,7 @@ public class TypeValidatorTests : TestContainer
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedDiscoveredTypes);
-        Verify(actualDiscoveredTypes.SequenceEqual(expectedDiscoveredTypes));
+        actualDiscoveredTypes.Should().Equal(expectedDiscoveredTypes);
     }
 
     public void TypeHasValidAccessibilityShouldReturnFalseForAllTypesThatAreNotPublicOrOneOfTheirDeclaringTypesIsNotPublic()
@@ -310,7 +312,7 @@ public class TypeValidatorTests : TestContainer
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedNonDiscoveredTypes);
-        Verify(actualDiscoveredTypes.SequenceEqual(expectedNonDiscoveredTypes));
+        actualDiscoveredTypes.Should().Equal(expectedNonDiscoveredTypes);
     }
 
     public void TypeHasValidAccessibilityShouldReturnTrueForAllPublicAndInternalTypesIncludingNestedTypesWhenDiscoverInternalIsEnabled()
@@ -345,7 +347,7 @@ public class TypeValidatorTests : TestContainer
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedDiscoveredTypes);
-        Verify(actualDiscoveredTypes.SequenceEqual(expectedDiscoveredTypes));
+        actualDiscoveredTypes.Should().Equal(expectedDiscoveredTypes);
     }
 
     public void TypeHasValidAccessibilityShouldReturnFalseForAllTypesThatAreNotPublicOrInternalOrOneOfTheirDeclaringTypesIsNotPublicOrInternalWhenDiscoverInternalIsEnabled()
@@ -375,7 +377,7 @@ public class TypeValidatorTests : TestContainer
 
         Array.Sort(actualDiscoveredTypes);
         Array.Sort(expectedNonDiscoveredTypes);
-        Verify(actualDiscoveredTypes.SequenceEqual(expectedNonDiscoveredTypes));
+        actualDiscoveredTypes.Should().Equal(expectedNonDiscoveredTypes);
     }
 
     private static Type[] GetAllTestTypes()

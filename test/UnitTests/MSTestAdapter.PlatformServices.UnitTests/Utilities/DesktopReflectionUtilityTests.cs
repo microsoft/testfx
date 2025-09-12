@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using TestFramework.ForTestingMSTest;
@@ -18,11 +20,11 @@ public class ReflectionUtilityTests : TestContainer
 
         List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
-        Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        attributes.Should().NotBeNull();
+        attributes.Count.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)).Should().BeTrue();
     }
 
     internal static string[] GetAttributeValuePairs(IEnumerable attributes)
