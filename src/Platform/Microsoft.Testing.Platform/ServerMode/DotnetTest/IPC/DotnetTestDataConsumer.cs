@@ -78,6 +78,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                     testMethodIdentifierProperty?.Namespace,
                                     testMethodIdentifierProperty?.TypeName,
                                     testMethodIdentifierProperty?.MethodName,
+                                    testMethodIdentifierProperty?.ParameterTypeFullNames,
                                     traits)
                             ]);
 
