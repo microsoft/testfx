@@ -65,6 +65,8 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.TypeName, actual.TypeName);
             Assert.AreEqual(expected.MethodName, actual.MethodName);
 
+            Assert.IsNotNull(expected.ParameterTypeFullNames);
+            Assert.IsNotNull(actual.ParameterTypeFullNames);
             Assert.HasCount(expected.ParameterTypeFullNames.Length, actual.ParameterTypeFullNames);
             for (int j = 0; j < expected.ParameterTypeFullNames.Length; j++)
             {
