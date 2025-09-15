@@ -37,9 +37,12 @@ public sealed class ProtocolTests
             "MyExecId",
             "MyInstId",
             [
-                new DiscoveredTestMessage("MyFirstUid", "DispName1", "path/to/file1.cs", 19, "MyNamespace1", "FirstType", "TM1", []),
-                new DiscoveredTestMessage("My2ndUid", "SecondDisplay", "file2.cs", 21, string.Empty, null, string.Empty, []),
-                new DiscoveredTestMessage("My3rdUid", "3rdDisplay", null, null, "MyNamespace3", "TestClass3", "TM3", [new("Key1", "Value"), new("Key2", string.Empty)]),
+                new DiscoveredTestMessage("MyFirstUid", "DispName1", "path/to/file1.cs", 19, "MyNamespace1", "FirstType", "TM1", [], []),
+                new DiscoveredTestMessage("My2ndUid", "SecondDisplay", "file2.cs", 21, string.Empty, null, string.Empty, [], []),
+                new DiscoveredTestMessage("My3rdUid", "3rdDisplay", null, null, "MyNamespace3", "TestClass3", "TM3", [], [new("Key1", "Value"), new("Key2", string.Empty)]),
+                new DiscoveredTestMessage("My4thUid", "DispName1", "path/to/file1.cs", 19, "MyNamespace1", "FirstType", "TM1", ["paramtype1", "paramtype2"], []),
+                new DiscoveredTestMessage("My5thUid", "SecondDisplay", "file2.cs", 21, string.Empty, null, string.Empty, ["paramtype1", "paramtype2", "paramtype3"], []),
+                new DiscoveredTestMessage("My5thUid", "3rdDisplay", null, null, "MyNamespace3", "TestClass3", "TM3", ["paramtype1", "paramtype2", "paramtype3"], [new("Key1", "Value"), new("Key2", string.Empty)]),
             ]);
 
         serializer.Serialize(message, stream);
@@ -61,6 +64,15 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.Namespace, actual.Namespace);
             Assert.AreEqual(expected.TypeName, actual.TypeName);
             Assert.AreEqual(expected.MethodName, actual.MethodName);
+
+            Assert.IsNotNull(expected.ParameterTypeFullNames);
+            Assert.IsNotNull(actual.ParameterTypeFullNames);
+            Assert.HasCount(expected.ParameterTypeFullNames.Length, actual.ParameterTypeFullNames);
+            for (int j = 0; j < expected.ParameterTypeFullNames.Length; j++)
+            {
+                Assert.AreEqual(expected.ParameterTypeFullNames[j], actual.ParameterTypeFullNames[j]);
+            }
+
             Assert.HasCount(expected.Traits.Length, actual.Traits);
             for (int j = 0; j < expected.Traits.Length; j++)
             {
