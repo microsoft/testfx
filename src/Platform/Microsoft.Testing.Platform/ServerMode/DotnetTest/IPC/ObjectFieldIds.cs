@@ -57,6 +57,7 @@ internal static class DiscoveredTestMessageFieldsId
     public const ushort TypeName = 6;
     public const ushort MethodName = 7;
     public const ushort Traits = 8;
+    public const ushort ParameterTypeFullNames = 9;
 }
 
 internal static class TraitMessageFieldsId
