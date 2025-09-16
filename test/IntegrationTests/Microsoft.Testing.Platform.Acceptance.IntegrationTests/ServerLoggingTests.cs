@@ -10,6 +10,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggingTests.TestAssetFixture>
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task RunningInServerJsonRpcModeShouldHaveOutputDeviceLogsPushedToTestExplorer()
     {
@@ -52,6 +54,9 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
             Log { LogLevel = Information, Message = This is normal text output. }
             Log { LogLevel = Trace, Message = Finished test session. }
             """, logsString);
+
+        await jsonClient.Exit(gracefully: false);
+        int exitCode = await jsonClient.WaitServerProcessExit(TestContext.CancellationToken);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)

@@ -17,12 +17,14 @@ public sealed class TestingPlatformClient : IDisposable
     private readonly IProcessHandle _processHandler;
     private readonly TargetHandler _targetHandler = new();
     private readonly StringBuilder _disconnectionReason = new();
+    private readonly Task _outputAndErrorTask;
 
-    public TestingPlatformClient(JsonRpc jsonRpc, TcpClient tcpClient, IProcessHandle processHandler, bool enableDiagnostic = false)
+    public TestingPlatformClient(JsonRpc jsonRpc, TcpClient tcpClient, IProcessHandle processHandler, Task outputAndErrorTask, bool enableDiagnostic = false)
     {
         JsonRpcClient = jsonRpc;
         _tcpClient = tcpClient;
         _processHandler = processHandler;
+        _outputAndErrorTask = outputAndErrorTask;
         JsonRpcClient.AddLocalRpcTarget(
             _targetHandler,
             new JsonRpcTargetOptions
@@ -52,6 +54,7 @@ public sealed class TestingPlatformClient : IDisposable
 
     public async Task<int> WaitServerProcessExit(CancellationToken cancellationToken)
     {
+        await _outputAndErrorTask;
         await _processHandler.WaitForExitAsync(cancellationToken);
         return _processHandler.ExitCode;
     }

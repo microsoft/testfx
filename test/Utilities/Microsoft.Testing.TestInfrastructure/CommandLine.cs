@@ -90,9 +90,13 @@ public sealed class CommandLine : IDisposable
                 OnStandardOutput = (_, o) => _standardOutputLines.Add(ClearBOM(o)),
                 WorkingDirectory = workingDirectory,
             };
-            _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
+
+            Task outputAndErrorTask;
+            (_process, outputAndErrorTask) = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
             using CancellationTokenRegistration registration = cancellationToken.Register(() => _process.Kill());
+
+            await outputAndErrorTask;
             return await _process.WaitForExitAsync(cancellationToken);
         }
         finally

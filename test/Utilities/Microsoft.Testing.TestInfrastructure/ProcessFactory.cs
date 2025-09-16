@@ -5,7 +5,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class ProcessFactory
 {
-    public static IProcessHandle Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
+    public static (IProcessHandle Handle, Task OutputAndErrorTask) Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
     {
         string fullPath = config.FileName; // Path.GetFullPath(startInfo.FileName);
         string workingDirectory = config.WorkingDirectory
@@ -61,6 +61,23 @@ public static class ProcessFactory
             process.Exited += (s, e) => config.OnExit.Invoke(processHandle, process.ExitCode);
         }
 
+        if (!process.Start())
+        {
+            throw new InvalidOperationException("Process failed to start");
+        }
+
+        try
+        {
+            processHandleInfo.ProcessName = process.ProcessName;
+        }
+        catch (InvalidOperationException)
+        {
+            // The associated process has exited.
+            // https://learn.microsoft.com/dotnet/api/system.diagnostics.process.processname?view=net-7.0
+        }
+
+        processHandleInfo.Id = process.Id;
+
         if (config.OnStandardOutput != null)
         {
             process.OutputDataReceived += (s, e) =>
@@ -83,33 +100,24 @@ public static class ProcessFactory
             };
         }
 
-        if (!process.Start())
-        {
-            throw new InvalidOperationException("Process failed to start");
-        }
+        Task outputTask = Task.Factory.StartNew(
+            () =>
+            {
+                while (process.StandardOutput.ReadLine() is string line)
+                {
+                    config.OnStandardOutput?.Invoke(processHandle, line);
+                }
+            }, TaskCreationOptions.LongRunning);
 
-        try
-        {
-            processHandleInfo.ProcessName = process.ProcessName;
-        }
-        catch (InvalidOperationException)
-        {
-            // The associated process has exited.
-            // https://learn.microsoft.com/dotnet/api/system.diagnostics.process.processname?view=net-7.0
-        }
+        Task errorTask = Task.Factory.StartNew(
+            () =>
+            {
+                while (process.StandardError.ReadLine() is string line)
+                {
+                    config.OnErrorOutput?.Invoke(processHandle, line);
+                }
+            }, TaskCreationOptions.LongRunning);
 
-        processHandleInfo.Id = process.Id;
-
-        if (config.OnStandardOutput != null)
-        {
-            process.BeginOutputReadLine();
-        }
-
-        if (config.OnErrorOutput != null)
-        {
-            process.BeginErrorReadLine();
-        }
-
-        return processHandle;
+        return (processHandle, Task.WhenAll(outputTask, errorTask));
     }
 }
