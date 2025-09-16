@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Extensions;
 
-[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+[assembly: Parallelize(Scope = ExecutionScope.ClassLevel, Workers = 0)]
 [assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 // Opt-out telemetry
