@@ -2197,6 +2197,129 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithNonGenericCollectionCountZero()
+    {
+        string code = """
+        using System.Collections;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public class MyTestClass
+        {
+            [TestMethod]
+            public void MyTestMethod()
+            {
+                var hashtable = new Hashtable();
+                {|#0:Assert.AreEqual(0, hashtable.Count)|};
+            }
+        }
+        """;
+
+        string fixedCode = """
+        using System.Collections;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public class MyTestClass
+        {
+            [TestMethod]
+            public void MyTestMethod()
+            {
+                var hashtable = new Hashtable();
+                Assert.IsEmpty(hashtable);
+            }
+        }
+        """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNonGenericCollectionCountEqualZero()
+    {
+        string code = """
+        using System.Collections;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public class MyTestClass
+        {
+            [TestMethod]
+            public void MyTestMethod()
+            {
+                var hashtable = new Hashtable();
+                {|#0:Assert.IsTrue(hashtable.Count == 0)|};
+            }
+        }
+        """;
+
+        string fixedCode = """
+        using System.Collections;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public class MyTestClass
+        {
+            [TestMethod]
+            public void MyTestMethod()
+            {
+                var hashtable = new Hashtable();
+                Assert.IsEmpty(hashtable);
+            }
+        }
+        """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNonGenericCollectionCountGreaterThanZero()
+    {
+        string code = """
+        using System.Collections;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public class MyTestClass
+        {
+            [TestMethod]
+            public void MyTestMethod()
+            {
+                var hashtable = new Hashtable { { "key", "value" } };
+                {|#0:Assert.IsTrue(hashtable.Count > 0)|};
+            }
+        }
+        """;
+
+        string fixedCode = """
+        using System.Collections;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        [TestClass]
+        public class MyTestClass
+        {
+            [TestMethod]
+            public void MyTestMethod()
+            {
+                var hashtable = new Hashtable { { "key", "value" } };
+                Assert.IsNotEmpty(hashtable);
+            }
+        }
+        """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
+    }
     #endregion
 
     #region New test cases for collection emptiness checks

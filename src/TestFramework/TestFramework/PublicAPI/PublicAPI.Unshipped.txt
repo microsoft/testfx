@@ -5,6 +5,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expe
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount(int expected, System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount(int expected, System.Collections.IEnumerable! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount(int expected, System.Collections.IEnumerable! collection, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collections.IEnumerable! collection) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collections.IEnumerable! collection, string? message, params object?[]? parameters) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
