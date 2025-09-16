@@ -42,9 +42,12 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         string solutionFolder = Path.Combine(tempDirectory.Path, "Solution");
         VSSolution solution = new(solutionFolder, "MSTestSolution");
         string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
-        solution.AddOrUpdateFileContent("dotnet.config", """
-            [dotnet.test.runner]
-            name= "VSTest"
+        solution.AddOrUpdateFileContent("global.json", """
+            {
+              "test": {
+                "runner": "VSTest"
+              }
+            }
             """);
         for (int i = 0; i < 3; i++)
         {
