@@ -7,13 +7,6 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class CommandLine : IDisposable
 {
-    private static int s_totalProcessesAttempt;
-    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime issue")]
-    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
-
-    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
-
     private readonly List<string> _errorOutputLines = [];
     private readonly List<string> _standardOutputLines = [];
     private IProcessHandle? _process;
@@ -25,18 +18,6 @@ public sealed class CommandLine : IDisposable
     public string StandardOutput => string.Join(Environment.NewLine, _standardOutputLines);
 
     public string ErrorOutput => string.Join(Environment.NewLine, _errorOutputLines);
-
-    public static int MaxOutstandingCommands
-    {
-        get => s_maxOutstandingCommand;
-
-        set
-        {
-            s_maxOutstandingCommand = value;
-            s_maxOutstandingCommands_semaphore.Dispose();
-            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
-        }
-    }
 
     public async Task RunAsync(
         string commandLine,
@@ -75,34 +56,25 @@ public sealed class CommandLine : IDisposable
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
         CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
-        try
+        (string command, string arguments) = GetCommandAndArguments(commandLine);
+        _errorOutputLines.Clear();
+        _standardOutputLines.Clear();
+        ProcessConfiguration startInfo = new(command)
         {
-            Interlocked.Increment(ref s_totalProcessesAttempt);
-            (string command, string arguments) = GetCommandAndArguments(commandLine);
-            _errorOutputLines.Clear();
-            _standardOutputLines.Clear();
-            ProcessConfiguration startInfo = new(command)
-            {
-                Arguments = arguments,
-                EnvironmentVariables = environmentVariables,
-                OnErrorOutput = (_, o) => _errorOutputLines.Add(ClearBOM(o)),
-                OnStandardOutput = (_, o) => _standardOutputLines.Add(ClearBOM(o)),
-                WorkingDirectory = workingDirectory,
-            };
+            Arguments = arguments,
+            EnvironmentVariables = environmentVariables,
+            OnErrorOutput = (_, o) => _errorOutputLines.Add(ClearBOM(o)),
+            OnStandardOutput = (_, o) => _standardOutputLines.Add(ClearBOM(o)),
+            WorkingDirectory = workingDirectory,
+        };
 
-            Task outputAndErrorTask;
-            (_process, outputAndErrorTask) = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
+        Task outputAndErrorTask;
+        (_process, outputAndErrorTask) = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
-            using CancellationTokenRegistration registration = cancellationToken.Register(() => _process.Kill());
+        using CancellationTokenRegistration registration = cancellationToken.Register(() => _process.Kill());
 
-            await outputAndErrorTask;
-            return await _process.WaitForExitAsync(cancellationToken);
-        }
-        finally
-        {
-            s_maxOutstandingCommands_semaphore.Release();
-        }
+        await outputAndErrorTask;
+        return await _process.WaitForExitAsync(cancellationToken);
     }
 
     /// <summary>
