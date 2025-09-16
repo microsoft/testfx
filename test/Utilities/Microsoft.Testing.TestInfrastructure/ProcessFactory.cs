@@ -78,34 +78,15 @@ public static class ProcessFactory
 
         processHandleInfo.Id = process.Id;
 
-        if (config.OnStandardOutput != null)
-        {
-            process.OutputDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                {
-                    config.OnStandardOutput(processHandle, e.Data);
-                }
-            };
-        }
-
-        if (config.OnErrorOutput != null)
-        {
-            process.ErrorDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                {
-                    config.OnErrorOutput(processHandle, e.Data);
-                }
-            };
-        }
-
         Task outputTask = Task.Factory.StartNew(
             () =>
             {
                 while (process.StandardOutput.ReadLine() is string line)
                 {
-                    config.OnStandardOutput?.Invoke(processHandle, line);
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        config.OnStandardOutput?.Invoke(processHandle, line);
+                    }
                 }
             }, TaskCreationOptions.LongRunning);
 
@@ -114,7 +95,10 @@ public static class ProcessFactory
             {
                 while (process.StandardError.ReadLine() is string line)
                 {
-                    config.OnErrorOutput?.Invoke(processHandle, line);
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        config.OnErrorOutput?.Invoke(processHandle, line);
+                    }
                 }
             }, TaskCreationOptions.LongRunning);
 
