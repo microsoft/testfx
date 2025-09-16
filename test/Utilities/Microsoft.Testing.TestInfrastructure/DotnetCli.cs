@@ -29,22 +29,6 @@ public static class DotnetCli
 
     private static int s_binlogCounter;
 
-    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
-    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
-
-    public static int MaxOutstandingCommands
-    {
-        get => s_maxOutstandingCommand;
-
-        set
-        {
-            s_maxOutstandingCommand = value;
-            s_maxOutstandingCommands_semaphore.Dispose();
-            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
-        }
-    }
-
     public static bool DoNotRetry { get; set; }
 
     public static async Task<DotnetMuxerResult> RunAsync(
@@ -61,69 +45,61 @@ public static class DotnetCli
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
-        try
+        environmentVariables ??= [];
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
-            environmentVariables ??= [];
-            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+            // Skip all unwanted environment variables.
+            string? key = entry.Key.ToString();
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                // Skip all unwanted environment variables.
-                string? key = entry.Key.ToString();
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+                continue;
+            }
+
+            if (disableCodeCoverage)
+            {
+                // Disable the code coverage during the build.
+                if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }
-
-                if (disableCodeCoverage)
-                {
-                    // Disable the code coverage during the build.
-                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-                }
-
-                // We use TryAdd to let tests "overwrite" existing environment variables.
-                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
-                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
-                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-                environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
             }
 
-            if (disableTelemetry)
-            {
-                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-            }
-
-            environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
-
-            string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
-            extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
-            if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
-            {
-                args = args.Insert(platformArgsIndex, extraArgs + " ");
-            }
-            else
-            {
-                args += extraArgs;
-            }
-
-            if (DoNotRetry)
-            {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
-            }
-            else
-            {
-                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
-                return await Policy
-                    .Handle<Exception>()
-                    .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async ct => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, ct), cancellationToken);
-            }
+            // We use TryAdd to let tests "overwrite" existing environment variables.
+            // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+            // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+            // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+            environmentVariables.TryAdd(key!, entry.Value!.ToString()!);
         }
-        finally
+
+        if (disableTelemetry)
         {
-            s_maxOutstandingCommands_semaphore.Release();
+            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+        }
+
+        environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
+
+        string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
+        extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
+        if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
+        {
+            args = args.Insert(platformArgsIndex, extraArgs + " ");
+        }
+        else
+        {
+            args += extraArgs;
+        }
+
+        if (DoNotRetry)
+        {
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+        }
+        else
+        {
+            IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
+            return await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(delay)
+                .ExecuteAsync(async ct => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, ct), cancellationToken);
         }
     }
 
