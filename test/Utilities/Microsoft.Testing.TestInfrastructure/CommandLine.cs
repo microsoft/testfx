@@ -112,6 +112,11 @@ public sealed class CommandLine : IDisposable
     /// </summary>
     private static string ClearBOM(string outputLine)
     {
+        if (outputLine.Length == 0)
+        {
+            return outputLine;
+        }
+
         int firstChar = outputLine[0];
         int byteOrderMark = 65279;
         return firstChar == byteOrderMark ? outputLine[1..] : outputLine;
