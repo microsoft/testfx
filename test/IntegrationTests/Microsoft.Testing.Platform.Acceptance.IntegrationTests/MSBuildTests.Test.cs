@@ -341,9 +341,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     </Target>
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;

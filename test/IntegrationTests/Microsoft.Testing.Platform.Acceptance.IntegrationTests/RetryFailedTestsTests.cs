@@ -249,9 +249,12 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     </ItemGroup>
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file Program.cs
 using Microsoft.Testing.Extensions;
