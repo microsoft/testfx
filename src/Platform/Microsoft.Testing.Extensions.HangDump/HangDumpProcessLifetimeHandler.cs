@@ -427,7 +427,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         try
         {
+
 #if NETCOREAPP
+            try {
             DiagnosticsClient diagnosticsClient = new(process.Id);
             DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
             {
@@ -446,6 +448,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             }
 
             diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
+            }
+            catch  {
+                // this is problematic, when processes depend on each other, some of them will inevitably close before others and exit when we are dumping them
+                // on windows we could possibly pause them, but there is no supported api for that that we are allowed to use
+            }
 #else
             MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
             {
@@ -468,7 +475,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 try
                 {
-                    process.Kill();
+                    process.KillWithoutKillingChildProcesses();
                 }
                 catch (ArgumentException)
                 {

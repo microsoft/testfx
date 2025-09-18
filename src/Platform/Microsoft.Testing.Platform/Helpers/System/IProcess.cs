@@ -33,6 +33,14 @@ internal interface IProcess : IDisposable
     /// <inheritdoc cref="Process.WaitForExit()" />
     void WaitForExit();
 
-    /// <inheritdoc cref="Process.Kill()" />
+    /// <summary>
+    /// Kills the process and its child processes.
+    /// </summary>
     void Kill();
+
+
+    /// <summary>
+    /// Kills the process without killing its child processes.
+    /// </summary>
+    void KillWithoutKillingChildProcesses();
 }
