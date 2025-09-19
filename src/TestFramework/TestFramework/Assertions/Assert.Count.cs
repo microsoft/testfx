@@ -172,12 +172,27 @@ public sealed partial class Assert
         => IsNotEmpty(collection, string.Empty, null);
 
     /// <summary>
+    /// Tests that the collection is not empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    public static void IsNotEmpty(IEnumerable collection)
+        => IsNotEmpty(collection, string.Empty, null);
+
+    /// <summary>
     /// Tests whether the collection is not empty.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message)
+        => IsNotEmpty(collection, message, null);
+
+    /// <summary>
+    /// Tests whether the collection is not empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void IsNotEmpty(IEnumerable collection, string? message)
         => IsNotEmpty(collection, message, null);
 
     /// <summary>
@@ -210,6 +225,23 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests that the collection is not empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
+    public static void IsNotEmpty(IEnumerable collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        if (collection.Cast<object>().Any())
+        {
+            return;
+        }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        ThrowAssertIsNotEmptyFailed(userMessage);
+    }
+
+    /// <summary>
     /// Tests whether the collection has the expected count/length.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -221,11 +253,28 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the collection has the expected count/length.
     /// </summary>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    public static void HasCount(int expected, IEnumerable collection)
+        => HasCount(expected, collection, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="expected">The expected count.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
     public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message)
+        => HasCount(expected, collection, message, null);
+
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void HasCount(int expected, IEnumerable collection, string? message)
         => HasCount(expected, collection, message, null);
 
     /// <summary>
@@ -252,6 +301,16 @@ public sealed partial class Assert
         => HasCount("HasCount", expected, collection, message, parameters);
 
     /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
+    public static void HasCount(int expected, IEnumerable collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => HasCount("HasCount", expected, collection, message, parameters);
+
+    /// <summary>
     /// Tests that the collection is empty.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -262,10 +321,25 @@ public sealed partial class Assert
     /// <summary>
     /// Tests that the collection is empty.
     /// </summary>
+    /// <param name="collection">The collection.</param>
+    public static void IsEmpty(IEnumerable collection)
+        => IsEmpty(collection, string.Empty, null);
+
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
     public static void IsEmpty<T>(IEnumerable<T> collection, string? message)
+        => IsEmpty(collection, message, null);
+
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void IsEmpty(IEnumerable collection, string? message)
         => IsEmpty(collection, message, null);
 
     /// <summary>
@@ -289,9 +363,35 @@ public sealed partial class Assert
     public static void IsEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
         => HasCount("IsEmpty", 0, collection, message, parameters);
 
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="parameters">The parameters to format the message.</param>
+    public static void IsEmpty(IEnumerable collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+        => HasCount("IsEmpty", 0, collection, message, parameters);
+
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
     {
         int actualCount = collection.Count();
+        if (actualCount == expected)
+        {
+            return;
+        }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
+    }
+
+    private static void HasCount(string assertionName, int expected, IEnumerable collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    {
+        int actualCount = 0;
+        foreach (object? item in collection)
+        {
+            actualCount++;
+        }
+
         if (actualCount == expected)
         {
             return;

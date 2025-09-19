@@ -470,7 +470,7 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         // Check if the type implements IEnumerable<T> (but is not string)
         // Note: Assert.Contains/IsEmpty/HasCount for collections accept IEnumerable<T>, but not IEnumerable.
         => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
-            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T) &&
+            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable) &&
             // object is coming from BCL and it's expected to always have a public key.
             type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
             type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
