@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TestProgressState
 {
-    public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch)
+    public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery = false)
     {
         Id = id;
         Assembly = assembly;
@@ -15,6 +15,7 @@ internal sealed class TestProgressState
         Architecture = architecture;
         Stopwatch = stopwatch;
         AssemblyName = Path.GetFileName(assembly)!;
+        IsDiscovery = isDiscovery;
     }
 
     public string Assembly { get; }
@@ -26,6 +27,8 @@ internal sealed class TestProgressState
     public string? Architecture { get; }
 
     public IStopwatch Stopwatch { get; }
+
+    public int DiscoveredTests { get; internal set; }
 
     public List<IProgressMessage> Messages { get; } = [];
 
@@ -46,6 +49,8 @@ internal sealed class TestProgressState
     public long Version { get; internal set; }
 
     public List<string> DiscoveredTestDisplayNames { get; internal set; } = [];
+
+    public bool IsDiscovery { get; }
 
     internal void AddError(string text)
         => Messages.Add(new ErrorMessage(text));

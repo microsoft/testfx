@@ -143,7 +143,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             }
 
             IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw);
+            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw, _isDiscovery);
             int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
             assemblyRun.SlotIndex = slotIndex;
             _testProgressState = assemblyRun;
@@ -842,6 +842,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestProgressState asm = _testProgressState;
         if (_isDiscovery)
         {
+            asm.DiscoveredTests++;
+            asm.TotalTests++;
+        }
+        else
+        {
             // TODO: add mode for discovered tests to the progress bar, to get rid of the hack here that allows updating the
             // progress, but also breaks the total counts if not done only in discovery.
             asm.PassedTests++;
@@ -859,7 +864,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.AppendLine();
 
         int totalTests = assembly?.TotalTests ?? 0;
-        bool runFailed = WasCancelled;
+        bool runFailed = WasCancelled || totalTests < 1;
 
         if (assembly is not null)
         {
