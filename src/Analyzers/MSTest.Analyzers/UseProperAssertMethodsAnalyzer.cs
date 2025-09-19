@@ -884,6 +884,16 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         if (actualArgument is IPropertyReferenceOperation propertyRef &&
             TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef, objectTypeSymbol) is { } expression)
         {
+            // Validate that the expectedArgument is suitable for collection assertions
+            if (!IsValidExpectedCountArgument(expectedArgument))
+            {
+                nodeToBeReplaced1 = null;
+                replacement1 = null;
+                nodeToBeReplaced2 = null;
+                replacement2 = null;
+                return CountCheckStatus.Unknown;
+            }
+
             bool isEmpty = expectedArgument.ConstantValue.HasValue &&
                 expectedArgument.ConstantValue.Value is int expectedValue &&
                 expectedValue == 0;
@@ -916,6 +926,18 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         if (expectedArgument is IPropertyReferenceOperation propertyRef2 &&
             TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
         {
+            // Validate that the actualArgument is suitable for collection assertions
+            // We should only suggest collection assertions when the non-collection argument
+            // represents an expected count, not when it's a computed result
+            if (!IsValidExpectedCountArgument(actualArgument))
+            {
+                nodeToBeReplaced1 = null;
+                replacement1 = null;
+                nodeToBeReplaced2 = null;
+                replacement2 = null;
+                return CountCheckStatus.Unknown;
+            }
+
             bool isEmpty = actualArgument.ConstantValue.HasValue &&
                 actualArgument.ConstantValue.Value is int actualValue &&
                 actualValue == 0;
@@ -972,5 +994,62 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     {
         argumentValue = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == ordinal)?.Value?.WalkDownConversion();
         return argumentValue is not null;
+    }
+
+    /// <summary>
+    /// Determines whether the given operation represents a valid expected count argument
+    /// for collection assertion methods like Assert.HasCount or Assert.IsEmpty.
+    /// </summary>
+    /// <param name="operation">The operation to validate.</param>
+    /// <returns>True if the operation is suitable for use as an expected count in collection assertions.</returns>
+    private static bool IsValidExpectedCountArgument(IOperation operation)
+    {
+        // Allow literal constants (e.g., 0, 1, 2, etc.)
+        if (operation is ILiteralOperation)
+        {
+            return true;
+        }
+
+        // Allow simple local variable, parameter, or field references
+        // These typically represent expected counts stored in variables
+        if (operation is ILocalReferenceOperation or IParameterReferenceOperation or IFieldReferenceOperation)
+        {
+            return true;
+        }
+
+        // Allow simple property access (but not count/length properties of collections)
+        if (operation is IPropertyReferenceOperation propertyRef)
+        {
+            // Avoid suggesting collection assertions when comparing one collection's count with another's
+            // This helps prevent confusing suggestions like Assert.HasCount(list2.Count, list1)
+            if (propertyRef.Property.Name is "Count" or "Length")
+            {
+                return false;
+            }
+            return true;
+        }
+
+        // Disallow method calls as they typically represent computed results, not expected counts
+        // This prevents false positives like Assert.AreEqual(buffer.Length, stream.Read(...))
+        if (operation is IInvocationOperation)
+        {
+            return false;
+        }
+
+        // Disallow complex binary operations and other complex expressions
+        // Simple arithmetic might be acceptable in some cases, but for safety, we'll be conservative
+        if (operation is IBinaryOperation or IUnaryOperation)
+        {
+            return false;
+        }
+
+        // Allow simple conversions (e.g., cast to int)
+        if (operation is IConversionOperation conversion)
+        {
+            return IsValidExpectedCountArgument(conversion.Operand);
+        }
+
+        // For other cases, err on the side of caution and don't suggest collection assertions
+        return false;
     }
 }
