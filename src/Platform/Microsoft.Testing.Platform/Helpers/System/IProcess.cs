@@ -38,7 +38,6 @@ internal interface IProcess : IDisposable
     /// </summary>
     void Kill();
 
-
     /// <summary>
     /// Kills the process without killing its child processes.
     /// </summary>

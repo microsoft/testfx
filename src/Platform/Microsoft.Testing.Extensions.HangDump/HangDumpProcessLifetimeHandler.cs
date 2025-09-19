@@ -352,42 +352,73 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         IProcess process = new SystemProcess(Process.GetProcessById(_testHostProcessInformation.PID));
         var processTree = process.GetProcessTree().Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
-
-        //if (_logger.IsEnabled(logLevel))
-        //{
-        if (processTree.Count > 1)
-        {
-            await _logger.LogInformationAsync("NetClientHangDumper.Dump: Dumping this process tree (from bottom):").ConfigureAwait(false);
-
-            foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
-            {
-                await _logger.LogInformationAsync($"NetClientHangDumper.Dump: {(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}").ConfigureAwait(false);
-            }
-        }
-        else
-        {
-            await _logger.LogInformationAsync($"Blame: Dumping {process.Id} - {process.Name}").ConfigureAwait(false);
-        }
-        //}
-
-        await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
-        // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
-        // them and hang dump request will get stuck forever, because the process is not co-operating.
-        // Instead we start one task per dump asynchronously, and hope that the parent process will start dumping
-        // before the child process is done dumping. This way if the parent is waiting for the children to exit,
-        // we will be dumping it before it observes the child exiting and we get a more accurate results. If we did not
-        // do this, then parent that is awaiting child might exit before we get to dumping it.
-        var tasks = new List<Task>();
-        foreach (IProcess p in bottomUpTree)
+        try
         {
-            // TPDebug.Assert(p != null);
-            tasks.Add(TakeDumpAsync(p));
-        }
+            //if (_logger.IsEnabled(logLevel))
+            //{
+            if (processTree.Count > 1)
+            {
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData("NetClientHangDumper.Dump: Dumping this process tree (from bottom):")).ConfigureAwait(false);
 
-        await Task.WhenAll(tasks).ConfigureAwait(false);
+                foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
+                {
+                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"NetClientHangDumper.Dump: {(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}")).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Blame: Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
+            }
+            //}
+
+            await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
+
+
+            // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
+            // them and hang dump request will get stuck forever, because the process is not co-operating.
+            // Instead we start one task per dump asynchronously, and hope that the parent process will start dumping
+            // before the child process is done dumping. This way if the parent is waiting for the children to exit,
+            // we will be dumping it before it observes the child exiting and we get a more accurate results. If we did not
+            // do this, then parent that is awaiting child might exit before we get to dumping it.
+            var tasks = new List<Task>();
+            foreach (IProcess p in bottomUpTree)
+            {
+                // TPDebug.Assert(p != null);
+                //tasks.Add(
+                await TakeDumpAsync(p);
+                //  );
+            }
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        finally
+        {
+
+            // Kill the main process, this should kill all the children as well.
+            // This should throw if the process fails to exit.
+            IProcess mainProcess = processTree[0].Process!;
+            try
+            {
+                mainProcess.Kill();
+            }
+            catch
+            {
+                throw new Exception($"peroblem k,illing {mainProcess.Name} {processTree[0].Level}");
+            }
+
+            // Some of the processes might crashed, which breaks the process tree (on windows it is just an illusion),
+            // so try extra hard to kill all the known processes in the tree, since we already spent a bunch of time getting
+            // to know which processes are involved.
+            foreach (IProcess p in bottomUpTree)
+            {
+                if (!p.HasExited)
+                {
+                    p.Kill();
+                }
+            }
+        }
     }
 
     private async Task TakeDumpAsync(IProcess process)
@@ -429,7 +460,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
 
 #if NETCOREAPP
-            try {
             DiagnosticsClient diagnosticsClient = new(process.Id);
             DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
             {
@@ -447,12 +477,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 finalDumpFileName = $"\"{finalDumpFileName}\"";
             }
 
-            diagnosticsClient.WriteDump(dumpType, finalDumpFileName, true);
+            try
+            {
+                diagnosticsClient.WriteDump(dumpType, finalDumpFileName, logDumpGeneration: true);
             }
-            catch  {
-                // this is problematic, when processes depend on each other, some of them will inevitably close before others and exit when we are dumping them
-                // on windows we could possibly pause them, but there is no supported api for that that we are allowed to use
+            catch (Exception e)
+            {
+                throw new Exception($"Error while writing dump of process {process.Name} {process.Id}", e);
             }
+
 #else
             MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
             {
