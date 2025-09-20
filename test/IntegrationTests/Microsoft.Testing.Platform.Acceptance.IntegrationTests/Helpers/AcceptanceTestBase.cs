@@ -43,9 +43,12 @@ public class UnitTest1
     }
 }
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 """;
 
     static AcceptanceTestBase()

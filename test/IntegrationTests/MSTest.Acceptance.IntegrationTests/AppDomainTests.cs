@@ -30,9 +30,12 @@ public sealed class AppDomainTests : AcceptanceTestBase<NopAssetFixture>
 
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file UnitTest1.cs
 using System;
