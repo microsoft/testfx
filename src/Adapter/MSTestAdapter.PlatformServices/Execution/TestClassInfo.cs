@@ -21,14 +21,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #else
 [Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable - not important to dispose the SemaphoreSlim, we don't access AvailableWaitHandle.
 public class TestClassInfo
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     /// <summary>
     /// Test context property name.
     /// </summary>
     private const string TestContextPropertyName = "TestContext";
 
-    private readonly Lock _testClassExecuteSyncObject = new();
+    private readonly SemaphoreSlim _testClassExecuteSyncSemaphore = new(1, 1);
 
     private TestResult? _classInitializeResult;
 
@@ -359,7 +361,7 @@ public class TestClassInfo
                 TestFailureException = _classInitializeResult.TestFailureException,
             };
 
-    internal Task<TestResult> GetResultOrRunClassInitializeAsync(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
+    internal async Task<TestResult> GetResultOrRunClassInitializeAsync(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         TestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
@@ -367,7 +369,7 @@ public class TestClassInfo
         if (clonedInitializeResult is not null)
         {
             DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
-            return Task.FromResult(clonedInitializeResult);
+            return clonedInitializeResult;
         }
 
         // For optimization purposes, return right away if there is nothing to execute.
@@ -376,7 +378,7 @@ public class TestClassInfo
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
             IsClassInitializeExecuted = true;
-            return Task.FromResult(_classInitializeResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed });
+            return _classInitializeResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed };
         }
 
         // At this point, maybe class initialize was executed by another thread such
@@ -386,15 +388,16 @@ public class TestClassInfo
         // We could keep the logic in lock only and not duplicate, but we don't want to pay
         // the lock cost unnecessarily for a common case.
         // We also need to lock to avoid concurrency issues and guarantee that class init is called only once.
-        lock (_testClassExecuteSyncObject)
+        try
         {
+            await _testClassExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
             clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
             // Optimization: If we already ran before and know the result, return it.
             if (clonedInitializeResult is not null)
             {
                 DebugEx.Assert(IsClassInitializeExecuted, "Class initialize result should be available if and only if class initialize was executed");
-                return Task.FromResult(clonedInitializeResult);
+                return clonedInitializeResult;
             }
 
             DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
@@ -422,16 +425,16 @@ public class TestClassInfo
                 try
                 {
                     entryPointThread.Join();
-                    return Task.FromResult(result);
+                    return result;
                 }
                 catch (Exception ex)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
-                    return Task.FromResult(new TestResult
+                    return new TestResult
                     {
                         TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                         Outcome = UTFUnitTestOutcome.Error,
-                    });
+                    };
                 }
             }
             else
@@ -442,9 +445,12 @@ public class TestClassInfo
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
                 }
 
-                // TODO: IMPORTANT: Avoid blocking, switch to SemaphoreSlim.
-                return Task.FromResult(DoRunAsync().GetAwaiter().GetResult());
+                return await DoRunAsync().ConfigureAwait(false);
             }
+        }
+        finally
+        {
+            _testClassExecuteSyncSemaphore.Release();
         }
 
         // Local functions
@@ -549,8 +555,10 @@ public class TestClassInfo
         }
 
         MethodInfo? classCleanupMethod = null;
-        lock (_testClassExecuteSyncObject)
+        try
         {
+            _testClassExecuteSyncSemaphore.Wait();
+
             if (IsClassCleanupExecuted)
             {
                 return null;
@@ -576,6 +584,10 @@ public class TestClassInfo
                     ClassCleanupException = exception;
                 }
             }
+        }
+        finally
+        {
+            _testClassExecuteSyncSemaphore.Release();
         }
 
         // If ClassCleanup was successful, then don't do anything
@@ -618,18 +630,19 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal Task<TestFailedException?> ExecuteClassCleanupAsync(TestContext testContext)
+    internal async Task<TestFailedException?> ExecuteClassCleanupAsync(TestContext testContext)
     {
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
         {
-            return Task.FromResult<TestFailedException?>(null);
+            return null;
         }
 
         MethodInfo? classCleanupMethod = ClassCleanupMethod;
 
-        lock (_testClassExecuteSyncObject)
+        try
         {
+            await _testClassExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
             if (IsClassCleanupExecuted
                 // If ClassInitialize method has not been executed, then we should not execute ClassCleanup
                 // Note that if there is no ClassInitialze method at all, we will still set
@@ -637,7 +650,7 @@ public class TestClassInfo
                 // IsClassInitializeExecuted can be false if all tests in the class are ignored.
                 || !IsClassInitializeExecuted)
             {
-                return Task.FromResult<TestFailedException?>(null);
+                return null;
             }
 
             try
@@ -646,10 +659,7 @@ public class TestClassInfo
                 {
                     if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                     {
-                        // TODO: Important. Avoid blocking.
-                        // Do proper async, and use SemaphoreSlim instead of lock (Monitor).
-                        // Then, we need to also update all other places that locks on the same object to use a semaphore slim, convert all those paths to async.
-                        ClassCleanupException = InvokeCleanupMethodAsync(classCleanupMethod, testContext).GetAwaiter().GetResult();
+                        ClassCleanupException = await InvokeCleanupMethodAsync(classCleanupMethod, testContext).ConfigureAwait(false);
                     }
                 }
 
@@ -660,10 +670,7 @@ public class TestClassInfo
                         classCleanupMethod = BaseClassCleanupMethods[i];
                         if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                         {
-                            // TODO: Important. Avoid blocking.
-                            // Do proper async, and use SemaphoreSlim instead of lock (Monitor).
-                            // Then, we need to also update all other places that locks on the same object to use a semaphore slim, convert all those paths to async.
-                            ClassCleanupException = InvokeCleanupMethodAsync(classCleanupMethod, testContext).GetAwaiter().GetResult();
+                            ClassCleanupException = await InvokeCleanupMethodAsync(classCleanupMethod, testContext).ConfigureAwait(false);
                             if (ClassCleanupException is not null)
                             {
                                 break;
@@ -681,17 +688,21 @@ public class TestClassInfo
                 IsClassCleanupExecuted = true;
             }
         }
+        finally
+        {
+            _testClassExecuteSyncSemaphore.Release();
+        }
 
         // If ClassCleanup was successful, then don't do anything
         if (ClassCleanupException == null)
         {
-            return Task.FromResult<TestFailedException?>(null);
+            return null;
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
         if (ClassCleanupException is TestFailedException classCleanupEx)
         {
-            return Task.FromResult<TestFailedException?>(classCleanupEx);
+            return classCleanupEx;
         }
 
         Exception realException = ClassCleanupException.GetRealException();
@@ -716,7 +727,7 @@ public class TestClassInfo
             realException);
         ClassCleanupException = testFailedException;
 
-        return Task.FromResult<TestFailedException?>(testFailedException);
+        return testFailedException;
     }
 
     internal async Task RunClassCleanupAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestResult[] results)
