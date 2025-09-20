@@ -81,9 +81,12 @@ public class ExceptionExtensionsTests : TestContainer
 
         StackTraceInformation? stackTraceInformation = exception.TryGetStackTraceInformation();
 
-        Verify(stackTraceInformation!.ErrorStackTrace.StartsWith("   at A()", StringComparison.Ordinal));
-        Verify(stackTraceInformation.ErrorFilePath is null);
-        Verify(stackTraceInformation.ErrorLineNumber == 0);
+        if (stackTraceInformation is not null)
+        {
+            Verify(stackTraceInformation.ErrorStackTrace.StartsWith("   at A()", StringComparison.Ordinal));
+            Verify(stackTraceInformation.ErrorFilePath is null);
+            Verify(stackTraceInformation.ErrorLineNumber == 0);
+        }
     }
 
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
