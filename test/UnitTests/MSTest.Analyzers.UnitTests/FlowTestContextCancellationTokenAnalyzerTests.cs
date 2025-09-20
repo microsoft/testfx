@@ -738,4 +738,154 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenMethodWithNamedArguments_ShouldUseNamedArgumentForCancellationToken()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public static class TestHelper
+            {
+                public static void DoSomething(string x = "", int i = 1, CancellationToken ct = default) { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void Test()
+                {
+                    [|TestHelper.DoSomething()|];
+                    [|TestHelper.DoSomething(i: 15)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public static class TestHelper
+            {
+                public static void DoSomething(string x = "", int i = 1, CancellationToken ct = default) { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void Test()
+                {
+                    TestHelper.DoSomething(ct: TestContext.CancellationToken);
+                    TestHelper.DoSomething(i: 15, ct: TestContext.CancellationToken);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodWithPositionalArguments_ShouldUseNamedArgumentForCancellationToken()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public static class TestHelper
+            {
+                public static void DoSomething(string x = "", int i = 1, CancellationToken ct = default) { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void Test()
+                {
+                    [|TestHelper.DoSomething("test")|];
+                    [|TestHelper.DoSomething("test", 42)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            public static class TestHelper
+            {
+                public static void DoSomething(string x = "", int i = 1, CancellationToken ct = default) { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public void Test()
+                {
+                    TestHelper.DoSomething("test", ct: TestContext.CancellationToken);
+                    TestHelper.DoSomething("test", 42, TestContext.CancellationToken);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTaskDelayStillWorksAsExpected_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await [|Task.Delay(1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Task.Delay(1000, TestContext.CancellationToken);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
