@@ -132,6 +132,45 @@ public class CollectionAssertTests : TestContainer
         _ = superset.Count; // no warning
     }
 
+    public void CollectionAssertIsSubsetOf_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubSetCollection();
+        ICollection? superset = GetSuperSetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection");
+    }
+
+    public void CollectionAssertIsSubsetOf_WithMessageParams_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubSetCollection();
+        ICollection? superset = GetSuperSetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection");
+    }
+
+    public void CollectionAssertIsSubsetOf_WithMessage_ReturnedSubsetValueMessage_ThrowExceptionMessage()
+    {
+        // Arrange
+        ICollection? collection = GetSubSetCollection();
+        ICollection? superset = GetSuperSetCollection();
+
+        // Act
+        Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection");
+    }
+
     public void CollectionAssertIsNotSubsetOfNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();
@@ -521,11 +560,15 @@ public class CollectionAssertTests : TestContainer
 
     private ICollection? GetCollection() => new[] { "item" };
 
+    private ICollection? GetSubSetCollection() => new[] { "iem", "a", "b" };
+
     private object? GetMatchingElement() => "item";
 
     private object? GetNotMatchingElement() => "not found";
 
     private ICollection? GetMatchingSuperSet() => new[] { "item", "item2" };
+
+    private ICollection? GetSuperSetCollection() => new[] { "item", "item2", "c", "d" };
 
     private ICollection? GetLettersCaseMismatchingSuperSet() => new[] { "Item", "iTem2" };
 

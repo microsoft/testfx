@@ -370,4 +370,7 @@ Actual: {2}</value>
   <data name="DoNotUseCollectionAssertReferenceEquals" xml:space="preserve">
     <value>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</value>
   </data>
+  <data name="ReturnedSubsetValueMessage" xml:space="preserve">
+    <value>Element(s) &lt;{0}&gt; is/are not present in the collection</value>
+  </data>
 </root>
