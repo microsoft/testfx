@@ -471,9 +471,12 @@ namespace MSTestSdkTest
   </ItemGroup>
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file UnitTest1.cs
 namespace AspireProject;
@@ -537,9 +540,12 @@ public class UnitTest1 : PageTest
     }
 }
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 """;
 
         public string AspireProjectPath => GetAssetPath(AspireProjectName);
