@@ -450,7 +450,7 @@ public class TestClassInfoTests : TestContainer
         => GetResultOrRunClassInitialize(_testContext);
 
     private TestResult GetResultOrRunClassInitialize(TestContext? testContext)
-        => _testClassInfo.GetResultOrRunClassInitialize(new TestTestContextImpl(testContext!), string.Empty, string.Empty, string.Empty, string.Empty);
+        => _testClassInfo.GetResultOrRunClassInitializeAsync(new TestTestContextImpl(testContext!), string.Empty, string.Empty, string.Empty, string.Empty).GetAwaiter().GetResult();
     #endregion
 
     #region Run Class Cleanup tests
