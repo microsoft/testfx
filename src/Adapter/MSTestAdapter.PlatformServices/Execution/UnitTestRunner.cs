@@ -190,7 +190,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 {
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
-                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages);
+                    TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                     {
@@ -217,7 +217,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
 
             testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
+            if (testMethodInfo is not null)
+            {
+                await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result).ConfigureAwait(false);
+            }
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
@@ -292,7 +295,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
             foreach (TestClassInfo classInfo in classInfoCache)
             {
-                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
+                TestFailedException? ex = classInfo.ExecuteClassCleanupAsync(testContext.Context).GetAwaiter().GetResult();
 
                 if (results.Length > 0 && ex is not null)
                 {
