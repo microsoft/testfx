@@ -3,6 +3,8 @@
 
 #if NET462
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 using static MSTestAdapter.PlatformServices.UnitTests.Utilities.AppDomainUtilitiesTests;
@@ -48,7 +50,7 @@ public class XmlUtilitiesTests : TestContainer
             expectedConfigBytes = ms.ToArray();
         }
 
-        Verify(expectedConfigBytes.SequenceEqual(configBytes));
+        configBytes.SequenceEqual(expectedConfigBytes).Should().BeTrue();
     }
 
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyConfig()
@@ -88,7 +90,7 @@ public class XmlUtilitiesTests : TestContainer
             expectedConfigBytes = ms.ToArray();
         }
 
-        Verify(expectedConfigBytes.SequenceEqual(configBytes));
+        configBytes.SequenceEqual(expectedConfigBytes).Should().BeTrue();
     }
 
     public void AddAssemblyRedirectionShouldAddRedirectionToAConfigWithARuntimeSectionOnly()
@@ -132,7 +134,7 @@ public class XmlUtilitiesTests : TestContainer
             expectedConfigBytes = ms.ToArray();
         }
 
-        Verify(expectedConfigBytes.SequenceEqual(configBytes));
+        configBytes.SequenceEqual(expectedConfigBytes).Should().BeTrue();
     }
 
     public void AddAssemblyRedirectionShouldAddRedirectionToAConfigWithRedirections()
@@ -186,7 +188,7 @@ public class XmlUtilitiesTests : TestContainer
             expectedConfigBytes = ms.ToArray();
         }
 
-        Verify(expectedConfigBytes.SequenceEqual(configBytes));
+        configBytes.SequenceEqual(expectedConfigBytes).Should().BeTrue();
     }
 }
 #endif
