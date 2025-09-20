@@ -51,9 +51,12 @@ namespace MSTestSdkTest
 
     private const string SingleTestSourceCodeVSTest = SingleTestSourceCode + """
 
-        #file dotnet.config
-        [dotnet.test.runner]
-        name = "VSTest"
+        #file global.json
+        {
+          "test": {
+            "runner": "VSTest"
+          }
+        }
         """;
 
     [TestMethod]
