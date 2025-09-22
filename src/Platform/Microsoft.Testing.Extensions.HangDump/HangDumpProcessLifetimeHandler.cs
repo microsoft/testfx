@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.Diagnostics.Helpers;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -46,6 +45,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
     private readonly ManualResetEventSlim _mutexNameReceived = new(false);
     private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
+    private readonly List<string> _dumpFiles = [];
 
     private TimeSpan _activityTimerValue = TimeSpan.FromMinutes(30);
     private Task? _waitConnectionTask;
@@ -54,10 +54,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private string? _activityTimerMutexName;
     private bool _exitActivityIndicatorTask;
     private string _dumpType = "Full";
-    private string _dumpFileNamePattern;
+    private string? _dumpFileNamePattern;
     private Mutex? _activityIndicatorMutex;
     private ITestHostProcessInformation? _testHostProcessInformation;
-    private string _dumpFileTaken = string.Empty;
     private NamedPipeClient? _namedPipeClient;
 
     public HangDumpProcessLifetimeHandler(
@@ -86,7 +85,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _processHandler = processHandler;
         _clock = clock;
         _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
-        _dumpFileNamePattern = $"{Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_hang.dmp";
     }
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
@@ -243,9 +241,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _activityIndicatorMutex?.Dispose();
         }
 
-        if (!RoslynString.IsNullOrEmpty(_dumpFileTaken))
+        foreach (string dumpFile in _dumpFiles)
         {
-            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(_dumpFileTaken), ExtensionResources.HangDumpArtifactDisplayName, ExtensionResources.HangDumpArtifactDescription)).ConfigureAwait(false);
+            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), ExtensionResources.HangDumpArtifactDisplayName, ExtensionResources.HangDumpArtifactDescription)).ConfigureAwait(false);
         }
     }
 
@@ -350,31 +348,30 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
+        await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
+
         IProcess process = new SystemProcess(Process.GetProcessById(_testHostProcessInformation.PID));
         var processTree = process.GetProcessTree().Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
         try
         {
-            //if (_logger.IsEnabled(logLevel))
-            //{
             if (processTree.Count > 1)
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData("NetClientHangDumper.Dump: Dumping this process tree (from bottom):")).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData("Dumping this process tree (from bottom):")).ConfigureAwait(false);
 
                 foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
                 {
-                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"NetClientHangDumper.Dump: {(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}")).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}")).ConfigureAwait(false);
                 }
             }
             else
             {
                 await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Blame: Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
             }
-            //}
 
             await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-
 
             // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
             // them and hang dump request will get stuck forever, because the process is not co-operating.
@@ -382,19 +379,22 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // before the child process is done dumping. This way if the parent is waiting for the children to exit,
             // we will be dumping it before it observes the child exiting and we get a more accurate results. If we did not
             // do this, then parent that is awaiting child might exit before we get to dumping it.
-            var tasks = new List<Task>();
             foreach (IProcess p in bottomUpTree)
             {
-                // TPDebug.Assert(p != null);
-                //tasks.Add(
-                await TakeDumpAsync(p);
-                //  );
+                try
+                {
+                    await TakeDumpAsync(p).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    // exceptions.Add(new InvalidOperationException($"Error while taking dump of process {p.Name} {p.Id}", e));
+                    await _logger.LogErrorAsync($"Error while taking dump of process {p.Name} {p.Id}", e).ConfigureAwait(false);
+                }
             }
-
-            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         finally
         {
+            NotifyCrashDumpServiceIfEnabled();
 
             // Kill the main process, this should kill all the children as well.
             // This should throw if the process fails to exit.
@@ -402,10 +402,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             try
             {
                 mainProcess.Kill();
+                await mainProcess.WaitForExitAsync().ConfigureAwait(false);
             }
-            catch
+            catch (Exception e)
             {
-                throw new Exception($"peroblem k,illing {mainProcess.Name} {processTree[0].Level}");
+                // exceptions.Add(new InvalidOperationException($"Problem killing {mainProcess.Id} {mainProcess.Name}", e));
+                await _logger.LogErrorAsync($"Problem killing {mainProcess.Id} {mainProcess.Name}", e).ConfigureAwait(false);
             }
 
             // Some of the processes might crashed, which breaks the process tree (on windows it is just an illusion),
@@ -413,9 +415,17 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // to know which processes are involved.
             foreach (IProcess p in bottomUpTree)
             {
-                if (!p.HasExited)
+                try
                 {
-                    p.Kill();
+                    if (!p.HasExited)
+                    {
+                        p.Kill();
+                        await p.WaitForExitAsync().ConfigureAwait(false);
+                    }
+                }
+                catch (Exception e)
+                {
+                    await _logger.LogErrorAsync($"Problem killing {mainProcess.Id} {mainProcess.Name}", e).ConfigureAwait(false);
                 }
             }
         }
@@ -426,10 +436,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
-        await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
-
-        string finalDumpFileName = _dumpFileNamePattern.Replace("%p", process.Id.ToString(CultureInfo.InvariantCulture));
+        string finalDumpFileName = (_dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp").Replace("%p", process.Id.ToString(CultureInfo.InvariantCulture));
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
@@ -456,68 +463,53 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName))).ConfigureAwait(false);
 
+#if NETCOREAPP
+        DiagnosticsClient diagnosticsClient = new(process.Id);
+        DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
+        {
+            "mini" => DumpType.Normal,
+            "heap" => DumpType.WithHeap,
+            "triage" => DumpType.Triage,
+            "full" => DumpType.Full,
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
+
+        // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
+        // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && finalDumpFileName.Contains(' '))
+        {
+            finalDumpFileName = $"\"{finalDumpFileName}\"";
+        }
+
         try
         {
-
-#if NETCOREAPP
-            DiagnosticsClient diagnosticsClient = new(process.Id);
-            DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
-            {
-                "mini" => DumpType.Normal,
-                "heap" => DumpType.WithHeap,
-                "triage" => DumpType.Triage,
-                "full" => DumpType.Full,
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
-
-            // Wrap the dump path into "" when it has space in it, this is a workaround for this runtime issue: https://github.com/dotnet/diagnostics/issues/5020
-            // It only affects windows. Otherwise the dump creation fails with: [createdump] The pid argument is no longer supported
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && finalDumpFileName.Contains(' '))
-            {
-                finalDumpFileName = $"\"{finalDumpFileName}\"";
-            }
-
-            try
-            {
-                diagnosticsClient.WriteDump(dumpType, finalDumpFileName, logDumpGeneration: true);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Error while writing dump of process {process.Name} {process.Id}", e);
-            }
+            diagnosticsClient.WriteDump(dumpType, finalDumpFileName, logDumpGeneration: true);
+        }
+        catch (Exception e)
+        {
+            await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
+        }
 
 #else
-            MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
-            {
-                "mini" => MiniDumpWriteDump.MiniDumpTypeOption.Mini,
-                "heap" => MiniDumpWriteDump.MiniDumpTypeOption.Heap,
-                "full" => MiniDumpWriteDump.MiniDumpTypeOption.Full,
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
+        MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
+        {
+            "mini" => MiniDumpWriteDump.MiniDumpTypeOption.Mini,
+            "heap" => MiniDumpWriteDump.MiniDumpTypeOption.Heap,
+            "full" => MiniDumpWriteDump.MiniDumpTypeOption.Full,
+            _ => throw ApplicationStateGuard.Unreachable(),
+        };
 
+        try
+        {
             MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(process.Id, finalDumpFileName, miniDumpTypeOption);
+        }
+        catch (Exception e)
+        {
+            await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
+        }
 #endif
 
-            _dumpFileTaken = finalDumpFileName;
-        }
-        finally
-        {
-            NotifyCrashDumpServiceIfEnabled();
-
-            if (!process.HasExited)
-            {
-                try
-                {
-                    process.KillWithoutKillingChildProcesses();
-                }
-                catch (ArgumentException)
-                {
-                    // process already exited
-                }
-            }
-
-            await process.WaitForExitAsync().ConfigureAwait(false);
-        }
+        _dumpFiles.Add(finalDumpFileName);
     }
 
     private static void NotifyCrashDumpServiceIfEnabled()
