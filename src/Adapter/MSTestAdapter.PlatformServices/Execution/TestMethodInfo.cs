@@ -426,12 +426,10 @@ public class TestMethodInfo : ITestMethod
                 else
                 {
                     // The whole ExecuteInternalAsync method is already running on the execution context we got after class init.
-                    // However, if the global test initialize call above is using a non-cooperative timeout, it will
-                    // need to capture the execution context from the thread running it (after it has finished).
+                    // However, after we run global test initialize, it will need to capture the execution context (after it has finished).
                     // This is the case when executionContext is not null (this code path).
                     // In this case, we want to ensure the constructor and setting TestContext are both run on the correct execution context.
                     // Also we re-capture the execution context in case constructor or TestContext setter modifies an async local value.
-                    ExecutionContext updatedExecutionContext = _executionContext;
                     ExecutionContextHelpers.RunOnContext(_executionContext, () =>
                     {
                         try
@@ -441,11 +439,12 @@ public class TestMethodInfo : ITestMethod
                         }
                         finally
                         {
-                            updatedExecutionContext = ExecutionContext.Capture() ?? _executionContext;
+                            _executionContext = ExecutionContext.Capture() ?? _executionContext;
+#if NETFRAMEWORK
+                            _hostContext = CallContext.HostContext;
+#endif
                         }
                     });
-
-                    _executionContext = updatedExecutionContext;
                 }
 
                 if (setTestContextSucessful)
@@ -468,12 +467,14 @@ public class TestMethodInfo : ITestMethod
                         else
                         {
                             var tcs = new TaskCompletionSource<object?>();
-                            ExecutionContext? updatedExecutionContext = _executionContext;
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
                             ExecutionContextHelpers.RunOnContext(_executionContext, async () =>
                             {
                                 try
                                 {
+#if NETFRAMEWORK
+                                    CallContext.HostContext = _hostContext;
+#endif
                                     Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
                                     if (invokeResult is not null)
                                     {
@@ -486,18 +487,16 @@ public class TestMethodInfo : ITestMethod
                                 }
                                 finally
                                 {
-                                    updatedExecutionContext = ExecutionContext.Capture();
+                                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+#if NETFRAMEWORK
+                                    _hostContext = CallContext.HostContext;
+#endif
                                     tcs.TrySetResult(null);
                                 }
                             });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
                             await tcs.Task.ConfigureAwait(false);
-
-                            if (updatedExecutionContext is not null)
-                            {
-                                _executionContext = updatedExecutionContext;
-                            }
                         }
 
                         result.Outcome = UTF.UnitTestOutcome.Passed;
@@ -917,11 +916,6 @@ public class TestMethodInfo : ITestMethod
             timeout = localTimeout;
         }
 
-        ExecutionContext? updatedExecutionContext = null;
-#if NETFRAMEWORK
-        // Best effort. When we capture ExecutionContext, we need to copy it
-        object? updatedHostContext = null;
-#endif
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
             {
@@ -935,9 +929,9 @@ public class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                updatedExecutionContext = ExecutionContext.Capture();
+                _executionContext = ExecutionContext.Capture() ?? _executionContext;
 #if NETFRAMEWORK
-                updatedHostContext = CallContext.HostContext;
+                _hostContext = CallContext.HostContext;
 #endif
             },
             TestContext!.Context.CancellationTokenSource,
@@ -950,28 +944,11 @@ public class TestMethodInfo : ITestMethod
                 ? null
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
 
-        if (updatedExecutionContext != null)
-        {
-            _executionContext = updatedExecutionContext;
-        }
-
-#if NETFRAMEWORK
-        // ExecutionContext.Capture looses the internal IllogicalCallContext.
-        // We do a "best-effort" to preserve what we can preserve from the IllogicalCallContext.
-        // Note that IllogicalCallContext can have arbitrary key-value data and not only the "HostContext".
-        // There is no public API in .NET Framework to get the IllogicalCallContext.
-        _hostContext = updatedHostContext;
-#endif
-
         return result;
     }
 
     private async Task<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
-        ExecutionContext? updatedExecutionContext = null;
-#if NETFRAMEWORK
-        object? updatedHostContext = null;
-#endif
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
             {
@@ -985,9 +962,9 @@ public class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                updatedExecutionContext = ExecutionContext.Capture();
+                _executionContext = ExecutionContext.Capture() ?? _executionContext;
 #if NETFRAMEWORK
-                updatedHostContext = CallContext.HostContext;
+                _hostContext = CallContext.HostContext;
 #endif
             },
             TestContext!.Context.CancellationTokenSource,
@@ -999,15 +976,6 @@ public class TestMethodInfo : ITestMethod
             timeoutTokenSource is null
                 ? null
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
-
-        if (updatedExecutionContext != null)
-        {
-            _executionContext = updatedExecutionContext;
-        }
-
-#if NETFRAMEWORK
-        _hostContext = updatedHostContext;
-#endif
 
         return result;
     }
@@ -1020,10 +988,6 @@ public class TestMethodInfo : ITestMethod
             timeout = localTimeout;
         }
 
-        ExecutionContext? updatedExecutionContext = null;
-#if NETFRAMEWORK
-        object? updatedHostContext = null;
-#endif
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
             {
@@ -1037,9 +1001,9 @@ public class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                updatedExecutionContext = ExecutionContext.Capture();
+                _executionContext = ExecutionContext.Capture() ?? _executionContext;
 #if NETFRAMEWORK
-                updatedHostContext = CallContext.HostContext;
+                _hostContext = CallContext.HostContext;
 #endif
             },
             TestContext!.Context.CancellationTokenSource,
@@ -1052,24 +1016,11 @@ public class TestMethodInfo : ITestMethod
                 ? null
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
 
-        if (updatedExecutionContext != null)
-        {
-            _executionContext = updatedExecutionContext;
-        }
-
-#if NETFRAMEWORK
-        _hostContext = updatedHostContext;
-#endif
-
         return result;
     }
 
     private async Task<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
-        ExecutionContext? updatedExecutionContext = null;
-#if NETFRAMEWORK
-        object? updatedHostContext = null;
-#endif
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
             {
@@ -1083,9 +1034,9 @@ public class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                updatedExecutionContext = ExecutionContext.Capture();
+                _executionContext = ExecutionContext.Capture() ?? _executionContext;
 #if NETFRAMEWORK
-                updatedHostContext = CallContext.HostContext;
+                _hostContext = CallContext.HostContext;
 #endif
             },
             TestContext!.Context.CancellationTokenSource,
@@ -1097,15 +1048,6 @@ public class TestMethodInfo : ITestMethod
             timeoutTokenSource is null
                 ? null
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
-
-        if (updatedExecutionContext != null)
-        {
-            _executionContext = updatedExecutionContext;
-        }
-
-#if NETFRAMEWORK
-        _hostContext = updatedHostContext;
-#endif
 
         return result;
     }
