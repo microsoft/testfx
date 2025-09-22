@@ -21,14 +21,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #else
 [Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
 #endif
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable - not important to dispose the SemaphoreSlim, we don't access AvailableWaitHandle.
 public class TestClassInfo
+#pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     /// <summary>
     /// Test context property name.
     /// </summary>
     private const string TestContextPropertyName = "TestContext";
 
-    private readonly Lock _testClassExecuteSyncObject = new();
+    private readonly SemaphoreSlim _testClassExecuteSyncSemaphore = new(1, 1);
 
     private TestResult? _classInitializeResult;
 
@@ -244,12 +246,16 @@ public class TestClassInfo
     /// </summary>
     public Queue<MethodInfo> BaseTestCleanupMethodsQueue { get; } = new();
 
+    /// <inheritdoc cref="RunClassInitializeAsync(TestContext)" />
+    public void RunClassInitialize(TestContext testContext)
+        => RunClassInitializeAsync(testContext).GetAwaiter().GetResult();
+
     /// <summary>
     /// Runs the class initialize method.
     /// </summary>
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-    public void RunClassInitialize(TestContext testContext)
+    internal async Task RunClassInitializeAsync(TestContext testContext)
     {
         // If no class initialize and no base class initialize, return
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
@@ -281,7 +287,7 @@ public class TestClassInfo
                 for (int i = BaseClassInitMethods.Count - 1; i >= 0; i--)
                 {
                     initializeMethod = BaseClassInitMethods[i];
-                    ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
+                    ClassInitializationException = await InvokeInitializeMethodAsync(initializeMethod, testContext).ConfigureAwait(false);
                     if (ClassInitializationException is not null)
                     {
                         break;
@@ -291,7 +297,7 @@ public class TestClassInfo
                 if (ClassInitializationException is null)
                 {
                     initializeMethod = ClassInitializeMethod;
-                    ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                    ClassInitializationException = await InvokeInitializeMethodAsync(ClassInitializeMethod, testContext).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -355,7 +361,7 @@ public class TestClassInfo
                 TestFailureException = _classInitializeResult.TestFailureException,
             };
 
-    internal TestResult GetResultOrRunClassInitialize(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
+    internal async Task<TestResult> GetResultOrRunClassInitializeAsync(ITestContext testContext, string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         TestResult? clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
@@ -382,8 +388,9 @@ public class TestClassInfo
         // We could keep the logic in lock only and not duplicate, but we don't want to pay
         // the lock cost unnecessarily for a common case.
         // We also need to lock to avoid concurrency issues and guarantee that class init is called only once.
-        lock (_testClassExecuteSyncObject)
+        try
         {
+            await _testClassExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
             clonedInitializeResult = TryGetClonedCachedClassInitializeResult();
 
             // Optimization: If we already ran before and know the result, return it.
@@ -407,7 +414,7 @@ public class TestClassInfo
                     IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
                 };
 
-                Thread entryPointThread = new(() => result = DoRun())
+                Thread entryPointThread = new(() => result = DoRunAsync().GetAwaiter().GetResult())
                 {
                     Name = "MSTest STATestClass ClassInitialize",
                 };
@@ -438,12 +445,16 @@ public class TestClassInfo
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
                 }
 
-                return DoRun();
+                return await DoRunAsync().ConfigureAwait(false);
             }
+        }
+        finally
+        {
+            _testClassExecuteSyncSemaphore.Release();
         }
 
         // Local functions
-        TestResult DoRun()
+        async Task<TestResult> DoRunAsync()
         {
             var result = new TestResult
             {
@@ -453,7 +464,7 @@ public class TestClassInfo
             try
             {
                 // This runs the ClassInitialize methods only once but saves the
-                RunClassInitialize(testContext.Context);
+                await RunClassInitializeAsync(testContext.Context).ConfigureAwait(false);
             }
             catch (TestFailedException ex)
             {
@@ -482,7 +493,7 @@ public class TestClassInfo
         }
     }
 
-    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
+    private async Task<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo? methodInfo, TestContext testContext)
     {
         if (methodInfo is null)
         {
@@ -495,14 +506,18 @@ public class TestClassInfo
             timeout = localTimeout;
         }
 
-        TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-            () =>
+        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+            async () =>
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
                 using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
                 {
-                    methodInfo.InvokeAsSynchronousTask(null, testContext);
+                    Task? task = methodInfo.GetInvokeResultAsync(null, testContext);
+                    if (task is not null)
+                    {
+                        await task.ConfigureAwait(false);
+                    }
                 }
 
                 // **After** we have executed the class initialize, we save the current context.
@@ -514,7 +529,7 @@ public class TestClassInfo
             methodInfo,
             ExecutionContext ?? Parent?.ExecutionContext,
             Resource.ClassInitializeWasCancelled,
-            Resource.ClassInitializeTimedOut);
+            Resource.ClassInitializeTimedOut).ConfigureAwait(false);
 
         return result;
     }
@@ -540,8 +555,10 @@ public class TestClassInfo
         }
 
         MethodInfo? classCleanupMethod = null;
-        lock (_testClassExecuteSyncObject)
+        try
         {
+            _testClassExecuteSyncSemaphore.Wait();
+
             if (IsClassCleanupExecuted)
             {
                 return null;
@@ -552,12 +569,12 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, null!) : null;
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethodAsync(classCleanupMethod, null!).GetAwaiter().GetResult() : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethods);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, null!);
+                        ClassCleanupException = InvokeCleanupMethodAsync(classCleanupMethod, null!).GetAwaiter().GetResult();
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -567,6 +584,10 @@ public class TestClassInfo
                     ClassCleanupException = exception;
                 }
             }
+        }
+        finally
+        {
+            _testClassExecuteSyncSemaphore.Release();
         }
 
         // If ClassCleanup was successful, then don't do anything
@@ -609,7 +630,7 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal TestFailedException? ExecuteClassCleanup(TestContext testContext)
+    internal async Task<TestFailedException?> ExecuteClassCleanupAsync(TestContext testContext)
     {
         if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
             || IsClassCleanupExecuted)
@@ -619,8 +640,9 @@ public class TestClassInfo
 
         MethodInfo? classCleanupMethod = ClassCleanupMethod;
 
-        lock (_testClassExecuteSyncObject)
+        try
         {
+            await _testClassExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
             if (IsClassCleanupExecuted
                 // If ClassInitialize method has not been executed, then we should not execute ClassCleanup
                 // Note that if there is no ClassInitialze method at all, we will still set
@@ -637,7 +659,7 @@ public class TestClassInfo
                 {
                     if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                     {
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, testContext);
+                        ClassCleanupException = await InvokeCleanupMethodAsync(classCleanupMethod, testContext).ConfigureAwait(false);
                     }
                 }
 
@@ -648,7 +670,7 @@ public class TestClassInfo
                         classCleanupMethod = BaseClassCleanupMethods[i];
                         if (!classCleanupMethod.DeclaringType!.IsIgnored(out _))
                         {
-                            ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, testContext);
+                            ClassCleanupException = await InvokeCleanupMethodAsync(classCleanupMethod, testContext).ConfigureAwait(false);
                             if (ClassCleanupException is not null)
                             {
                                 break;
@@ -665,6 +687,10 @@ public class TestClassInfo
             {
                 IsClassCleanupExecuted = true;
             }
+        }
+        finally
+        {
+            _testClassExecuteSyncSemaphore.Release();
         }
 
         // If ClassCleanup was successful, then don't do anything
@@ -704,7 +730,7 @@ public class TestClassInfo
         return testFailedException;
     }
 
-    internal void RunClassCleanup(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestResult[] results)
+    internal async Task RunClassCleanupAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestResult[] results)
     {
         DebugEx.Assert(testMethodInfo.Parent == this, "Parent of testMethodInfo should be this TestClassInfo.");
 
@@ -729,7 +755,7 @@ public class TestClassInfo
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            Thread entryPointThread = new(DoRun)
+            var entryPointThread = new Thread(() => DoRunAsync().GetAwaiter().GetResult())
             {
                 Name = "MSTest STATestClass ClassCleanup",
             };
@@ -754,15 +780,15 @@ public class TestClassInfo
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            DoRun();
+            await DoRunAsync().ConfigureAwait(false);
         }
 
         // Local functions
-        void DoRun()
+        async Task DoRunAsync()
         {
             try
             {
-                TestFailedException? ex = ExecuteClassCleanup(testContext.Context);
+                TestFailedException? ex = await ExecuteClassCleanupAsync(testContext.Context).ConfigureAwait(false);
                 if (ex is not null && results.Length > 0)
                 {
 #pragma warning disable IDE0056 // Use index operator
@@ -789,7 +815,7 @@ public class TestClassInfo
         }
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, TestContext testContext)
+    private async Task<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, TestContext testContext)
     {
         TimeoutInfo? timeout = null;
         if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -797,20 +823,20 @@ public class TestClassInfo
             timeout = localTimeout;
         }
 
-        TestFailedException? result = FixtureMethodRunner.RunWithTimeoutAndCancellation(
-            () =>
+        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+            async () =>
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
                 using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
                 {
-                    if (methodInfo.GetParameters().Length == 0)
+                    Task? task = methodInfo.GetParameters().Length == 0
+                        ? methodInfo.GetInvokeResultAsync(null)
+                        : methodInfo.GetInvokeResultAsync(null, testContext);
+
+                    if (task is not null)
                     {
-                        methodInfo.InvokeAsSynchronousTask(null);
-                    }
-                    else
-                    {
-                        methodInfo.InvokeAsSynchronousTask(null, testContext);
+                        await task.ConfigureAwait(false);
                     }
                 }
 
@@ -824,7 +850,7 @@ public class TestClassInfo
             methodInfo,
             ExecutionContext ?? Parent.ExecutionContext,
             Resource.ClassCleanupWasCancelled,
-            Resource.ClassCleanupTimedOut);
+            Resource.ClassCleanupTimedOut).ConfigureAwait(false);
 
         return result;
     }
