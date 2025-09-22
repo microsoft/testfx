@@ -206,4 +206,7 @@ public static class ServiceProviderExtensions
 
     internal static IFileLoggerInformation? GetFileLoggerInformation(this IServiceProvider serviceProvider)
         => serviceProvider.GetServiceInternal<IFileLoggerInformation>();
+
+    internal static IArtifactNamingService GetArtifactNamingService(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<IArtifactNamingService>();
 }

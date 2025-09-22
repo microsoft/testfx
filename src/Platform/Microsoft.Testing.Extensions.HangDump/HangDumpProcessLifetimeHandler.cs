@@ -45,6 +45,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
     private readonly ManualResetEventSlim _mutexNameReceived = new(false);
     private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
+    private readonly IArtifactNamingService _artifactNamingService;
 
     private TimeSpan _activityTimerValue = TimeSpan.FromMinutes(30);
     private Task? _waitConnectionTask;
@@ -85,6 +86,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _processHandler = processHandler;
         _clock = clock;
         _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
+        _artifactNamingService = serviceProvider.GetArtifactNamingService();
         _dumpFileNamePattern = $"{Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_%p_hang.dmp";
     }
 
@@ -352,7 +354,20 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
-        string finalDumpFileName = _dumpFileNamePattern.Replace("%p", _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
+        // Create custom replacements for the dumped process
+        var customReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["process-name"] = _testHostProcessInformation.ProcessName,
+            ["pid"] = _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)
+        };
+
+        // Create legacy replacements for backward compatibility
+        var legacyReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["%p"] = _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)
+        };
+
+        string finalDumpFileName = _artifactNamingService.ResolveTemplateWithLegacySupport(_dumpFileNamePattern, customReplacements, legacyReplacements);
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
