@@ -22,7 +22,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
-        Assert.HasCount(48, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {testHostResult}");
+        Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {testHostResult}");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)

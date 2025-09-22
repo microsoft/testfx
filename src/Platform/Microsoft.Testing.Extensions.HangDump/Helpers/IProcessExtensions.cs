@@ -7,9 +7,9 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Extensions.Diagnostics.Helpers;
 
 /// <summary>
-/// Helper functions for process info.
+/// Helper functions for IProcess.
 /// </summary>
-internal static class ProcessCodeMethods
+internal static class IProcessExtensions
 {
     private const int InvalidProcessId = -1;
 
@@ -59,20 +59,12 @@ internal static class ProcessCodeMethods
 
     internal static int GetParentPidWindows(Process process)
     {
-        try
-        {
-            IntPtr handle = process.Handle;
-            int res = NtQueryInformationProcess(handle, 0, out var pbi, Marshal.SizeOf<ProcessBasicInformation>(), out int size);
+        IntPtr handle = process.Handle;
+        int res = NtQueryInformationProcess(handle, 0, out ProcessBasicInformation pbi, Marshal.SizeOf<ProcessBasicInformation>(), out int _);
 
-            int p = res != 0 ? InvalidProcessId : pbi.InheritedFromUniqueProcessId.ToInt32();
+        int p = res != 0 ? InvalidProcessId : pbi.InheritedFromUniqueProcessId.ToInt32();
 
-            return p;
-        }
-        catch (Exception ex)
-        {
-            // EqtTrace.Verbose($"ProcessCodeMethods.GetParentPidLinux: Error getting parent of process {process.Id} - {process.ProcessName}, {ex}.");
-            return InvalidProcessId;
-        }
+        return p;
     }
 
     /// <summary>Read the /proc file system for information about the parent.</summary>
@@ -86,52 +78,36 @@ internal static class ProcessCodeMethods
         // 4th column will contain the ppid, 92 in the example below
         // ex: 93 (bash) S 92 93 2 4294967295 ...
         string path = $"/proc/{pid}/stat";
-        try
-        {
-            string stat = File.ReadAllText(path);
-            string[] parts = stat.Split(' ');
+        string stat = File.ReadAllText(path);
+        string[] parts = stat.Split(' ');
 
-            return parts.Length < 5 ? InvalidProcessId : int.Parse(parts[3], CultureInfo.CurrentCulture);
-        }
-        catch (Exception ex)
-        {
-            // EqtTrace.Verbose($"ProcessCodeMethods.GetParentPidLinux: Error getting parent of process {process.Id} - {process.ProcessName}, {ex}.");
-            return InvalidProcessId;
-        }
+        return parts.Length < 5 ? InvalidProcessId : int.Parse(parts[3], CultureInfo.CurrentCulture);
     }
 
     internal static int GetParentPidMacOs(Process process)
     {
-        try
+        var output = new StringBuilder();
+        var err = new StringBuilder();
+        Process ps = new();
+        ps.StartInfo.FileName = "ps";
+        ps.StartInfo.Arguments = $"-o ppid= {process.Id}";
+        ps.StartInfo.UseShellExecute = false;
+        ps.StartInfo.RedirectStandardOutput = true;
+        ps.OutputDataReceived += (_, e) => output.Append(e.Data);
+        ps.ErrorDataReceived += (_, e) => err.Append(e.Data);
+        ps.Start();
+        ps.BeginOutputReadLine();
+        ps.WaitForExit(5_000);
+
+        string o = output.ToString();
+        int parent = int.TryParse(o.Trim(), out int ppid) ? ppid : InvalidProcessId;
+
+        if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
         {
-            var output = new StringBuilder();
-            var err = new StringBuilder();
-            Process ps = new();
-            ps.StartInfo.FileName = "ps";
-            ps.StartInfo.Arguments = $"-o ppid= {process.Id}";
-            ps.StartInfo.UseShellExecute = false;
-            ps.StartInfo.RedirectStandardOutput = true;
-            ps.OutputDataReceived += (_, e) => output.Append(e.Data);
-            ps.ErrorDataReceived += (_, e) => err.Append(e.Data);
-            ps.Start();
-            ps.BeginOutputReadLine();
-            ps.WaitForExit(5_000);
-
-            string o = output.ToString();
-            int parent = int.TryParse(o.Trim(), out int ppid) ? ppid : InvalidProcessId;
-
-            if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
-            {
-                // EqtTrace.Verbose($"ProcessCodeMethods.GetParentPidMacOs: Error getting parent of process {process.Id} - {process.ProcessName}, {error}.");
-            }
-
-            return parent;
+            // EqtTrace.Verbose($"ProcessCodeMethods.GetParentPidMacOs: Error getting parent of process {process.Id} - {process.ProcessName}, {error}.");
         }
-        catch (Exception ex)
-        {
-            // EqtTrace.Verbose($"ProcessCodeMethods.GetParentPidMacOs: Error getting parent of process {process.Id} - {process.ProcessName}, {ex}.");
-            return InvalidProcessId;
-        }
+
+        return parent;
     }
 
     private static void ResolveChildren(IProcess parent, List<ProcessTreeNode> acc, int level, int limit)
@@ -184,15 +160,4 @@ internal static class ProcessCodeMethods
         out ProcessBasicInformation processInformation,
         int processInformationLength,
         out int returnLength);
-}
-
-internal class ProcessTreeNode
-{
-    public IProcess? Process { get; set; }
-
-    public int Level { get; set; }
-
-    public int ParentId { get; set; }
-
-    public Process? ParentProcess { get; set; }
 }

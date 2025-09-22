@@ -67,7 +67,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ITask task,
         IEnvironment environment,
         ILoggerFactory loggerFactory,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
         IConfiguration configuration,
         IProcessHandler processHandler,
         IServiceProvider serviceProvider,
@@ -351,7 +350,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
-        IProcess process = new SystemProcess(Process.GetProcessById(_testHostProcessInformation.PID));
+        IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         var processTree = process.GetProcessTree().Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
