@@ -811,6 +811,6 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         // Assert - should contain information about 2 tests discovered
-        Assert.IsTrue(output.Contains("2") || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+        Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
     }
 }
