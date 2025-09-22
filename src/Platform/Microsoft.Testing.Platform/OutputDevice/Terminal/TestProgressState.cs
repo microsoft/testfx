@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TestProgressState
 {
-    public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery = false)
+    public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery)
     {
         Id = id;
         Assembly = assembly;

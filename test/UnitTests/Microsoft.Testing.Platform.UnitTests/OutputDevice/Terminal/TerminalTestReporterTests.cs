@@ -761,24 +761,24 @@ public sealed class TerminalTestReporterTests
     {
         // Arrange
         var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
-        
+
         // Act
         var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch, isDiscovery: true);
-        
+
         // Assert
         Assert.IsTrue(progressState.IsDiscovery);
         Assert.AreEqual(0, progressState.DiscoveredTests);
     }
 
     [TestMethod]
-    public void TestProgressState_WhenCreatedWithoutDiscoveryParameter_ShouldHaveIsDiscoveryFalse()
+    public void TestProgressState_WhenCreatedWithFalseIsDiscoveryParameter_ShouldHaveIsDiscoveryFalse()
     {
         // Arrange
         var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
-        
+
         // Act
-        var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch);
-        
+        var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch, isDiscovery: false);
+
         // Assert
         Assert.IsFalse(progressState.IsDiscovery);
         Assert.AreEqual(0, progressState.DiscoveredTests);
