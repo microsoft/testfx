@@ -402,7 +402,6 @@ public class TestMethodInfo : ITestMethod
         bool hasTestInitializePassed = false;
         Exception? testRunnerException = null;
         _isTestCleanupInvoked = false;
-        ExecutionContext? executionContext = null;
 
         try
         {
@@ -419,7 +418,7 @@ public class TestMethodInfo : ITestMethod
 
                 // TODO remove dry violation with TestMethodRunner
                 bool setTestContextSucessful = false;
-                if (executionContext is null)
+                if (_executionContext is null)
                 {
                     _classInstance = CreateTestClassInstance(result);
                     setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
@@ -432,8 +431,8 @@ public class TestMethodInfo : ITestMethod
                     // This is the case when executionContext is not null (this code path).
                     // In this case, we want to ensure the constructor and setting TestContext are both run on the correct execution context.
                     // Also we re-capture the execution context in case constructor or TestContext setter modifies an async local value.
-                    ExecutionContext updatedExecutionContext = executionContext;
-                    ExecutionContextHelpers.RunOnContext(executionContext, () =>
+                    ExecutionContext updatedExecutionContext = _executionContext;
+                    ExecutionContextHelpers.RunOnContext(_executionContext, () =>
                     {
                         try
                         {
@@ -442,11 +441,11 @@ public class TestMethodInfo : ITestMethod
                         }
                         finally
                         {
-                            updatedExecutionContext = ExecutionContext.Capture() ?? executionContext;
+                            updatedExecutionContext = ExecutionContext.Capture() ?? _executionContext;
                         }
                     });
 
-                    executionContext = updatedExecutionContext;
+                    _executionContext = updatedExecutionContext;
                 }
 
                 if (setTestContextSucessful)
@@ -458,7 +457,7 @@ public class TestMethodInfo : ITestMethod
                     {
                         hasTestInitializePassed = true;
 
-                        if (executionContext is null)
+                        if (_executionContext is null)
                         {
                             Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
                             if (invokeResult is not null)
@@ -469,9 +468,9 @@ public class TestMethodInfo : ITestMethod
                         else
                         {
                             var tcs = new TaskCompletionSource<object?>();
-                            ExecutionContext? updatedExecutionContext = executionContext;
+                            ExecutionContext? updatedExecutionContext = _executionContext;
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
-                            ExecutionContextHelpers.RunOnContext(executionContext, async () =>
+                            ExecutionContextHelpers.RunOnContext(_executionContext, async () =>
                             {
                                 try
                                 {
@@ -497,7 +496,7 @@ public class TestMethodInfo : ITestMethod
 
                             if (updatedExecutionContext is not null)
                             {
-                                executionContext = updatedExecutionContext;
+                                _executionContext = updatedExecutionContext;
                             }
                         }
 
@@ -578,7 +577,7 @@ public class TestMethodInfo : ITestMethod
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
         // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
-        await RunTestCleanupMethodAsync(result, executionContext, timeoutTokenSource).ConfigureAwait(false);
+        await RunTestCleanupMethodAsync(result, timeoutTokenSource).ConfigureAwait(false);
 
         return testRunnerException != null ? throw testRunnerException : result;
     }
@@ -723,10 +722,9 @@ public class TestMethodInfo : ITestMethod
     /// Runs TestCleanup methods of parent TestClass and base classes.
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
-    /// <param name="executionContext">The execution context to run on.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async Task RunTestCleanupMethodAsync(TestResult result, ExecutionContext? executionContext, CancellationTokenSource? timeoutTokenSource)
+    private async Task RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(result != null, "result != null");
 
@@ -1275,7 +1273,6 @@ public class TestMethodInfo : ITestMethod
 
         TestResult? result = null;
         Exception? failure = null;
-        ExecutionContext? executionContext = null;
 
         if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TimeoutInfo.Timeout, TestContext!.Context.CancellationTokenSource.Token))
         {
@@ -1308,7 +1305,7 @@ public class TestMethodInfo : ITestMethod
 
         // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
         // The method already checks if the cleanup was already executed.
-        await RunTestCleanupMethodAsync(timeoutResult, executionContext, null).ConfigureAwait(false);
+        await RunTestCleanupMethodAsync(timeoutResult, null).ConfigureAwait(false);
         return timeoutResult;
 
         // Local functions
