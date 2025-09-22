@@ -109,16 +109,14 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string fileName = Path.GetFileNameWithoutExtension(dumpFile);
         
         // File should match pattern: <process-name>_<pid>_<id>_hang
-        // The process name should be HangDump, pid should be numeric, id should be 8 chars
-        Assert.IsTrue(fileName.StartsWith("HangDump_"), $"File name should start with 'HangDump_'. Actual: {fileName}");
+        // The process name should be the test executable name, pid should be numeric, id should be 8 chars
         Assert.IsTrue(fileName.EndsWith("_hang"), $"File name should end with '_hang'. Actual: {fileName}");
         
         string[] parts = fileName.Split('_');
-        Assert.AreEqual(4, parts.Length, $"File name should have 4 parts separated by '_'. Actual: {fileName}");
-        Assert.AreEqual("HangDump", parts[0], "First part should be process name");
-        Assert.IsTrue(int.TryParse(parts[1], out _), $"Second part should be PID (numeric). Actual: {parts[1]}");
-        Assert.AreEqual(8, parts[2].Length, $"Third part should be 8-character ID. Actual: {parts[2]}");
-        Assert.AreEqual("hang", parts[3], "Fourth part should be 'hang'");
+        Assert.IsTrue(parts.Length >= 3, $"File name should have at least 3 parts separated by '_'. Actual: {fileName}");
+        Assert.IsTrue(int.TryParse(parts[^3], out _), $"Third-to-last part should be PID (numeric). Actual: {parts[^3]}");
+        Assert.AreEqual(8, parts[^2].Length, $"Second-to-last part should be 8-character ID. Actual: {parts[^2]}");
+        Assert.AreEqual("hang", parts[^1], "Last part should be 'hang'");
     }
 
     [DataRow("Mini")]

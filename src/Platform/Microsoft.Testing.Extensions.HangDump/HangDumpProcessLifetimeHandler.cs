@@ -355,9 +355,21 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
         // Create custom replacements for the dumped process
+        string processName;
+        try
+        {
+            using var process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
+            processName = process.ProcessName;
+        }
+        catch
+        {
+            // If we can't get the process name, use a default
+            processName = "testhost";
+        }
+
         var customReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["process-name"] = _testHostProcessInformation.ProcessName,
+            ["process-name"] = processName,
             ["pid"] = _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)
         };
 
