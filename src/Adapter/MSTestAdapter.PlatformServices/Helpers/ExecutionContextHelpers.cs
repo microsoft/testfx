@@ -31,34 +31,17 @@ internal static class ExecutionContextHelpers
         }
         else
         {
-#if NET
-            if (ExecutionContext.Capture() is { } previousExecutionContext)
+            // CreateCopy doesn't do anything on .NET Core as ExecutionContexts are immutable.
+            // But it's important on .NET Framework.
+            // On .NET Framework, ExecutionContext.Run cannot be called twice with the same ExecutionContext.
+            // Otherwise, it will throw InvalidOperationException with message:
+            // Cannot apply a context that has been marshaled across AppDomains, that was not acquired through a Capture operation or that has already been the argument to a Set call.
+            executionContext = executionContext.CreateCopy();
+            Task? t = null;
+            ExecutionContext.Run(executionContext, action => t = ((Func<Task>)action!).Invoke(), action);
+            if (t is not null)
             {
-                ExecutionContext.Restore(executionContext);
-                try
-                {
-                    await action().ConfigureAwait(false);
-                }
-                finally
-                {
-                    ExecutionContext.Restore(previousExecutionContext);
-                }
-            }
-            else
-#endif
-            {
-                // CreateCopy doesn't do anything on .NET Core as ExecutionContexts are immutable.
-                // But it's important on .NET Framework.
-                // On .NET Framework, ExecutionContext.Run cannot be called twice with the same ExecutionContext.
-                // Otherwise, it will throw InvalidOperationException with message:
-                // Cannot apply a context that has been marshaled across AppDomains, that was not acquired through a Capture operation or that has already been the argument to a Set call.
-                executionContext = executionContext.CreateCopy();
-                Task? t = null;
-                ExecutionContext.Run(executionContext, action => t = ((Func<Task>)action!).Invoke(), action);
-                if (t is not null)
-                {
-                    await t.ConfigureAwait(false);
-                }
+                await t.ConfigureAwait(false);
             }
         }
     }
