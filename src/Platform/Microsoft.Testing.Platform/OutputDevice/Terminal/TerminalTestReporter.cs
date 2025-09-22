@@ -840,16 +840,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         TestProgressState asm = _testProgressState;
+        asm.DiscoveredTests++;
+
         if (_isDiscovery)
         {
-            asm.DiscoveredTests++;
-            asm.TotalTests++;
-        }
-        else
-        {
-            // TODO: add mode for discovered tests to the progress bar, to get rid of the hack here that allows updating the
-            // progress, but also breaks the total counts if not done only in discovery.
-            asm.PassedTests++;
+            // In discovery mode we count discovered tests,
+            // but in execution mode the completion of test will increase the total tests count.
             asm.TotalTests++;
         }
 
