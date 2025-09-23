@@ -87,7 +87,7 @@ public class DeadlockCase1
     // This repro is related to https://github.com/microsoft/testfx/issues/6575
     private static TaskCompletionSource<object> _cts = new();
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static async Task ClassCleanup()
     {
         await _cts.Task;
