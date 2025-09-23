@@ -2156,40 +2156,40 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertAreEqualWithCollectionCountUsingNonGenericCollection()
     {
         string code = """
-        using System;
-        using System.Collections;
-        using System.Collections.Generic;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var x = new Hashtable();
-                {|#0:Assert.AreEqual(4, x.Count)|};
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var x = new Hashtable();
+                    {|#0:Assert.AreEqual(4, x.Count)|};
+                }
             }
-        }
-        """;
+            """;
 
         string fixedCode = """
-        using System;
-        using System.Collections;
-        using System.Collections.Generic;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var x = new Hashtable();
-                Assert.HasCount(4, x);
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var x = new Hashtable();
+                    Assert.HasCount(4, x);
+                }
             }
-        }
-        """;
+            """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
@@ -2202,36 +2202,36 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertAreEqualWithNonGenericCollectionCountZero()
     {
         string code = """
-        using System.Collections;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var hashtable = new Hashtable();
-                {|#0:Assert.AreEqual(0, hashtable.Count)|};
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.AreEqual(0, hashtable.Count)|};
+                }
             }
-        }
-        """;
+            """;
 
         string fixedCode = """
-        using System.Collections;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var hashtable = new Hashtable();
-                Assert.IsEmpty(hashtable);
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
             }
-        }
-        """;
+            """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
@@ -2243,36 +2243,36 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertIsTrueWithNonGenericCollectionCountEqualZero()
     {
         string code = """
-        using System.Collections;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var hashtable = new Hashtable();
-                {|#0:Assert.IsTrue(hashtable.Count == 0)|};
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.IsTrue(hashtable.Count == 0)|};
+                }
             }
-        }
-        """;
+            """;
 
         string fixedCode = """
-        using System.Collections;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var hashtable = new Hashtable();
-                Assert.IsEmpty(hashtable);
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
             }
-        }
-        """;
+            """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
@@ -2284,36 +2284,36 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertIsTrueWithNonGenericCollectionCountGreaterThanZero()
     {
         string code = """
-        using System.Collections;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var hashtable = new Hashtable { { "key", "value" } };
-                {|#0:Assert.IsTrue(hashtable.Count > 0)|};
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable { { "key", "value" } };
+                    {|#0:Assert.IsTrue(hashtable.Count > 0)|};
+                }
             }
-        }
-        """;
+            """;
 
         string fixedCode = """
-        using System.Collections;
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void MyTestMethod()
+            [TestClass]
+            public class MyTestClass
             {
-                var hashtable = new Hashtable { { "key", "value" } };
-                Assert.IsNotEmpty(hashtable);
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable { { "key", "value" } };
+                    Assert.IsNotEmpty(hashtable);
+                }
             }
-        }
-        """;
+            """;
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
