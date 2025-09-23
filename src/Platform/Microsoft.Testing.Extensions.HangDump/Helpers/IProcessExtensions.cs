@@ -50,7 +50,7 @@ internal static class IProcessExtensions
     /// </summary>
     /// <param name="process">The process to find parent of.</param>
     /// <param name="logger">The logger.</param>
-    /// <param name="outputDisplay">The output display.</param>
+    /// <param name="outputDisplay">The output display.git </param>
     /// <returns>The pid of the parent process.</returns>
     internal static int GetParentPid(Process process, ILogger logger, OutputDeviceWriter outputDisplay)
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -104,6 +104,7 @@ internal static class IProcessExtensions
         ps.WaitForExit(5_000);
 
         string o = output.ToString();
+        outputDisplay.DisplayAsync(new WarningMessageOutputDeviceData($"ps output: {o}")).Wait();
         int parent = int.TryParse(o.Trim(), out int ppid) ? ppid : InvalidProcessId;
 
         if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
