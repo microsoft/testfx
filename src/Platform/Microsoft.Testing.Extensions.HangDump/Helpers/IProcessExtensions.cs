@@ -30,10 +30,9 @@ internal static class IProcessExtensions
                 // c.ParentId = parentId;
                 acc.Add(new ProcessTreeNode { ParentId = parentId, Process = new SystemProcess(c) });
             }
-            catch
+            catch (Exception e)
             {
-                // many things can go wrong with this
-                // just ignore errors
+                logger.LogError($"Failed to get parent for process {c.Id} - {c.ProcessName}", e);
             }
         }
 
