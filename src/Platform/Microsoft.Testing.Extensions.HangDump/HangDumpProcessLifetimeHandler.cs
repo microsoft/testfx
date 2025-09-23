@@ -32,7 +32,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #endif
 {
     private readonly IMessageBus _messageBus;
-    private readonly IOutputDevice _outputDisplay;
+    private readonly OutputDeviceWriter _outputDisplay;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly ITask _task;
     private readonly IEnvironment _environment;
@@ -62,7 +62,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     public HangDumpProcessLifetimeHandler(
         PipeNameDescription pipeNameDescription,
         IMessageBus messageBus,
-        IOutputDevice outputDisplay,
+        IOutputDevice outputDevice,
         ICommandLineOptions commandLineOptions,
         ITask task,
         IEnvironment environment,
@@ -76,7 +76,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
         _pipeNameDescription = pipeNameDescription;
         _messageBus = messageBus;
-        _outputDisplay = outputDisplay;
+        _outputDisplay = new OutputDeviceWriter(outputDevice, this);
         _commandLineOptions = commandLineOptions;
         _task = task;
         _environment = environment;
@@ -198,7 +198,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                     }
                     catch (Exception e)
                     {
-                        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo()))).ConfigureAwait(false);
+                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo()))).ConfigureAwait(false);
                         throw;
                     }
                 }, "[HangDump] ActivityTimerAsync", cancellation);
@@ -348,26 +348,26 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
         IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        var processTree = process.GetProcessTree(_logger).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
+        var processTree = process.GetProcessTree(_logger, _outputDisplay).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
         try
         {
             if (processTree.Count > 1)
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData("Dumping this process tree (from bottom):")).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData("Dumping this process tree (from bottom):")).ConfigureAwait(false);
 
                 foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
                 {
-                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}")).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}")).ConfigureAwait(false);
                 }
             }
             else
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
             }
 
             await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
@@ -388,6 +388,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 {
                     // exceptions.Add(new InvalidOperationException($"Error while taking dump of process {p.Name} {p.Id}", e));
                     await _logger.LogErrorAsync($"Error while taking dump of process {p.Name} {p.Id}", e).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error while taking dump of process {p.Name} {p.Id}: {e}")).ConfigureAwait(false);
                 }
             }
         }
@@ -407,6 +408,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 // exceptions.Add(new InvalidOperationException($"Problem killing {mainProcess.Id} {mainProcess.Name}", e));
                 await _logger.LogErrorAsync($"Problem killing {mainProcess.Id} {mainProcess.Name}", e).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Problem killing {mainProcess.Id} {mainProcess.Name}: {e}")).ConfigureAwait(false);
             }
 
             // Some of the processes might crashed, which breaks the process tree (on windows it is just an illusion),
@@ -425,6 +427,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 catch (Exception e)
                 {
                     await _logger.LogErrorAsync($"Problem killing {mainProcess.Id} {mainProcess.Name}", e).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Problem killing {mainProcess.Id} {mainProcess.Name}: {e}")).ConfigureAwait(false);
                 }
             }
         }
@@ -447,11 +450,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping)).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping)).ConfigureAwait(false);
                 foreach ((string testName, int seconds) in tests.Tests)
                 {
                     await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}")).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}")).ConfigureAwait(false);
                 }
             }
 
@@ -460,7 +463,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}").ConfigureAwait(false);
 
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName))).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName))).ConfigureAwait(false);
 
 #if NETCOREAPP
         DiagnosticsClient diagnosticsClient = new(process.Id);
@@ -487,6 +490,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception e)
         {
             await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error while taking dump of process {process.Name} {process.Id}: {e}")).ConfigureAwait(false);
         }
 
 #else
@@ -505,6 +509,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception e)
         {
             await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error while taking dump of process {process.Name} {process.Id}: {e}")).ConfigureAwait(false);
         }
 #endif
 
@@ -546,4 +551,24 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _pipeNameDescription.Dispose();
     }
 #endif
+}
+
+internal sealed class OutputDeviceWriter
+{
+    private readonly IOutputDevice _outputDevice;
+    private readonly IOutputDeviceDataProducer _outputDeviceDataProducer;
+
+    public OutputDeviceWriter(IOutputDevice outputDevice, IOutputDeviceDataProducer outputDeviceDataProducer)
+    {
+        _outputDevice = outputDevice;
+        _outputDeviceDataProducer = outputDeviceDataProducer;
+    }
+
+    /// <summary>
+    /// Displays the output data asynchronously, using the stored producer.
+    /// </summary>
+    /// <param name="data">The output data.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public async Task DisplayAsync(IOutputDeviceData data)
+        => await _outputDevice.DisplayAsync(_outputDeviceDataProducer, data).ConfigureAwait(false);
 }
