@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.Diagnostics.Helpers;
 
@@ -13,7 +14,7 @@ internal static class IProcessExtensions
 {
     private const int InvalidProcessId = -1;
 
-    public static List<ProcessTreeNode> GetProcessTree(this IProcess process)
+    public static List<ProcessTreeNode> GetProcessTree(this IProcess process, ILogger logger)
     {
         var childProcesses = Process.GetProcesses()
             .Where(p => IsChildCandidate(p, process))
@@ -24,7 +25,7 @@ internal static class IProcessExtensions
         {
             try
             {
-                int parentId = GetParentPid(c);
+                int parentId = GetParentPid(c, logger);
 
                 // c.ParentId = parentId;
                 acc.Add(new ProcessTreeNode { ParentId = parentId, Process = new SystemProcess(c) });
@@ -38,7 +39,7 @@ internal static class IProcessExtensions
 
         int level = 1;
         int limit = 10;
-        ResolveChildren(process, acc, level, limit);
+        ResolveChildren(process, logger, acc, level, limit);
 
         return [new() { Process = process, Level = 0 }, .. acc.Where(a => a.Level > 0)];
     }
@@ -47,14 +48,15 @@ internal static class IProcessExtensions
     /// Returns the parent id of a process or -1 if it fails.
     /// </summary>
     /// <param name="process">The process to find parent of.</param>
+    /// <param name="logger">The logger.</param>
     /// <returns>The pid of the parent process.</returns>
-    internal static int GetParentPid(Process process)
+    internal static int GetParentPid(Process process, ILogger logger)
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? GetParentPidWindows(process)
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
                 ? GetParentPidLinux(process)
                 : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ?
-                    GetParentPidMacOs(process)
+                    GetParentPidMacOs(process, logger)
                     : throw new PlatformNotSupportedException();
 
     internal static int GetParentPidWindows(Process process)
@@ -84,7 +86,7 @@ internal static class IProcessExtensions
         return parts.Length < 5 ? InvalidProcessId : int.Parse(parts[3], CultureInfo.CurrentCulture);
     }
 
-    internal static int GetParentPidMacOs(Process process)
+    internal static int GetParentPidMacOs(Process process, ILogger logger)
     {
         var output = new StringBuilder();
         var err = new StringBuilder();
@@ -104,13 +106,13 @@ internal static class IProcessExtensions
 
         if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
         {
-            // EqtTrace.Verbose($"ProcessCodeMethods.GetParentPidMacOs: Error getting parent of process {process.Id} - {process.ProcessName}, {error}.");
+            logger.LogError($"Error getting parent of process {process.Id} - {process.ProcessName}, {error}.");
         }
 
         return parent;
     }
 
-    private static void ResolveChildren(IProcess parent, List<ProcessTreeNode> acc, int level, int limit)
+    private static void ResolveChildren(IProcess parent, ILogger logger, List<ProcessTreeNode> acc, int level, int limit)
     {
         if (limit < 0)
         {
@@ -124,7 +126,7 @@ internal static class IProcessExtensions
         foreach (ProcessTreeNode child in children)
         {
             child.Level = level;
-            ResolveChildren(child.Process!, acc, level + 1, limit);
+            ResolveChildren(child.Process!, logger, acc, level + 1, limit);
         }
     }
 

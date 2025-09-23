@@ -351,7 +351,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
         IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        var processTree = process.GetProcessTree().Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
+        var processTree = process.GetProcessTree(_logger).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
         try
@@ -367,7 +367,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             }
             else
             {
-                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Blame: Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData($"Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
             }
 
             await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
