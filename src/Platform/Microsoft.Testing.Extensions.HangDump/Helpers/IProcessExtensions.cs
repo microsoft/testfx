@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Threading.Tasks;
+
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -88,7 +90,7 @@ internal static class IProcessExtensions
         return parts.Length < 5 ? InvalidProcessId : int.Parse(parts[3], CultureInfo.CurrentCulture);
     }
 
-    internal static int GetParentPidMacOs(Process process, ILogger logger, OutputDeviceWriter outputDisplay)
+    internal static async Task<int> GetParentPidMacOs(Process process, ILogger logger, OutputDeviceWriter outputDisplay)
     {
         var output = new StringBuilder();
         var err = new StringBuilder();
@@ -103,7 +105,19 @@ internal static class IProcessExtensions
         ps.Start();
         ps.BeginOutputReadLine();
         ps.BeginErrorReadLine();
-        ps.WaitForExit(5_000);
+
+        int timeout = 5_000;
+#if !NETSTANDARD2_0
+        // This will read the output streams till the end.
+        await ps.WaitForExitAsync(new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
+#else
+        // This won't read the streams till the end. If we timeout, we need to use the
+        // wait without timeout, but that can hang, so we offload that into a task so we can abandon it and continue.
+        if (!ps.WaitForExit(timeout))
+        {
+            await Task.Run(ps.WaitForExit, new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
+        }
+#endif
 
         string o = output.ToString();
         string e = err.ToString();
