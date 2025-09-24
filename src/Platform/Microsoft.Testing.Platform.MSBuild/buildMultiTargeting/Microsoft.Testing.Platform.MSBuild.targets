@@ -331,7 +331,7 @@
     <TestingPlatformShowTestsFailure Condition=" '$(TestingPlatformShowTestsFailure)' == '' ">False</TestingPlatformShowTestsFailure>
     <TestingPlatformCaptureOutput Condition=" '$(TestingPlatformCaptureOutput)' == '' " >true</TestingPlatformCaptureOutput>
   </PropertyGroup>
-  <Target Name="InvokeTestingPlatform" >
+  <Target Name="InvokeTestingPlatform" DependsOnTargets="_ValidateVSTestProperties" >
     <!--
       This target name is hardcoded in TerminalLogger to mean start of test workload.
       This let's terminal logger know that it should show `Testing` in the output,
@@ -356,6 +356,26 @@
                                VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
                                TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
+  </Target>
+
+  <Target Name="_ValidateVSTestProperties">
+    <PropertyGroup>
+      <_VSTestPropertiesFound></_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestSetting)' != '' ">$(_VSTestPropertiesFound)VSTestSetting; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestListTests)' != '' ">$(_VSTestPropertiesFound)VSTestListTests; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestTestCaseFilter)' != '' ">$(_VSTestPropertiesFound)VSTestTestCaseFilter; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestTestAdapterPath)' != '' ">$(_VSTestPropertiesFound)VSTestTestAdapterPath; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestLogger)' != '' ">$(_VSTestPropertiesFound)VSTestLogger; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestDiag)' != '' ">$(_VSTestPropertiesFound)VSTestDiag; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestResultsDirectory)' != '' ">$(_VSTestPropertiesFound)VSTestResultsDirectory; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestCollect)' != '' ">$(_VSTestPropertiesFound)VSTestCollect; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestBlame)' != '' ">$(_VSTestPropertiesFound)VSTestBlame; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestBlameCrash)' != '' ">$(_VSTestPropertiesFound)VSTestBlameCrash; </_VSTestPropertiesFound>
+      <_VSTestPropertiesFound Condition=" '$(VSTestBlameHang)' != '' ">$(_VSTestPropertiesFound)VSTestBlameHang; </_VSTestPropertiesFound>
+    </PropertyGroup>
+    <Warning Code="MTP0001" Condition=" '$(_VSTestPropertiesFound)' != '' " 
+             Text="VSTest-specific properties are set but will be ignored when using Microsoft.Testing.Platform. The following properties are set: $(_VSTestPropertiesFound)."
+             HelpLink="https://aka.ms/mtp0001" />
   </Target>
 
   <Target Name="_TestRunStart" />
