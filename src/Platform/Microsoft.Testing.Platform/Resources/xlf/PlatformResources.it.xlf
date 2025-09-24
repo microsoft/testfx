@@ -977,6 +977,31 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
         <target state="translated">Nessun test eseguito</target>
         <note />
       </trans-unit>
+      <trans-unit id="Duration">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedSummary">
+        <source>failed</source>
+        <target state="new">failed</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedSummary">
+        <source>skipped</source>
+        <target state="new">skipped</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SucceededSummary">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalSummary">
+        <source>total</source>
+        <target state="new">total</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

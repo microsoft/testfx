@@ -518,6 +518,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="FailedLowercase" xml:space="preserve">
     <value>failed</value>
   </data>
+  <data name="FailedSummary" xml:space="preserve">
+    <value>failed</value>
+  </data>
   <data name="ForTest" xml:space="preserve">
     <value>For test</value>
     <comment>is followed by test name</comment>
@@ -544,11 +547,20 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="SkippedLowercase" xml:space="preserve">
     <value>skipped</value>
   </data>
+  <data name="SkippedSummary" xml:space="preserve">
+    <value>skipped</value>
+  </data>
   <data name="StackTrace" xml:space="preserve">
     <value>Stack Trace</value>
   </data>
+  <data name="SucceededSummary" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
   <data name="Total" xml:space="preserve">
     <value>Total</value>
+  </data>
+  <data name="TotalSummary" xml:space="preserve">
+    <value>total</value>
   </data>
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
@@ -556,6 +568,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
     <value>Console is already in batching mode.</value>
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="Duration" xml:space="preserve">
+    <value>duration</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>
