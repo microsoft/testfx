@@ -423,8 +423,16 @@ public sealed class CollectionAssert
         {
             string returnedSubsetValueMessage = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
 
-            returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage.Trim());
-            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
+            returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage);
+            string userMessage = Assert.BuildUserMessage(message, parameters);
+            if (string.IsNullOrEmpty(userMessage))
+            {
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
+            }
+            else
+            {
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", $"{returnedSubsetValueMessage} {userMessage}");
+            }
         }
     }
 

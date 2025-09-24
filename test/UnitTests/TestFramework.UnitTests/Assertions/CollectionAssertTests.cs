@@ -142,7 +142,7 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection");
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection.");
     }
 
     public void CollectionAssertIsSubsetOf_WithMessageParams_ReturnedSubsetValueMessage_ThrowExceptionMessage()
@@ -155,7 +155,7 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message format {0} {1}", 1, 2);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection");
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection. message format 1 2");
     }
 
     public void CollectionAssertIsSubsetOf_WithMessage_ReturnedSubsetValueMessage_ThrowExceptionMessage()
@@ -168,7 +168,7 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection");
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection. message");
     }
 
     public void CollectionAssertIsNotSubsetOfNullabilityPostConditions()
