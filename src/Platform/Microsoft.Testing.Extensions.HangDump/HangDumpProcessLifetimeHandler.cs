@@ -485,7 +485,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         try
         {
-            diagnosticsClient.WriteDump(dumpType, finalDumpFileName, logDumpGeneration: true);
+            diagnosticsClient.WriteDump(dumpType, finalDumpFileName, logDumpGeneration: false);
         }
         catch (Exception e)
         {
