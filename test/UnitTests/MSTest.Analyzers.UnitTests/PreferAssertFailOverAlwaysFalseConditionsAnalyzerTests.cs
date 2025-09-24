@@ -125,7 +125,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_Diagnostic()
+    public async Task WhenIsNullAssertion_ValueParameterAsReferenceObjectIsNotNullable_NoDiagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -137,7 +137,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
                 public void Test()
                 {
                     ObjectClass obj = new ObjectClass();
-                    [|Assert.IsNull(obj)|];
+                    Assert.IsNull(obj);
                 }
             }
 
@@ -146,26 +146,8 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
             }
             """;
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-            #nullable enable
-            [TestClass]
-            public class TestClass
-            {
-                [TestMethod]
-                public void Test()
-                {
-                    ObjectClass obj = new ObjectClass();
-                    Assert.Fail();
-                }
-            }
 
-            public class ObjectClass
-            {
-
-            }
-            """;
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -1472,7 +1454,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenIsNullAssertion_ValueParameterInNullableDisableContext_NoDiagnostic()
+    public async Task WhenIsNullAssertion_ReferenceTypeInNullableDisableContext_NoDiagnostic()
     {
         string code = """
             using System.Diagnostics.CodeAnalysis;
@@ -1510,46 +1492,37 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenIsNullAssertion_ValueParameterInNullableEnableContext_StillReportsDiagnostic()
+    public async Task WhenIsNullAssertion_ValueTypeParameter_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            #nullable enable
+
             [TestClass]
             public class TestClass
             {
                 [TestMethod]
                 public void Test()
                 {
-                    ObjectClass obj = new ObjectClass();
-                    [|Assert.IsNull(obj)|];
+                    int value = 42;
+                    [|Assert.IsNull(value)|];
                 }
-            }
-
-            public class ObjectClass
-            {
-
             }
             """;
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            #nullable enable
+
             [TestClass]
             public class TestClass
             {
                 [TestMethod]
                 public void Test()
                 {
-                    ObjectClass obj = new ObjectClass();
+                    int value = 42;
                     Assert.Fail();
                 }
             }
-
-            public class ObjectClass
-            {
-
-            }
             """;
+
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

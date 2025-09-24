@@ -73,7 +73,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         var operation = (IInvocationOperation)context.Operation;
 
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysFalse(operation, context.Operation.SemanticModel))
+            IsAlwaysFalse(operation))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties: null, operation.TargetMethod.Name));
         }
@@ -111,7 +111,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         return ImmutableArray.Create(messageArg.Syntax.GetLocation(), parametersArg.Syntax.GetLocation());
     }
 
-    private static bool IsAlwaysFalse(IInvocationOperation operation, SemanticModel? semanticModel)
+    private static bool IsAlwaysFalse(IInvocationOperation operation)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => GetConditionArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: false } },
@@ -119,60 +119,16 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
             "IsNotNull" => GetValueArgument(operation) is { Value.ConstantValue: { HasValue: true, Value: null } },
-            "IsNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation, semanticModel),
+            "IsNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation),
             _ => false,
         };
 
-    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation, SemanticModel? semanticModel)
+    private static bool IsNotNullableType(IArgumentOperation valueArgumentOperation)
     {
         ITypeSymbol? valueArgType = valueArgumentOperation.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
-        if (valueArgType is null)
-        {
-            return false;
-        }
-
-        // If this is a value type, check if it's not System.Nullable<T>
-        if (valueArgType.IsValueType)
-        {
-            return valueArgType.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T;
-        }
-
-        // For reference types, we need to check both the nullable annotation and the nullable context
-        if (valueArgType.IsReferenceType)
-        {
-            // If nullable annotation is explicitly Annotated (e.g., string?), then it's nullable
-            if (valueArgType.NullableAnnotation == NullableAnnotation.Annotated)
-            {
-                return false;
-            }
-
-            // If nullable annotation is NotAnnotated, we need to check if nullable reference types are enabled
-            if (valueArgType.NullableAnnotation == NullableAnnotation.NotAnnotated)
-            {
-                // If we have a semantic model, check the nullable context at this location
-                if (semanticModel is not null)
-                {
-                    // Get the nullable context at the argument's syntax location
-                    var syntaxNode = valueArgumentOperation.Syntax;
-                    
-                    // Check if nullable reference types are enabled at this location
-                    // In a #nullable disable context, we should treat reference types as potentially nullable
-                    // and not report the diagnostic
-                    var nullableContext = semanticModel.GetNullableContext(syntaxNode.SpanStart);
-                    if (nullableContext == Microsoft.CodeAnalysis.NullableContext.Disabled)
-                    {
-                        // In a disabled nullable context, reference types should be treated as potentially nullable
-                        return false;
-                    }
-                }
-
-                // If nullable reference types are enabled (or we can't determine), 
-                // and the annotation is NotAnnotated, then it's a non-nullable reference type
-                return true;
-            }
-        }
-
-        return false;
+        return valueArgType is not null
+            && valueArgType.IsValueType
+            && valueArgType.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T;
     }
 
     private static IArgumentOperation? GetArgumentWithName(IInvocationOperation operation, string name)
