@@ -36,6 +36,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     private int? _testHostExitCode;
     private int? _testHostPID;
 
+    [UnsupportedOSPlatform("browser")]
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
         : base(serviceProvider)
@@ -118,7 +119,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             string arguments = builder.ToString();
 #endif
 
-#pragma warning disable CA1416 // Validate platform compatibility
             ProcessStartInfo processStartInfo = new(
                 executableInfo.FilePath,
                 arguments)
@@ -132,7 +132,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 },
                 UseShellExecute = false,
             };
-#pragma warning restore CA1416
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
 
@@ -220,9 +219,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
                 foreach (EnvironmentVariable envVar in environmentVariables.GetAll())
                 {
-#pragma warning disable CA1416 // Validate platform compatibility
                     processStartInfo.EnvironmentVariables[envVar.Variable] = envVar.Value;
-#pragma warning restore CA1416
                 }
             }
 
@@ -237,13 +234,9 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             // Launch the test host process
             string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
-#pragma warning disable CA1416 // Validate platform compatibility
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);
-#pragma warning restore CA1416
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid} '{testHostProcessStartupTime}'").ConfigureAwait(false);
-#pragma warning disable CA1416 // Validate platform compatibility
             await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'").ConfigureAwait(false);
-#pragma warning restore CA1416
             using IProcess testHostProcess = process.Start(processStartInfo);
 
             int? testHostProcessId = null;
@@ -283,9 +276,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 // Wait for the test host controller to send the PID of the test host process
                 using (CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout))
                 {
-#pragma warning disable CA1416 // Validate platform compatibility
                     _waitForPid.Wait(timeout.Token);
-#pragma warning restore CA1416
                 }
 
                 await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync").ConfigureAwait(false);
