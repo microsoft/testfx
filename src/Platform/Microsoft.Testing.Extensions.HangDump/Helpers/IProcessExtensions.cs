@@ -50,7 +50,7 @@ internal static class IProcessExtensions
     /// </summary>
     /// <param name="process">The process to find parent of.</param>
     /// <param name="logger">The logger.</param>
-    /// <param name="outputDisplay">The output display.git </param>
+    /// <param name="outputDisplay">The output display.git.</param>
     /// <returns>The pid of the parent process.</returns>
     internal static int GetParentPid(Process process, ILogger logger, OutputDeviceWriter outputDisplay)
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
