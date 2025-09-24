@@ -1470,4 +1470,86 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenIsNullAssertion_ValueParameterInNullableDisableContext_NoDiagnostic()
+    {
+        string code = """
+            using System.Diagnostics.CodeAnalysis;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class MyTests
+            {
+            #nullable disable
+                [TestMethod]
+                public void Repro()
+                {
+                    Assert.IsFalse(TryGetPool(poolKey: null, out var pool));
+                    Assert.IsNull(pool);
+                }
+            #nullable restore
+
+            #nullable enable
+                internal bool TryGetPool(string? poolKey, [MaybeNullWhen(false)] out object pool)
+                {
+                    if (poolKey is not null)
+                    {
+                        pool = new object();
+                        return true;
+                    }
+
+                    pool = null;
+                    return false;
+                }
+            #nullable restore
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenIsNullAssertion_ValueParameterInNullableEnableContext_StillReportsDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass obj = new ObjectClass();
+                    [|Assert.IsNull(obj)|];
+                }
+            }
+
+            public class ObjectClass
+            {
+
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            #nullable enable
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void Test()
+                {
+                    ObjectClass obj = new ObjectClass();
+                    Assert.Fail();
+                }
+            }
+
+            public class ObjectClass
+            {
+
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
