@@ -351,7 +351,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
         IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        var processTree = process.GetProcessTree(_logger, _outputDisplay).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
+        var processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
         try
