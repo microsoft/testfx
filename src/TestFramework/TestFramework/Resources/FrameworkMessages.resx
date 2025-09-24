@@ -396,4 +396,7 @@ Actual: {2}</value>
     <value>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</value>
     <comment>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
   </data>
+  <data name="ReturnedSubsetValueMessage" xml:space="preserve">
+    <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
+  </data>
 </root>
