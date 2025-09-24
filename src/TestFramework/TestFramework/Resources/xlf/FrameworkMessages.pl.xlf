@@ -283,6 +283,11 @@ Rzeczywiste: {2}</target>
         <target state="translated">Inna liczba elementów.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not present in the collection</source>
+        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">Ciąg „{0}” nie rozpoczyna się od ciągu „{1}”. {2}</target>
