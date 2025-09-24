@@ -97,14 +97,18 @@ internal static class IProcessExtensions
         ps.StartInfo.Arguments = $"-o ppid= {process.Id}";
         ps.StartInfo.UseShellExecute = false;
         ps.StartInfo.RedirectStandardOutput = true;
+        ps.StartInfo.RedirectStandardError = true;
         ps.OutputDataReceived += (_, e) => output.Append(e.Data);
         ps.ErrorDataReceived += (_, e) => err.Append(e.Data);
         ps.Start();
         ps.BeginOutputReadLine();
+        ps.BeginErrorReadLine();
         ps.WaitForExit(5_000);
 
         string o = output.ToString();
-        outputDisplay.DisplayAsync(new WarningMessageOutputDeviceData($"ps output: {o}")).Wait();
+        string e = err.ToString();
+        outputDisplay.DisplayAsync(new WarningMessageOutputDeviceData($"parent of {process.Id} - {process.ProcessName}  ps output: {o}")).Wait();
+        outputDisplay.DisplayAsync(new WarningMessageOutputDeviceData($"ps err: {e}")).Wait();
         int parent = int.TryParse(o.Trim(), out int ppid) ? ppid : InvalidProcessId;
 
         if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
