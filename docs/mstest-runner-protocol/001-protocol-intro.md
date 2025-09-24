@@ -1,7 +1,7 @@
 # 001 - MSTest Runner Protocol
 
 MSTest Runner projects builds into a self-contained executable that can be invoked to run tests.
-The protocol describes the communication between the client (IDE/CLI/CI) any the MSTest Runner executable (also refered to as the server).
+The protocol describes the communication between the client (IDE/CLI/CI) and the MSTest Runner executable (also refered to as the server).
 
 The communication is based on JSON-RPC and describes the RPC messages sent in order to support running of tests.
 
