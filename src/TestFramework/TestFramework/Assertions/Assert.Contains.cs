@@ -483,6 +483,14 @@ public sealed partial class Assert
         => DoesNotContain(expected, collection, string.Empty, null);
 
     /// <summary>
+    /// Tests whether the specified non-generic collection does not contain the specified item.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The non-generic collection.</param>
+    public static void DoesNotContain(object? expected, IEnumerable collection)
+        => DoesNotContain(expected, collection, string.Empty);
+
+    /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -510,6 +518,24 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the specified non-generic collection does not contain the specified item.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The non-generic collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void DoesNotContain(object? expected, IEnumerable collection, string? message)
+    {
+        foreach (object? item in collection)
+        {
+            if (object.Equals(item, expected))
+            {
+                string userMessage = BuildUserMessage(message);
+                ThrowAssertDoesNotContainItemFailed(userMessage);
+            }
+        }
+    }
+
+    /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -518,6 +544,15 @@ public sealed partial class Assert
     /// <param name="comparer">An equality comparer to compare values.</param>
     public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         => DoesNotContain(expected, collection, comparer, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    public static void DoesNotContain(object? expected, IEnumerable collection, IEqualityComparer comparer)
+        => DoesNotContain(expected, collection, comparer, string.Empty);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -545,6 +580,26 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessage(message, parameters);
             ThrowAssertDoesNotContainItemFailed(userMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified non-generic collection does not contain the specified item,
+    /// using a custom equality comparer.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The non-generic collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void DoesNotContain(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message)
+    {
+        foreach (object? item in collection)
+        {
+            if (comparer.Equals(item, expected))
+            {
+                string userMessage = BuildUserMessage(message);
+                ThrowAssertDoesNotContainItemFailed(userMessage);
+            }
         }
     }
 

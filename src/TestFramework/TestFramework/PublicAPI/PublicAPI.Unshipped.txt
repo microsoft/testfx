@@ -8,6 +8,10 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collec
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collections.IEnumerable! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty(System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty(System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer, string? message) -> void
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
 *REMOVED*static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!

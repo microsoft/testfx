@@ -573,6 +573,37 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the DoesNotContain method (value overload) when the expected item is not present.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_ValueExpected_ItemNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, 15 };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(20, collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method (value overload) when the expected item is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_ValueExpected_ItemPresent_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, 15, "a" };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(10, collection, "Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found*");
+    }
+
+    /// <summary>
     /// Tests the DoesNotContain method with a comparer when the item is not present.
     /// </summary>
     public void DoesNotContain_WithComparer_ItemNotPresent_DoesNotThrow()
@@ -583,6 +614,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.DoesNotContain("cherry", collection, comparer, "No cherry found", null);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method with a comparer when the item is not present.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_WithComparer_ItemNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { "apple", "banana", 1 };
+        IEqualityComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+        // Act
+        Action action = () => Assert.DoesNotContain("cherry", collection, comparer, "No cherry found");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -600,6 +647,23 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "Unexpected {0}", "APPLE");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*APPLE*");
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method with a comparer when the item is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_WithComparer_ItemPresent_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { "apple", "banana", 1 };
+        IEqualityComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+        // Act
+        Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "APPLE");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*APPLE*");
