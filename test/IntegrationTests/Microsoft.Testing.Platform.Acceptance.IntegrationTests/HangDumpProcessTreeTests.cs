@@ -13,7 +13,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDumpWithChild", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --results-directory {resultDirectory}",
+            $"--hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                         { "SLEEPTIMEMS1", "4000" },
