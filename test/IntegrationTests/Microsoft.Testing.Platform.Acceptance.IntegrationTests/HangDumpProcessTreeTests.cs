@@ -98,7 +98,7 @@ public class Startup
             else
             {        
                 // Just sleep for a long time.
-                Thread.Sleep(600_000);
+                Thread.Sleep(3_600_000);
                 return 0;
             }
         }
