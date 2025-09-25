@@ -443,6 +443,16 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("*lazy*");
     }
 
+    public void Contains_HashSetWithCustomComparer_ItemExists_DoesNotThrow()
+    {
+        var collection = new HashSet<string>(AlwaysTrueEqualityComparer.Instance) { "1" };
+
+        // This call shouldn't use EqualityComparer<string>.Default.
+        Action action = () => Assert.Contains("2", collection);
+        action.Should().NotThrow<AssertFailedException>();
+        action();
+    }
+
     #endregion
 
     #region DoesNotContain Tests
@@ -876,9 +886,45 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("*Expected no items to match the predicate*");
     }
 
+    public void DoesNotContains_HashSetWithCustomComparer_ItemDoesNotExist_DoesNotThrow()
+    {
+        var collection = new HashSet<string>(AlwaysFalseEqualityComparer.Instance) { "1" };
+
+        // This call shouldn't use EqualityComparer<string>.Default.
+        Action action = () => Assert.DoesNotContain("1", collection);
+        action.Should().NotThrow<AssertFailedException>();
+        action();
+    }
+
     #endregion
 
     private record Person(string Name, int Age);
+
+    private sealed class AlwaysTrueEqualityComparer : IEqualityComparer<string>
+    {
+        private AlwaysTrueEqualityComparer()
+        {
+        }
+
+        public static AlwaysTrueEqualityComparer Instance { get; } = new();
+
+        public bool Equals(string? x, string? y) => true;
+
+        public int GetHashCode([DisallowNull] string obj) => 0;
+    }
+
+    private sealed class AlwaysFalseEqualityComparer : IEqualityComparer<string>
+    {
+        private AlwaysFalseEqualityComparer()
+        {
+        }
+
+        public static AlwaysFalseEqualityComparer Instance { get; } = new();
+
+        public bool Equals(string? x, string? y) => false;
+
+        public int GetHashCode([DisallowNull] string obj) => 0;
+    }
 
     #endregion
 }
