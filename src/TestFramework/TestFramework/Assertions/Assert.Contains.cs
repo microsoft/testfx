@@ -188,7 +188,13 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => Contains(expected, collection, EqualityComparer<T>.Default, message, expectedExpression, collectionExpression);
+    {
+        if (!collection.Contains(expected))
+        {
+            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+            ThrowAssertContainsItemFailed(userMessage);
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -335,7 +341,13 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => DoesNotContain(expected, collection, EqualityComparer<T>.Default, message, expectedExpression, collectionExpression);
+    {
+        if (collection.Contains(expected))
+        {
+            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+            ThrowAssertDoesNotContainItemFailed(userMessage);
+        }
+    }
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
