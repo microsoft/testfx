@@ -22,6 +22,9 @@ internal interface IProcess : IDisposable
     /// <inheritdoc cref="Process.MainModule" />
     IMainModule? MainModule { get; }
 
+    /// <inheritdoc cref="Process.StartTime" />
+    DateTime StartTime { get; }
+
     /// <summary>
     /// Instructs the Process component to wait for the associated process to exit, or for the cancellationToken to be canceled.
     /// </summary>
@@ -30,6 +33,8 @@ internal interface IProcess : IDisposable
     /// <inheritdoc cref="Process.WaitForExit()" />
     void WaitForExit();
 
-    /// <inheritdoc cref="Process.Kill()" />
+    /// <summary>
+    /// Kills the process and try to kill all child processes.
+    /// </summary>
     void Kill();
 }
