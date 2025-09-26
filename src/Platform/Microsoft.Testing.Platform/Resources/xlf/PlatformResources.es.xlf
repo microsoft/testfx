@@ -977,6 +977,16 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <target state="translated">No se ejecutaron pruebas</target>
         <note />
       </trans-unit>
+      <trans-unit id="Duration">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="new">total</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

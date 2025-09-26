@@ -977,6 +977,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">테스트가 0개 실행됨</target>
         <note />
       </trans-unit>
+      <trans-unit id="Duration">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="new">total</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
