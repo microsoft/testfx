@@ -194,7 +194,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 {
                     try
                     {
-                        await ActivityTimerAsync().ConfigureAwait(false);
+                        await ActivityTimerAsync(cancellation).ConfigureAwait(false);
                     }
                     catch (Exception e)
                     {
@@ -246,11 +246,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
-    private async Task ActivityTimerAsync()
+    private async Task ActivityTimerAsync(CancellationToken cancellationToken)
     {
         _logger.LogDebug("Wait for mutex name from the test host");
 
-        if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MutexNameReceptionTimeoutErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
@@ -338,20 +338,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (timeoutFired)
         {
-            await TakeDumpOfTreeAsync().ConfigureAwait(false);
-            // await TakeDumpAsync().ConfigureAwait(false);
+            await TakeDumpOfTreeAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
-    private async Task TakeDumpOfTreeAsync()
+    private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
         await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
 
-        IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        var processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
+        using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
+        var processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay, cancellationToken).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
         try

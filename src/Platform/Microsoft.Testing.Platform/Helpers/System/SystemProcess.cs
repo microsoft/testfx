@@ -40,14 +40,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public Task WaitForExitAsync()
         => _process.WaitForExitAsync();
 
-    /// <summary>
-    /// Kills the process and all child processes.
-    /// </summary>
     public void Kill()
         => _process.Kill(entireProcessTree: true);
-
-    public void KillWithoutKillingChildProcesses()
-        => _process.Kill(entireProcessTree: false);
 
     public void Dispose() => _process.Dispose();
 #pragma warning restore CA1416

@@ -16,7 +16,7 @@ internal static class IProcessExtensions
 {
     private const int InvalidProcessId = -1;
 
-    public static async Task<List<ProcessTreeNode>> GetProcessTreeAsync(this IProcess process, ILogger logger, OutputDeviceWriter outputDisplay)
+    public static async Task<List<ProcessTreeNode>> GetProcessTreeAsync(this IProcess process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
     {
         var childProcesses = Process.GetProcesses()
             .Where(p => IsChildCandidate(p, process))
@@ -25,17 +25,18 @@ internal static class IProcessExtensions
         var acc = new List<ProcessTreeNode>();
         foreach (Process c in childProcesses)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 int parentId = await GetParentPidAsync(c, logger, outputDisplay).ConfigureAwait(false);
 
-                // c.ParentId = parentId;
                 acc.Add(new ProcessTreeNode { ParentId = parentId, Process = new SystemProcess(c) });
             }
             catch (Exception e)
             {
                 logger.LogError($"Failed to get parent for process {c.Id} - {c.ProcessName}", e);
-                await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Failed to get parent for process {c.Id} - {c.ProcessName}, {e}.")).ConfigureAwait(false);
+                await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, c.Id, c.ProcessName, e))).ConfigureAwait(false);
             }
         }
 
@@ -125,10 +126,10 @@ internal static class IProcessExtensions
 
         int parent = int.TryParse(o.Trim(), out int ppid) ? ppid : InvalidProcessId;
 
-        if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
+        if (!RoslynString.IsNullOrWhiteSpace(e))
         {
-            logger.LogError($"Error getting parent of process {process.Id} - {process.ProcessName}, {error}.");
-            await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, process.Id, process.ProcessName, error))).ConfigureAwait(false);
+            logger.LogError($"Error getting parent of process {process.Id} - {process.ProcessName}, {e}.");
+            await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, process.Id, process.ProcessName, e))).ConfigureAwait(false);
         }
 
         return parent;

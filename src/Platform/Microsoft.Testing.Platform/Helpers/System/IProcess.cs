@@ -34,12 +34,7 @@ internal interface IProcess : IDisposable
     void WaitForExit();
 
     /// <summary>
-    /// Kills the process and its child processes.
+    /// Kills the process and try to kill all child processes.
     /// </summary>
     void Kill();
-
-    /// <summary>
-    /// Kills the process without killing its child processes.
-    /// </summary>
-    void KillWithoutKillingChildProcesses();
 }
