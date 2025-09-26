@@ -1310,6 +1310,41 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithWrongContainsMethod()
+    {
+        string code = """
+            using System.Collections.ObjectModel;
+            using System.IO;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTests
+            {
+                [TestMethod]
+                public void Contains()
+                {
+                    // This collection is KeyedCollection<TKey, TItem>
+                    // It implements IEnumerable<TItem>, but the available Contains method searches for TKey.
+                    // Whether or not the type of TKey and TItem match, we shouldn't raise a diagnostic as it changes semantics.
+                    var collection = new MyKeyedCollection();
+                    Assert.IsFalse(collection.Contains(5));
+                    Assert.IsTrue(collection.Contains(5));
+                }
+
+                internal class MyKeyedCollection : KeyedCollection<int, int>
+                {
+                    protected override int GetKeyForItem(int item)
+                    {
+                        return 667;
+                    }
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     #region New test cases for string methods
 
     [TestMethod]
