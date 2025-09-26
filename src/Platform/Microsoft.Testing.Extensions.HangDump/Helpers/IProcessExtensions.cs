@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -121,14 +122,13 @@ internal static class IProcessExtensions
 
         string o = output.ToString();
         string e = err.ToString();
-        await outputDisplay.DisplayAsync(new WarningMessageOutputDeviceData($"parent of {process.Id} - {process.ProcessName}  ps output: {o}")).ConfigureAwait(false);
-        await outputDisplay.DisplayAsync(new WarningMessageOutputDeviceData($"ps err: {e}")).ConfigureAwait(false);
+
         int parent = int.TryParse(o.Trim(), out int ppid) ? ppid : InvalidProcessId;
 
         if (err.ToString() is string error && !RoslynString.IsNullOrWhiteSpace(error))
         {
             logger.LogError($"Error getting parent of process {process.Id} - {process.ProcessName}, {error}.");
-            await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error getting parent of process {process.Id} - {process.ProcessName}, {error}.")).ConfigureAwait(false);
+            await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, process.Id, process.ProcessName, error))).ConfigureAwait(false);
         }
 
         return parent;

@@ -358,7 +358,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             if (processTree.Count > 1)
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData("Dumping this process tree (from bottom):")).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.DumpingProcessTree)).ConfigureAwait(false);
 
                 foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
                 {
@@ -367,7 +367,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             }
             else
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Dumping {process.Id} - {process.Name}")).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.DumpingProcess, process.Id, process.Name))).ConfigureAwait(false);
             }
 
             await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
@@ -387,8 +387,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 catch (Exception e)
                 {
                     // exceptions.Add(new InvalidOperationException($"Error while taking dump of process {p.Name} {p.Id}", e));
-                    await _logger.LogErrorAsync($"Error while taking dump of process {p.Name} {p.Id}", e).ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error while taking dump of process {p.Name} {p.Id}: {e}")).ConfigureAwait(false);
+                    await _logger.LogErrorAsync($"Error while taking dump of process {p.Id} - {p.Name}", e).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e))).ConfigureAwait(false);
                 }
             }
         }
@@ -396,26 +396,17 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             NotifyCrashDumpServiceIfEnabled();
 
-            // Kill the main process, this should kill all the children as well.
-            // This should throw if the process fails to exit.
-            IProcess mainProcess = processTree[0].Process!;
-            try
-            {
-                mainProcess.Kill();
-                await mainProcess.WaitForExitAsync().ConfigureAwait(false);
-            }
-            catch (Exception e)
-            {
-                // exceptions.Add(new InvalidOperationException($"Problem killing {mainProcess.Id} {mainProcess.Name}", e));
-                await _logger.LogErrorAsync($"Problem killing {mainProcess.Id} {mainProcess.Name}", e).ConfigureAwait(false);
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Problem killing {mainProcess.Id} {mainProcess.Name}: {e}")).ConfigureAwait(false);
-            }
-
             // Some of the processes might crashed, which breaks the process tree (on windows it is just an illusion),
             // so try extra hard to kill all the known processes in the tree, since we already spent a bunch of time getting
             // to know which processes are involved.
-            foreach (IProcess p in bottomUpTree)
+            foreach (ProcessTreeNode node in processTree)
             {
+                IProcess? p = node.Process;
+                if (p == null)
+                {
+                    continue;
+                }
+
                 try
                 {
                     if (!p.HasExited)
@@ -426,8 +417,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 }
                 catch (Exception e)
                 {
-                    await _logger.LogErrorAsync($"Problem killing {mainProcess.Id} {mainProcess.Name}", e).ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Problem killing {mainProcess.Id} {mainProcess.Name}: {e}")).ConfigureAwait(false);
+                    await _logger.LogErrorAsync($"Problem killing {p.Id} - {p.Name}", e).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e))).ConfigureAwait(false);
                 }
             }
         }
@@ -490,7 +481,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception e)
         {
             await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
-            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error while taking dump of process {process.Name} {process.Id}: {e}")).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e))).ConfigureAwait(false);
         }
 
 #else
@@ -509,7 +500,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception e)
         {
             await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
-            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"Error while taking dump of process {process.Name} {process.Id}: {e}")).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e))).ConfigureAwait(false);
         }
 #endif
 
