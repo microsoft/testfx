@@ -252,10 +252,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
         bool colorizeSkipped = skipped > 0 && skipped == total && _buildErrorsCount == 0 && failed == 0;
 
-        string totalText = $"{SingleIndentation}{PlatformResources.TotalSummary}: {total}";
-        string failedText = $"{SingleIndentation}{PlatformResources.FailedSummary}: {failed}";
-        string passedText = $"{SingleIndentation}{PlatformResources.SucceededSummary}: {passed}";
-        string skippedText = $"{SingleIndentation}{PlatformResources.SkippedSummary}: {skipped}";
+        string totalText = $"{SingleIndentation}{PlatformResources.TotalLowercase}: {total}";
+        string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
+        string passedText = $"{SingleIndentation}{PlatformResources.PassedLowercase}: {passed}";
+        string skippedText = $"{SingleIndentation}{PlatformResources.SkippedLowercase}: {skipped}";
         string durationText = $"{SingleIndentation}{PlatformResources.Duration}: ";
 
         terminal.ResetColor();

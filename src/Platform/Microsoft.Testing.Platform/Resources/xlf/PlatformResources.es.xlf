@@ -982,22 +982,7 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <target state="new">duration</target>
         <note />
       </trans-unit>
-      <trans-unit id="FailedSummary">
-        <source>failed</source>
-        <target state="new">failed</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SkippedSummary">
-        <source>skipped</source>
-        <target state="new">skipped</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SucceededSummary">
-        <source>succeeded</source>
-        <target state="new">succeeded</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TotalSummary">
+      <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="new">total</target>
         <note />
