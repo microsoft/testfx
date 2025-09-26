@@ -80,6 +80,45 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         Assert.IsNotNull(dumpFile, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
     }
 
+    [TestMethod]
+    public async Task HangDump_TemplateFileName_CreateDump()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // TODO: Investigate failures on macos
+            return;
+        }
+
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename <process-name>_<pid>_<id>_hang.dmp --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "4000" },
+                { "SLEEPTIMEMS2", "20000" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        
+        // Verify the dump file uses the template format
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*_hang.dmp", SearchOption.AllDirectories);
+        Assert.IsTrue(dumpFiles.Length > 0, $"No dump files found in '{resultDirectory}'\n{testHostResult}'");
+        
+        string dumpFile = dumpFiles[0];
+        string fileName = Path.GetFileNameWithoutExtension(dumpFile);
+        
+        // File should match pattern: <process-name>_<pid>_<id>_hang
+        // The process name should be the test executable name, pid should be numeric, id should be 8 chars
+        Assert.IsTrue(fileName.EndsWith("_hang"), $"File name should end with '_hang'. Actual: {fileName}");
+        
+        string[] parts = fileName.Split('_');
+        Assert.IsTrue(parts.Length >= 3, $"File name should have at least 3 parts separated by '_'. Actual: {fileName}");
+        Assert.IsTrue(int.TryParse(parts[^3], out _), $"Third-to-last part should be PID (numeric). Actual: {parts[^3]}");
+        Assert.AreEqual(8, parts[^2].Length, $"Second-to-last part should be 8-character ID. Actual: {parts[^2]}");
+        Assert.AreEqual("hang", parts[^1], "Last part should be 'hang'");
+    }
+
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Triage")]

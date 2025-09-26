@@ -101,6 +101,10 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.TryAddService(systemMonitor);
         SystemMonitorAsyncFactory systemMonitorAsyncFactory = new();
         serviceProvider.TryAddService(systemMonitorAsyncFactory);
+        
+        // Add artifact naming service
+        ArtifactNamingService artifactNamingService = new(_testApplicationModuleInfo, systemEnvironment, systemClock, processHandler);
+        serviceProvider.TryAddService(artifactNamingService);
 
         PlatformInformation platformInformation = new();
         serviceProvider.AddService(platformInformation);
