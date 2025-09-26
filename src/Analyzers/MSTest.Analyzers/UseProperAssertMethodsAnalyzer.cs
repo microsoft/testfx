@@ -929,42 +929,6 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        // Check if actualArgument is a literal and expectedArgument is a count/length property
-        if (expectedArgument is IPropertyReferenceOperation propertyRef2 &&
-            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
-        {
-            bool isEmpty = actualArgument.ConstantValue.HasValue &&
-                actualArgument.ConstantValue.Value is int actualValue &&
-                actualValue == 0;
-
-            if (isEmpty)
-            {
-                // We have Assert.AreEqual(collection.Count/Length, expectedCount)
-                // We want Assert.IsEmpty(collection)
-                // So, only two replacements are needed:
-                // 1. Replace collection.Count/Length with expectedCount
-                // 2. Replace expectedCount with collection
-                nodeToBeReplaced1 = expectedArgument.Syntax; // collection.Count/Length
-                replacement1 = expression2; // collection
-                nodeToBeReplaced2 = actualArgument.Syntax; // expectedCount
-                replacement2 = null;
-                return CountCheckStatus.IsEmpty;
-            }
-            else
-            {
-                // We have Assert.AreEqual(collection.Count/Length, expectedCount)
-                // We want Assert.HasCount(expectedCount, collection)
-                // So, only two replacements are needed:
-                // 1. Replace collection.Count/Length with expectedCount
-                // 2. Replace expectedCount with collection
-                nodeToBeReplaced1 = expectedArgument.Syntax; // collection.Count/Length
-                replacement1 = actualArgument.Syntax; // expectedCount
-                nodeToBeReplaced2 = actualArgument.Syntax; // expectedCount
-                replacement2 = expression2; // collection
-                return CountCheckStatus.HasCount;
-            }
-        }
-
         nodeToBeReplaced1 = null;
         replacement1 = null;
         nodeToBeReplaced2 = null;
