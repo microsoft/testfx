@@ -283,6 +283,11 @@ Actual: {2}</source>
         <target state="translated">Разное число элементов.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
+        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">Строка "{0}" не начинается со строки "{1}". {2}</target>

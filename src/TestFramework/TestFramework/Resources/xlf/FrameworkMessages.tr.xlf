@@ -283,6 +283,11 @@ Gerçekte olan: {2}</target>
         <target state="translated">Öğe sayıları farklı.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
+        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">'{0}' dizesi, '{1}' dizesi ile başlamıyor. {2}</target>

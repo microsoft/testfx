@@ -127,7 +127,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
     {
         ITypeSymbol? valueArgType = valueArgumentOperation.Value.GetReferencedMemberOrLocalOrParameter().GetReferencedMemberOrLocalOrParameter();
         return valueArgType is not null
-            && valueArgType.NullableAnnotation == NullableAnnotation.NotAnnotated
+            && valueArgType.IsValueType
             && valueArgType.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T;
     }
 

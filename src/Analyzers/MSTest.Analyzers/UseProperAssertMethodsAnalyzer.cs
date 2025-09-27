@@ -450,13 +450,30 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             string methodName = invocation.TargetMethod.Name;
 
             // Check for Collection.Contains(item)
-            if (methodName == "Contains" && invocation.Arguments.Length == 1)
+            // We need to also ensure that invocation.TargetMethod.OriginalDefinition.Parameters[0] matches the type of the ienumerable returned by invocation.TargetMethod.ContainingType.OriginalDefinition.AllInterfaces
+            if (methodName == "Contains" &&
+                invocation.Arguments.Length == 1 &&
+                invocation.TargetMethod.OriginalDefinition.Parameters.Length == 1 &&
+                invocation.TargetMethod.OriginalDefinition.Parameters[0].Type is { } containsParameterType)
             {
                 if (IsBCLCollectionType(invocation.TargetMethod.ContainingType, objectTypeSymbol))
                 {
-                    collectionExpression = invocation.Instance?.Syntax;
-                    itemExpression = invocation.Arguments[0].Value.Syntax;
-                    return CollectionCheckStatus.Contains;
+                    ITypeSymbol? enumerableElementType = invocation.TargetMethod.ContainingType.OriginalDefinition.AllInterfaces.FirstOrDefault(
+                        i => i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)?.TypeArguments[0];
+
+                    if (enumerableElementType is null || enumerableElementType.Equals(containsParameterType, SymbolEqualityComparer.Default))
+                    {
+                        // If enumerableElementType is null, we expect that this is a non-generic IEnumerable. So we simply report the diagnostic.
+                        // If it's not null, ensure that the "T" of "IEnumerable<T>" matches the type of the Contains method.
+                        // The type comparison here is not for "substituted" types.
+                        // So, when analyzing KeyedCollection<TKey, TItem>.Contains(TKey), we will have:
+                        // 1. containsParameterType as the symbol referring to "TKey".
+                        // 2. enumerableElementType as the symbol referring to "TItem".
+                        // So, even if we are dealing with KeyedCollection<string, string>, the types won't match, and we won't produce a diagnostic.
+                        collectionExpression = invocation.Instance?.Syntax;
+                        itemExpression = invocation.Arguments[0].Value.Syntax;
+                        return CollectionCheckStatus.Contains;
+                    }
                 }
             }
         }
@@ -907,42 +924,6 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 replacement1 = expression; // collection
                 nodeToBeReplaced2 = null;
                 replacement2 = null;
-                return CountCheckStatus.HasCount;
-            }
-        }
-
-        // Check if actualArgument is a literal and expectedArgument is a count/length property
-        if (expectedArgument is IPropertyReferenceOperation propertyRef2 &&
-            TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef2, objectTypeSymbol) is { } expression2)
-        {
-            bool isEmpty = actualArgument.ConstantValue.HasValue &&
-                actualArgument.ConstantValue.Value is int actualValue &&
-                actualValue == 0;
-
-            if (isEmpty)
-            {
-                // We have Assert.AreEqual(collection.Count/Length, expectedCount)
-                // We want Assert.IsEmpty(collection)
-                // So, only two replacements are needed:
-                // 1. Replace collection.Count/Length with expectedCount
-                // 2. Replace expectedCount with collection
-                nodeToBeReplaced1 = expectedArgument.Syntax; // collection.Count/Length
-                replacement1 = expression2; // collection
-                nodeToBeReplaced2 = actualArgument.Syntax; // expectedCount
-                replacement2 = null;
-                return CountCheckStatus.IsEmpty;
-            }
-            else
-            {
-                // We have Assert.AreEqual(collection.Count/Length, expectedCount)
-                // We want Assert.HasCount(expectedCount, collection)
-                // So, only two replacements are needed:
-                // 1. Replace collection.Count/Length with expectedCount
-                // 2. Replace expectedCount with collection
-                nodeToBeReplaced1 = expectedArgument.Syntax; // collection.Count/Length
-                replacement1 = actualArgument.Syntax; // expectedCount
-                nodeToBeReplaced2 = actualArgument.Syntax; // expectedCount
-                replacement2 = expression2; // collection
                 return CountCheckStatus.HasCount;
             }
         }

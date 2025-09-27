@@ -104,7 +104,7 @@ internal sealed class ClassCleanupManager
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         foreach (TestClassInfo classInfo in classInfoCache)
         {
-            TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext);
+            TestFailedException? ex = classInfo.ExecuteClassCleanupAsync(testContext).GetAwaiter().GetResult();
             if (ex is not null)
             {
                 throw ex;
