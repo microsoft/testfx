@@ -489,6 +489,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the Contains method that accepts a predicate when an element satisfies the condition.
+    /// </summary>
+    public void Contains_InNonGenericCollection_Predicate_ItemMatches_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 2, 4, 6, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(IsEven, collection, "Even number exists");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
     /// Tests the Contains method that accepts a predicate when no element satisfies the condition.
     /// Expects an exception.
     /// </summary>
@@ -499,6 +514,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.Contains(IsEven, collection, "No even number found", null);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*even*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method that accepts a predicate when no element satisfies the condition.
+    /// Expects an exception.
+    /// </summary>
+    public void Contains_InNonGenericCollection_Predicate_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(IsEven, collection, "No even number found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*even*");
@@ -685,6 +716,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the DoesNotContain method that accepts a predicate when no element satisfies the predicate.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_Predicate_NoItemMatches_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(IsEven, collection, "All items are odd");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
     /// Tests the DoesNotContain method that accepts a predicate when at least one element satisfies the predicate.
     /// Expects an exception.
     /// </summary>
@@ -695,6 +741,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists", null);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*even*");
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method that accepts a predicate when at least one element satisfies the predicate.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_Predicate_AtLeastOneItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 2, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*even*");
@@ -870,6 +932,8 @@ public partial class AssertTests : TestContainer
     }
 
     private static bool IsEven(int x) => x % 2 == 0;
+
+    private static bool IsEven(object? x) => x is int i && i % 2 == 0;
 
     #endregion
 

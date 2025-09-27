@@ -289,6 +289,14 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection contains the given element.
     /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    public static void Contains(Func<object?, bool> predicate, IEnumerable collection)
+        => Contains(predicate, collection, string.Empty);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
@@ -309,6 +317,31 @@ public sealed partial class Assert
         if (!collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message, parameters);
+            ThrowAssertContainsPredicateFailed(userMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message)
+    {
+        bool found = false;
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            string userMessage = BuildUserMessage(message);
             ThrowAssertContainsPredicateFailed(userMessage);
         }
     }
@@ -615,6 +648,14 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection)
+        => DoesNotContain(predicate, collection, string.Empty);
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
@@ -635,6 +676,31 @@ public sealed partial class Assert
         if (collection.Any(predicate))
         {
             string userMessage = BuildUserMessage(message, parameters);
+            ThrowAssertDoesNotContainPredicateFailed(userMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message)
+    {
+        bool found = false;
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (found)
+        {
+            string userMessage = BuildUserMessage(message);
             ThrowAssertDoesNotContainPredicateFailed(userMessage);
         }
     }
