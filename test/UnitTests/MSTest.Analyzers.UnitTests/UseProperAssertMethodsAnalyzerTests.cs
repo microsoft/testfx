@@ -2197,18 +2197,157 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var x = new Hashtable();
-                    Assert.AreEqual(4, x.Count);
-                    // error CS0411: The type arguments for method 'Assert.HasCount<T>(int, IEnumerable<T>)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
-                    // When we add a non-generic IEnumerable overload, this test will fail because CS0411 is no longer reported.
-                    // In that case, the analyzer should start reporting a diagnostic for the AreEqual call above.
-                    // The codefix should suggest to switch to HasCount.
-                    // Tracking issue https://github.com/microsoft/testfx/issues/6184.
-                    Assert.{|CS0411:HasCount|}(4, x);
+                    {|#0:Assert.AreEqual(4, x.Count)|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var x = new Hashtable();
+                    Assert.HasCount(4, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithNonGenericCollectionCountZero()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.AreEqual(0, hashtable.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNonGenericCollectionCountEqualZero()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.IsTrue(hashtable.Count == 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNonGenericCollectionCountGreaterThanZero()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable { { "key", "value" } };
+                    {|#0:Assert.IsTrue(hashtable.Count > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable { { "key", "value" } };
+                    Assert.IsNotEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
     }
     #endregion
 
