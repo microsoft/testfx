@@ -525,6 +525,8 @@ public class CollectionAssertTests : TestContainer
             CollectionAssert.AreEqual failed. Element at index 1 do not match.
             Expected: 2
             Actual: 5
+            Full Expected: 1, 2, 3
+            Full Actual: 1, 5, 3
             """);
     }
 
@@ -537,6 +539,19 @@ public class CollectionAssertTests : TestContainer
             CollectionAssert.AreEqual failed. User-provided message. Element at index 1 do not match.
             Expected: 2
             Actual: 5
+            Full Expected: 1, 2, 3
+            Full Actual: 1, 5, 3
+            """);
+    }
+
+    public void CollectionAssertAreEqual_DifferentLengths_FailsWithFullCollections()
+    {
+        Action action = () => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 2 });
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Be("""
+            CollectionAssert.AreEqual failed. Different number of elements.
+            Expected: 1, 2, 3
+            Actual: 1, 2
             """);
     }
 

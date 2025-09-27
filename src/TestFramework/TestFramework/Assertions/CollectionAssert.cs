@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -1625,31 +1627,37 @@ public sealed class CollectionAssert
             return true;
         }
 
-        return CompareIEnumerable(expected, actual, comparer, ref reason);
+        string fullExpectedStr = expected == null ? "null" : string.Join(", ", expected.Cast<object>().Select(x => Convert.ToString(Assert.ReplaceNulls(x), CultureInfo.InvariantCulture)));
+        string fullActualStr = actual == null ? "null" : string.Join(", ", actual.Cast<object>().Select(x => Convert.ToString(Assert.ReplaceNulls(x), CultureInfo.InvariantCulture)));
+
+        return CompareIEnumerable(expected, actual, comparer, ref reason, fullExpectedStr, fullActualStr);
     }
 
-    private static bool CompareIEnumerable(IEnumerable? expected, IEnumerable? actual, IComparer comparer, ref string reason)
+    private static bool CompareIEnumerable(IEnumerable? expected, IEnumerable? actual, IComparer comparer, ref string reason, string fullExpected, string fullActual)
     {
         if ((expected == null) || (actual == null))
         {
+            reason = string.Format(CultureInfo.CurrentCulture, "Collections differ in nullability.\nExpected: {0}\nActual: {1}", fullExpected, fullActual);
             return false;
         }
 
-        var stack = new Stack<Tuple<IEnumerator, IEnumerator, int>>();
-        stack.Push(new(expected.GetEnumerator(), actual.GetEnumerator(), 0));
+        var stack = new Stack<Tuple<IEnumerator, IEnumerator, int, string, string>>();
+        stack.Push(new(expected.GetEnumerator(), actual.GetEnumerator(), 0, fullExpected, fullActual));
 
         while (stack.Count > 0)
         {
-            Tuple<IEnumerator, IEnumerator, int> cur = stack.Pop();
+            Tuple<IEnumerator, IEnumerator, int, string, string> cur = stack.Pop();
             IEnumerator expectedEnum = cur.Item1;
             IEnumerator actualEnum = cur.Item2;
             int position = cur.Item3;
+            string fullExp = cur.Item4;
+            string fullAct = cur.Item5;
 
             while (expectedEnum.MoveNext())
             {
                 if (!actualEnum.MoveNext())
                 {
-                    reason = FrameworkMessages.NumberOfElementsDiff;
+                    reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NumberOfElementsDiff, fullExp, fullAct);
                     return false;
                 }
 
@@ -1661,8 +1669,8 @@ public sealed class CollectionAssert
                 }
                 else if (curExpected is IEnumerable curExpectedEnum && curActual is IEnumerable curActualEnum)
                 {
-                    stack.Push(new(expectedEnum, actualEnum, position + 1));
-                    stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
+                    stack.Push(new(expectedEnum, actualEnum, position + 1, fullExp, fullAct));
+                    stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0, fullExp, fullAct));
                 }
                 else if (comparer.Compare(curExpected, curActual) != 0)
                 {
@@ -1671,14 +1679,16 @@ public sealed class CollectionAssert
                         FrameworkMessages.ElementsAtIndexDontMatch,
                         position,
                         Assert.ReplaceNulls(curExpected),
-                        Assert.ReplaceNulls(curActual));
+                        Assert.ReplaceNulls(curActual),
+                        fullExp,
+                        fullAct);
                     return false;
                 }
             }
 
             if (actualEnum.MoveNext() && !expectedEnum.MoveNext())
             {
-                reason = FrameworkMessages.NumberOfElementsDiff;
+                reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NumberOfElementsDiff, fullExp, fullAct);
                 return false;
             }
         }

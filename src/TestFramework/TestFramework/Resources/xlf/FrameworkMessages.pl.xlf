@@ -186,10 +186,14 @@
       <trans-unit id="ElementsAtIndexDontMatch">
         <source>Element at index {0} do not match.
 Expected: {1}
-Actual: {2}</source>
-        <target state="translated">Element w indeksie {0} nie jest zgodny.
-Oczekiwano: {1}
-Rzeczywiste: {2}</target>
+Actual: {2}
+Full Expected: {3}
+Full Actual: {4}</source>
+        <target state="new">Element at index {0} do not match.
+Expected: {1}
+Actual: {2}
+Full Expected: {3}
+Full Actual: {4}</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
@@ -279,9 +283,13 @@ Rzeczywiste: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
-        <source>Different number of elements.</source>
-        <target state="translated">Inna liczba elementów.</target>
-        <note></note>
+        <source>Different number of elements.
+Expected: {0}
+Actual: {1}</source>
+        <target state="new">Different number of elements.
+Expected: {0}
+Actual: {1}</target>
+        <note />
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
