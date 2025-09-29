@@ -50,10 +50,6 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
     public override bool ShouldRun
-#if NET462
-        // On .NET Framework, we are sure we are running on Windows.
-        => (_operatingSystems & OperatingSystems.Windows) != 0;
-#else
     {
         get
         {
@@ -69,15 +65,16 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             {
                 return (_operatingSystems & OperatingSystems.OSX) != 0;
             }
+#if !NETFRAMEWORK
             else if (RuntimeInformation.IsOSPlatform(FreeBSD))
             {
                 return (_operatingSystems & OperatingSystems.FreeBSD) != 0;
             }
+#endif
 
             return false;
         }
     }
-#endif
 
     /// <inheritdoc />
     public override string? IgnoreMessage { get; set; }
