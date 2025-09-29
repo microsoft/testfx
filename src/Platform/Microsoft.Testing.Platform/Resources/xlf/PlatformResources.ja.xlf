@@ -224,6 +224,11 @@
         <target state="translated">からテストを検出しています</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">プロバイダー '{0}' (UID: {1}) が次のエラーで失敗しました: {2}</target>
@@ -759,6 +764,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">テスト セッションを開始しています。ログ ファイルのパスが '{0}' です。</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">'ITestExecutionFilterFactory' ファクトリは既に設定されています</target>
@@ -976,6 +986,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">0 件のテストが実行されました</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="new">total</target>
         <note />
       </trans-unit>
     </body>
