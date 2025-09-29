@@ -722,4 +722,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="PlatformCommandLineDebugAttachOptionDescription" xml:space="preserve">
     <value>Allows to pause execution in order to attach to the process for debug purposes.</value>
   </data>
+  <data name="SucceededLowercase" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
 </root>

@@ -254,7 +254,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         string totalText = $"{SingleIndentation}{PlatformResources.TotalLowercase}: {total}";
         string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
-        string passedText = $"{SingleIndentation}{PlatformResources.PassedLowercase}: {passed}";
+        string passedText = $"{SingleIndentation}{PlatformResources.SucceededLowercase}: {passed}";
         string skippedText = $"{SingleIndentation}{PlatformResources.SkippedLowercase}: {skipped}";
         string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
 
