@@ -221,21 +221,16 @@ public sealed partial class Assert
     /// <param name="message">The message format to display when the assertion fails.</param>
     public static void Contains(object? expected, IEnumerable collection, string? message)
     {
-        bool isFound = false;
         foreach (object? item in collection)
         {
             if (object.Equals(item, expected))
             {
-                isFound = true;
-                break;
+                return;
             }
         }
 
-        if (!isFound)
-        {
-            string userMessage = BuildUserMessage(message);
-            ThrowAssertContainsItemFailed(userMessage);
-        }
+        string userMessage = BuildUserMessage(message);
+        ThrowAssertContainsItemFailed(userMessage);
     }
 
     /// <summary>
@@ -247,6 +242,15 @@ public sealed partial class Assert
     /// <param name="comparer">An equality comparer to compare values.</param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         => Contains(expected, collection, comparer, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    public static void Contains(object expected, IEnumerable collection, IEqualityComparer comparer)
+        => Contains(expected, collection, comparer, string.Empty);
 
     /// <summary>
     /// Tests whether the specified collection contains the given element.
@@ -275,6 +279,27 @@ public sealed partial class Assert
             string userMessage = BuildUserMessage(message, parameters);
             ThrowAssertContainsItemFailed(userMessage);
         }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    public static void Contains(object expected, IEnumerable collection, IEqualityComparer comparer, string? message)
+    {
+        foreach (object? item in collection)
+        {
+            if (comparer.Equals(item, expected))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessage(message);
+        ThrowAssertContainsItemFailed(userMessage);
     }
 
     /// <summary>
@@ -329,21 +354,16 @@ public sealed partial class Assert
     /// <param name="message">The message format to display when the assertion fails.</param>
     public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message)
     {
-        bool found = false;
         foreach (object? item in collection)
         {
             if (predicate(item))
             {
-                found = true;
-                break;
+                return;
             }
         }
 
-        if (!found)
-        {
-            string userMessage = BuildUserMessage(message);
-            ThrowAssertContainsPredicateFailed(userMessage);
-        }
+        string userMessage = BuildUserMessage(message);
+        ThrowAssertContainsPredicateFailed(userMessage);
     }
 
     /// <summary>
@@ -688,21 +708,16 @@ public sealed partial class Assert
     /// <param name="message">The message to display when the assertion fails.</param>
     public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message)
     {
-        bool found = false;
         foreach (object? item in collection)
         {
             if (predicate(item))
             {
-                found = true;
-                break;
+                return;
             }
         }
 
-        if (found)
-        {
-            string userMessage = BuildUserMessage(message);
-            ThrowAssertDoesNotContainPredicateFailed(userMessage);
-        }
+        string userMessage = BuildUserMessage(message);
+        ThrowAssertDoesNotContainPredicateFailed(userMessage);
     }
 
     /// <summary>
