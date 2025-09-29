@@ -363,6 +363,84 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemDoesNotExist_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+        object expected = 20;
+
+        // Act
+        Action action = () => Assert.Contains(expected, collection, $"Item {expected} not found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expected} not found*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+
+        // Act
+        Action action = () => Assert.Contains("a", collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ValueExpected_ItemExists_DoesNotThrowException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(5, collection);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is not present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_NullableValueExpected_ItemDoesNotExist_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, "a" };
+        object? expected = null;
+
+        // Act
+        Action action = () => Assert.Contains(expected, collection, $"Item {expected} not found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage($"*Item {expected} not found*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method (value overload) when the expected item is present.
+    /// </summary>
+    public void Contains_InNonGenericCollection_NullableValueExpected_ItemExists_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { null, 10, "a" };
+        object? expected = null;
+
+        // Act
+        Action action = () => Assert.Contains(expected, collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
     /// Tests the Contains method with a comparer when the expected item is present.
     /// </summary>
     public void Contains_WithComparer_ItemExists_DoesNotThrow()
@@ -411,6 +489,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the Contains method that accepts a predicate when an element satisfies the condition.
+    /// </summary>
+    public void Contains_InNonGenericCollection_Predicate_ItemMatches_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 2, 4, 6, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(IsEven, collection, "Even number exists");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
     /// Tests the Contains method that accepts a predicate when no element satisfies the condition.
     /// Expects an exception.
     /// </summary>
@@ -421,6 +514,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.Contains(IsEven, collection, "No even number found", null);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*even*");
+    }
+
+    /// <summary>
+    /// Tests the Contains method that accepts a predicate when no element satisfies the condition.
+    /// Expects an exception.
+    /// </summary>
+    public void Contains_InNonGenericCollection_Predicate_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.Contains(IsEven, collection, "No even number found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*even*");
@@ -495,6 +604,37 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the DoesNotContain method (value overload) when the expected item is not present.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_ValueExpected_ItemNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, 15 };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(20, collection, "No failure expected");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method (value overload) when the expected item is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_ValueExpected_ItemPresent_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 5, 10, 15, "a" };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(10, collection, "Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Assert.DoesNotContain failed. Expected collection to not contain the specified item. Item {0} should not be found*");
+    }
+
+    /// <summary>
     /// Tests the DoesNotContain method with a comparer when the item is not present.
     /// </summary>
     public void DoesNotContain_WithComparer_ItemNotPresent_DoesNotThrow()
@@ -505,6 +645,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.DoesNotContain("cherry", collection, comparer, "No cherry found", null);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method with a comparer when the item is not present.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_WithComparer_ItemNotPresent_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { "apple", "banana", 1 };
+        IEqualityComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+        // Act
+        Action action = () => Assert.DoesNotContain("cherry", collection, comparer, "No cherry found");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -528,6 +684,23 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the DoesNotContain method with a comparer when the item is present.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_WithComparer_ItemPresent_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { "apple", "banana", 1 };
+        IEqualityComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+        // Act
+        Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "APPLE");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*APPLE*");
+    }
+
+    /// <summary>
     /// Tests the DoesNotContain method that accepts a predicate when no element satisfies the predicate.
     /// </summary>
     public void DoesNotContain_Predicate_NoItemMatches_DoesNotThrow()
@@ -537,6 +710,21 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.DoesNotContain(IsEven, collection, "All items are odd", null);
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method that accepts a predicate when no element satisfies the predicate.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_Predicate_NoItemMatches_DoesNotThrow()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(IsEven, collection, "All items are odd");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -553,6 +741,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists", null);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*even*");
+    }
+
+    /// <summary>
+    /// Tests the DoesNotContain method that accepts a predicate when at least one element satisfies the predicate.
+    /// Expects an exception.
+    /// </summary>
+    public void DoesNotContain_InNonGenericCollection_Predicate_AtLeastOneItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 2, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*even*");
@@ -729,6 +933,8 @@ public partial class AssertTests : TestContainer
 
     private static bool IsEven(int x) => x % 2 == 0;
 
+    private static bool IsEven(object? x) => x is int i && i % 2 == 0;
+
     #endregion
 
     #region ContainsSingle with Predicate Tests
@@ -874,6 +1080,21 @@ public partial class AssertTests : TestContainer
     {
         // Arrange
         var collection = new List<int> { 1, 2, 3 };
+
+        // Act
+        Action action = () => Assert.Contains(5, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected collection to contain the specified item*");
+    }
+
+    /// <summary>
+    /// Tests that Contains (item) failure shows specific error message.
+    /// </summary>
+    public void Contains_InNonGenericCollection_ItemNotFound_ShowsSpecificErrorMessage()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 2, 3 };
 
         // Act
         Action action = () => Assert.Contains(5, collection);
