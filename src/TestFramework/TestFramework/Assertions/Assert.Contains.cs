@@ -712,12 +712,10 @@ public sealed partial class Assert
         {
             if (predicate(item))
             {
-                return;
+                string userMessage = BuildUserMessage(message);
+                ThrowAssertDoesNotContainPredicateFailed(userMessage);
             }
         }
-
-        string userMessage = BuildUserMessage(message);
-        ThrowAssertDoesNotContainPredicateFailed(userMessage);
     }
 
     /// <summary>
