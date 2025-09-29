@@ -763,6 +763,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">테스트 세션을 시작하는 중입니다. 로그 파일 경로가 '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">'ITestExecutionFilterFactory' 팩터리가 이미 설정되어 있음</target>

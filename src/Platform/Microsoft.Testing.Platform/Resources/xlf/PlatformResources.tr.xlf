@@ -763,6 +763,11 @@ Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|
         <target state="translated">Test oturumu başlatılıyor. Günlük dosyası yolu '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Bir 'ITestExecutionFilterFactory' fabrikası zaten ayarlanmış</target>

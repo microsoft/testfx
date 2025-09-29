@@ -763,6 +763,11 @@ Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value
         <target state="translated">Die Testsitzung wird gestartet. Der Protokolldateipfad ist '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Eine "ITestExecutionFilterFactory"-Factory ist bereits festgelegt</target>

@@ -763,6 +763,11 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
         <target state="translated">Iniciando sesión de prueba. La ruta de acceso del archivo de registro es '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Ya se ha establecido una fábrica "ITestExecutionFilterFactory"</target>
