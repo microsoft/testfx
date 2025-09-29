@@ -224,7 +224,7 @@ public sealed partial class Assert
         bool isFound = false;
         foreach (object? item in collection)
         {
-            if (object.Equals(expected, item))
+            if (object.Equals(item, expected))
             {
                 isFound = true;
                 break;
@@ -560,7 +560,7 @@ public sealed partial class Assert
     {
         foreach (object? item in collection)
         {
-            if (object.Equals(item, expected))
+            if (object.Equals(expected, item))
             {
                 string userMessage = BuildUserMessage(message);
                 ThrowAssertDoesNotContainItemFailed(userMessage);
