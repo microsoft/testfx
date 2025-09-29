@@ -24,6 +24,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.FlowTestContextCancellationTokenMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal const string TestContextMemberNamePropertyKey = nameof(TestContextMemberNamePropertyKey);
+    internal const string CancellationTokenParameterNamePropertyKey = nameof(CancellationTokenParameterNamePropertyKey);
 
     internal static readonly DiagnosticDescriptor FlowTestContextCancellationTokenRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.FlowTestContextCancellationTokenRuleId,
@@ -92,31 +93,52 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         if (parameterHasDefaultValue &&
             invocationOperation.Arguments.FirstOrDefault(arg => SymbolEqualityComparer.Default.Equals(arg.Parameter, cancellationTokenParameter))?.ArgumentKind != ArgumentKind.Explicit)
         {
-            // The called method has an optional CancellationToken parameter, but it was not explicitly provided.
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState)));
+            // The called method has an optional CancellationToken parameter, but it was not explicitly provided. So we report a diagnostic.
+            // We also pass non-null cancellationTokenParameterName if the codefix should use named argument.
+            string? cancellationTokenParameterName = null;
+            int indexOfParameterCorrespondingToLastExplicitArgument = invocationOperation.Arguments.LastOrDefault(arg => arg.ArgumentKind == ArgumentKind.Explicit)?.Parameter?.Ordinal ?? -1;
+            if (cancellationTokenParameter!.Ordinal != indexOfParameterCorrespondingToLastExplicitArgument + 1)
+            {
+                cancellationTokenParameterName = cancellationTokenParameter.Name;
+            }
+
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState, cancellationTokenParameterName)));
             return;
         }
 
         // At this point, we want to only continue analysis if and only if the called method didn't have a CancellationToken parameter.
         // In this case, we look for other overloads that might accept a CancellationToken.
         if (cancellationTokenParameter is null &&
-            HasOverloadWithCancellationToken(method, cancellationTokenSymbol))
+            GetCancellationTokenParameterOfOverloadWithCancellationToken(method, cancellationTokenSymbol) is { } cancellationTokenParameterFromDifferentOverload)
         {
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState)));
+            string? cancellationTokenParameterName = null;
+            int indexOfParameterCorrespondingToLastExplicitArgument = invocationOperation.Arguments.LastOrDefault(arg => arg.ArgumentKind == ArgumentKind.Explicit)?.Parameter?.Ordinal ?? -1;
+
+            if (cancellationTokenParameterFromDifferentOverload.Ordinal != indexOfParameterCorrespondingToLastExplicitArgument + 1)
+            {
+                cancellationTokenParameterName = cancellationTokenParameterFromDifferentOverload.Name;
+            }
+
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState, cancellationTokenParameterName)));
         }
 
-        static ImmutableDictionary<string, string?> GetPropertiesBag(string? testContextMemberNameInScope, TestContextState? testContextState)
+        static ImmutableDictionary<string, string?> GetPropertiesBag(string? testContextMemberNameInScope, TestContextState? testContextState, string? cancellationTokenParameterName)
         {
             ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty;
             properties = testContextMemberNameInScope is not null
                 ? properties.Add(TestContextMemberNamePropertyKey, testContextMemberNameInScope)
                 : properties.Add(nameof(TestContextState), testContextState.ToString());
 
+            if (cancellationTokenParameterName is not null)
+            {
+                properties = properties.Add(CancellationTokenParameterNamePropertyKey, cancellationTokenParameterName);
+            }
+
             return properties;
         }
     }
 
-    private static bool HasOverloadWithCancellationToken(IMethodSymbol method, INamedTypeSymbol cancellationTokenSymbol)
+    private static IParameterSymbol? GetCancellationTokenParameterOfOverloadWithCancellationToken(IMethodSymbol method, INamedTypeSymbol cancellationTokenSymbol)
     {
         // Look for overloads of the same method that accept CancellationToken
         INamedTypeSymbol containingType = method.ContainingType;
@@ -128,14 +150,14 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
                 candidateMethod.IsStatic == method.IsStatic)
             {
                 // Check if this method has the same parameters plus a CancellationToken
-                if (IsCompatibleOverloadWithCancellationToken(method, candidateMethod, cancellationTokenSymbol))
+                if (GetCancellationTokenParameterIfCandidateIsValid(method, candidateMethod, cancellationTokenSymbol) is { } parameter)
                 {
-                    return true;
+                    return parameter;
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     private static bool HasOrCouldHaveTestContextInScope(
@@ -202,7 +224,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         return false;
     }
 
-    private static bool IsCompatibleOverloadWithCancellationToken(IMethodSymbol originalMethod, IMethodSymbol candidateMethod, INamedTypeSymbol cancellationTokenSymbol)
+    private static IParameterSymbol? GetCancellationTokenParameterIfCandidateIsValid(IMethodSymbol originalMethod, IMethodSymbol candidateMethod, INamedTypeSymbol cancellationTokenSymbol)
     {
         // Check if the candidate method has all the same parameters as the original method plus a CancellationToken
         ImmutableArray<IParameterSymbol> originalParams = originalMethod.Parameters;
@@ -211,7 +233,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         // The candidate should have one more parameter (the CancellationToken)
         if (candidateParams.Length != originalParams.Length + 1)
         {
-            return false;
+            return null;
         }
 
         // Check if all original parameters match the first N parameters of the candidate
@@ -219,13 +241,13 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         {
             if (!SymbolEqualityComparer.Default.Equals(originalParams[i].Type, candidateParams[i].Type))
             {
-                return false;
+                return null;
             }
         }
 
         // Check if the last parameter is CancellationToken
         IParameterSymbol lastParam = candidateParams[candidateParams.Length - 1];
-        return SymbolEqualityComparer.Default.Equals(lastParam.Type, cancellationTokenSymbol);
+        return SymbolEqualityComparer.Default.Equals(lastParam.Type, cancellationTokenSymbol) ? lastParam : null;
     }
 
     internal enum TestContextState
