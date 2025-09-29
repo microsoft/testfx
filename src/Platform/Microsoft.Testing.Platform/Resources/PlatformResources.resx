@@ -560,7 +560,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Console is already in batching mode.</value>
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
   </data>
-  <data name="Duration" xml:space="preserve">
+  <data name="DurationLowercase" xml:space="preserve">
     <value>duration</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">

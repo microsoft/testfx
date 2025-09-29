@@ -224,6 +224,11 @@
         <target state="translated">正在发现以下位置中的测试</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">提供程序 '{0}' (UID: {1}) 失败，出现错误: {2}</target>
@@ -975,11 +980,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">运行了零个测试</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Duration">
-        <source>duration</source>
-        <target state="new">duration</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

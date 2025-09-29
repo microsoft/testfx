@@ -224,6 +224,11 @@
         <target state="translated">からテストを検出しています</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">プロバイダー '{0}' (UID: {1}) が次のエラーで失敗しました: {2}</target>
@@ -976,11 +981,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">0 件のテストが実行されました</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Duration">
-        <source>duration</source>
-        <target state="new">duration</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

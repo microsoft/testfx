@@ -224,6 +224,11 @@
         <target state="translated">Individuazione di test da</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Provider '{0}' (UID: {1}) non riuscito con errore: {2}</target>
@@ -975,11 +980,6 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Nessun test eseguito</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Duration">
-        <source>duration</source>
-        <target state="new">duration</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

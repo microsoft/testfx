@@ -224,6 +224,11 @@
         <target state="translated">Testler şuradan bulunuyor:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">'{0}' sağlayıcısı '' (UID: {1}) şu hatayla başarısız oldu: {2}</target>
@@ -975,11 +980,6 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Sıfır test çalıştırıldı</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Duration">
-        <source>duration</source>
-        <target state="new">duration</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

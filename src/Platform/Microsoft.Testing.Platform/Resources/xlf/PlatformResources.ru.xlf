@@ -224,6 +224,11 @@
         <target state="translated">Обнаружение тестов из</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Сбой поставщика "{0}" (ИД пользователя: {1}) с ошибкой: {2}</target>
@@ -975,11 +980,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Запущено ноль тестов</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Duration">
-        <source>duration</source>
-        <target state="new">duration</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

@@ -256,7 +256,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
         string passedText = $"{SingleIndentation}{PlatformResources.PassedLowercase}: {passed}";
         string skippedText = $"{SingleIndentation}{PlatformResources.SkippedLowercase}: {skipped}";
-        string durationText = $"{SingleIndentation}{PlatformResources.Duration}: ";
+        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
 
         terminal.ResetColor();
         terminal.AppendLine(totalText);
@@ -890,7 +890,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.AppendLine();
         }
 
-        string durationText = $"{SingleIndentation}{PlatformResources.Duration}: ";
+        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
