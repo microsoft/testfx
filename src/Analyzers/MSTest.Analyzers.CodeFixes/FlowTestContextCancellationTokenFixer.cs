@@ -51,6 +51,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         }
 
         diagnostic.Properties.TryGetValue(FlowTestContextCancellationTokenAnalyzer.TestContextMemberNamePropertyKey, out string? testContextMemberName);
+        diagnostic.Properties.TryGetValue(FlowTestContextCancellationTokenAnalyzer.CancellationTokenParameterNamePropertyKey, out string? cancellationTokenParameterName);
         diagnostic.Properties.TryGetValue(nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState), out string? testContextState);
 
         // Register a code action that will invoke the fix
@@ -60,7 +61,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
                 createChangedDocument: async c =>
                 {
                     DocumentEditor editor = await DocumentEditor.CreateAsync(context.Document, context.CancellationToken).ConfigureAwait(false);
-                    return ApplyFix(editor, invocationExpression, testContextMemberName, testContextState, adjustedSymbols: null, c);
+                    return ApplyFix(editor, invocationExpression, testContextMemberName, testContextState, cancellationTokenParameterName, adjustedSymbols: null, c);
                 },
                 equivalenceKey: nameof(FlowTestContextCancellationTokenFixer)),
             diagnostic);
@@ -71,13 +72,14 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         InvocationExpressionSyntax invocationExpression,
         string? testContextMemberName,
         string? testContextState,
+        string? cancellationTokenParameterName,
         HashSet<ISymbol>? adjustedSymbols,
         CancellationToken cancellationToken)
     {
         if (testContextState == nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState.CouldBeInScopeAsProperty))
         {
             Debug.Assert(testContextMemberName is null, "TestContext member name should be null when state is CouldBeInScopeAsProperty");
-            AddCancellationTokenArgument(editor, invocationExpression, "TestContext");
+            AddCancellationTokenArgument(editor, invocationExpression, "TestContext", cancellationTokenParameterName);
             TypeDeclarationSyntax? containingTypeDeclaration = invocationExpression.FirstAncestorOrSelf<TypeDeclarationSyntax>();
             if (containingTypeDeclaration is not null)
             {
@@ -96,7 +98,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         else if (testContextState == nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState.CouldBeInScopeAsParameter))
         {
             Debug.Assert(testContextMemberName is null, "TestContext member name should be null when state is CouldBeInScopeAsParameter");
-            AddCancellationTokenArgument(editor, invocationExpression, "testContext");
+            AddCancellationTokenArgument(editor, invocationExpression, "testContext", cancellationTokenParameterName);
             MethodDeclarationSyntax? containingMethodDeclaration = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
 
             if (containingMethodDeclaration is not null)
@@ -116,7 +118,7 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         else
         {
             Guard.NotNull(testContextMemberName);
-            AddCancellationTokenArgument(editor, invocationExpression, testContextMemberName);
+            AddCancellationTokenArgument(editor, invocationExpression, testContextMemberName, cancellationTokenParameterName);
         }
 
         return editor.GetChangedDocument();
@@ -125,7 +127,8 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
     internal static void AddCancellationTokenArgument(
         DocumentEditor editor,
         InvocationExpressionSyntax invocationExpression,
-        string testContextMemberName)
+        string testContextMemberName,
+        string? cancellationTokenParameterName)
     {
         // Find the containing method to determine the context
         MethodDeclarationSyntax? containingMethod = invocationExpression.FirstAncestorOrSelf<MethodDeclarationSyntax>();
@@ -140,7 +143,8 @@ public sealed class FlowTestContextCancellationTokenFixer : CodeFixProvider
         {
             var invocationExpression = (InvocationExpressionSyntax)node;
             ArgumentListSyntax currentArguments = invocationExpression.ArgumentList;
-            SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(testContextExpression));
+            NameColonSyntax? nameColon = cancellationTokenParameterName is null ? null : SyntaxFactory.NameColon(cancellationTokenParameterName);
+            SeparatedSyntaxList<ArgumentSyntax> newArguments = currentArguments.Arguments.Add(SyntaxFactory.Argument(nameColon, default, testContextExpression));
             return invocationExpression.WithArgumentList(currentArguments.WithArguments(newArguments));
         });
     }
@@ -252,9 +256,10 @@ internal sealed class FlowTestContextCancellationTokenFixAllProvider : FixAllPro
             }
 
             diagnostic.Properties.TryGetValue(FlowTestContextCancellationTokenAnalyzer.TestContextMemberNamePropertyKey, out string? testContextMemberName);
+            diagnostic.Properties.TryGetValue(FlowTestContextCancellationTokenAnalyzer.CancellationTokenParameterNamePropertyKey, out string? cancellationTokenParameterName);
             diagnostic.Properties.TryGetValue(nameof(FlowTestContextCancellationTokenAnalyzer.TestContextState), out string? testContextState);
 
-            FlowTestContextCancellationTokenFixer.ApplyFix(documentEditor, invocationExpression, testContextMemberName, testContextState, fixedSymbols, cancellationToken);
+            FlowTestContextCancellationTokenFixer.ApplyFix(documentEditor, invocationExpression, testContextMemberName, testContextState, cancellationTokenParameterName, fixedSymbols, cancellationToken);
         }
     }
 }

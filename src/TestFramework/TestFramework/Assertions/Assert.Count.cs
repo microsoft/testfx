@@ -206,6 +206,25 @@ public sealed partial class Assert
         ThrowAssertIsNotEmptyFailed(userMessage);
     }
 
+    /// <summary>
+    /// Tests that the collection is not empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty(IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        if (collection.Cast<object>().Any())
+        {
+            return;
+        }
+
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+        ThrowAssertIsNotEmptyFailed(userMessage);
+    }
     #endregion // IsNotEmpty
 
     #region HasCount
@@ -240,6 +259,19 @@ public sealed partial class Assert
     public static void HasCount<T>(int expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount("HasCount", expected, collection, message, collectionExpression);
 
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount(int expected, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("HasCount", expected, collection, message, collectionExpression);
+
     #endregion // HasCount
 
     #region IsEmpty
@@ -272,11 +304,40 @@ public sealed partial class Assert
     public static void IsEmpty<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount("IsEmpty", 0, collection, message, collectionExpression);
 
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty(IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("IsEmpty", 0, collection, message, collectionExpression);
+
     #endregion // IsEmpty
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string message, string collectionExpression)
     {
         int actualCount = collection.Count();
+        if (actualCount == expected)
+        {
+            return;
+        }
+
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+        ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
+    }
+
+    private static void HasCount(string assertionName, int expected, IEnumerable collection, string message, string collectionExpression)
+    {
+        int actualCount = 0;
+        foreach (object? item in collection)
+        {
+            actualCount++;
+        }
+
         if (actualCount == expected)
         {
             return;

@@ -199,6 +199,34 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection contains the given element.
     /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains(object? expected, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        foreach (object? item in collection)
+        {
+            if (object.Equals(item, expected))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+        ThrowAssertContainsItemFailed(userMessage);
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
@@ -224,6 +252,35 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection contains the given element.
     /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        foreach (object? item in collection)
+        {
+            if (comparer.Equals(item, expected))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+        ThrowAssertContainsItemFailed(userMessage);
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
@@ -243,6 +300,34 @@ public sealed partial class Assert
             string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
             ThrowAssertContainsPredicateFailed(userMessage);
         }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+        ThrowAssertContainsPredicateFailed(userMessage);
     }
 
     /// <summary>
@@ -352,6 +437,32 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain(object? expected, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        foreach (object? item in collection)
+        {
+            if (object.Equals(expected, item))
+            {
+                string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+                ThrowAssertDoesNotContainItemFailed(userMessage);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
@@ -377,6 +488,33 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain(object? expected, IEnumerable collection, IEqualityComparer comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        foreach (object? item in collection)
+        {
+            if (comparer.Equals(item, expected))
+            {
+                string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+                ThrowAssertDoesNotContainItemFailed(userMessage);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
@@ -395,6 +533,32 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
             ThrowAssertDoesNotContainPredicateFailed(userMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+                ThrowAssertDoesNotContainPredicateFailed(userMessage);
+            }
         }
     }
 

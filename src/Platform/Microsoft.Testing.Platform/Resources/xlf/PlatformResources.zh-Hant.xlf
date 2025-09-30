@@ -224,6 +224,11 @@
         <target state="translated">正在以下位置找測試</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">提供者 '{0}' (UID: {1}) 失敗，發生錯誤: {2}</target>
@@ -758,6 +763,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">正在啟動測試會話。記錄檔路徑 '{0}'。</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">已設定 'ITestExecutionFilterFactory' 中心</target>
@@ -975,6 +985,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">已執行零項測試</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="new">total</target>
         <note />
       </trans-unit>
     </body>
