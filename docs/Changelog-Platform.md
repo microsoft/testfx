@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="1.8.5" />[1.8.5] - 2025-09-30
+
+See full log [of v3.10.4...v3.10.5](https://github.com/microsoft/testfx/compare/v3.10.4...v3.10.5)
+
+### Fixed
+
+* Avoid long path issues for pipes by @Youssef1313 in [#6536](https://github.com/microsoft/testfx/pull/6536)
+* Clean TestProgressState on TestExecutionCompleted to fix HotReload by @Youssef1313 in [#6505](https://github.com/microsoft/testfx/pull/6551)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Platform/1.8.5)
+* Microsoft.Testing.Platform.MSBuild: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/1.8.5)
+* Microsoft.Testing.Extensions.CrashDump: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.8.5)
+* Microsoft.Testing.Extensions.HangDump: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.8.5)
+* Microsoft.Testing.Extensions.HotReload: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.8.5)
+* Microsoft.Testing.Extensions.Retry: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.8.5)
+* Microsoft.Testing.Extensions.Telemetry: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/1.8.5)
+* Microsoft.Testing.Extensions.TrxReport: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.8.5)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/1.8.5)
+* Microsoft.Testing.Extensions.VSTestBridge: [1.8.5](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/1.8.5)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [1.0.0-alpha.25480.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/1.0.0-alpha.25480.6)
+
 ## <a name="1.8.4" />[1.8.4] - 2025-09-02
 
 See full log [of v3.10.3...v3.10.4](https://github.com/microsoft/testfx/compare/v3.10.3...v3.10.4)

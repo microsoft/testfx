@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="3.10.5" />[3.10.5] - 2025-09-30
+
+See full log [of v3.10.4...v3.10.5](https://github.com/microsoft/testfx/compare/v3.10.4...v3.10.5)
+
+### Fixed
+
+* Include TestFramework.Extensions.dll in TestAdapter NuGet package for .NET Framework by @Youssef1313 in [#6625](https://github.com/microsoft/testfx/pull/6625)
+
+### Artifacts
+
+* MSTest: [3.10.5](https://www.nuget.org/packages/MSTest/3.10.5)
+* MSTest.TestFramework: [3.10.5](https://www.nuget.org/packages/MSTest.TestFramework/3.10.5)
+* MSTest.TestAdapter: [3.10.5](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.5)
+* MSTest.Analyzers: [3.10.5](https://www.nuget.org/packages/MSTest.Analyzers/3.10.5)
+* MSTest.Sdk: [3.10.5](https://www.nuget.org/packages/MSTest.Sdk/3.10.5)
+* MSTest.SourceGeneration: [1.0.0-alpha.25480.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25480.6)
+* MSTest.Engine: [1.0.0-alpha.25480.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25480.6)
+
 ## <a name="3.10.4" />[3.10.4] - 2025-09-02
 
 See full log [of v3.10.3...v3.10.4](https://github.com/microsoft/testfx/compare/v3.10.3...v3.10.4)
