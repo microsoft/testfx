@@ -224,6 +224,11 @@
         <target state="translated">Découverte des tests à partir de</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="new">duration</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Désolé, échec de l’« {0} » du fournisseur (UID : {1}) avec l’erreur : {2}</target>
@@ -758,6 +763,11 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
         <target state="translated">Démarrage de la session de test. Le chemin d’accès au fichier journal est '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="new">succeeded</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Désolé, une fabrique « ITestExecutionFilterFactory » est déjà définie</target>
@@ -975,6 +985,11 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Zéro tests exécutés</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="new">total</target>
         <note />
       </trans-unit>
     </body>
