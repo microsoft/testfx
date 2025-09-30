@@ -539,7 +539,6 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
