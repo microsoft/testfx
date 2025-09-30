@@ -1021,6 +1021,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Assert.Throws yalnızca tek bir deyim/ifade içermelidir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="EmptyTestMethodDescription">
+        <source>Empty test methods are useless and should be removed or have meaningful test logic added.</source>
+        <target state="new">Empty test methods are useless and should be removed or have meaningful test logic added.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EmptyTestMethodMessageFormat">
+        <source>Test method '{0}' is empty</source>
+        <target state="new">Test method '{0}' is empty</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EmptyTestMethodTitle">
+        <source>Test method should not be empty</source>
+        <target state="new">Test method should not be empty</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
