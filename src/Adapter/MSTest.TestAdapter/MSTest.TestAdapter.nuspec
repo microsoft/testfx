@@ -90,7 +90,7 @@
       This can result in TestFramework.Extensions.dll loaded from VS installation which mismatches the other assemblies.
       See https://devdiv.visualstudio.com/DevDiv/_workitems/edit/2577652
     -->
-    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="buildTransitive\net462\" />
+    <file src="net462\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net462\" />
 
     <!-- Localization -->
     <!-- All TFMs share the same resx, copy only TestAdapter TestAdapter.PlatformServices, do NOT copy TestFramework and other dependency resource dlls. -->
