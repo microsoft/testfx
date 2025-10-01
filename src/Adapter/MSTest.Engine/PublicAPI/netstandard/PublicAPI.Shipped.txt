@@ -1,2 +1,2 @@
-﻿#nullable enable
+#nullable enable
 

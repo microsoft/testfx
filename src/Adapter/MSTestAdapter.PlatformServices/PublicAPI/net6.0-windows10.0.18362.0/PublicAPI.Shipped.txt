@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.InDirectory.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.InMachineNameDirectory.get -> string!

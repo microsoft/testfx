@@ -1,1 +1,2 @@
-﻿#nullable enable
+#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
