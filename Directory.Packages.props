@@ -12,7 +12,7 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>9.4.0</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>9.5.0</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
@@ -23,7 +23,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.14.1</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.55.0-beta-4</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.55.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.14.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
@@ -38,7 +38,12 @@
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
+    <!-- If this gets updated, please revise if the explicit dependency on System.Diagnostics.DiagnosticSource is still needed -->
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+
+    <!-- This comes transitvely via Microsoft.ApplicationInsights, but we want to upgrade it because 5.0.0 is not maintained -->
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
