@@ -1,12 +1,12 @@
 <Project>
 
   <PropertyGroup>
-    <AspireTestingVersion>9.4.0</AspireTestingVersion>
-    <CodeCoverageVersion>17.14.2</CodeCoverageVersion>
-    <MSTestVersion>3.10.1</MSTestVersion>
-    <MSTestAOTVersion>1.0.0-alpha.25405.1</MSTestAOTVersion>
-    <PlaywrightVersion>1.54.0</PlaywrightVersion>
-    <TestingPlatformVersion>1.8.1</TestingPlatformVersion>
+    <AspireTestingVersion>9.5.0</AspireTestingVersion>
+    <CodeCoverageVersion>18.0.4</CodeCoverageVersion>
+    <MSTestVersion>3.11.0</MSTestVersion>
+    <MSTestAOTVersion>1.0.0-alpha.25501.5</MSTestAOTVersion>
+    <PlaywrightVersion>1.55.0</PlaywrightVersion>
+    <TestingPlatformVersion>1.9.0</TestingPlatformVersion>
     <VSTestVersion>17.13.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
