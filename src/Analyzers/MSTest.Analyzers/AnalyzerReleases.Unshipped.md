@@ -24,3 +24,12 @@ MSTEST0032 | Usage | Warning | Usage | Info | ReviewAlwaysTrueAssertConditionAna
 MSTEST0035 | Usage | Warning | Usage | Info | UseDeploymentItemWithTestMethodOrTestClassAnalyzer
 MSTEST0037 | Usage | Warning | Usage | Info | UseProperAssertMethodsAnalyzer
 MSTEST0045 | Usage | Warning | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer
+
+### Removed Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+MSTEST0006 | Design | Info | AvoidExpectedExceptionAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0006)
+MSTEST0034 | Usage | Info | UseClassCleanupBehaviorEndOfClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0034)
+MSTEST0039 | Usage | Warning | Usage | Info | UseNewerAssertThrowsAnalyzer
+MSTEST0053 | Usage | Warning | AvoidAssertFormatParametersAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0053)
