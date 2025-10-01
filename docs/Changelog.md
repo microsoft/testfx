@@ -15,17 +15,6 @@ See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/
 * Add field support to DynamicDataAttribute by @Copilot in [#6203](https://github.com/microsoft/testfx/pull/6203)
 * Add analyzer for DynamicDataSourceType usage (MSTEST0052) by @Copilot in [#6261](https://github.com/microsoft/testfx/pull/6261)
 * Enhance Assert.AreEqual string comparison with smart context windowing and visual difference indicators by @Copilot in [#6163](https://github.com/microsoft/testfx/pull/6163)
-* Performance improvements:
-  * Performance: Reduce unnecessary logic in UpdateInfoIfTestInitializeOrCleanupMethod by @Youssef1313 in [#6318](https://github.com/microsoft/testfx/pull/6318)
-  * Avoid ManagedNameHelper when possible by @Youssef1313 in [#6319](https://github.com/microsoft/testfx/pull/6319)
-  * Avoid accessing TestCase.Traits when possible by @Youssef1313 in [#6353](https://github.com/microsoft/testfx/pull/6353)
-  * Cleanup TestContextImplementation by @Youssef1313 in [#6352](https://github.com/microsoft/testfx/pull/6352)
-  * Prevent unnecessary `List<TestCase>` allocations by @Youssef1313 in [#6370](https://github.com/microsoft/testfx/pull/6370)
-  * Avoid iterator allocations by @Youssef1313 in [#6369](https://github.com/microsoft/testfx/pull/6369)
-  * Optimize tcm properties by @Youssef1313 in [#6372](https://github.com/microsoft/testfx/pull/6372)
-  * Early exit RunTestCleanupMethodAsync if no cleanups by @Youssef1313 in [#6379](https://github.com/microsoft/testfx/pull/6379)
-  * Don't store fixture tests when the feature isn't used by @Youssef1313 in [#6378](https://github.com/microsoft/testfx/pull/6378)
-  * Avoid LINQ in TryExecuteFoldedDataDrivenTestsAsync by @Youssef1313 in [#6376](https://github.com/microsoft/testfx/pull/6376)
 * MSTEST0037: Recognize IsTrue(collection.\[Count|Length] \[==|>|!=] 0) patterns and cleanup by @Youssef1313 in [#6416](https://github.com/microsoft/testfx/pull/6416)
 * Improve collection.Count/Length detection in MSTEST0037 by @Youssef1313 in [#6428](https://github.com/microsoft/testfx/pull/6428)
 * Add analyzer for Assert APIs with format parameters (MSTEST0053) by @Copilot in [#6294](https://github.com/microsoft/testfx/pull/6294)
@@ -47,6 +36,17 @@ See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/
 * Fix MSTEST0037 false positive for Contains with type different from the generic parameter of `IEnumerable<T>` by @Youssef1313 in [#6607](https://github.com/microsoft/testfx/pull/6607)
 * Don't suggest HasCount when Length/Count access is on the "expected" side by @Youssef1313 in [#6608](https://github.com/microsoft/testfx/pull/6608)
 * Fix flow cancellation token codefix to use named arg when necessary by @Youssef1313 in [#6617](https://github.com/microsoft/testfx/pull/6617)
+* Performance improvements:
+  * Performance: Reduce unnecessary logic in UpdateInfoIfTestInitializeOrCleanupMethod by @Youssef1313 in [#6318](https://github.com/microsoft/testfx/pull/6318)
+  * Avoid ManagedNameHelper when possible by @Youssef1313 in [#6319](https://github.com/microsoft/testfx/pull/6319)
+  * Avoid accessing TestCase.Traits when possible by @Youssef1313 in [#6353](https://github.com/microsoft/testfx/pull/6353)
+  * Cleanup TestContextImplementation by @Youssef1313 in [#6352](https://github.com/microsoft/testfx/pull/6352)
+  * Prevent unnecessary `List<TestCase>` allocations by @Youssef1313 in [#6370](https://github.com/microsoft/testfx/pull/6370)
+  * Avoid iterator allocations by @Youssef1313 in [#6369](https://github.com/microsoft/testfx/pull/6369)
+  * Optimize tcm properties by @Youssef1313 in [#6372](https://github.com/microsoft/testfx/pull/6372)
+  * Early exit RunTestCleanupMethodAsync if no cleanups by @Youssef1313 in [#6379](https://github.com/microsoft/testfx/pull/6379)
+  * Don't store fixture tests when the feature isn't used by @Youssef1313 in [#6378](https://github.com/microsoft/testfx/pull/6378)
+  * Avoid LINQ in TryExecuteFoldedDataDrivenTestsAsync by @Youssef1313 in [#6376](https://github.com/microsoft/testfx/pull/6376)
 
 ### Housekeeping
 
