@@ -268,7 +268,8 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             $"test -p:TestingPlatformDotnetTestSupport=True --filter Category=Unit --logger trx \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
-            failIfReturnValueIsNotZero: false);
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(1, result.ExitCode);
         result.AssertOutputContains("VSTest-specific properties are set but will be ignored when using Microsoft.Testing.Platform.");
@@ -291,7 +292,8 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             $"test -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
-            failIfReturnValueIsNotZero: false);
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode);
     }
