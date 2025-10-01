@@ -29,7 +29,7 @@ MSTEST0045 | Usage | Warning | Usage | Info | UseCooperativeCancellationForTimeo
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0006 | Design | Info | AvoidExpectedExceptionAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0006)
+MSTEST0006 | Design | Warning | AvoidExpectedExceptionAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0006)
 MSTEST0034 | Usage | Info | UseClassCleanupBehaviorEndOfClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0034)
-MSTEST0039 | Usage | Warning | Usage | Info | UseNewerAssertThrowsAnalyzer
+MSTEST0039 | Usage | Warning | UseNewerAssertThrowsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0039)
 MSTEST0053 | Usage | Warning | AvoidAssertFormatParametersAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0053)
