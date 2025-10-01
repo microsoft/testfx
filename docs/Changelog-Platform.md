@@ -17,7 +17,6 @@ See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/
 * Dump child process on hang by @nohwnd in [#6574](https://github.com/microsoft/testfx/pull/6574)
 * \[MTP] Support Trx Description by @Youssef1313 in [#6464](https://github.com/microsoft/testfx/pull/6464)
 * \[MTP] Warn when VSTest arguments are passed via dotnet test when they will be ignored by @Copilot in #5698 (backport to rel/3.11) by @youssef-backport-bot in [#6634](https://github.com/microsoft/testfx/pull/6634)
-* Avoid unnecessary `List<string>` allocations in ObjectModelConverters by @Youssef1313 in [#6396](https://github.com/microsoft/testfx/pull/6396)
 
 ### Fixed
 
@@ -27,6 +26,7 @@ See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/
 * Implement discovery indicator fixes - show neutral progress colors and error for zero tests by @Copilot in [#6579](https://github.com/microsoft/testfx/pull/6579)
 * Add localized resource strings for TerminalTestReporter summary output by @Copilot in [#6602](https://github.com/microsoft/testfx/pull/6602)
 * Add DiagnosticSource 6.0.0 to MTP telemetry by @Youssef1313 in [#6638](https://github.com/microsoft/testfx/pull/6638)
+* Avoid unnecessary `List<string>` allocations in ObjectModelConverters by @Youssef1313 in [#6396](https://github.com/microsoft/testfx/pull/6396)
 
 ### Housekeeping
 
