@@ -30,8 +30,8 @@ See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/
 
 ### Housekeeping
 
-* Remove unused JsonRpc protocol properties by @Youssef1313 in https://github.com/microsoft/testfx/pull/6395
-* Rename ReadShort and WriteShort to ReadUShort and WriteUShort by @Youssef1313 in https://github.com/microsoft/testfx/pull/6530
+* Remove unused JsonRpc protocol properties by @Youssef1313 in [#6395](https://github.com/microsoft/testfx/pull/6395)
+* Rename ReadShort and WriteShort to ReadUShort and WriteUShort by @Youssef1313 in [#6530](https://github.com/microsoft/testfx/pull/6530)
 
 ### Artifacts
 
