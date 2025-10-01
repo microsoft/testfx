@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 Microsoft.Testing.Extensions.AppInsightsTelemetryProviderExtensions
 Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook
 static Microsoft.Testing.Extensions.AppInsightsTelemetryProviderExtensions.AddAppInsightsTelemetryProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 [TPEXP]const Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.OptionPrefix = '-' -> char
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
@@ -255,8 +255,8 @@ Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.TestFile
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Key.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Key.init -> void
-Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! Key, string! Value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! Key, string! Value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Value.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Value.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty
@@ -320,8 +320,8 @@ Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.TimingInfo(System.Date
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.GlobalTiming.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.StepTimings.get -> Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]!
-Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.TimingProperty(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo globalTiming, Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]! stepTimings) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.TimingProperty(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo globalTiming) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.TimingProperty(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo globalTiming, Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]! stepTimings) -> void
 Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer
 Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext
 Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext.CancellationToken.get -> System.Threading.CancellationToken
@@ -441,14 +441,14 @@ Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.Message.get -> string!
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMessageOutputDeviceData(string! message) -> void
 Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest
-Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest.DiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest.DiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> void
+Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest.DiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.IRequest
 Microsoft.Testing.Platform.Requests.IRequest.Session.get -> Microsoft.Testing.Platform.TestHost.TestSessionContext!
 Microsoft.Testing.Platform.Requests.ITestExecutionFilter
 Microsoft.Testing.Platform.Requests.RunTestExecutionRequest
-Microsoft.Testing.Platform.Requests.RunTestExecutionRequest.RunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.RunTestExecutionRequest.RunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> void
+Microsoft.Testing.Platform.Requests.RunTestExecutionRequest.RunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.TestExecutionRequest
 Microsoft.Testing.Platform.Requests.TestExecutionRequest.Filter.get -> Microsoft.Testing.Platform.Requests.ITestExecutionFilter!
 Microsoft.Testing.Platform.Requests.TestExecutionRequest.Session.get -> Microsoft.Testing.Platform.TestHost.TestSessionContext!
@@ -524,11 +524,11 @@ static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCritical(this Mic
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCriticalAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogDebug(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogDebugAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
-static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
+static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, System.Exception! ex) -> void
-static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, System.Exception! ex) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogInformation(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogInformationAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!

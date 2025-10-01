@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 Microsoft.Testing.Extensions.AzureDevOpsExtensions
 Microsoft.Testing.Extensions.AzureDevOpsReport.TestingPlatformBuilderHook
 static Microsoft.Testing.Extensions.AzureDevOpsExtensions.AddAzureDevOpsProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

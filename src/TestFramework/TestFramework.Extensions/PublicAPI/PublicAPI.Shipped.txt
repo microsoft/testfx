@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(string! fileName) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
@@ -11,6 +11,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Error = 2 -> Microsoft
 Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Informational = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
 Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel.Warning = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestContext() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.get -> object?[]?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestData.set -> void

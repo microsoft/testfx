@@ -1,8 +1,8 @@
-#nullable enable
+﻿#nullable enable
 Microsoft.Testing.Framework.AssertFailedException
 Microsoft.Testing.Framework.AssertFailedException.AssertFailedException() -> void
-Microsoft.Testing.Framework.AssertFailedException.AssertFailedException(string! message, System.Exception! ex) -> void
 Microsoft.Testing.Framework.AssertFailedException.AssertFailedException(string! message) -> void
+Microsoft.Testing.Framework.AssertFailedException.AssertFailedException(string! message, System.Exception! ex) -> void
 Microsoft.Testing.Framework.Configurations.ConfigurationExtensions
 Microsoft.Testing.Framework.Configurations.IConfiguration
 Microsoft.Testing.Framework.Configurations.IConfiguration.this[string! key].get -> string?
