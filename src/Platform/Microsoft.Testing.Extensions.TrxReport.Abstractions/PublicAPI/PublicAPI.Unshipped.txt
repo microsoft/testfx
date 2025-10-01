@@ -1,1 +1,83 @@
 #nullable enable
+Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.DebugOrTraceTrxMessage(string? message) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.StandardErrorTrxMessage(string? message) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.StandardOutputTrxMessage(string? message) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.TrxCategoriesProperty(string![]! categories) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.TrxExceptionProperty(string? message, string? stackTrace) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.TrxFullyQualifiedTypeNameProperty(string! fullyQualifiedTypeName) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.TrxMessage(string? message) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.TrxMessagesProperty(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]! messages) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.DebugOrTraceTrxMessage(string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.Deconstruct(out string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.Deconstruct(out string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.StandardErrorTrxMessage(string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.Deconstruct(out string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.StandardOutputTrxMessage(string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty!
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.Categories.init -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.Deconstruct(out string![]! Categories) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.TrxCategoriesProperty(string![]! Categories) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty!
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.Deconstruct(out string? Message, out string? StackTrace) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.Message.init -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.StackTrace.init -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.TrxExceptionProperty(string? Message, string? StackTrace) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty!
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.Deconstruct(out string! FullyQualifiedTypeName) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.FullyQualifiedTypeName.init -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.TrxFullyQualifiedTypeNameProperty(string! FullyQualifiedTypeName) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.Deconstruct(out string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.Message.init -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.TrxMessage(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage! original) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.TrxMessage(string? Message) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty!
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.Deconstruct(out Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]! Messages) -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty? other) -> bool
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.Messages.init -> void
+*REMOVED*Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.TrxMessagesProperty(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]! Messages) -> void
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.GetHashCode() -> int
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.ToString() -> string!
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.Equals(object? obj) -> bool
+*REMOVED*override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.GetHashCode() -> int
+*REMOVED*override sealed Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? other) -> bool
+*REMOVED*override sealed Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? other) -> bool
+*REMOVED*override sealed Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? other) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.operator !=(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty? right) -> bool
+*REMOVED*static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.operator ==(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty? left, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty? right) -> bool
+*REMOVED*virtual Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage!
+*REMOVED*virtual Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.EqualityContract.get -> System.Type!
+*REMOVED*virtual Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.Equals(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage? other) -> bool
+*REMOVED*virtual Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.PrintMembers(System.Text.StringBuilder! builder) -> bool

@@ -1,10 +1,10 @@
 #nullable enable
-~override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Equals(object! obj) -> bool
-~override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.ToString() -> string!
-~override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Equals(object! obj) -> bool
-~override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.ToString() -> string!
-~override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Equals(object! obj) -> bool
-~override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.ToString() -> string!
 abstract Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty!
 abstract Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.<Clone>$() -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty!
 Microsoft.Testing.Platform.Builder.TestApplication.DisposeAsync() -> System.Threading.Tasks.ValueTask

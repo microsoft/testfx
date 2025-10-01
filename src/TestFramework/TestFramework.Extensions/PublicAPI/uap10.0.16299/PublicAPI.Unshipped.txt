@@ -1,1 +1,5 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.UITestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethod) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.UITestMethodAttribute() -> void
+*REMOVED*override Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.Execute(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethod) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
