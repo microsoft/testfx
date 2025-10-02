@@ -141,6 +141,9 @@ public sealed partial class Assert
     private static string BuildUserMessageForExpectedExpressionAndCollectionExpression(string? format, string expectedExpression, string collectionExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", collectionExpression, "collection");
 
+    private static string BuildUserMessageForNotExpectedExpressionAndCollectionExpression(string? format, string notExpectedExpression, string collectionExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", collectionExpression, "collection");
+
     private static string BuildUserMessageForPredicateExpressionAndCollectionExpression(string? format, string predicateExpression, string collectionExpression)
         => BuildUserMessageForTwoExpressions(format, predicateExpression, "predicate", collectionExpression, "collection");
 
