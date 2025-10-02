@@ -414,22 +414,22 @@ public sealed partial class Assert
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="notExpected">The expected item.</param>
+    /// <param name="notExpected">The unexpected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Contains(notExpected))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
             ThrowAssertDoesNotContainItemFailed(userMessage);
         }
     }
@@ -437,24 +437,24 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
-    /// <param name="notExpected">The expected item.</param>
+    /// <param name="notExpected">The unexpected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
             if (object.Equals(notExpected, item))
             {
-                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
                 ThrowAssertDoesNotContainItemFailed(userMessage);
             }
         }
@@ -464,23 +464,23 @@ public sealed partial class Assert
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="notExpected">The expected item.</param>
+    /// <param name="notExpected">The unexpected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Contains(notExpected, comparer))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
             ThrowAssertDoesNotContainItemFailed(userMessage);
         }
     }
@@ -488,25 +488,25 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
-    /// <param name="notExpected">The expected item.</param>
+    /// <param name="notExpected">The unexpected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="expectedExpression">
-    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="collectionExpression">
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
             if (comparer.Equals(item, notExpected))
             {
-                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
                 ThrowAssertDoesNotContainItemFailed(userMessage);
             }
         }

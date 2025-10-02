@@ -9,23 +9,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     /// <summary>
-    /// Tests whether the specified string begins with the specified substring
+    /// Tests whether the specified string begins with the specified prefix
     /// and throws an exception if the test string does not start with the
-    /// substring.
+    /// prefix.
     /// </summary>
-    /// <param name="substring">
+    /// <param name="expectedPrefix">
     /// The string expected to be a prefix of <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
+    /// The string that is expected to begin with <paramref name="expectedPrefix"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
-    /// does not begin with <paramref name="substring"/>. The message is
+    /// does not begin with <paramref name="expectedPrefix"/>. The message is
     /// shown in test results.
     /// </param>
-    /// <param name="substringExpression">
-    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// <param name="expectedPrefixExpression">
+    /// The syntactic expression of expectedPrefix as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="valueExpression">
@@ -33,33 +33,33 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
+    /// <paramref name="value"/> is null, or <paramref name="expectedPrefix"/> is null,
+    /// or <paramref name="value"/> does not start with <paramref name="expectedPrefix"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => StartsWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
+    public static void StartsWith([NotNull] string? expectedPrefix, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(expectedPrefix))] string expectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => StartsWith(expectedPrefix, value, StringComparison.Ordinal, message, expectedPrefixExpression, valueExpression);
 
     /// <summary>
-    /// Tests whether the specified string begins with the specified substring
+    /// Tests whether the specified string begins with the specified prefix
     /// and throws an exception if the test string does not start with the
-    /// substring.
+    /// prefix.
     /// </summary>
-    /// <param name="substring">
+    /// <param name="expectedPrefix">
     /// The string expected to be a prefix of <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
+    /// The string that is expected to begin with <paramref name="expectedPrefix"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
-    /// does not begin with <paramref name="substring"/>. The message is
+    /// does not begin with <paramref name="expectedPrefix"/>. The message is
     /// shown in test results.
     /// </param>
-    /// <param name="substringExpression">
-    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// <param name="expectedPrefixExpression">
+    /// The syntactic expression of expectedPrefix as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="valueExpression">
@@ -67,38 +67,38 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
+    /// <paramref name="value"/> is null, or <paramref name="expectedPrefix"/> is null,
+    /// or <paramref name="value"/> does not start with <paramref name="expectedPrefix"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void StartsWith([NotNull] string? expectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedPrefix))] string expectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
-        CheckParameterNotNull(substring, "Assert.StartsWith", "substring", string.Empty);
-        if (!value.StartsWith(substring, comparisonType))
+        CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix", string.Empty);
+        if (!value.StartsWith(expectedPrefix, comparisonType))
         {
-            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
+            string userMessage = BuildUserMessageForExpectedPrefixExpressionAndValueExpression(message, expectedPrefixExpression, valueExpression);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, expectedPrefix, userMessage);
             ThrowAssertFailed("Assert.StartsWith", finalMessage);
         }
     }
 
     /// <summary>
-    /// Tests whether the specified string does not begin with the specified substring
-    /// and throws an exception if the test string does start with the substring.
+    /// Tests whether the specified string does not begin with the specified unexpected prefix
+    /// and throws an exception if the test string does start with the prefix.
     /// </summary>
-    /// <param name="substring">
-    /// The string expected to be a prefix of <paramref name="value"/>.
+    /// <param name="notExpectedPrefix">
+    /// The string not expected to be a prefix of <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
+    /// The string that is not expected to begin with <paramref name="notExpectedPrefix"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
-    /// does not begin with <paramref name="substring"/>. The message is
+    /// begins with <paramref name="notExpectedPrefix"/>. The message is
     /// shown in test results.
     /// </param>
-    /// <param name="substringExpression">
-    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// <param name="notExpectedPrefixExpression">
+    /// The syntactic expression of notExpectedPrefix as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="valueExpression">
@@ -106,32 +106,32 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
+    /// <paramref name="value"/> is null, or <paramref name="notExpectedPrefix"/> is null,
+    /// or <paramref name="value"/> does not start with <paramref name="notExpectedPrefix"/>.
     /// </exception>
-    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => DoesNotStartWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
+    public static void DoesNotStartWith([NotNull] string? notExpectedPrefix, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(notExpectedPrefix))] string notExpectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => DoesNotStartWith(notExpectedPrefix, value, StringComparison.Ordinal, message, notExpectedPrefixExpression, valueExpression);
 
     /// <summary>
-    /// Tests whether the specified string does not begin with the specified substring
-    /// and throws an exception if the test string does start with the substring.
+    /// Tests whether the specified string does not begin with the specified unexpected prefix
+    /// and throws an exception if the test string does start with the prefix.
     /// </summary>
-    /// <param name="substring">
-    /// The string expected to be a prefix of <paramref name="value"/>.
+    /// <param name="notExpectedPrefix">
+    /// The string not expected to be a prefix of <paramref name="value"/>.
     /// </param>
     /// <param name="value">
-    /// The string that is expected to begin with <paramref name="substring"/>.
+    /// The string that is not expected to begin with <paramref name="notExpectedPrefix"/>.
     /// </param>
     /// <param name="comparisonType">
     /// The comparison method to compare strings <paramref name="comparisonType"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="value"/>
-    /// does not begin with <paramref name="substring"/>. The message is
+    /// begins with <paramref name="notExpectedPrefix"/>. The message is
     /// shown in test results.
     /// </param>
-    /// <param name="substringExpression">
-    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// <param name="notExpectedPrefixExpression">
+    /// The syntactic expression of notExpectedPrefix as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <param name="valueExpression">
@@ -139,17 +139,17 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
+    /// <paramref name="value"/> is null, or <paramref name="notExpectedPrefix"/> is null,
+    /// or <paramref name="value"/> does not start with <paramref name="notExpectedPrefix"/>.
     /// </exception>
-    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotStartWith([NotNull] string? notExpectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedPrefix))] string notExpectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
-        CheckParameterNotNull(substring, "Assert.DoesNotStartWith", "substring", string.Empty);
-        if (value.StartsWith(substring, comparisonType))
+        CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix", string.Empty);
+        if (value.StartsWith(notExpectedPrefix, comparisonType))
         {
-            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, substring, userMessage);
+            string userMessage = BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(message, notExpectedPrefixExpression, valueExpression);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, notExpectedPrefix, userMessage);
             ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
         }
     }

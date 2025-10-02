@@ -109,6 +109,18 @@ public sealed partial class Assert
     private static string BuildUserMessageForSubstringExpressionAndValueExpression(string? format, string substringExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, substringExpression, "substring", valueExpression, "value");
 
+    private static string BuildUserMessageForExpectedSuffixExpressionAndValueExpression(string? format, string expectedSuffixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedSuffixExpression, "expectedSuffix", valueExpression, "value");
+
+    private static string BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(string? format, string notExpectedSuffixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedSuffixExpression, "notExpectedSuffix", valueExpression, "value");
+
+    private static string BuildUserMessageForExpectedPrefixExpressionAndValueExpression(string? format, string expectedPrefixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedPrefixExpression, "expectedPrefix", valueExpression, "value");
+
+    private static string BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(string? format, string notExpectedPrefixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedPrefixExpression, "notExpectedPrefix", valueExpression, "value");
+
     private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
 
