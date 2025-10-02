@@ -343,31 +343,6 @@ Actual: {2}</source>
         <target state="translated">(物件)</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">預期的例外狀況類型必須是 System.Exception 或衍生自 System.Exception 的類型。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">測試方法未擲回例外狀況。測試方法上定義的屬性 {0} 需要例外狀況。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">測試方法未擲回預期的例外狀況 {0}。{1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1}。例外狀況訊息: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1} 或是衍生自其的類型。例外狀況訊息: {2}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(因為發生例外狀況，所以無法取得類型 {0} 之例外狀況的訊息。)</target>

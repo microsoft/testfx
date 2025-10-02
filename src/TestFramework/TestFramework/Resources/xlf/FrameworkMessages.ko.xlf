@@ -343,31 +343,6 @@ Actual: {2}</source>
         <target state="translated">(개체)</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">예상 예외 형식은 System.Exception이거나 System.Exception에서 파생된 형식이어야 합니다.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">테스트 메서드에서 예외를 throw하지 않았습니다. 예외는 테스트 메서드에 정의된 {0} 특성에 의해 예상되었습니다.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">테스트 메서드에서 예상 예외 {0}을(를) throw하지 않았습니다. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외를 예상했습니다. 예외 메시지: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외 또는 해당 예외에서 파생된 형식을 예상했습니다. 예외 메시지: {2}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(예외로 인해 {0} 형식의 예외에 대한 메시지를 가져오지 못했습니다.)</target>

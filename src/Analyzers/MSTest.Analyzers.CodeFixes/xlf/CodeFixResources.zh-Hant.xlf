@@ -32,16 +32,6 @@
         <target state="new">Use assignment instead of 'out' parameter</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
-        <source>Use interpolated string instead of format parameters</source>
-        <target state="translated">請使用差補字串而不是格式參數</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
-        <source>Use 'string.Format' instead of format parameters</source>
-        <target state="translated">請使用 'string.Format' 而不是格式參數</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">將方法協助工具變更為 'private'</target>
@@ -58,11 +48,6 @@
         <note />
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
-        <source>Fix signature</source>
-        <target state="translated">修正簽章</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
         <source>Fix signature</source>
         <target state="translated">修正簽章</target>
         <note />
@@ -137,11 +122,6 @@
         <target state="new">Transform 'Execute' override to 'ExecuteAsync'</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
-        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="translated">使用 'Assert.ThrowsException&lt;T&gt;' 取代 '[ExpectedException]' 属性</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">新增 '[TestMethod]'</target>
@@ -165,11 +145,6 @@
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="new">Use 'DisplayName' property instead of string argument</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrows">
-        <source>Use '{0}'</source>
-        <target state="translated">使用 '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

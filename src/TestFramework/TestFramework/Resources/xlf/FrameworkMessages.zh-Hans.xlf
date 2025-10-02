@@ -343,31 +343,6 @@ Actual: {2}</source>
         <target state="translated">(对象)</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">预期的异常类型必须为 System.Exception 或从 System.Exception 派生的类型。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">测试方法未引发异常。预期会因测试方法上定义的属性 {0} 引发一个异常。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">测试方法未引发预期异常 {0}. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">测试方法引发异常 {0}，但预期异常是 {1}。异常消息: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">测试方法引发异常 {0}，但预期异常是 {1} 或其派生类型。异常消息: {2}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(因异常而未能获取类型为 {0} 的异常的消息。)</target>

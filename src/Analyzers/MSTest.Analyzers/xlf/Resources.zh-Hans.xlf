@@ -132,31 +132,6 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">不要将 “Assert.AreSame” 或 “Assert.AreNotSame” 与值类型一起使用</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
-        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="translated">将 ‘{0}’ 替换为 string.Format 或字符串内插</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersTitle">
-        <source>Avoid using Assert methods with format parameters</source>
-        <target state="translated">避免将 Assert 方法与格式参数配合使用</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="translated">首选“Assert.ThrowsExactly”或“Assert.ThrowsExactlyAsync”，而不是“[ExpectedException]”，因为它确保只有预期调用才会引发预期异常。断言 API 还提供更多的灵活性，并允许你断言异常的额外属性。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="translated">首先“Assert.ThrowsExactly/ThrowsExactlyAsync”而不是“[ExpectedException]”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
-        <source>Avoid '[ExpectedException]'</source>
-        <target state="translated">避免 "[ExpectedException]"</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
         <target state="translated">移除 "DynamicDataSourceType" 参数以使用默认的自动检测行为</target>
@@ -702,21 +677,6 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">使用 TestContext.CancellationToken 而不是 TestContext.CancellationTokenSource.Token</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
-        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">如果不使用 "ClassCleanupBehavior.EndOfClass"，"[ClassCleanup]" 将默认在程序集末尾运行，而不是在类的末尾运行。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">将 "ClassCleanupBehavior.EndOfClass" 与 "[ClassCleanup]" 配合使用</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">将 "ClassCleanupBehavior.EndOfClass" 与 "[ClassCleanup]" 配合使用</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
@@ -962,16 +922,6 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">只能对测试类或测试方法指定 "[DeploymentItem]"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsMessageFormat">
-        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="translated">使用 “Assert.ThrowsExactly” 而不是 “Assert.ThrowsException”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsTitle">
-        <source>Use newer methods to assert exceptions</source>
-        <target state="translated">使用较新的方法断言异常</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
