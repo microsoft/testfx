@@ -343,31 +343,6 @@ Gerçekte olan: {2}</target>
         <target state="translated">(nesne)</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">Beklenen özel durum türü, System.Exception türü veya System.Exception'dan türetilmiş bir tür olmalıdır.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">Test metodu bir özel durum oluşturmadı. Test metodunda tanımlanan {0} özniteliği tarafından bir özel durum bekleniyordu.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">Test yöntemi beklenen {0} özel durumunu oluşturmadı. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu bekleniyordu. Özel durum iletisi: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu veya ondan türetilmiş bir tür bekleniyordu. Özel durum iletisi: {2}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(Bir özel durum nedeniyle, {0} türündeki özel durum iletisi alınamadı.)</target>
