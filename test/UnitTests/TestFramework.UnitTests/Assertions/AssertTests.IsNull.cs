@@ -92,4 +92,32 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Be($"Assert.IsNotNull failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
+
+    public void IsNull_NullableMessage_PassNull_ShouldPass()
+    {
+        string? nullMessage = null;
+        Assert.IsNull(null, nullMessage);
+    }
+
+    public void IsNull_NullableMessage_PassNonNull_ShouldFail()
+    {
+        string? nullMessage = null;
+        Action action = () => Assert.IsNull(new object(), nullMessage);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Be("Assert.IsNull failed. 'value' expression: 'new object()'. (null)");
+    }
+
+    public void IsNotNull_NullableMessage_PassNonNull_ShouldPass()
+    {
+        string? nullMessage = null;
+        Assert.IsNotNull(new object(), nullMessage);
+    }
+
+    public void IsNotNull_NullableMessage_PassNull_ShouldFail()
+    {
+        string? nullMessage = null;
+        Action action = () => Assert.IsNotNull(null, nullMessage);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Be("Assert.IsNotNull failed. 'value' expression: 'null'. (null)");
+    }
 }

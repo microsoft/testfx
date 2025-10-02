@@ -1597,6 +1597,37 @@ public partial class AssertTests : TestContainer
             """);
     }
 
+    public void AreEqual_NullableMessage_PassesWhenEqual()
+    {
+        string? nullMessage = null;
+        Assert.AreEqual(1, 1, nullMessage);
+    }
+
+    public void AreEqual_NullableMessage_FailsWhenNotEqual()
+    {
+        string? nullMessage = null;
+        Action action = () => Assert.AreEqual(1, 2, nullMessage);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("(null)");
+    }
+
+    public void AreEqual_UseCaseWithConditionalNullMessage_PassesWhenEqual()
+    {
+        // Simulating the use case: Assert.AreEqual(OperateResultStatus.Success, result.Status, result.Reason)
+        // where result.Reason is null when successful
+        var result = new { Status = "Success", Reason = (string?)null };
+        Assert.AreEqual("Success", result.Status, result.Reason);
+    }
+
+    public void AreEqual_UseCaseWithConditionalNullMessage_FailsWhenNotEqual()
+    {
+        // Simulating the use case where result is not successful and Reason has a value
+        var result = new { Status = "Failure", Reason = "Expected operation to succeed" };
+        Action action = () => Assert.AreEqual("Success", result.Status, result.Reason);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("Expected operation to succeed");
+    }
+
     private string FormatStringPreview(Tuple<string, string, int> tuple)
         => $"""
             "{tuple.Item1}"
