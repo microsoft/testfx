@@ -182,12 +182,12 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static TException Throws<TException>(Action action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+    public static TException Throws<TException>(Action action, string? message = null, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: false, message, actionExpression);
 
     /// <inheritdoc cref="Throws{TException}(Action, string, string)"/>
-    public static TException Throws<TException>(Func<object?> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+    public static TException Throws<TException>(Func<object?> action, string? message = null, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
         => ThrowsException<TException>(() => _ = action(), isStrictType: false, message, actionExpression);
 
@@ -262,12 +262,12 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static TException ThrowsExactly<TException>(Action action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+    public static TException ThrowsExactly<TException>(Action action, string? message = null, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
         => ThrowsException<TException>(action, isStrictType: true, message, actionExpression);
 
     /// <inheritdoc cref="ThrowsExactly{TException}(Action, string, string)" />
-    public static TException ThrowsExactly<TException>(Func<object?> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+    public static TException ThrowsExactly<TException>(Func<object?> action, string? message = null, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
         => ThrowsException<TException>(() => _ = action(), isStrictType: true, message, actionExpression);
 
@@ -383,7 +383,7 @@ public sealed partial class Assert
     /// The exception that was thrown.
     /// </returns>
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, string? message = null, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         where TException : Exception
         => ThrowsExceptionAsync<TException>(action, isStrictType: false, message, actionExpression);
@@ -413,7 +413,7 @@ public sealed partial class Assert
     /// The exception that was thrown.
     /// </returns>
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string message = "", [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, string? message = null, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         where TException : Exception
         => ThrowsExceptionAsync<TException>(action, isStrictType: true, message, actionExpression);

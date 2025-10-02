@@ -36,7 +36,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => StartsWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -70,7 +70,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void StartsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.StartsWith", "substring", string.Empty);
@@ -109,7 +109,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => DoesNotStartWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -142,7 +142,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotStartWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.DoesNotStartWith", "substring", string.Empty);

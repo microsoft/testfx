@@ -21,6 +21,6 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string message = "")
+    public static void Fail(string? message = null)
         => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message));
 }

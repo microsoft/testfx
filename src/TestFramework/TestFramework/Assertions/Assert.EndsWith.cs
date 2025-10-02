@@ -36,7 +36,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => EndsWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -70,7 +70,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not start with <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void EndsWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.EndsWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.EndsWith", "substring", string.Empty);
@@ -110,7 +110,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> ends with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => DoesNotEndWith(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -144,7 +144,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> ends with <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotEndWith([NotNull] string? substring, [NotNull] string? value, StringComparison comparisonType, string? message = null, [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value", string.Empty);
         CheckParameterNotNull(substring, "Assert.DoesNotEndWith", "substring", string.Empty);

@@ -195,7 +195,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message = null, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Any())
         {
@@ -215,7 +215,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void IsNotEmpty(IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void IsNotEmpty(IEnumerable collection, string? message = null, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Cast<object>().Any())
         {
@@ -256,7 +256,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message = null, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount("HasCount", expected, collection, message, collectionExpression);
 
     /// <summary>
@@ -269,7 +269,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void HasCount(int expected, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void HasCount(int expected, IEnumerable collection, string? message = null, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount("HasCount", expected, collection, message, collectionExpression);
 
     #endregion // HasCount
@@ -301,7 +301,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void IsEmpty<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void IsEmpty<T>(IEnumerable<T> collection, string? message = null, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount("IsEmpty", 0, collection, message, collectionExpression);
 
     /// <summary>
@@ -313,7 +313,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void IsEmpty(IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void IsEmpty(IEnumerable collection, string? message = null, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount("IsEmpty", 0, collection, message, collectionExpression);
 
     #endregion // IsEmpty

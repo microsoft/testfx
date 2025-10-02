@@ -21,7 +21,7 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Inconclusive(string message = "")
+    public static void Inconclusive(string? message = null)
     {
         string userMessage = BuildUserMessage(message);
         throw new AssertInconclusiveException(

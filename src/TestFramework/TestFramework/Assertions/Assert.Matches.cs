@@ -37,7 +37,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="pattern"/> is null,
     /// or <paramref name="value"/> does not match <paramref name="pattern"/>.
     /// </exception>
-    public static void MatchesRegex([NotNull] Regex? pattern, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void MatchesRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.MatchesRegex", "value", string.Empty);
         CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern", string.Empty);
@@ -78,7 +78,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="pattern"/> is null,
     /// or <paramref name="value"/> does not match <paramref name="pattern"/>.
     /// </exception>
-    public static void MatchesRegex([NotNull] string? pattern, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void MatchesRegex([NotNull] string? pattern, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => MatchesRegex(ToRegex(pattern), value, message, patternExpression, valueExpression);
 
     #endregion // MatchesRegex
@@ -113,7 +113,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="pattern"/> is null,
     /// or <paramref name="value"/> MatchesRegex <paramref name="pattern"/>.
     /// </exception>
-    public static void DoesNotMatchRegex([NotNull] Regex? pattern, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotMatchRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value", string.Empty);
         CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern", string.Empty);
@@ -154,7 +154,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="pattern"/> is null,
     /// or <paramref name="value"/> MatchesRegex <paramref name="pattern"/>.
     /// </exception>
-    public static void DoesNotMatchRegex([NotNull] string? pattern, [NotNull] string? value, string message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotMatchRegex([NotNull] string? pattern, [NotNull] string? value, string? message = null, [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => DoesNotMatchRegex(ToRegex(pattern), value, message, patternExpression, valueExpression);
 
     #endregion // DoesNotMatchRegex

@@ -170,7 +170,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(T? expected, T? actual, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreSame<T>(T? expected, T? actual, string? message = null, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (!IsAreSameFailing(expected, actual))
         {
@@ -236,7 +236,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame<T>(T? notExpected, T? actual, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotSame<T>(T? notExpected, T? actual, string? message = null, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (IsAreNotSameFailing(notExpected, actual))
         {
