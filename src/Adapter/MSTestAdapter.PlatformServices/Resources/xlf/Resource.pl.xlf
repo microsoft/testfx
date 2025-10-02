@@ -570,7 +570,7 @@ Błąd: {1}</target>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="translated">Metoda testowa {0}.{1} zgłosiła wyjątek: 
+        <target state="new">Test method {0}.{1} threw exception:
 {2}</target>
         <note />
       </trans-unit>
