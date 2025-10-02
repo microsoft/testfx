@@ -343,31 +343,6 @@ Actual: {2}</source>
         <target state="translated">(объект)</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">Тип ожидаемого исключения должен быть System.Exception или производным от System.Exception.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">Метод теста не создал исключение. Исключение ожидалось атрибутом {0}, определенным в методе теста.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">Метод теста не создал ожидаемое исключение ({0}). {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">Метод теста создал исключение "{0}", а ожидалось исключение "{1}". Сообщение исключения: "{2}".</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">Метод теста создал исключение "{0}", а ожидалось исключение "{1}" или производный от него тип. Сообщение исключения: "{2}".</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(Не удалось получить сообщение для исключения с типом {0} в связи с возникновением исключения.)</target>

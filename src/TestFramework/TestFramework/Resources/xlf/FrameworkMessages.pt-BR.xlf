@@ -343,31 +343,6 @@ Real: {2}</target>
         <target state="translated">(objeto)</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">O tipo de exceção esperado deve ser System.Exception ou um tipo derivado de System.Exception.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">O método de teste não emitiu uma exceção. Uma exceção era esperada pelo atributo {0} definido no método de teste.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">O método de teste não emitiu a exceção esperada {0}. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">O método de teste emitiu a exceção {0}, mas a exceção {1} era esperada. Mensagem de exceção: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">O método de teste emitiu a exceção {0}, mas a exceção {1} ou um tipo derivado dela eram esperados. Mensagem da exceção: {2}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(Falha ao obter a mensagem para uma exceção do tipo {0} devido a uma exceção.)</target>
