@@ -331,21 +331,7 @@ public sealed partial class Assert
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
-    {
-        int actualCount = 0;
-        foreach (object? item in collection)
-        {
-            actualCount++;
-        }
-
-        if (actualCount == expected)
-        {
-            return;
-        }
-
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
-    }
+        => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
 
     [DoesNotReturn]
     private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
