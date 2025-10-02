@@ -401,7 +401,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual<T>(T? expected, T? actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEqual(expected, actual, EqualityComparer<T>.Default, message, expectedExpression, actualExpression);
 
     /// <summary>
@@ -481,7 +481,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (!AreEqualFailing(expected, actual, comparer))
         {
@@ -734,7 +734,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual<T>(T? notExpected, T? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEqual(notExpected, actual, EqualityComparer<T>.Default, message, notExpectedExpression, actualExpression);
 
     /// <inheritdoc cref="AreNotEqual{T}(T, T, string, string, string)" />
@@ -784,7 +784,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (!AreNotEqualFailing(notExpected, actual, comparer))
         {
@@ -833,7 +833,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(float expected, float actual, float delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual(float expected, float actual, float delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -880,7 +880,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(float notExpected, float actual, float delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual(float notExpected, float actual, float delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -948,7 +948,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(decimal expected, decimal actual, decimal delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual(decimal expected, decimal actual, decimal delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -995,7 +995,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -1045,7 +1045,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(long expected, long actual, long delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual(long expected, long actual, long delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -1092,7 +1092,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(long notExpected, long actual, long delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual(long notExpected, long actual, long delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -1141,7 +1141,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(double expected, double actual, double delta, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual(double expected, double actual, double delta, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreEqualFailing(expected, actual, delta))
         {
@@ -1188,7 +1188,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual(double notExpected, double actual, double delta, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
@@ -1262,7 +1262,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, expectedExpression, actualExpression);
 
     /// <inheritdoc cref="AreEqual(string?, string?, bool, string, string, string)" />
@@ -1314,7 +1314,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
@@ -1357,7 +1357,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, notExpectedExpression, actualExpression);
 
     /// <inheritdoc cref="AreNotEqual(string?, string?, bool, string, string, string)" />
@@ -1410,7 +1410,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))
