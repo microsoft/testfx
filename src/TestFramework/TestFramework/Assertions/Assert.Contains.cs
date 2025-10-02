@@ -120,7 +120,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <returns>The item.</returns>
-    public static T ContainsSingle<T>(IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static T ContainsSingle<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         int actualCount = collection.Count();
         if (actualCount == 1)
@@ -151,7 +151,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
@@ -187,7 +187,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (!collection.Contains(expected))
         {
@@ -210,7 +210,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains(object? expected, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
@@ -240,7 +240,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (!collection.Contains(expected, comparer))
         {
@@ -264,7 +264,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
@@ -293,7 +293,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (!collection.Any(predicate))
         {
@@ -316,7 +316,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
@@ -358,7 +358,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
-    public static void Contains(string substring, string value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void Contains(string substring, string value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => Contains(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -392,7 +392,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
     /// </exception>
-    public static void Contains(string substring, string value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
 #if NETFRAMEWORK || NETSTANDARD
         if (value.IndexOf(substring, comparisonType) < 0)
@@ -425,7 +425,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Contains(notExpected))
         {
@@ -448,7 +448,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(object? notExpected, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
@@ -476,7 +476,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Contains(notExpected, comparer))
         {
@@ -500,7 +500,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
@@ -527,7 +527,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Any(predicate))
         {
@@ -550,7 +550,7 @@ public sealed partial class Assert
     /// The syntactic expression of collection as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         foreach (object? item in collection)
         {
@@ -590,7 +590,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotContain(string substring, string value, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotContain(string substring, string value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => DoesNotContain(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
 
     /// <summary>
@@ -624,7 +624,7 @@ public sealed partial class Assert
     /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
-    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
 #if NETFRAMEWORK || NETSTANDARD
         if (value.IndexOf(substring, comparisonType) >= 0)
@@ -663,7 +663,7 @@ public sealed partial class Assert
     /// The syntactic expression of value as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, string message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
         if (maxValue.CompareTo(minValue) <= 0)
