@@ -132,31 +132,6 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Verwenden Sie "Assert.AreSame" oder "Assert.AreNotSame" nicht mit Werttypen.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
-        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="translated">„{0}“ durch Formatparameter mit string.Format oder Zeichenfolgeninterpolation ersetzen</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersTitle">
-        <source>Avoid using Assert methods with format parameters</source>
-        <target state="translated">Verwendung von Assert-Methoden mit Formatparametern vermeiden</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="translated">„Assert.ThrowsExactly“ oder „Assert.ThrowsExactlyAsync“ gegenüber „[ExpectedException]“ bevorzugen, da dadurch sichergestellt wird, dass nur der erwartete Aufruf die erwartete Ausnahme auslöst. Die Assert-APIs bieten außerdem mehr Flexibilität und ermöglichen es Ihnen, zusätzliche Eigenschaften der Ausführung zu bestätigen.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="translated">„Assert.ThrowsExactly/ThrowsExactlyAsync“ gegenüber „[ExpectedException]“ bevorzugen</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
-        <source>Avoid '[ExpectedException]'</source>
-        <target state="translated">„[ExpectedException]“ vermeiden</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
         <target state="translated">Entfernen Sie das Argument „DynamicDataSourceType“, um das standardmäßige automatische Erkennungsverhalten zu verwenden.</target>
@@ -703,21 +678,6 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">TestContext.CancellationToken anstelle von TestContext.CancellationTokenSource.Token verwenden</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
-        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">Ohne Verwendung von „ClassCleanupBehavior.EndOfClass“ wird „[ClassCleanup]“ standardmäßig am Ende der Assembly und nicht am Ende der Klasse ausgeführt.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">Verwenden von „ClassCleanupBehavior.EndOfClass“ mit „[ClassCleanup]“</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">Verwenden von „ClassCleanupBehavior.EndOfClass“ mit „[ClassCleanup]“</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
@@ -963,16 +923,6 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">„[DeploymentItem]“ kann nur für die Testklasse oder Testmethode angegeben werden.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsMessageFormat">
-        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="translated">Verwenden Sie "Assert.ThrowsExactly" anstelle von "Assert.ThrowsException".</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsTitle">
-        <source>Use newer methods to assert exceptions</source>
-        <target state="translated">Neuere Methoden zum Bestätigen von Ausnahmen verwenden</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
