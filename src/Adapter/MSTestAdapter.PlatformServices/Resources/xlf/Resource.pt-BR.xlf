@@ -177,6 +177,13 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <target state="translated">item de implantação '{0}' (diretório de saída '{1}')</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DiscoveryErrors">
+        <source>Discovery failed for source '{0}' with {1} errors:
+{2}</source>
+        <target state="new">Discovery failed for source '{0}' with {1} errors:
+{2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DiscoveryWarning">
         <source>[MSTest][Discovery][{0}] {1}</source>
         <target state="translated">[MSTest][Descoberta][{0}] {1}</target>
@@ -561,7 +568,7 @@ Erro: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
-        <source>Test method {0}.{1} threw exception: 
+        <source>Test method {0}.{1} threw exception:
 {2}</source>
         <target state="translated">O método de teste {0}.{1} lançou a exceção: 
 {2}</target>

@@ -30,10 +30,18 @@ public sealed partial class Assert
     /// is not greater than <paramref name="lowerBound"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="lowerBoundExpression">
+    /// The syntactic expression of lowerBound as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not greater than <paramref name="lowerBound"/>.
     /// </exception>
-    public static void IsGreaterThan<T>(T lowerBound, T value, string message = "")
+    public static void IsGreaterThan<T>(T lowerBound, T value, string message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(lowerBound) > 0)
@@ -41,7 +49,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
         ThrowAssertIsGreaterThanFailed(lowerBound, value, userMessage);
     }
 
@@ -67,10 +75,18 @@ public sealed partial class Assert
     /// is not greater than or equal to <paramref name="lowerBound"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="lowerBoundExpression">
+    /// The syntactic expression of lowerBound as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not greater than or equal to <paramref name="lowerBound"/>.
     /// </exception>
-    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string message = "")
+    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(lowerBound) >= 0)
@@ -78,7 +94,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
         ThrowAssertIsGreaterThanOrEqualToFailed(lowerBound, value, userMessage);
     }
 
@@ -104,10 +120,18 @@ public sealed partial class Assert
     /// is not less than <paramref name="upperBound"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="upperBoundExpression">
+    /// The syntactic expression of upperBound as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not less than <paramref name="upperBound"/>.
     /// </exception>
-    public static void IsLessThan<T>(T upperBound, T value, string message = "")
+    public static void IsLessThan<T>(T upperBound, T value, string message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(upperBound) < 0)
@@ -115,7 +139,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
         ThrowAssertIsLessThanFailed(upperBound, value, userMessage);
     }
 
@@ -141,10 +165,18 @@ public sealed partial class Assert
     /// is not less than or equal to <paramref name="upperBound"/>. The message is shown in
     /// test results.
     /// </param>
+    /// <param name="upperBoundExpression">
+    /// The syntactic expression of upperBound as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not less than or equal to <paramref name="upperBound"/>.
     /// </exception>
-    public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string message = "")
+    public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(upperBound) <= 0)
@@ -152,7 +184,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message);
+        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
         ThrowAssertIsLessThanOrEqualToFailed(upperBound, value, userMessage);
     }
 
@@ -174,10 +206,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="value"/>
     /// is not positive. The message is shown in test results.
     /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not positive.
     /// </exception>
-    public static void IsPositive<T>(T value, string message = "")
+    public static void IsPositive<T>(T value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
         var zero = default(T);
@@ -185,14 +221,14 @@ public sealed partial class Assert
         // Handle special case for floating point NaN values
         if (value is float.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
 
         if (value is double.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsPositiveFailed(value, userMessage);
             return;
         }
@@ -202,7 +238,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessage(message);
+        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
         ThrowAssertIsPositiveFailed(value, userMessage2);
     }
 
@@ -224,10 +260,14 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="value"/>
     /// is not negative. The message is shown in test results.
     /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not negative.
     /// </exception>
-    public static void IsNegative<T>(T value, string message = "")
+    public static void IsNegative<T>(T value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
         var zero = default(T);
@@ -235,14 +275,14 @@ public sealed partial class Assert
         // Handle special case for floating point NaN values
         if (value is float.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
 
         if (value is double.NaN)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
             ThrowAssertIsNegativeFailed(value, userMessage);
             return;
         }
@@ -252,7 +292,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessage(message);
+        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
         ThrowAssertIsNegativeFailed(value, userMessage2);
     }
 

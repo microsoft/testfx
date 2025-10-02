@@ -6,12 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <summary>
 /// To read settings from the runsettings xml for the corresponding platform service.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public interface ISettingsProvider
+internal interface ISettingsProvider
 {
     /// <summary>
     /// Load settings from the xml reader instance which are specific

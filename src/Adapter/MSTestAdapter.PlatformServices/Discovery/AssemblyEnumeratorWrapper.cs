@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -20,11 +21,8 @@ internal sealed class AssemblyEnumeratorWrapper
     /// <summary>
     /// Gets test elements from an assembly.
     /// </summary>
-    /// <param name="assemblyFileName"> The assembly file name. </param>
-    /// <param name="runSettings"> The run Settings. </param>
-    /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> A collection of test elements. </returns>
-    internal ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, out List<string> warnings)
     {
         warnings = [];
 
@@ -35,65 +33,52 @@ internal sealed class AssemblyEnumeratorWrapper
 
         string fullFilePath = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(assemblyFileName);
 
+        if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
+        {
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
+            throw new FileNotFoundException(message);
+        }
+
+        if (!testSourceHandler.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
+        {
+            return null;
+        }
+
         try
         {
-            if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
-            {
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
-                throw new FileNotFoundException(message);
-            }
-
-            if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
-            {
-                return null;
-            }
-
             // Load the assembly in isolation if required.
             AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings);
             warnings.AddRange(result.Warnings);
             return result.TestElements;
         }
-        catch (FileNotFoundException ex)
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            warnings.Add(message);
-
-            return null;
-        }
         catch (ReflectionTypeLoadException ex)
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
-            warnings.Add(message);
-
             if (ex.LoaderExceptions != null)
             {
+                if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
+                {
+                    // This exception might be more clear than the ReflectionTypeLoadException, so we throw it.
+                    throw singleLoaderException;
+                }
+
+                // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
                 }
             }
 
-            return null;
+            throw;
         }
         catch (BadImageFormatException)
         {
-            // Ignore BadImageFormatException when loading native dll in managed adapter.
-            return null;
-        }
-        catch (Exception ex)
-        {
-            // Catch all exceptions, if discoverer fails to load the dll then let caller continue with other sources.
-            // Discover test doesn't work if there is a managed C++ project in solution
-            // Assembly.Load() fails to load the managed cpp executable, with FileLoadException. It can load the dll
-            // successfully though. This is known CLR issue.
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            string message = ex is FileNotFoundException fileNotFoundEx ? fileNotFoundEx.Message : string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+            if (!IsManagedAssembly(fullFilePath))
+            {
+                // Ignore BadImageFormatException when loading native dll in managed adapter.
+                return null;
+            }
 
-            warnings.Add(message);
-            return null;
+            throw;
         }
     }
 
@@ -121,5 +106,63 @@ internal sealed class AssemblyEnumeratorWrapper
         // of strings normally (by reference), and we were mutating that collection in the appdomain.
         // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
         return assemblyEnumerator.EnumerateAssembly(fullFilePath);
+    }
+
+    private static bool IsManagedAssembly(string fileName)
+    {
+        // Copy from https://stackoverflow.com/a/15608028/5108631
+        using var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+        using var binaryReader = new BinaryReader(fileStream);
+        if (fileStream.Length < 64)
+        {
+            return false;
+        }
+
+        // PE Header starts @ 0x3C (60). Its a 4 byte header.
+        fileStream.Position = 0x3C;
+        uint peHeaderPointer = binaryReader.ReadUInt32();
+        if (peHeaderPointer == 0)
+        {
+            peHeaderPointer = 0x80;
+        }
+
+        // Ensure there is at least enough room for the following structures:
+        //     24 byte PE Signature & Header
+        //     28 byte Standard Fields         (24 bytes for PE32+)
+        //     68 byte NT Fields               (88 bytes for PE32+)
+        // >= 128 byte Data Dictionary Table
+        if (peHeaderPointer > fileStream.Length - 256)
+        {
+            return false;
+        }
+
+        // Check the PE signature.  Should equal 'PE\0\0'.
+        fileStream.Position = peHeaderPointer;
+        uint peHeaderSignature = binaryReader.ReadUInt32();
+        if (peHeaderSignature != 0x00004550)
+        {
+            return false;
+        }
+
+        // skip over the PEHeader fields
+        fileStream.Position += 20;
+
+        const ushort PE32 = 0x10b;
+        const ushort PE32Plus = 0x20b;
+
+        // Read PE magic number from Standard Fields to determine format.
+        ushort peFormat = binaryReader.ReadUInt16();
+        if (peFormat is not PE32 and not PE32Plus)
+        {
+            return false;
+        }
+
+        // Read the 15th Data Dictionary RVA field which contains the CLI header RVA.
+        // When this is non-zero then the file contains CLI data otherwise not.
+        ushort dataDictionaryStart = (ushort)(peHeaderPointer + (peFormat == PE32 ? 232 : 248));
+        fileStream.Position = dataDictionaryStart;
+
+        uint cliHeaderRva = binaryReader.ReadUInt32();
+        return cliHeaderRva != 0;
     }
 }

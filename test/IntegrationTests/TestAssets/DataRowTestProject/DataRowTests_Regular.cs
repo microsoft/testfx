@@ -24,7 +24,6 @@ public class DataRowTests_Regular
 
     [TestCategory("DataRowOptionalInvalidArguments")]
     [TestMethod]
-    [ExpectedException(typeof(System.Reflection.TargetParameterCountException))]
     [DataRow]
     [DataRow(2)]
     [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]

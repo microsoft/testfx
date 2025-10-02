@@ -20,16 +20,6 @@ public sealed class VSTestRunTestExecutionRequest : RunTestExecutionRequest
     /// <param name="assemblyPaths">The assembly paths.</param>
     /// <param name="runContext">The VSTest run context.</param>
     /// <param name="frameworkHandle">The VSTest framework handle.</param>
-    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
-    public VSTestRunTestExecutionRequest(TestSessionContext session, VSTestTestExecutionFilter executionFilter, string[] assemblyPaths,
-        IRunContext runContext, IFrameworkHandle frameworkHandle)
-        : base(session, executionFilter)
-    {
-        AssemblyPaths = assemblyPaths;
-        RunContext = runContext;
-        FrameworkHandle = frameworkHandle;
-    }
-
     internal VSTestRunTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter, string[] assemblyPaths,
         IRunContext runContext, IFrameworkHandle frameworkHandle)
         : base(session, executionFilter)
@@ -38,13 +28,6 @@ public sealed class VSTestRunTestExecutionRequest : RunTestExecutionRequest
         RunContext = runContext;
         FrameworkHandle = frameworkHandle;
     }
-
-    /// <summary>
-    /// Gets the VSTest filter.
-    /// </summary>
-    [Obsolete("VSTestTestExecutionFilter always have null TestCases and should not be used.", error: true)]
-    public VSTestTestExecutionFilter VSTestFilter
-        => VSTestTestExecutionFilter.Instance;
 
     /// <summary>
     /// Gets the array of assembly paths.

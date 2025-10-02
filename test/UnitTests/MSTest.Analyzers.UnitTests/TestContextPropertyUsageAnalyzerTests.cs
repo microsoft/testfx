@@ -25,9 +25,7 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = [|testContext.TestData|];
                     _ = [|testContext.TestDisplayName|];
                     _ = [|testContext.TestName|];
-                    _ = [|testContext.ManagedMethod|];
                     _ = [|testContext.FullyQualifiedTestClassName|];
-                    _ = [|testContext.ManagedType|];
                 }
             }
             """;
@@ -51,9 +49,7 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = [|testContext.TestData|];
                     _ = [|testContext.TestDisplayName|];
                     _ = [|testContext.TestName|];
-                    _ = [|testContext.ManagedMethod|];
                     _ = [|testContext.FullyQualifiedTestClassName|];
-                    _ = [|testContext.ManagedType|];
                 }
 
                 private static TestContext GetTestContext() => null;
@@ -78,10 +74,8 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = [|testContext.TestData|];
                     _ = [|testContext.TestDisplayName|];
                     _ = [|testContext.TestName|];
-                    _ = [|testContext.ManagedMethod|];
                     // These should NOT trigger diagnostics in class initialize
                     _ = testContext.FullyQualifiedTestClassName;
-                    _ = testContext.ManagedType;
                 }
             }
             """;
@@ -105,10 +99,8 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = [|testContext.TestData|];
                     _ = [|testContext.TestDisplayName|];
                     _ = [|testContext.TestName|];
-                    _ = [|testContext.ManagedMethod|];
                     // These should NOT trigger diagnostics in class cleanup
                     _ = testContext.FullyQualifiedTestClassName;
-                    _ = testContext.ManagedType;
                 }
 
                 private static TestContext GetTestContext() => null;
@@ -136,9 +128,7 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = TestContext.TestData;
                     _ = TestContext.TestDisplayName;
                     _ = TestContext.TestName;
-                    _ = TestContext.ManagedMethod;
                     _ = TestContext.FullyQualifiedTestClassName;
-                    _ = TestContext.ManagedType;
                 }
             }
             """;
@@ -164,9 +154,7 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = TestContext.TestData;
                     _ = TestContext.TestDisplayName;
                     _ = TestContext.TestName;
-                    _ = TestContext.ManagedMethod;
                     _ = TestContext.FullyQualifiedTestClassName;
-                    _ = TestContext.ManagedType;
                 }
             }
             """;
@@ -192,9 +180,7 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                     _ = TestContext.TestData;
                     _ = TestContext.TestDisplayName;
                     _ = TestContext.TestName;
-                    _ = TestContext.ManagedMethod;
                     _ = TestContext.FullyQualifiedTestClassName;
-                    _ = TestContext.ManagedType;
                 }
             }
             """;
@@ -248,7 +234,6 @@ public sealed class TestContextPropertyUsageAnalyzerTests
                 {
                     // These properties should be allowed in class initialize
                     _ = testContext.FullyQualifiedTestClassName;
-                    _ = testContext.ManagedType;
                     _ = testContext.Properties;
                 }
             }

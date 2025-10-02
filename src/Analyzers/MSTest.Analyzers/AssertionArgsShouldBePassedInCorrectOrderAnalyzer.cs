@@ -37,7 +37,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
         MessageFormat,
         Description,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

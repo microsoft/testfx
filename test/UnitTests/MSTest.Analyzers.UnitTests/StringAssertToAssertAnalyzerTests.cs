@@ -28,9 +28,7 @@ public sealed class StringAssertToAssertAnalyzerTests
                     {|#0:StringAssert.Contains(value, substring)|};
                     {|#1:StringAssert.Contains(value, substring, "message")|};
                     {|#2:StringAssert.Contains(value, substring, StringComparison.Ordinal)|};
-                    {|#3:StringAssert.Contains(value, substring, "message", StringComparison.Ordinal)|};
-                    {|#4:StringAssert.Contains(value, substring, "message {0}", "arg")|};
-                    {|#5:StringAssert.Contains(value, substring, "message {0}", StringComparison.Ordinal, "arg")|};
+                    {|#3:StringAssert.Contains(value, substring, StringComparison.Ordinal, "message")|};
                 }
             }
             """;
@@ -51,8 +49,6 @@ public sealed class StringAssertToAssertAnalyzerTests
                     Assert.Contains(substring, value, "message");
                     Assert.Contains(substring, value, StringComparison.Ordinal);
                     Assert.Contains(substring, value, StringComparison.Ordinal, "message");
-                    Assert.Contains(substring, value, "message {0}", "arg");
-                    Assert.Contains(substring, value, StringComparison.Ordinal, "message {0}", "arg");
                 }
             }
             """;
@@ -68,10 +64,6 @@ public sealed class StringAssertToAssertAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("Contains", "Contains"),
                 // /0/Test0.cs(15,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("Contains", "Contains"),
-                // /0/Test0.cs(16,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("Contains", "Contains"),
-                // /0/Test0.cs(17,9): info MSTEST0046: Use 'Assert.Contains' instead of 'StringAssert.Contains'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("Contains", "Contains"),
             ],
             fixedCode);
     }

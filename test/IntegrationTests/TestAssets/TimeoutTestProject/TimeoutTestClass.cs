@@ -12,7 +12,7 @@ public class TimeoutTestClass
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [Timeout(TestTimeout.Infinite)]
+    [Timeout(int.MaxValue)]
     public void TimeoutTest_WhenUserCancelsTestContextToken_AbortTest()
     {
         TestContext.CancellationTokenSource.Cancel();
@@ -21,7 +21,7 @@ public class TimeoutTestClass
 
 #if NETFRAMEWORK
     [TestMethod]
-    [Timeout(TestTimeout.Infinite)]
+    [Timeout(int.MaxValue)]
     public void TimeoutTest_WhenUserCallsThreadAbort_AbortTest()
     {
         Thread.CurrentThread.Abort();

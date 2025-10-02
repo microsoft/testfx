@@ -147,10 +147,10 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object)).
             Returns(attributes);
 
-        Verify(rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object));
     }
 
     public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
@@ -160,10 +160,10 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestClassAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object)).
             Returns(attributes);
 
-        Verify(!rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object, true));
+        Verify(!rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object));
     }
 
     public void IsAttributeDefinedShouldReturnFromCache()
@@ -177,17 +177,17 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
+            Setup(ro => ro.GetCustomAttributes(memberInfo)).
             Returns(attributes);
 
-        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo));
 
         // Validate that reflection APIs are not called again.
-        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo, true));
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo));
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo), Times.Once);
 
         // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>(), It.IsAny<bool>()), Times.Never);
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>()), Times.Never);
     }
 
     public void HasAttributeDerivedFromShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
@@ -197,10 +197,10 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object)).
             Returns(attributes);
 
-        Verify(rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object));
     }
 
     public void HasAttributeDerivedFromShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
@@ -210,10 +210,10 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object)).
             Returns(attributes);
 
-        Verify(!rh.IsAttributeDefined<TestClassAttribute>(mockMemberInfo.Object, true));
+        Verify(!rh.IsAttributeDefined<TestClassAttribute>(mockMemberInfo.Object));
     }
 
     public void HasAttributeDerivedFromShouldReturnFromCache()
@@ -227,17 +227,17 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
+            Setup(ro => ro.GetCustomAttributes(memberInfo)).
             Returns(attributes);
 
-        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo, true));
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo));
 
         // Validate that reflection APIs are not called again.
-        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo, true));
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
+        Verify(rh.IsAttributeDefined<TestMethodAttribute>(memberInfo));
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo), Times.Once);
 
         // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>(), It.IsAny<bool>()), Times.Never);
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>()), Times.Never);
     }
 
     public void HasAttributeDerivedFromShouldReturnFalseQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
@@ -247,38 +247,14 @@ public class ReflectHelperTests : TestContainer
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object)).
             Returns((object[])null!);
 
         _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestMethodAttribute), true)).
+            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestMethodAttribute))).
             Returns(attributes);
 
-        Verify(!rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object, true));
-    }
-
-    public void GettingAttributesShouldNotReturnInheritedAttributesWhenAskingForNonInheritedAttributes()
-    {
-        // This test checks that we get non-inherited attributes when asking for the same type.
-        // Reflect helper is internally caching the attributes so we don't ask Reflection for them over and over,
-        // and in the past there was a bug that stored the first ask for the attributes in the cache, not differentiating
-        // if you asked for inherited, or non-inherited attributes. So if that bug is again put in place you would get 2 attributes
-        // in both answers.
-        var rh = new ReflectHelper();
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ true)).
-            Returns([new TestClassAttribute(), new TestClassAttribute()]);
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(It.IsAny<Type>(), /* inherit */ false)).
-            Returns([new TestClassAttribute()]);
-
-        TestClassAttribute[] inheritedAttributes = [.. rh.GetAttributes<TestClassAttribute>(typeof(object), inherit: true)];
-        TestClassAttribute[] nonInheritedAttributes = [.. rh.GetAttributes<TestClassAttribute>(typeof(object), inherit: false)];
-
-        Verify(inheritedAttributes.Length == 2);
-        Verify(nonInheritedAttributes.Length == 1);
+        Verify(!rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object));
     }
 
     internal class AttributeMockingHelper
@@ -301,13 +277,13 @@ public class ReflectHelperTests : TestContainer
                 _data.Add((type, attribute, memberTypes));
             }
 
-            _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>()))
-                .Returns<ICustomAttributeProvider, bool>(GetCustomAttributesNotCached);
+            _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<MemberInfo>()))
+                .Returns<ICustomAttributeProvider>(GetCustomAttributesNotCached);
             _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>()))
-                .Returns<ICustomAttributeProvider, Type>((assembly, _) => GetCustomAttributesNotCached(assembly, false));
+                .Returns<ICustomAttributeProvider, Type>((assembly, _) => GetCustomAttributesNotCached(assembly));
         }
 
-        public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
+        public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider)
         {
             var foundAttributes = new List<Attribute>();
             foreach ((Type Type, Attribute Attribute, MemberTypes MemberType) attributeData in _data)

@@ -177,6 +177,13 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">'{0}' dağıtım öğesi (çıktı dizini '{1}')</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DiscoveryErrors">
+        <source>Discovery failed for source '{0}' with {1} errors:
+{2}</source>
+        <target state="new">Discovery failed for source '{0}' with {1} errors:
+{2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DiscoveryWarning">
         <source>[MSTest][Discovery][{0}] {1}</source>
         <target state="translated">[MSTest][Discovery][{0}] {1}</target>
@@ -561,7 +568,7 @@ Hata: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
-        <source>Test method {0}.{1} threw exception: 
+        <source>Test method {0}.{1} threw exception:
 {2}</source>
         <target state="translated">{0}.{1} test metodu özel durum oluşturdu: 
 {2}</target>

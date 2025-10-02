@@ -33,13 +33,6 @@ public sealed class SdkTests : AcceptanceTestBase<SdkTests.TestAssetFixture>
 
 </Project>
 
-#file global.json
-{
-  "test": {
-    "runner": "VSTest"
-  }
-}
-
 #file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -56,13 +49,23 @@ namespace MSTestSdkTest
 }
 """;
 
+    private const string SingleTestSourceCodeVSTest = SingleTestSourceCode + """
+
+        #file global.json
+        {
+          "test": {
+            "runner": "VSTest"
+          }
+        }
+        """;
+
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            SingleTestSourceCode
+            SingleTestSourceCodeVSTest
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
             .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
@@ -73,8 +76,6 @@ namespace MSTestSdkTest
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net7\.0\)");
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net6\.0\)");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -94,19 +95,17 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --no-progress --no-ansi", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net9\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net9\.0\|x64\) passed");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net8\.0|x64\]");
-        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net7\.0|x64\]");
-        compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net6\.0|x64\]");
+        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net8\.0\|x64\) passed");
 #endif
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            compilationResult.AssertOutputMatchesRegex(@"Tests succeeded: .* \[net462|x64\]");
+            compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net48\|x64\) passed");
         }
     }
 
@@ -152,39 +151,39 @@ namespace MSTestSdkTest
         }
     }
 
-    public static IEnumerable<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
+    public static IEnumerable<TestDataRow<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)>> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
     {
         foreach ((string MultiTfm, BuildConfiguration BuildConfiguration) buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())
         {
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
                 "<EnableMicrosoftTestingExtensionsCodeCoverage>true</EnableMicrosoftTestingExtensionsCodeCoverage>",
                 "--coverage",
-                "--crashdump");
+                "--crashdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>",
               "--retry-failed-tests 3",
-              "--crashdump");
+              "--crashdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>",
               "--report-trx",
-              "--crashdump");
+              "--crashdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsCrashDump>true</EnableMicrosoftTestingExtensionsCrashDump>",
               "--crashdump",
-              "--hangdump");
+              "--hangdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>",
               "--hangdump",
-              "--crashdump");
+              "--crashdump"));
 
-            yield return new(buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>",
               "--report-azdo",
-              "--crashdump");
+              "--crashdump"));
         }
     }
 
@@ -426,7 +425,7 @@ namespace MSTestSdkTest
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               SingleTestSourceCodeVSTest
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                .PatchCodeWithReplace("$ExtraProperties$", "<IsTestApplication>false</IsTestApplication>"));
@@ -440,11 +439,11 @@ namespace MSTestSdkTest
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
         // Ensure that MSTest.Framework is referenced
-        Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
-        Assert.IsTrue(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsTrue(references.Any(r => r.Text.EndsWith("MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsTrue(references.Any(r => r.Text.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase)));
 
         // No adapter, no extensions, no vstest sdk
-        Assert.IsFalse(references.Any(r => r.Text.EndsWith("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase)));
+        Assert.IsFalse(references.Any(r => r.Text.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase)));
         Assert.IsFalse(references.Any(r => r.Text.Contains("Microsoft.Testing.Extensions.", StringComparison.OrdinalIgnoreCase)));
 
         // It's not an executable
@@ -464,8 +463,6 @@ namespace MSTestSdkTest
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Ensures that dotnet test uses VSTest so we can run tests with the 2 platforms -->
-    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
     <!-- Disable all extensions by default -->
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnableAspireTesting>true</EnableAspireTesting>
@@ -473,6 +470,7 @@ namespace MSTestSdkTest
 
   <ItemGroup>
     <Using Include="System.Threading.Tasks" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
 </Project>
 
@@ -505,8 +503,6 @@ public class IntegrationTest1
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Ensures that dotnet test uses VSTest so we can run tests with the 2 platforms -->
-    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
     <!-- Disable all extensions by default -->
     <TestingExtensionsProfile>None</TestingExtensionsProfile>
     <EnablePlaywright>true</EnablePlaywright>
@@ -515,6 +511,7 @@ public class IntegrationTest1
   <ItemGroup>
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
 </Project>
 

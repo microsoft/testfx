@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddCallerInfoParametersFix">
+        <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
+        <target state="new">Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">Aggiungi '[TestClass]'</target>
@@ -20,6 +25,11 @@
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
         <source>Use '{0}'</source>
         <target state="translated">Usare ‘{0}’</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="new">Use assignment instead of 'out' parameter</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
@@ -60,6 +70,11 @@
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Passare l'argomento 'TestContext.CancellationToken' alla chiamata al metodo</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="new">Remove 'ClassCleanupBehavior' argument</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -117,6 +132,11 @@
         <target state="translated">Correggi la firma del metodo di test</target>
         <note />
       </trans-unit>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="new">Transform 'Execute' override to 'ExecuteAsync'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
         <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
         <target state="translated">Usare l'attributo 'Assert.ThrowsException&lt;T&gt;' anziché '[ExpectedException]</target>
@@ -127,6 +147,11 @@
         <target state="translated">Aggiungi '[TestMethod]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseContainsKeyInsteadOfContainsFix">
+        <source>Use 'ContainsKey' instead of 'Contains'</source>
+        <target state="new">Use 'ContainsKey' instead of 'Contains'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
         <source>Use 'TestContext.CancellationToken' instead</source>
         <target state="translated">In alternativa, usare 'TestContext.CancellationToken'</target>
@@ -135,6 +160,11 @@
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
         <target state="translated">Usa "CooperativeCancellation = true"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
+        <source>Use 'DisplayName' property instead of string argument</source>
+        <target state="new">Use 'DisplayName' property instead of string argument</target>
         <note />
       </trans-unit>
       <trans-unit id="UseNewerAssertThrows">

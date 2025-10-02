@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
@@ -12,26 +11,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// This service is responsible for platform specific reflection operations.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class ReflectionOperations : IReflectionOperations
+internal class ReflectionOperations : IReflectionOperations
 {
     /// <summary>
     /// Gets all the custom attributes adorned on a member.
     /// </summary>
     /// <param name="memberInfo"> The member. </param>
-    /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+    public object[]? GetCustomAttributes(MemberInfo memberInfo)
 #if NETFRAMEWORK
-         => [.. ReflectionUtility.GetCustomAttributes(memberInfo, inherit)];
+         => [.. ReflectionUtility.GetCustomAttributes(memberInfo)];
 #else
     {
-        object[] attributes = memberInfo.GetCustomAttributes(typeof(Attribute), inherit);
+        object[] attributes = memberInfo.GetCustomAttributes(typeof(Attribute), inherit: true);
 
         // Ensures that when the return of this method is used here:
         // https://github.com/microsoft/testfx/blob/e101a9d48773cc935c7b536d25d378d9a3211fee/src/Adapter/MSTest.TestAdapter/Helpers/ReflectHelper.cs#L461
@@ -47,14 +40,13 @@ public class ReflectionOperations : IReflectionOperations
     /// </summary>
     /// <param name="memberInfo"> The member info. </param>
     /// <param name="type"> The attribute type. </param>
-    /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) =>
+    public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type) =>
 #if NETFRAMEWORK
-        [.. ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit)];
+        [.. ReflectionUtility.GetCustomAttributesCore(memberInfo, type)];
 #else
-        memberInfo.GetCustomAttributes(type, inherit);
+        memberInfo.GetCustomAttributes(type, inherit: true);
 #endif
 
     /// <summary>

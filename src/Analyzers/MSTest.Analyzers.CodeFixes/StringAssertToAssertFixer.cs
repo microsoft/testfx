@@ -85,21 +85,6 @@ public sealed class StringAssertToAssertFixer : CodeFixProvider
         // NOTE: Index 1 has the "separator" (comma) between the first and second arguments.
         (newArguments[0], newArguments[2]) = (newArguments[2], newArguments[0]);
 
-        // StringAssert has overloads with parameter types (string, string, string, StringComparison)
-        // In Assert class, these are (string, string, StringComparison, string)
-        // So we need to do the swap.
-        if (arguments.Count >= 4)
-        {
-            SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-            if (semanticModel.GetSymbolInfo(invocationExpr, cancellationToken).Symbol is IMethodSymbol stringAssertMethod &&
-                stringAssertMethod.Parameters.Length >= 4 &&
-                stringAssertMethod.Parameters[2].Type.SpecialType == SpecialType.System_String &&
-                stringAssertMethod.Parameters[3].Type.Name == "StringComparison")
-            {
-                (newArguments[4], newArguments[6]) = (newArguments[6], newArguments[4]);
-            }
-        }
-
         ArgumentListSyntax newArgumentList = invocationExpr.ArgumentList.WithArguments(SyntaxFactory.SeparatedList<ArgumentSyntax>(newArguments));
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(newArgumentList);
 

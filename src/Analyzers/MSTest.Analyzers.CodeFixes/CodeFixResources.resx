@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="RemoveClassCleanupBehaviorArgumentFix" xml:space="preserve">
+    <value>Remove 'ClassCleanupBehavior' argument</value>
+  </data>
   <data name="FixSignatureCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
@@ -194,6 +197,21 @@
   </data>
   <data name="RemoveDynamicDataSourceTypeFix" xml:space="preserve">
     <value>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</value>
+  </data>
+  <data name="UseDisplayNamePropertyInsteadOfStringArgumentFix" xml:space="preserve">
+    <value>Use 'DisplayName' property instead of string argument</value>
+  </data>
+  <data name="AddCallerInfoParametersFix" xml:space="preserve">
+    <value>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</value>
+  </data>
+  <data name="AvoidOutParameterOnAssertIsInstanceOfTypeFix" xml:space="preserve">
+    <value>Use assignment instead of 'out' parameter</value>
+  </data>
+  <data name="UseContainsKeyInsteadOfContainsFix" xml:space="preserve">
+    <value>Use 'ContainsKey' instead of 'Contains'</value>
+  </data>
+  <data name="TransformExecuteToExecuteAsyncFix" xml:space="preserve">
+    <value>Transform 'Execute' override to 'ExecuteAsync'</value>
   </data>
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>

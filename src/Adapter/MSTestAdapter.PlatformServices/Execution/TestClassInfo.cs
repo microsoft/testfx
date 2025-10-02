@@ -16,13 +16,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Defines the TestClassInfo object.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - not important to dispose the SemaphoreSlim, we don't access AvailableWaitHandle.
-public class TestClassInfo
+internal sealed class TestClassInfo
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     /// <summary>
@@ -85,7 +80,7 @@ public class TestClassInfo
     public TestAssemblyInfo Parent { get; }
 
     /// <summary>
-    /// Gets the class initialize method.
+    /// Gets or sets the class initialize method.
     /// </summary>
     public MethodInfo? ClassInitializeMethod
     {
@@ -127,37 +122,31 @@ public class TestClassInfo
     internal Dictionary<MethodInfo, TimeoutInfo> TestCleanupMethodTimeoutMilliseconds { get; } = [];
 
     /// <summary>
-    /// Gets a value indicating whether class initialize has executed.
+    /// Gets or sets a value indicating whether class initialize has executed.
     /// </summary>
     public bool IsClassInitializeExecuted { get; internal set; }
 
     /// <summary>
-    /// Gets a value indicating whether class cleanup has executed.
+    /// Gets or sets a value indicating whether class cleanup has executed.
     /// </summary>
     public bool IsClassCleanupExecuted { get; internal set; }
-
-    /// <summary>
-    /// Gets a stack of class cleanup methods to be executed.
-    /// </summary>
-    [Obsolete("API will be dropped in v4")]
-    public Stack<MethodInfo> BaseClassCleanupMethodsStack { get; } = new();
 
     internal List<MethodInfo> BaseClassInitMethods { get; } = [];
 
     internal List<MethodInfo> BaseClassCleanupMethods { get; } = [];
 
     /// <summary>
-    /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
+    /// Gets or sets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
     /// </summary>
     public Exception? ClassInitializationException { get; internal set; }
 
     /// <summary>
-    /// Gets the exception thrown during <see cref="ClassCleanupAttribute"/> method invocation.
+    /// Gets or sets the exception thrown during <see cref="ClassCleanupAttribute"/> method invocation.
     /// </summary>
     public Exception? ClassCleanupException { get; internal set; }
 
     /// <summary>
-    /// Gets the class cleanup method.
+    /// Gets or sets the class cleanup method.
     /// </summary>
     public MethodInfo? ClassCleanupMethod
     {
@@ -193,13 +182,7 @@ public class TestClassInfo
     }
 
     /// <summary>
-    /// Gets a tuples' queue of class initialize/cleanup methods to call for this type.
-    /// </summary>
-    [Obsolete("API will be dropped in v4")]
-    public Queue<Tuple<MethodInfo?, MethodInfo?>> BaseClassInitAndCleanupMethods { get; } = new();
-
-    /// <summary>
-    /// Gets the test initialize method.
+    /// Gets or sets the test initialize method.
     /// </summary>
     public MethodInfo? TestInitializeMethod
     {
@@ -217,7 +200,7 @@ public class TestClassInfo
     }
 
     /// <summary>
-    /// Gets the test cleanup method.
+    /// Gets or sets the test cleanup method.
     /// </summary>
     public MethodInfo? TestCleanupMethod
     {
@@ -532,95 +515,6 @@ public class TestClassInfo
             Resource.ClassInitializeTimedOut).ConfigureAwait(false);
 
         return result;
-    }
-
-    /// <summary>
-    /// Run class cleanup methods.
-    /// </summary>
-    /// <param name="classCleanupLifecycle">The current lifecycle position that ClassCleanup is executing from.</param>
-    /// <returns>
-    /// Any exception that can be thrown as part of a class cleanup as warning messages.
-    /// </returns>
-    [Obsolete("API will be dropped in v4")]
-    public string? RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
-    {
-        if (ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
-        {
-            return null;
-        }
-
-        if (IsClassCleanupExecuted)
-        {
-            return null;
-        }
-
-        MethodInfo? classCleanupMethod = null;
-        try
-        {
-            _testClassExecuteSyncSemaphore.Wait();
-
-            if (IsClassCleanupExecuted)
-            {
-                return null;
-            }
-
-            if (IsClassInitializeExecuted || ClassInitializeMethod is null)
-            {
-                try
-                {
-                    classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethodAsync(classCleanupMethod, null!).GetAwaiter().GetResult() : null;
-                    var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethods);
-                    while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
-                    {
-                        classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = InvokeCleanupMethodAsync(classCleanupMethod, null!).GetAwaiter().GetResult();
-                    }
-
-                    IsClassCleanupExecuted = ClassCleanupException is null;
-                }
-                catch (Exception exception)
-                {
-                    ClassCleanupException = exception;
-                }
-            }
-        }
-        finally
-        {
-            _testClassExecuteSyncSemaphore.Release();
-        }
-
-        // If ClassCleanup was successful, then don't do anything
-        if (ClassCleanupException == null)
-        {
-            return null;
-        }
-
-        Exception realException = ClassCleanupException.GetRealException();
-
-        // special case AssertFailedException to trim off part of the stack trace
-        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-            ? realException.Message
-            : realException.GetFormattedExceptionMessage();
-
-        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-
-        errorMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-            classCleanupMethod!.DeclaringType!.Name,
-            classCleanupMethod.Name,
-            errorMessage,
-            exceptionStackTraceInfo?.ErrorStackTrace);
-
-        if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
-        {
-            var testFailedException = new TestFailedException(UTFUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
-            ClassCleanupException = testFailedException;
-            throw testFailedException;
-        }
-
-        return errorMessage;
     }
 
     /// <summary>

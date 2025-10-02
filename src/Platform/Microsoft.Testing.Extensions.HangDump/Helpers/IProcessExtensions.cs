@@ -29,14 +29,14 @@ internal static class IProcessExtensions
 
             try
             {
-                int parentId = await GetParentPidAsync(c, logger, outputDisplay).ConfigureAwait(false);
+                int parentId = await GetParentPidAsync(c, logger, outputDisplay, cancellationToken).ConfigureAwait(false);
 
                 acc.Add(new ProcessTreeNode { ParentId = parentId, Process = new SystemProcess(c) });
             }
             catch (Exception e)
             {
                 logger.LogError($"Failed to get parent for process {c.Id} - {c.ProcessName}", e);
-                await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, c.Id, c.ProcessName, e))).ConfigureAwait(false);
+                await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, c.Id, c.ProcessName, e)), cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -53,14 +53,15 @@ internal static class IProcessExtensions
     /// <param name="process">The process to find parent of.</param>
     /// <param name="logger">The logger.</param>
     /// <param name="outputDisplay">The output display.git.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The pid of the parent process.</returns>
-    internal static async Task<int> GetParentPidAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay)
+    internal static async Task<int> GetParentPidAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? await GetParentPidWindowsAsync(process).ConfigureAwait(false)
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
                 ? await GetParentPidLinuxAsync(process).ConfigureAwait(false)
                 : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ?
-                    await GetParentPidMacOsAsync(process, logger, outputDisplay).ConfigureAwait(false)
+                    await GetParentPidMacOsAsync(process, logger, outputDisplay, cancellationToken).ConfigureAwait(false)
                     : throw new PlatformNotSupportedException();
 
     internal static Task<int> GetParentPidWindowsAsync(Process process)
@@ -92,7 +93,7 @@ internal static class IProcessExtensions
         return Task.FromResult(ppid);
     }
 
-    internal static async Task<int> GetParentPidMacOsAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay)
+    internal static async Task<int> GetParentPidMacOsAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
     {
         var output = new StringBuilder();
         var err = new StringBuilder();
@@ -129,7 +130,7 @@ internal static class IProcessExtensions
         if (!RoslynString.IsNullOrWhiteSpace(e))
         {
             logger.LogError($"Error getting parent of process {process.Id} - {process.ProcessName}, {e}.");
-            await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, process.Id, process.ProcessName, e))).ConfigureAwait(false);
+            await outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorGettingParentOfProcess, process.Id, process.ProcessName, e)), cancellationToken).ConfigureAwait(false);
         }
 
         return parent;

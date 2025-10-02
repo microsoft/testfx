@@ -663,6 +663,26 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Die Eigenschaft „TestContext“ muss gültig sein</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
+        <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
+        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
+        <source>TestMethodAttribute derived class should propagate source information</source>
+        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
+        <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
+        <target state="new">Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
+        <source>TestMethodAttribute should set DisplayName correctly</source>
+        <target state="new">TestMethodAttribute should set DisplayName correctly</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Signatur der Testmethode "{0}" ist ungültig</target>

@@ -9,7 +9,9 @@
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <OutputType>Exe</OutputType>
-    <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
+    <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
+    <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>
+    <TestingPlatformDotnetTestSupport Condition=" '$(TestingPlatformDotnetTestSupport)' == '' AND '$(_SupportsGlobalJsonTestRunner)' != 'true' ">true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
   <Target Name="_MSTestSDKValidateTestingExtensionsProfile" BeforeTargets="Build">

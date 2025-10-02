@@ -25,7 +25,7 @@ public partial class AssertTests : TestContainer
         try
         {
             // This call is expected to throw when _builder is not null.
-            _ = handler.ComputeAssertion();
+            _ = handler.ComputeAssertion("<collection arg expression placeholder>");
         }
         catch (Exception ex)
         {
@@ -51,7 +51,7 @@ public partial class AssertTests : TestContainer
         shouldAppend.Should().BeFalse();
 
         // Act
-        int result = handler.ComputeAssertion();
+        int result = handler.ComputeAssertion("<collection arg expression placeholder>");
 
         // Assert
         result.Should().Be(singleItem);
@@ -308,23 +308,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection, ref handler);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). ");
-    }
-
-    /// <summary>
-    /// Tests the ContainsSingle method with message and parameters when the collection does not have exactly one element.
-    /// Expects an exception.
-    /// </summary>
-    public void ContainsSingle_WithMessageAndParams_WithInvalidCollection_ThrowsException()
-    {
-        // Arrange
-        var collection = new List<string> { "a", "b" };
-
-        // Act
-        Action action = () => Assert.ContainsSingle(collection, "Expected: {0}", "SingleItem");
-
-        // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*SingleItem*");
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'collection'. ");
     }
 
     #endregion
@@ -340,7 +324,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 5, 10, 15 };
 
         // Act
-        Action action = () => Assert.Contains(10, collection, "No failure expected", null);
+        Action action = () => Assert.Contains(10, collection, "No failure expected");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -356,7 +340,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 5, 10, 15 };
 
         // Act
-        Action action = () => Assert.Contains(20, collection, "Item {0} not found", 20);
+        Action action = () => Assert.Contains(20, collection, "Item 20 not found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*20*");
@@ -450,7 +434,7 @@ public partial class AssertTests : TestContainer
         IEqualityComparer<string> comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        Action action = () => Assert.Contains("APPLE", collection, comparer, "Should find apple", null);
+        Action action = () => Assert.Contains("APPLE", collection, comparer, "Should find apple");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -467,7 +451,7 @@ public partial class AssertTests : TestContainer
         IEqualityComparer<string> comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        Action action = () => Assert.Contains("cherry", collection, comparer, "Missing {0}", "cherry");
+        Action action = () => Assert.Contains("cherry", collection, comparer, "Missing cherry");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*cherry*");
@@ -482,7 +466,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 2, 4, 6 };
 
         // Act
-        Action action = () => Assert.Contains(IsEven, collection, "Even number exists", null);
+        Action action = () => Assert.Contains(IsEven, collection, "Even number exists");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -513,7 +497,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 1, 3, 5 };
 
         // Act
-        Action action = () => Assert.Contains(IsEven, collection, "No even number found", null);
+        Action action = () => Assert.Contains(IsEven, collection, "No even number found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*even*");
@@ -545,7 +529,7 @@ public partial class AssertTests : TestContainer
         string substring = "brown";
 
         // Act
-        Action action = () => Assert.Contains(substring, value, StringComparison.Ordinal, "Substring found", null);
+        Action action = () => Assert.Contains(substring, value, StringComparison.Ordinal, "Substring found");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -562,10 +546,20 @@ public partial class AssertTests : TestContainer
         string substring = "lazy";
 
         // Act
-        Action action = () => Assert.Contains(substring, value, StringComparison.Ordinal, "Missing substring", null);
+        Action action = () => Assert.Contains(substring, value, StringComparison.Ordinal, "Missing substring");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*lazy*");
+    }
+
+    public void Contains_HashSetWithCustomComparer_ItemExists_DoesNotThrow()
+    {
+        var collection = new HashSet<string>(AlwaysTrueEqualityComparer.Instance) { "1" };
+
+        // This call shouldn't use EqualityComparer<string>.Default.
+        Action action = () => Assert.Contains("2", collection);
+        action.Should().NotThrow<AssertFailedException>();
+        action();
     }
 
     #endregion
@@ -581,7 +575,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 5, 10, 15 };
 
         // Act
-        Action action = () => Assert.DoesNotContain(20, collection, "No failure expected", null);
+        Action action = () => Assert.DoesNotContain(20, collection, "No failure expected");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -597,7 +591,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 5, 10, 15 };
 
         // Act
-        Action action = () => Assert.DoesNotContain(10, collection, "Item {0} should not be found", 10);
+        Action action = () => Assert.DoesNotContain(10, collection, "Item 10 should not be found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*10*");
@@ -644,7 +638,7 @@ public partial class AssertTests : TestContainer
         IEqualityComparer<string> comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        Action action = () => Assert.DoesNotContain("cherry", collection, comparer, "No cherry found", null);
+        Action action = () => Assert.DoesNotContain("cherry", collection, comparer, "No cherry found");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -677,7 +671,7 @@ public partial class AssertTests : TestContainer
         IEqualityComparer<string> comparer = StringComparer.OrdinalIgnoreCase;
 
         // Act
-        Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "Unexpected {0}", "APPLE");
+        Action action = () => Assert.DoesNotContain("APPLE", collection, comparer, "Unexpected \"APPLE\"");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*APPLE*");
@@ -709,7 +703,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 1, 3, 5 };
 
         // Act
-        Action action = () => Assert.DoesNotContain(IsEven, collection, "All items are odd", null);
+        Action action = () => Assert.DoesNotContain(IsEven, collection, "All items are odd");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -740,7 +734,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<int> { 2, 3, 5 };
 
         // Act
-        Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists", null);
+        Action action = () => Assert.DoesNotContain(IsEven, collection, "An even number exists");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*even*");
@@ -772,7 +766,7 @@ public partial class AssertTests : TestContainer
         string substring = "lazy";
 
         // Act
-        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.Ordinal, "Should not contain", null);
+        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.Ordinal, "Should not contain");
 
         // Assert
         action.Should().NotThrow<AssertFailedException>();
@@ -789,45 +783,10 @@ public partial class AssertTests : TestContainer
         string substring = "brown";
 
         // Act
-        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.Ordinal, "Unexpected substring", null);
+        Action action = () => Assert.DoesNotContain(substring, value, StringComparison.Ordinal, "Unexpected substring");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*brown*");
-    }
-
-    /// <summary>
-    /// Tests the string DoesNotContain overload with message and parameters when substring is not present.
-    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
-    /// </summary>
-    public void DoesNotContain_StringWithMessageAndParameters_SubstringNotPresent_DoesNotThrow()
-    {
-        // Arrange
-        string value = "The quick brown fox";
-        string substring = "lazy";
-
-        // Act
-        Action action = () => Assert.DoesNotContain(substring, value, "Custom message: {0}", "test parameter");
-
-        // Assert
-        action.Should().NotThrow<AssertFailedException>();
-    }
-
-    /// <summary>
-    /// Tests the string DoesNotContain overload with message and parameters when substring is present.
-    /// This test ensures the method overload works correctly and prevents regression of stackoverflow bug.
-    /// Expects an exception.
-    /// </summary>
-    public void DoesNotContain_StringWithMessageAndParameters_SubstringPresent_ThrowsException()
-    {
-        // Arrange
-        string value = "The quick brown fox";
-        string substring = "brown";
-
-        // Act
-        Action action = () => Assert.DoesNotContain(substring, value, "Found unexpected substring: {0}", substring);
-
-        // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("*Found unexpected substring: brown*");
     }
 
     /// <summary>
@@ -1148,9 +1107,45 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("*Expected no items to match the predicate*");
     }
 
+    public void DoesNotContains_HashSetWithCustomComparer_ItemDoesNotExist_DoesNotThrow()
+    {
+        var collection = new HashSet<string>(AlwaysFalseEqualityComparer.Instance) { "1" };
+
+        // This call shouldn't use EqualityComparer<string>.Default.
+        Action action = () => Assert.DoesNotContain("1", collection);
+        action.Should().NotThrow<AssertFailedException>();
+        action();
+    }
+
     #endregion
 
     private record Person(string Name, int Age);
+
+    private sealed class AlwaysTrueEqualityComparer : IEqualityComparer<string>
+    {
+        private AlwaysTrueEqualityComparer()
+        {
+        }
+
+        public static AlwaysTrueEqualityComparer Instance { get; } = new();
+
+        public bool Equals(string? x, string? y) => true;
+
+        public int GetHashCode([DisallowNull] string obj) => 0;
+    }
+
+    private sealed class AlwaysFalseEqualityComparer : IEqualityComparer<string>
+    {
+        private AlwaysFalseEqualityComparer()
+        {
+        }
+
+        public static AlwaysFalseEqualityComparer Instance { get; } = new();
+
+        public bool Equals(string? x, string? y) => false;
+
+        public int GetHashCode([DisallowNull] string obj) => 0;
+    }
 
     #endregion
 }

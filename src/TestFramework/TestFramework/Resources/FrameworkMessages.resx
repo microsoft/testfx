@@ -370,6 +370,32 @@ Actual: {2}</value>
   <data name="DoNotUseCollectionAssertReferenceEquals" xml:space="preserve">
     <value>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</value>
   </data>
+  <data name="InvalidAccessToTestContextProperty" xml:space="preserve">
+    <value>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</value>
+  </data>
+  <data name="CallerArgumentExpressionSingleParameterMessage" xml:space="preserve">
+    <value>'{0}' expression: '{1}'.</value>
+    <comment>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</comment>
+  </data>
+  <data name="AssertThatFailedFormat" xml:space="preserve">
+    <value>Assert.That({0}) failed.</value>
+    <comment>{0} is the user code expression</comment>
+  </data>
+  <data name="AssertThatMessageFormat" xml:space="preserve">
+    <value>Message: {0}</value>
+    <comment>{0} user provided message</comment>
+  </data>
+  <data name="AssertThatDetailsPrefix" xml:space="preserve">
+    <value>Details:</value>
+  </data>
+  <data name="CallerArgumentExpressionTwoParametersMessage" xml:space="preserve">
+    <value>'{0}' expression: '{1}', '{2}' expression: '{3}'.</value>
+    <comment>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
+  </data>
+  <data name="CallerArgumentExpressionThreeParametersMessage" xml:space="preserve">
+    <value>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</value>
+    <comment>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
+  </data>
   <data name="ReturnedSubsetValueMessage" xml:space="preserve">
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
   </data>

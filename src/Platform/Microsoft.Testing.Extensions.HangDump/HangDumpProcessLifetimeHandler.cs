@@ -16,7 +16,6 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 
 #if NETCOREAPP
 using Microsoft.Diagnostics.NETCore.Client;
@@ -39,7 +38,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly IConfiguration _configuration;
     private readonly IProcessHandler _processHandler;
     private readonly IClock _clock;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly bool _traceEnabled;
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
@@ -69,7 +67,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
         IProcessHandler processHandler,
-        IServiceProvider serviceProvider,
         IClock clock)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
@@ -83,7 +80,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _configuration = configuration;
         _processHandler = processHandler;
         _clock = clock;
-        _testApplicationCancellationTokenSource = serviceProvider.GetTestApplicationCancellationTokenSource();
     }
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
@@ -171,7 +167,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
-    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_waitConnectionTask is not null);
         ApplicationStateGuard.Ensure(_singleConnectionNamedPipeServer is not null);
@@ -182,10 +178,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
             await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
             using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
-            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellation, timeout.Token);
+            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
             _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
             ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-            await _namedPipeClient.ConnectAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
             await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
 
             // Keep the custom thread to avoid to waste one from thread pool.
@@ -194,16 +190,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 {
                     try
                     {
-                        await ActivityTimerAsync(cancellation).ConfigureAwait(false);
+                        await ActivityTimerAsync(cancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception e)
                     {
-                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo()))).ConfigureAwait(false);
+                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())), cancellationToken).ConfigureAwait(false);
                         throw;
                     }
-                }, "[HangDump] ActivityTimerAsync", cancellation);
+                }, "[HangDump] ActivityTimerAsync", cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
     }
@@ -227,9 +223,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         return builder.ToString();
     }
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellation.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
@@ -347,7 +343,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue))).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)), cancellationToken).ConfigureAwait(false);
 
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         var processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay, cancellationToken).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
@@ -357,16 +353,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             if (processTree.Count > 1)
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.DumpingProcessTree)).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.DumpingProcessTree), cancellationToken).ConfigureAwait(false);
 
                 foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
                 {
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}")).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}"), cancellationToken).ConfigureAwait(false);
                 }
             }
             else
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.DumpingProcess, process.Id, process.Name))).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.DumpingProcess, process.Id, process.Name)), cancellationToken).ConfigureAwait(false);
             }
 
             await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
@@ -381,13 +377,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 try
                 {
-                    await TakeDumpAsync(p).ConfigureAwait(false);
+                    await TakeDumpAsync(p, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     // exceptions.Add(new InvalidOperationException($"Error while taking dump of process {p.Name} {p.Id}", e));
                     await _logger.LogErrorAsync($"Error while taking dump of process {p.Id} - {p.Name}", e).ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e))).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e)), cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -417,13 +413,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 catch (Exception e)
                 {
                     await _logger.LogErrorAsync($"Problem killing {p.Id} - {p.Name}", e).ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e))).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e)), cancellationToken).ConfigureAwait(false);
                 }
             }
         }
     }
 
-    private async Task TakeDumpAsync(IProcess process)
+    private async Task TakeDumpAsync(IProcess process, CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
@@ -432,19 +428,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-        GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
+        await _namedPipeClient.RequestReplyAsync<ExitSignalActivityIndicatorTaskRequest, VoidResponse>(new ExitSignalActivityIndicatorTaskRequest(), cancellationToken).ConfigureAwait(false);
         if (tests.Tests.Length > 0)
         {
             string hangTestsFileName = Path.Combine(_configuration.GetTestResultDirectory(), Path.ChangeExtension(Path.GetFileName(finalDumpFileName), ".log"));
             using (FileStream fs = File.OpenWrite(hangTestsFileName))
             using (StreamWriter sw = new(fs))
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping)).ConfigureAwait(false);
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
                 foreach ((string testName, int seconds) in tests.Tests)
                 {
                     await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}")).ConfigureAwait(false);
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -453,7 +449,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}").ConfigureAwait(false);
 
-        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName))).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)), cancellationToken).ConfigureAwait(false);
 
 #if NETCOREAPP
         DiagnosticsClient diagnosticsClient = new(process.Id);
@@ -480,7 +476,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception e)
         {
             await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
-            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e))).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e)), cancellationToken).ConfigureAwait(false);
         }
 
 #else
@@ -499,7 +495,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception e)
         {
             await _logger.LogErrorAsync($"Error while writing dump of process {process.Name} {process.Id}", e).ConfigureAwait(false);
-            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e))).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e)), cancellationToken).ConfigureAwait(false);
         }
 #endif
 
@@ -558,7 +554,8 @@ internal sealed class OutputDeviceWriter
     /// Displays the output data asynchronously, using the stored producer.
     /// </summary>
     /// <param name="data">The output data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task DisplayAsync(IOutputDeviceData data)
-        => await _outputDevice.DisplayAsync(_outputDeviceDataProducer, data).ConfigureAwait(false);
+    public async Task DisplayAsync(IOutputDeviceData data, CancellationToken cancellationToken)
+        => await _outputDevice.DisplayAsync(_outputDeviceDataProducer, data, cancellationToken).ConfigureAwait(false);
 }

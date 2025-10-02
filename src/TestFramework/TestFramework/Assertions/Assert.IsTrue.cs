@@ -10,6 +10,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// unit tests. If the condition being tested is not met, an exception
 /// is thrown.
 /// </summary>
+
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
 public sealed partial class Assert
 {
     [InterpolatedStringHandler]
@@ -28,10 +32,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string conditionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
                 ThrowAssertIsTrueFailed(_builder.ToString());
             }
         }
@@ -43,9 +48,7 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -61,13 +64,9 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     [InterpolatedStringHandler]
@@ -85,10 +84,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string conditionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
                 ThrowAssertIsFalseFailed(_builder.ToString());
             }
         }
@@ -100,9 +100,7 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
 
         // NOTE: All the overloads involving format and/or alignment are not super efficient.
@@ -118,64 +116,17 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition)
-        => IsTrue(condition, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
-        => IsTrue(condition, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is false. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
-        => IsTrue(condition, message, null);
-
-    /// <inheritdoc cref="IsTrue(bool, string?)"/>
+    /// <inheritdoc cref="IsTrue(bool?, string, string)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(conditionExpression);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -188,127 +139,32 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="condition"/>
     /// is false. The message is shown in test results.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
-        => IsTrue(condition, message, null);
-
-    /// <inheritdoc cref="IsTrue(bool?, string?)"/>
-#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message)
-#pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is false. The message is shown in test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// <param name="conditionExpression">
+    /// The syntactic expression of condition as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
-        }
-    }
-
-    /// <summary>
-    /// Tests whether the specified condition is true and throws an exception
-    /// if the condition is false.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be true.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is false. The message is shown in test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is false.
-    /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
-    {
-        if (IsTrueFailing(condition))
-        {
-            ThrowAssertIsTrueFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
         }
     }
 
     private static bool IsTrueFailing(bool? condition)
         => condition is false or null;
 
-    private static bool IsTrueFailing(bool condition)
-        => !condition;
-
     private static void ThrowAssertIsTrueFailed(string message)
         => ThrowAssertFailed("Assert.IsTrue", message);
 
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition)
-        => IsFalse(condition, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
-        => IsFalse(condition, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is true. The message is shown in test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
-        => IsFalse(condition, message, null);
-
-    /// <inheritdoc cref="IsFalse(bool, string?)" />
+    /// <inheritdoc cref="IsFalse(bool?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(conditionExpression);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -321,75 +177,23 @@ public sealed partial class Assert
     /// The message to include in the exception when <paramref name="condition"/>
     /// is true. The message is shown in test results.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
-        => IsFalse(condition, message, null);
-
-    /// <inheritdoc cref="IsFalse(bool, string?)" />
-#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message)
-#pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is true. The message is shown in test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// <param name="conditionExpression">
+    /// The syntactic expression of condition as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
-        }
-    }
-
-    /// <summary>
-    /// Tests whether the specified condition is false and throws an exception
-    /// if the condition is true.
-    /// </summary>
-    /// <param name="condition">
-    /// The condition the test expects to be false.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="condition"/>
-    /// is true. The message is shown in test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="condition"/> is true.
-    /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
-    {
-        if (IsFalseFailing(condition))
-        {
-            ThrowAssertIsFalseFailed(BuildUserMessage(message, parameters));
+            ThrowAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
         }
     }
 
     private static bool IsFalseFailing(bool? condition)
         => condition is true or null;
-
-    private static bool IsFalseFailing(bool condition)
-        => condition;
 
     [DoesNotReturn]
     private static void ThrowAssertIsFalseFailed(string userMessage)

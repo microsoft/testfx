@@ -133,7 +133,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod")!;
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
-        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>())); // call cleanup without calling init
+        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>())); // call cleanup without calling init
         Verify(ex is null);
         Verify(classCleanupCallCount == 0);
     }
@@ -147,7 +147,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         GetResultOrRunClassInitialize();
-        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>())); // call cleanup without calling init
+        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>())); // call cleanup without calling init
 
         Verify(ex is null);
         Verify(classCleanupCallCount == 1);
@@ -162,7 +162,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassCleanupMethods.Add(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")!);
 
         GetResultOrRunClassInitialize();
-        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         Verify(ex is null);
         Verify(classCleanupCallCount == 1);
@@ -361,7 +361,7 @@ public class TestClassInfoTests : TestContainer
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>", StringComparison.Ordinal));
 #endif
         Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
@@ -380,7 +380,7 @@ public class TestClassInfoTests : TestContainer
             exception.Message
             == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>", StringComparison.Ordinal));
 #endif
         Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
@@ -466,7 +466,7 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         GetResultOrRunClassInitialize(null);
-        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(ex is null);
@@ -481,7 +481,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = null;
 
         // Act
-        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(ex is null);
@@ -496,7 +496,7 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         GetResultOrRunClassInitialize(null);
-        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(classCleanupException is not null);
@@ -518,7 +518,7 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         GetResultOrRunClassInitialize(null);
-        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(classCleanupException is not null);
@@ -539,7 +539,7 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         GetResultOrRunClassInitialize(null);
-        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(classCleanupException is not null);
@@ -558,7 +558,7 @@ public class TestClassInfoTests : TestContainer
 
         // Act
         GetResultOrRunClassInitialize(null);
-        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(classCleanupException is not null);
@@ -577,7 +577,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassCleanupMethods.Add(baseClassCleanupMethod);
 
         // Act
-        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert
         Verify(ex is null);
@@ -586,7 +586,7 @@ public class TestClassInfoTests : TestContainer
 
         // Act 2
         GetResultOrRunClassInitialize(null);
-        ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert 2
         Verify(ex is null);
@@ -595,7 +595,7 @@ public class TestClassInfoTests : TestContainer
         Verify(classCleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
 
         // Act 3
-        ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        ex = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         // Assert 3
         Verify(ex is null);
@@ -612,7 +612,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod")!;
 
         GetResultOrRunClassInitialize(null);
-        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, new StringWriter(), new Dictionary<string, object?>()));
+        TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(new TestContextImplementation(null, null, new Dictionary<string, object?>()));
 
         Verify(classCleanupException is not null);
         Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.InvalidOperationException: I fail..", StringComparison.Ordinal));

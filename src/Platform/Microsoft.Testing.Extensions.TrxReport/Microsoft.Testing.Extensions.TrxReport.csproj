@@ -6,6 +6,7 @@
     <!--A file (CrashDumpCommandLineOptions.cs) is shared as a link file between projects. To avoid conflicts between both projects,
     different namespace is used for the shared file.-->
     <DefineConstants>$(DefineConstants);USE_TRX_NAMESPACE</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- NuGet properties -->
