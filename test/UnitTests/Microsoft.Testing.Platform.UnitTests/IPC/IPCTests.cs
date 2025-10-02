@@ -60,7 +60,7 @@ public sealed class IPCTests
 
         Assert.HasCount(1, openedPipe);
         Assert.HasCount(1, exceptions);
-        Assert.AreEqual(exceptions[0].GetType(), typeof(IOException));
+        Assert.AreEqual(typeof(IOException), exceptions[0].GetType());
         Assert.Contains("All pipe instances are busy.", exceptions[0].Message);
 
         await waitTask;

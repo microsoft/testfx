@@ -83,7 +83,7 @@ public sealed class ServiceProviderTests
         var clonedServiceProvider = (ServiceProvider)_serviceProvider.Clone(o => o is TestHostProcessLifetimeHandler);
 
         Assert.HasCount(1, clonedServiceProvider.Services);
-        Assert.AreEqual(_serviceProvider.Services.ToArray()[0].GetType(), typeof(TestHostProcessLifetimeHandler));
+        Assert.AreEqual(typeof(TestHostProcessLifetimeHandler), _serviceProvider.Services.ToArray()[0].GetType());
     }
 
     [TestMethod]
