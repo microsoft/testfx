@@ -57,27 +57,27 @@ internal static class IProcessExtensions
     /// <returns>The pid of the parent process.</returns>
     internal static async Task<int> GetParentPidAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? await GetParentPidWindowsAsync(process).ConfigureAwait(false)
+            ? GetParentPidWindows(process)
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                ? await GetParentPidLinuxAsync(process).ConfigureAwait(false)
+                ? GetParentPidLinux(process)
                 : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ?
                     await GetParentPidMacOsAsync(process, logger, outputDisplay, cancellationToken).ConfigureAwait(false)
                     : throw new PlatformNotSupportedException();
 
-    internal static Task<int> GetParentPidWindowsAsync(Process process)
+    internal static int GetParentPidWindows(Process process)
     {
         IntPtr handle = process.Handle;
         int res = NtQueryInformationProcess(handle, 0, out ProcessBasicInformation pbi, Marshal.SizeOf<ProcessBasicInformation>(), out int _);
 
         int p = res != 0 ? InvalidProcessId : pbi.InheritedFromUniqueProcessId.ToInt32();
 
-        return Task.FromResult(p);
+        return p;
     }
 
     /// <summary>Read the /proc file system for information about the parent.</summary>
     /// <param name="process">The process to get the parent process from.</param>
     /// <returns>The process id.</returns>
-    internal static Task<int> GetParentPidLinuxAsync(Process process)
+    internal static int GetParentPidLinux(Process process)
     {
         int pid = process.Id;
 
@@ -90,7 +90,7 @@ internal static class IProcessExtensions
 
         int ppid = parts.Length < 5 ? InvalidProcessId : int.Parse(parts[3], CultureInfo.CurrentCulture);
 
-        return Task.FromResult(ppid);
+        return ppid;
     }
 
     internal static async Task<int> GetParentPidMacOsAsync(Process process, ILogger logger, OutputDeviceWriter outputDisplay, CancellationToken cancellationToken)
