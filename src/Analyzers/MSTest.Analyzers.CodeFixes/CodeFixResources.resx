@@ -123,9 +123,6 @@
   <data name="FixSignatureCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
-  <data name="AssemblyInitializeShouldBeValidCodeFix" xml:space="preserve">
-    <value>Fix signature</value>
-  </data>
   <data name="FixAssertionArgsOrder" xml:space="preserve">
     <value>Fix actual/expected arguments order</value>
   </data>
@@ -168,13 +165,7 @@
   <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
     <value>Replace constructor with TestInitialize method</value>
   </data>
-  <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
-    <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
-  </data>
   <data name="UseProperAssertMethodsFix" xml:space="preserve">
-    <value>Use '{0}'</value>
-  </data>
-  <data name="UseNewerAssertThrows" xml:space="preserve">
     <value>Use '{0}'</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
@@ -215,11 +206,5 @@
   </data>
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
-  </data>
-  <data name="AvoidAssertFormatParametersUseStringFormat" xml:space="preserve">
-    <value>Use 'string.Format' instead of format parameters</value>
-  </data>
-  <data name="AvoidAssertFormatParametersUseInterpolatedString" xml:space="preserve">
-    <value>Use interpolated string instead of format parameters</value>
   </data>
 </root>

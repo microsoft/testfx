@@ -41,7 +41,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not greater than <paramref name="lowerBound"/>.
     /// </exception>
-    public static void IsGreaterThan<T>(T lowerBound, T value, string message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsGreaterThan<T>(T lowerBound, T value, string? message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(lowerBound) > 0)
@@ -86,7 +86,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not greater than or equal to <paramref name="lowerBound"/>.
     /// </exception>
-    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsGreaterThanOrEqualTo<T>(T lowerBound, T value, string? message = "", [CallerArgumentExpression(nameof(lowerBound))] string lowerBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(lowerBound) >= 0)
@@ -131,7 +131,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not less than <paramref name="upperBound"/>.
     /// </exception>
-    public static void IsLessThan<T>(T upperBound, T value, string message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsLessThan<T>(T upperBound, T value, string? message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(upperBound) < 0)
@@ -176,7 +176,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not less than or equal to <paramref name="upperBound"/>.
     /// </exception>
-    public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsLessThanOrEqualTo<T>(T upperBound, T value, string? message = "", [CallerArgumentExpression(nameof(upperBound))] string upperBoundExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : IComparable<T>
     {
         if (value.CompareTo(upperBound) <= 0)
@@ -213,7 +213,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not positive.
     /// </exception>
-    public static void IsPositive<T>(T value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsPositive<T>(T value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
         var zero = default(T);
@@ -267,7 +267,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not negative.
     /// </exception>
-    public static void IsNegative<T>(T value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNegative<T>(T value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
         var zero = default(T);

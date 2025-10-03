@@ -26,24 +26,6 @@ public sealed partial class Assert
     public static Assert That { get; } = new();
 
     /// <summary>
-    /// Replaces null characters ('\0') with "\\0".
-    /// </summary>
-    /// <param name="input">
-    /// The string to search.
-    /// </param>
-    /// <returns>
-    /// The converted string with null characters replaced by "\\0".
-    /// </returns>
-    /// <remarks>
-    /// This is only public and still present to preserve compatibility with the V1 framework.
-    /// </remarks>
-    [return: NotNullIfNotNull(nameof(input))]
-    public static string? ReplaceNullChars(string? input)
-        => StringEx.IsNullOrEmpty(input)
-            ? input
-            : input.Replace("\0", "\\0");
-
-    /// <summary>
     /// Helper function that creates and throws an AssertionFailedException.
     /// </summary>
     /// <param name="assertionName">
@@ -56,7 +38,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
         => throw new AssertFailedException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
@@ -68,9 +50,7 @@ public sealed partial class Assert
     /// The formatted string based on format and parameters.
     /// </returns>
     internal static string BuildUserMessage(string? format)
-        => format is null
-            ? FrameworkMessages.Common_NullInMessages.ToString()
-            : ReplaceNullChars(format);
+        => format ?? string.Empty;
 
     private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
     {
@@ -129,6 +109,18 @@ public sealed partial class Assert
     private static string BuildUserMessageForSubstringExpressionAndValueExpression(string? format, string substringExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, substringExpression, "substring", valueExpression, "value");
 
+    private static string BuildUserMessageForExpectedSuffixExpressionAndValueExpression(string? format, string expectedSuffixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedSuffixExpression, "expectedSuffix", valueExpression, "value");
+
+    private static string BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(string? format, string notExpectedSuffixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedSuffixExpression, "notExpectedSuffix", valueExpression, "value");
+
+    private static string BuildUserMessageForExpectedPrefixExpressionAndValueExpression(string? format, string expectedPrefixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedPrefixExpression, "expectedPrefix", valueExpression, "value");
+
+    private static string BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(string? format, string notExpectedPrefixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedPrefixExpression, "notExpectedPrefix", valueExpression, "value");
+
     private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
         => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
 
@@ -140,6 +132,9 @@ public sealed partial class Assert
 
     private static string BuildUserMessageForExpectedExpressionAndCollectionExpression(string? format, string expectedExpression, string collectionExpression)
         => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", collectionExpression, "collection");
+
+    private static string BuildUserMessageForNotExpectedExpressionAndCollectionExpression(string? format, string notExpectedExpression, string collectionExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", collectionExpression, "collection");
 
     private static string BuildUserMessageForPredicateExpressionAndCollectionExpression(string? format, string predicateExpression, string collectionExpression)
         => BuildUserMessageForTwoExpressions(format, predicateExpression, "predicate", collectionExpression, "collection");
@@ -178,32 +173,8 @@ public sealed partial class Assert
         }
     }
 
-    /// <summary>
-    /// Safely converts an object to a string, handling null values and null characters.
-    /// Null values are converted to "(null)". Null characters are converted to "\\0".
-    /// </summary>
-    /// <param name="input">
-    /// The object to convert to a string.
-    /// </param>
-    /// <returns>
-    /// The converted string.
-    /// </returns>
-    [SuppressMessage("ReSharper", "RedundantToStringCall", Justification = "We are ensuring ToString() isn't overloaded in a way to misbehave")]
-    [return: NotNull]
     internal static string ReplaceNulls(object? input)
-    {
-        // Use the localized "(null)" string for null values.
-        if (input == null)
-        {
-            return FrameworkMessages.Common_NullInMessages.ToString();
-        }
-
-        // Convert it to a string.
-        string? inputString = input.ToString();
-
-        // Make sure the class didn't override ToString and return null.
-        return inputString == null ? FrameworkMessages.Common_ObjectString.ToString() : ReplaceNullChars(inputString);
-    }
+        => input?.ToString() ?? string.Empty;
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison

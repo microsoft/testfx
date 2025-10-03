@@ -148,7 +148,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNull(object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNullFailing(value))
         {
@@ -158,7 +158,7 @@ public sealed partial class Assert
 
     private static bool IsNullFailing(object? value) => value is not null;
 
-    private static void ThrowAssertIsNullFailed(string message)
+    private static void ThrowAssertIsNullFailed(string? message)
         => ThrowAssertFailed("Assert.IsNull", message);
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
@@ -187,7 +187,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotNull([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNotNullFailing(value))
         {
@@ -198,6 +198,6 @@ public sealed partial class Assert
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotNullFailed(string message)
+    private static void ThrowAssertIsNotNullFailed(string? message)
         => ThrowAssertFailed("Assert.IsNotNull", message);
 }

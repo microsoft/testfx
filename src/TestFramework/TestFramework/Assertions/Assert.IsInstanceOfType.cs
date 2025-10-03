@@ -288,7 +288,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
@@ -310,7 +310,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static T IsInstanceOfType<T>([NotNull] object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static T IsInstanceOfType<T>([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         IsInstanceOfType(value, typeof(T), message, valueExpression);
         return (T)value!;
@@ -372,7 +372,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
@@ -394,7 +394,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
-    public static void IsNotInstanceOfType<T>(object? value, string message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotInstanceOfType<T>(object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => IsNotInstanceOfType(value, typeof(T), message, valueExpression);
 
     /// <inheritdoc cref="IsNotInstanceOfType{T}(object?, string, string)" />

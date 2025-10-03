@@ -22,7 +22,7 @@
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>17.14.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>18.0.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.55.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>17.14.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
