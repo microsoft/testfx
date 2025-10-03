@@ -515,7 +515,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="translated">测试方法 {0}.{1} 引发了异常: 
+        <target state="new">Test method {0}.{1} threw exception:
 {2}</target>
         <note />
       </trans-unit>

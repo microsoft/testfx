@@ -515,7 +515,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="translated">Die Testmethode "{0}.{1}" hat eine Ausnahme ausgelöst: 
+        <target state="new">Test method {0}.{1} threw exception:
 {2}</target>
         <note />
       </trans-unit>
