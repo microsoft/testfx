@@ -9,27 +9,27 @@
       </trans-unit>
       <trans-unit id="DumpingProcess">
         <source>Dumping process {0} - {1}</source>
-        <target state="new">Dumping process {0} - {1}</target>
+        <target state="translated">傾印處理序 {0} - {1}</target>
         <note>0 is pid, 1 is the name of the process</note>
       </trans-unit>
       <trans-unit id="DumpingProcessTree">
         <source>Dumping this process tree (from bottom):</source>
-        <target state="new">Dumping this process tree (from bottom):</target>
+        <target state="translated">正在傾印此處理序樹狀結構 (從底部):</target>
         <note />
       </trans-unit>
       <trans-unit id="ErrorGettingParentOfProcess">
         <source>Error getting parent of process {0} - {1}: {2}"</source>
-        <target state="new">Error getting parent of process {0} - {1}: {2}"</target>
+        <target state="translated">取得 {0} - {1} 的父處理序時發生錯誤: {2}"</target>
         <note>0 is pid, 1 is name, 2 is the exception</note>
       </trans-unit>
       <trans-unit id="ErrorKillingProcess">
         <source>Error while killing process {0} - {1}: {2}</source>
-        <target state="new">Error while killing process {0} - {1}: {2}</target>
+        <target state="translated">終止處理序 {0} - {1} 時發生錯誤: {2}</target>
         <note>0 is pid, 1 is name, 2 is the exception</note>
       </trans-unit>
       <trans-unit id="ErrorWhileDumpingProcess">
         <source>Error while taking dump of process {0} - {1}: {2}</source>
-        <target state="new">Error while taking dump of process {0} - {1}: {2}</target>
+        <target state="translated">擷取處理序 {0} - {1} 的傾印時發生錯誤: {2}</target>
         <note>0 is pid, 1 is name, 2 is the exception from the system</note>
       </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">

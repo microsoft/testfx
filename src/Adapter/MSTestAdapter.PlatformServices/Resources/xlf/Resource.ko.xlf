@@ -174,7 +174,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">{1} 오류로 인해 원본 '{0}' 검색에 실패했습니다. 
 {2}</target>
         <note />
       </trans-unit>

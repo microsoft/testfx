@@ -226,7 +226,7 @@
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">duración</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -765,7 +765,7 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">correcto</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -989,7 +989,7 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">total</target>
         <note />
       </trans-unit>
     </body>

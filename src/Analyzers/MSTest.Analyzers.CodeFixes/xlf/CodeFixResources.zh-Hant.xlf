@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AddCallerInfoParametersFix">
         <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
-        <target state="new">Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</target>
+        <target state="translated">新增 '[CallerFilePath]' 和 '[CallerLineNumber]' 參數</target>
         <note />
       </trans-unit>
       <trans-unit id="AddTestClassFix">
@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
         <source>Use assignment instead of 'out' parameter</source>
-        <target state="new">Use assignment instead of 'out' parameter</target>
+        <target state="translated">使用指派而非 'out' 參數</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
-        <target state="new">Remove 'ClassCleanupBehavior' argument</target>
+        <target state="translated">移除 'ClassCleanupBehavior' 參數</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="TransformExecuteToExecuteAsyncFix">
         <source>Transform 'Execute' override to 'ExecuteAsync'</source>
-        <target state="new">Transform 'Execute' override to 'ExecuteAsync'</target>
+        <target state="translated">將 'Execute' 覆寫改為 'ExecuteAsync'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
         <source>Use 'ContainsKey' instead of 'Contains'</source>
-        <target state="new">Use 'ContainsKey' instead of 'Contains'</target>
+        <target state="translated">使用 'ContainsKey' 而非 'Contains'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
-        <target state="new">Use 'DisplayName' property instead of string argument</target>
+        <target state="translated">使用 'DisplayName' 屬性取代字串引數</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

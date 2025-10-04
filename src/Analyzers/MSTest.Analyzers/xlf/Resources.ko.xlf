@@ -639,22 +639,22 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <target state="translated">TestMethodAttribute에서 파생된 클래스 '{0}'은(는) 생성자에 CallerFilePath와 CallerLineNumber 매개 변수를 추가해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <target state="translated">TestMethodAttribute에서 파생된 클래스는 소스 정보를 전파해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
-        <target state="new">Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</target>
+        <target state="translated">TestMethodAttribute에 문자열 인수를 전달하는 대신 'DisplayName' 속성을 사용하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
         <source>TestMethodAttribute should set DisplayName correctly</source>
-        <target state="new">TestMethodAttribute should set DisplayName correctly</target>
+        <target state="translated">TestMethodAttribute는 DisplayName을 올바르게 설정해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">

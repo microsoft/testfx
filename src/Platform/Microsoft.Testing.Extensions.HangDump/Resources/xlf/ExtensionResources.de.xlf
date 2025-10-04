@@ -9,27 +9,27 @@
       </trans-unit>
       <trans-unit id="DumpingProcess">
         <source>Dumping process {0} - {1}</source>
-        <target state="new">Dumping process {0} - {1}</target>
+        <target state="translated">Speicherauszug des Prozesses {0} – {1} wird erstellt</target>
         <note>0 is pid, 1 is the name of the process</note>
       </trans-unit>
       <trans-unit id="DumpingProcessTree">
         <source>Dumping this process tree (from bottom):</source>
-        <target state="new">Dumping this process tree (from bottom):</target>
+        <target state="translated">Diese Prozessstruktur wird gesichert (von unten):</target>
         <note />
       </trans-unit>
       <trans-unit id="ErrorGettingParentOfProcess">
         <source>Error getting parent of process {0} - {1}: {2}"</source>
-        <target state="new">Error getting parent of process {0} - {1}: {2}"</target>
+        <target state="translated">Fehler beim Abrufen des übergeordneten Prozesses {0} – {1}: {2}</target>
         <note>0 is pid, 1 is name, 2 is the exception</note>
       </trans-unit>
       <trans-unit id="ErrorKillingProcess">
         <source>Error while killing process {0} - {1}: {2}</source>
-        <target state="new">Error while killing process {0} - {1}: {2}</target>
+        <target state="translated">Fehler beim Beenden des Prozesses {0} – {1}: {2}</target>
         <note>0 is pid, 1 is name, 2 is the exception</note>
       </trans-unit>
       <trans-unit id="ErrorWhileDumpingProcess">
         <source>Error while taking dump of process {0} - {1}: {2}</source>
-        <target state="new">Error while taking dump of process {0} - {1}: {2}</target>
+        <target state="translated">Fehler beim Erstellen des Speicherauszugs des Prozesses {0} – {1}: {2}</target>
         <note>0 is pid, 1 is name, 2 is the exception from the system</note>
       </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">

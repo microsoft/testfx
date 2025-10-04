@@ -639,22 +639,22 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <target state="translated">TestMethodAttribute türetilmiş sınıf '{0}', yapıcıya CallerFilePath ve CallerLineNumber parametrelerini eklemelidir</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <target state="translated">TestMethodAttribute türetilmiş sınıfı kaynak bilgilerini yaymalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
-        <target state="new">Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</target>
+        <target state="translated">TestMethodAttribute'a bir dize bağımsız değişkeni aktarmak yerine 'DisplayName' özelliğini kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
         <source>TestMethodAttribute should set DisplayName correctly</source>
-        <target state="new">TestMethodAttribute should set DisplayName correctly</target>
+        <target state="translated">TestMethodAttribute, DisplayName'i doğru şekilde ayarlamalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
