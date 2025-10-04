@@ -21,9 +21,9 @@
       <Uri>https://github.com/microsoft/testfx</Uri>
       <Sha>86355ce30b293314485eaae50e3e7065b9c50f96</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="2.0.0-preview.25503.1">
+    <Dependency Name="Microsoft.Testing.Platform" Version="2.0.0">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>86355ce30b293314485eaae50e3e7065b9c50f96</Sha>
+      <Sha>2bec15462381649ff4b770577e7b8b3bbba5ea12</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
