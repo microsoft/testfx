@@ -174,7 +174,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">來源 '{0}' 的探索失敗，並發生 {1} 個錯誤: 
 {2}</target>
         <note />
       </trans-unit>
@@ -515,7 +515,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="new">Test method {0}.{1} threw exception:
+        <target state="translated">測試方法 {0}.{1} 擲回例外狀況: 
 {2}</target>
         <note />
       </trans-unit>
