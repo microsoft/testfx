@@ -226,7 +226,7 @@
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">süre</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -765,7 +765,7 @@ Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">başarılı</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -989,7 +989,7 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">toplam</target>
         <note />
       </trans-unit>
     </body>
