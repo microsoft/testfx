@@ -85,17 +85,17 @@
       </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
-        <target state="new">Details:</target>
+        <target state="translated">Dettagli:</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertThatFailedFormat">
         <source>Assert.That({0}) failed.</source>
-        <target state="new">Assert.That({0}) failed.</target>
+        <target state="translated">Assert.That({0}) non riuscito.</target>
         <note>{0} is the user code expression</note>
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
-        <target state="new">Message: {0}</target>
+        <target state="translated">Messaggio: {0}</target>
         <note>{0} user provided message</note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
@@ -120,17 +120,17 @@
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
         <source>'{0}' expression: '{1}'.</source>
-        <target state="new">'{0}' expression: '{1}'.</target>
+        <target state="translated">Espressione '{0}': '{1}'.</target>
         <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
         <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
-        <target state="new">'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</target>
+        <target state="translated">Espressione '{0}': '{1}', espressione '{2}': '{3}', espressione '{4}': '{5}'.</target>
         <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
         <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
-        <target state="new">'{0}' expression: '{1}', '{2}' expression: '{3}'.</target>
+        <target state="translated">Espressione '{0}': '{1}', espressione '{2}': '{3}'.</target>
         <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -244,7 +244,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
-        <target state="new">The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</target>
+        <target state="translated">La proprietà 'TestContext.{0}' relativa al test corrente non è disponibile durante le fixture di assembly o classe.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
@@ -320,7 +320,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
-        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection.</target>
+        <target state="translated">Gli elementi &lt;{0}&gt; non sono presenti nella raccolta.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">

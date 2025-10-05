@@ -226,7 +226,7 @@
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">doba trvání</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -765,7 +765,7 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">úspěšné</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -989,7 +989,7 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">celkem</target>
         <note />
       </trans-unit>
     </body>
