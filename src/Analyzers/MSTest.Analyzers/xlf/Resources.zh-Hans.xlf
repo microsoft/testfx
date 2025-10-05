@@ -639,22 +639,22 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <target state="translated">TestMethodAttribute 派生类‘{0}’应在其构造函数中添加参数 CallerFilePath 和 CallerLineNumber</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <target state="translated">TestMethodAttribute 派生类应传递源信息</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
-        <target state="new">Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</target>
+        <target state="translated">请使用属性‘DisplayName’，而不是将字符串参数传递给 TestMethodAttribute</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
         <source>TestMethodAttribute should set DisplayName correctly</source>
-        <target state="new">TestMethodAttribute should set DisplayName correctly</target>
+        <target state="translated">TestMethodAttribute 应正确设置 DisplayName</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
