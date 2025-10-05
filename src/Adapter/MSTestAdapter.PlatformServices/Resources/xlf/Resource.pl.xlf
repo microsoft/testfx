@@ -174,7 +174,7 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">Nie udało się wykryć źródła „{0}” z powodu {1} błędów:
 {2}</target>
         <note />
       </trans-unit>

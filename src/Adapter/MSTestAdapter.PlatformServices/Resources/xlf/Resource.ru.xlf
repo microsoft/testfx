@@ -174,7 +174,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">Сбой обнаружения для источника "{0}" с ошибками ({1}):
 {2}</target>
         <note />
       </trans-unit>
@@ -515,8 +515,8 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="translated">Метод теста {0}.{1} создал исключение: 
-{2}.</target>
+        <target state="translated">Метод теста {0}.{1} создал исключение:
+{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">

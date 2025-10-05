@@ -175,7 +175,7 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">ソース '{0}' の検出に失敗しました。{1} エラー:
 {2}</target>
         <note />
       </trans-unit>

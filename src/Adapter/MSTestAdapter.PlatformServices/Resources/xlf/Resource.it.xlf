@@ -174,7 +174,7 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">Individuazione non riuscita per l'origine '{0}' con {1} errori: 
 {2}</target>
         <note />
       </trans-unit>
