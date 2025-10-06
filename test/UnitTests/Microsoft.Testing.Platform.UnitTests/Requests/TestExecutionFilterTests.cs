@@ -190,11 +190,8 @@ public sealed class TestExecutionFilterTests
     }
 
     [TestMethod]
-    public void AggregateTestExecutionFilter_Constructor_ThrowsWhenNoFiltersProvided()
-    {
-        // Act & Assert
+    public void AggregateTestExecutionFilter_Constructor_ThrowsWhenNoFiltersProvided() =>
         Assert.ThrowsExactly<ArgumentException>(() => new AggregateTestExecutionFilter([]));
-    }
 
     [TestMethod]
     public void AggregateTestExecutionFilter_InnerFilters_ReturnsProvidedFilters()
@@ -208,7 +205,7 @@ public sealed class TestExecutionFilterTests
         AggregateTestExecutionFilter aggregateFilter = new(filters);
 
         // Assert
-        Assert.AreEqual(2, aggregateFilter.InnerFilters.Count);
+        Assert.HasCount(2, aggregateFilter.InnerFilters);
         Assert.IsTrue(aggregateFilter.InnerFilters.Contains(uidFilter));
         Assert.IsTrue(aggregateFilter.InnerFilters.Contains(treeFilter));
     }

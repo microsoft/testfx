@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
@@ -20,7 +22,7 @@ public sealed class RequestFilterProviderTests
 
         public bool IsOptionSet(string optionName) => _options.ContainsKey(optionName);
 
-        public bool TryGetOptionArgumentList(string optionName, out string[]? arguments)
+        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
         {
             if (_options.TryGetValue(optionName, out string[]? values))
             {
@@ -39,7 +41,7 @@ public sealed class RequestFilterProviderTests
         TestNodeUidRequestFilterProvider provider = new();
         TestNode[] testNodes = [new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" }];
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, testNodes, GraphFilter: null)));
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(Guid.NewGuid(), testNodes, null)));
 
         bool result = provider.CanHandle(serviceProvider);
 
@@ -51,7 +53,7 @@ public sealed class RequestFilterProviderTests
     {
         TestNodeUidRequestFilterProvider provider = new();
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, TestNodes: null, GraphFilter: "/Some/Filter")));
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(Guid.NewGuid(), null, "/Some/Filter")));
 
         bool result = provider.CanHandle(serviceProvider);
 
@@ -68,13 +70,13 @@ public sealed class RequestFilterProviderTests
             new() { Uid = new TestNodeUid("test2"), DisplayName = "Test2" },
         ];
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, testNodes, GraphFilter: null)));
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(Guid.NewGuid(), testNodes, null)));
 
         ITestExecutionFilter filter = await provider.CreateFilterAsync(serviceProvider);
 
         Assert.IsInstanceOfType<TestNodeUidListFilter>(filter);
-        TestNodeUidListFilter uidFilter = (TestNodeUidListFilter)filter;
-        Assert.AreEqual(2, uidFilter.TestNodeUids.Length);
+        var uidFilter = (TestNodeUidListFilter)filter;
+        Assert.HasCount(2, uidFilter.TestNodeUids);
     }
 
     [TestMethod]
@@ -149,7 +151,7 @@ public sealed class RequestFilterProviderTests
         TreeNodeRequestFilterProvider treeProvider = new();
         TestNode[] testNodes = [new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" }];
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, testNodes, GraphFilter: "/**/Test*")));
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(Guid.NewGuid(), testNodes, "/**/Test*")));
         var commandLineOptions = new MockCommandLineOptions();
         commandLineOptions.AddOption(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, ["/**/Test*"]);
         serviceProvider.AddService(commandLineOptions);
@@ -165,7 +167,7 @@ public sealed class RequestFilterProviderTests
         TreeNodeRequestFilterProvider treeProvider = new();
         NopRequestFilterProvider nopProvider = new();
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, TestNodes: null, GraphFilter: null)));
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(Guid.NewGuid(), null, null)));
         var commandLineOptions = new MockCommandLineOptions();
         serviceProvider.AddService(commandLineOptions);
 
