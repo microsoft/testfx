@@ -457,7 +457,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // ServerMode and Console mode uses different host
         if (hasServerFlag && isJsonRpcProtocol)
         {
-            TestHostManager testHostManager = (TestHostManager)TestHost;
+            var testHostManager = (TestHostManager)TestHost;
             if (!testHostManager.HasRequestFilterProviders())
             {
                 testHostManager.AddRequestFilterProvider(sp => new TestNodeUidRequestFilterProvider());
@@ -491,7 +491,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
         else
         {
-            TestHostManager testHostManager = (TestHostManager)TestHost;
+            var testHostManager = (TestHostManager)TestHost;
             if (!testHostManager.HasFilterFactories())
             {
                 testHostManager.AddTestExecutionFilterFactory(serviceProvider =>

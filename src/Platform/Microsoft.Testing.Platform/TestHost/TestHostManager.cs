@@ -125,7 +125,7 @@ internal sealed class TestHostManager : ITestHostManager
             => Task.FromResult((true, (ITestExecutionFilter?)_filter));
     }
 
-    internal void AddRequestFilterProvider(Func<IServiceProvider, IRequestFilterProvider> requestFilterProvider)
+    public void AddRequestFilterProvider(Func<IServiceProvider, IRequestFilterProvider> requestFilterProvider)
     {
         Guard.NotNull(requestFilterProvider);
         _requestFilterProviders.Add(requestFilterProvider);
@@ -135,13 +135,15 @@ internal sealed class TestHostManager : ITestHostManager
 
     internal async Task<ITestExecutionFilter> ResolveRequestFilterAsync(ServerMode.RequestArgsBase args, ServiceProvider serviceProvider)
     {
+        serviceProvider.AddService(new TestExecutionRequestContext(args));
+
         foreach (Func<IServiceProvider, IRequestFilterProvider> providerFactory in _requestFilterProviders)
         {
             IRequestFilterProvider provider = providerFactory(serviceProvider);
 
-            if (await provider.IsEnabledAsync().ConfigureAwait(false) && provider.CanHandle(args))
+            if (await provider.IsEnabledAsync().ConfigureAwait(false) && provider.CanHandle(serviceProvider))
             {
-                return await provider.CreateFilterAsync(args).ConfigureAwait(false);
+                return await provider.CreateFilterAsync(serviceProvider).ConfigureAwait(false);
             }
         }
 

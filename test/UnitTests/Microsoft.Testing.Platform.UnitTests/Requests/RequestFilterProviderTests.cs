@@ -1,23 +1,47 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
 public sealed class RequestFilterProviderTests
 {
+    private sealed class MockCommandLineOptions : ICommandLineOptions
+    {
+        private readonly Dictionary<string, string[]> _options = [];
+
+        public void AddOption(string key, string[] values) => _options[key] = values;
+
+        public bool IsOptionSet(string optionName) => _options.ContainsKey(optionName);
+
+        public bool TryGetOptionArgumentList(string optionName, out string[]? arguments)
+        {
+            if (_options.TryGetValue(optionName, out string[]? values))
+            {
+                arguments = values;
+                return true;
+            }
+
+            arguments = null;
+            return false;
+        }
+    }
+
     [TestMethod]
     public void TestNodeUidRequestFilterProvider_CanHandle_ReturnsTrueWhenTestNodesProvided()
     {
         TestNodeUidRequestFilterProvider provider = new();
         TestNode[] testNodes = [new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" }];
-        RequestArgsBase args = new(Guid.NewGuid(), testNodes, null);
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, testNodes, GraphFilter: null)));
 
-        bool result = provider.CanHandle(args);
+        bool result = provider.CanHandle(serviceProvider);
 
         Assert.IsTrue(result);
     }
@@ -26,9 +50,10 @@ public sealed class RequestFilterProviderTests
     public void TestNodeUidRequestFilterProvider_CanHandle_ReturnsFalseWhenTestNodesNull()
     {
         TestNodeUidRequestFilterProvider provider = new();
-        RequestArgsBase args = new(Guid.NewGuid(), null, "/Some/Filter");
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, TestNodes: null, GraphFilter: "/Some/Filter")));
 
-        bool result = provider.CanHandle(args);
+        bool result = provider.CanHandle(serviceProvider);
 
         Assert.IsFalse(result);
     }
@@ -42,9 +67,10 @@ public sealed class RequestFilterProviderTests
             new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" },
             new() { Uid = new TestNodeUid("test2"), DisplayName = "Test2" },
         ];
-        RequestArgsBase args = new(Guid.NewGuid(), testNodes, null);
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, testNodes, GraphFilter: null)));
 
-        ITestExecutionFilter filter = await provider.CreateFilterAsync(args);
+        ITestExecutionFilter filter = await provider.CreateFilterAsync(serviceProvider);
 
         Assert.IsInstanceOfType<TestNodeUidListFilter>(filter);
         TestNodeUidListFilter uidFilter = (TestNodeUidListFilter)filter;
@@ -55,9 +81,12 @@ public sealed class RequestFilterProviderTests
     public void TreeNodeRequestFilterProvider_CanHandle_ReturnsTrueWhenGraphFilterProvided()
     {
         TreeNodeRequestFilterProvider provider = new();
-        RequestArgsBase args = new(Guid.NewGuid(), null, "/**/Test*");
+        ServiceProvider serviceProvider = new();
+        var commandLineOptions = new MockCommandLineOptions();
+        commandLineOptions.AddOption(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, ["/**/Test*"]);
+        serviceProvider.AddService(commandLineOptions);
 
-        bool result = provider.CanHandle(args);
+        bool result = provider.CanHandle(serviceProvider);
 
         Assert.IsTrue(result);
     }
@@ -66,10 +95,11 @@ public sealed class RequestFilterProviderTests
     public void TreeNodeRequestFilterProvider_CanHandle_ReturnsFalseWhenGraphFilterNull()
     {
         TreeNodeRequestFilterProvider provider = new();
-        TestNode[] testNodes = [new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" }];
-        RequestArgsBase args = new(Guid.NewGuid(), testNodes, null);
+        ServiceProvider serviceProvider = new();
+        var commandLineOptions = new MockCommandLineOptions();
+        serviceProvider.AddService(commandLineOptions);
 
-        bool result = provider.CanHandle(args);
+        bool result = provider.CanHandle(serviceProvider);
 
         Assert.IsFalse(result);
     }
@@ -78,9 +108,12 @@ public sealed class RequestFilterProviderTests
     public async Task TreeNodeRequestFilterProvider_CreateFilterAsync_CreatesTreeNodeFilter()
     {
         TreeNodeRequestFilterProvider provider = new();
-        RequestArgsBase args = new(Guid.NewGuid(), null, "/**/Test*");
+        ServiceProvider serviceProvider = new();
+        var commandLineOptions = new MockCommandLineOptions();
+        commandLineOptions.AddOption(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, ["/**/Test*"]);
+        serviceProvider.AddService(commandLineOptions);
 
-        ITestExecutionFilter filter = await provider.CreateFilterAsync(args);
+        ITestExecutionFilter filter = await provider.CreateFilterAsync(serviceProvider);
 
         Assert.IsInstanceOfType<TreeNodeFilter>(filter);
     }
@@ -89,22 +122,22 @@ public sealed class RequestFilterProviderTests
     public void NopRequestFilterProvider_CanHandle_AlwaysReturnsTrue()
     {
         NopRequestFilterProvider provider = new();
-        RequestArgsBase args1 = new(Guid.NewGuid(), null, null);
-        RequestArgsBase args2 = new(Guid.NewGuid(), [new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" }], null);
-        RequestArgsBase args3 = new(Guid.NewGuid(), null, "/**/Test*");
+        ServiceProvider serviceProvider1 = new();
+        ServiceProvider serviceProvider2 = new();
+        ServiceProvider serviceProvider3 = new();
 
-        Assert.IsTrue(provider.CanHandle(args1));
-        Assert.IsTrue(provider.CanHandle(args2));
-        Assert.IsTrue(provider.CanHandle(args3));
+        Assert.IsTrue(provider.CanHandle(serviceProvider1));
+        Assert.IsTrue(provider.CanHandle(serviceProvider2));
+        Assert.IsTrue(provider.CanHandle(serviceProvider3));
     }
 
     [TestMethod]
     public async Task NopRequestFilterProvider_CreateFilterAsync_CreatesNopFilter()
     {
         NopRequestFilterProvider provider = new();
-        RequestArgsBase args = new(Guid.NewGuid(), null, null);
+        ServiceProvider serviceProvider = new();
 
-        ITestExecutionFilter filter = await provider.CreateFilterAsync(args);
+        ITestExecutionFilter filter = await provider.CreateFilterAsync(serviceProvider);
 
         Assert.IsInstanceOfType<NopFilter>(filter);
     }
@@ -114,12 +147,15 @@ public sealed class RequestFilterProviderTests
     {
         TestNodeUidRequestFilterProvider uidProvider = new();
         TreeNodeRequestFilterProvider treeProvider = new();
-
         TestNode[] testNodes = [new() { Uid = new TestNodeUid("test1"), DisplayName = "Test1" }];
-        RequestArgsBase args = new(Guid.NewGuid(), testNodes, "/**/Test*");
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, testNodes, GraphFilter: "/**/Test*")));
+        var commandLineOptions = new MockCommandLineOptions();
+        commandLineOptions.AddOption(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, ["/**/Test*"]);
+        serviceProvider.AddService(commandLineOptions);
 
-        Assert.IsTrue(uidProvider.CanHandle(args), "UID provider should handle when TestNodes is provided");
-        Assert.IsTrue(treeProvider.CanHandle(args), "Tree provider should also handle when GraphFilter is provided");
+        Assert.IsTrue(uidProvider.CanHandle(serviceProvider), "UID provider should handle when TestNodes is provided");
+        Assert.IsTrue(treeProvider.CanHandle(serviceProvider), "Tree provider should also handle when GraphFilter is provided");
     }
 
     [TestMethod]
@@ -128,11 +164,13 @@ public sealed class RequestFilterProviderTests
         TestNodeUidRequestFilterProvider uidProvider = new();
         TreeNodeRequestFilterProvider treeProvider = new();
         NopRequestFilterProvider nopProvider = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestExecutionRequestContext(new RunRequestArgs(ClientInfo: null, TestNodes: null, GraphFilter: null)));
+        var commandLineOptions = new MockCommandLineOptions();
+        serviceProvider.AddService(commandLineOptions);
 
-        RequestArgsBase args = new(Guid.NewGuid(), null, null);
-
-        Assert.IsFalse(uidProvider.CanHandle(args), "UID provider should not handle when TestNodes is null");
-        Assert.IsFalse(treeProvider.CanHandle(args), "Tree provider should not handle when GraphFilter is null");
-        Assert.IsTrue(nopProvider.CanHandle(args), "Nop provider should always handle");
+        Assert.IsFalse(uidProvider.CanHandle(serviceProvider), "UID provider should not handle when TestNodes is null");
+        Assert.IsFalse(treeProvider.CanHandle(serviceProvider), "Tree provider should not handle when GraphFilter is null");
+        Assert.IsTrue(nopProvider.CanHandle(serviceProvider), "Nop provider should always handle");
     }
 }

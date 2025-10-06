@@ -2,26 +2,27 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.Requests;
 
 /// <summary>
-/// Provides a filter for server-mode test execution requests based on request arguments.
+/// Provides a filter for server-mode test execution requests.
+/// Providers query request-specific information from the service provider.
 /// </summary>
-internal interface IRequestFilterProvider : IExtension
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface IRequestFilterProvider : IExtension
 {
     /// <summary>
-    /// Determines whether this provider can handle the given request arguments.
+    /// Determines whether this provider can handle the current request context.
     /// </summary>
-    /// <param name="args">The request arguments.</param>
-    /// <returns>true if this provider can create a filter for the given arguments; otherwise, false.</returns>
-    bool CanHandle(RequestArgsBase args);
+    /// <param name="serviceProvider">The service provider containing request-specific services.</param>
+    /// <returns>true if this provider can create a filter for the current request; otherwise, false.</returns>
+    bool CanHandle(IServiceProvider serviceProvider);
 
     /// <summary>
-    /// Creates a test execution filter for the given request arguments.
+    /// Creates a test execution filter for the current request.
     /// </summary>
-    /// <param name="args">The request arguments.</param>
+    /// <param name="serviceProvider">The service provider containing request-specific services.</param>
     /// <returns>A test execution filter.</returns>
-    Task<ITestExecutionFilter> CreateFilterAsync(RequestArgsBase args);
+    Task<ITestExecutionFilter> CreateFilterAsync(IServiceProvider serviceProvider);
 }

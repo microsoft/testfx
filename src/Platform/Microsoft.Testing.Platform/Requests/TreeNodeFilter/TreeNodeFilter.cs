@@ -485,18 +485,12 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
             .OfType<TestMethodIdentifierProperty>()
             .FirstOrDefault();
 
-        string fullPath;
-        if (methodIdentifier is not null)
-        {
-            fullPath = $"{PathSeparator}{Uri.EscapeDataString(new AssemblyName(methodIdentifier.AssemblyFullName).Name)}" +
-                      $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.Namespace)}" +
-                      $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.TypeName)}" +
-                      $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.MethodName)}";
-        }
-        else
-        {
-            fullPath = $"{PathSeparator}*{PathSeparator}*{PathSeparator}*{PathSeparator}{Uri.EscapeDataString(testNode.DisplayName)}";
-        }
+        string fullPath = methodIdentifier is not null
+            ? $"{PathSeparator}{Uri.EscapeDataString(new AssemblyName(methodIdentifier.AssemblyFullName).Name ?? string.Empty)}" +
+              $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.Namespace)}" +
+              $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.TypeName)}" +
+              $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.MethodName)}"
+            : $"{PathSeparator}*{PathSeparator}*{PathSeparator}*{PathSeparator}{Uri.EscapeDataString(testNode.DisplayName)}";
 
         return MatchesFilter(fullPath, testNode.Properties);
     }

@@ -53,4 +53,13 @@ public interface ITestHostManager
     /// <param name="testExecutionFilterFactory">The factory method for creating the test execution filter factory.</param>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory);
+
+    /// <summary>
+    /// Adds a request filter provider for server-mode test execution requests.
+    /// Multiple providers can be registered and will be evaluated in registration order.
+    /// The first provider that can handle the request will create the filter.
+    /// </summary>
+    /// <param name="requestFilterProvider">The factory method for creating the request filter provider.</param>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    void AddRequestFilterProvider(Func<IServiceProvider, IRequestFilterProvider> requestFilterProvider);
 }
