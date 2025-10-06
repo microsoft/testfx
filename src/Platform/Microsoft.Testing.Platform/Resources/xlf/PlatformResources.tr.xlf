@@ -224,6 +224,11 @@
         <target state="translated">Testler şuradan bulunuyor:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="translated">süre</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">'{0}' sağlayıcısı '' (UID: {1}) şu hatayla başarısız oldu: {2}</target>
@@ -468,7 +473,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
-        <target state="new">Allows to pause execution in order to attach to the process for debug purposes.</target>
+        <target state="translated">Hata ayıklama amacıyla işleme eklemek için yürütmeyi duraklatmayı sağlar.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
@@ -758,6 +763,11 @@ Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|
         <target state="translated">Test oturumu başlatılıyor. Günlük dosyası yolu '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="translated">başarılı</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Bir 'ITestExecutionFilterFactory' fabrikası zaten ayarlanmış</target>
@@ -975,6 +985,11 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Sıfır test çalıştırıldı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="translated">toplam</target>
         <note />
       </trans-unit>
     </body>

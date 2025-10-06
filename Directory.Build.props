@@ -19,8 +19,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
 
-    <!-- !!!TEMPORARY!!! Disabling public API temporarily. Re-enable when merging this branch to main!! -->
-    <NoWarn>$(NoWarn);RS0016;RS0017;RS2003;RS2002</NoWarn>
     <ReportAnalyzer>true</ReportAnalyzer>
   </PropertyGroup>
 
@@ -31,7 +29,6 @@
     <ModernUwpMinimum>net9.0-windows10.0.17763.0</ModernUwpMinimum>
     <WinUiMinimum>net8.0-windows10.0.18362.0</WinUiMinimum>
 
-    <MicrosoftTestingTargetFrameworks>net8.0;net9.0</MicrosoftTestingTargetFrameworks>
     <SupportedNetFrameworks>net8.0;net9.0</SupportedNetFrameworks>
   </PropertyGroup>
 

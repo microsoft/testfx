@@ -13,16 +13,6 @@ public partial class AssertTests
     public void InstanceShouldCacheAssertInstance() => Assert.That.Should().BeSameAs(Assert.That);
     #endregion
 
-    #region ReplaceNullChars tests
-    public void ReplaceNullCharsShouldReturnStringIfNullOrEmpty()
-    {
-        Assert.ReplaceNullChars(null).Should().BeNull();
-        Assert.ReplaceNullChars(string.Empty).Should().BeSameAs(string.Empty);
-    }
-
-    public void ReplaceNullCharsShouldReplaceNullCharsInAString() => Assert.ReplaceNullChars("The quick brown fox \0 jumped over the la\0zy dog\0").Should().Be("The quick brown fox \\0 jumped over the la\\0zy dog\\0");
-    #endregion
-
     #region BuildUserMessage tests
 
     // See https://github.com/dotnet/sdk/issues/25373

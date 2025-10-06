@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Base class for Framework Exceptions.
 /// </summary>
 [Serializable]
-public class MSTestException : Exception
+internal sealed class MSTestException : Exception
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestException"/> class.
@@ -47,7 +47,7 @@ public class MSTestException : Exception
     [Obsolete("Legacy serialization support is deprecated since .NET 8", DiagnosticId = "SYSLIB0051")]
 #endif
     [EditorBrowsable(EditorBrowsableState.Never)]
-    protected MSTestException(SerializationInfo info, StreamingContext context)
+    public MSTestException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
         // Do not remove this as unused, it is used by BinaryFormatter when communicating between tested VisualStudio instance,

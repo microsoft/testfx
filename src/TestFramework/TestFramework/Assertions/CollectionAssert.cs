@@ -294,9 +294,21 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
-        if (!IsSubsetOfHelper(subset, superset))
+        Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
+        if (!isSubsetValue.Item1)
         {
-            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", Assert.BuildUserMessage(message));
+            string returnedSubsetValueMessage = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
+
+            returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage);
+            string userMessage = Assert.BuildUserMessage(message);
+            if (string.IsNullOrEmpty(userMessage))
+            {
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
+            }
+            else
+            {
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", $"{returnedSubsetValueMessage} {userMessage}");
+            }
         }
     }
 
@@ -342,7 +354,8 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
-        if (IsSubsetOfHelper(subset, superset))
+        Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
+        if (isSubsetValue.Item1)
         {
             Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message));
         }
@@ -518,7 +531,7 @@ public sealed class CollectionAssert
     /// exception if the two collections contain identical elements without regard
     /// to order.
     /// </summary>
-    /// <param name="expected">
+    /// <param name="notExpected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
     /// </param>
@@ -527,20 +540,20 @@ public sealed class CollectionAssert
     /// the code under test.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
-        => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, string.Empty);
+        [NotNullIfNotNull(nameof(actual))] ICollection? notExpected, [NotNullIfNotNull(nameof(notExpected))] ICollection? actual)
+        => AreNotEquivalent(notExpected?.Cast<object>(), actual?.Cast<object>(), EqualityComparer<object>.Default, string.Empty);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
     /// exception if the two collections contain identical elements without regard
     /// to order.
     /// </summary>
-    /// <param name="expected">
+    /// <param name="notExpected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
     /// </param>
@@ -550,18 +563,18 @@ public sealed class CollectionAssert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
-    /// contains the same elements as <paramref name="expected"/>. The message
+    /// contains the same elements as <paramref name="notExpected"/>. The message
     /// is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent(
-        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        [NotNullIfNotNull(nameof(actual))] ICollection? notExpected, [NotNullIfNotNull(nameof(notExpected))] ICollection? actual,
         string? message)
-        => AreNotEquivalent(expected?.Cast<object>(), actual?.Cast<object>(), comparer: EqualityComparer<object>.Default, message);
+        => AreNotEquivalent(notExpected?.Cast<object>(), actual?.Cast<object>(), comparer: EqualityComparer<object>.Default, message);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -571,7 +584,7 @@ public sealed class CollectionAssert
     /// <typeparam name="T">
     /// The type of values to compare.
     /// </typeparam>
-    /// <param name="expected">
+    /// <param name="notExpected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
     /// </param>
@@ -583,13 +596,13 @@ public sealed class CollectionAssert
     /// The compare implementation to use when comparing elements of the collection.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
-        => AreNotEquivalent(expected, actual, comparer, string.Empty);
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? notExpected, [NotNullIfNotNull(nameof(notExpected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer)
+        => AreNotEquivalent(notExpected, actual, comparer, string.Empty);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -599,7 +612,7 @@ public sealed class CollectionAssert
     /// <typeparam name="T">
     /// The type of values to compare.
     /// </typeparam>
-    /// <param name="expected">
+    /// <param name="notExpected">
     /// The first collection to compare. This contains the elements the test
     /// expects to be different than the actual collection.
     /// </param>
@@ -612,29 +625,29 @@ public sealed class CollectionAssert
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
-    /// contains the same elements as <paramref name="expected"/>. The message
+    /// contains the same elements as <paramref name="notExpected"/>. The message
     /// is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// <paramref name="notExpected"/> and <paramref name="actual"/> nullabilities don't match,
     /// or if collections contain the same elements, including the same number of duplicate
     /// occurrences of each element.
     /// </exception>
     public static void AreNotEquivalent<T>(
-        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
+        [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? notExpected, [NotNullIfNotNull(nameof(notExpected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
 
         // Check whether one is null while the other is not.
-        if (expected == null != (actual == null))
+        if (notExpected == null != (actual == null))
         {
             return;
         }
 
         // If the references are the same or both collections are null, they
         // are equivalent. object.ReferenceEquals will handle case where both are null.
-        if (object.ReferenceEquals(expected, actual))
+        if (object.ReferenceEquals(notExpected, actual))
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(
@@ -645,16 +658,16 @@ public sealed class CollectionAssert
         }
 
         DebugEx.Assert(actual is not null, "actual is not null here");
-        DebugEx.Assert(expected is not null, "expected is not null here");
+        DebugEx.Assert(notExpected is not null, "expected is not null here");
 
         // Check whether the element counts are different.
-        if (expected.Count() != actual.Count())
+        if (notExpected.Count() != actual.Count())
         {
             return;
         }
 
         // If both collections are empty, they are equivalent.
-        if (!expected.Any())
+        if (!notExpected.Any())
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(
@@ -665,7 +678,7 @@ public sealed class CollectionAssert
         }
 
         // Search for a mismatched element.
-        if (!FindMismatchedElement(expected, actual, comparer, out _, out _, out _))
+        if (!FindMismatchedElement(notExpected, actual, comparer, out _, out _, out _))
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(
@@ -997,21 +1010,30 @@ public sealed class CollectionAssert
     /// True if <paramref name="subset"/> is a subset of
     /// <paramref name="superset"/>, false otherwise.
     /// </returns>
-    internal static bool IsSubsetOfHelper(ICollection subset, ICollection superset)
+    internal static Tuple<bool, ICollection<object?>> IsSubsetOfHelper(ICollection subset, ICollection superset)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
         // $ CONSIDER: in an algorithm of ~n*log(n) + m*log(m) + n*log(m). It should be
         // $ CONSIDER: faster to sort both collections and do an element-by-element
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
+        var nonSubsetValues = new List<object?>();
 
         // Count the occurrences of each object in both collections.
         Dictionary<object, int> subsetElements = GetElementCounts(subset.Cast<object>(), EqualityComparer<object>.Default, out int subsetNulls);
         Dictionary<object, int> supersetElements = GetElementCounts(superset.Cast<object>(), EqualityComparer<object>.Default, out int supersetNulls);
 
+        bool isSubset = true;
+
+        // Check null counts first
         if (subsetNulls > supersetNulls)
         {
-            return false;
+            isSubset = false;
+            // Add the excess null values to non-subset collection
+            for (int i = 0; i < (subsetNulls - supersetNulls); i++)
+            {
+                nonSubsetValues.Add(null);
+            }
         }
 
         // Compare the counts of each object in the subset to the count of that object
@@ -1023,12 +1045,17 @@ public sealed class CollectionAssert
 
             if (subsetCount > supersetCount)
             {
-                return false;
+                isSubset = false;
+                // Add the excess occurrences to non-subset collection
+                int excessCount = subsetCount - supersetCount;
+                for (int i = 0; i < excessCount; i++)
+                {
+                    nonSubsetValues.Add(element);
+                }
             }
         }
 
-        // All the elements counts were OK.
-        return true;
+        return new Tuple<bool, ICollection<object?>>(isSubset, nonSubsetValues);
     }
 
 #pragma warning disable CS8714

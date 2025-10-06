@@ -54,7 +54,7 @@ internal sealed class ClassCleanupManager
         foreach (TestClassInfo classInfo in classInfoCache)
         {
             TestContext testContext = new TestContextImplementation(null, classInfo.ClassType.FullName, sourceLevelParameters, logger, testRunCancellationToken: null);
-            TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext);
+            TestFailedException? ex = classInfo.ExecuteClassCleanupAsync(testContext).GetAwaiter().GetResult();
             if (ex is not null)
             {
                 throw ex;

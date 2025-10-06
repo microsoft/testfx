@@ -47,12 +47,6 @@
         <note>{0}: Zero based index if an element inside of an array,
 {1}: Test name</note>
       </trans-unit>
-      <trans-unit id="CannotExpandIDataSourceAttribute_DuplicateDisplayName">
-        <source>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</source>
-        <target state="translated">Nazwa wyświetlana „{2}” w indeksach {0} i {1} jest duplikatem. Nazwy wyświetlane powinny być unikatowe.</target>
-        <note>{0}, {1}: Zero based index if an element inside of an array
-{2}: Test display name.</note>
-      </trans-unit>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
         <target state="translated">Nie można odnaleźć pliku „{0}”.</target>
@@ -180,7 +174,7 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="new">Discovery failed for source '{0}' with {1} errors:
+        <target state="translated">Nie udało się wykryć źródła „{0}” z powodu {1} błędów:
 {2}</target>
         <note />
       </trans-unit>
@@ -194,21 +188,11 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <target state="translated">Wykryto zarówno pliki „.runsettings”, jak i „.testconfig.json”. Wybierz tylko jeden z tych plików konfiguracji testu.</target>
         <note />
       </trans-unit>
-      <trans-unit id="EnumeratorLoadTypeErrorFormat">
-        <source>{0}: {1}</source>
-        <target state="translated">{0}: {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ExceptionOccuredWhileGettingTheExceptionDescription">
         <source>"{0}": (Failed to get exception description due to an exception of type "{1}".</source>
         <target state="translated">„{0}”: (Nie można uzyskać opisu wyjątku z powodu wyjątku typu „{1}”.</target>
         <note>{0}: Type of the original exception that we're trying to get the description of.
 {1}: Thrown exception</note>
-      </trans-unit>
-      <trans-unit id="ExceptionsThrown">
-        <source>Exceptions thrown:</source>
-        <target state="translated">Zgłoszone wyjątki:</target>
-        <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
@@ -241,11 +225,6 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <target state="translated">Znaleziono dwa typy powodujące konflikt dla parametru ogólnego „{0}”. Typy powodujące konflikt to „{1}” i „{2}”.</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidClassCleanupLifecycleValue">
-        <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="translated">Dla ustawienia „ClassCleanupLifecycle” określono nieprawidłową wartość „{0}”. Obsługiwane zakresy to {1}.</target>
-        <note>{Locked="ClassCleanupLifecycle"}</note>
-      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">Określono nieprawidłową wartość „{0}” dla właściwości „Scope”. Obsługiwane zakresy to {1}.</target>
@@ -266,17 +245,7 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <target state="translated">Adapter MSTestAdapter napotkał nieoczekiwany element „{0}” w ustawieniach „{1}”. Usuń ten element i spróbuj ponownie.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="InvalidSettingsXmlElement1">
-        <source>Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</source>
-        <target state="translated">Nieprawidłowe ustawienia „{0}”. Nieoczekiwany atrybut XmlElement: „{1}”.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="InvalidValue">
-        <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="translated">Nieprawidłowa wartość „{0}” dla wpisu runsettings „{1}”. Ustawienie zostanie zignorowane.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidValue1">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">Nieprawidłowa wartość „{0}” dla wpisu runsettings „{1}”. Ustawienie zostanie zignorowane.</target>
         <note />
@@ -309,11 +278,6 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">Uruchamianie testów w żadnym z podanych źródeł nie jest obsługiwane dla wybranej platformy</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
-        <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
-        <target state="translated">Nie można odnaleźć testów z zestawu {0}. Przyczyna:{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
@@ -366,13 +330,6 @@ ale odebrał argumenty {4} z typami „{5}”.</target>
         <target state="translated">{0}_{1} {2}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="TypeLoadFailed">
-        <source>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
-Error: {1}</source>
-        <target state="translated">Nie można załadować typów ze źródła testów „{0}”. Niektóre lub wszystkie testy w tym źródle mogły nie zostać odnalezione.
-Błąd: {1}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
         <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
         <target state="translated">Metoda czyszczenia zestawu {0}.{1} nie powiodła się. Komunikat o błędzie: {2}. Ślad stosu: {3}</target>
@@ -411,11 +368,6 @@ Błąd: {1}</target>
       <trans-unit id="UTA_CleanupMethodThrowsGeneralError">
         <source>Error calling Test Cleanup method for test class {0}: {1}</source>
         <target state="translated">Błąd podczas wywoływania metody czyszczącej testu dla klasy testowej {0}: {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UTA_CleanupStackTrace">
-        <source>TestCleanup Stack Trace</source>
-        <target state="translated">Ślad stosu dla TestCleanup</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
@@ -503,13 +455,6 @@ Błąd: {1}</target>
 {1}</source>
         <target state="translated">Metoda „Execute” zgłosiła nieobsługiwany wyjątek. Zgłoś ten błąd autorowi atrybutu „{0}”.
 {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UTA_ExpectedExceptionAttributeConstructionException">
-        <source>The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
-{2}</source>
-        <target state="translated">Atrybut ExpectedException zdefiniowany dla metody testowej {0}.{1} zgłosił wyjątek w trakcie konstruowania.
-{2}</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">

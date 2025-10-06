@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
     <DefineConstants>$(DefineConstants);ROOT_FINDER_PUBLIC</DefineConstants>

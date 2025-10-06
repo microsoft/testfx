@@ -13,19 +13,9 @@ namespace Playground;
 public class TestClass
 {
     [TestMethod]
-    [DynamicData(nameof(Data))]
-    public void Test3(int a, int b)
+    public void Test1()
     {
         Thread.Sleep(5000);
         Assert.IsPositive(a);
-    }
-
-    public static IEnumerable<(int A, int B)> Data
-    {
-        get
-        {
-            yield return (1, 2);
-            yield return (3, 4);
-        }
     }
 }

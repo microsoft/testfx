@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AddCallerInfoParametersFix">
         <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
-        <target state="new">Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</target>
+        <target state="translated">Adicionar os parâmetros "[CallerFilePath]" e "[CallerLineNumber]"</target>
         <note />
       </trans-unit>
       <trans-unit id="AddTestClassFix">
@@ -29,17 +29,7 @@
       </trans-unit>
       <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
         <source>Use assignment instead of 'out' parameter</source>
-        <target state="new">Use assignment instead of 'out' parameter</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
-        <source>Use interpolated string instead of format parameters</source>
-        <target state="translated">Use cadeia de caracteres interpolada em vez de parâmetros de formato</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
-        <source>Use 'string.Format' instead of format parameters</source>
-        <target state="translated">Use 'string.Format' em vez de parâmetros de formato</target>
+        <target state="translated">Usar atribuição em vez do parâmetro "out"</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -62,11 +52,6 @@
         <target state="translated">Corrigir assinatura</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
-        <source>Fix signature</source>
-        <target state="translated">Corrigir assinatura</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Passar o argumento 'TestContext.CancellationToken' para a chamada de método</target>
@@ -74,7 +59,7 @@
       </trans-unit>
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
-        <target state="new">Remove 'ClassCleanupBehavior' argument</target>
+        <target state="translated">Remover o argumento "ClassCleanupBehavior"</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -134,12 +119,7 @@
       </trans-unit>
       <trans-unit id="TransformExecuteToExecuteAsyncFix">
         <source>Transform 'Execute' override to 'ExecuteAsync'</source>
-        <target state="new">Transform 'Execute' override to 'ExecuteAsync'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
-        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="translated">Usar 'Assert.ThrowsException&lt;T&gt;' em vez do atributo '[ExpectedException]'</target>
+        <target state="translated">Transformar a substituição "Execute" em "ExecuteAsync"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
@@ -149,7 +129,7 @@
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
         <source>Use 'ContainsKey' instead of 'Contains'</source>
-        <target state="new">Use 'ContainsKey' instead of 'Contains'</target>
+        <target state="translated">Usar "ContainsKey" em vez de "Contains"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
@@ -164,12 +144,7 @@
       </trans-unit>
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
-        <target state="new">Use 'DisplayName' property instead of string argument</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrows">
-        <source>Use '{0}'</source>
-        <target state="translated">Usar "{0}"</target>
+        <target state="translated">Usar a propriedade "DisplayName" em vez do argumento de cadeia de caracteres</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

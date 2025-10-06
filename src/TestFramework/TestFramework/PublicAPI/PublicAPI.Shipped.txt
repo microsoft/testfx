@@ -341,6 +341,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.UnfoldingStrat
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataAttribute.UnfoldingStrategy.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.AutoDetect = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Field = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Method = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType.Property = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType
 Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope
@@ -636,12 +637,18 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expecte
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object! expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object! expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expected, System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(object? expected, System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(string! substring, string! value) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Contains<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection) -> void
@@ -656,12 +663,18 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(Sys
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Collections.Generic.IEnumerable<T>! collection) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string! message = "") -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection, System.Collections.IEqualityComparer! comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(object? expected, System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, System.StringComparison comparisonType, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, System.StringComparison comparisonType, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(string! substring, string! value) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.DoesNotContain<T>(System.Func<T, bool>! predicate, System.Collections.Generic.IEnumerable<T>! collection) -> void
@@ -683,6 +696,8 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Equals(object? objA, 
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail() -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount(int expected, System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount(int expected, System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
@@ -690,7 +705,8 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expec
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive() -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive(string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive(string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty(System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
@@ -721,6 +737,8 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(o
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThan<T>(T upperBound, T value, string! message = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsLessThanOrEqualTo<T>(T upperBound, T value, string! message = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNegative<T>(T value, string! message = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty(System.Collections.IEnumerable! collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty(System.Collections.IEnumerable! collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<T> message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Collections.Generic.IEnumerable<T>! collection, string? message) -> void
@@ -822,7 +840,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotCont
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Equals(object? objA, object? objB) -> bool
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
@@ -850,7 +867,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Equals(object? objA, object? objB) -> bool
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
