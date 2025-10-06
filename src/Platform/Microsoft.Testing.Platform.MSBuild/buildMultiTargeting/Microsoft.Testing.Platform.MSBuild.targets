@@ -276,7 +276,7 @@
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.MSBuild.VSTest.targets"
           Condition=" '$(TargetFramework)' != '' AND '$(TestingPlatformDotnetTestSupport)' == 'true' "/>
   
-  <Target Name="_MTPTestTarget" AfterTargets="Test">
+  <Target Name="_MTPTestTarget" AfterTargets="Test" Condition="'$(UseMSBuildTestInfrastructure)' == 'true'">
     <!-- Multiple TFMs: we call _MTPTestTargetMultiTargeting which builds and dispatches to inner builds -->
     <CallTarget Targets="_MTPTestTargetMultiTargeting" Condition=" '$(TargetFramework)' == '' "/>
 
