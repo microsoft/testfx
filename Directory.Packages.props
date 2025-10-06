@@ -24,7 +24,7 @@
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>18.0.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.55.0</MicrosoftPlaywrightVersion>
-    <MicrosoftTestingExtensionsFakesVersion>18.1.0</MicrosoftTestingExtensionsFakesVersion>
+    <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
   </PropertyGroup>
