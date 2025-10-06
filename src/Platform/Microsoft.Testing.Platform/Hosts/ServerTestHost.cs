@@ -438,26 +438,19 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         // catch and propagated as correct json rpc error
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Note: Currently the request generation and filtering isn't extensible
-        // in server mode, we create NoOp services, so that they're always available.
-        ServerTestExecutionRequestFactory requestFactory = new(session =>
-        {
-            ICollection<TestNode>? testNodes = args.TestNodes;
-            string? filter = args.GraphFilter;
-            ITestExecutionFilter executionFilter = testNodes is not null
-                ? new TestNodeUidListFilter(testNodes.Select(node => node.Uid).ToArray())
-                : filter is not null
-                    ? new TreeNodeFilter(filter)
-                    : new NopFilter();
+        ITestExecutionFilter executionFilter = args.TestNodes is not null
+            ? new TestNodeUidListFilter(args.TestNodes.Select(node => node.Uid).ToArray())
+            : args.GraphFilter is not null
+                ? new TreeNodeFilter(args.GraphFilter)
+                : new NopFilter();
 
-            return method == JsonRpcMethods.TestingRunTests
+        ServerTestExecutionRequestFactory requestFactory = new(session =>
+            method == JsonRpcMethods.TestingRunTests
                 ? new RunTestExecutionRequest(session, executionFilter)
                 : method == JsonRpcMethods.TestingDiscoverTests
                     ? new DiscoverTestExecutionRequest(session, executionFilter)
-                    : throw new NotImplementedException($"Request not implemented '{method}'");
-        });
+                    : throw new NotImplementedException($"Request not implemented '{method}'"));
 
-        // Build the per request objects
         ServerTestExecutionFilterFactory filterFactory = new();
         TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
         PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());

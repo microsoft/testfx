@@ -125,3 +125,9 @@ Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.TestNodeSta
 *REMOVED*virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.EqualityContract.get -> System.Type!
 *REMOVED*virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? other) -> bool
 *REMOVED*virtual Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.PrintMembers(System.Text.StringBuilder! builder) -> bool
+Microsoft.Testing.Platform.Requests.ITestExecutionFilter.Matches(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
+[TPEXP]Microsoft.Testing.Platform.Requests.AggregateTestExecutionFilter
+[TPEXP]Microsoft.Testing.Platform.Requests.AggregateTestExecutionFilter.AggregateTestExecutionFilter(System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>! innerFilters) -> void
+[TPEXP]Microsoft.Testing.Platform.Requests.AggregateTestExecutionFilter.InnerFilters.get -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+[TPEXP]Microsoft.Testing.Platform.Requests.AggregateTestExecutionFilter.Matches(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
+[TPEXP]Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestExecutionFilterFactory(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory!>! testExecutionFilterFactory) -> void

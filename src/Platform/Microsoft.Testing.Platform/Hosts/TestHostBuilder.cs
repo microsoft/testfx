@@ -483,8 +483,14 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
         else
         {
-            // Add custom ITestExecutionFilterFactory to the service list if available
-            ActionResult<ITestExecutionFilterFactory> testExecutionFilterFactoryResult = await ((TestHostManager)TestHost).TryBuildTestExecutionFilterFactoryAsync(serviceProvider).ConfigureAwait(false);
+            TestHostManager testHostManager = (TestHostManager)TestHost;
+            if (!testHostManager.HasFilterFactories())
+            {
+                testHostManager.AddTestExecutionFilterFactory(serviceProvider =>
+                    new ConsoleTestExecutionFilterFactory(serviceProvider.GetCommandLineOptions()));
+            }
+
+            ActionResult<ITestExecutionFilterFactory> testExecutionFilterFactoryResult = await testHostManager.TryBuildTestExecutionFilterFactoryAsync(serviceProvider).ConfigureAwait(false);
             if (testExecutionFilterFactoryResult.IsSuccess)
             {
                 serviceProvider.TryAddService(testExecutionFilterFactoryResult.Result);

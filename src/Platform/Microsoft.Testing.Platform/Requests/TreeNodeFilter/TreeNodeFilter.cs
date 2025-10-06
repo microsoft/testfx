@@ -476,6 +476,31 @@ public sealed class TreeNodeFilter : ITestExecutionFilter
         }
     }
 
+    /// <inheritdoc />
+    public bool Matches(TestNode testNode)
+    {
+        Guard.NotNull(testNode);
+
+        TestMethodIdentifierProperty? methodIdentifier = testNode.Properties
+            .OfType<TestMethodIdentifierProperty>()
+            .FirstOrDefault();
+
+        string fullPath;
+        if (methodIdentifier is not null)
+        {
+            fullPath = $"{PathSeparator}{Uri.EscapeDataString(new AssemblyName(methodIdentifier.AssemblyFullName).Name)}" +
+                      $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.Namespace)}" +
+                      $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.TypeName)}" +
+                      $"{PathSeparator}{Uri.EscapeDataString(methodIdentifier.MethodName)}";
+        }
+        else
+        {
+            fullPath = $"{PathSeparator}*{PathSeparator}*{PathSeparator}*{PathSeparator}{Uri.EscapeDataString(testNode.DisplayName)}";
+        }
+
+        return MatchesFilter(fullPath, testNode.Properties);
+    }
+
     /// <summary>
     /// Checks whether a node path matches the tree node filter.
     /// </summary>

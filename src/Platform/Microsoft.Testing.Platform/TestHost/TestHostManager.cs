@@ -23,7 +23,7 @@ internal sealed class TestHostManager : ITestHostManager
     private readonly List<ICompositeExtensionFactory> _testSessionLifetimeHandlerCompositeFactories = [];
 
     // Non-exposed extension points
-    private Func<IServiceProvider, ITestExecutionFilterFactory>? _testExecutionFilterFactory;
+    private readonly List<Func<IServiceProvider, ITestExecutionFilterFactory>> _testExecutionFilterFactories = [];
     private Func<IServiceProvider, ITestFrameworkInvoker>? _testFrameworkInvokerFactory;
 
     public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
@@ -60,32 +60,68 @@ internal sealed class TestHostManager : ITestHostManager
     public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
     {
         Guard.NotNull(testExecutionFilterFactory);
-        if (_testExecutionFilterFactory is not null)
-        {
-            throw new InvalidOperationException(PlatformResources.TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage);
-        }
-
-        _testExecutionFilterFactory = testExecutionFilterFactory;
+        _testExecutionFilterFactories.Add(testExecutionFilterFactory);
     }
+
+    internal bool HasFilterFactories() => _testExecutionFilterFactories.Count > 0;
 
     internal async Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
     {
-        if (_testExecutionFilterFactory is null)
+        List<ITestExecutionFilter> filters = [];
+        foreach (Func<IServiceProvider, ITestExecutionFilterFactory> factory in _testExecutionFilterFactories)
         {
-            return ActionResult.Fail<ITestExecutionFilterFactory>();
+            ITestExecutionFilterFactory filterFactory = factory(serviceProvider);
+
+            if (await filterFactory.IsEnabledAsync().ConfigureAwait(false))
+            {
+                await filterFactory.TryInitializeAsync().ConfigureAwait(false);
+
+                (bool success, ITestExecutionFilter? filter) = await filterFactory.TryCreateAsync().ConfigureAwait(false);
+                if (success && filter is not null)
+                {
+                    filters.Add(filter);
+                }
+            }
         }
 
-        ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
-
-        // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync().ConfigureAwait(false))
+        if (filters.Count == 0)
         {
-            await testExecutionFilterFactory.TryInitializeAsync().ConfigureAwait(false);
-
-            return ActionResult.Ok(testExecutionFilterFactory);
+            return ActionResult.Ok<ITestExecutionFilterFactory>(new SingleFilterFactory(new NopFilter()));
         }
 
-        return ActionResult.Fail<ITestExecutionFilterFactory>();
+        if (filters.Count > 1)
+        {
+            ITestExecutionFilter aggregateFilter = new AggregateTestExecutionFilter(filters);
+            return ActionResult.Ok<ITestExecutionFilterFactory>(new SingleFilterFactory(aggregateFilter));
+        }
+
+        return ActionResult.Ok<ITestExecutionFilterFactory>(new SingleFilterFactory(filters[0]));
+    }
+
+    /// <summary>
+    /// Internal factory that wraps a single pre-built filter.
+    /// </summary>
+    private sealed class SingleFilterFactory : ITestExecutionFilterFactory
+    {
+        private readonly ITestExecutionFilter _filter;
+
+        public SingleFilterFactory(ITestExecutionFilter filter)
+        {
+            _filter = filter;
+        }
+
+        public string Uid => nameof(SingleFilterFactory);
+
+        public string Version => AppVersion.DefaultSemVer;
+
+        public string DisplayName => "Single Filter Factory";
+
+        public string Description => "Factory that wraps a pre-built filter";
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync()
+            => Task.FromResult((true, (ITestExecutionFilter?)_filter));
     }
 
     public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)
