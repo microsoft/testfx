@@ -438,11 +438,9 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         // catch and propagated as correct json rpc error
         cancellationToken.ThrowIfCancellationRequested();
 
-        ITestExecutionFilter executionFilter = args.TestNodes is not null
-            ? new TestNodeUidListFilter(args.TestNodes.Select(node => node.Uid).ToArray())
-            : args.GraphFilter is not null
-                ? new TreeNodeFilter(args.GraphFilter)
-                : new NopFilter();
+        ITestExecutionFilter executionFilter = await _testSessionManager
+            .ResolveRequestFilterAsync(args, perRequestServiceProvider)
+            .ConfigureAwait(false);
 
         ServerTestExecutionRequestFactory requestFactory = new(session =>
             method == JsonRpcMethods.TestingRunTests

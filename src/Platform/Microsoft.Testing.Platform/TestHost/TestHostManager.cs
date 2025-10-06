@@ -24,6 +24,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     // Non-exposed extension points
     private readonly List<Func<IServiceProvider, ITestExecutionFilterFactory>> _testExecutionFilterFactories = [];
+    private readonly List<Func<IServiceProvider, IRequestFilterProvider>> _requestFilterProviders = [];
     private Func<IServiceProvider, ITestFrameworkInvoker>? _testFrameworkInvokerFactory;
 
     public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
@@ -122,6 +123,29 @@ internal sealed class TestHostManager : ITestHostManager
 
         public Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync()
             => Task.FromResult((true, (ITestExecutionFilter?)_filter));
+    }
+
+    internal void AddRequestFilterProvider(Func<IServiceProvider, IRequestFilterProvider> requestFilterProvider)
+    {
+        Guard.NotNull(requestFilterProvider);
+        _requestFilterProviders.Add(requestFilterProvider);
+    }
+
+    internal bool HasRequestFilterProviders() => _requestFilterProviders.Count > 0;
+
+    internal async Task<ITestExecutionFilter> ResolveRequestFilterAsync(ServerMode.RequestArgsBase args, ServiceProvider serviceProvider)
+    {
+        foreach (Func<IServiceProvider, IRequestFilterProvider> providerFactory in _requestFilterProviders)
+        {
+            IRequestFilterProvider provider = providerFactory(serviceProvider);
+
+            if (await provider.IsEnabledAsync().ConfigureAwait(false) && provider.CanHandle(args))
+            {
+                return await provider.CreateFilterAsync(args).ConfigureAwait(false);
+            }
+        }
+
+        return new NopFilter();
     }
 
     public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)

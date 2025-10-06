@@ -457,6 +457,14 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // ServerMode and Console mode uses different host
         if (hasServerFlag && isJsonRpcProtocol)
         {
+            TestHostManager testHostManager = (TestHostManager)TestHost;
+            if (!testHostManager.HasRequestFilterProviders())
+            {
+                testHostManager.AddRequestFilterProvider(sp => new TestNodeUidRequestFilterProvider());
+                testHostManager.AddRequestFilterProvider(sp => new TreeNodeRequestFilterProvider());
+                testHostManager.AddRequestFilterProvider(sp => new NopRequestFilterProvider());
+            }
+
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(serviceProvider);
 
@@ -464,7 +472,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             // note that we pass the BuildTestFrameworkAsync as callback because server mode will call it per-request
             // this is not needed in console mode where we have only 1 request.
             ServerTestHost serverTestHost =
-                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
+                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, testHostManager);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             IHost actualTestHost = testControllerConnection is not null
