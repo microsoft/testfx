@@ -11,26 +11,6 @@ namespace MSTest.Analyzers.Test;
 public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 {
     [TestMethod]
-    public async Task WhenTestMethodHasMicrosoftDescriptionAttribute_NoDiagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                [Description("Description")]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
     public async Task WhenTestMethodHasSystemDescriptionAttribute_Diagnostic()
     {
         string code = """

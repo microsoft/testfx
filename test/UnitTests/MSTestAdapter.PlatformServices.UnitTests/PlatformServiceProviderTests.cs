@@ -38,19 +38,8 @@ public class PlatformServiceProviderTests : TestContainer
     public void TestSourceShouldReturnANonNullInstance()
         => PlatformServiceProvider.Instance.Should().NotBeNull();
 
-    public void TestSourceShouldReturnAValidTestSource()
-        => PlatformServiceProvider.Instance.TestSource.Should().BeOfType<TestSource>();
-
-    public void TestSourceShouldBeCached()
-    {
-        PlatformServices.Interface.ITestSource testSourceInstance = PlatformServiceProvider.Instance.TestSource;
-
-        testSourceInstance.Should().NotBeNull();
-        testSourceInstance.Should().Be(PlatformServiceProvider.Instance.TestSource);
-    }
-
-    public void ReflectionOperationsShouldReturnAValidInstance()
-        => PlatformServiceProvider.Instance.ReflectionOperations.Should().BeOfType<ReflectionOperations2>();
+    public void ReflectionOperationsShouldReturnAValidInstance() 
+        => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
 
     public void ReflectionOperationsShouldBeCached()
     {
@@ -69,12 +58,13 @@ public class PlatformServiceProviderTests : TestContainer
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, properties, null!, default);
+        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, null, properties, null!, default);
 
         // Assert.
-        testContext.Context.FullyQualifiedTestClassName.Should().Be("A.C.M");
-        testContext.Context.TestName.Should().Be("M");
-        testContext.Context.Properties.Contains(properties.ToArray()[0].Key).Should().BeTrue();
-        ((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]!).Should().BeTrue();
+        Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
+        Verify(testContext.Context.TestName == "M");
+        Verify(testContext.Context.Properties.ContainsKey(properties.Single().Key));
+
+        Verify(testContext.Context.Properties.Contains(properties.Single()));
     }
 }

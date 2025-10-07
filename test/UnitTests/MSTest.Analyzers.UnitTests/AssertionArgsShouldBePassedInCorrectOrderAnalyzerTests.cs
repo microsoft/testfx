@@ -46,17 +46,12 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreEqual(s, "", "some message")|];
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    [|Assert.AreEqual(s, "", "some message", 1, "input")|];
-                    [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message", 1, "input")|];
 
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreNotEqual(s, "", "some message")|];
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    [|Assert.AreNotEqual(s, "", "some message", 1, "input")|];
-                    [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message", 1, "input")|];
 
                     [|Assert.AreSame(s, "", "some message")|];
-                    [|Assert.AreSame(s, "", "some message", 1, "input")|];
                 }
 
                 [TestMethod]
@@ -118,17 +113,12 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreEqual("", s, EqualityComparer<string>.Default);
                     Assert.AreEqual("", s, "some message");
                     Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message");
-                    Assert.AreEqual("", s, "some message", 1, "input");
-                    Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
 
                     Assert.AreNotEqual("", s, EqualityComparer<string>.Default);
                     Assert.AreNotEqual("", s, "some message");
                     Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message");
-                    Assert.AreNotEqual("", s, "some message", 1, "input");
-                    Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
 
                     Assert.AreSame("", s, "some message");
-                    Assert.AreSame("", s, "some message", 1, "input");
                 }
 
                 [TestMethod]
@@ -883,6 +873,114 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     // These should NOT be flagged - comparing constants to properties with "expected" names is correct
                     Assert.AreEqual(EXPECTED_CONSTANT, obj.ExpectedValue);
                     Assert.AreNotEqual(EXPECTED_CONSTANT, obj.expectedResult);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task TypeOfExpressions()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.IO;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These should be flagged - typeof() expressions should be treated as constants
+                    [|Assert.AreEqual(actualType, typeof(string))|];
+                    [|Assert.AreEqual(exception.GetType(), typeof(IOException))|];
+                    [|Assert.AreNotEqual(actualType, typeof(int))|];
+                    [|Assert.AreSame(actualType, typeof(string))|];
+                    [|Assert.AreNotSame(actualType, typeof(int))|];
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These are correct - typeof() expressions as expected values
+                    Assert.AreEqual(typeof(string), actualType);
+                    Assert.AreEqual(typeof(IOException), exception.GetType());
+                    Assert.AreNotEqual(typeof(int), actualType);
+                    Assert.AreSame(typeof(string), actualType);
+                    Assert.AreNotSame(typeof(int), actualType);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.IO;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These should be flagged - typeof() expressions should be treated as constants
+                    Assert.AreEqual(typeof(string), actualType);
+                    Assert.AreEqual(typeof(IOException), exception.GetType());
+                    Assert.AreNotEqual(typeof(int), actualType);
+                    Assert.AreSame(typeof(string), actualType);
+                    Assert.AreNotSame(typeof(int), actualType);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These are correct - typeof() expressions as expected values
+                    Assert.AreEqual(typeof(string), actualType);
+                    Assert.AreEqual(typeof(IOException), exception.GetType());
+                    Assert.AreNotEqual(typeof(int), actualType);
+                    Assert.AreSame(typeof(string), actualType);
+                    Assert.AreNotSame(typeof(int), actualType);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task TypeOfExpressionsAndConstants_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void Compliant()
+                {
+                    // When both are typeof() expressions, don't flag
+                    Assert.AreEqual(typeof(string), typeof(string));
+                    Assert.AreEqual(typeof(int), typeof(int));
+                    Assert.AreNotEqual(typeof(string), typeof(int));
                 }
             }
             """;

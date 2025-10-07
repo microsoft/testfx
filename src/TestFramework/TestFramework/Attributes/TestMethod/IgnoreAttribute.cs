@@ -31,10 +31,7 @@ public sealed class IgnoreAttribute : ConditionBaseAttribute
         => IgnoreMessage = message;
 
     /// <inheritdoc />
-    public override string? IgnoreMessage { get; set; }
-
-    /// <inheritdoc />
-    public override bool ShouldRun => false;
+    public override bool IsConditionMet => false;
 
     /// <inheritdoc />
     public override string GroupName => "Ignore";

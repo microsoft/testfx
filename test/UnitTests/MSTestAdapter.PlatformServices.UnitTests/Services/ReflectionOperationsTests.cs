@@ -19,7 +19,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(2);
@@ -28,24 +28,11 @@ public class ReflectionOperationsTests : TestContainer
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
     }
 
-    public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(2);
-
-        string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(3);
@@ -59,7 +46,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        object[] attributes = GetMemberAttributes(type, false);
+        object[] attributes = GetMemberAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(1);
@@ -68,30 +55,17 @@ public class ReflectionOperationsTests : TestContainer
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
     }
 
-    private object[] GetMemberAttributes(Type type, bool inherit)
-        => [.. _reflectionOperations.GetCustomAttributes(type, inherit).Where(x => x.GetType().FullName != "System.Runtime.CompilerServices.NullableContextAttribute")];
-
-    public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
-    {
-        Type type = typeof(DummyTestClass);
-
-        object[] attributes = GetMemberAttributes(type, false);
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(1);
-
-        string[] expectedAttributes = ["DummyA : a"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
+    private object[] GetMemberAttributes(Type type)
+        => [.. _reflectionOperations.GetCustomAttributes(type).Where(x => x.GetType().FullName != "System.Runtime.CompilerServices.NullableContextAttribute")];
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        Type method = typeof(DummyTestClass);
+        Type type = typeof(DummyTestClass);
 
-        object[] attributes = GetMemberAttributes(method, true);
+        object[] attributes = GetMemberAttributes(type);
 
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(2);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
@@ -101,7 +75,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(1);
@@ -110,24 +84,11 @@ public class ReflectionOperationsTests : TestContainer
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
     }
 
-    public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(1);
-
-        string[] expectedAttributes = ["DummyA : derived"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(2);
@@ -140,7 +101,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(1);
@@ -149,24 +110,11 @@ public class ReflectionOperationsTests : TestContainer
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
     }
 
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
+    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
         Type type = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute), false);
-
-        attributes.Should().NotBeNull();
-        attributes.Length.Should().Be(1);
-
-        string[] expectedAttributes = ["DummyA : a"];
-        GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
-    }
-
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
-    {
-        Type method = typeof(DummyTestClass);
-
-        object[] attributes = _reflectionOperations.GetCustomAttributes(method, typeof(DummyAAttribute), true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Length.Should().Be(2);

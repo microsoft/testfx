@@ -34,7 +34,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
     {
         _mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(false);
+            rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>())).Returns(false);
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings).Should().BeFalse();
     }
 
@@ -57,7 +57,7 @@ public class TestMethodValidatorTests : TestContainer
         SetupTestMethod();
 
         _mockReflectHelper
-            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(_mockMethodInfo.Object, false))
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(_mockMethodInfo.Object))
             .Returns(default(AsyncStateMachineAttribute?));
 
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
@@ -114,7 +114,7 @@ public class TestMethodValidatorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public)!;
-        _mockReflectHelper.Setup(_mockReflectHelper => _mockReflectHelper.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo, false))
+        _mockReflectHelper.Setup(_mockReflectHelper => _mockReflectHelper.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
             .CallBase();
 
         _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
@@ -190,7 +190,7 @@ public class TestMethodValidatorTests : TestContainer
 
     private void SetupTestMethod()
         => _mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>())).Returns(true);
 }
 
 #region Dummy types

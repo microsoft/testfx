@@ -7,6 +7,31 @@
         <target state="translated">Creazione del file di dump '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="DumpingProcess">
+        <source>Dumping process {0} - {1}</source>
+        <target state="translated">Dump del processo {0} - {1}</target>
+        <note>0 is pid, 1 is the name of the process</note>
+      </trans-unit>
+      <trans-unit id="DumpingProcessTree">
+        <source>Dumping this process tree (from bottom):</source>
+        <target state="translated">Dump di questo albero processi (dal basso):</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorGettingParentOfProcess">
+        <source>Error getting parent of process {0} - {1}: {2}"</source>
+        <target state="translated">Errore durante il recupero dell'elemento padre del processo {0} - {1}: {2}"</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorKillingProcess">
+        <source>Error while killing process {0} - {1}: {2}</source>
+        <target state="translated">Errore durante la terminazione del processo {0} - {1}: {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorWhileDumpingProcess">
+        <source>Error while taking dump of process {0} - {1}: {2}</source>
+        <target state="translated">Errore durante l'acquisizione del dump del processo {0} - {1}: {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception from the system</note>
+      </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
         <target state="translated">Il file di dump di blocco</target>

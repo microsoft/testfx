@@ -43,10 +43,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion(string assertionName)
+        internal void ComputeAssertion(string assertionName, string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
             }
         }
@@ -110,10 +111,11 @@ public sealed partial class Assert
             }
         }
 
-        internal void ComputeAssertion()
+        internal void ComputeAssertion(string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertIsNotEmptyFailed(_builder.ToString());
             }
         }
@@ -163,22 +165,10 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <summary>
-    /// Tests that the collection is not empty.
-    /// </summary>
-    /// <typeparam name="T">The type of the items of the collection.</typeparam>
-    /// <param name="collection">The collection.</param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection)
-        => IsNotEmpty(collection, string.Empty, null);
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
-    /// <summary>
-    /// Tests whether the collection is not empty.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message)
-        => IsNotEmpty(collection, message, null);
+    #region IsNotEmpty
 
     /// <summary>
     /// Tests that the collection is not empty.
@@ -186,10 +176,14 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message)
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(collectionExpression);
 
     /// <summary>
     /// Tests that the collection is not empty.
@@ -197,99 +191,134 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void IsNotEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Any())
         {
             return;
         }
 
-        string userMessage = BuildUserMessage(message, parameters);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertIsNotEmptyFailed(userMessage);
     }
 
     /// <summary>
-    /// Tests whether the collection has the expected count/length.
+    /// Tests that the collection is not empty.
     /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected count.</param>
-    /// <param name="collection">The collection.</param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection)
-        => HasCount(expected, collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the collection has the expected count/length.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected count.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message)
-        => HasCount(expected, collection, message, null);
-
-    /// <summary>
-    /// Tests whether the collection has the expected count/length.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected count.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-#pragma warning disable IDE0060 // Remove unused parameter
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message)
-#pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion("HasCount");
-
-    /// <summary>
-    /// Tests whether the collection has the expected count/length.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected count.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void HasCount<T>(int expected, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        => HasCount("HasCount", expected, collection, message, parameters);
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        if (collection.Cast<object>().Any())
+        {
+            return;
+        }
+
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+        ThrowAssertIsNotEmptyFailed(userMessage);
+    }
+    #endregion // IsNotEmpty
+
+    #region HasCount
 
     /// <summary>
-    /// Tests that the collection is empty.
+    /// Tests whether the collection has the expected count/length.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
-    public static void IsEmpty<T>(IEnumerable<T> collection)
-        => IsEmpty(collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests that the collection is empty.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    public static void IsEmpty<T>(IEnumerable<T> collection, string? message)
-        => IsEmpty(collection, message, null);
-
-    /// <summary>
-    /// Tests that the collection is empty.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The expected count.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message)
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion("IsEmpty");
+        => message.ComputeAssertion("HasCount", collectionExpression);
+
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("HasCount", expected, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the collection has the expected count/length.
+    /// </summary>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount(int expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("HasCount", expected, collection, message, collectionExpression);
+
+    #endregion // HasCount
+
+    #region IsEmpty
 
     /// <summary>
     /// Tests that the collection is empty.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void IsEmpty<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-        => HasCount("IsEmpty", 0, collection, message, parameters);
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsEmpty<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion("IsEmpty", collectionExpression);
 
-    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("IsEmpty", 0, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the collection is empty.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount("IsEmpty", 0, collection, message, collectionExpression);
+
+    #endregion // IsEmpty
+
+    private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message, string collectionExpression)
     {
         int actualCount = collection.Count();
         if (actualCount == expected)
@@ -297,9 +326,12 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessage(message, parameters);
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
         ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
     }
+
+    private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
+        => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
 
     [DoesNotReturn]
     private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)

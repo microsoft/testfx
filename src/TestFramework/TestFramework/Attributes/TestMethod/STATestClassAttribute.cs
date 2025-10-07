@@ -7,4 +7,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The test class attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public class STATestClassAttribute : TestClassAttribute;
+public class STATestClassAttribute : TestClassAttribute
+{
+    /// <inheritdoc />
+    public override TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
+        => new STATestMethodAttribute(testMethodAttribute);
+}

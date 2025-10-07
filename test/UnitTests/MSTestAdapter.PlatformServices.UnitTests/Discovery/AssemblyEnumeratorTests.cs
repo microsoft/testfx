@@ -85,7 +85,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Returns([]);
 
-        AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length.Should().Be(0);
+        AssemblyEnumerator.GetTypes(mockAssembly.Object).Length.Should().Be(0);
     }
 
     public void GetTypesShouldReturnSetOfDefinedTypes()
@@ -97,115 +97,8 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes()).Returns(expectedTypes);
 
-        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object);
         expectedTypes.SequenceEqual(types).Should().BeTrue();
-    }
-
-    public void GetTypesShouldHandleReflectionTypeLoadException()
-    {
-        Mock<TestableAssembly> mockAssembly = new();
-
-        // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, null));
-
-        AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-    }
-
-    public void GetTypesShouldReturnReflectionTypeLoadExceptionTypesOnException()
-    {
-        Mock<TestableAssembly> mockAssembly = new();
-        var reflectedTypes = new Type[] { typeof(DummyTestClass) };
-
-        // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
-
-        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-
-        types.Should().NotBeNull();
-        reflectedTypes.SequenceEqual(types).Should().BeTrue();
-    }
-
-    public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
-    {
-        Mock<TestableAssembly> mockAssembly = new();
-        var exceptions = new Exception[] { new("DummyLoaderException") };
-
-        // Setup mocks
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
-        mockAssembly.Setup(a => a.GetTypes()).Throws(new ReflectionTypeLoadException(null, exceptions));
-
-        Type[] types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
-
-        // Depending on the TFM, .NET either gives us null or empty array.
-        (types is null || types.Length == 0).Should().BeTrue();
-
-        _warnings.Count.Should().Be(1);
-        _warnings.ToList().Contains(
-            string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n")).Should().BeTrue();
-
-        _testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
-    }
-
-    #endregion
-
-    #region GetLoadExceptionDetails tests
-
-    public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull() =>
-        AssemblyEnumerator.GetLoadExceptionDetails(
-            new ReflectionTypeLoadException(null, null, "DummyMessage"))
-        .Should().Be("DummyMessage\r\n");
-
-    public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessage()
-    {
-        var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(null, [loaderException]);
-
-        string.Concat(
-            string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.EnumeratorLoadTypeErrorFormat,
-                loaderException.GetType(),
-                loaderException.Message),
-            "\r\n")
-        .Should().Be(AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
-    }
-
-    public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessagesForMoreThanOneException()
-    {
-        var loaderException1 = new ArgumentNullException("DummyLoaderExceptionMessage1", (Exception)null!);
-        var loaderException2 = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(
-            null,
-            [loaderException1, loaderException2]);
-        StringBuilder errorDetails = new();
-
-        errorDetails.AppendFormat(
-                CultureInfo.CurrentCulture,
-                Resource.EnumeratorLoadTypeErrorFormat,
-                loaderException1.GetType(),
-                loaderException1.Message).AppendLine();
-        errorDetails.AppendFormat(
-                CultureInfo.CurrentCulture,
-                Resource.EnumeratorLoadTypeErrorFormat,
-                loaderException2.GetType(),
-                loaderException2.Message).AppendLine();
-
-        errorDetails.ToString().Should().Be(AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
-    }
-
-    public void GetLoadExceptionDetailsShouldLogUniqueExceptionsOnly()
-    {
-        var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(null, [loaderException, loaderException]);
-
-        string.Concat(
-            string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.EnumeratorLoadTypeErrorFormat,
-                loaderException.GetType(),
-                loaderException.Message),
-            "\r\n")
-        .Should().Be(AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
     #endregion
@@ -416,12 +309,6 @@ public class AssemblyEnumeratorTests : TestContainer
                 true))
             .Returns(Array.Empty<Attribute>());
 
-        mockAssembly
-            .Setup(a => a.GetCustomAttributes(
-                typeof(TestIdGenerationStrategyAttribute),
-                true))
-            .Returns(Array.Empty<Attribute>());
-
         return mockAssembly;
     }
 
@@ -444,13 +331,12 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
             "DummyAssembly",
             reflectHelper.Object,
             typeValidator.Object,
-            testMethodValidator.Object,
-            TestIdGenerationStrategy.FullyQualified);
+            testMethodValidator.Object);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
         => MockTypeEnumerator.Object;
 }
 

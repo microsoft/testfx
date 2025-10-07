@@ -15,10 +15,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
-    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
+    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-file-prefix";
     public const string DiagnosticOutputDirectoryOptionKey = "diagnostic-output-directory";
     public const string DiagnosticVerbosityOptionKey = "diagnostic-verbosity";
-    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-filelogger-synchronouswrite";
+    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-synchronous-write";
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
@@ -29,7 +29,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
     public const string FilterUidOptionKey = "filter-uid";
-    public const string DebugAttachOptionKey = "debug-wait-attach";
+    public const string DebugAttachOptionKey = "debug";
 
     public const string ServerOptionKey = "server";
     public const string ClientPortOptionKey = "client-port";

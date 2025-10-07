@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
@@ -201,7 +200,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -234,7 +233,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                     if (_platformInformation.BuildDate is { } buildDate)
                     {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime.ToShortDateString()})");
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
                     }
 
                     if (_runtimeFeature.IsDynamicCodeSupported)
@@ -264,10 +263,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task DisplayBeforeHotReloadSessionStartAsync()
-        => await DisplayBeforeSessionStartAsync().ConfigureAwait(false);
+    public async Task DisplayBeforeHotReloadSessionStartAsync(CancellationToken cancellationToken)
+        => await DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
 
-    public async Task DisplayBeforeSessionStartAsync()
+    public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
         if (_isServerMode)
         {
@@ -286,10 +285,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public async Task DisplayAfterHotReloadSessionEndAsync()
+    public async Task DisplayAfterHotReloadSessionEndAsync(CancellationToken cancellationToken)
         => await DisplayAfterSessionEndRunInternalAsync().ConfigureAwait(false);
 
-    public async Task DisplayAfterSessionEndRunAsync()
+    public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
         if (_isServerMode)
         {
@@ -320,11 +319,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         }
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (_isServerMode || cancellationToken.IsCancellationRequested)
+        if (_isServerMode || testSessionContext.CancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }
@@ -345,7 +344,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     /// </summary>
     /// <param name="producer">The producer that sent the data.</param>
     /// <param name="data">The data to be displayed.</param>
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -540,13 +540,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public void Dispose()
         => _terminalTestReporter?.Dispose();
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

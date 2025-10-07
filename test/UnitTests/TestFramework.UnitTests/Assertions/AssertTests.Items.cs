@@ -25,14 +25,7 @@ public partial class AssertTests
         var collection = new List<int> { 1 };
         Action action = () => Assert.HasCount(3, collection);
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.HasCount failed. Expected collection of size 3. Actual: 1. ");
-    }
-
-    public void Count_MessageArgs_WhenCountIsNotSame_ShouldFail()
-    {
-        Action action = () => Assert.HasCount(1, Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType());
-        action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.HasCount failed. Expected collection of size 1. Actual: 0. User-provided message: System.Object type: System.Object");
+            .Message.Should().Be("Assert.HasCount failed. Expected collection of size 3. Actual: 1. 'collection' expression: 'collection'.");
     }
 
     public async Task Count_InterpolatedString_WhenCountIsNotSame_ShouldFail()
@@ -41,7 +34,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.HasCount(1, Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).And
-            .Message.Should().Be($"Assert.HasCount failed. Expected collection of size 1. Actual: 0. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Message.Should().Be($"Assert.HasCount failed. Expected collection of size 1. Actual: 0. 'collection' expression: 'Array.Empty<int>()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -60,15 +53,7 @@ public partial class AssertTests
         var collection = new List<int> { 1 };
         Action action = () => Assert.IsEmpty(collection);
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. ");
-    }
-
-    public void NotAny_MessageArgs_WhenNotEmpty_ShouldFail()
-    {
-        var collection = new List<int> { 1 };
-        Action action = () => Assert.IsEmpty(collection, "User-provided message: System.Object type: {0}", new object().GetType());
-        action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. User-provided message: System.Object type: System.Object");
+            .Message.Should().Be("Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. 'collection' expression: 'collection'.");
     }
 
     public async Task NotAny_InterpolatedString_WhenNotEmpty_ShouldFail()
@@ -78,7 +63,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsEmpty(collection, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).And
-            .Message.Should().Be($"Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Message.Should().Be($"Assert.IsEmpty failed. Expected collection of size 0. Actual: 1. 'collection' expression: 'collection'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -101,28 +86,14 @@ public partial class AssertTests
     {
         Action action = () => Assert.ContainsSingle(Array.Empty<int>());
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). ");
+            .Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'Array.Empty<int>()'.");
     }
 
     public void Single_WhenMultipleItems_ShouldFail()
     {
         Action action = () => Assert.ContainsSingle([1, 2, 3]);
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). ");
-    }
-
-    public void Single_MessageArgs_WhenNoItem_ShouldFail()
-    {
-        Action action = () => Assert.ContainsSingle(Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType());
-        action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). User-provided message: System.Object type: System.Object");
-    }
-
-    public void Single_MessageArgs_WhenMultipleItems_ShouldFail()
-    {
-        Action action = () => Assert.ContainsSingle([1, 2, 3], "User-provided message: System.Object type: {0}", new object().GetType());
-        action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). User-provided message: System.Object type: System.Object");
+            .Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: '[1, 2, 3]'.");
     }
 
     public async Task Single_InterpolatedString_WhenNoItem_ShouldFail()
@@ -131,7 +102,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).And
-            .Message.Should().Be($"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Message.Should().Be($"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'Array.Empty<int>()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -141,7 +112,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).And
-            .Message.Should().Be($"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Message.Should().Be($"Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: '[1, 2, 3]'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -166,7 +137,7 @@ public partial class AssertTests
         var collection = new List<int> { 1, 3, 5 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). ");
+            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
     }
 
     public void SinglePredicate_WhenMultipleItemsMatch_ShouldFail()
@@ -174,7 +145,7 @@ public partial class AssertTests
         var collection = new List<int> { 2, 4, 6 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). ");
+            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'.");
     }
 
     public void SinglePredicate_Message_WhenNoItemMatches_ShouldFail()
@@ -182,7 +153,7 @@ public partial class AssertTests
         var collection = new List<int> { 1, 3, 5 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: test");
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). No even numbers found: test");
+            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 0 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'. No even numbers found: test");
     }
 
     public void SinglePredicate_Message_WhenMultipleItemsMatch_ShouldFail()
@@ -190,7 +161,7 @@ public partial class AssertTests
         var collection = new List<int> { 2, 4, 6 };
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: test");
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). Too many even numbers: test");
+            .Message.Should().Be("Assert.ContainsSingle failed. Expected exactly one item to match the predicate but found 3 item(s). 'predicate' expression: 'x => x % 2 == 0', 'collection' expression: 'collection'. Too many even numbers: test");
     }
 
     public void Any_WhenOneItem_ShouldPass()
@@ -223,14 +194,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsNotEmpty(Array.Empty<int>());
         action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. ");
-    }
-
-    public void Any_MessageArgs_WhenNoItem_ShouldFail()
-    {
-        Action action = () => Assert.IsNotEmpty(Array.Empty<float>(), "User-provided message: System.Object type: {0}", new object().GetType());
-        action.Should().Throw<Exception>().And
-            .Message.Should().Be("Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. User-provided message: System.Object type: System.Object");
+            .Message.Should().Be("Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. 'collection' expression: 'Array.Empty<int>()'.");
     }
 
     public async Task Any_InterpolatedString_WhenNoItem_ShouldFail()
@@ -239,7 +203,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsNotEmpty(Array.Empty<string>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).And
-            .Message.Should().Be($"Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .Message.Should().Be($"Assert.IsNotEmpty failed. Expected collection to contain any item but it is empty. 'collection' expression: 'Array.Empty<string>()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 }

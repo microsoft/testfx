@@ -348,9 +348,9 @@ public class MSTestAdapterSettingsTests : TestContainer
         string settingsXml =
             """
         <RunSettings>
-            <MSTest>
+            <RunConfiguration>
                 <DisableAppDomain>false</DisableAppDomain>
-            </MSTest>
+            </RunConfiguration>
         </RunSettings>
         """;
 
@@ -373,7 +373,7 @@ public class MSTestAdapterSettingsTests : TestContainer
     #endregion
 }
 
-public class TestableMSTestAdapterSettings : MSTestAdapterSettings
+internal class TestableMSTestAdapterSettings : MSTestAdapterSettings
 {
     public TestableMSTestAdapterSettings()
     {

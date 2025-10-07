@@ -550,12 +550,18 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="Total" xml:space="preserve">
     <value>Total</value>
   </data>
+  <data name="TotalLowercase" xml:space="preserve">
+    <value>total</value>
+  </data>
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
   </data>
   <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
     <value>Console is already in batching mode.</value>
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="DurationLowercase" xml:space="preserve">
+    <value>duration</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>
@@ -715,5 +721,8 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="PlatformCommandLineDebugAttachOptionDescription" xml:space="preserve">
     <value>Allows to pause execution in order to attach to the process for debug purposes.</value>
+  </data>
+  <data name="SucceededLowercase" xml:space="preserve">
+    <value>succeeded</value>
   </data>
 </root>

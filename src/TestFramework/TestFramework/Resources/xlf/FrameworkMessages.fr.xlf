@@ -83,6 +83,21 @@
         <target state="translated">Ne passez pas de types valeur à AreSame(). Les valeurs converties en Object ne seront plus jamais les mêmes. Si possible, utilisez AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertThatDetailsPrefix">
+        <source>Details:</source>
+        <target state="translated">Détails :</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedFormat">
+        <source>Assert.That({0}) failed.</source>
+        <target state="translated">Désolé, échec de Assert.That({0}).</target>
+        <note>{0} is the user code expression</note>
+      </trans-unit>
+      <trans-unit id="AssertThatMessageFormat">
+        <source>Message: {0}</source>
+        <target state="translated">Message : {0}</target>
+        <note>{0} user provided message</note>
+      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
         <target state="translated">Les deux collections sont vides. {0}</target>
@@ -102,6 +117,21 @@
         <source>Both collections contain the same elements. {0}</source>
         <target state="translated">Les deux collections contiennent les mêmes éléments. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="translated">« {0} » expression : « {1} ».</target>
+        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
+        <target state="translated">expression « {0} », « {1} », expression « {2} », « {3} », expression « {4} », « {5} ».</target>
+        <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
+        <target state="translated">expression « {0} » : « {1} », expression « {2} » : « {3} ».</target>
+        <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
@@ -212,6 +242,11 @@ Réel : {2}</target>
         <target state="translated">Collection de tailles attendue {1}. Réel : {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="translated">La propriété « TestContext.{0} », liée au test en cours, n’est pas disponible pendant les fixtures d’assembly ou de classe.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">URL de ticket GitHub non valide</target>
@@ -283,6 +318,11 @@ Réel : {2}</target>
         <target state="translated">Nombre d'éléments différent.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
+        <target state="translated">L’élément ou les éléments &lt;{0}&gt; n’est ou ne sont pas présent(s) dans la collection.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' ne commence pas par la chaîne '{1}'. {2}</target>
@@ -301,31 +341,6 @@ Réel : {2}</target>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
         <target state="translated">(objet)</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">Le type de l'exception attendue doit être System.Exception ou un type dérivé de System.Exception.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">La méthode de test n'a pas levé d'exception. Une exception était attendue par l'attribut {0} défini sur la méthode de test.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">La méthode de test n'a pas levé l'exception attendue {0}. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">La méthode de test a levé l'exception {0}, mais l'exception {1} était attendue. Message d'exception : {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">La méthode de test a levé l'exception {0}, mais l'exception {1} (ou un type dérivé de cette dernière) était attendue. Message d'exception : {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

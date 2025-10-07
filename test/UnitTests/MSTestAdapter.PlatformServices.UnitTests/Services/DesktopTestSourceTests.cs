@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -12,9 +12,9 @@ namespace MSTestAdapter.PlatformServices.UnitTests;
 
 public class DesktopTestSourceTests : TestContainer
 {
-    private readonly TestSource _testSource;
+    private readonly TestSourceHandler _testSource;
 
-    public DesktopTestSourceTests() => _testSource = new TestSource();
+    public DesktopTestSourceTests() => _testSource = new TestSourceHandler();
 
     public void ValidSourceExtensionsShouldContainDllExtensions() => _testSource.ValidSourceExtensions.Contains(".dll").Should().BeTrue();
 

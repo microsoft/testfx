@@ -1,2 +1,24 @@
 #nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CancellationToken.get -> System.Threading.CancellationToken
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.Generic.IDictionary<string!, object?>!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string!
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedMethod.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedType.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string?
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedMethod.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedType.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string?
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedMethod.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedType.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string?
+*REMOVED*abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedMethod.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ManagedType.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName.get -> string?

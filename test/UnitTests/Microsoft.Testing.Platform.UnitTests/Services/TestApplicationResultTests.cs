@@ -94,7 +94,7 @@ public sealed class TestApplicationResultTests
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_TestAdapter_Returns_TestAdapterTestSessionFailure()
     {
-        await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error");
+        await _testApplicationResult.SetTestAdapterTestSessionFailureAsync("Adapter error", CancellationToken.None);
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
             new TestNode

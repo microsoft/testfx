@@ -24,14 +24,27 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
             .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent}</TargetFramework>")
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Debug {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -t:Test -c Debug {generator.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
 
         // In the real-world issue, access to path C:\Program Files\dotnet\ is denied, but we run this from a local .dotnet folder, where we have write access.
         // So instead of relying on the test run failing because of AccessDenied, we check the output, and see where TestResults were placed.
         // They must not be next to the local dotnet.exe.
         string testsFailed = "error run failed: Tests failed:";
         compilationResult.AssertOutputContains(testsFailed);
-        string failedResultsLine = compilationResult.StandardOutputLines.Single(l => l.Contains(testsFailed));
+
+        // Output looks like:
+        // Determining projects to restore...
+        //  Restored /Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/PublishAotNonNative.csproj (in 8.18 sec).
+        //  PublishAotNonNative -> /Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/bin/Debug/net9.0/PublishAotNonNative.dll
+        //  Run tests: '/Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/bin/Debug/net9.0/PublishAotNonNative.dll' [net9.0|x64]
+        //  Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1, Duration: 470ms - PublishAotNonNative.dll (net9.0|x64)
+        // /Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/bin/Debug/net9.0/PublishAotNonNative.dll : error run failed: Tests failed: '/Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/bin/Debug/net9.0/TestResults/PublishAotNonNative_net9.0_x64.log' [net9.0|x64] [/Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/PublishAotNonNative.csproj]
+        // Build FAILED.
+        // /Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/bin/Debug/net9.0/PublishAotNonNative.dll : error run failed: Tests failed: '/Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/bin/Debug/net9.0/TestResults/PublishAotNonNative_net9.0_x64.log' [net9.0|x64] [/Users/runner/work/1/s/artifacts/tmp/Debug/testsuite/CNwcY/PublishAotNonNative/PublishAotNonNative.csproj]
+        //    0 Warning(s)
+        //    1 Error(s)
+        // Time Elapsed 00:00:15.78
+        string failedResultsLine = compilationResult.StandardOutputLines.First(l => l.Contains(testsFailed));
         if (failedResultsLine.Contains("dotnet"))
         {
             Assert.Fail($"TestResults should be placed next to the tested dll or exe, and not next to dotnet.exe, this is an error in determining path of the tested module.\nStandard output of test:{compilationResult.StandardOutput}");
@@ -44,7 +57,6 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
     <PropertyGroup>
         <EnableMSTestRunner>true</EnableMSTestRunner>
         <PublishAot>true</PublishAot>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
 
 
          $TargetFramework$
@@ -68,9 +80,12 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase<NopAssetFixtur
     </ItemGroup>
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file UnitTest1.cs
 

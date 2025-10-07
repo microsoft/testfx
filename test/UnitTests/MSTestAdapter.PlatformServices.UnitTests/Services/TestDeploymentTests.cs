@@ -292,11 +292,6 @@ public class TestDeploymentTests : TestContainer
             [TestContext.ResultsDirectoryLabel] = applicationBaseDirectory,
             [TestContext.TestRunResultsDirectoryLabel] = applicationBaseDirectory,
             [TestContext.TestResultsDirectoryLabel] = applicationBaseDirectory,
-#pragma warning disable CS0618 // Type or member is obsolete
-            [TestContext.TestDirLabel] = applicationBaseDirectory,
-            [TestContext.TestDeploymentDirLabel] = applicationBaseDirectory,
-            [TestContext.TestLogsDirLabel] = applicationBaseDirectory,
-#pragma warning restore CS0618 // Type or member is obsolete
         };
         properties.Should().NotBeNull();
         properties.Should().BeEquivalentTo(expectedProperties);
@@ -326,11 +321,6 @@ public class TestDeploymentTests : TestContainer
             [TestContext.ResultsDirectoryLabel] = testRunDirectories.InDirectory,
             [TestContext.TestRunResultsDirectoryLabel] = testRunDirectories.InMachineNameDirectory,
             [TestContext.TestResultsDirectoryLabel] = testRunDirectories.InDirectory,
-#pragma warning disable CS0618 // Type or member is obsolete
-            [TestContext.TestDirLabel] = testRunDirectories.RootDeploymentDirectory,
-            [TestContext.TestDeploymentDirLabel] = testRunDirectories.OutDirectory,
-            [TestContext.TestLogsDirLabel] = testRunDirectories.InMachineNameDirectory,
-#pragma warning restore CS0618 // Type or member is obsolete
         };
 
         properties.Should().NotBeNull();
@@ -361,11 +351,6 @@ public class TestDeploymentTests : TestContainer
             [TestContext.ResultsDirectoryLabel] = testRunDirectories.InDirectory,
             [TestContext.TestRunResultsDirectoryLabel] = testRunDirectories.InMachineNameDirectory,
             [TestContext.TestResultsDirectoryLabel] = testRunDirectories.InDirectory,
-#pragma warning disable CS0618 // Type or member is obsolete
-            [TestContext.TestDirLabel] = testRunDirectories.RootDeploymentDirectory,
-            [TestContext.TestDeploymentDirLabel] = testRunDirectories.OutDirectory,
-            [TestContext.TestLogsDirLabel] = testRunDirectories.InMachineNameDirectory,
-#pragma warning restore CS0618 // Type or member is obsolete
         };
 
         properties.Should().NotBeNull();
@@ -415,7 +400,7 @@ public class TestDeploymentTests : TestContainer
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         var mockAssemblyUtility = new Mock<AssemblyUtility>();
-#if NET462
+#if NETFRAMEWORK
         mockAssemblyUtility.Setup(
            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
            .Returns(Array.Empty<string>());

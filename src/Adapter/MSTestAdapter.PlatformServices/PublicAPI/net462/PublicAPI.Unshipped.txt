@@ -1,1 +1,77 @@
 #nullable enable
+*REMOVED*extern Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.SetupConfiguration.SetupConfiguration() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.~AssemblyResolver() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.AddSearchDirectoriesFromRunSetting(System.Collections.Generic.List<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath!>! recursiveDirectoryPath) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.AssemblyResolver(System.Collections.Generic.IList<string!>! directories) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.Dispose() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.InDirectory.get -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.InMachineNameDirectory.get -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.OutDirectory.get -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.RootDeploymentDirectory.get -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.RootDeploymentDirectory.set -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment.TestRunDirectories.TestRunDirectories(string! rootDirectory) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete.get -> bool
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.DeploymentEnabled.get -> bool
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.DeployTestSourceDependencies.get -> bool
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.GetDirectoryListWithRecursiveProperty(string! baseDirectory) -> System.Collections.Generic.List<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath!>!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.MSTestAdapterSettings() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.SearchDirectories.get -> System.Collections.Generic.List<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath!>!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.DirectoryPath.get -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.IncludeSubDirectories.get -> bool
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.RecursiveDirectoryPath(string! dirPath, bool includeSubDirectories) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDataSource.GetData(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethodInfo, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext! testContext) -> System.Collections.Generic.IEnumerable<object!>?
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances.Clone() -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances.Next(int celt, out Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance! rgelt, out int pceltFetched) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances.Reset() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances.Skip(int celt) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupConfiguration
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupConfiguration.EnumInstances() -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IEnumSetupInstances!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupConfiguration.GetInstanceForCurrentProcess() -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupConfiguration.GetInstanceForPath(string! wzPath) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetDescription(int lcid) -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetDisplayName(int lcid) -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetInstallationName() -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetInstallationPath() -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetInstallationVersion() -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetInstallDate() -> System.Runtime.InteropServices.ComTypes.FILETIME
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.GetInstanceId() -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.ISetupInstance.ResolvePath(string! relativePath) -> string!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.SetupConfiguration
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.InitializeLifetimeService() -> object?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.InitializeLifetimeService() -> object!
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DataConnection.get -> System.Data.Common.DbConnection?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DataRow.get -> System.Data.DataRow?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DeploymentDirectory.get -> string?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FullyQualifiedTestClassName.get -> string!
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ManagedMethod.get -> string!
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ManagedType.get -> string!
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ResultsDirectory.get -> string?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestName.get -> string!
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestResultsDirectory.get -> string?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunDirectory.get -> string?
+*REMOVED*override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunResultsDirectory.get -> string?
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.IsAppDomainCreationDisabled(string? settingsXml) -> bool
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.ToSettings(System.Xml.XmlReader! reader) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings!
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.Reset() -> void
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.Settings.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings!
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IsCurrentProcessRunningInPortableMode() -> bool
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IsProcessRunningInPortableMode(string? exeName) -> bool
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.PathToPrivateAssemblies.get -> string?
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.PathToPublicAssemblies.get -> string?
+*REMOVED*static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.VSInstallPath.get -> string?
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.Dispose(bool disposing) -> void
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.DoesDirectoryExist(string! path) -> bool
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.DoesFileExist(string! filePath) -> bool
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.GetDirectories(string! path) -> string![]!
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.LoadAssemblyFrom(string! path) -> System.Reflection.Assembly!
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.ReflectionOnlyLoadAssemblyFrom(string! path) -> System.Reflection.Assembly!
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.SearchAssembly(System.Collections.Generic.List<string!>! searchDirectorypaths, string! name, bool isReflectionOnly) -> System.Reflection.Assembly?
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.DoesDirectoryExist(string! path) -> bool
+*REMOVED*virtual Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings.ExpandEnvironmentVariables(string! path) -> string!

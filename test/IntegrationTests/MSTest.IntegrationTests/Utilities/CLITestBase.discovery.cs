@@ -7,6 +7,7 @@ using DiscoveryAndExecutionTests.Utilities;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -19,7 +20,7 @@ public abstract partial class CLITestBase
 {
     internal static ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string? testCaseFilter = null)
     {
-        var unitTestDiscoverer = new UnitTestDiscoverer();
+        var unitTestDiscoverer = new UnitTestDiscoverer(new TestSourceHandler());
         var logger = new InternalLogger();
         var sink = new InternalSink();
 

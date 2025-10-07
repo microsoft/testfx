@@ -40,40 +40,6 @@ public class RunConfigurationSettingsTests : TestContainer
             PlatformServiceProvider.Instance = null;
         }
     }
-    #region Property validation.
-
-    public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <RunConfiguration>
-              </RunConfiguration>
-            </RunSettings>
-            """;
-
-        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
-        configurationSettings.CollectSourceInformation.Should().BeTrue();
-    }
-
-    public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
-    {
-        string runSettingsXml =
-            """
-            <?xml version="1.0" encoding="utf-8"?>
-            <RunSettings>
-               <RunConfiguration>
-                 <ResultsDirectory>.\TestResults</ResultsDirectory>
-                 <CollectSourceInformation>false</CollectSourceInformation>
-               </RunConfiguration>
-            </RunSettings>
-            """;
-
-        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingsXml, RunConfigurationSettings.SettingsName)!;
-        configurationSettings.CollectSourceInformation.Should().BeFalse();
-    }
-
-    #endregion
 
     #region ConfigurationSettings tests
 
@@ -85,7 +51,7 @@ public class RunConfigurationSettingsTests : TestContainer
         settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        settings.CollectSourceInformation.Should().BeTrue();
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     #endregion
@@ -97,7 +63,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        settings.CollectSourceInformation.Should().BeTrue();
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -105,7 +71,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        settings.CollectSourceInformation.Should().BeTrue();
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -114,7 +80,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        settings.CollectSourceInformation.Should().BeTrue();
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
@@ -136,7 +102,7 @@ public class RunConfigurationSettingsTests : TestContainer
         settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        settings.CollectSourceInformation.Should().BeTrue();
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
@@ -146,7 +112,7 @@ public class RunConfigurationSettingsTests : TestContainer
             <RunSettings>
               <RunConfiguration>
                 <ResultsDirectory>.\TestResults</ResultsDirectory>
-                <CollectSourceInformation>false</CollectSourceInformation>
+                <ExecutionThreadApartmentState>STA</ExecutionThreadApartmentState>
               </RunConfiguration>
             </RunSettings>
             """;
@@ -159,7 +125,7 @@ public class RunConfigurationSettingsTests : TestContainer
         settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        settings.CollectSourceInformation.Should().BeFalse();
+        settings.ExecutionApartmentState.Should().Be(ApartmentState.STA);
     }
 
     #endregion
@@ -170,7 +136,6 @@ public class RunConfigurationSettingsTests : TestContainer
         // Arrange
         var configDictionary = new Dictionary<string, string>
         {
-            { "mstest:execution:collectSourceInformation", "true" },
             { "mstest:execution:executionApartmentState", "STA" },
         };
 
@@ -185,7 +150,6 @@ public class RunConfigurationSettingsTests : TestContainer
 
         // Assert
         settings.Should().NotBeNull();
-        settings.CollectSourceInformation.Should().BeTrue();
         settings.ExecutionApartmentState.Should().Be(ApartmentState.STA);
     }
 

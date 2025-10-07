@@ -120,7 +120,7 @@ public class DynamicDataTests : CLITestBase
         ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Assert.HasCount(6, testCases);
+        Assert.HasCount(4, testCases);
 
         VerifyE2E.TestsPassed(
             testResults,
@@ -128,16 +128,8 @@ public class DynamicDataTests : CLITestBase
             "TestPropertySourceOnCurrentType (2,\"b\")",
             "TestPropertySourceOnDifferentType (3,\"c\")",
             "TestPropertySourceOnDifferentType (4,\"d\")",
-            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (1,\"a\")",
-            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (2,\"b\")",
-            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (3,\"c\")",
-            "TestPropertyWithTwoSourcesAndSecondDisablesExpansion (4,\"d\")",
             "TestMethodSourceOnDifferentType (3,\"c\")",
             "TestMethodSourceOnDifferentType (4,\"d\")",
-            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (1,\"a\")",
-            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (2,\"b\")",
-            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (3,\"c\")",
-            "TestPropertyWithTwoSourcesAndFirstDisablesExpansion (4,\"d\")",
             "TestMethodSourceOnCurrentType (1,\"a\")",
             "TestMethodSourceOnCurrentType (2,\"b\")");
         VerifyE2E.FailedTestCount(testResults, 0);

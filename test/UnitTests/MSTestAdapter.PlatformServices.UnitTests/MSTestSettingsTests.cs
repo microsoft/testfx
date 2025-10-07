@@ -346,7 +346,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors.Should().BeTrue();
     }
 
-    public void TreatDiscoveryWarningsAsErrorsShouldBeFalseByDefault()
+    public void TreatDiscoveryWarningsAsErrorsShouldBeTrueByDefault()
     {
         string runSettingsXml =
             """
@@ -358,7 +358,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
-        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeFalse();
+        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
     public void TreatDiscoveryWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -1031,7 +1031,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
-        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeFalse();
+        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -1043,7 +1043,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
-        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeFalse();
+        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -1056,7 +1056,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
-        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeFalse();
+        adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()

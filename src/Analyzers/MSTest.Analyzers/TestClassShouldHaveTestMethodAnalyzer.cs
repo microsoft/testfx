@@ -22,7 +22,8 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestClassShouldHaveTestMethodDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestClassShouldHaveTestMethodMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.TestClassShouldHaveTestMethodTitle" />
+    public static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestClassShouldHaveTestMethodRuleId,
         Title,
         MessageFormat,

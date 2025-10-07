@@ -29,7 +29,6 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             foreach (bool testSucceeded in new bool[] { true, false })
             {
                 yield return ("build -t:Test", TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
-                yield return ("test -p:TestingPlatformDotnetTestSupport=True", TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
             }
         }
     }
@@ -126,7 +125,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
+    public async Task Invoke_TestTarget_With_Arch_Switch_x86_Should_Work()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -148,7 +147,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         await DotnetCli.RunAsync(
-            $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
+            $"build -t:Test --arch x86 -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetRootX86,
@@ -165,7 +164,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+    public async Task Invoke_TestTarget_With_Incompatible_Arch()
     {
         // TODO: Test with both old and new dotnet test experience.
         Architecture currentArchitecture = RuntimeInformation.ProcessArchitecture;
@@ -183,7 +182,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+            $"build -t:Test --arch {incompatibleArchitecture} \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
@@ -217,7 +216,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
+    public async Task Invoke_TestTarget_With_DOTNET_HOST_PATH_Should_Work()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -239,7 +238,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         await DotnetCli.RunAsync(
-            $"test -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
+            $"build -t:Test -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetHostPathEnvVar,
@@ -341,9 +340,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     </Target>
 </Project>
 
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file Program.cs
 using Microsoft.Testing.Platform.Builder;

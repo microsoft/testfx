@@ -40,15 +40,15 @@ public class TypeValidatorTests : TestContainer
 
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>(), false)).Returns(false);
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<Type>())).Returns(false);
         _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeFalse();
     }
 
     public void IsValidTestClassShouldReturnTrueForClassesMarkedByAnAttributeDerivedFromTestClass()
     {
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(false);
+        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(false);
         _mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
+            rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(true);
         _typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings).Should().BeTrue();
     }
 
@@ -392,7 +392,7 @@ public class TypeValidatorTests : TestContainer
 
     #region private methods
 
-    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
+    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TestClassAttribute>(It.IsAny<TypeInfo>())).Returns(true);
 
     #endregion
 }
