@@ -37,10 +37,10 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     }
 
     public void GetTestsShouldReturnNullIfAssemblyNameIsNull()
-        => AssemblyEnumeratorWrapper.GetTests(null, null, out _warnings).Should().BeNull();
+        => AssemblyEnumeratorWrapper.GetTests(null, null, _mockTestSourceHandler.Object, out _).Should().BeNull();
 
     public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty()
-        => AssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings).Should().BeNull();
+        => AssemblyEnumeratorWrapper.GetTests(string.Empty, null, _mockTestSourceHandler.Object, out _).Should().BeNull();
 
     public void GetTestsShoulThrowIfSourceFileDoesNotExistInContext()
     {
@@ -52,8 +52,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(false);
 
-        FileNotFoundException exception = VerifyThrows<FileNotFoundException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _));
-        Verify(exception.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, assemblyName));
+        FileNotFoundException exception = Assert.Throws<FileNotFoundException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _));
+        exception.Message.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, assemblyName));
     }
 
     public void GetTestsShouldReturnNullIfSourceDoesNotReferenceUnitTestFrameworkAssembly()
@@ -108,8 +108,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(true);
 
-        Exception fileNotFoundException = Assert.Throws<FileNotFoundException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _));
-        Verify(fileNotFoundException.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath));
+        FileNotFoundException fileNotFoundException = Assert.Throws<FileNotFoundException>(() => AssemblyEnumeratorWrapper.GetTests(assemblyName, null, _mockTestSourceHandler.Object, out _));
+        fileNotFoundException.Message.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath));
     }
 
     #endregion

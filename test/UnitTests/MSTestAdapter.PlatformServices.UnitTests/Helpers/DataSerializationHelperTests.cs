@@ -66,7 +66,7 @@ public class DataSerializationHelperTests : TestContainer
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
         actual!.Length.Should().Be(1);
-        actual[0].Should().BeOfType<typeof(DateOnly));
+        actual[0].Should().BeOfType<DateOnly>();
         actual[0]!.Equals(source).Should().BeTrue();
     }
 
@@ -77,7 +77,7 @@ public class DataSerializationHelperTests : TestContainer
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
         actual!.Length.Should().Be(1);
-        actual[0].Should().BeOfType<typeof(TimeOnly));
+        actual[0].Should().BeOfType<TimeOnly>();
         actual[0]!.Equals(source).Should().BeTrue();
     }
 #endif

@@ -59,8 +59,8 @@ public class ReflectionUtilityTests : TestContainer
 
         IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
 
-        Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);

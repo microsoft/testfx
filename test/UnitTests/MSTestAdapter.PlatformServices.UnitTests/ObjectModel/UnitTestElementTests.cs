@@ -147,7 +147,7 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!));
+        ((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!).Should().Equal(["2312", "22332"]);
     }
 
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
@@ -180,10 +180,10 @@ public class UnitTestElementTests : TestContainer
             }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Guid expectedId = GuidFromString("MyAssemblyMyProduct.MyNamespace.MyClass.MyMethod" + (dataType == DynamicDataType.None ? string.Empty : "[0]"));
-            Verify(expectedTestCase.Id != testCase.Id);
-            Verify(expectedId == testCase.Id);
-            Verify(Guid.TryParse(dataType == DynamicDataType.None ? "157ad7ac-90d2-8e05-a240-056ef4253f19" : "1834fb10-d2d5-8106-8620-918822cdc63a", out Guid expectedId2));
-            Verify(expectedId == expectedId2);
+            expectedTestCase.Id.Should().NotBe(testCase.Id);
+            testCase.Id.Should().Be(expectedId);
+            Guid.TryParse(dataType == DynamicDataType.None ? "157ad7ac-90d2-8e05-a240-056ef4253f19" : "1834fb10-d2d5-8106-8620-918822cdc63a", out Guid expectedId2).Should().BeTrue();
+            expectedId.Should().Be(expectedId2);
         }
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 

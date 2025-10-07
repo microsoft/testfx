@@ -38,8 +38,8 @@ public class PlatformServiceProviderTests : TestContainer
     public void TestSourceShouldReturnANonNullInstance()
         => PlatformServiceProvider.Instance.Should().NotBeNull();
 
-    public void ReflectionOperationsShouldReturnAValidInstance() 
-        => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
+    public void ReflectionOperationsShouldReturnAValidInstance()
+        => PlatformServiceProvider.Instance.ReflectionOperations.Should().BeOfType<ReflectionOperations2>();
 
     public void ReflectionOperationsShouldBeCached()
     {
@@ -61,10 +61,9 @@ public class PlatformServiceProviderTests : TestContainer
         PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, null, properties, null!, default);
 
         // Assert.
-        Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
-        Verify(testContext.Context.TestName == "M");
-        Verify(testContext.Context.Properties.ContainsKey(properties.Single().Key));
-
-        Verify(testContext.Context.Properties.Contains(properties.Single()));
+        testContext.Context.FullyQualifiedTestClassName.Should().Be("A.C.M");
+        testContext.Context.TestName.Should().Be("M");
+        testContext.Context.Properties.Should().ContainKey(properties.Single().Key);
+        testContext.Context.Properties.Should().Contain(properties.Single());
     }
 }

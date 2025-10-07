@@ -215,19 +215,19 @@ public class MSTestDiscovererTests : TestContainer
 
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
     {
-        _mockTestSourceHandler.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
+        _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
         MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object).Should().BeFalse();
     }
 
     public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
     {
-        _mockTestSourceHandler.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
+        _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
         MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object).Should().BeTrue();
     }
 
     public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
     {
-        _mockTestSourceHandler.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
+        _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
         MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object).Should().BeFalse();
     }
 
