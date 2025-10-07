@@ -125,6 +125,15 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         HasCount,
     }
 
+    private enum LinqPredicateCheckStatus
+    {
+        Unknown,
+        Any,
+        Count,
+        WhereAny,
+        WhereCount,
+    }
+
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
 
     /// <summary>
@@ -519,6 +528,95 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return ComparisonCheckStatus.Unknown;
     }
 
+    // Add this new method to recognize LINQ patterns with predicates
+    private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
+         IOperation operation,
+         out SyntaxNode? collectionExpression,
+         out SyntaxNode? predicateExpression,
+         out IOperation? countOperation)
+    {
+        collectionExpression = null;
+        predicateExpression = null;
+        countOperation = null;
+
+        // Check for enumerable.Any(predicate)
+        if (operation is IInvocationOperation anyInvocation &&
+            anyInvocation.TargetMethod.Name == "Any" &&
+            anyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            // For extension methods on IEnumerable, the syntax is: collection.Any(predicate)
+            // In Roslyn's operation tree: Instance = collection, Arguments[0] = predicate
+            if (anyInvocation.Instance != null &&
+                anyInvocation.Arguments.Length == 1 &&
+                IsPredicate(anyInvocation.Arguments[0].Value))
+            {
+                collectionExpression = anyInvocation.Instance.Syntax;
+                predicateExpression = anyInvocation.Arguments[0].Value.Syntax;
+                return LinqPredicateCheckStatus.Any;
+            }
+        }
+
+        // Check for enumerable.Count(predicate)
+        if (operation is IInvocationOperation countInvocation &&
+            countInvocation.TargetMethod.Name == "Count" &&
+            countInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            // For extension methods: collection.Count(predicate)
+            if (countInvocation.Instance != null &&
+                countInvocation.Arguments.Length == 1 &&
+                IsPredicate(countInvocation.Arguments[0].Value))
+            {
+                collectionExpression = countInvocation.Instance.Syntax;
+                predicateExpression = countInvocation.Arguments[0].Value.Syntax;
+                countOperation = operation;
+                return LinqPredicateCheckStatus.Count;
+            }
+        }
+
+        // Check for enumerable.Where(predicate).Any()
+        if (operation is IInvocationOperation whereAnyInvocation &&
+            whereAnyInvocation.TargetMethod.Name == "Any" &&
+            whereAnyInvocation.Arguments.Length == 0 &&
+            whereAnyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereAnyInvocation.Instance is IInvocationOperation whereInvocation &&
+            whereInvocation.TargetMethod.Name == "Where" &&
+            whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            // collection.Where(predicate).Any()
+            if (whereInvocation.Instance != null &&
+                whereInvocation.Arguments.Length == 1 &&
+                IsPredicate(whereInvocation.Arguments[0].Value))
+            {
+                collectionExpression = whereInvocation.Instance.Syntax;
+                predicateExpression = whereInvocation.Arguments[0].Value.Syntax;
+                return LinqPredicateCheckStatus.WhereAny;
+            }
+        }
+
+        // Check for enumerable.Where(predicate).Count()
+        if (operation is IInvocationOperation whereCountInvocation &&
+            whereCountInvocation.TargetMethod.Name == "Count" &&
+            whereCountInvocation.Arguments.Length == 0 &&
+            whereCountInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereCountInvocation.Instance is IInvocationOperation whereInvocation2 &&
+            whereInvocation2.TargetMethod.Name == "Where" &&
+            whereInvocation2.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            // collection.Where(predicate).Count()
+            if (whereInvocation2.Instance != null &&
+                whereInvocation2.Arguments.Length == 1 &&
+                IsPredicate(whereInvocation2.Arguments[0].Value))
+            {
+                collectionExpression = whereInvocation2.Instance.Syntax;
+                predicateExpression = whereInvocation2.Arguments[0].Value.Syntax;
+                countOperation = operation;
+                return LinqPredicateCheckStatus.WhereCount;
+            }
+        }
+
+        return LinqPredicateCheckStatus.Unknown;
+    }
+
     private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
@@ -553,6 +651,36 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
+        }
+
+        // Check for LINQ predicate patterns that suggest Contains/DoesNotContain
+        LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
+            conditionArgument,
+            out SyntaxNode? linqCollectionExpr,
+            out SyntaxNode? predicateExpr,
+            out IOperation? countOp);
+
+        if (linqStatus != LinqPredicateCheckStatus.Unknown && linqCollectionExpr != null && predicateExpr != null)
+        {
+            // For Any() and Where().Any() patterns
+            if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny)
+            {
+                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(
+                        conditionArgument.Syntax.GetLocation(),
+                        predicateExpr.GetLocation(),
+                        linqCollectionExpr.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    isTrueInvocation ? "IsTrue" : "IsFalse"));
+                return;
+            }
         }
 
         // Check for string method patterns: myString.StartsWith/EndsWith/Contains(...)
@@ -722,6 +850,40 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue))
             {
+                // Check for LINQ predicate patterns that suggest ContainsSingle
+                LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
+                    actualArgumentValue!,
+                    out SyntaxNode? linqCollectionExpr2,
+                    out SyntaxNode? predicateExpr2,
+                    out IOperation? countOp2);
+
+                if (isAreEqualInvocation &&
+                    linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
+                    linqCollectionExpr2 != null &&
+                    predicateExpr2 != null &&
+                    expectedArgument.ConstantValue.HasValue &&
+                    expectedArgument.ConstantValue.Value is int expectedCountValue &&
+                    expectedCountValue == 1)
+                {
+                    // We have Assert.AreEqual(1, enumerable.Count(predicate))
+                    // We want Assert.ContainsSingle(predicate, enumerable)
+                    string properAssertMethod = "ContainsSingle";
+
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(
+                            actualArgumentValue.Syntax.GetLocation(),
+                            predicateExpr2.GetLocation(),
+                            linqCollectionExpr2.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        "AreEqual"));
+                    return;
+                }
+
                 // Check if we're comparing a count/length property
                 CountCheckStatus countStatus = RecognizeCountCheck(
                     expectedArgument,
@@ -954,5 +1116,11 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     {
         argumentValue = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == ordinal)?.Value?.WalkDownConversion();
         return argumentValue is not null;
+    }
+
+    private static bool IsPredicate(IOperation operation)
+    {
+        IOperation unwrapped = operation.WalkDownConversion();
+        return unwrapped is IAnonymousFunctionOperation or IDelegateCreationOperation;
     }
 }
