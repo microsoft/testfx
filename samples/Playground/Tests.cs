@@ -16,6 +16,6 @@ public class TestClass
     public void Test1()
     {
         Thread.Sleep(5000);
-        Assert.IsPositive(a);
+        Assert.IsPositive(1);
     }
 }

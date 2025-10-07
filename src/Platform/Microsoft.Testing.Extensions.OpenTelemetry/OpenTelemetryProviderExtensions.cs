@@ -13,6 +13,7 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Extensions for adding AppInsights telemetry provider.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class OpenTelemetryProviderExtensions
 {
     /// <summary>

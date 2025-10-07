@@ -6,7 +6,6 @@ namespace Microsoft.Testing.Platform.Telemetry;
 /// <summary>
 /// The OpenTelemetry provider interface.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public interface IOpenTelemetryProvider : IDisposable
+internal interface IOpenTelemetryProvider : IDisposable
 {
 }
