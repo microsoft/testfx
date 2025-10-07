@@ -4,7 +4,7 @@
     <VersionPrefix>4.0.0</VersionPrefix>
     <!-- Testing Platform version -->
     <TestingPlatformVersionPrefix>2.0.0</TestingPlatformVersionPrefix>
-    <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
+    <PreReleaseVersionLabel>release</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>11.0.0-beta.25504.3</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
