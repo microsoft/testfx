@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Requests;
 
 namespace Microsoft.Testing.Platform.TestHost;
 
@@ -44,4 +45,21 @@ public interface ITestHostManager
     /// <param name="compositeServiceFactory">The composite extension factory for creating the test session lifetime handle.</param>
     void AddTestSessionLifetimeHandle<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestSessionLifetimeHandler;
+
+    /// <summary>
+    /// Adds a test execution filter factory. Multiple filter factories can be registered,
+    /// and if more than one filter is enabled, they will be combined using AND logic.
+    /// </summary>
+    /// <param name="testExecutionFilterFactory">The factory method for creating the test execution filter factory.</param>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory);
+
+    /// <summary>
+    /// Adds a request filter provider for server-mode test execution requests.
+    /// Multiple providers can be registered and will be evaluated in registration order.
+    /// The first provider that can handle the request will create the filter.
+    /// </summary>
+    /// <param name="requestFilterProvider">The factory method for creating the request filter provider.</param>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    void AddRequestFilterProvider(Func<IServiceProvider, IRequestFilterProvider> requestFilterProvider);
 }

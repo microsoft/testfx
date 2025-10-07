@@ -20,4 +20,7 @@ public sealed class TestNodeUidListFilter : ITestExecutionFilter
     /// Gets the test node UIDs to filter.
     /// </summary>
     public TestNodeUid[] TestNodeUids { get; }
+
+    /// <inheritdoc />
+    public bool Matches(TestNode testNode) => TestNodeUids.Contains(testNode.Uid);
 }
