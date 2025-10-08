@@ -12,8 +12,6 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Extensions.Policy;
 
 internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
@@ -31,9 +31,7 @@ public static partial class VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyAnalyzerAsync(string, DiagnosticResult[])"/>
     public static async Task VerifyAnalyzerAsync(
-#if !NETFRAMEWORK // not using StringSyntax in .NET Framework as it's not available, until we can resolve the issues with Polyfill and IVTs. https://github.com/SimonCropp/Polyfill/issues/379
         [StringSyntax("VB-test")]
-#endif
         string source, params DiagnosticResult[] expected)
     {
         var test = new Test
@@ -47,39 +45,27 @@ public static partial class VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, string)"/>
     public static async Task VerifyCodeFixAsync(
-#if !NETFRAMEWORK
         [StringSyntax("VB-test")]
-#endif
         string source,
-#if !NETFRAMEWORK
         [StringSyntax("VB-test")]
-#endif
         string fixedSource)
         => await VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult, string)"/>
     public static async Task VerifyCodeFixAsync(
-#if !NETFRAMEWORK
         [StringSyntax("VB-test")]
-#endif
         string source,
         DiagnosticResult expected,
-#if !NETFRAMEWORK
         [StringSyntax("VB-test")]
-#endif
         string fixedSource)
         => await VerifyCodeFixAsync(source, [expected], fixedSource);
 
     /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult[], string)"/>
     public static async Task VerifyCodeFixAsync(
-#if !NETFRAMEWORK
         [StringSyntax("VB-test")]
-#endif
         string source,
         DiagnosticResult[] expected,
-#if !NETFRAMEWORK
         [StringSyntax("VB-test")]
-#endif
         string fixedSource)
     {
         var test = new Test
