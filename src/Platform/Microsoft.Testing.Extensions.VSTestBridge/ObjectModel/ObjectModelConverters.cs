@@ -172,10 +172,10 @@ internal static class ObjectModelConverters
                 .Select(msg =>
                     msg.Category switch
                     {
-                        string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
                         string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
                         string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => new TrxMessage(msg.Text),
+                        _ => throw new UnreachableException(),
                     })]));
         }
 
@@ -310,7 +310,7 @@ internal static class ObjectModelConverters
         // But the eventual goal should be to stop using the VSTestBridge altogether.
         // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
         // Or alternatively, does VSTest object model expose the assembly full name somewhere?
-        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, ReturnTypeFullName: string.Empty);
+        return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)

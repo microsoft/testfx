@@ -4,8 +4,6 @@
 using Microsoft.Testing.Framework.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Framework;
 
 internal sealed class TestFixtureManager : ITestFixtureManager

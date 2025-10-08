@@ -9,6 +9,6 @@ internal sealed class NopTelemetryService(bool enabled) : ITelemetryCollector
 {
     private readonly bool _enabled = enabled;
 
-    public Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
+    public Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap, CancellationToken cancellationToken)
         => !_enabled ? throw new InvalidOperationException(PlatformResources.UnexpectedCallTelemetryIsDisabledErrorMessage) : Task.CompletedTask;
 }

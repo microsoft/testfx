@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <!-- Packaged as part of Microsoft.Testing.Platform.MSBuild -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -9,6 +9,10 @@
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -175,7 +174,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning)).ConfigureAwait(false);
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellation).ConfigureAwait(false);
             }
 
             await _messageBus.PublishAsync(

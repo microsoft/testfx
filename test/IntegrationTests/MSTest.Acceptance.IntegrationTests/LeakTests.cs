@@ -14,7 +14,7 @@ public sealed class LeakTests : AcceptanceTestBase<LeakTests.TestAssetFixture>
     public async Task TestContextInstancesShouldNotLeak(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 100, skipped: 0);
@@ -130,4 +130,6 @@ public class TestClass
 
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

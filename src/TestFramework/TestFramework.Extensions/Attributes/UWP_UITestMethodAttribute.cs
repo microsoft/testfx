@@ -10,10 +10,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => GetType() == typeof(UITestMethodAttribute);
-
-    /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
-    public override TestResult[] Execute(ITestMethod testMethod) => base.Execute(testMethod);
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
+    /// </summary>
+    public UITestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+        : base(callerFilePath, callerLineNumber)
+    {
+    }
 
     /// <summary>
     /// Executes the test method on the UI Thread.
@@ -24,7 +27,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <returns>
     /// An array of <see cref="TestResult"/> instances.
     /// </returns>
-    internal override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
         var tcs = new TaskCompletionSource<TestResult>();
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates

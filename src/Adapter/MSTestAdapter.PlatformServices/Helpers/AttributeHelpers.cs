@@ -9,7 +9,7 @@ internal static class AttributeExtensions
 {
     public static bool IsIgnored(this ICustomAttributeProvider type, out string? ignoreMessage)
     {
-        IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<ConditionBaseAttribute>(type, inherit: false);
+        IEnumerable<ConditionBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<ConditionBaseAttribute>(type);
         IEnumerable<IGrouping<string, ConditionBaseAttribute>> groups = attributes.GroupBy(attr => attr.GroupName);
         foreach (IGrouping<string, ConditionBaseAttribute>? group in groups)
         {
@@ -17,7 +17,7 @@ internal static class AttributeExtensions
             string? firstNonSatisfiedMatch = null;
             foreach (ConditionBaseAttribute attribute in group)
             {
-                bool shouldRun = attribute.Mode == ConditionMode.Include ? attribute.ShouldRun : !attribute.ShouldRun;
+                bool shouldRun = attribute.Mode == ConditionMode.Include ? attribute.IsConditionMet : !attribute.IsConditionMet;
                 if (shouldRun)
                 {
                     atLeastOneInGroupIsSatisfied = true;

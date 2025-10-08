@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Framework.UnitTests;
 
@@ -34,7 +33,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Act
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
@@ -66,7 +65,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Act
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));

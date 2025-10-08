@@ -5,6 +5,7 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public partial class TestId : CLITestBase
 {
     private const string DefaultStrategyDll = "TestIdProject.DefaultStrategy";

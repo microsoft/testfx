@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
@@ -17,16 +16,13 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
 
     public MSBuildOrchestratorLifetime(
         IConfiguration configuration,
-        ICommandLineOptions commandLineOptions,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
+        ICommandLineOptions commandLineOptions)
     {
         _configuration = configuration;
         _commandLineOptions = commandLineOptions;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public string Uid => nameof(MSBuildOrchestratorLifetime);
@@ -56,14 +52,14 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
         pipeClient.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
         pipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
-        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, _testApplicationCancellationTokenSource.CancellationToken);
+        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
         await pipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);
         await pipeClient.RequestReplyAsync<ModuleInfoRequest, VoidResponse>(
             new ModuleInfoRequest(
             RuntimeInformation.FrameworkDescription,
             RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
             _configuration.GetTestResultDirectory()),
-            _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false);
     }
 
     public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;

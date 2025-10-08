@@ -218,11 +218,6 @@
     <comment>{0}: Zero based index if an element inside of an array,
 {1}: Test name</comment>
   </data>
-  <data name="CannotExpandIDataSourceAttribute_DuplicateDisplayName" xml:space="preserve">
-    <value>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</value>
-    <comment>{0}, {1}: Zero based index if an element inside of an array
-{2}: Test display name.</comment>
-  </data>
   <data name="CannotRunTestArgumentsMismatchError" xml:space="preserve">
     <value>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
@@ -258,17 +253,10 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="DuplicateConfigurationError" xml:space="preserve">
     <value>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</value>
   </data>
-  <data name="EnumeratorLoadTypeErrorFormat" xml:space="preserve">
-    <value>{0}: {1}</value>
-  </data>
   <data name="ExceptionOccuredWhileGettingTheExceptionDescription" xml:space="preserve">
     <value>"{0}": (Failed to get exception description due to an exception of type "{1}".</value>
     <comment>{0}: Type of the original exception that we're trying to get the description of.
 {1}: Thrown exception</comment>
-  </data>
-  <data name="ExceptionsThrown" xml:space="preserve">
-    <value>Exceptions thrown:</value>
-    <comment>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</comment>
   </data>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
     <value>Test '{0}' was canceled</value>
@@ -290,10 +278,6 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="GenericParameterConflict" xml:space="preserve">
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
   </data>
-  <data name="InvalidClassCleanupLifecycleValue" xml:space="preserve">
-    <value>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</value>
-    <comment>{Locked="ClassCleanupLifecycle"}</comment>
-  </data>
   <data name="InvalidParallelScopeValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>
     <comment>{Locked="Scope"}</comment>
@@ -305,12 +289,6 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="InvalidSettingsXmlAttribute" xml:space="preserve">
     <value>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</value>
   </data>
-  <data name="InvalidSettingsXmlElement1" xml:space="preserve">
-    <value>Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</value>
-  </data>
-  <data name="InvalidValue1" xml:space="preserve">
-    <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
-  </data>
   <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
     <value>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</value>
   </data>
@@ -319,9 +297,6 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="SourcesNotSupported" xml:space="preserve">
     <value>Running tests in any of the provided sources is not supported for the selected platform</value>
-  </data>
-  <data name="TestAssembly_AssemblyDiscoveryFailure" xml:space="preserve">
-    <value>Failed to discover tests from assembly {0}. Reason:{1}</value>
   </data>
   <data name="TestAssembly_FileDoesNotExist" xml:space="preserve">
     <value>File does not exist: {0}</value>
@@ -351,10 +326,6 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>
     <comment>{Locked="Workers"}{Locked="Scope"}</comment>
   </data>
-  <data name="TypeLoadFailed" xml:space="preserve">
-    <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
-Error: {1}</value>
-  </data>
   <data name="UTA_AssemblyCleanupMethodWasUnsuccesful" xml:space="preserve">
     <value>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</value>
   </data>
@@ -378,9 +349,6 @@ Error: {1}</value>
   </data>
   <data name="UTA_CleanupMethodThrowsGeneralError" xml:space="preserve">
     <value>Error calling Test Cleanup method for test class {0}: {1}</value>
-  </data>
-  <data name="UTA_CleanupStackTrace" xml:space="preserve">
-    <value>TestCleanup Stack Trace</value>
   </data>
   <data name="UTA_EndOfInnerExceptionTrace" xml:space="preserve">
     <value>--- End of inner exception stack trace ---</value>
@@ -428,10 +396,6 @@ Error: {1}</value>
     <value>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</value>
   </data>
-  <data name="UTA_ExpectedExceptionAttributeConstructionException" xml:space="preserve">
-    <value>The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
-{2}</value>
-  </data>
   <data name="UTA_FailedToGetTestMethodException" xml:space="preserve">
     <value>Failed to obtain the exception thrown by test method {0}.{1}.</value>
   </data>
@@ -466,7 +430,7 @@ Error: {1}</value>
     <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
   </data>
   <data name="UTA_TestMethodThrows" xml:space="preserve">
-    <value>Test method {0}.{1} threw exception: 
+    <value>Test method {0}.{1} threw exception:
 {2}</value>
   </data>
   <data name="UTA_TypeLoadError" xml:space="preserve">
@@ -486,5 +450,9 @@ Error: {1}</value>
   </data>
   <data name="VersionMismatchBetweenAdapterAndFramework" xml:space="preserve">
     <value>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</value>
+  </data>
+  <data name="DiscoveryErrors" xml:space="preserve">
+    <value>Discovery failed for source '{0}' with {1} errors:
+{2}</value>
   </data>
 </root>

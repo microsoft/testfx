@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MSTest.Analyzers.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Analyzers.CodeFixes" Key="$(VsPublicKey)" />
   </ItemGroup>
 

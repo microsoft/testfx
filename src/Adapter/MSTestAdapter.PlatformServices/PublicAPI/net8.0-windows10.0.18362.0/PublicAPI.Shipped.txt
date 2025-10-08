@@ -1,0 +1,8 @@
+#nullable enable
+System.MarshalByRefObject (forwarded, contained in System.Runtime)
+System.MarshalByRefObject.GetLifetimeService() -> object! (forwarded, contained in System.Runtime)
+System.MarshalByRefObject.MarshalByRefObject() -> void (forwarded, contained in System.Runtime)
+System.MarshalByRefObject.MemberwiseClone(bool cloneIdentity) -> System.MarshalByRefObject! (forwarded, contained in System.Runtime)
+System.SerializableAttribute (forwarded, contained in System.Runtime)
+System.SerializableAttribute.SerializableAttribute() -> void (forwarded, contained in System.Runtime)
+virtual System.MarshalByRefObject.InitializeLifetimeService() -> object! (forwarded, contained in System.Runtime)

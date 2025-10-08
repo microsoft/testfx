@@ -29,7 +29,8 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
             {
                 { "SLEEPTIMEMS1", "100" },
                 { "SLEEPTIMEMS2", "600000" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         testHostResult.AssertOutputContains("Test1");
     }
@@ -150,4 +151,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

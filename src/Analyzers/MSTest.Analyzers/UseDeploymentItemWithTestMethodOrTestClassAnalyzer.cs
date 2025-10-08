@@ -26,7 +26,7 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
         MessageFormat,
         null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

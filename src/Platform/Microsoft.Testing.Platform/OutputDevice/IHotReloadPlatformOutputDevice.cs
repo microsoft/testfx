@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 
 internal interface IHotReloadPlatformOutputDevice : IPlatformOutputDevice
 {
-    Task DisplayBeforeHotReloadSessionStartAsync();
+    Task DisplayBeforeHotReloadSessionStartAsync(CancellationToken cancellationToken);
 
-    Task DisplayAfterHotReloadSessionEndAsync();
+    Task DisplayAfterHotReloadSessionEndAsync(CancellationToken cancellationToken);
 }

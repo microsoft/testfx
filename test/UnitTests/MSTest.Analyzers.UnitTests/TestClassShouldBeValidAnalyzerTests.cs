@@ -192,6 +192,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests
     [TestMethod]
     public async Task WhenDiscoverInternalsAndTypeIsPrivate_Diagnostic()
     {
+        // NOTE: As we are fixing the modifier, we still prefer to make it public, even if discover internals is set.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -214,7 +215,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests
             public class A
             {
                 [TestClass]
-                internal class MyTestClass
+                public class MyTestClass
                 {
                 }
             }
@@ -449,6 +450,90 @@ public sealed class TestClassShouldBeValidAnalyzerTests
                 [TestMethod]
                 public static void TestMethod()
                 {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassIsInternalSealed_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace
+            {
+                [TestClass]
+                internal sealed class {|#0:MyTestClass|}
+                {
+                    [TestMethod]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace
+            {
+                [TestClass]
+                public sealed class MyTestClass
+                {
+                    [TestMethod]
+                    public void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassIsInternalStatic_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace
+            {
+                [TestClass]
+                internal static class {|#0:MyTestClass|}
+                {
+                    [TestMethod]
+                    public static void TestMethod()
+                    {
+                    }
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace
+            {
+                [TestClass]
+                public class MyTestClass
+                {
+                    [TestMethod]
+                    public static void TestMethod()
+                    {
+                    }
                 }
             }
             """;

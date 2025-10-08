@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -32,9 +31,6 @@ public sealed class ServiceProviderTests
         Assert.IsNull(_serviceProvider.GetService<IDataConsumer>());
 
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.IsNull(_serviceProvider.GetService<ITestApplicationLifecycleCallbacks>());
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNull(_serviceProvider.GetService<ITestHostApplicationLifetime>());
     }
 
@@ -54,9 +50,6 @@ public sealed class ServiceProviderTests
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<IDataConsumer>());
 
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestApplicationLifecycleCallbacks>());
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNotNull(_serviceProvider.GetServiceInternal<ITestHostApplicationLifetime>());
     }
 
@@ -90,7 +83,7 @@ public sealed class ServiceProviderTests
         var clonedServiceProvider = (ServiceProvider)_serviceProvider.Clone(o => o is TestHostProcessLifetimeHandler);
 
         Assert.HasCount(1, clonedServiceProvider.Services);
-        Assert.AreEqual(_serviceProvider.Services.ToArray()[0].GetType(), typeof(TestHostProcessLifetimeHandler));
+        Assert.AreEqual(typeof(TestHostProcessLifetimeHandler), _serviceProvider.Services.ToArray()[0].GetType());
     }
 
     [TestMethod]
@@ -161,9 +154,6 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>().Count());
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.AreEqual(2, _serviceProvider.GetServicesInternal<ITestHostApplicationLifetime>().Count());
     }
 
@@ -173,9 +163,6 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.AreEqual(0, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: true).Count());
     }
 
@@ -185,9 +172,6 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.AreEqual(2, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: false, skipInternalOnlyExtensions: false).Count());
     }
 
@@ -197,9 +181,6 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestApplicationLifecycleCallbacks), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.AreEqual(1, _serviceProvider.GetServicesInternal(typeof(ITestHostApplicationLifetime), stopAtFirst: true, skipInternalOnlyExtensions: false).Count());
     }
 
@@ -209,9 +190,6 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.IsNotNull(_serviceProvider.GetServiceInternal(typeof(ITestApplicationLifecycleCallbacks), skipInternalOnlyExtensions: false));
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNotNull(_serviceProvider.GetServiceInternal(typeof(ITestHostApplicationLifetime), skipInternalOnlyExtensions: false));
     }
 
@@ -221,9 +199,6 @@ public sealed class ServiceProviderTests
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
         _serviceProvider.AddService(new TestApplicationLifecycleCallbacks());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        Assert.IsNull(_serviceProvider.GetServiceInternal(typeof(ITestApplicationLifecycleCallbacks), skipInternalOnlyExtensions: true));
-#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNull(_serviceProvider.GetServiceInternal(typeof(ITestHostApplicationLifetime), skipInternalOnlyExtensions: true));
     }
 
@@ -296,9 +271,9 @@ public sealed class ServiceProviderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
-        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
     }
 
     private sealed class DataConsumer : IDataConsumer

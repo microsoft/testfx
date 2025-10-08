@@ -45,7 +45,7 @@ public class TestPropertyAttributeTests : TestContainer
         string className = typeof(DummyTestClassBase).FullName!;
         var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
+        var testContext = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>());
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
@@ -75,7 +75,7 @@ public class TestPropertyAttributeTests : TestContainer
         string className = typeof(DummyTestClassDerived).FullName!;
         var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
+        var testContext = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>());
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
@@ -120,7 +120,7 @@ public class TestPropertyAttributeTests : TestContainer
         string className = typeof(DummyTestClassDerived).FullName!;
         var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
+        var testContext = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>());
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,

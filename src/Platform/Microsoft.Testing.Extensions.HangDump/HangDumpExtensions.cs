@@ -36,10 +36,8 @@ public static class HangDumpExtensions
                 serviceProvider.GetTask(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetLoggerFactory(),
-                serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetProcessHandler(),
-                serviceProvider,
                 serviceProvider.GetClock()));
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider

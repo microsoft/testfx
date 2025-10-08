@@ -16,9 +16,7 @@ internal sealed class TestHostManager : ITestHostManager
     private readonly List<object> _factoryOrdering = [];
 
     // Exposed extension points
-#pragma warning disable CS0618 // Type or member is obsolete
-    private readonly List<Func<IServiceProvider, ITestApplicationLifecycleCallbacks>> _testApplicationLifecycleCallbacksFactories = [];
-#pragma warning restore CS0618 // Type or member is obsolete
+    private readonly List<Func<IServiceProvider, ITestHostApplicationLifetime>> _testApplicationLifecycleCallbacksFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
@@ -90,28 +88,18 @@ internal sealed class TestHostManager : ITestHostManager
         return ActionResult.Fail<ITestExecutionFilterFactory>();
     }
 
-    [Obsolete]
-    public void AddTestApplicationLifecycleCallbacks(Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks)
-    {
-        Guard.NotNull(testApplicationLifecycleCallbacks);
-        _testApplicationLifecycleCallbacksFactories.Add(testApplicationLifecycleCallbacks);
-    }
-
     public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)
     {
         Guard.NotNull(testHostApplicationLifetime);
-#pragma warning disable CS0612 // Type or member is obsolete
         _testApplicationLifecycleCallbacksFactories.Add(testHostApplicationLifetime);
-#pragma warning restore CS0612 // Type or member is obsolete
     }
 
-#pragma warning disable CS0618 // Type or member is obsolete
-    internal async Task<ITestApplicationLifecycleCallbacks[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
+    internal async Task<ITestHostApplicationLifetime[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
     {
-        List<ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacks = [];
-        foreach (Func<IServiceProvider, ITestApplicationLifecycleCallbacks> testApplicationLifecycleCallbacksFactory in _testApplicationLifecycleCallbacksFactories)
+        List<ITestHostApplicationLifetime> testApplicationLifecycleCallbacks = [];
+        foreach (Func<IServiceProvider, ITestHostApplicationLifetime> testApplicationLifecycleCallbacksFactory in _testApplicationLifecycleCallbacksFactories)
         {
-            ITestApplicationLifecycleCallbacks service = testApplicationLifecycleCallbacksFactory(serviceProvider);
+            ITestHostApplicationLifetime service = testApplicationLifecycleCallbacksFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
             testApplicationLifecycleCallbacks.ValidateUniqueExtension(service);
@@ -128,7 +116,6 @@ internal sealed class TestHostManager : ITestHostManager
 
         return [.. testApplicationLifecycleCallbacks];
     }
-#pragma warning restore CS0618 // Type or member is obsolete
 
     public void AddDataConsumer(Func<IServiceProvider, IDataConsumer> dataConsumerFactory)
     {

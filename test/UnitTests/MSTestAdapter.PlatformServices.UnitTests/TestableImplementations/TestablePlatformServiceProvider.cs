@@ -17,8 +17,6 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     #region Mock Implementations
 
-    public Mock<ITestSource> MockTestSourceValidator { get; } = new();
-
     public Mock<IFileOperations> MockFileOperations { get; } = new();
 
     public Mock<IAdapterTraceLogger> MockTraceLogger { get; } = new();
@@ -31,17 +29,11 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<ITestDataSource> MockTestDataSource { get; } = new();
 
-    public Mock<ITraceListener> MockTraceListener { get; } = new();
-
-    public Mock<ITraceListenerManager> MockTraceListenerManager { get; } = new();
-
     public Mock<IThreadOperations> MockThreadOperations { get; } = new();
 
     public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
 
     #endregion
-
-    public ITestSource TestSource => MockTestSourceValidator.Object;
 
     public IFileOperations FileOperations => MockFileOperations.Object;
 
@@ -69,19 +61,14 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public bool IsGracefulStopRequested { get; set; }
 
-    public ITestContext GetTestContext(ITestMethod testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
+    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
     {
-        var testContextImpl = new TestContextImplementation(testMethod, properties, messageLogger, testRunCancellationToken: null);
+        var testContextImpl = new TestContextImplementation(testMethod, testClassFullName, properties, messageLogger, testRunCancellationToken: null);
         testContextImpl.SetOutcome(outcome);
         return testContextImpl;
     }
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
-
-    public ITraceListener GetTraceListener(TextWriter textWriter) => MockTraceListener.Object;
-
-    [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
-    public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter) => MockTraceListenerManager.Object;
 
     public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>();
 }

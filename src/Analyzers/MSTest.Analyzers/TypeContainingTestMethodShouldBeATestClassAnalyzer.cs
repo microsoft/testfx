@@ -28,7 +28,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzer : Diagnos
         MessageFormat,
         Description,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

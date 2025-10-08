@@ -9,7 +9,6 @@
       "src\\Analyzers\\MSTest.Analyzers.Package\\MSTest.Analyzers.Package.csproj",
       "src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj",
       "src\\Analyzers\\MSTest.GlobalConfigsGenerator\\MSTest.GlobalConfigsGenerator.csproj",
-      "src\\Analyzers\\MSTest.Internal.Analyzers\\MSTest.Internal.Analyzers.csproj",
       "src\\Analyzers\\MSTest.SourceGeneration\\MSTest.SourceGeneration.csproj",
       "src\\Package\\MSTest.Sdk\\MSTest.Sdk.csproj",
       "src\\Package\\MSTest\\MSTest.csproj",

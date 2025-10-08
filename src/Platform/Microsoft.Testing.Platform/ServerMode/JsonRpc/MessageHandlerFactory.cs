@@ -42,7 +42,7 @@ internal sealed partial class ServerModeManager
 #pragma warning disable CA1416 // Validate platform compatibility
         public async Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
         {
-            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port))).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
 
             TcpClient client = new();
 

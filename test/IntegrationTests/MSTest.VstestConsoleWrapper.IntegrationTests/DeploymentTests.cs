@@ -21,7 +21,7 @@ public class DeploymentTests : CLITestBase
 
     [TestMethod]
     [DataRow("net462")]
-    [DataRow("netcoreapp3.1")]
+    [DataRow("net8.0")]
     public void ValidateTestSourceDependencyDeployment(string targetFramework)
     {
         InvokeVsTestForExecution([TestAssetNever], targetFramework: targetFramework);
@@ -31,7 +31,7 @@ public class DeploymentTests : CLITestBase
 
     [TestMethod]
     [DataRow("net462")]
-    [DataRow("netcoreapp3.1", IgnoreMessage = "This is currently ignored and that's why we marked it as private")]
+    [DataRow("net8.0", IgnoreMessage = "This is currently ignored and that's why we marked it as private")]
     public void ValidateTestSourceLocationDeployment(string targetFramework)
     {
         InvokeVsTestForExecution([TestAssetPreserveNewest], RunSetting, "DeploymentTestProject", targetFramework: targetFramework);
@@ -41,7 +41,7 @@ public class DeploymentTests : CLITestBase
 
     [TestMethod]
     [DataRow("net462")]
-    [DataRow("netcoreapp3.1")]
+    [DataRow("net8.0")]
     public void ValidateDirectoryDeployment(string targetFramework)
     {
         InvokeVsTestForExecution([TestAssetPreserveNewest], testCaseFilter: "DirectoryDeploymentTests", targetFramework: targetFramework);
@@ -50,7 +50,7 @@ public class DeploymentTests : CLITestBase
 
     [TestMethod]
     [DataRow("net462")]
-    [DataRow("netcoreapp3.1")]
+    [DataRow("net8.0")]
     public void ValidateFileDeployment(string targetFramework)
     {
         InvokeVsTestForExecution([TestAssetPreserveNewest], testCaseFilter: "FileDeploymentTests", targetFramework: targetFramework);

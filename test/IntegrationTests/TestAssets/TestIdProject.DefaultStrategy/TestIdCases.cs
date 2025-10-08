@@ -3,18 +3,6 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if LEGACY_TEST_ID
-#pragma warning disable CS0618 // Type or member is obsolete
-[assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.Legacy)]
-#pragma warning restore CS0618 // Type or member is obsolete
-#elif DISPLAY_NAME_TEST_ID
-#pragma warning disable CS0618 // Type or member is obsolete
-[assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.DisplayName)]
-#pragma warning restore CS0618 // Type or member is obsolete
-#elif FULLY_QUALIFIED_ID
-[assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.FullyQualified)]
-#endif
-
 namespace TestIdProject;
 
 [TestClass]

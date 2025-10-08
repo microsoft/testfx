@@ -51,9 +51,6 @@
 
   <!-- Core (for test applications - not for test libraries) -->
   <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Sdk="MSTest"
-                      Condition=" '$(ExcludeMicrosoftNetTestSdk)' != 'true' "
-                      Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
     <!--
       Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
       At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is

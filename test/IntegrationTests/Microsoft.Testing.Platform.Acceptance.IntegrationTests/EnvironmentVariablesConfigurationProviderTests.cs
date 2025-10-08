@@ -13,7 +13,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     public async Task SetEnvironmentVariable_ShouldSucceed(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
@@ -136,4 +136,6 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

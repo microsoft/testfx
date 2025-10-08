@@ -112,7 +112,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method, ReflectHelper? reflectHelper = null)
     {
-        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method);
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 

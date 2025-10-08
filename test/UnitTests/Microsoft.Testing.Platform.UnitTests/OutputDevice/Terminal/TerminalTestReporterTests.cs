@@ -755,4 +755,62 @@ public sealed class TerminalTestReporterTests
             Assert.DoesNotContain(literalDisplayName, output, $"Literal {charName} should not be present in test display name");
         }
     }
+
+    [TestMethod]
+    public void TestProgressState_WhenCreatedWithDiscoveryTrue_ShouldHaveIsDiscoveryTrue()
+    {
+        // Arrange
+        var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
+
+        // Act
+        var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch, isDiscovery: true);
+
+        // Assert
+        Assert.IsTrue(progressState.IsDiscovery);
+        Assert.AreEqual(0, progressState.DiscoveredTests);
+    }
+
+    [TestMethod]
+    public void TestProgressState_WhenCreatedWithFalseIsDiscoveryParameter_ShouldHaveIsDiscoveryFalse()
+    {
+        // Arrange
+        var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
+
+        // Act
+        var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch, isDiscovery: false);
+
+        // Assert
+        Assert.IsFalse(progressState.IsDiscovery);
+        Assert.AreEqual(0, progressState.DiscoveredTests);
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_WhenInDiscoveryMode_ShouldIncrementDiscoveredTests()
+    {
+        // Arrange
+        string assembly = "test.dll";
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            UseAnsi = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // Act
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true);
+        terminalReporter.AssemblyRunStarted();
+        terminalReporter.TestDiscovered("TestMethod1");
+        terminalReporter.TestDiscovered("TestMethod2");
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // Assert - should contain information about 2 tests discovered
+        Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+    }
 }

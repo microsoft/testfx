@@ -5,9 +5,10 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 namespace TestingPlatformExplorer.InProcess;
+
 internal sealed class DisplayTestSessionLifeTimeHandler : ITestSessionLifetimeHandler,
     IOutputDeviceDataProducer,
     IAsyncInitializableExtension,
@@ -31,32 +32,33 @@ internal sealed class DisplayTestSessionLifeTimeHandler : ITestSessionLifetimeHa
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from OnTestSessionStartingAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, testSessionContext.CancellationToken);
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from OnTestSessionFinishingAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, testSessionContext.CancellationToken);
+
     public async Task InitializeAsync()
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from InitializeAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, CancellationToken.None);
 
     public async Task CleanupAsync()
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from CleanupAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, CancellationToken.None);
 
     public async ValueTask DisposeAsync()
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from DisposeAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, CancellationToken.None);
 }

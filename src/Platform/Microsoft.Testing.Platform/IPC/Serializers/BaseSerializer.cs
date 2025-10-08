@@ -117,7 +117,7 @@ internal abstract class BaseSerializer
         stream.Write(bytes);
     }
 
-    protected static void WriteShort(Stream stream, ushort value)
+    protected static void WriteUShort(Stream stream, ushort value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
         ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
@@ -147,7 +147,7 @@ internal abstract class BaseSerializer
         return BitConverter.ToInt64(bytes);
     }
 
-    protected static ushort ReadShort(Stream stream)
+    protected static ushort ReadUShort(Stream stream)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
         stream.ReadExactly(bytes);
@@ -229,7 +229,7 @@ internal abstract class BaseSerializer
         stream.Write(bytes, 0, bytes.Length);
     }
 
-    protected static void WriteShort(Stream stream, ushort value)
+    protected static void WriteUShort(Stream stream, ushort value)
     {
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
@@ -242,7 +242,7 @@ internal abstract class BaseSerializer
         return BitConverter.ToInt64(bytes, 0);
     }
 
-    protected static ushort ReadShort(Stream stream)
+    protected static ushort ReadUShort(Stream stream)
     {
         byte[] bytes = new byte[sizeof(ushort)];
         _ = stream.Read(bytes, 0, bytes.Length);
@@ -274,7 +274,7 @@ internal abstract class BaseSerializer
             return;
         }
 
-        WriteShort(stream, id);
+        WriteUShort(stream, id);
         WriteStringSize(stream, value);
         WriteStringValue(stream, value);
     }
@@ -286,7 +286,7 @@ internal abstract class BaseSerializer
             return;
         }
 
-        WriteShort(stream, id);
+        WriteUShort(stream, id);
         WriteSize<long>(stream);
         WriteLong(stream, value.Value);
     }
@@ -298,7 +298,7 @@ internal abstract class BaseSerializer
             return;
         }
 
-        WriteShort(stream, id);
+        WriteUShort(stream, id);
         WriteSize<int>(stream);
         WriteInt(stream, value.Value);
     }
@@ -330,7 +330,7 @@ internal abstract class BaseSerializer
             return;
         }
 
-        WriteShort(stream, id);
+        WriteUShort(stream, id);
         WriteSize<bool>(stream);
         WriteBool(stream, value.Value);
     }
@@ -342,7 +342,7 @@ internal abstract class BaseSerializer
             return;
         }
 
-        WriteShort(stream, id);
+        WriteUShort(stream, id);
         WriteSize<byte>(stream);
         WriteByte(stream, value.Value);
     }

@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
-    <TargetFrameworks>net6.0;net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>$(NetStandardNetFrameworkHolder);net8.0;net9.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(WinUiMinimum)</TargetFrameworks>
-    <IsNetCoreApp Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
+    <IsNetCoreApp Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</AssemblyName>
     <UseInternalTestFramework>true</UseInternalTestFramework>
@@ -24,6 +24,7 @@
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

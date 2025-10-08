@@ -33,7 +33,7 @@ public class ParallelExecutionTests : CLITestBase
             // Timer validation sometimes get flacky. So retrying the test if it fails.
             catch (AssertFailedException ex) when (i != maxAttempts && ex.Message.Contains("Test Run was expected to not exceed"))
             {
-                await Task.Delay(2000);
+                await Task.Delay(2000, TestContext.CancellationToken);
             }
         }
 
@@ -104,4 +104,6 @@ public class ParallelExecutionTests : CLITestBase
             "DoNotParallelizeTestProject.UnitTest1.SimpleTest12",
             "DoNotParallelizeTestProject.UnitTest2.SimpleTest22");
     }
+
+    public TestContext TestContext { get; set; }
 }

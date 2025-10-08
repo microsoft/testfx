@@ -24,6 +24,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
 
     public int ExitCode => _process.ExitCode;
 
+    public DateTime StartTime => _process.StartTime;
+
     public IMainModule? MainModule
         => _process.MainModule is null
             ? null
@@ -39,7 +41,7 @@ internal sealed class SystemProcess : IProcess, IDisposable
         => _process.WaitForExitAsync();
 
     public void Kill()
-        => _process.Kill(true);
+        => _process.Kill(entireProcessTree: true);
 
     public void Dispose() => _process.Dispose();
 #pragma warning restore CA1416

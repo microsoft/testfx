@@ -21,12 +21,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// A host that loads the test source. This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class TestSourceHost : ITestSourceHost
+#pragma warning disable CA1852 // Seal internal types - needs to be non-sealed because it's mocked in tests.
+internal class TestSourceHost : ITestSourceHost
 {
 #if !WINDOWS_UWP
 #pragma warning disable IDE0052 // Remove unread private members
@@ -345,7 +341,7 @@ public class TestSourceHost : ITestSourceHost
             : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
     }
 
-    internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
+    internal string GetTargetFrameworkVersionString(string sourceFileName)
         => AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
 
     private static string? GetConfigFileForTestSource(string sourceFileName)

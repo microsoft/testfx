@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -185,7 +185,7 @@ public class AssemblyResolverTests : TestContainer
     }
 }
 
-public class TestableAssemblyResolver : AssemblyResolver
+internal class TestableAssemblyResolver : AssemblyResolver
 {
     public TestableAssemblyResolver(IList<string> directories)
         : base(directories)

@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
 
@@ -11,71 +13,71 @@ public class GitHubWorkItemTests : TestContainer
     {
         string url = "https://github.com/microsoft/testfx/issues/1234";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_IssueUrlWithEndingSlash()
     {
         string url = "https://github.com/microsoft/testfx/issues/1234/";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_IssueUrlWithComment()
     {
         string url = "https://github.com/microsoft/testfx/issues/1234#issuecomment-2581012838";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_PRUrl()
     {
         string url = "https://github.com/microsoft/testfx/pull/1234";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_PRUrlWithEndingSlash()
     {
         string url = "https://github.com/microsoft/testfx/pull/1234/";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_PRUrlWithComment()
     {
         string url = "https://github.com/microsoft/testfx/pull/1234#discussion_r1932733213";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_DiscussionUrl()
     {
         string url = "https://github.com/microsoft/testfx/discussions/1234";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_DiscussionUrlWithEndingSlash()
     {
         string url = "https://github.com/microsoft/testfx/discussions/1234/";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 
     public void GitHubWorkItemAttributeShouldExtractIdFromUrl_DiscussionUrlWithComment()
     {
         string url = "https://github.com/microsoft/testfx/discussions/1234#discussioncomment-11865020";
         GitHubWorkItemAttribute attribute = new(url);
-        Verify(attribute.Url == url);
-        Verify(attribute.Id == 1234);
+        attribute.Url.Should().Be(url);
+        attribute.Id.Should().Be(1234);
     }
 }

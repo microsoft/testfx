@@ -22,7 +22,8 @@ public sealed class UseAsyncSuffixTestFixtureMethodSuppressor : DiagnosticSuppre
     // https://github.com/microsoft/vs-threading/blob/main/doc/analyzers/VSTHRD200.md
     private const string SuppressedDiagnosticId = "VSTHRD200";
 
-    internal static readonly SuppressionDescriptor Rule =
+    /// <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification" />
+    public static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.UseAsyncSuffixTestFixtureMethodSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification);
 
     /// <inheritdoc />

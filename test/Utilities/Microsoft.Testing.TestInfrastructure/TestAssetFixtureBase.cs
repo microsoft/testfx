@@ -5,12 +5,12 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public interface ITestAssetFixture : IDisposable
 {
-    Task InitializeAsync();
+    Task InitializeAsync(CancellationToken cancellationToken);
 }
 
 public sealed class NopAssetFixture : ITestAssetFixture
 {
-    public Task InitializeAsync() => Task.CompletedTask;
+    public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public void Dispose()
     {
@@ -32,13 +32,13 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
             : testAsset.TargetAssetPath;
 
-    public async Task InitializeAsync() =>
+    public async Task InitializeAsync(CancellationToken cancellationToken) =>
         // Generate all projects into the same temporary base folder, but separate subdirectories, so we can reference one from other.
 #if NET
         await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.ID, asset.Code, _tempDirectory);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name, cancellationToken: cancellationToken);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
@@ -46,7 +46,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code, _tempDirectory);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name, cancellationToken: cancellationToken);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         }));

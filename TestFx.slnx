@@ -12,7 +12,7 @@
     <File Path="global.json" />
     <File Path="Nuget.config" />
   </Folder>
-  <Folder Name="/Solution Items/eng/">
+  <Folder Name="/Solution Items/eng/" Id="5450f9c7-f297-9839-c636-5c9c04a5ba28">
     <File Path="eng/AfterSolutionBuild.targets" />
     <File Path="eng/Analyzers.props" />
     <File Path="eng/Build.props" />
@@ -23,7 +23,7 @@
     <File Path="eng/Versions.props" />
     <File Path="eng/write-release-notes.ps1" />
   </Folder>
-  <Folder Name="/Solution Items/eng/TestingPlatformRunner/">
+  <Folder Name="/Solution Items/eng/TestingPlatformRunner/" Id="a7b54d83-9a9c-527b-00f3-bda998e116c9">
     <File Path="eng/TestingPlatformRunner/TestingPlatform.Runner.targets" />
     <File Path="eng/TestingPlatformRunner/TestingPlatformRunner.targets" />
   </Folder>
@@ -31,7 +31,7 @@
     <File Path="src/.editorconfig" />
     <File Path="src/Directory.Build.props" />
   </Folder>
-  <Folder Name="/src/1 - Platform and Extensions/">
+  <Folder Name="/src/1 - Platform and Extensions/" Id="4272bbd9-efdb-ae85-3883-a1ab2fbd20bd">
     <File Path="src/Platform/Directory.Build.props" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport/Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.CrashDump/Microsoft.Testing.Extensions.CrashDump.csproj" />
@@ -46,26 +46,25 @@
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
   </Folder>
-  <Folder Name="/src/2 - Adapter/">
+  <Folder Name="/src/2 - Adapter/" Id="f7cf448e-306d-5d9b-7166-fa7205a8989c">
     <Project Path="src/Adapter/MSTest.Engine/MSTest.Engine.csproj" />
     <Project Path="src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj" />
     <Project Path="src/Adapter/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
   </Folder>
-  <Folder Name="/src/3 - TestFramework/">
+  <Folder Name="/src/3 - TestFramework/" Id="f28cc185-255f-b581-6ed3-c247f7096eb1">
     <Project Path="src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj" />
     <Project Path="src/TestFramework/TestFramework/TestFramework.csproj" />
   </Folder>
-  <Folder Name="/src/4 - Analyzers/">
+  <Folder Name="/src/4 - Analyzers/" Id="9c73ee5c-ce16-2586-eb05-df3b4306d351">
     <Project Path="src/Analyzers/MSTest.Analyzers.CodeFixes/MSTest.Analyzers.CodeFixes.csproj" />
     <Project Path="src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj">
       <BuildDependency Project="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
     </Project>
     <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
-    <Project Path="src/Analyzers/MSTest.Internal.Analyzers/MSTest.Internal.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" />
   </Folder>
-  <Folder Name="/src/5 - Package/">
+  <Folder Name="/src/5 - Package/" Id="87d92690-a0c0-3299-b302-eb18ebf7ffb3">
     <Project Path="src/Package/MSTest.Sdk/MSTest.Sdk.csproj" />
     <Project Path="src/Package/MSTest/MSTest.csproj" />
   </Folder>
@@ -74,14 +73,14 @@
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
   </Folder>
-  <Folder Name="/test/IntegrationTests/">
+  <Folder Name="/test/IntegrationTests/" Id="334eb2cc-8f21-7cba-1333-4c64d82c9f9a">
     <Project Path="test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.IntegrationTests/MSTest.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/PlatformServices.Desktop.IntegrationTests/PlatformServices.Desktop.IntegrationTests.csproj" />
   </Folder>
-  <Folder Name="/test/IntegrationTests/TestAssets/">
+  <Folder Name="/test/IntegrationTests/TestAssets/" Id="05959510-e531-ecb6-7089-da3b202e43db">
     <File Path="test/IntegrationTests/TestAssets/Directory.Build.targets" />
     <Project Path="test/IntegrationTests/TestAssets/ClsTestProject/ClsTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DataRowTestProject/DataRowTestProject.csproj" />
@@ -108,21 +107,18 @@
     <Project Path="test/IntegrationTests/TestAssets/SuiteLifeCycleTestProject/SuiteLifeCycleTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestCategoriesFromTestDataRowProject/TestCategoriesFromTestDataRowProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DefaultStrategy/TestIdProject.DefaultStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DisplayNameStrategy/TestIdProject.DisplayNameStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.FullyQualifiedTestStrategy/TestIdProject.FullyQualifiedStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.LegacyStrategy/TestIdProject.LegacyStrategy.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestProject/TestProjectForDiscovery.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TimeoutTestProject/TimeoutTestProject.csproj" />
   </Folder>
-  <Folder Name="/test/Performance/">
+  <Folder Name="/test/Performance/" Id="5e428a24-a249-2472-0469-8a6e9a79c114">
     <Project Path="test/Performance/MSTest.Performance.Runner/MSTest.Performance.Runner.csproj" />
   </Folder>
-  <Folder Name="/test/TestUtilities/">
+  <Folder Name="/test/TestUtilities/" Id="f47f7890-75b5-78d9-9d83-447eee1edf9f">
     <Project Path="test/Utilities/Automation.CLI/Automation.CLI.csproj" />
     <Project Path="test/Utilities/Microsoft.Testing.TestInfrastructure/Microsoft.Testing.TestInfrastructure.csproj" />
     <Project Path="test/Utilities/TestFramework.ForTestingMSTest/TestFramework.ForTestingMSTest.csproj" />
   </Folder>
-  <Folder Name="/test/UnitTests/">
+  <Folder Name="/test/UnitTests/" Id="afae3f01-5c40-22b5-606d-a848a5891b0a">
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />

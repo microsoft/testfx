@@ -176,15 +176,15 @@ public sealed class FileLoggerTests : IDisposable
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
-            await _memoryStream.FlushAsync(TestContext.CancellationTokenSource.Token);
+            await _memoryStream.FlushAsync(TestContext.CancellationToken);
             int iteration = 0;
             while (_memoryStream.Length == 0 && iteration < 10)
             {
                 iteration++;
-                await Task.Delay(200, TestContext.CancellationTokenSource.Token);
+                await Task.Delay(200, TestContext.CancellationToken);
             }
 
-            await _memoryStream.FlushAsync(TestContext.CancellationTokenSource.Token);
+            await _memoryStream.FlushAsync(TestContext.CancellationToken);
 
             _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
             Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));

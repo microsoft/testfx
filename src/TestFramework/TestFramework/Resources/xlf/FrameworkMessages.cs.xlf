@@ -83,6 +83,21 @@
         <target state="translated">Nevkládejte hodnotu typů do AreSame(). Hodnoty převedené do typu Object už nebudou nikdy stejné. Zvažte použití AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertThatDetailsPrefix">
+        <source>Details:</source>
+        <target state="translated">Podrobnosti:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedFormat">
+        <source>Assert.That({0}) failed.</source>
+        <target state="translated">Assert.That({0}) se nezdařilo.</target>
+        <note>{0} is the user code expression</note>
+      </trans-unit>
+      <trans-unit id="AssertThatMessageFormat">
+        <source>Message: {0}</source>
+        <target state="translated">Zpráva: {0}</target>
+        <note>{0} user provided message</note>
+      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
         <target state="translated">Obě kolekce jsou prázdné. {0}</target>
@@ -102,6 +117,21 @@
         <source>Both collections contain the same elements. {0}</source>
         <target state="translated">Obě kolekce obsahují stejné elementy. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="translated">Výraz „{0}“: {1}.</target>
+        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
+        <target state="translated">Výraz „{0}“: {1}, výraz „{2}“: {3}, výraz „{4}“: {5}.</target>
+        <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
+        <target state="translated">Výraz „{0}“: {1}, výraz „{2}“: {3}.</target>
+        <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
@@ -212,6 +242,11 @@ Skutečnost: {2}</target>
         <target state="translated">Očekávala se kolekce {1} velikosti. Skutečnost: {2} {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="translated">Vlastnost TestContext.{0} souvisí s aktuálním testem a není k dispozici během sestavení nebo používání testovacích přípravků tříd.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">Neplatná adresa URL lístku GitHubu</target>
@@ -283,6 +318,11 @@ Skutečnost: {2}</target>
         <target state="translated">Rozdílný počet elementů.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="ReturnedSubsetValueMessage">
+        <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
+        <target state="translated">Elementy &lt;{0}&gt; se v kolekci nenachází.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">Řetězec „{0}“ nezačíná řetězcem „{1}“. {2}</target>
@@ -301,31 +341,6 @@ Skutečnost: {2}</target>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
         <target state="translated">(objekt)</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">Typ očekávané výjimky musí být typu System.Exception nebo z něj odvozený.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">Testovací metoda nevyvolala výjimku. Atribut {0} definovaný u testovací metody výjimku očekával.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">Testovací metoda nevyvolala očekávanou výjimku {0}. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">Testovací metoda vyvolala výjimku {0}, ale očekávala se výjimka {1}. Zpráva o výjimce: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">Testovací metoda vyvolala výjimku {0}, ale očekávala se výjimka {1} nebo od ní odvozený typ. Zpráva o výjimce: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

@@ -58,27 +58,27 @@ public class CIConditionAttributeTests : TestContainer
         attribute.IgnoreMessage.Should().Be("Test is not supported in CI environments");
     }
 
-    public void ShouldRun_IncludeMode_WhenNotInCI_ReturnsFalse()
+    public void IsConditionMet_IncludeMode_WhenNotInCI_ReturnsFalse()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 
-    public void ShouldRun_ExcludeMode_WhenNotInCI_ReturnsFalse()
+    public void IsConditionMet_ExcludeMode_WhenNotInCI_ReturnsFalse()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
         var attribute = new CIConditionAttribute(ConditionMode.Exclude, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_GitHub_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_GitHub_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -86,10 +86,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_ExcludeMode_WhenInCI_GitHub_ReturnsTrue()
+    public void IsConditionMet_ExcludeMode_WhenInCI_GitHub_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -97,10 +97,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Exclude, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_AzurePipelines_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_AzurePipelines_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -108,10 +108,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_AppVeyor_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_AppVeyor_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -119,10 +119,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_Travis_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_Travis_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -130,10 +130,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_CircleCI_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_CircleCI_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -141,10 +141,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_Generic_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_Generic_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -152,10 +152,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_TeamCity_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_TeamCity_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -163,10 +163,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_Jenkins_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_Jenkins_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -175,10 +175,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_AWSCodeBuild_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_AWSCodeBuild_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -187,10 +187,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_GoogleCloudBuild_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_GoogleCloudBuild_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -199,10 +199,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_IncludeMode_WhenInCI_JetBrainsSpace_ReturnsTrue()
+    public void IsConditionMet_IncludeMode_WhenInCI_JetBrainsSpace_ReturnsTrue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -210,10 +210,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert
-        attribute.ShouldRun.Should().BeTrue();
+        attribute.IsConditionMet.Should().BeTrue();
     }
 
-    public void ShouldRun_Jenkins_RequiresBothVariables()
+    public void IsConditionMet_Jenkins_RequiresBothVariables()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -222,10 +222,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert - Should not detect as CI since both variables are required
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 
-    public void ShouldRun_AWSCodeBuild_RequiresBothVariables()
+    public void IsConditionMet_AWSCodeBuild_RequiresBothVariables()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -234,10 +234,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert - Should not detect as CI since both variables are required
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 
-    public void ShouldRun_GoogleCloudBuild_RequiresBothVariables()
+    public void IsConditionMet_GoogleCloudBuild_RequiresBothVariables()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -246,10 +246,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert - Should not detect as CI since both variables are required
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 
-    public void ShouldRun_BooleanVariable_RequiresTrueValue()
+    public void IsConditionMet_BooleanVariable_RequiresTrueValue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -257,10 +257,10 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert - Should not detect as CI since value is false
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 
-    public void ShouldRun_BooleanVariable_RequiresValidBooleanValue()
+    public void IsConditionMet_BooleanVariable_RequiresValidBooleanValue()
     {
         // Arrange
         var mockEnvironment = new Mock<IEnvironment>();
@@ -268,6 +268,6 @@ public class CIConditionAttributeTests : TestContainer
         var attribute = new CIConditionAttribute(ConditionMode.Include, mockEnvironment.Object);
 
         // Act & Assert - Should not detect as CI since value is not a valid boolean
-        attribute.ShouldRun.Should().BeFalse();
+        attribute.IsConditionMet.Should().BeFalse();
     }
 }

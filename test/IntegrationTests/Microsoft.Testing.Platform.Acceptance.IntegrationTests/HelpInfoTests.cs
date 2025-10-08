@@ -11,7 +11,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -22,18 +22,20 @@ Execute a .NET Test Application.
 Options:
     --config-file
         Specifies a testconfig.json file.
+    --debug
+        Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-    --diagnostic-filelogger-synchronouswrite
-        Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+    --diagnostic-file-prefix
+        Prefix for the log file name that will replace '[log]_.'
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-    --diagnostic-output-fileprefix
-        Prefix for the log file name that will replace '[log]_.'
+    --diagnostic-synchronous-write
+        Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
@@ -77,7 +79,7 @@ Extension options:
     public async Task HelpShortName_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -98,7 +100,7 @@ Options:
         const string UnknownOption = "aaa";
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
@@ -118,7 +120,7 @@ Options:
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -148,30 +150,34 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Specify the port of the client\.
-    --config-file
+      --config-file
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig\.json file\.
+      --debug
+        Arity: 0
+        Hidden: False
+        Description: Allows to pause execution in order to attach to the process for debug purposes.
       --diagnostic
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
         The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag
-      --diagnostic-filelogger-synchronouswrite
-        Arity: 0
+      --diagnostic-file-prefix
+        Arity: 1
         Hidden: False
-        Description: Force the built-in file logger to write the log synchronously\.
-        Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\.
-        Note that this is slowing down the test execution\.
+        Description: Prefix for the log file name that will replace '\[log\]_\.'
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
         Description: Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory\.
-      --diagnostic-output-fileprefix
-        Arity: 1
+      --diagnostic-synchronous-write
+        Arity: 0
         Hidden: False
-        Description: Prefix for the log file name that will replace '\[log\]_\.'
+        Description: Force the built-in file logger to write the log synchronously\.
+        Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\.
+        Note that this is slowing down the test execution\.
       --diagnostic-verbosity
         Arity: 1
         Hidden: False
@@ -268,7 +274,7 @@ Registered tools:
     public async Task Help_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -279,18 +285,20 @@ Execute a .NET Test Application.
 Options:
     --config-file
         Specifies a testconfig.json file.
+    --debug
+        Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-    --diagnostic-filelogger-synchronouswrite
-        Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+    --diagnostic-file-prefix
+        Prefix for the log file name that will replace '[log]_.'
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-    --diagnostic-output-fileprefix
-        Prefix for the log file name that will replace '[log]_.'
+    --diagnostic-synchronous-write
+        Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
@@ -367,7 +375,7 @@ Extension options:
     public async Task HelpShortName_WithAllExtensionsRegistered_OutputFullHelpContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("-?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("-?", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -386,7 +394,7 @@ Options:
     public async Task Info_WithAllExtensionsRegistered_OutputFullInfoContent(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.AllExtensionsTargetAssetPath, TestAssetFixture.AllExtensionsAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -420,26 +428,30 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig.json file.
+      --debug
+        Arity: 0
+        Hidden: False
+        Description: Allows to pause execution in order to attach to the process for debug purposes.
       --diagnostic
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-      --diagnostic-filelogger-synchronouswrite
-        Arity: 0
+      --diagnostic-file-prefix
+        Arity: 1
         Hidden: False
-        Description: Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+        Description: Prefix for the log file name that will replace '[log]_.'
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
         Description: Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-      --diagnostic-output-fileprefix
-        Arity: 1
+      --diagnostic-synchronous-write
+        Arity: 0
         Hidden: False
-        Description: Prefix for the log file name that will replace '[log]_.'
+        Description: Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
       --diagnostic-verbosity
         Arity: 1
         Hidden: False
@@ -653,7 +665,7 @@ Registered tools:
             Directory.Delete(testResultsPath, recursive: true);
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -675,7 +687,7 @@ Registered tools:
             Directory.Delete(testResultsPath, recursive: true);
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--?");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--?", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -697,7 +709,7 @@ Registered tools:
             Directory.Delete(testResultsPath, recursive: true);
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -851,4 +863,6 @@ public class DummyTestFramework : ITestFramework
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

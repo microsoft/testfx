@@ -1,0 +1,9 @@
+#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.UITestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.WinUITestTargetAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.WinUITestTargetAttribute.ApplicationType.get -> System.Type!
+Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.WinUITestTargetAttribute.WinUITestTargetAttribute(System.Type! applicationType) -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethod) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.DispatcherQueue.get -> Microsoft.UI.Dispatching.DispatcherQueue?
+static Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer.UITestMethodAttribute.DispatcherQueue.set -> void

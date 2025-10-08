@@ -10,12 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 /// <summary>
 /// Extension methods for <see cref="UTF.UnitTestOutcome"/>.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public static class UnitTestOutcomeExtensions
+internal static class UnitTestOutcomeExtensions
 {
     /// <summary>
     /// Converts the test framework's UnitTestOutcome object to adapter's UnitTestOutcome object.

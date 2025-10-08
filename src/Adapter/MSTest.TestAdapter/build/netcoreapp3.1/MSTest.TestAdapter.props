@@ -1,3 +1,0 @@
-<Project>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\buildTransitive\netcoreapp3.1\MSTest.TestAdapter.props" />
-</Project>

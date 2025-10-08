@@ -15,7 +15,7 @@ public sealed class DynamicDataMethodTests : AcceptanceTestBase<DynamicDataMetho
     public async Task DynamicDataTestWithParameterizedDataProviderMethod(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 3, passed: 9, skipped: 0);
@@ -181,4 +181,6 @@ public class TestClass1
 </RunSettings>
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

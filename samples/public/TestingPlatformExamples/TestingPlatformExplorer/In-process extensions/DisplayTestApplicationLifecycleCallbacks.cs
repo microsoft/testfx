@@ -6,7 +6,8 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
 
 namespace TestingPlatformExplorer.InProcess;
-internal sealed class DisplayTestApplicationLifecycleCallbacks : ITestApplicationLifecycleCallbacks, IOutputDeviceDataProducer
+
+internal sealed class DisplayTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
 
@@ -23,17 +24,17 @@ internal sealed class DisplayTestApplicationLifecycleCallbacks : ITestApplicatio
         _outputDevice = outputDevice;
     }
 
-    public async Task AfterRunAsync(int exitCode, CancellationToken cancellation)
+    public async Task AfterRunAsync(int exitCode, CancellationToken cancellationToken)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Hello from AfterRunAsync, exit code: {exitCode}")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, cancellationToken);
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from BeforeRunAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
-        });
+        }, cancellationToken);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }

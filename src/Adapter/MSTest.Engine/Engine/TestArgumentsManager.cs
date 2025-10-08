@@ -3,8 +3,6 @@
 
 using Microsoft.Testing.Platform;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Framework;
 
 internal sealed class TestArgumentsManager : ITestArgumentsManager

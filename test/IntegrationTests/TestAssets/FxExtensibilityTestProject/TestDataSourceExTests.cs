@@ -17,8 +17,8 @@ public class TestDataSourceExTests
         Assert.AreEqual(0, c % 3);
     }
 
-    [TestMethod]
-    [CustomDisableExpansionTestDataSource]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [CustomTestDataSource]
     public void CustomDisableExpansionTestDataSourceTestMethod1(int a, int b, int c)
     {
     }
@@ -46,17 +46,6 @@ public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
 public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
 {
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [];
-
-    public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
-        => data != null ? $"{methodInfo.Name} ({string.Join(",", data)})" : null;
-}
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class CustomDisableExpansionTestDataSourceAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability
-{
-    public TestDataSourceUnfoldingStrategy UnfoldingStrategy => TestDataSourceUnfoldingStrategy.Fold;
-
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => data != null ? $"{methodInfo.Name} ({string.Join(",", data)})" : null;

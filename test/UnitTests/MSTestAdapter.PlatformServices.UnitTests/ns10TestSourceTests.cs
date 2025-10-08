@@ -9,9 +9,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services;
 
 public class TestSourceTests : TestContainer
 {
-    private readonly TestSource _testSource;
+    private readonly TestSourceHandler _testSource;
 
-    public TestSourceTests() => _testSource = new TestSource();
+    public TestSourceTests() => _testSource = new TestSourceHandler();
 
     public void ValidSourceExtensionsShouldContainDllExtensions()
         => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".dll"));
@@ -28,7 +28,7 @@ public class TestSourceTests : TestContainer
 
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
     {
-#if !NET462
+#if !NETFRAMEWORK
 #pragma warning disable IDE0022 // Use expression body for method
         Verify(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
 #pragma warning restore IDE0022 // Use expression body for method

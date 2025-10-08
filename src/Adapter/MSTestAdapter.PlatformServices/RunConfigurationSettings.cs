@@ -5,8 +5,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #endif
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,12 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// The run configuration settings.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class RunConfigurationSettings
+internal sealed class RunConfigurationSettings
 {
     /// <summary>
     /// The settings name.
@@ -28,36 +21,19 @@ public class RunConfigurationSettings
     public const string SettingsName = "RunConfiguration";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RunConfigurationSettings"/> class.
-    /// </summary>
-    public RunConfigurationSettings() => CollectSourceInformation = true;
-
-    /// <summary>
-    /// Gets a value indicating whether source information needs to be collected or not.
-    /// </summary>
-    public bool CollectSourceInformation { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating the requested platform apartment state.
     /// </summary>
     internal ApartmentState? ExecutionApartmentState { get; private set; }
 
-    /// <summary>
-    /// Populate adapter settings from the context.
-    /// </summary>
-    /// <param name="context">
-    /// The discovery context that contains the runsettings.
-    /// </param>
-    /// <returns>Populated RunConfigurationSettings from the discovery context.</returns>
-    public static RunConfigurationSettings PopulateSettings(IDiscoveryContext? context)
+    public static RunConfigurationSettings PopulateSettings([StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml)
     {
-        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (StringEx.IsNullOrEmpty(runSettingsXml))
         {
             // This will contain default configuration settings
             return new RunConfigurationSettings();
         }
 
-        RunConfigurationSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
+        RunConfigurationSettings? settings = GetSettings(runSettingsXml, SettingsName);
 
         return settings ?? new RunConfigurationSettings();
     }
@@ -65,25 +41,25 @@ public class RunConfigurationSettings
     /// <summary>
     /// Gets the configuration settings from the xml.
     /// </summary>
-    /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
+    /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the settings to fetch.</param>
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static RunConfigurationSettings? GetSettings(
-        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string runSettingsXml,
         string settingName)
     {
-        using var stringReader = new StringReader(runsettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        using var stringReader = new StringReader(runSettingsXml);
+        var reader = XmlReader.Create(stringReader, new() { IgnoreComments = true, IgnoreWhitespace = true, DtdProcessing = DtdProcessing.Prohibit });
 
         // read to the fist child
-        XmlReaderUtilities.ReadToRootNode(reader);
-        reader.ReadToNextElement();
+        ReadToRootNode(reader);
+        ReadToNextElement(reader);
 
         // Read till we reach nodeName element or reach EOF
         while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
                 && !reader.EOF)
         {
-            reader.SkipToNextElement();
+            SkipToNextElement(reader);
         }
 
         if (!reader.EOF)
@@ -115,7 +91,7 @@ public class RunConfigurationSettings
         RunConfigurationSettings settings = new();
 
         // Read the first element in the section
-        reader.ReadToNextElement();
+        ReadToNextElement(reader);
 
         if (!reader.IsEmptyElement)
         {
@@ -126,19 +102,6 @@ public class RunConfigurationSettings
                 string elementName = reader.Name.ToUpperInvariant();
                 switch (elementName)
                 {
-                    case "COLLECTSOURCEINFORMATION":
-                        {
-                            if (bool.TryParse(reader.ReadInnerXml(), out bool result))
-                            {
-                                settings.CollectSourceInformation = result;
-                                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                                "CollectSourceInformation value found : {0} ",
-                                result);
-                            }
-
-                            break;
-                        }
-
                     case "EXECUTIONTHREADAPARTMENTSTATE":
                         {
                             if (Enum.TryParse(reader.ReadInnerXml(), out PlatformApartmentState platformApartmentState))
@@ -156,7 +119,7 @@ public class RunConfigurationSettings
 
                     default:
                         {
-                            reader.SkipToNextElement();
+                            SkipToNextElement(reader);
                             break;
                         }
                 }
@@ -172,17 +135,9 @@ public class RunConfigurationSettings
         // Expected format of the json is: -
         // "mstest" : {
         //  "execution": {
-        //    "collectSourceInformation": true,
         //    "executionApartmentState": "STA"
         //  }
         // }
-        if (bool.TryParse(configuration["mstest:execution:collectSourceInformation"], out bool collectSourceInformation))
-        {
-            settings.CollectSourceInformation = collectSourceInformation;
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "CollectSourceInformation value found : {0}", collectSourceInformation);
-        }
-
         string? apartmentStateValue = configuration["mstest:execution:executionApartmentState"];
         if (Enum.TryParse(apartmentStateValue, out PlatformApartmentState platformApartmentState))
         {
@@ -197,4 +152,32 @@ public class RunConfigurationSettings
         return settings;
     }
 #endif
+
+    private static void ReadToRootNode(XmlReader reader)
+    {
+        ReadToNextElement(reader);
+
+        // Verify that it is a "RunSettings" node.
+        if (reader.Name != "RunSettings")
+        {
+            throw new FormatException("Invalid runsettings");
+        }
+    }
+
+    private static void ReadToNextElement(XmlReader reader)
+    {
+        while (!reader.EOF && reader.Read() && reader.NodeType != XmlNodeType.Element)
+        {
+        }
+    }
+
+    private static void SkipToNextElement(XmlReader reader)
+    {
+        reader.Skip();
+
+        if (reader.NodeType != XmlNodeType.Element)
+        {
+            ReadToNextElement(reader);
+        }
+    }
 }

@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -28,7 +29,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
         MessageFormat,
         null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />
@@ -61,7 +62,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
 
         IArgumentOperation? conditionArgument = invocationOperation.Arguments.FirstOrDefault(x => x.Parameter?.Name == "condition");
         if (conditionArgument != null
-            && conditionArgument.Value is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not })
+            && conditionArgument.Value.WalkDownConversion() is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not })
         {
             context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
         }

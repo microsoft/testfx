@@ -38,7 +38,7 @@ public class MSTestExecutorTests : TestContainer
 
     public async Task RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
     {
-        var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
+        var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v4"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
         string runSettingsXml =
             """
@@ -60,7 +60,7 @@ public class MSTestExecutorTests : TestContainer
 
     public async Task RunTestsShouldReportErrorAndBailOutOnSettingsException()
     {
-        var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
+        var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v4"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
         string runSettingsXml =
             """
@@ -126,38 +126,5 @@ public class MSTestExecutorTests : TestContainer
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
         _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
-    }
-
-    public async Task RunTestsWithSourcesShouldSetDefaultCollectSourceInformationAsTrue()
-    {
-        var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingsXml =
-            """
-            <RunSettings>
-            </RunSettings>
-            """;
-        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
-
-        Verify(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
-    }
-
-    public async Task RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
-    {
-        var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <RunConfiguration>
-                <CollectSourceInformation>false</CollectSourceInformation>
-              </RunConfiguration>
-            </RunSettings>
-            """;
-        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
-
-        Verify(!MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }
 }

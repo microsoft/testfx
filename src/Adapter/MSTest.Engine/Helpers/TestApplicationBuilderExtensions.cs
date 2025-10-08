@@ -7,8 +7,6 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Framework;
 
 public static class TestApplicationBuilderExtensions

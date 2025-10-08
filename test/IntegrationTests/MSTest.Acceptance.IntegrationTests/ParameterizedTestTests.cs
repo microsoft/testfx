@@ -50,7 +50,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DynamicDataAssetName), DynamicDataAssetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings AppDomainEnabled.runsettings --filter ClassName=TestDataRowTests --list-tests", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputMatchesRegexLines("""
             MSTest *
               TestDataRowSingleParameterFolded
@@ -73,7 +73,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             """);
 
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
-        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress");
+        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
@@ -303,11 +303,11 @@ public class ParameterizedTestSerializationIssue2390
 #file AppDomainEnabled.runsettings
 <?xml version="1.0" encoding="utf-8" ?>
 <RunSettings>
-    <MSTest>
+    <RunConfiguration>
         <!-- Currently, the default is already false, but we want to ensure the
              test runs with AppDomain enabled even if we changed the default -->
         <DisableAppDomain>false</DisableAppDomain>
-    </MSTest>
+    </RunConfiguration>
 </RunSettings>
 
 #file UnitTest1.cs
@@ -340,38 +340,38 @@ public class TestClass
 [TestClass]
 public class TestDataRowTests
 {
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowSingleParameterFoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(TestDataRowSingleParameterFoldedData))]
     public void TestDataRowSingleParameterFolded(string _)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowSingleParameterUnfoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(TestDataRowSingleParameterUnfoldedData))]
     public void TestDataRowSingleParameterUnfolded(string _)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowTwoParametersFoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(TestDataRowTwoParametersFoldedData))]
     public void TestDataRowTwoParametersFolded(string _1, string _2)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowTwoParametersUnfoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(TestDataRowTwoParametersUnfoldedData))]
     public void TestDataRowTwoParametersUnfolded(string _1, string _2)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowParameterIsTupleFoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(TestDataRowParameterIsTupleFoldedData))]
     public void TestDataRowParameterIsTupleFolded((string, string) tuple)
     {
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TestDataRowParameterIsTupleUnfoldedData), UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(TestDataRowParameterIsTupleUnfoldedData))]
     public void TestDataRowParameterIsTupleUnfolded((string, string) tuple)
     {
     }
@@ -460,4 +460,6 @@ public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

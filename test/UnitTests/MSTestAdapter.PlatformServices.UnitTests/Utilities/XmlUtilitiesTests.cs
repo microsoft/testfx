@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
 
 using TestFramework.ForTestingMSTest;
 
@@ -25,14 +25,14 @@ public class XmlUtilitiesTests : TestContainer
             assemblyName.Version.ToString());
 
         // Assert.
-        string expectedXml = """
+        string expectedXml = $$"""
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
                     <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
                         <dependentAssembly>
                             <assemblyIdentity name="MSTestAdapter.PlatformServices.UnitTests" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-                            <bindingRedirect oldVersion="99.99.99.99" newVersion="14.0.0.0" />
+                            <bindingRedirect oldVersion="99.99.99.99" newVersion="{{assemblyName.Version}}" />
                         </dependentAssembly>
                     </assemblyBinding>
                 </runtime>
@@ -65,14 +65,14 @@ public class XmlUtilitiesTests : TestContainer
             assemblyName.Version.ToString());
 
         // Assert.
-        string expectedXml = """
+        string expectedXml = $$"""
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
                     <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
                         <dependentAssembly>
                             <assemblyIdentity name="MSTestAdapter.PlatformServices.UnitTests" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-                            <bindingRedirect oldVersion="99.99.99.99" newVersion="14.0.0.0" />
+                            <bindingRedirect oldVersion="99.99.99.99" newVersion="{{assemblyName.Version}}" />
                         </dependentAssembly>
                     </assemblyBinding>
                 </runtime>
@@ -107,14 +107,14 @@ public class XmlUtilitiesTests : TestContainer
             assemblyName.Version.ToString());
 
         // Assert.
-        string expectedXml = """
+        string expectedXml = $$"""
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
                     <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
                         <dependentAssembly>
                             <assemblyIdentity name="MSTestAdapter.PlatformServices.UnitTests" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-                            <bindingRedirect oldVersion="99.99.99.99" newVersion="14.0.0.0" />
+                            <bindingRedirect oldVersion="99.99.99.99" newVersion="{{assemblyName.Version}}" />
                         </dependentAssembly>
                     </assemblyBinding>
                 </runtime>
@@ -159,7 +159,7 @@ public class XmlUtilitiesTests : TestContainer
             assemblyName.Version.ToString());
 
         // Assert.
-        string expectedXml = """
+        string expectedXml = $$"""
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
@@ -170,7 +170,7 @@ public class XmlUtilitiesTests : TestContainer
                         </dependentAssembly>
                         <dependentAssembly>
                             <assemblyIdentity name="MSTestAdapter.PlatformServices.UnitTests" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-                            <bindingRedirect oldVersion="99.99.99.99" newVersion="14.0.0.0" />
+                            <bindingRedirect oldVersion="99.99.99.99" newVersion="{{assemblyName.Version}}" />
                         </dependentAssembly>
                     </assemblyBinding>
                 </runtime>

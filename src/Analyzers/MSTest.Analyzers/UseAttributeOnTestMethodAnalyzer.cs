@@ -19,7 +19,9 @@ namespace MSTest.Analyzers;
 public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
 {
     private const string OwnerAttributeShortName = "Owner";
-    internal static readonly DiagnosticDescriptor OwnerRule = DiagnosticDescriptorHelper.Create(
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor OwnerRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), OwnerAttributeShortName),
@@ -27,11 +29,13 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), OwnerAttributeShortName),
         description: null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     private const string PriorityAttributeShortName = "Priority";
-    internal static readonly DiagnosticDescriptor PriorityRule = DiagnosticDescriptorHelper.Create(
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor PriorityRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), PriorityAttributeShortName),
@@ -39,35 +43,13 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), PriorityAttributeShortName),
         description: null,
         Category.Usage,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
-
-    private const string TestPropertyAttributeShortName = "TestProperty";
-    internal static readonly DiagnosticDescriptor TestPropertyRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), TestPropertyAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), TestPropertyAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
-
-    private const string WorkItemAttributeShortName = "WorkItem";
-    internal static readonly DiagnosticDescriptor WorkItemRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), WorkItemAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), WorkItemAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     private const string DescriptionAttributeShortName = "Description";
-    internal static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
@@ -75,47 +57,41 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
         description: null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    private const string ExpectedExceptionAttributeShortName = "ExpectedException";
-    internal static readonly DiagnosticDescriptor ExpectedExceptionRule = DiagnosticDescriptorHelper.Create(
+    private const string TestPropertyAttributeShortName = "TestProperty";
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor TestPropertyRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ExpectedExceptionAttributeShortName),
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), TestPropertyAttributeShortName),
         messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ExpectedExceptionAttributeShortName),
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), TestPropertyAttributeShortName),
         description: null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    private const string CssIterationAttributeShortName = "CssIteration";
-    internal static readonly DiagnosticDescriptor CssIterationRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.UseAttributeOnTestMethodRuleId,
-        title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), CssIterationAttributeShortName),
-        messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), CssIterationAttributeShortName),
-        description: null,
-        Category.Usage,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+    private const string WorkItemAttributeShortName = "WorkItem";
 
-    private const string CssProjectStructureAttributeShortName = "CssProjectStructure";
-    internal static readonly DiagnosticDescriptor CssProjectStructureRule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor WorkItemRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), CssProjectStructureAttributeShortName),
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), WorkItemAttributeShortName),
         messageFormat: new LocalizableResourceString(
-            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), CssProjectStructureAttributeShortName),
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), WorkItemAttributeShortName),
         description: null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     private const string ConditionBaseAttributeShortName = "ConditionBaseAttribute";
-    internal static readonly DiagnosticDescriptor ConditionBaseRule = DiagnosticDescriptorHelper.Create(
+
+    /// <inheritdoc cref="Resources.UseAttributeOnTestMethodAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor ConditionBaseRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
@@ -123,7 +99,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
         description: null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     // IMPORTANT: Remember to add any new rule to the rule tuple.
@@ -136,9 +112,6 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionBaseAttribute, ExpectedExceptionRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, ConditionBaseRule),
     ];
 
@@ -147,12 +120,9 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         ImmutableArray.Create(
             OwnerRule,
             PriorityRule,
-            TestPropertyRule,
-            WorkItemRule,
             DescriptionRule,
-            ExpectedExceptionRule,
-            CssIterationRule,
-            CssProjectStructureRule);
+            TestPropertyRule,
+            WorkItemRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)

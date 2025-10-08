@@ -56,7 +56,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
                 _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
             }
 
-            _dotnetTestPipeClient = new(arguments[0]);
+            _dotnetTestPipeClient = new(arguments[0], _environment);
             _dotnetTestPipeClient.RegisterAllSerializers();
 
             await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);

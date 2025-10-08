@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </list>
 /// </remarks>
 [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "Compat")]
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public sealed class DataSourceAttribute : Attribute
 {
     // DefaultProviderName needs not to be constant so that clients do not need

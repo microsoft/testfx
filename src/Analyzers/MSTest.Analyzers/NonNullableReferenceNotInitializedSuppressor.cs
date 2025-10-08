@@ -24,7 +24,8 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
     // https://learn.microsoft.com/dotnet/csharp/language-reference/compiler-messages/nullable-warnings?f1url=%3FappId%3Droslyn%26k%3Dk(CS8618)#nonnullable-reference-not-initialized
     private const string SuppressedDiagnosticId = "CS8618";
 
-    internal static readonly SuppressionDescriptor Rule =
+    /// <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification" />
+    public static readonly SuppressionDescriptor Rule =
         new(DiagnosticIds.NonNullableReferenceNotInitializedSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification);
 
     /// <inheritdoc />
