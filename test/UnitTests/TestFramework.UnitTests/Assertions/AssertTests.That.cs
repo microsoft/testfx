@@ -479,10 +479,10 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = 1/1/0001 12:00:00 AM
+                  DateTime.MinValue = 01/01/0001 00:00:00
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = 12/25/2023 12:00:00 AM
+                  new DateTime(year, month, day) = 12/25/2023 00:00:00
                   year = 2023
                 """);
     }
@@ -1041,5 +1041,26 @@ public partial class AssertTests : TestContainer
               nonNullVariable = "value"
               nullVariable = null
             """);
+    }
+
+    public void That_DoesNotEvaluateTwice()
+    {
+        var box = new Box();
+        int expected = 2;
+
+        Action act = () => Assert.That(() => box.GetNumber() == expected);
+
+        act.Should().Throw<AssertFailedException>();
+    }
+
+    private class Box
+    {
+        private int _c;
+
+        public int GetNumber()
+        {
+            _c++;
+            return _c;
+        }
     }
 }
