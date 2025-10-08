@@ -1,5 +1,5 @@
 {
     "msbuild-sdks": {
-        "MSTest.Sdk": "3.11.0"
+        "MSTest.Sdk": "4.0.0"
     }
 }
