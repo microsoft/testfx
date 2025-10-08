@@ -552,4 +552,51 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenTestCleanupHasComments_CommentsArePreserved()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                internal void {|#0:TestCleanup|}()
+                {
+                    CleanupCode();
+
+                    // Cleanup comments;
+                    // More comments
+                }
+
+                private void CleanupCode() { }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                    CleanupCode();
+
+                    // Cleanup comments;
+                    // More comments
+                }
+
+                private void CleanupCode() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
+            fixedCode);
+    }
 }
