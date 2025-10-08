@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v3.11.0...v4.0.0)
 
-### Added
+### Changed
 
 * Breaking changes: see <https://github.com/microsoft/testfx/issues/5762> for information.
 
