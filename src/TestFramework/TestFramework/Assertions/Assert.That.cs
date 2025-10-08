@@ -968,7 +968,8 @@ public static partial class AssertExtensions
 
     /// <summary>
     /// Removes parentheses that wrap the entire expression and cleans up excessive
-    /// consecutive parentheses (e.g., "(((x)))" becomes "x", "((x) && (y))" becomes "(x) && (y)").
+    /// consecutive parentheses (e.g., "(((x)))" becomes "x", "((x) &amp;&amp; (y))" becomes "(x) &amp;&amp; (y)").
+
     /// </summary>
     private static string CleanParentheses(string input)
     {
