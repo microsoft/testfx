@@ -12,6 +12,9 @@ See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v
 
 * Support for `CallerArgumentExpression` in all Assert APIs for better messages of assertion failures.
 * Added `Assert.That`, which provides easy way to write any assertion boolean expression with clear error message in case of assertion failures.
+
+### Changed
+
 * Breaking changes: see [Migrate from MSTest v3 to MSTest v4](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-migration-v3-v4).
 
 ### Artifacts
