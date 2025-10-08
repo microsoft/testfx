@@ -5,18 +5,23 @@ using Analyzer.Utilities;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 
 namespace MSTest.Analyzers.Helpers;
 
 internal static class FixtureMethodFixer
 {
-    private const SyntaxNode? VoidReturnTypeNode = null;
-
     public static async Task<Solution> FixSignatureAsync(Document document, SyntaxNode root, SyntaxNode node,
         bool isParameterLess, bool shouldBeStatic, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Cast to MethodDeclarationSyntax to preserve method body and trivia
+        if (node is not MethodDeclarationSyntax methodDeclaration)
+        {
+            return document.Project.Solution;
+        }
 
         SemanticModel? semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
@@ -27,66 +32,111 @@ internal static class FixtureMethodFixer
         }
 
         var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
-        var syntaxGenerator = SyntaxGenerator.GetGenerator(document);
 
-        SyntaxNode fixedMethodDeclarationNode = syntaxGenerator.MethodDeclaration(
-            methodSymbol.Name,
-            GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider),
-            typeParameters: null,
-            GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider),
-            Accessibility.Public,
-            GetModifiers(methodSymbol, shouldBeStatic),
-            GetStatements(node, syntaxGenerator));
+        // Start with the original method declaration to preserve trivia and body
+        MethodDeclarationSyntax fixedMethodDeclaration = methodDeclaration;
 
-        // Copy the attributes from the old method to the new method.
-        fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
+        // Update parameters
+        ParameterListSyntax newParameterList = GetParameterList(isParameterLess, wellKnownTypeProvider);
+        fixedMethodDeclaration = fixedMethodDeclaration.WithParameterList(newParameterList);
 
-        return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
+        // Update return type
+        TypeSyntax? newReturnType = GetReturnType(methodSymbol, wellKnownTypeProvider);
+        if (newReturnType is not null)
+        {
+            fixedMethodDeclaration = fixedMethodDeclaration.WithReturnType(newReturnType);
+        }
+
+        // Update modifiers (accessibility and static)
+        SyntaxTokenList newModifiers = GetModifiers(methodDeclaration, methodSymbol, shouldBeStatic);
+        fixedMethodDeclaration = fixedMethodDeclaration.WithModifiers(newModifiers);
+
+        // Remove type parameters if any
+        if (fixedMethodDeclaration.TypeParameterList is not null)
+        {
+            fixedMethodDeclaration = fixedMethodDeclaration.WithTypeParameterList(null);
+        }
+
+        // Remove return and yield return statements from body if needed
+        if (fixedMethodDeclaration.Body is not null)
+        {
+            SyntaxList<StatementSyntax> statements = fixedMethodDeclaration.Body.Statements;
+            IEnumerable<StatementSyntax> filteredStatements = statements
+                .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
+
+            if (statements.Count != filteredStatements.Count())
+            {
+                fixedMethodDeclaration = fixedMethodDeclaration.WithBody(
+                    fixedMethodDeclaration.Body.WithStatements(SyntaxFactory.List(filteredStatements)));
+            }
+        }
+
+        return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclaration)).Project.Solution;
     }
 
-    private static IEnumerable<SyntaxNode> GetStatements(SyntaxNode node, SyntaxGenerator syntaxGenerator)
-        => syntaxGenerator.GetStatements(node)
-            .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
-
-    private static DeclarationModifiers GetModifiers(IMethodSymbol methodSymbol, bool shouldBeStatic)
+    private static SyntaxTokenList GetModifiers(MethodDeclarationSyntax methodDeclaration, IMethodSymbol methodSymbol, bool shouldBeStatic)
     {
-        DeclarationModifiers newModifiers = methodSymbol.IsAsync
-            ? DeclarationModifiers.Async
-            : DeclarationModifiers.None;
+        // Start with existing modifiers
+        SyntaxTokenList modifiers = methodDeclaration.Modifiers;
 
-        return newModifiers.WithIsStatic(shouldBeStatic);
+        // Remove all accessibility modifiers
+        modifiers = SyntaxFactory.TokenList(modifiers.Where(m =>
+            !m.IsKind(SyntaxKind.PublicKeyword) &&
+            !m.IsKind(SyntaxKind.PrivateKeyword) &&
+            !m.IsKind(SyntaxKind.ProtectedKeyword) &&
+            !m.IsKind(SyntaxKind.InternalKeyword)));
+
+        // Remove abstract modifier if present
+        modifiers = SyntaxFactory.TokenList(modifiers.Where(m => !m.IsKind(SyntaxKind.AbstractKeyword)));
+
+        // Handle static modifier
+        bool hasStaticModifier = modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword));
+        if (shouldBeStatic && !hasStaticModifier)
+        {
+            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+        }
+        else if (!shouldBeStatic && hasStaticModifier)
+        {
+            modifiers = SyntaxFactory.TokenList(modifiers.Where(m => !m.IsKind(SyntaxKind.StaticKeyword)));
+        }
+
+        // Add public at the beginning
+        modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddRange(modifiers);
+
+        return modifiers;
     }
 
-    private static SyntaxNode? GetReturnType(SyntaxGenerator syntaxGenerator, IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
+    private static TypeSyntax? GetReturnType(IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
     {
         if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask1)))
         {
-            return syntaxGenerator.IdentifierName("ValueTask");
+            return SyntaxFactory.IdentifierName("ValueTask");
         }
 
         if (methodSymbol.IsAsync
             || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1)))
         {
-            return syntaxGenerator.IdentifierName("Task");
+            return SyntaxFactory.IdentifierName("Task");
         }
 
-        // For all other cases return void.
-        return VoidReturnTypeNode;
+        // For void, return a predefined void type
+        return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword));
     }
 
-    private static IEnumerable<SyntaxNode> GetParameters(SyntaxGenerator syntaxGenerator, bool isParameterLess,
-        WellKnownTypeProvider wellKnownTypeProvider)
+    private static ParameterListSyntax GetParameterList(bool isParameterLess, WellKnownTypeProvider wellKnownTypeProvider)
     {
         if (isParameterLess
             || !wellKnownTypeProvider.TryGetOrCreateTypeByMetadataName(
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext,
                 out INamedTypeSymbol? testContextTypeSymbol))
         {
-            return [];
+            return SyntaxFactory.ParameterList();
         }
 
-        SyntaxNode testContextType = syntaxGenerator.TypeExpression(testContextTypeSymbol);
-        SyntaxNode testContextParameter = syntaxGenerator.ParameterDeclaration("testContext", testContextType);
-        return [testContextParameter];
+        TypeSyntax testContextType = SyntaxFactory.ParseTypeName(testContextTypeSymbol.ToDisplayString());
+        ParameterSyntax testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
+            .WithType(testContextType);
+
+        return SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter));
     }
 }
