@@ -33,7 +33,6 @@ MSTEST0034 | Usage | Info | UseClassCleanupBehaviorEndOfClassAnalyzer, [Document
 MSTEST0039 | Usage | Warning | UseNewerAssertThrowsAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0039)
 MSTEST0053 | Usage | Warning | AvoidAssertFormatParametersAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0053)
 
-
 ## Release 3.11.0
 
 ### New Rules
