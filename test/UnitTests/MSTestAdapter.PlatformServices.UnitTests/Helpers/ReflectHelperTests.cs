@@ -186,7 +186,7 @@ public class ReflectHelperTests : TestContainer
 
         // Validate that reflection APIs are not called again.
         rh.IsAttributeDefined<TestMethodAttribute>(memberInfo).Should().BeTrue();
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo), Times.Once);
 
         // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>()), Times.Never);
@@ -256,7 +256,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestMethodAttribute))).
             Returns(attributes);
 
-        Verify(!rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object));
+        rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object).Should().BeFalse();
     }
 
     internal class AttributeMockingHelper

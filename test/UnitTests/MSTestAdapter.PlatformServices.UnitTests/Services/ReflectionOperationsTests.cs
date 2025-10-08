@@ -64,8 +64,8 @@ public class ReflectionOperationsTests : TestContainer
 
         object[] attributes = GetMemberAttributes(type);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         GetAttributeValuePairs(attributes).SequenceEqual(expectedAttributes).Should().BeTrue();
