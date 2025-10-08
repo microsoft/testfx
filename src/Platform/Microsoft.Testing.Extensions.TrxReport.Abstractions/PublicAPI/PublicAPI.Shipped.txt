@@ -1,21 +1,29 @@
 #nullable enable
 Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage
+Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.DebugOrTraceTrxMessage(string? message) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.ITrxReportCapability
 Microsoft.Testing.Extensions.TrxReport.Abstractions.ITrxReportCapability.Enable() -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.ITrxReportCapability.IsSupported.get -> bool
 Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage
+Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.StandardErrorTrxMessage(string? message) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage
+Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.StandardOutputTrxMessage(string? message) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.Categories.get -> string![]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty.TrxCategoriesProperty(string![]! categories) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.Message.get -> string?
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.StackTrace.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty.TrxExceptionProperty(string? message, string? stackTrace) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.FullyQualifiedTypeName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty.TrxFullyQualifiedTypeNameProperty(string! fullyQualifiedTypeName) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.Message.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage.TrxMessage(string? message) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.Messages.get -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty.TrxMessagesProperty(Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMessage![]! messages) -> void
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.ToString() -> string!
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.ToString() -> string!
 override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.ToString() -> string!
