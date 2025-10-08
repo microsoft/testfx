@@ -1043,14 +1043,39 @@ public partial class AssertTests : TestContainer
             """);
     }
 
-    public void That_DoesNotEvaluateTwice()
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails()
     {
         var box = new Box();
-        int expected = 2;
 
-        Action act = () => Assert.That(() => box.GetNumber() == expected);
+        // If we evaluate twice, box.GetNumber() is called once on comparison, and once when message for assertion is built.
+        // We compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetNumber() == 0);
 
-        act.Should().Throw<AssertFailedException>();
+        // GetNumber() should report 1, which is the value when we evaluate only once.
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetNumber() == 0) failed.
+            Details:
+              box.GetNumber() = 1
+            """);
+
+        // We call again, this should be second call now.
+        box.GetNumber().Should().Be(2);
+    }
+
+    public void That_DoesEvaluateTwice()
+    {
+        var box = new Box();
+
+        // Compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetNumber() + box.GetNumber() == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetNumber() + box.GetNumber() == 0) failed.
+            Details:
+              box.GetNumber() = 1
+            """);
     }
 
     private class Box
