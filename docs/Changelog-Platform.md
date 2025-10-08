@@ -10,7 +10,7 @@ See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v
 
 ### Added
 
-* Breaking changes: see https://github.com/microsoft/testfx/issues/5762 for information.
+* Breaking changes: see <https://github.com/microsoft/testfx/issues/5762> for information.
 
 ### Artifacts
 
