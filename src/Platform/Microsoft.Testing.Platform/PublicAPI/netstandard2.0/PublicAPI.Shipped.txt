@@ -1,35 +1,19 @@
 #nullable enable
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(string! standardError) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
 Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.DiscoveredTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
-Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.FileLocationProperty(string! filePath, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan lineSpan) -> void
 Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.InProgressTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Equals(Microsoft.Testing.Platform.Extensions.Messages.LinePosition other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.LinePosition.LinePosition(int line, int column) -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Equals(Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.LinePositionSpan(Microsoft.Testing.Platform.Extensions.Messages.LinePosition start, Microsoft.Testing.Platform.Extensions.Messages.LinePosition end) -> void
 Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.PassedTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.SkippedTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Equals(Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.StepTimingInfo(string! id, string! description, Microsoft.Testing.Platform.Extensions.Messages.TimingInfo timing) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.TestFileLocationProperty(string! filePath, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan lineSpan) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key, string! value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TestMethodIdentifierProperty(string! assemblyFullName, string! namespace, string! typeName, string! methodName, int methodArity, string![]! parameterTypeFullNames, string! returnTypeFullName) -> void
-Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.TestNodeStateProperty(string? explanation) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Equals(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.TimingInfo(System.DateTimeOffset startTime, System.DateTimeOffset endTime, System.TimeSpan duration) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TimingProperty? other) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.GetHashCode() -> int
