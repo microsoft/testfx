@@ -1,11 +1,1 @@
 #nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer.DiscoverTests(System.Collections.Generic.IEnumerable<string!>! sources, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext! discoveryContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! logger, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseDiscoverySink! discoverySink) -> void
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscoverer.MSTestDiscoverer() -> void
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.Cancel() -> void
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.MSTestExecutor() -> void
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.RunTests(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase!>? tests, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunContext? runContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) -> void
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.RunTests(System.Collections.Generic.IEnumerable<string!>? sources, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunContext? runContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) -> void
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.TestExecutionManager.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager!
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestExecutor.TestExecutionManager.set -> void
