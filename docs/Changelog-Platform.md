@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.0.0" />[2.0.0] - 2025-10-07
+
+See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v3.11.0...v4.0.0)
+
+### Added
+
+* Breaking changes: see https://github.com/microsoft/testfx/issues/5762 for information.
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.0.0)
+* Microsoft.Testing.Platform.MSBuild: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.0.0)
+* Microsoft.Testing.Extensions.CrashDump: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.0.0)
+* Microsoft.Testing.Extensions.HangDump: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.0.0)
+* Microsoft.Testing.Extensions.HotReload: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.0.0)
+* Microsoft.Testing.Extensions.Retry: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.0.0)
+* Microsoft.Testing.Extensions.Telemetry: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.0.0)
+* Microsoft.Testing.Extensions.TrxReport: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.0.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.0.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.0.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport [2.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.0.0)
+
 ## <a name="1.9.0" />[1.9.0] - 2025-10-01
 
 See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/v3.10.5...v3.11.0)
