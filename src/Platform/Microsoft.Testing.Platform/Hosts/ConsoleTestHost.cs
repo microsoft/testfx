@@ -38,7 +38,6 @@ internal sealed class ConsoleTestHost(
     {
         var consoleRunStarted = Stopwatch.StartNew();
         DateTimeOffset consoleRunStart = _clock.UtcNow;
-
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
         // Add the ClientInfo service to the service provider
@@ -49,22 +48,26 @@ internal sealed class ConsoleTestHost(
             ?? new ConsoleTestExecutionFilterFactory(ServiceProvider.GetCommandLineOptions());
 
         // Use user provided filter factory or create console default one.
-        ITestFrameworkInvoker testAdapterInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
+        ITestFrameworkInvoker testFrameworkInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
             ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
         ServiceProvider.TryAddService(new Services.TestSessionContext(cancellationToken));
-        ITestFramework testFramework = await _buildTestFrameworkAsync(new(
-            ServiceProvider,
-            new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
-            testAdapterInvoker,
-            testExecutionFilterFactory,
-            ServiceProvider.GetPlatformOutputDevice(),
-            [],
-            _testFrameworkManager,
-            _testHostManager,
-            new MessageBusProxy(),
-            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-            false)).ConfigureAwait(false);
+        ITestFramework testFramework;
+        using (ServiceProvider.GetPlatformOTelService()?.StartActivity("CreateTestFramework"))
+        {
+            testFramework = await _buildTestFrameworkAsync(new(
+                ServiceProvider,
+                new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
+                testFrameworkInvoker,
+                testExecutionFilterFactory,
+                ServiceProvider.GetPlatformOutputDevice(),
+                [],
+                _testFrameworkManager,
+                _testHostManager,
+                new MessageBusProxy(),
+                ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
+                false)).ConfigureAwait(false);
+        }
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
