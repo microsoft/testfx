@@ -31,9 +31,11 @@
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? other) -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(string! standardError) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider.CreateLogger(string! categoryName) -> Microsoft.Testing.Platform.Logging.ILogger!
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager
@@ -145,6 +147,7 @@ Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid
 Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.DataWithSessionUid(string! displayName, string? description, Microsoft.Testing.Platform.TestHost.SessionUid sessionUid) -> void
 Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid
 Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.DiscoveredTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.ErrorTestNodeStateProperty() -> void
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.ErrorTestNodeStateProperty(string! explanation) -> void
@@ -162,9 +165,11 @@ Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Description.get -> string?
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.DisplayName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty? other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileArtifactProperty(System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.FileInfo.get -> System.IO.FileInfo!
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty? other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.FileLocationProperty(string! filePath, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan lineSpan) -> void
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.FilePath.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.LineSpan.get -> Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan
 Microsoft.Testing.Platform.Extensions.Messages.IData
@@ -173,16 +178,20 @@ Microsoft.Testing.Platform.Extensions.Messages.IData.DisplayName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.IDataProducer
 Microsoft.Testing.Platform.Extensions.Messages.IDataProducer.DataTypesProduced.get -> System.Type![]!
 Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.InProgressTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.IProperty
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Column.get -> int
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Line.get -> int
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.LinePosition() -> void
+Microsoft.Testing.Platform.Extensions.Messages.LinePosition.LinePosition(int line, int column) -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.End.get -> Microsoft.Testing.Platform.Extensions.Messages.LinePosition
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.LinePositionSpan() -> void
+Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.LinePositionSpan(Microsoft.Testing.Platform.Extensions.Messages.LinePosition start, Microsoft.Testing.Platform.Extensions.Messages.LinePosition end) -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Start.get -> Microsoft.Testing.Platform.Extensions.Messages.LinePosition
 Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.PassedTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.PropertyBag
 Microsoft.Testing.Platform.Extensions.Messages.PropertyBag.Add(Microsoft.Testing.Platform.Extensions.Messages.IProperty! property) -> void
 Microsoft.Testing.Platform.Extensions.Messages.PropertyBag.Any<TProperty>() -> bool
@@ -204,13 +213,17 @@ Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact
 Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.FileInfo.get -> System.IO.FileInfo!
 Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.SessionFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.SkippedTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Description.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Id.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.StepTimingInfo(string! id, string! description, Microsoft.Testing.Platform.Extensions.Messages.TimingInfo timing) -> void
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Timing.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty
+Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.TestFileLocationProperty(string! filePath, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan lineSpan) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Key.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key, string! value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Value.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty
@@ -220,6 +233,7 @@ Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Meth
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Namespace.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.ParameterTypeFullNames.get -> string![]!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.ReturnTypeFullName.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TestMethodIdentifierProperty(string! assemblyFullName, string! namespace, string! typeName, string! methodName, int methodArity, string![]! parameterTypeFullNames, string! returnTypeFullName) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.TypeName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestNode
 Microsoft.Testing.Platform.Extensions.Messages.TestNode.DisplayName.get -> string!
@@ -232,6 +246,7 @@ Microsoft.Testing.Platform.Extensions.Messages.TestNode.Uid.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.Explanation.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.TestNodeStateProperty(string? explanation) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.TestNodeUid(string! value) -> void
@@ -253,6 +268,7 @@ Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Duration.get -> System
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.EndTime.get -> System.DateTimeOffset
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.StartTime.get -> System.DateTimeOffset
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.TimingInfo() -> void
+Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.TimingInfo(System.DateTimeOffset startTime, System.DateTimeOffset endTime, System.TimeSpan duration) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.GlobalTiming.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.StepTimings.get -> Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]!
