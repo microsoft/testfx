@@ -529,89 +529,157 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     // Add this new method to recognize LINQ patterns with predicates
+    //private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
+    //     IOperation operation,
+    //     out SyntaxNode? collectionExpression,
+    //     out SyntaxNode? predicateExpression,
+    //     out IOperation? countOperation)
+    //{
+    //    collectionExpression = null;
+    //    predicateExpression = null;
+    //    countOperation = null;
+
+    //    // Check for enumerable.Any(predicate)
+    //    if (operation is IInvocationOperation anyInvocation &&
+    //        anyInvocation.TargetMethod.Name == "Any" &&
+    //        anyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+    //    {
+    //        // For extension methods on IEnumerable, the syntax is: collection.Any(predicate)
+    //        // In Roslyn's operation tree: Instance = collection, Arguments[0] = predicate
+    //        if (anyInvocation.Instance != null &&
+    //            anyInvocation.Arguments.Length == 1 &&
+    //            IsPredicate(anyInvocation.Arguments[0].Value))
+    //        {
+    //            collectionExpression = anyInvocation.Instance.Syntax;
+    //            predicateExpression = anyInvocation.Arguments[0].Value.Syntax;
+    //            return LinqPredicateCheckStatus.Any;
+    //        }
+    //    }
+
+    //    // Check for enumerable.Count(predicate)
+    //    if (operation is IInvocationOperation countInvocation &&
+    //        countInvocation.TargetMethod.Name == "Count" &&
+    //        countInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+    //    {
+    //        // For extension methods: collection.Count(predicate)
+    //        if (countInvocation.Instance != null &&
+    //            countInvocation.Arguments.Length == 1 &&
+    //            IsPredicate(countInvocation.Arguments[0].Value))
+    //        {
+    //            collectionExpression = countInvocation.Instance.Syntax;
+    //            predicateExpression = countInvocation.Arguments[0].Value.Syntax;
+    //            countOperation = operation;
+    //            return LinqPredicateCheckStatus.Count;
+    //        }
+    //    }
+
+    //    // Check for enumerable.Where(predicate).Any()
+    //    if (operation is IInvocationOperation whereAnyInvocation &&
+    //        whereAnyInvocation.TargetMethod.Name == "Any" &&
+    //        whereAnyInvocation.Arguments.Length == 0 &&
+    //        whereAnyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+    //        whereAnyInvocation.Instance is IInvocationOperation whereInvocation &&
+    //        whereInvocation.TargetMethod.Name == "Where" &&
+    //        whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+    //    {
+    //        // collection.Where(predicate).Any()
+    //        if (whereInvocation.Instance != null &&
+    //            whereInvocation.Arguments.Length == 1 &&
+    //            IsPredicate(whereInvocation.Arguments[0].Value))
+    //        {
+    //            collectionExpression = whereInvocation.Instance.Syntax;
+    //            predicateExpression = whereInvocation.Arguments[0].Value.Syntax;
+    //            return LinqPredicateCheckStatus.WhereAny;
+    //        }
+    //    }
+
+    //    // Check for enumerable.Where(predicate).Count()
+    //    if (operation is IInvocationOperation whereCountInvocation &&
+    //        whereCountInvocation.TargetMethod.Name == "Count" &&
+    //        whereCountInvocation.Arguments.Length == 0 &&
+    //        whereCountInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+    //        whereCountInvocation.Instance is IInvocationOperation whereInvocation2 &&
+    //        whereInvocation2.TargetMethod.Name == "Where" &&
+    //        whereInvocation2.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+    //    {
+    //        // collection.Where(predicate).Count()
+    //        if (whereInvocation2.Instance != null &&
+    //            whereInvocation2.Arguments.Length == 1 &&
+    //            IsPredicate(whereInvocation2.Arguments[0].Value))
+    //        {
+    //            collectionExpression = whereInvocation2.Instance.Syntax;
+    //            predicateExpression = whereInvocation2.Arguments[0].Value.Syntax;
+    //            countOperation = operation;
+    //            return LinqPredicateCheckStatus.WhereCount;
+    //        }
+    //    }
+
+    //    return LinqPredicateCheckStatus.Unknown;
+    //}
+
     private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
-         IOperation operation,
-         out SyntaxNode? collectionExpression,
-         out SyntaxNode? predicateExpression,
-         out IOperation? countOperation)
+    IOperation operation,
+    out SyntaxNode? collectionExpression,
+    out SyntaxNode? predicateExpression,
+    out IOperation? countOperation)
     {
         collectionExpression = null;
         predicateExpression = null;
         countOperation = null;
 
         // Check for enumerable.Any(predicate)
+        // Extension methods appear as: Instance=null, Arguments[0]=collection, Arguments[1]=predicate
         if (operation is IInvocationOperation anyInvocation &&
             anyInvocation.TargetMethod.Name == "Any" &&
-            anyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+            anyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            anyInvocation.Arguments.Length == 2)
         {
-            // For extension methods on IEnumerable, the syntax is: collection.Any(predicate)
-            // In Roslyn's operation tree: Instance = collection, Arguments[0] = predicate
-            if (anyInvocation.Instance != null &&
-                anyInvocation.Arguments.Length == 1 &&
-                IsPredicate(anyInvocation.Arguments[0].Value))
-            {
-                collectionExpression = anyInvocation.Instance.Syntax;
-                predicateExpression = anyInvocation.Arguments[0].Value.Syntax;
-                return LinqPredicateCheckStatus.Any;
-            }
+            collectionExpression = anyInvocation.Arguments[0].Value.Syntax;
+            predicateExpression = anyInvocation.Arguments[1].Value.Syntax;
+            return LinqPredicateCheckStatus.Any;
         }
 
         // Check for enumerable.Count(predicate)
         if (operation is IInvocationOperation countInvocation &&
             countInvocation.TargetMethod.Name == "Count" &&
-            countInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+            countInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            countInvocation.Arguments.Length == 2)
         {
-            // For extension methods: collection.Count(predicate)
-            if (countInvocation.Instance != null &&
-                countInvocation.Arguments.Length == 1 &&
-                IsPredicate(countInvocation.Arguments[0].Value))
-            {
-                collectionExpression = countInvocation.Instance.Syntax;
-                predicateExpression = countInvocation.Arguments[0].Value.Syntax;
-                countOperation = operation;
-                return LinqPredicateCheckStatus.Count;
-            }
+            collectionExpression = countInvocation.Arguments[0].Value.Syntax;
+            predicateExpression = countInvocation.Arguments[1].Value.Syntax;
+            countOperation = operation;
+            return LinqPredicateCheckStatus.Count;
         }
 
         // Check for enumerable.Where(predicate).Any()
         if (operation is IInvocationOperation whereAnyInvocation &&
             whereAnyInvocation.TargetMethod.Name == "Any" &&
-            whereAnyInvocation.Arguments.Length == 0 &&
             whereAnyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
-            whereAnyInvocation.Instance is IInvocationOperation whereInvocation &&
+            whereAnyInvocation.Arguments.Length == 1 &&
+            whereAnyInvocation.Arguments[0].Value is IInvocationOperation whereInvocation &&
             whereInvocation.TargetMethod.Name == "Where" &&
-            whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+            whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereInvocation.Arguments.Length == 2)
         {
-            // collection.Where(predicate).Any()
-            if (whereInvocation.Instance != null &&
-                whereInvocation.Arguments.Length == 1 &&
-                IsPredicate(whereInvocation.Arguments[0].Value))
-            {
-                collectionExpression = whereInvocation.Instance.Syntax;
-                predicateExpression = whereInvocation.Arguments[0].Value.Syntax;
-                return LinqPredicateCheckStatus.WhereAny;
-            }
+            collectionExpression = whereInvocation.Arguments[0].Value.Syntax;
+            predicateExpression = whereInvocation.Arguments[1].Value.Syntax;
+            return LinqPredicateCheckStatus.WhereAny;
         }
 
         // Check for enumerable.Where(predicate).Count()
         if (operation is IInvocationOperation whereCountInvocation &&
             whereCountInvocation.TargetMethod.Name == "Count" &&
-            whereCountInvocation.Arguments.Length == 0 &&
             whereCountInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
-            whereCountInvocation.Instance is IInvocationOperation whereInvocation2 &&
+            whereCountInvocation.Arguments.Length == 1 &&
+            whereCountInvocation.Arguments[0].Value is IInvocationOperation whereInvocation2 &&
             whereInvocation2.TargetMethod.Name == "Where" &&
-            whereInvocation2.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+            whereInvocation2.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereInvocation2.Arguments.Length == 2)
         {
-            // collection.Where(predicate).Count()
-            if (whereInvocation2.Instance != null &&
-                whereInvocation2.Arguments.Length == 1 &&
-                IsPredicate(whereInvocation2.Arguments[0].Value))
-            {
-                collectionExpression = whereInvocation2.Instance.Syntax;
-                predicateExpression = whereInvocation2.Arguments[0].Value.Syntax;
-                countOperation = operation;
-                return LinqPredicateCheckStatus.WhereCount;
-            }
+            collectionExpression = whereInvocation2.Arguments[0].Value.Syntax;
+            predicateExpression = whereInvocation2.Arguments[1].Value.Syntax;
+            countOperation = operation;
+            return LinqPredicateCheckStatus.WhereCount;
         }
 
         return LinqPredicateCheckStatus.Unknown;
@@ -750,6 +818,55 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
+        }
+
+        // Special-case: enumerable.Count(predicate) > 0 → Assert.Contains(predicate, enumerable)
+        if (conditionArgument is IBinaryOperation binaryOp &&
+            binaryOp.OperatorKind == BinaryOperatorKind.GreaterThan)
+        {
+            if (binaryOp.LeftOperand is IInvocationOperation countInvocation &&
+                binaryOp.RightOperand.ConstantValue.HasValue &&
+                binaryOp.RightOperand.ConstantValue.Value is int intValue &&
+                intValue == 0 &&
+                countInvocation.TargetMethod.Name == "Count")
+            {
+                SyntaxNode? countCollectionExpr = null;
+                SyntaxNode? countPredicateExpr = null;
+
+                if (countInvocation.Instance != null && countInvocation.Arguments.Length == 1)
+                {
+                    countCollectionExpr = countInvocation.Instance.Syntax;
+                    countPredicateExpr = countInvocation.Arguments[0].Value.Syntax;
+                }
+                else if (countInvocation.Instance == null && countInvocation.Arguments.Length == 2)
+                {
+                    countCollectionExpr = countInvocation.Arguments[0].Value.Syntax;
+                    countPredicateExpr = countInvocation.Arguments[1].Value.Syntax;
+                }
+
+                if (countCollectionExpr != null && countPredicateExpr != null)
+                {
+                    string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+
+                    var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+
+                    context.ReportDiagnostic(
+                        context.Operation.CreateDiagnostic(
+                            Rule,
+                            additionalLocations: ImmutableArray.Create(
+                                conditionArgument.Syntax.GetLocation(),
+                                countPredicateExpr.GetLocation(),
+                                countCollectionExpr.GetLocation()),
+                            properties: properties.ToImmutable(),
+                            properAssertMethod,
+                            isTrueInvocation ? "IsTrue" : "IsFalse"));
+
+                    return;
+                }
+
+            }
         }
 
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
