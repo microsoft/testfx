@@ -528,95 +528,6 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return ComparisonCheckStatus.Unknown;
     }
 
-    // Add this new method to recognize LINQ patterns with predicates
-    //private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
-    //     IOperation operation,
-    //     out SyntaxNode? collectionExpression,
-    //     out SyntaxNode? predicateExpression,
-    //     out IOperation? countOperation)
-    //{
-    //    collectionExpression = null;
-    //    predicateExpression = null;
-    //    countOperation = null;
-
-    //    // Check for enumerable.Any(predicate)
-    //    if (operation is IInvocationOperation anyInvocation &&
-    //        anyInvocation.TargetMethod.Name == "Any" &&
-    //        anyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
-    //    {
-    //        // For extension methods on IEnumerable, the syntax is: collection.Any(predicate)
-    //        // In Roslyn's operation tree: Instance = collection, Arguments[0] = predicate
-    //        if (anyInvocation.Instance != null &&
-    //            anyInvocation.Arguments.Length == 1 &&
-    //            IsPredicate(anyInvocation.Arguments[0].Value))
-    //        {
-    //            collectionExpression = anyInvocation.Instance.Syntax;
-    //            predicateExpression = anyInvocation.Arguments[0].Value.Syntax;
-    //            return LinqPredicateCheckStatus.Any;
-    //        }
-    //    }
-
-    //    // Check for enumerable.Count(predicate)
-    //    if (operation is IInvocationOperation countInvocation &&
-    //        countInvocation.TargetMethod.Name == "Count" &&
-    //        countInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
-    //    {
-    //        // For extension methods: collection.Count(predicate)
-    //        if (countInvocation.Instance != null &&
-    //            countInvocation.Arguments.Length == 1 &&
-    //            IsPredicate(countInvocation.Arguments[0].Value))
-    //        {
-    //            collectionExpression = countInvocation.Instance.Syntax;
-    //            predicateExpression = countInvocation.Arguments[0].Value.Syntax;
-    //            countOperation = operation;
-    //            return LinqPredicateCheckStatus.Count;
-    //        }
-    //    }
-
-    //    // Check for enumerable.Where(predicate).Any()
-    //    if (operation is IInvocationOperation whereAnyInvocation &&
-    //        whereAnyInvocation.TargetMethod.Name == "Any" &&
-    //        whereAnyInvocation.Arguments.Length == 0 &&
-    //        whereAnyInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
-    //        whereAnyInvocation.Instance is IInvocationOperation whereInvocation &&
-    //        whereInvocation.TargetMethod.Name == "Where" &&
-    //        whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
-    //    {
-    //        // collection.Where(predicate).Any()
-    //        if (whereInvocation.Instance != null &&
-    //            whereInvocation.Arguments.Length == 1 &&
-    //            IsPredicate(whereInvocation.Arguments[0].Value))
-    //        {
-    //            collectionExpression = whereInvocation.Instance.Syntax;
-    //            predicateExpression = whereInvocation.Arguments[0].Value.Syntax;
-    //            return LinqPredicateCheckStatus.WhereAny;
-    //        }
-    //    }
-
-    //    // Check for enumerable.Where(predicate).Count()
-    //    if (operation is IInvocationOperation whereCountInvocation &&
-    //        whereCountInvocation.TargetMethod.Name == "Count" &&
-    //        whereCountInvocation.Arguments.Length == 0 &&
-    //        whereCountInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
-    //        whereCountInvocation.Instance is IInvocationOperation whereInvocation2 &&
-    //        whereInvocation2.TargetMethod.Name == "Where" &&
-    //        whereInvocation2.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
-    //    {
-    //        // collection.Where(predicate).Count()
-    //        if (whereInvocation2.Instance != null &&
-    //            whereInvocation2.Arguments.Length == 1 &&
-    //            IsPredicate(whereInvocation2.Arguments[0].Value))
-    //        {
-    //            collectionExpression = whereInvocation2.Instance.Syntax;
-    //            predicateExpression = whereInvocation2.Arguments[0].Value.Syntax;
-    //            countOperation = operation;
-    //            return LinqPredicateCheckStatus.WhereCount;
-    //        }
-    //    }
-
-    //    return LinqPredicateCheckStatus.Unknown;
-    //}
-
     private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
     IOperation operation,
     out SyntaxNode? collectionExpression,
@@ -848,7 +759,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 {
                     string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 
-                    var properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
                     properties.Add(ProperAssertMethodNameKey, properAssertMethod);
                     properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
 
@@ -865,7 +776,6 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
                     return;
                 }
-
             }
         }
 
@@ -1233,11 +1143,5 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     {
         argumentValue = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == ordinal)?.Value?.WalkDownConversion();
         return argumentValue is not null;
-    }
-
-    private static bool IsPredicate(IOperation operation)
-    {
-        IOperation unwrapped = operation.WalkDownConversion();
-        return unwrapped is IAnonymousFunctionOperation or IDelegateCreationOperation;
     }
 }
