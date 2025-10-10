@@ -175,4 +175,11 @@ public sealed class TestMethod : ITestMethod
     internal string DisplayName { get; set; }
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
+
+    internal TestMethod CloneWithUpdatedSource(string source)
+    {
+        var clone = (TestMethod)MemberwiseClone();
+        AssemblyName = source;
+        return clone;
+    }
 }

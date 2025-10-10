@@ -72,7 +72,15 @@ internal static class TestCaseExtensions
     {
         if (testCase.LocalExtensionData is UnitTestElement unitTestElement)
         {
-            return unitTestElement;
+            // If the requested source is different, clone it with updated source.
+            // This can happen when there are deployment items in tests.
+            // In this case, the source would be the path of the deployment directory.
+            // If we don't return UnitTestElement with the correct path to deployment directory, we will
+            // end up trying to load the test assembly twice in the same appdomain, once with the default context and once in a LoadFrom context.
+            // See https://github.com/microsoft/testfx/issues/6713
+            return unitTestElement.TestMethod.AssemblyName != source
+                ? unitTestElement.CloneWithUpdatedSource(source)
+                : unitTestElement;
         }
 
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
