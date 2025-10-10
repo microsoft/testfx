@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -14,7 +16,7 @@ public class VSInstallationUtilitiesTests : TestContainer
     {
         TestSourceHost isolatedHost = new(null!, null, null);
         List<string> paths = isolatedHost.GetResolutionPaths(Assembly.GetExecutingAssembly().FullName, true);
-        Verify(!paths.Contains(EngineConstants.PublicAssemblies) || paths.Contains(EngineConstants.PrivateAssemblies));
+        (!paths.Contains(EngineConstants.PublicAssemblies) || paths.Contains(EngineConstants.PrivateAssemblies)).Should().BeTrue();
     }
 }
 #endif

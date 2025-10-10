@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !NETFRAMEWORK
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -19,8 +21,8 @@ public class TestSourceHostTests : TestContainer
     {
         var type = _testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
-        Verify(type is not null);
-        Verify(type.IsDefaultConstructorCalled);
+        type.Should().NotBeNull();
+        type.IsDefaultConstructorCalled.Should().BeTrue();
     }
 }
 

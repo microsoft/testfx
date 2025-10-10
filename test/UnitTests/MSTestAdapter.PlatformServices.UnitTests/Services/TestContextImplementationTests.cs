@@ -6,6 +6,8 @@ using System.Data;
 using System.Data.Common;
 #endif
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -37,7 +39,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.Properties is not null);
+        _testContextImplementation.Properties.Should().NotBeNull();
     }
 
     public void TestContextConstructorShouldInitializeDefaultProperties()
@@ -47,17 +49,17 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.Properties is not null);
+        _testContextImplementation.Properties.Should().NotBeNull();
 
-        Verify(_testContextImplementation.Properties["FullyQualifiedTestClassName"]!.Equals("A.C.M"));
-        Verify(_testContextImplementation.Properties["TestName"]!.Equals("M"));
+        _testContextImplementation.Properties["FullyQualifiedTestClassName"]!.Should().Be("A.C.M");
+        _testContextImplementation.Properties["TestName"]!.Should().Be("M");
     }
 
     public void CurrentTestOutcomeShouldReturnDefaultOutcome()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.CurrentTestOutcome == UnitTestOutcome.Failed);
+        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public void CurrentTestOutcomeShouldReturnOutcomeSet()
@@ -66,7 +68,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetOutcome(UnitTestOutcome.InProgress);
 
-        Verify(_testContextImplementation.CurrentTestOutcome == UnitTestOutcome.InProgress);
+        _testContextImplementation.CurrentTestOutcome.Should().Be(UnitTestOutcome.InProgress);
     }
 
     public void FullyQualifiedTestClassNameShouldReturnTestMethodsFullClassName()
@@ -75,7 +77,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.FullyQualifiedTestClassName == "A.C.M");
+        _testContextImplementation.FullyQualifiedTestClassName.Should().Be("A.C.M");
     }
 
     public void TestNameShouldReturnTestMethodsName()
@@ -84,7 +86,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.TestName == "M");
+        _testContextImplementation.TestName.Should().Be("M");
     }
 
     public void PropertiesShouldReturnPropertiesPassedToTestContext()
@@ -97,8 +99,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.Properties[property1.Key] == property1.Value);
-        Verify(_testContextImplementation.Properties[property2.Key] == property2.Value);
+        _testContextImplementation.Properties[property1.Key].Should().Be(property1.Value);
+        _testContextImplementation.Properties[property2.Key].Should().Be(property2.Value);
     }
 
     public void ContextShouldReturnTestContextObject()
@@ -107,8 +109,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.Context is not null);
-        Verify(_testContextImplementation.Context.TestName == "M");
+        _testContextImplementation.Context.Should().NotBeNull();
+        _testContextImplementation.Context.TestName.Should().Be("M");
     }
 
     public void TryGetPropertyValueShouldReturnTrueIfPropertyIsPresent()
@@ -117,16 +119,16 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(_testContextImplementation.TryGetPropertyValue("TestName", out object? propValue));
-        Verify("M".Equals(propValue));
+        _testContextImplementation.TryGetPropertyValue("TestName", out object? propValue).Should().BeTrue();
+        propValue.Should().Be("M");
     }
 
     public void TryGetPropertyValueShouldReturnFalseIfPropertyIsNotPresent()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        Verify(!_testContextImplementation.TryGetPropertyValue("Random", out object? propValue));
-        Verify(propValue is null);
+        _testContextImplementation.TryGetPropertyValue("Random", out object? propValue).Should().BeFalse();
+        propValue.Should().BeNull();
     }
 
     public void AddPropertyShouldAddPropertiesToThePropertyBag()
@@ -135,23 +137,23 @@ public class TestContextImplementationTests : TestContainer
         var property = new KeyValuePair<string, string>("SomeNewProperty", "SomeValue");
         _testContextImplementation.AddProperty(property.Key, property.Value);
 
-        Verify(_testContextImplementation.Properties[property.Key]!.Equals(property.Value));
+        _testContextImplementation.Properties[property.Key]!.Should().Be(property.Value);
     }
 
     public void AddResultFileShouldThrowIfFileNameIsNull()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        ArgumentException exception = VerifyThrows<ArgumentException>(() => _testContextImplementation.AddResultFile(null!));
-        Verify(exception.Message.Contains(Resource.Common_CannotBeNullOrEmpty));
+        Action action = () => _testContextImplementation.AddResultFile(null!);
+        action.Should().Throw<ArgumentException>().WithMessage("*" + Resource.Common_CannotBeNullOrEmpty + "*");
     }
 
     public void AddResultFileShouldThrowIfFileNameIsEmpty()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
 
-        ArgumentException exception = VerifyThrows<ArgumentException>(() => _testContextImplementation.AddResultFile(string.Empty));
-        Verify(exception.Message.Contains(Resource.Common_CannotBeNullOrEmpty));
+        Action action = () => _testContextImplementation.AddResultFile(string.Empty);
+        action.Should().Throw<ArgumentException>().WithMessage("*" + Resource.Common_CannotBeNullOrEmpty + "*");
     }
 
     public void AddResultFileShouldAddFileToResultsFiles()
@@ -162,7 +164,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultsFiles!.Contains("C:\\temp.txt"));
+        resultsFiles!.Should().Contain("C:\\temp.txt");
     }
 
     public void AddResultFileShouldAddMultipleFilesToResultsFiles()
@@ -174,36 +176,36 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultsFiles!.Contains("C:\\files\\file1.txt"));
-        Verify(resultsFiles.Contains("C:\\files\\files2.html"));
+        resultsFiles!.Should().Contain("C:\\files\\file1.txt");
+        resultsFiles.Should().Contain("C:\\files\\files2.html");
     }
 
     public void WriteShouldWriteToStringWriter()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
         _testContextImplementation.Write("{0} Testing write", 1);
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing write"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
     }
 
     public void WriteShouldWriteToStringWriterForNullCharacters()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
         _testContextImplementation.Write("{0} Testing \0 write \0", 1);
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing \\0 write \\0"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldWriteToStringWriter()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
         _testContextImplementation.Write("1 Testing write");
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing write"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
         _testContextImplementation.Write("1 Testing \0 write \0");
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing \\0 write \\0"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForReturnCharacters()
@@ -211,7 +213,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, null, _properties);
         _testContextImplementation.Write("2 Testing write \n\r");
         _testContextImplementation.Write("3 Testing write\n\r");
-        Verify(_testContextImplementation.GetDiagnosticMessages() == "2 Testing write \n\r3 Testing write\n\r");
+        _testContextImplementation.GetDiagnosticMessages().Should().Be("2 Testing write \n\r3 Testing write\n\r");
     }
 
     public void WriteLineShouldWriteToStringWriter()
@@ -220,7 +222,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing write", 1);
 
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing write"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
     }
 
     public void WriteLineShouldWriteToStringWriterForNullCharacters()
@@ -229,7 +231,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
 
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing \\0 write \\0"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriter()
@@ -238,7 +240,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing write");
 
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing write"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriterForNullCharacters()
@@ -247,7 +249,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing \0 write \0");
 
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing \\0 write \\0"));
+        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void GetDiagnosticMessagesShouldReturnMessagesFromWriteLine()
@@ -257,8 +259,8 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.WriteLine("1 Testing write");
         _testContextImplementation.WriteLine("2 Its a happy day");
 
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("1 Testing write"));
-        Verify(_testContextImplementation.GetDiagnosticMessages()!.Contains("2 Its a happy day"));
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("2 Its a happy day");
     }
 
     public void ClearDiagnosticMessagesShouldClearMessagesFromWriteLine()
@@ -270,7 +272,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.ClearDiagnosticMessages();
 
-        Verify(_testContextImplementation.GetDiagnosticMessages() == string.Empty);
+        _testContextImplementation.GetDiagnosticMessages().Should().Be(string.Empty);
     }
 
 #if NETFRAMEWORK
@@ -288,8 +290,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetDataRow(dataTable.Select()[0]);
 
-        Verify(2.Equals(_testContextImplementation.DataRow!.ItemArray[0]));
-        Verify("Hello".Equals(_testContextImplementation.DataRow.ItemArray[1]));
+        _testContextImplementation.DataRow!.ItemArray[0].Should().Be(2);
+        _testContextImplementation.DataRow.ItemArray[1].Should().Be("Hello");
     }
 
     public void SetDataConnectionShouldSetDbConnectionForFetchingData()
@@ -302,8 +304,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetDataConnection(connection);
 
-        Verify(_testContextImplementation.DataConnection!.ConnectionString
-            == "Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
+        _testContextImplementation.DataConnection!.ConnectionString
+            .Should().Be("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
     }
 #endif
 
@@ -314,7 +316,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultFiles is null);
+        resultFiles.Should().BeNull();
     }
 
     public void GetResultFilesShouldReturnListOfAddedResultFiles()
@@ -326,9 +328,9 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultFiles = _testContextImplementation.GetResultFiles();
 
-        Verify(resultFiles!.Count > 0, "GetResultFiles returned added elements");
-        Verify(resultFiles.Contains("C:\\files\\myfile.txt"));
-        Verify(resultFiles.Contains("C:\\files\\myfile2.txt"));
+        resultFiles!.Count.Should().BeGreaterThan(0, "GetResultFiles returned added elements");
+        resultFiles.Should().Contain("C:\\files\\myfile.txt");
+        resultFiles.Should().Contain("C:\\files\\myfile2.txt");
     }
 #endif
 

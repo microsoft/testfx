@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -33,7 +35,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
         IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
-        Verify(tcmProperties is null);
+        tcmProperties.Should().BeNull();
     }
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
@@ -60,7 +62,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         SetTestCaseProperties(testCase, propertiesValue);
 
         IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
-        Verify(tcmProperties is null);
+        tcmProperties.Should().BeNull();
     }
 
     public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()
@@ -232,10 +234,10 @@ public class TcmTestPropertiesProviderTests : TestContainer
 
     private void VerifyTcmProperties(IDictionary<TestProperty, object?>? tcmProperties, TestCase testCase)
     {
-        Verify(tcmProperties is not null);
+        tcmProperties.Should().NotBeNull();
         foreach (TestProperty property in _tcmKnownProperties)
         {
-            Verify(testCase.GetPropertyValue(property)!.Equals(tcmProperties[property]));
+            testCase.GetPropertyValue(property)!.Equals(tcmProperties[property]).Should().BeTrue();
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -13,7 +15,7 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturnsNullOnNullRunSettings()
     {
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(null);
-        Verify(trp is null);
+        trp.Should().BeNull();
     }
 
     public void GetTestRunParametersReturnsNullWhenNoTestRunParameters()
@@ -31,7 +33,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is null);
+        trp.Should().BeNull();
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()
@@ -51,8 +53,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        trp.Should().BeEmpty();
     }
 
     public void GetTestRunParametersReturns1EntryOn1TestRunParameter()
@@ -73,12 +74,12 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 1);
+        trp.Should().NotBeNull();
+        trp.Count.Should().Be(1);
 
         // Verify Parameter Values.
-        Verify(trp.ContainsKey("webAppUrl"));
-        Verify("http://localhost".Equals(trp["webAppUrl"]));
+        trp.Should().ContainKey("webAppUrl");
+        trp["webAppUrl"].Should().Be("http://localhost");
     }
 
     public void GetTestRunParametersReturns3EntryOn3TestRunParameter()
@@ -101,16 +102,16 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 3);
+        trp.Should().NotBeNull();
+        trp.Count.Should().Be(3);
 
         // Verify Parameter Values.
-        Verify(trp.ContainsKey("webAppUrl"));
-        Verify("http://localhost".Equals(trp["webAppUrl"]));
-        Verify(trp.ContainsKey("webAppUserName"));
-        Verify("Admin".Equals(trp["webAppUserName"]));
-        Verify(trp.ContainsKey("webAppPassword"));
-        Verify("Password".Equals(trp["webAppPassword"]));
+        trp.Should().ContainKey("webAppUrl");
+        trp["webAppUrl"].Should().Be("http://localhost");
+        trp.Should().ContainKey("webAppUserName");
+        trp["webAppUserName"].Should().Be("Admin");
+        trp.Should().ContainKey("webAppPassword");
+        trp["webAppPassword"].Should().Be("Password");
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasAttributes()
@@ -130,7 +131,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        VerifyThrows<SettingsException>(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<SettingsException>();
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
@@ -151,7 +152,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        VerifyThrows<SettingsException>(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<SettingsException>();
     }
 
     public void GetTestRunParametersIgnoresMalformedKeyValues()
@@ -172,7 +173,6 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object>? trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        trp.Should().BeEmpty();
     }
 }

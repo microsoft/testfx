@@ -3,6 +3,8 @@
 
 #if NETFRAMEWORK
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -21,8 +23,8 @@ public class DesktopThreadOperationsTests : TestContainer
         var cancellationTokenSource = new CancellationTokenSource();
         void Action() => actionThreadID = Environment.CurrentManagedThreadId;
 
-        Verify(_asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token));
-        Verify(Environment.CurrentManagedThreadId != actionThreadID);
+        _asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token).Should().BeTrue();
+        Environment.CurrentManagedThreadId.Should().NotBe(actionThreadID);
     }
 
     public void TokenCancelShouldAbortExecutingAction()
@@ -35,7 +37,7 @@ public class DesktopThreadOperationsTests : TestContainer
         bool result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
-        Verify(!result, "The execution failed to abort");
+        result.Should().BeFalse("The execution failed to abort");
     }
 
     public void TokenCancelShouldAbortIfAlreadyCanceled()
@@ -48,7 +50,7 @@ public class DesktopThreadOperationsTests : TestContainer
         bool result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
-        Verify(!result, "The execution failed to abort");
+        result.Should().BeFalse("The execution failed to abort");
     }
 }
 #endif
