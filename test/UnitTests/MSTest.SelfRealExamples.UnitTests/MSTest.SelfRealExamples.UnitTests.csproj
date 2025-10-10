@@ -7,6 +7,7 @@
     <OutputType>Exe</OutputType>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMSTestFromSource>true</UseMSTestFromSource>
   </PropertyGroup>
 
   <ItemGroup>
