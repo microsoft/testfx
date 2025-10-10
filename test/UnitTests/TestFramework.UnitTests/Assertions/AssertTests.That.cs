@@ -479,10 +479,10 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = 1/1/0001 12:00:00 AM
+                  DateTime.MinValue = 01/01/0001 00:00:00
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = 12/25/2023 12:00:00 AM
+                  new DateTime(year, month, day) = 12/25/2023 00:00:00
                   year = 2023
                 """);
     }
@@ -1041,5 +1041,51 @@ public partial class AssertTests : TestContainer
               nonNullVariable = "value"
               nullVariable = null
             """);
+    }
+
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails()
+    {
+        var box = new Box();
+
+        // If we evaluate twice, box.GetNumber() is called once on comparison, and once when message for assertion is built.
+        // We compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetNumber() == 0);
+
+        // GetNumber() should report 1, which is the value when we evaluate only once.
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetNumber() == 0) failed.
+            Details:
+              box.GetNumber() = 1
+            """);
+
+        // We call again, this should be second call now.
+        box.GetNumber().Should().Be(2);
+    }
+
+    public void That_DoesEvaluateTwice()
+    {
+        var box = new Box();
+
+        // Compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetNumber() + box.GetNumber() == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => box.GetNumber() + box.GetNumber() == 0) failed.
+            Details:
+              box.GetNumber() = 1
+            """);
+    }
+
+    private class Box
+    {
+        private int _c;
+
+        public int GetNumber()
+        {
+            _c++;
+            return _c;
+        }
     }
 }
