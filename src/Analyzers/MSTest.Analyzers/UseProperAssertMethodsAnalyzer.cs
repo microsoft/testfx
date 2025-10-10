@@ -637,7 +637,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             conditionArgument,
             out SyntaxNode? linqCollectionExpr,
             out SyntaxNode? predicateExpr,
-            out IOperation? countOp);
+            out _);
 
         if (linqStatus != LinqPredicateCheckStatus.Unknown && linqCollectionExpr != null && predicateExpr != null)
         {
@@ -882,7 +882,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                     actualArgumentValue!,
                     out SyntaxNode? linqCollectionExpr2,
                     out SyntaxNode? predicateExpr2,
-                    out IOperation? countOp2);
+                    out _);
 
                 if (isAreEqualInvocation &&
                     linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
