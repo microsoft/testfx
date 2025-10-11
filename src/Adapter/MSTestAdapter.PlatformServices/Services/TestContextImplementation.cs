@@ -98,20 +98,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
-        : this(testMethod, testClassFullName, properties)
-    {
-        _messageLogger = messageLogger;
-        _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
-    /// </summary>
-    /// <param name="testMethod">The test method.</param>
-    /// <param name="testClassFullName">The test class full name.</param>
-    /// <param name="properties">Properties/configuration passed in.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
@@ -139,6 +126,9 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
                 _properties.Add(TestNameLabel, testMethod.Name);
             }
         }
+
+        _messageLogger = messageLogger;
+        _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
     internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
