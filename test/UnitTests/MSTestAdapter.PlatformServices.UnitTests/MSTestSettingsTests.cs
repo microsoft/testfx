@@ -1178,7 +1178,7 @@ public class MSTestSettingsTests : TestContainer
         var settings = new MSTestSettings();
         MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
 
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(15));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(14));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'timeout:useCooperativeCancellation', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyInitialize', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyCleanup', setting will be ignored."), Times.Once);
