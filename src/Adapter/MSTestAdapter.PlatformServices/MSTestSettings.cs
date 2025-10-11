@@ -53,7 +53,6 @@ internal sealed class MSTestSettings
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
         EnableBaseClassTestMethodsFromOtherAssemblies = true;
-        ForcedLegacyMode = false;
         TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
@@ -93,12 +92,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
     public bool CaptureDebugTraces { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating whether user wants the adapter to run in legacy mode or not.
-    /// Default is False.
-    /// </summary>
-    public bool ForcedLegacyMode { get; private set; }
 
     /// <summary>
     /// Gets the path to settings file.
@@ -226,7 +219,6 @@ internal sealed class MSTestSettings
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
         CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
-        CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
@@ -418,7 +410,6 @@ internal sealed class MSTestSettings
         // (or)
         //
         // <MSTest>
-        //     <ForcedLegacyMode>true</ForcedLegacyMode>
         //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         // </MSTest>
@@ -462,21 +453,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
-                            }
-
-                            break;
-                        }
-
-                    case "FORCEDLEGACYMODE":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.ForcedLegacyMode = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ForcedLegacyMode"));
                             }
 
                             break;

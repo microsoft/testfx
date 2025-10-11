@@ -50,7 +50,6 @@ public class AssemblyEnumeratorTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                <ForcedLegacyMode>True</ForcedLegacyMode>
                 <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
               </MSTest>
             </RunSettings>
@@ -68,7 +67,6 @@ public class AssemblyEnumeratorTests : TestContainer
         // Constructor has the side effect of populating the passed settings to MSTestSettings.CurrentSettings
         _ = new AssemblyEnumerator(adapterSettings);
 
-        Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
     }
 
