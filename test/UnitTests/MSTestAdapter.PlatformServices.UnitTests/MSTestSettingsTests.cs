@@ -113,7 +113,6 @@ public class MSTestSettingsTests : TestContainer
                     <TreatDiscoveryWarningsAsErrors>3</TreatDiscoveryWarningsAsErrors>
                     <EnableBaseClassTestMethodsFromOtherAssemblies>3</EnableBaseClassTestMethodsFromOtherAssemblies>
                     <TestTimeout>timeout</TestTimeout>
-                    <TreatClassAndAssemblyCleanupWarningsAsErrors>3</TreatClassAndAssemblyCleanupWarningsAsErrors>
                </MSTestV2>
             </RunSettings>
             """;
@@ -128,7 +127,6 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CaptureTraceOutput', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'MapNotRunnableToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'EnableBaseClassTestMethodsFromOtherAssemblies', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'TreatClassAndAssemblyCleanupWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyInitializeTimeout', setting will be ignored."), Times.Once);
@@ -278,37 +276,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         Verify(adapterSettings.TestTimeout == 0);
-    }
-
-    public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
-
-        Verify(!adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
-    }
-
-    public void TreatClassCleanupWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-                <TreatClassAndAssemblyCleanupWarningsAsErrors>True</TreatClassAndAssemblyCleanupWarningsAsErrors>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
-
-        Verify(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
 
     public void TreatDiscoveryWarningsAsErrorsShouldBeTrueByDefault()
@@ -959,7 +926,6 @@ public class MSTestSettingsTests : TestContainer
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                 <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
               </MSTest>
             </RunSettings>
             """;
@@ -972,7 +938,6 @@ public class MSTestSettingsTests : TestContainer
         Verify(MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
         Verify(MSTestSettings.CurrentSettings.MapNotRunnableToFailed);
         Verify(MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
         Verify(!string.IsNullOrEmpty(MSTestSettings.CurrentSettings.TestSettingsFile));
     }
 
@@ -1202,7 +1167,6 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "3" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "3" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "3" },
-            { "mstest:execution:treatClassAndAssemblyCleanupWarningsAsErrors", "3" },
             { "mstest:execution:considerFixturesAsSpecialTests", "3" },
             { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "3" },
         };
@@ -1221,7 +1185,6 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classInitialize', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapNotRunnableToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'enableBaseClassTestMethodsFromOtherAssemblies', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:treatClassAndAssemblyCleanupWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classCleanup', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testInitialize', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testCleanup', setting will be ignored."), Times.Once);
@@ -1252,7 +1215,6 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "true" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
-            { "mstest:execution:treatClassAndAssemblyCleanupWarningsAsErrors", "true" },
             { "mstest:execution:considerFixturesAsSpecialTests", "true" },
             { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "true" },
             { "mstest:orderTestsByNameInClass", "true" },
@@ -1277,7 +1239,6 @@ public class MSTestSettingsTests : TestContainer
         Verify(settings.MapNotRunnableToFailed);
         Verify(settings.TreatDiscoveryWarningsAsErrors);
         Verify(settings.ConsiderEmptyDataSourceAsInconclusive);
-        Verify(settings.TreatClassAndAssemblyCleanupWarningsAsErrors);
         Verify(settings.ConsiderFixturesAsSpecialTests);
 
         Verify(settings.TestTimeout == 60);
