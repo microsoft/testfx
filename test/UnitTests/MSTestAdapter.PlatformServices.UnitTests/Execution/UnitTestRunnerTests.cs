@@ -51,7 +51,6 @@ public sealed class UnitTestRunnerTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                <ForcedLegacyMode>True</ForcedLegacyMode>
                 <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
               </MSTest>
             </RunSettings>
@@ -67,7 +66,6 @@ public sealed class UnitTestRunnerTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
-        Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
     }
 

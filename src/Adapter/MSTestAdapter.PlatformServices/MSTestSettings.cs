@@ -53,7 +53,6 @@ internal sealed class MSTestSettings
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
         EnableBaseClassTestMethodsFromOtherAssemblies = true;
-        ForcedLegacyMode = false;
         TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
@@ -64,7 +63,6 @@ internal sealed class MSTestSettings
         ClassCleanupTimeout = 0;
         TestInitializeTimeout = 0;
         TestCleanupTimeout = 0;
-        TreatClassAndAssemblyCleanupWarningsAsErrors = false;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
     }
@@ -93,12 +91,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
     public bool CaptureDebugTraces { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating whether user wants the adapter to run in legacy mode or not.
-    /// Default is False.
-    /// </summary>
-    public bool ForcedLegacyMode { get; private set; }
 
     /// <summary>
     /// Gets the path to settings file.
@@ -184,11 +176,6 @@ internal sealed class MSTestSettings
     internal int TestCleanupTimeout { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether failures in class cleanups should be treated as errors.
-    /// </summary>
-    public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether AssemblyInitialize, AssemblyCleanup, ClassInitialize and ClassCleanup methods are
     /// reported as special tests (cannot be executed). When this feature is enabled, these methods will be reported as
     /// separate entries in the TRX reports, in Test Explorer or in CLI.
@@ -226,7 +213,6 @@ internal sealed class MSTestSettings
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
         CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
-        CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
@@ -236,7 +222,6 @@ internal sealed class MSTestSettings
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
         CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
-        CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
     }
 
@@ -408,7 +393,6 @@ internal sealed class MSTestSettings
         //     <TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors>
         //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
-        //     <TreatClassAndAssemblyCleanupWarningsAsErrors>false</TreatClassAndAssemblyCleanupWarningsAsErrors>
         //     <Parallelize>
         //        <Workers>4</Workers>
         //        <Scope>TestClass</Scope>
@@ -418,7 +402,6 @@ internal sealed class MSTestSettings
         // (or)
         //
         // <MSTest>
-        //     <ForcedLegacyMode>true</ForcedLegacyMode>
         //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         // </MSTest>
@@ -462,21 +445,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
-                            }
-
-                            break;
-                        }
-
-                    case "FORCEDLEGACYMODE":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.ForcedLegacyMode = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ForcedLegacyMode"));
                             }
 
                             break;
@@ -666,21 +634,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TestCleanupTimeout"));
-                            }
-
-                            break;
-                        }
-
-                    case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatClassAndAssemblyCleanupWarningsAsErrors"));
                             }
 
                             break;
@@ -909,7 +862,6 @@ internal sealed class MSTestSettings
         //      "mapNotRunnableToFailed" : true/false
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
-        //      "treatClassAndAssemblyCleanupWarningsAsErrors" : true/false
         //      "considerFixturesAsSpecialTests" : true/false
         //  }
         //  ... remaining settings
@@ -925,7 +877,6 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
-        ParseBooleanSetting(configuration, "execution:treatClassAndAssemblyCleanupWarningsAsErrors", logger, value => settings.TreatClassAndAssemblyCleanupWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
