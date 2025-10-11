@@ -40,12 +40,15 @@ public class TestPropertyAttributeTests : TestContainer
 
     #region GetTestMethodInfo tests
 
+    private static TestContextImplementation CreateTestContextImplementationForMethod(TestMethod testMethod)
+        => new(testMethod, null, new Dictionary<string, object?>(), null, null);
+
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
         string className = typeof(DummyTestClassBase).FullName!;
         var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>());
+        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
@@ -75,7 +78,7 @@ public class TestPropertyAttributeTests : TestContainer
         string className = typeof(DummyTestClassDerived).FullName!;
         var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>());
+        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
@@ -120,7 +123,7 @@ public class TestPropertyAttributeTests : TestContainer
         string className = typeof(DummyTestClassDerived).FullName!;
         var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
 
-        var testContext = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>());
+        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
