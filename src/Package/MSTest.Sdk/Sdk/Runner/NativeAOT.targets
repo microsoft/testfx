@@ -46,6 +46,9 @@
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Sdk="MSTest"
                       Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
                       Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Sdk="MSTest"
+                      Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' " />
   </ItemGroup>
 
 </Project>
