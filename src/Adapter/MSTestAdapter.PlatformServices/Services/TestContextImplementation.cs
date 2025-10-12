@@ -390,14 +390,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
     {
-        // Prefer writing to the current test context instead of 'this'.
-        // This is just a hack to preserve backward compatibility.
-        // It's relevant for cases where users store 'TestContext' in a static field.
-        // Then, they write to the "wrong" test context.
-        // Here, we are correcting user's fault by finding out the correct TestContext that should receive the message.
-        TestContextImplementation @this = CurrentTestContext ?? this;
-        _ = @this._testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref @this._testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return @this._testContextMessageStringBuilder;
+        _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
+        return _testContextMessageStringBuilder;
     }
 
     internal string? GetOut()
