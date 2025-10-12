@@ -325,7 +325,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }
@@ -356,7 +355,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }

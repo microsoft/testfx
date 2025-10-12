@@ -9,6 +9,7 @@ internal sealed class PipeNameDescription(string name) : IDisposable
 
     // This is available via IVT.
     // Avoid removing it as it can be seen as a binary breaking change when users use newer version of core MTP but older version of one of the extensions.
+    [Obsolete("No-op.")]
     public void Dispose()
     {
     }
