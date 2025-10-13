@@ -68,7 +68,7 @@ internal static class TestCaseExtensions
     /// <param name="testCase"> The test case. </param>
     /// <param name="source"> The source. If deployed this is the full path of the source in the deployment directory. </param>
     /// <returns> The converted <see cref="UnitTestElement"/>. </returns>
-    internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
+    internal static UnitTestElement ToUnitTestElementWithUpdatedSource(this TestCase testCase, string source)
     {
         if (testCase.LocalExtensionData is UnitTestElement unitTestElement)
         {
