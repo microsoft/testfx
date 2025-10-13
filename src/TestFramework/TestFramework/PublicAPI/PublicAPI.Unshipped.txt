@@ -1,1 +1,11 @@
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AppendLiteral(string value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler.AssertSingleInterpolatedStringHandler(int literalLength, int formattedCount, System.Collections.IEnumerable collection, out bool shouldAppend) -> void
+
 #nullable enable

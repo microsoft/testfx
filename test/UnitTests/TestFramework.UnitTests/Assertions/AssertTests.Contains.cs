@@ -280,6 +280,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithSingleElement_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { 100 };
+
+        // Act
+        object? result = Assert.ContainsSingle(collection);
+
+        // Assert
+        result.Should().Be(100);
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with a message where the collection has a single element.
     /// </summary>
     public void ContainsSingle_WithMessage_WithSingleElement_ReturnsElement()
@@ -289,6 +304,21 @@ public partial class AssertTests : TestContainer
 
         // Act
         string result = Assert.ContainsSingle(collection, "Custom message");
+
+        // Assert
+        result.Should().Be("OnlyOne");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with a message where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_WithMessage_WithSingleElement_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { "OnlyOne" };
+
+        // Act
+        object? result = Assert.ContainsSingle(collection, "Custom message");
 
         // Assert
         result.Should().Be("OnlyOne");
@@ -311,6 +341,52 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'collection'. ");
     }
 
+    /// <summary>
+    /// Tests the ContainsSingle method that uses an interpolated string handler when the collection has multiple elements.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_InterpolatedHandler_WithMultipleElements_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 2, 3 };
+        var handler = new Assert.AssertSingleInterpolatedStringHandler(literalLength: 5, formattedCount: 0, collection, out bool shouldAppend);
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection, ref handler);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 2 element(s). 'collection' expression: 'collection'. ");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithNull_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { null };
+
+        // Act
+        object? result = Assert.ContainsSingle(collection);
+
+        // Assert
+        result.Should().Be(null);
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithEmptyCollection_ReturnsNoElement()
+    {
+        // Arrange
+        var collection = new ArrayList();
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>();
+    }
     #endregion
 
     #region Contains Tests

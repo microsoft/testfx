@@ -89,6 +89,98 @@ public sealed partial class Assert
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 
+    [InterpolatedStringHandler]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public readonly struct AssertSingleInterpolatedStringHandler
+    {
+        private readonly StringBuilder? _builder;
+        private readonly int _actualCount;
+        private readonly object? _item;
+
+        public AssertSingleInterpolatedStringHandler(int literalLength, int formattedCount, IEnumerable collection, out bool shouldAppend)
+        {
+            _actualCount = 0;
+            object? firstItem = null;
+
+            foreach (object? item in collection)
+            {
+                if (_actualCount == 0)
+                {
+                    firstItem = item;
+                }
+
+                _actualCount++;
+
+                if (_actualCount > 1)
+                {
+                    break;
+                }
+            }
+
+            shouldAppend = _actualCount != 1;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+            else
+            {
+                _item = firstItem;
+            }
+        }
+
+        internal object ComputeAssertion(string collectionExpression)
+        {
+            if (_builder is not null)
+            {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
+                ThrowAssertContainsSingleFailed(_actualCount, _builder.ToString());
+            }
+
+            return _item!;
+        }
+
+        public void AppendLiteral(string value)
+            => _builder!.Append(value);
+
+        public void AppendFormatted<T>(T value)
+            => AppendFormatted(value, format: null);
+
+#if NETCOREAPP3_1_OR_GREATER
+        public void AppendFormatted(ReadOnlySpan<char> value)
+            => _builder!.Append(value);
+
+        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null)
+            => AppendFormatted(value.ToString(), alignment, format);
+#endif
+
+        // NOTE: All the overloads involving format and/or alignment are not super efficient.
+        // This code path is only for when an assert is failing, so that's not the common scenario
+        // and should be okay if not very optimized.
+        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
+        // the BCL's StringBuilder.AppendInterpolatedStringHandler
+        public void AppendFormatted<T>(T value, string? format)
+            => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
+
+        public void AppendFormatted<T>(T value, int alignment)
+            => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
+
+        public void AppendFormatted<T>(T value, int alignment, string? format)
+            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(string? value)
+            => _builder!.Append(value);
+
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+        public void AppendFormatted(string? value, int alignment = 0, string? format = null)
+            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+
+        public void AppendFormatted(object? value, int alignment = 0, string? format = null)
+            => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+    }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
     /// </summary>
@@ -102,6 +194,21 @@ public sealed partial class Assert
     /// <returns>The item.</returns>
 #pragma warning disable IDE0060 // Remove unused parameter
     public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+        => message.ComputeAssertion(collectionExpression);
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item.</returns>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static object ContainsSingle(IEnumerable collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion(collectionExpression);
 
@@ -136,6 +243,49 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item.</returns>
+    public static object ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        int actualCount = 0;
+        object? firstItem = null;
+
+        foreach (object? item in collection)
+        {
+            if (actualCount == 0)
+            {
+                firstItem = item;
+            }
+
+            actualCount++;
+
+            // Early exit if we already know there's more than one item
+            if (actualCount > 1)
+            {
+                break;
+            }
+        }
+
+        if (actualCount == 1)
+        {
+            return firstItem!;
+        }
+
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+        ThrowAssertContainsSingleFailed(actualCount, userMessage);
+
+        // Unreachable code but compiler cannot work it out
+        return default!;
+    }
+
+    /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -166,6 +316,52 @@ public sealed partial class Assert
 
         // Unreachable code but compiler cannot work it out
         return default;
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static object ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        var matchingElements = new List<object>();
+
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                matchingElements.Add(item);
+
+                // Early exit optimization - no need to continue if we already have more than one match
+                if (matchingElements.Count > 1)
+                {
+                    break;
+                }
+            }
+        }
+
+        int actualCount = matchingElements.Count;
+        if (actualCount == 1)
+        {
+            return matchingElements[0];
+        }
+
+        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+        ThrowAssertSingleMatchFailed(actualCount, userMessage);
+
+        // Unreachable code but compiler cannot work it out
+        return default!;
     }
 
     #endregion // ContainsSingle
