@@ -55,6 +55,7 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
