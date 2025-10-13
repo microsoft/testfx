@@ -13,8 +13,6 @@ public sealed class LifeCycleClassCleanupEndOfClass
     : IDisposable
 #endif
 {
-    private static TestContext s_testContext = null!;
-
     public TestContext TestContext { get; set; } = null!;
 
     public LifeCycleClassCleanupEndOfClass(TestContext testContext)
@@ -28,8 +26,7 @@ public sealed class LifeCycleClassCleanupEndOfClass
     [ClassInitialize]
     public static void ClassInitialize(TestContext testContext)
     {
-        s_testContext = testContext;
-        s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
+        testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
         Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
         Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
         Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
@@ -82,9 +79,9 @@ public sealed class LifeCycleClassCleanupEndOfClass
 #endif
 
     [ClassCleanup]
-    public static void ClassCleanup()
+    public static void ClassCleanup(TestContext testContext)
     {
-        s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
+        testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
         Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
         Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
         Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
