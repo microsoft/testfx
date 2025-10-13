@@ -25,10 +25,9 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IOutputDeviceDataProducer, IDataProducer,
 #if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
+    IAsyncDisposable,
 #endif
+    IDisposable
 {
     private readonly IMessageBus _messageBus;
     private readonly OutputDeviceWriter _outputDisplay;
@@ -140,14 +139,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             await _logger.LogDebugAsync("Session end received by the test host").ConfigureAwait(false);
             _exitActivityIndicatorTask = true;
-#if NET
-            if (_namedPipeClient is not null)
-            {
-                await _namedPipeClient.DisposeAsync().ConfigureAwait(false);
-            }
-#else
             _namedPipeClient?.Dispose();
-#endif
             return VoidResponse.CachedInstance;
         }
         else if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
@@ -519,7 +511,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _waitConsumerPipeName.Dispose();
         _mutexNameReceived.Dispose();
         _singleConnectionNamedPipeServer?.Dispose();
-        _pipeNameDescription.Dispose();
     }
 
 #if NETCOREAPP
@@ -534,7 +525,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _waitConsumerPipeName.Dispose();
         _mutexNameReceived.Dispose();
         _singleConnectionNamedPipeServer?.Dispose();
-        _pipeNameDescription.Dispose();
     }
 #endif
 }

@@ -241,6 +241,11 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
     }
 
 #if NETCOREAPP
+    [Obsolete("All owned fields are disposed synchronously. Introduction of DisposeAsync here is unnecessary complexity.")]
+    // NOTE: While NamedPipeClient is internal API, it's breaking to change it as it's consumed via IVT by MTP extensions.
+    // If we removed DisposeAsync in newer MTP version, but an old MTP extension is used with newer MTP version, we will get MissingMethodException.
+    // It might be more safe to obsolete for now, and potentially remove after few versions are released when most users will
+    // already be on those newer versions, and the risk of break is reduced.
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
