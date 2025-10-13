@@ -17,9 +17,9 @@ public sealed class LifeCycleClassCleanupEndOfClass
 
     public TestContext TestContext { get; set; } = null!;
 
-    public LifeCycleClassCleanupEndOfClass()
+    public LifeCycleClassCleanupEndOfClass(TestContext testContext)
     {
-        s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ctor was called");
+        testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ctor was called");
         Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.ctor was called");
         Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.ctor was called");
         Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.ctor was called");
