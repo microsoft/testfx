@@ -7,6 +7,7 @@ using System.Buffers;
 
 using System.IO.Pipes;
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
 #if NET
@@ -16,6 +17,7 @@ using Microsoft.Testing.Platform.Resources;
 namespace Microsoft.Testing.Platform.IPC;
 
 #pragma warning disable CA1416 // Validate platform compatibility
+[Embedded]
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
     private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
