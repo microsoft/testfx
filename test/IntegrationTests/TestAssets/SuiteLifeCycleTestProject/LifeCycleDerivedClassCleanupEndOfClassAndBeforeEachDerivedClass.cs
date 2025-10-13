@@ -11,6 +11,7 @@ public sealed class LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedCl
     public TestContext DerivedClassTestContext { get; set; } = null!;
 
     public LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass(TestContext testContext)
+        : base(testContext)
     {
         testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ctor was called");
         Console.WriteLine("Console: LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ctor was called");
