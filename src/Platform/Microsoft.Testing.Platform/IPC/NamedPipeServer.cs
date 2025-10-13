@@ -3,15 +3,14 @@
 
 using System.IO.Pipes;
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-
-#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
-#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[Embedded]
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
 #pragma warning disable CA1416 // Validate platform compatibility
@@ -315,11 +314,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                    "'{0}' didn't exit as expected",
-#else
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-#endif
                     nameof(InternalLoopAsync)));
             }
         }
