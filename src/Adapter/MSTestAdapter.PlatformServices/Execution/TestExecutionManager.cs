@@ -540,7 +540,7 @@ public class TestExecutionManager
             }
 
             hasAnyRunnableTests = true;
-            var unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
+            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
 
             testExecutionRecorder.RecordStart(currentTest);
 
@@ -602,7 +602,7 @@ public class TestExecutionManager
             }
 
             Trait trait = currentTest.Traits.First(t => t.Name == EngineConstants.FixturesTestTrait);
-            var unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
+            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
             FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
 
             if (fixtureTestResult.IsExecuted)
