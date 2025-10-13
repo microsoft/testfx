@@ -170,6 +170,7 @@ internal sealed class TestMethod : ITestMethod
     {
         var clone = (TestMethod)MemberwiseClone();
         AssemblyName = source;
+        MethodInfo = null;
         return clone;
     }
 }
