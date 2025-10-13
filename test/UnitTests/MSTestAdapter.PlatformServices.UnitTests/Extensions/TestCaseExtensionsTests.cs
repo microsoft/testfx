@@ -23,7 +23,7 @@ public class TestCaseExtensionsTests : TestContainer
         testCase.SetPropertyValue(EngineConstants.TestCategoryProperty, testCategories);
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
 
-        var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
+        var resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         Verify(resultUnitTestElement.Priority == 2);
         Verify(testCategories == resultUnitTestElement.TestCategory);
@@ -38,7 +38,7 @@ public class TestCaseExtensionsTests : TestContainer
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
 
-        var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
+        var resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         // These are set for testCase by default by ObjectModel.
         Verify(resultUnitTestElement.Priority == 0);
@@ -51,7 +51,7 @@ public class TestCaseExtensionsTests : TestContainer
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
         testCase.SetPropertyValue(EngineConstants.DeclaringClassNameProperty, "DummyDeclaringClassName");
 
-        var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
+        var resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
         Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName == "DummyDeclaringClassName");
