@@ -138,8 +138,6 @@ internal class TypeEnumerator
 
         var testElement = new UnitTestElement(testMethod)
         {
-            // Get compiler generated type name for async test method (either void returning or task returning).
-            AsyncTypeName = method.GetAsyncTypeName(),
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
