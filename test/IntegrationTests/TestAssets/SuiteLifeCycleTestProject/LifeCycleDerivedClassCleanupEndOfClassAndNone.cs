@@ -8,13 +8,12 @@ namespace SuiteLifeCycleTestProject;
 [TestClass]
 public sealed class LifeCycleDerivedClassCleanupEndOfClassAndNone : LifeCycleClassCleanupEndOfClassAndNone
 {
-    private static TestContext s_testContext = null!;
-
     public TestContext DerivedClassTestContext { get; set; } = null!;
 
-    public LifeCycleDerivedClassCleanupEndOfClassAndNone()
+    public LifeCycleDerivedClassCleanupEndOfClassAndNone(TestContext testContext)
+        : base(testContext)
     {
-        s_testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndNone.ctor was called");
+        testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndNone.ctor was called");
         Console.WriteLine("Console: LifeCycleDerivedClassCleanupEndOfClassAndNone.ctor was called");
         Trace.WriteLine("Trace: LifeCycleDerivedClassCleanupEndOfClassAndNone.ctor was called");
         Debug.WriteLine("Debug: LifeCycleDerivedClassCleanupEndOfClassAndNone.ctor was called");
@@ -23,8 +22,7 @@ public sealed class LifeCycleDerivedClassCleanupEndOfClassAndNone : LifeCycleCla
     [ClassInitialize]
     public static void DerivedClassInitialize(TestContext testContext)
     {
-        s_testContext = testContext;
-        s_testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassInitialize was called");
+        testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassInitialize was called");
         Console.WriteLine("Console: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassInitialize was called");
         Trace.WriteLine("Trace: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassInitialize was called");
         Debug.WriteLine("Debug: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassInitialize was called");
@@ -58,9 +56,9 @@ public sealed class LifeCycleDerivedClassCleanupEndOfClassAndNone : LifeCycleCla
     }
 
     [ClassCleanup]
-    public static void DerivedClassCleanup()
+    public static void DerivedClassCleanup(TestContext testContext)
     {
-        s_testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called");
+        testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called");
         Console.WriteLine("Console: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called");
         Trace.WriteLine("Trace: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called");
         Debug.WriteLine("Debug: LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called");
