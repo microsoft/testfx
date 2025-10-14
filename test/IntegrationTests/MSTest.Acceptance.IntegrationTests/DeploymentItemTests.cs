@@ -14,10 +14,12 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
-    public async Task AssemblyIsLoadedOnceFromDeploymentDirectory()
+    [DataRow("AppDomainDisabled.runsettings", IgnoreMessage = "https://github.com/microsoft/testfx/issues/6738")]
+    [DataRow("AppDomainEnabled.runsettings")]
+    public async Task AssemblyIsLoadedOnceFromDeploymentDirectory(string runsettings)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0]);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runsettings}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
@@ -45,11 +47,36 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="AppDomainEnabled.runsettings">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="AppDomainDisabled.runsettings">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
 
 #file TestDeploymentItem.xml
 <?xml version="1.0" encoding="utf-8" ?>
 <Root />
+
+#file AppDomainEnabled.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <DisableAppDomain>false</DisableAppDomain>
+    </RunConfiguration>
+</RunSettings>
+
+#file AppDomainDisabled.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <DisableAppDomain>true</DisableAppDomain>
+    </RunConfiguration>
+</RunSettings>
 
 #file TestClass1.cs
 using System;
