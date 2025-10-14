@@ -31,7 +31,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<IThreadOperations> MockThreadOperations { get; } = new();
 
-    public Mock<IReflectionOperations2> MockReflectionOperations { get; set; } = null!;
+    public Mock<IReflectionOperations> MockReflectionOperations { get; set; } = null!;
 
     #endregion
 
@@ -47,11 +47,11 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     [field: AllowNull]
     [field: MaybeNull]
-    public IReflectionOperations2 ReflectionOperations
+    public IReflectionOperations ReflectionOperations
     {
         get => MockReflectionOperations != null
             ? MockReflectionOperations.Object
-            : field ??= new ReflectionOperations2();
+            : field ??= new ReflectionOperations();
         private set;
     }
 
@@ -70,5 +70,5 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
 
-    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations2>();
+    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations>();
 }
