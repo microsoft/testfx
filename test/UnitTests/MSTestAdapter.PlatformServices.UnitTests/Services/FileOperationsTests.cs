@@ -17,7 +17,7 @@ public class FileOperationsTests : TestContainer
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         string filePath = "temp<>txt";
-        void A() => _fileOperations.LoadAssembly(filePath, false);
+        void A() => _fileOperations.LoadAssembly(filePath);
 
 #if NETCOREAPP
         VerifyThrows<FileNotFoundException>(A);
