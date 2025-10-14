@@ -3,7 +3,6 @@
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
