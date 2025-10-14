@@ -460,7 +460,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
-        Verify(testElement.DisplayName == "MethodWithVoidReturnType");
+        Verify(testElement.TestMethod.DisplayName == "MethodWithVoidReturnType");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromTestMethodAttribute()
@@ -473,7 +473,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
+        Verify(testElement.TestMethod.DisplayName == "Test method display name.");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
@@ -486,7 +486,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
+        Verify(testElement.TestMethod.DisplayName == "Test method display name.");
     }
 
     #endregion

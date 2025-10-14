@@ -169,8 +169,7 @@ internal class TypeEnumerator
         // DebugEx.Assert(testMethodAttribute is not null, "Expected to find a 'TestMethod' attribute.");
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
-        testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
-        testMethod.DisplayName = testElement.DisplayName;
+        testMethod.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
         testElement.DeclaringFilePath = testMethodAttribute?.DeclaringFilePath;
         testElement.DeclaringLineNumber = testMethodAttribute?.DeclaringLineNumber;
         testElement.UnfoldingStrategy = testMethodAttribute?.UnfoldingStrategy ?? TestDataSourceUnfoldingStrategy.Auto;

@@ -61,7 +61,7 @@ public class UnitTestElementTests : TestContainer
 
     public void ToTestCaseShouldSetDisplayNameIfPresent()
     {
-        _unitTestElement.DisplayName = "Display Name";
+        _unitTestElement.TestMethod.DisplayName = "Display Name";
         var testCase = _unitTestElement.ToTestCase();
 
         Verify(testCase.DisplayName == "Display Name");

@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// The unit test element.
 /// </summary>
 [Serializable]
-[DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
+[DebuggerDisplay("{TestMethod.DisplayName} ({TestMethod.ManagedTypeName})")]
 internal sealed class UnitTestElement
 {
     private static readonly byte[] OpenParen = [40, 0]; // Encoding.Unicode.GetBytes("(");
@@ -65,12 +65,6 @@ internal sealed class UnitTestElement
     /// </summary>
     public KeyValuePair<string, string>[]? DeploymentItems { get; set; }
 
-    /// <summary>
-    /// Gets or sets the DisplayName.
-    /// </summary>
-    // TODO: Remove this property and simply use TestMethod.DisplayName
-    public string? DisplayName { get; set; }
-
     internal string? DeclaringFilePath { get; set; }
 
     internal int? DeclaringLineNumber { get; set; }
@@ -108,7 +102,7 @@ internal sealed class UnitTestElement
 
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, TestMethod.AssemblyName)
         {
-            DisplayName = GetDisplayName(),
+            DisplayName = TestMethod.DisplayName,
             LocalExtensionData = this,
         };
 
@@ -289,6 +283,4 @@ internal sealed class UnitTestElement
 #endif
         return guid;
     }
-
-    private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
 }

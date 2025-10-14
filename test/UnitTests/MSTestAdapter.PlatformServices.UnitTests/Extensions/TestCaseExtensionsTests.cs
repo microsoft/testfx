@@ -28,7 +28,7 @@ public class TestCaseExtensionsTests : TestContainer
 
         Verify(resultUnitTestElement.Priority == 2);
         Verify(testCategories == resultUnitTestElement.TestCategory);
-        Verify(resultUnitTestElement.DisplayName == "DummyDisplayName");
+        Verify(resultUnitTestElement.TestMethod.DisplayName == "DummyDisplayName");
         Verify(resultUnitTestElement.TestMethod.Name == "DummyMethod");
         Verify(resultUnitTestElement.TestMethod.FullClassName == "DummyClassName");
         Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName is null);
