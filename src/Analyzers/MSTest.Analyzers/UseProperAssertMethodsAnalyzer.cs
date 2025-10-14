@@ -132,6 +132,10 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         Count,
         WhereAny,
         WhereCount,
+        Single,
+        SingleOrDefault,
+        WhereSingle,
+        WhereSingleOrDefault,
     }
 
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
@@ -277,6 +281,56 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             case "AreNotEqual":
                 AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol);
                 break;
+            case "IsNull":
+                AnalyzeIsNullOrIsNotNullInvocation(context, firstArgument, isNullCheck: true);
+                break;
+
+            case "IsNotNull":
+                AnalyzeIsNullOrIsNotNullInvocation(context, firstArgument, isNullCheck: false);
+                break;
+        }
+    }
+
+    private static void AnalyzeIsNullOrIsNotNullInvocation(OperationAnalysisContext context, IOperation argument, bool isNullCheck)
+    {
+        RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
+
+        // Check for Single/SingleOrDefault patterns
+        LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
+            argument,
+            out SyntaxNode? linqCollectionExpr,
+            out SyntaxNode? predicateExpr,
+            out _);
+
+        if (linqStatus is LinqPredicateCheckStatus.Single or
+                         LinqPredicateCheckStatus.SingleOrDefault or
+                         LinqPredicateCheckStatus.WhereSingle or
+                         LinqPredicateCheckStatus.WhereSingleOrDefault &&
+            linqCollectionExpr != null)
+        {
+            // For Assert.IsNotNull(enumerable.Single[OrDefault](...)) -> Assert.ContainsSingle
+            // For Assert.IsNull(enumerable.Single[OrDefault](...)) -> Assert.DoesNotContain
+            string properAssertMethod = isNullCheck ? "DoesNotContain" : "ContainsSingle";
+
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+            properties.Add(CodeFixModeKey, predicateExpr != null ? CodeFixModeAddArgument : CodeFixModeSimple);
+
+            ImmutableArray<Location> additionalLocations = predicateExpr != null
+                ? ImmutableArray.Create(
+                    argument.Syntax.GetLocation(),
+                    predicateExpr.GetLocation(),
+                    linqCollectionExpr.GetLocation())
+                : ImmutableArray.Create(
+                    argument.Syntax.GetLocation(),
+                    linqCollectionExpr.GetLocation());
+
+            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                Rule,
+                additionalLocations: additionalLocations,
+                properties: properties.ToImmutable(),
+                properAssertMethod,
+                isNullCheck ? "IsNull" : "IsNotNull"));
         }
     }
 
@@ -591,6 +645,78 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             predicateExpression = whereInvocation2.Arguments[1].Value.Syntax;
             countOperation = operation;
             return LinqPredicateCheckStatus.WhereCount;
+        }
+
+        // Check for enumerable.Where(predicate).Single()
+        if (operation is IInvocationOperation whereSingleInvocation &&
+            whereSingleInvocation.TargetMethod.Name == "Single" &&
+            whereSingleInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereSingleInvocation.Arguments.Length == 1 &&
+            whereSingleInvocation.Arguments[0].Value is IInvocationOperation whereInvocation3 &&
+            whereInvocation3.TargetMethod.Name == "Where" &&
+            whereInvocation3.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereInvocation3.Arguments.Length == 2)
+        {
+            collectionExpression = whereInvocation3.Arguments[0].Value.Syntax;
+            predicateExpression = whereInvocation3.Arguments[1].Value.Syntax;
+            return LinqPredicateCheckStatus.WhereSingle;
+        }
+
+        // Check for enumerable.Where(predicate).SingleOrDefault()
+        if (operation is IInvocationOperation whereSingleOrDefaultInvocation &&
+            whereSingleOrDefaultInvocation.TargetMethod.Name == "SingleOrDefault" &&
+            whereSingleOrDefaultInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereSingleOrDefaultInvocation.Arguments.Length == 1 &&
+            whereSingleOrDefaultInvocation.Arguments[0].Value is IInvocationOperation whereInvocation4 &&
+            whereInvocation4.TargetMethod.Name == "Where" &&
+            whereInvocation4.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereInvocation4.Arguments.Length == 2)
+        {
+            collectionExpression = whereInvocation4.Arguments[0].Value.Syntax;
+            predicateExpression = whereInvocation4.Arguments[1].Value.Syntax;
+            return LinqPredicateCheckStatus.WhereSingleOrDefault;
+        }
+
+        // Check for enumerable.Single(predicate)
+        if (operation is IInvocationOperation singleInvocation &&
+            singleInvocation.TargetMethod.Name == "Single" &&
+            singleInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            if (singleInvocation.Arguments.Length == 2)
+            {
+                // Extension method with predicate
+                collectionExpression = singleInvocation.Arguments[0].Value.Syntax;
+                predicateExpression = singleInvocation.Arguments[1].Value.Syntax;
+                return LinqPredicateCheckStatus.Single;
+            }
+            else if (singleInvocation.Arguments.Length == 1)
+            {
+                // Instance method or extension without predicate
+                collectionExpression = singleInvocation.Instance?.Syntax ?? singleInvocation.Arguments[0].Value.Syntax;
+                predicateExpression = null;
+                return LinqPredicateCheckStatus.Single;
+            }
+        }
+
+        // Check for enumerable.SingleOrDefault(predicate)
+        if (operation is IInvocationOperation singleOrDefaultInvocation &&
+            singleOrDefaultInvocation.TargetMethod.Name == "SingleOrDefault" &&
+            singleOrDefaultInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            if (singleOrDefaultInvocation.Arguments.Length == 2)
+            {
+                // Extension method with predicate
+                collectionExpression = singleOrDefaultInvocation.Arguments[0].Value.Syntax;
+                predicateExpression = singleOrDefaultInvocation.Arguments[1].Value.Syntax;
+                return LinqPredicateCheckStatus.SingleOrDefault;
+            }
+            else if (singleOrDefaultInvocation.Arguments.Length == 1)
+            {
+                // Instance method or extension without predicate
+                collectionExpression = singleOrDefaultInvocation.Instance?.Syntax ?? singleOrDefaultInvocation.Arguments[0].Value.Syntax;
+                predicateExpression = null;
+                return LinqPredicateCheckStatus.SingleOrDefault;
+            }
         }
 
         return LinqPredicateCheckStatus.Unknown;
