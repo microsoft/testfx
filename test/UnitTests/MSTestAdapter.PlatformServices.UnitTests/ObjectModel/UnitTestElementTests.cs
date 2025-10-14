@@ -18,7 +18,7 @@ public class UnitTestElementTests : TestContainer
 
     public UnitTestElementTests()
     {
-        _testMethod = new TestMethod("M", "C", "A", true);
+        _testMethod = new TestMethod("M", "C", "A", displayName: null);
         _unitTestElement = new UnitTestElement(_testMethod);
     }
 

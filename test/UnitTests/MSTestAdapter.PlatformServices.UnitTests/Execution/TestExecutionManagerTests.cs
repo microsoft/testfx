@@ -814,7 +814,7 @@ public class TestExecutionManagerTests : TestContainer
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName)!;
-        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, isAsync: false);
+        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, displayName: null);
         UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }

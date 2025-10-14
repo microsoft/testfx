@@ -29,14 +29,7 @@ internal sealed class TestMethod : ITestMethod
     /// <param name="name">The name of the method.</param>
     /// <param name="fullClassName">The full name of the class declaring the method.</param>
     /// <param name="assemblyName">The full assembly name.</param>
-    /// <param name="isAsync">Whether the method is async.</param>
-#pragma warning disable IDE0060 // Remove unused parameter - Public API :/
-    public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
-#pragma warning restore IDE0060 // Remove unused parameter
-        : this(null, null, null, name, fullClassName, assemblyName, null, null)
-    {
-    }
-
+    /// <param name="displayName">The display name of the test method.</param>
     internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
         : this(null, null, null, name, fullClassName, assemblyName, displayName, null)
     {
