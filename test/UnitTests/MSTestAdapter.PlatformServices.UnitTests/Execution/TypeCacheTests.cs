@@ -93,7 +93,7 @@ public class TypeCacheTests : TestContainer
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
 
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Throws(new Exception("Load failure"));
 
         void Action() =>
@@ -776,7 +776,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));
 
-        _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
+        _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>()), Times.Once);
         Verify(_typeCache.ClassInfoCache.Count == 1);
     }
 
@@ -1342,7 +1342,7 @@ public class TypeCacheTests : TestContainer
 
     #endregion
 
-    private void SetupMocks() => _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+    private void SetupMocks() => _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
     #region dummy implementations

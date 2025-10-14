@@ -120,7 +120,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
             .Returns(doesFileExist);
         _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), assemblyName)).Returns(isAssemblyReferenced);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object[]>()))

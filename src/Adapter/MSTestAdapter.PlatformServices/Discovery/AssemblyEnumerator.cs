@@ -72,7 +72,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // Contains list of assembly/class names for which we have already added fixture tests.
         var fixturesTests = new HashSet<string>();
 
-        Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
+        Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
