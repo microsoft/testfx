@@ -77,22 +77,6 @@ internal sealed class TestMethod : ITestMethod
     public string? ParameterTypes { get; }
 
     /// <summary>
-    /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
-    /// This will be null if AssemblyName is same as DeclaringAssemblyName.
-    /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
-    /// </summary>
-    public string? DeclaringAssemblyName
-    {
-        get;
-
-        set
-        {
-            DebugEx.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
-            field = value;
-        }
-    }
-
-    /// <summary>
     /// Gets or sets the declaring class full name.
     /// This will be used to resolve overloads and while getting navigation data.
     /// This will be null if FullClassName is same as DeclaringClassFullName.
@@ -153,11 +137,6 @@ internal sealed class TestMethod : ITestMethod
     /// The test is ignored if this is set to non-null.
     /// </remarks>
     internal string? TestDataSourceIgnoreMessage { get; set; }
-
-    /// <summary>
-    /// Gets or sets the test group set during discovery.
-    /// </summary>
-    internal string? TestGroup { get; set; }
 
     /// <summary>
     /// Gets or sets the display name set during discovery.

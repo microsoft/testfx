@@ -26,13 +26,6 @@ internal interface IFileOperations
     Assembly LoadAssembly(string assemblyName, bool isReflectionOnly);
 
     /// <summary>
-    /// Gets the path to the .DLL of the assembly.
-    /// </summary>
-    /// <param name="assembly">The assembly.</param>
-    /// <returns>Path to the .DLL of the assembly.</returns>
-    string? GetAssemblyPath(Assembly assembly);
-
-    /// <summary>
     /// Verify if a file exists in the current context.
     /// </summary>
     /// <param name="assemblyFileName"> The assembly file name. </param>
