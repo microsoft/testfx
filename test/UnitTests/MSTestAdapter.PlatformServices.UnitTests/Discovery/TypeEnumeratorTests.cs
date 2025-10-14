@@ -275,20 +275,6 @@ public partial class TypeEnumeratorTests : TestContainer
         Verify(testElement.TestMethod.AssemblyName == "DummyAssemblyName");
     }
 
-    public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
-    {
-        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("AsyncMethodWithTaskReturnType")!;
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
-
-        string? expectedAsyncTaskName = methodInfo.GetCustomAttribute<AsyncStateMachineAttribute>()!.StateMachineType.FullName;
-
-        Verify(testElement is not null);
-        Verify(expectedAsyncTaskName == testElement.AsyncTypeName);
-    }
-
     public void GetTestFromMethodShouldSetTestCategory()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);

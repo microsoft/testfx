@@ -76,11 +76,6 @@ internal sealed class UnitTestElement
     internal int? DeclaringLineNumber { get; set; }
 
     /// <summary>
-    /// Gets or sets the compiler generated type name for async test method.
-    /// </summary>
-    internal string? AsyncTypeName { get; set; }
-
-    /// <summary>
     /// Gets or sets the Work Item Ids for the test method.
     /// </summary>
     internal string[]? WorkItemIds { get; set; }

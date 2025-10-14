@@ -3,7 +3,6 @@
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -138,8 +137,6 @@ internal class TypeEnumerator
 
         var testElement = new UnitTestElement(testMethod)
         {
-            // Get compiler generated type name for async test method (either void returning or task returning).
-            AsyncTypeName = method.GetAsyncTypeName(),
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
