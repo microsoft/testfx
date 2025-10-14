@@ -61,21 +61,6 @@ internal sealed class FileOperations : IFileOperations
     }
 
     /// <summary>
-    /// Gets the path to the .DLL of the assembly.
-    /// </summary>
-    /// <param name="assembly">The assembly.</param>
-    /// <returns>Path to the .DLL of the assembly.</returns>
-    public string? GetAssemblyPath(Assembly assembly)
-#if NETSTANDARD || (NETCOREAPP && !WINDOWS_UWP) || NETFRAMEWORK
-        // This method will never be called in source generator mode, we are providing a different provider for file operations.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-        => assembly.Location;
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-#elif WINDOWS_UWP
-        => null; // TODO: what are the options here?
-#endif
-
-    /// <summary>
     /// Verifies if file exists in context.
     /// </summary>
     /// <param name="assemblyFileName"> The assembly file name. </param>

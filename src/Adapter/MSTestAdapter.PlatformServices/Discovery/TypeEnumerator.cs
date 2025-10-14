@@ -83,7 +83,7 @@ internal class TypeEnumerator
             {
                 // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
-                UnitTestElement testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
+                UnitTestElement testMethod = GetTestFromMethod(method, warnings);
 
                 tests.Add(testMethod);
             }
@@ -117,10 +117,9 @@ internal class TypeEnumerator
     /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
     /// </summary>
     /// <param name="method">The reflected method.</param>
-    /// <param name="isDeclaredInTestTypeAssembly">True if the reflected method is declared in the same assembly as the current type.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
@@ -135,13 +134,6 @@ internal class TypeEnumerator
         if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
         {
             testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
-        }
-
-        if (!isDeclaredInTestTypeAssembly)
-        {
-            testMethod.DeclaringAssemblyName =
-                PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
-                    method.DeclaringType.Assembly);
         }
 
         var testElement = new UnitTestElement(testMethod)
