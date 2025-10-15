@@ -567,7 +567,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -626,7 +626,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -727,7 +727,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))

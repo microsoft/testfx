@@ -387,7 +387,7 @@ public class TestMethodRunnerTests : TestContainer
 
     private async Task RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(bool considerEmptyAsInconclusive)
     {
-        Mock<IReflectionOperations2>? existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
+        Mock<IReflectionOperations>? existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
         try
         {
             // We want this test to go through the "real" reflection to hit the product code path relevant for the test.
