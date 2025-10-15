@@ -22,7 +22,7 @@ public class TestPropertyAttributeTests : TestContainer
     {
         _typeCache = new TypeCache(new ReflectHelper());
         var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>())).Returns(GetType().Assembly);
+        testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>())).Returns(GetType().Assembly);
         PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
         ReflectHelper.Instance.ClearCache();

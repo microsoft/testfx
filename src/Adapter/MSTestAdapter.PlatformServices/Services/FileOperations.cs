@@ -27,10 +27,8 @@ internal sealed class FileOperations : IFileOperations
     /// Loads an assembly.
     /// </summary>
     /// <param name="assemblyName"> The assembly name. </param>
-    /// <param name="isReflectionOnly">Indicates whether this should be a reflection only load.</param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
-    public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
+    public Assembly LoadAssembly(string assemblyName)
     {
 #if NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 #if WIN_UI
@@ -48,15 +46,8 @@ internal sealed class FileOperations : IFileOperations
 
         return assembly;
 #elif NETFRAMEWORK
-        if (isReflectionOnly)
-        {
-            return Assembly.ReflectionOnlyLoadFrom(assemblyName);
-        }
-        else
-        {
-            Assembly assembly = _assemblyCache.GetOrAdd(assemblyName, Assembly.LoadFrom);
-            return assembly;
-        }
+        Assembly assembly = _assemblyCache.GetOrAdd(assemblyName, Assembly.LoadFrom);
+        return assembly;
 #endif
     }
 

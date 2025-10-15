@@ -233,7 +233,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (t == null)
             {
-                Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName, isReflectionOnly: false);
+                Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName);
 
                 // Attempt to load the type from the test assembly.
                 // Allow this call to throw if the type can't be loaded.

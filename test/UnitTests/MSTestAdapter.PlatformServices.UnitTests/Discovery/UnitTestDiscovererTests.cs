@@ -102,7 +102,7 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns(true);
         _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
@@ -135,7 +135,7 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns(true);
         _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
@@ -175,7 +175,7 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns(true);
         _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))

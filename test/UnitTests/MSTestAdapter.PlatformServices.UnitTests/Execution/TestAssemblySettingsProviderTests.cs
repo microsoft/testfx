@@ -39,7 +39,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
@@ -54,7 +54,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -73,7 +73,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -92,7 +92,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
@@ -107,7 +107,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -126,7 +126,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
@@ -141,7 +141,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
