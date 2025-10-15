@@ -139,7 +139,7 @@ public class AssemblyEnumeratorTests : TestContainer
     {
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
+        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", displayName: null));
 
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
@@ -161,7 +161,7 @@ public class AssemblyEnumeratorTests : TestContainer
     {
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
+        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", displayName: null));
         var expectedTestElements = new List<UnitTestElement> { unitTestElement, unitTestElement };
 
         // Setup mocks
@@ -184,7 +184,7 @@ public class AssemblyEnumeratorTests : TestContainer
     {
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
+        var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", displayName: null));
         var expectedTestElements = new List<UnitTestElement> { unitTestElement, unitTestElement };
 
         // Setup mocks

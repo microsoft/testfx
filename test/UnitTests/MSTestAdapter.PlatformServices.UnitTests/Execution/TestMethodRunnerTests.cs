@@ -39,7 +39,7 @@ public class TestMethodRunnerTests : TestContainer
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         _testMethodAttribute = new TestMethodAttribute();
 
-        _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
+        _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", displayName: null);
         _testContextImplementation = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), null, null);
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 

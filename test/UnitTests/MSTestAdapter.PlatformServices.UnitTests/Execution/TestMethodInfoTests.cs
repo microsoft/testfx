@@ -46,7 +46,7 @@ public class TestMethodInfoTests : TestContainer
         _testMethodAttribute = new TestMethodAttribute();
 
         _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
-        var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
+        var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", displayName: null);
         _testContextImplementation = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>(), null, null);
         _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
 
