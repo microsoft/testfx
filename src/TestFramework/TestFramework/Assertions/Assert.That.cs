@@ -10,6 +10,29 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public static partial class AssertExtensions
 {
+    // Constants for standardized display values
+    private const string FailedToEvaluate = "<Failed to evaluate>";
+    private const string NullDisplay = "null";
+    private const string NullAngleBrackets = "<null>";
+
+    // Constants for indexer method names
+    private const string GetItemMethodName = "get_Item";
+    private const string GetMethodName = "Get";
+
+    // Constants for compiler-generated patterns
+    private const string AnonymousTypePrefix = "<>f__AnonymousType";
+    private const string ValueWrapperPattern = "value(";
+    private const string ArrayLengthWrapperPattern = "ArrayLength(";
+    private const string NewKeyword = "new ";
+    private const string ActionTypePrefix = "Action`";
+    private const string FuncTypePrefix = "Func`";
+
+    // Constants for collection type patterns
+    private const string ListInitPattern = "`1()";
+
+    // Constants for parenthesis limits
+    private const int MaxConsecutiveParentheses = 2;
+
     /// <summary>
     /// Provides That extension to Assert class.
     /// </summary>
@@ -24,6 +47,7 @@ public static partial class AssertExtensions
         /// <param name="conditionExpression">The source code of the condition expression. This parameter is automatically populated by the compiler.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="condition"/> is <see langword="null"/>.</exception>
         /// <exception cref="AssertFailedException">Thrown if the evaluated condition is <see langword="false"/>.</exception>
+        [RequiresDynamicCode("Calls Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.EvaluateExpression(Expression, Dictionary<Expression, Object>)")]
         public static void That(Expression<Func<bool>> condition, string? message = null, [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null)
         {
             if (condition == null)
@@ -31,7 +55,15 @@ public static partial class AssertExtensions
                 throw new ArgumentNullException(nameof(condition));
             }
 
-            if (condition.Compile()())
+            // Cache to store evaluated expression values to avoid re-evaluation.
+            // This is critical for expressions with side effects - we evaluate each sub-expression
+            // only once and reuse the cached result throughout the assertion process.
+            var evaluationCache = new Dictionary<Expression, object?>();
+
+            // Evaluate the condition expression and cache all sub-expression values
+            bool result = EvaluateExpression(condition.Body, evaluationCache);
+
+            if (result)
             {
                 return;
             }
@@ -45,7 +77,7 @@ public static partial class AssertExtensions
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
             }
 
-            string details = ExtractDetails(condition.Body);
+            string details = ExtractDetails(condition.Body, evaluationCache);
             if (!string.IsNullOrWhiteSpace(details))
             {
                 sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
@@ -56,17 +88,238 @@ public static partial class AssertExtensions
         }
     }
 
-    private static string ExtractDetails(Expression expr)
+    /// <summary>
+    /// Evaluates an expression tree and caches all sub-expression values to avoid re-evaluation.
+    /// This ensures expressions with side effects (like method calls) are only executed once.
+    /// </summary>
+    [RequiresDynamicCode("Calls Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.EvaluateAllSubExpressions(Expression, Dictionary<Expression, Object>)")]
+    private static bool EvaluateExpression(Expression expr, Dictionary<Expression, object?> cache)
     {
+        // Use a single-pass evaluation that only evaluates each expression once
+        EvaluateAllSubExpressions(expr, cache);
+
+        // The root expression should now be cached
+        if (cache.TryGetValue(expr, out object? result))
+        {
+            return (bool)result!;
+        }
+
+        // Fallback - this should not happen if EvaluateAllSubExpressions works correctly
+        return false;
+    }
+
+    /// <summary>
+    /// Recursively evaluates all sub-expressions in the tree and caches their values.
+    /// Uses a bottom-up approach: evaluate children first, then replace them with constants
+    /// before evaluating the parent. This prevents side effects from being executed multiple times.
+    /// </summary>
+    [RequiresDynamicCode("Calls System.Linq.Expressions.Expression.Lambda(Expression, params ParameterExpression[])")]
+    private static void EvaluateAllSubExpressions(Expression expr, Dictionary<Expression, object?> cache)
+    {
+        // If already evaluated, skip to avoid duplicate work
+        if (cache.ContainsKey(expr))
+        {
+            return;
+        }
+
+        try
+        {
+            // First, recursively evaluate all sub-expressions (depth-first traversal).
+            // This ensures that when we evaluate a parent expression, all its children
+            // are already cached and can be replaced with constant values.
+            switch (expr)
+            {
+                case BinaryExpression binaryExpr:
+                    // Evaluate both operands before evaluating the binary operation
+                    EvaluateAllSubExpressions(binaryExpr.Left, cache);
+                    EvaluateAllSubExpressions(binaryExpr.Right, cache);
+                    break;
+
+                case UnaryExpression unaryExpr:
+                    // Evaluate the operand before evaluating the unary operation
+                    EvaluateAllSubExpressions(unaryExpr.Operand, cache);
+                    break;
+
+                case MemberExpression memberExpr:
+                    // For member access (e.g., obj.Property), evaluate the object first
+                    if (memberExpr.Expression is not null)
+                    {
+                        EvaluateAllSubExpressions(memberExpr.Expression, cache);
+                    }
+
+                    break;
+
+                case MethodCallExpression callExpr:
+                    // For method calls, evaluate the target object and all arguments first
+                    if (callExpr.Object is not null)
+                    {
+                        EvaluateAllSubExpressions(callExpr.Object, cache);
+                    }
+
+                    foreach (Expression argument in callExpr.Arguments)
+                    {
+                        EvaluateAllSubExpressions(argument, cache);
+                    }
+
+                    break;
+
+                case ConditionalExpression conditionalExpr:
+                    // For ternary expressions, evaluate all three parts
+                    EvaluateAllSubExpressions(conditionalExpr.Test, cache);
+                    EvaluateAllSubExpressions(conditionalExpr.IfTrue, cache);
+                    EvaluateAllSubExpressions(conditionalExpr.IfFalse, cache);
+                    break;
+
+                case InvocationExpression invocationExpr:
+                    // For delegate invocations, evaluate the delegate and all arguments
+                    EvaluateAllSubExpressions(invocationExpr.Expression, cache);
+                    foreach (Expression argument in invocationExpr.Arguments)
+                    {
+                        EvaluateAllSubExpressions(argument, cache);
+                    }
+
+                    break;
+
+                case NewExpression newExpr:
+                    // For object creation, evaluate all constructor arguments
+                    foreach (Expression argument in newExpr.Arguments)
+                    {
+                        EvaluateAllSubExpressions(argument, cache);
+                    }
+
+                    break;
+
+                case ListInitExpression listInitExpr:
+                    // For collection initializers, evaluate the new expression and all initializer arguments
+                    EvaluateAllSubExpressions(listInitExpr.NewExpression, cache);
+                    foreach (ElementInit initializer in listInitExpr.Initializers)
+                    {
+                        foreach (Expression argument in initializer.Arguments)
+                        {
+                            EvaluateAllSubExpressions(argument, cache);
+                        }
+                    }
+
+                    break;
+
+                case NewArrayExpression newArrayExpr:
+                    // For array creation, evaluate all element expressions
+                    foreach (Expression expression in newArrayExpr.Expressions)
+                    {
+                        EvaluateAllSubExpressions(expression, cache);
+                    }
+
+                    break;
+
+                case TypeBinaryExpression typeBinaryExpr:
+                    // For type checks (e.g., obj is Type), evaluate the object being tested
+                    EvaluateAllSubExpressions(typeBinaryExpr.Expression, cache);
+                    break;
+            }
+
+            // Now build a new expression that replaces sub-expressions with their cached values.
+            // This is crucial: by replacing evaluated sub-expressions with constants, we ensure
+            // that compiling and invoking this expression won't cause side effects to re-execute.
+            Expression replacedExpr = ReplaceSubExpressionsWithConstants(expr, cache);
+
+            // Evaluate the replaced expression - this is now safe because all sub-expressions
+            // that could have side effects have been replaced with their constant values.
+            object? result = Expression.Lambda(replacedExpr).Compile().DynamicInvoke();
+            cache[expr] = result;
+        }
+        catch
+        {
+            // If evaluation fails (e.g., null reference, division by zero), mark it as failed
+            // rather than throwing. This allows us to continue and provide diagnostic information.
+            cache[expr] = FailedToEvaluate;
+        }
+    }
+
+    /// <summary>
+    /// Replaces sub-expressions in an expression tree with constant values from the cache.
+    /// This prevents re-execution of side effects when the parent expression is compiled and invoked.
+    /// </summary>
+    private static Expression ReplaceSubExpressionsWithConstants(Expression expr, Dictionary<Expression, object?> cache)
+    {
+        // If this expression's direct sub-expressions are cached, replace them with constants
+        switch (expr)
+        {
+            case BinaryExpression binaryExpr:
+                // Replace left and right operands with constants if they're cached
+                Expression left = cache.TryGetValue(binaryExpr.Left, out object? leftValue)
+                    ? Expression.Constant(leftValue, binaryExpr.Left.Type)
+                    : binaryExpr.Left;
+                Expression right = cache.TryGetValue(binaryExpr.Right, out object? rightValue)
+                    ? Expression.Constant(rightValue, binaryExpr.Right.Type)
+                    : binaryExpr.Right;
+                return Expression.MakeBinary(binaryExpr.NodeType, left, right);
+
+            case UnaryExpression unaryExpr:
+                // Replace the operand with a constant if it's cached
+                Expression operand = cache.TryGetValue(unaryExpr.Operand, out object? value)
+                    ? Expression.Constant(value, unaryExpr.Operand.Type)
+                    : unaryExpr.Operand;
+                return Expression.MakeUnary(unaryExpr.NodeType, operand, unaryExpr.Type);
+
+            case MemberExpression memberExpr when memberExpr.Expression is not null && cache.ContainsKey(memberExpr.Expression):
+                // Replace the object being accessed with a constant
+                Expression instance = Expression.Constant(cache[memberExpr.Expression], memberExpr.Expression.Type);
+                return Expression.MakeMemberAccess(instance, memberExpr.Member);
+
+            case MethodCallExpression callExpr:
+                // Replace the target object and all arguments with constants if they're cached
+                Expression? obj = callExpr.Object is not null && cache.TryGetValue(callExpr.Object, out object? callExprValue)
+                    ? Expression.Constant(callExprValue, callExpr.Object.Type)
+                    : callExpr.Object;
+
+                Expression[] args = [.. callExpr.Arguments
+                    .Select(arg => cache.TryGetValue(arg, out object? value)
+                        ? Expression.Constant(value, arg.Type)
+                        : arg)];
+
+                return Expression.Call(obj, callExpr.Method, args);
+
+            case ConditionalExpression conditionalExpr:
+                // Replace all three parts of the ternary expression with constants if they're cached
+                Expression test = cache.TryGetValue(conditionalExpr.Test, out object? testValue)
+                    ? Expression.Constant(testValue, conditionalExpr.Test.Type)
+                    : conditionalExpr.Test;
+                Expression ifTrue = cache.TryGetValue(conditionalExpr.IfTrue, out object? ifTrueValue)
+                    ? Expression.Constant(ifTrueValue, conditionalExpr.IfTrue.Type)
+                    : conditionalExpr.IfTrue;
+                Expression ifFalse = cache.TryGetValue(conditionalExpr.IfFalse, out object? ifFalseValue)
+                    ? Expression.Constant(ifFalseValue, conditionalExpr.IfFalse.Type)
+                    : conditionalExpr.IfFalse;
+                return Expression.Condition(test, ifTrue, ifFalse);
+
+            case TypeBinaryExpression typeBinaryExpr when cache.ContainsKey(typeBinaryExpr.Expression):
+                // Replace the object being type-checked with a constant
+                Expression typeExpr = Expression.Constant(cache[typeBinaryExpr.Expression], typeBinaryExpr.Expression.Type);
+                return Expression.TypeIs(typeExpr, typeBinaryExpr.TypeOperand);
+
+            default:
+                // For other expressions or leaf nodes (constants, parameters), return as-is
+                return expr;
+        }
+    }
+
+    /// <summary>
+    /// Extracts diagnostic details from the failed assertion by identifying variables
+    /// and their values in the expression tree. Returns a formatted string showing
+    /// variable names and their evaluated values.
+    /// </summary>
+    private static string ExtractDetails(Expression expr, Dictionary<Expression, object?> evaluationCache)
+    {
+        // Dictionary to store variable names and their values
         var details = new Dictionary<string, object?>();
-        ExtractVariablesFromExpression(expr, details);
+        ExtractVariablesFromExpression(expr, details, evaluationCache);
 
         if (details.Count == 0)
         {
             return string.Empty;
         }
 
-        // Sort details alphabetically by variable name for consistent ordering
+        // Sort details alphabetically by variable name for consistent, readable output
         IOrderedEnumerable<KeyValuePair<string, object?>> sortedDetails = details.OrderBy(kvp => kvp.Key, StringComparer.Ordinal);
 
         var sb = new StringBuilder();
@@ -82,7 +335,12 @@ public static partial class AssertExtensions
         return sb.ToString();
     }
 
-    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, bool suppressIntermediateValues = false)
+    /// <summary>
+    /// Recursively walks the expression tree to extract meaningful variable references and their values.
+    /// The suppressIntermediateValues parameter controls whether to display the value of intermediate
+    /// expressions (like 'new List()' when it's part of 'new List().Count').
+    /// </summary>
+    private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache, bool suppressIntermediateValues = false)
     {
         if (expr is null)
         {
@@ -93,110 +351,131 @@ public static partial class AssertExtensions
         {
             // Special handling for array indexing (myArray[index])
             case BinaryExpression binaryExpr when binaryExpr.NodeType == ExpressionType.ArrayIndex:
-                HandleArrayIndexExpression(binaryExpr, details);
+                HandleArrayIndexExpression(binaryExpr, details, evaluationCache);
                 break;
 
             case BinaryExpression binaryExpr:
-                ExtractVariablesFromExpression(binaryExpr.Left, details, suppressIntermediateValues);
-                ExtractVariablesFromExpression(binaryExpr.Right, details, suppressIntermediateValues);
+                // For binary operations (e.g., x > y), extract variables from both sides
+                ExtractVariablesFromExpression(binaryExpr.Left, details, evaluationCache, suppressIntermediateValues);
+                ExtractVariablesFromExpression(binaryExpr.Right, details, evaluationCache, suppressIntermediateValues);
                 break;
 
             case TypeBinaryExpression typeBinaryExpr:
                 // Extract variables from the expression being tested (e.g., 'obj' in 'obj is int')
-                ExtractVariablesFromExpression(typeBinaryExpr.Expression, details, suppressIntermediateValues);
+                ExtractVariablesFromExpression(typeBinaryExpr.Expression, details, evaluationCache, suppressIntermediateValues);
                 break;
 
-            // Special handling for ArrayLength expressions
+            // Special handling for ArrayLength expressions (e.g., myArray.Length)
             case UnaryExpression unaryExpr when unaryExpr.NodeType == ExpressionType.ArrayLength:
+                // Display as "arrayName.Length" for better readability
                 string arrayName = GetCleanMemberName(unaryExpr.Operand);
                 string lengthDisplayName = $"{arrayName}.Length";
-                TryAddExpressionValue(unaryExpr, lengthDisplayName, details);
+                TryAddExpressionValue(unaryExpr, lengthDisplayName, details, evaluationCache);
 
+                // Only extract the array variable if it's not already a member expression
+                // (to avoid duplicate entries like "myArray" and "myArray.Length")
                 if (unaryExpr.Operand is not MemberExpression)
                 {
-                    ExtractVariablesFromExpression(unaryExpr.Operand, details, suppressIntermediateValues);
+                    ExtractVariablesFromExpression(unaryExpr.Operand, details, evaluationCache, suppressIntermediateValues);
                 }
 
                 break;
 
             case UnaryExpression unaryExpr:
-                ExtractVariablesFromExpression(unaryExpr.Operand, details, suppressIntermediateValues);
+                // For other unary operations (e.g., !flag), extract the operand
+                ExtractVariablesFromExpression(unaryExpr.Operand, details, evaluationCache, suppressIntermediateValues);
                 break;
 
             case MemberExpression memberExpr:
-                AddMemberExpressionToDetails(memberExpr, details);
+                // For member access (e.g., obj.Property), add to details
+                AddMemberExpressionToDetails(memberExpr, details, evaluationCache);
                 break;
 
             case MethodCallExpression callExpr:
-                HandleMethodCallExpression(callExpr, details, suppressIntermediateValues);
+                // Handle method calls with special logic for indexers and boolean methods
+                HandleMethodCallExpression(callExpr, details, evaluationCache, suppressIntermediateValues);
                 break;
 
             case ConditionalExpression conditionalExpr:
-                ExtractVariablesFromExpression(conditionalExpr.Test, details, suppressIntermediateValues);
-                ExtractVariablesFromExpression(conditionalExpr.IfTrue, details, suppressIntermediateValues);
-                ExtractVariablesFromExpression(conditionalExpr.IfFalse, details, suppressIntermediateValues);
+                // For ternary expressions, extract from all three parts
+                ExtractVariablesFromExpression(conditionalExpr.Test, details, evaluationCache, suppressIntermediateValues);
+                ExtractVariablesFromExpression(conditionalExpr.IfTrue, details, evaluationCache, suppressIntermediateValues);
+                ExtractVariablesFromExpression(conditionalExpr.IfFalse, details, evaluationCache, suppressIntermediateValues);
                 break;
 
             case InvocationExpression invocationExpr:
-                ExtractVariablesFromExpression(invocationExpr.Expression, details, suppressIntermediateValues);
+                // For delegate invocations, extract from the delegate and all arguments
+                ExtractVariablesFromExpression(invocationExpr.Expression, details, evaluationCache, suppressIntermediateValues);
                 foreach (Expression argument in invocationExpr.Arguments)
                 {
-                    ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                    ExtractVariablesFromExpression(argument, details, evaluationCache, suppressIntermediateValues);
                 }
 
                 break;
 
             case NewExpression newExpr:
+                // For object creation, extract from constructor arguments
                 foreach (Expression argument in newExpr.Arguments)
                 {
-                    ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                    ExtractVariablesFromExpression(argument, details, evaluationCache, suppressIntermediateValues);
                 }
 
-                // Don't display the new object value if we're suppressing intermediate values
-                // (which happens when it's part of a member access chain)
+                // Don't display the new object value if it's part of a member access chain
+                // (e.g., don't show "new Person()" when displaying "new Person().Name")
                 if (!suppressIntermediateValues)
                 {
                     string newExprDisplay = GetCleanMemberName(newExpr);
-                    TryAddExpressionValue(newExpr, newExprDisplay, details);
+                    TryAddExpressionValue(newExpr, newExprDisplay, details, evaluationCache);
                 }
 
                 break;
 
             case ListInitExpression listInitExpr:
-                ExtractVariablesFromExpression(listInitExpr.NewExpression, details, suppressIntermediateValues: true);
+                // For collection initializers, suppress the intermediate 'new List()' but show the elements
+                ExtractVariablesFromExpression(listInitExpr.NewExpression, details, evaluationCache, suppressIntermediateValues: true);
                 foreach (ElementInit initializer in listInitExpr.Initializers)
                 {
                     foreach (Expression argument in initializer.Arguments)
                     {
-                        ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                        ExtractVariablesFromExpression(argument, details, evaluationCache, suppressIntermediateValues);
                     }
                 }
 
                 break;
 
             case NewArrayExpression newArrayExpr:
+                // For array creation, extract from all element expressions
                 foreach (Expression expression in newArrayExpr.Expressions)
                 {
-                    ExtractVariablesFromExpression(expression, details, suppressIntermediateValues);
+                    ExtractVariablesFromExpression(expression, details, evaluationCache, suppressIntermediateValues);
                 }
 
                 break;
         }
     }
 
-    private static void HandleArrayIndexExpression(BinaryExpression arrayIndexExpr, Dictionary<string, object?> details)
+    /// <summary>
+    /// Handles array indexing expressions (e.g., myArray[i]) by displaying them in indexer notation
+    /// and extracting the index variable.
+    /// </summary>
+    private static void HandleArrayIndexExpression(BinaryExpression arrayIndexExpr, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache)
     {
         string arrayName = GetCleanMemberName(arrayIndexExpr.Left);
-        string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right);
+        string indexValue = GetIndexArgumentDisplay(arrayIndexExpr.Right, evaluationCache);
         string indexerDisplay = $"{arrayName}[{indexValue}]";
-        TryAddExpressionValue(arrayIndexExpr, indexerDisplay, details);
+        TryAddExpressionValue(arrayIndexExpr, indexerDisplay, details, evaluationCache);
 
         // Extract variables from the index argument
-        ExtractVariablesFromExpression(arrayIndexExpr.Right, details);
+        ExtractVariablesFromExpression(arrayIndexExpr.Right, details, evaluationCache);
     }
 
-    private static void AddMemberExpressionToDetails(MemberExpression memberExpr, Dictionary<string, object?> details)
+    /// <summary>
+    /// Adds a member expression (e.g., obj.Property) to the details dictionary with its cached value.
+    /// Filters out Func and Action delegates as they don't provide useful diagnostic information.
+    /// </summary>
+    private static void AddMemberExpressionToDetails(MemberExpression memberExpr, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache)
     {
+        // Get a clean, readable name for the member (e.g., "person.Name" instead of compiler-generated text)
         string displayName = GetCleanMemberName(memberExpr);
 
         if (details.ContainsKey(displayName))
@@ -204,73 +483,79 @@ public static partial class AssertExtensions
             return;
         }
 
-        try
-        {
-            object? value = Expression.Lambda(memberExpr).Compile().DynamicInvoke();
+        // Use cached value if available, otherwise mark as failed
+        details[displayName] = evaluationCache.TryGetValue(memberExpr, out object? cachedValue)
+            ? cachedValue
+            : FailedToEvaluate;
 
-            // Skip Func and Action delegates as they don't provide useful information in assertion failures
-            if (IsFuncOrActionType(value?.GetType()))
-            {
-                return;
-            }
-
-            details[displayName] = value;
-        }
-        catch
+        // Skip Func and Action delegates as they don't provide useful information in assertion failures
+        if (IsFuncOrActionType(cachedValue?.GetType()))
         {
-            details[displayName] = "<Failed to evaluate>";
+            details.Remove(displayName);
+            return;
         }
 
-        // Only extract variables from the object being accessed if it's not a member expression or indexer (which would show the full collection)
+        // Only extract variables from the object being accessed if it's not a member expression
+        // (to avoid showing both "person" and "person.Name" when "person.Name" is sufficient)
         if (memberExpr.Expression is not null and not MemberExpression)
         {
-            ExtractVariablesFromExpression(memberExpr.Expression, details, suppressIntermediateValues: true);
+            ExtractVariablesFromExpression(memberExpr.Expression, details, evaluationCache, suppressIntermediateValues: true);
         }
     }
 
-    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details, bool suppressIntermediateValues = false)
+    /// <summary>
+    /// Handles method call expressions with special logic for:
+    /// - Indexers (get_Item and Get methods): displayed as object[index]
+    /// - Boolean-returning methods: extract from the target object for better diagnostics
+    /// - Other methods: capture the method call itself and extract from arguments.
+    /// </summary>
+    private static void HandleMethodCallExpression(MethodCallExpression callExpr, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache, bool suppressIntermediateValues = false)
     {
-        // Special handling for indexers (get_Item calls)
-        if (callExpr.Method.Name == "get_Item" && callExpr.Object is not null && callExpr.Arguments.Count == 1)
+        // Special handling for indexers (e.g., list[0] calls get_Item(0))
+        if (callExpr.Method.Name == GetItemMethodName && callExpr.Object is not null && callExpr.Arguments.Count == 1)
         {
+            // Display as "listName[indexValue]" for readability
             string objectName = GetCleanMemberName(callExpr.Object);
-            string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0]);
+            string indexValue = GetIndexArgumentDisplay(callExpr.Arguments[0], evaluationCache);
             string indexerDisplay = $"{objectName}[{indexValue}]";
-            TryAddExpressionValue(callExpr, indexerDisplay, details);
+            TryAddExpressionValue(callExpr, indexerDisplay, details, evaluationCache);
 
-            // Extract variables from the index argument but not from the object.
-            ExtractVariablesFromExpression(callExpr.Arguments[0], details, suppressIntermediateValues);
+            // Extract variables from the index argument but not from the object
+            // (to avoid showing both "list" and "list[0]")
+            ExtractVariablesFromExpression(callExpr.Arguments[0], details, evaluationCache, suppressIntermediateValues);
         }
-        else if (callExpr.Method.Name == "Get" && callExpr.Object is not null && callExpr.Arguments.Count > 0)
+        else if (callExpr.Method.Name == GetMethodName && callExpr.Object is not null && callExpr.Arguments.Count > 0)
         {
+            // Handle multi-dimensional array indexers (e.g., array.Get(i, j) displayed as array[i, j])
             string objectName = GetCleanMemberName(callExpr.Object);
-            string indexDisplay = string.Join(", ", callExpr.Arguments.Select(GetIndexArgumentDisplay));
+            string indexDisplay = string.Join(", ", callExpr.Arguments.Select(arg => GetIndexArgumentDisplay(arg, evaluationCache)));
             string indexerDisplay = $"{objectName}[{indexDisplay}]";
-            TryAddExpressionValue(callExpr, indexerDisplay, details);
+            TryAddExpressionValue(callExpr, indexerDisplay, details, evaluationCache);
 
             // Extract variables from the index arguments but not from the object
             foreach (Expression argument in callExpr.Arguments)
             {
-                ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                ExtractVariablesFromExpression(argument, details, evaluationCache, suppressIntermediateValues);
             }
         }
         else
         {
-            // Check if the method returns a boolean
+            // Check if the method returns a boolean (e.g., list.Any(), string.Contains())
             if (callExpr.Method.ReturnType == typeof(bool))
             {
                 if (callExpr.Object is not null)
                 {
-                    // For boolean-returning methods, extract details from the object being called
-                    // This captures the last non-boolean method call in a chain
-                    ExtractVariablesFromExpression(callExpr.Object, details, suppressIntermediateValues);
+                    // For boolean-returning methods, extract details from the object being called.
+                    // This provides more useful context (e.g., show "list" and "list.Count" rather than "list.Any()")
+                    ExtractVariablesFromExpression(callExpr.Object, details, evaluationCache, suppressIntermediateValues);
                 }
             }
             else
             {
                 // For non-boolean methods, capture the method call itself
+                // (e.g., "list.Count" when used in a comparison)
                 string methodCallDisplay = GetCleanMemberName(callExpr);
-                TryAddExpressionValue(callExpr, methodCallDisplay, details);
+                TryAddExpressionValue(callExpr, methodCallDisplay, details, evaluationCache);
 
                 // Don't extract from the object to avoid duplication
             }
@@ -278,7 +563,7 @@ public static partial class AssertExtensions
             // Always extract variables from the arguments
             foreach (Expression argument in callExpr.Arguments)
             {
-                ExtractVariablesFromExpression(argument, details, suppressIntermediateValues);
+                ExtractVariablesFromExpression(argument, details, evaluationCache, suppressIntermediateValues);
             }
         }
     }
@@ -292,30 +577,60 @@ public static partial class AssertExtensions
 
         // Check for Action types
         if (type == typeof(Action) ||
-            (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Action`", StringComparison.Ordinal)))
+            (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith(ActionTypePrefix, StringComparison.Ordinal)))
         {
             return true;
         }
 
         // Check for Func types
-        return type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("Func`", StringComparison.Ordinal);
+        return type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith(FuncTypePrefix, StringComparison.Ordinal);
     }
 
     private static string GetCleanMemberName(Expression? expr)
         => expr is null
-            ? "<null>"
+            ? NullAngleBrackets
             : CleanExpressionText(expr.ToString());
 
-    private static string GetIndexArgumentDisplay(Expression indexArg)
+    /// <summary>
+    /// Gets a display string for an index argument in an indexer expression.
+    /// Preserves variable names for readability (e.g., "i" instead of "0" if i is a variable).
+    /// </summary>
+    private static string GetIndexArgumentDisplay(Expression indexArg, Dictionary<Expression, object?> evaluationCache)
     {
         try
         {
+            // For constant values, just format the value
             if (indexArg is ConstantExpression constExpr)
             {
                 return FormatValue(constExpr.Value);
             }
 
-            // For complex index expressions, just use the expression string
+            // For member expressions that are fields or simple variable references,
+            // preserve the variable name to help with readability (e.g., "myIndex" instead of "5")
+            if (indexArg is MemberExpression memberExpr && IsVariableReference(memberExpr))
+            {
+                return CleanExpressionText(indexArg.ToString());
+            }
+
+            // For parameter expressions (method parameters), preserve the parameter name
+            if (indexArg is ParameterExpression)
+            {
+                return CleanExpressionText(indexArg.ToString());
+            }
+
+            // For complex expressions (e.g., "i + 1"), preserve the expression text for clarity
+            if (!IsSimpleExpression(indexArg))
+            {
+                return CleanExpressionText(indexArg.ToString());
+            }
+
+            // For other simple expressions, try to use cached value
+            if (evaluationCache.TryGetValue(indexArg, out object? cachedValue))
+            {
+                return FormatValue(cachedValue);
+            }
+
+            // Fallback to expression text
             return CleanExpressionText(indexArg.ToString());
         }
         catch
@@ -324,32 +639,64 @@ public static partial class AssertExtensions
         }
     }
 
+    /// <summary>
+    /// Determines if a member expression is a simple variable reference (field or captured variable)
+    /// rather than a property access on an object.
+    /// </summary>
+    private static bool IsVariableReference(MemberExpression memberExpr)
+        // Fields typically have Expression as null (static) or ConstantExpression (instance field on captured variable)
+        => memberExpr.Expression is null or ConstantExpression;
+
+    /// <summary>
+    /// Determines if an expression is simple enough to evaluate directly or if its
+    /// textual representation should be preserved for better diagnostic messages.
+    /// </summary>
+    private static bool IsSimpleExpression(Expression expr)
+        => expr switch
+        {
+            // Constants are simple and can be evaluated
+            ConstantExpression => true,
+            // Parameter references should preserve their names for indices (e.g., "i" not "0")
+            ParameterExpression => false,
+            // Member expressions should be evaluated case by case
+            MemberExpression => false,
+            // Simple unary operations on members like "!flag" should preserve the expression text
+            UnaryExpression unary when unary.Operand is MemberExpression or ParameterExpression => false,
+            // Everything else is considered complex (binary operations, method calls, etc.)
+            _ => false,
+        };
+
     private static string FormatValue(object? value)
         => value switch
         {
-            null => "null",
+            null => NullDisplay,
             string s => $"\"{s}\"",
+            IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
             IEnumerable<object> e => $"[{string.Join(", ", e.Select(FormatValue))}]",
             IEnumerable e and not string => $"[{string.Join(", ", e.Cast<object>().Select(FormatValue))}]",
-            _ => value.ToString() ?? "<null>",
+            _ => value.ToString() ?? NullAngleBrackets,
         };
 
+    /// <summary>
+    /// Cleans up compiler-generated artifacts from expression text to make it more readable.
+    /// Removes display classes, compiler wrappers, and formats anonymous types and collections properly.
+    /// </summary>
     private static string CleanExpressionText(string raw)
     {
-        // Remove display class names and generated compiler prefixes
         string cleaned = raw;
 
-        // Remove compiler-generated wrappers FIRST, before display class cleanup
+        // Remove compiler-generated wrappers FIRST (e.g., "value()", "ArrayLength()")
+        // This must happen before display class cleanup to avoid breaking patterns
         cleaned = RemoveCompilerGeneratedWrappers(cleaned);
 
-        // Handle anonymous types - remove the compiler-generated type wrapper
+        // Handle anonymous types - convert compiler-generated type names to C# syntax (e.g., "new { ... }")
         cleaned = RemoveAnonymousTypeWrappers(cleaned);
 
         // Handle list initialization expressions - convert from Add method calls to collection initializer syntax
         cleaned = CleanListInitializers(cleaned);
 
         // Handle compiler-generated display classes more comprehensively
-        // Updated pattern to handle cases with and without parentheses around the display class
+        // Removes patterns like "DisplayClass0_1.myVariable" to just "myVariable"
         cleaned = CompilerGeneratedDisplayClassRegex().Replace(cleaned, "$1");
 
         // Remove unnecessary outer parentheses and excessive consecutive parentheses
@@ -358,6 +705,10 @@ public static partial class AssertExtensions
         return cleaned;
     }
 
+    /// <summary>
+    /// Removes anonymous type wrappers (e.g., "new &lt;&gt;f__AnonymousType0(x = 1)")
+    /// and replaces them with C# anonymous type syntax (e.g., "new { x = 1 }").
+    /// </summary>
     private static string RemoveAnonymousTypeWrappers(string input)
     {
         if (string.IsNullOrEmpty(input))
@@ -371,11 +722,11 @@ public static partial class AssertExtensions
         while (i < input.Length)
         {
             // Look for anonymous type pattern: new <>f__AnonymousType followed by generic parameters
-            if (i <= input.Length - 4 && input.Substring(i, 4) == "new " &&
-                i + 4 < input.Length && input.Substring(i + 4).StartsWith("<>f__AnonymousType", StringComparison.Ordinal))
+            if (i <= input.Length - NewKeyword.Length && input.Substring(i, NewKeyword.Length) == NewKeyword &&
+                i + NewKeyword.Length < input.Length && input.Substring(i + NewKeyword.Length).StartsWith(AnonymousTypePrefix, StringComparison.Ordinal))
             {
                 // Find the start of the constructor parameters
-                int constructorStart = input.IndexOf('(', i + 4);
+                int constructorStart = input.IndexOf('(', i + NewKeyword.Length);
                 if (constructorStart == -1)
                 {
                     result.Append(input[i]);
@@ -421,6 +772,11 @@ public static partial class AssertExtensions
         return result.ToString();
     }
 
+    /// <summary>
+    /// Cleans up collection initializer expressions by converting verbose Add method calls
+    /// (e.g., "new List`1() { Void Add(Int32)(1), Void Add(Int32)(2) }")
+    /// to standard C# syntax (e.g., "new List&lt;int&gt; { 1, 2 }").
+    /// </summary>
     private static string CleanListInitializers(string input)
     {
         if (string.IsNullOrEmpty(input))
@@ -513,12 +869,12 @@ public static partial class AssertExtensions
         patternEnd = startIndex;
 
         // Check for "new " at the start
-        if (startIndex + 4 >= input.Length || !input.Substring(startIndex, 4).Equals("new ", StringComparison.Ordinal))
+        if (startIndex + NewKeyword.Length >= input.Length || !input.Substring(startIndex, NewKeyword.Length).Equals(NewKeyword, StringComparison.Ordinal))
         {
             return false;
         }
 
-        int pos = startIndex + 4;
+        int pos = startIndex + NewKeyword.Length;
 
         // Skip whitespace
         while (pos < input.Length && char.IsWhiteSpace(input[pos]))
@@ -547,12 +903,12 @@ public static partial class AssertExtensions
         }
 
         // Check for "`1()" pattern
-        if (pos + 4 >= input.Length || !input.Substring(pos, 4).Equals("`1()", StringComparison.Ordinal))
+        if (pos + ListInitPattern.Length >= input.Length || !input.Substring(pos, ListInitPattern.Length).Equals(ListInitPattern, StringComparison.Ordinal))
         {
             return false;
         }
 
-        pos += 4;
+        pos += ListInitPattern.Length;
 
         // Skip whitespace
         while (pos < input.Length && char.IsWhiteSpace(input[pos]))
@@ -610,6 +966,11 @@ public static partial class AssertExtensions
             _ => typeName,
         };
 
+    /// <summary>
+    /// Removes parentheses that wrap the entire expression and cleans up excessive
+    /// consecutive parentheses (e.g., "(((x)))" becomes "x", "((x) &amp;&amp; (y))" becomes "(x) &amp;&amp; (y)").
+
+    /// </summary>
     private static string CleanParentheses(string input)
     {
         if (string.IsNullOrEmpty(input))
@@ -636,6 +997,10 @@ public static partial class AssertExtensions
         return input;
     }
 
+    /// <summary>
+    /// Removes outer parentheses if they wrap the entire expression without serving
+    /// a syntactic purpose (e.g., "(x > 5)" becomes "x > 5").
+    /// </summary>
     private static string RemoveOuterParentheses(string input)
     {
         if (input.Length < 2 || !input.StartsWith('(') || !input.EndsWith(')'))
@@ -666,6 +1031,10 @@ public static partial class AssertExtensions
         return parenCount == 0 ? input.Substring(1, input.Length - 2).Trim() : input;
     }
 
+    /// <summary>
+    /// Reduces excessive consecutive identical parentheses to at most 2.
+    /// This handles cases where multiple layers of compilation create redundant nesting.
+    /// </summary>
     private static string CleanExcessiveParentheses(string input)
     {
         if (string.IsNullOrEmpty(input))
@@ -690,7 +1059,7 @@ public static partial class AssertExtensions
                 }
 
                 // Keep at most 2 consecutive parentheses
-                int keepCount = Math.Min(count, 2);
+                int keepCount = Math.Min(count, MaxConsecutiveParentheses);
                 result.Append(new string(currentChar, keepCount));
                 i += count;
             }
@@ -704,6 +1073,10 @@ public static partial class AssertExtensions
         return result.ToString();
     }
 
+    /// <summary>
+    /// Removes compiler-generated wrapper functions like "value(...)" and "ArrayLength(...)"
+    /// that appear in expression tree string representations.
+    /// </summary>
     private static string RemoveCompilerGeneratedWrappers(string input)
     {
         var result = new StringBuilder();
@@ -711,8 +1084,8 @@ public static partial class AssertExtensions
 
         while (i < input.Length)
         {
-            if (TryRemoveWrapper(input, ref i, "value(", RemoveCompilerGeneratedWrappers, result) ||
-                TryRemoveWrapper(input, ref i, "ArrayLength(", content => RemoveCompilerGeneratedWrappers(content) + ".Length", result))
+            if (TryRemoveWrapper(input, ref i, ValueWrapperPattern, RemoveCompilerGeneratedWrappers, result) ||
+                TryRemoveWrapper(input, ref i, ArrayLengthWrapperPattern, content => RemoveCompilerGeneratedWrappers(content) + ".Length", result))
             {
                 continue;
             }
@@ -724,9 +1097,14 @@ public static partial class AssertExtensions
         return result.ToString();
     }
 
+    /// <summary>
+    /// Generic helper method to try removing a specific wrapper pattern from the input string.
+    /// Uses a transformation function to convert the unwrapped content as needed.
+    /// </summary>
     private static bool TryRemoveWrapper(string input, ref int index, string pattern,
         Func<string, string> transform, StringBuilder result)
     {
+        // Check if the pattern exists at the current index
         if (index > input.Length - pattern.Length ||
             !string.Equals(input.Substring(index, pattern.Length), pattern, StringComparison.Ordinal))
         {
@@ -737,7 +1115,7 @@ public static partial class AssertExtensions
         int parenCount = 1;
         int i = start;
 
-        // Find matching closing parenthesis
+        // Find matching closing parenthesis by counting nesting levels
         while (i < input.Length && parenCount > 0)
         {
             if (input[i] == '(')
@@ -752,36 +1130,40 @@ public static partial class AssertExtensions
             i++;
         }
 
+        // If we found a complete wrapper, extract and transform the content
         if (parenCount == 0)
         {
-            // Extract content and apply transformation
             string content = input.Substring(start, i - start - 1);
             result.Append(transform(content));
             index = i;
             return true;
         }
 
-        // Malformed, don't consume the pattern
+        // Malformed wrapper, don't consume the pattern
         return false;
     }
 
-    private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details)
+    /// <summary>
+    /// Attempts to add an expression's value to the details dictionary using the cached value.
+    /// Returns true if the value was added, false if the key already exists.
+    /// </summary>
+    private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache)
     {
+        // Don't overwrite existing entries
         if (details.ContainsKey(displayName))
         {
             return false;
         }
 
-        try
+        // Use cached value if available
+        if (evaluationCache.TryGetValue(expr, out object? cachedValue))
         {
-            object? value = Expression.Lambda(expr).Compile().DynamicInvoke();
-            details[displayName] = value;
-        }
-        catch
-        {
-            details[displayName] = "<Failed to evaluate>";
+            details[displayName] = cachedValue;
+            return true;
         }
 
+        // Mark as failed if we couldn't evaluate it
+        details[displayName] = FailedToEvaluate;
         return true;
     }
 
