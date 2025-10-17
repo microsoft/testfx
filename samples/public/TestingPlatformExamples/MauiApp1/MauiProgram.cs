@@ -27,6 +27,13 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
+        string cacheDir = FileSystem.CacheDirectory;
+
+#if ANDROID
+
+        cacheDir = Android.App.Application.Context.CacheDir!.AbsolutePath;
+
+#endif
         return builder.Build();
     }
 }

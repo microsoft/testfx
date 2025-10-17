@@ -17,36 +17,28 @@ using Microsoft.Testing.Platform.Capabilities;
 using Xunit;
 using System.Collections.Generic;
 using XUnitTestFx = Xunit.v3;
+using System.Collections.ObjectModel;
 
 namespace MauiApp1;
 
 public partial class MainPage : ContentPage
 {
     int count = 0;
+    ITestApplication testApplication;
+
+    ObservableCollection<string> Logs = new ObservableCollection<string>();
 
     public MainPage()
     {
         InitializeComponent();
         this.Loaded += OnLoaded;
+        cvLogs.ItemsSource = Logs;
     }
 
     private async void OnLoaded(object? sender, EventArgs e)
     {
-        // Create the test application builder
-
-    }
-
-    private async void OnCounterClicked(object? sender, EventArgs e)
-    {
-        count++;
-
-        if (count == 1)
-            CounterBtn.Text = $"Clicked {count} time";
-        else
-            CounterBtn.Text = $"Clicked {count} times";
-
-        SemanticScreenReader.Announce(CounterBtn.Text);
-
+        Logs.Clear();
+        Logs.Add("Loaded the testApplicationBuilder");
         string cacheDir = FileSystem.CacheDirectory;
 
 #if ANDROID
@@ -58,17 +50,28 @@ public partial class MainPage : ContentPage
             "--results-directory", cacheDir
             });
 
+        //testApplicationBuilder.TestHost.AddTestHostApplicationLifetime(serviceProvider
+        //    => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
+        //testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
+        //    => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
+        testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
+            => new DisplayDataConsumer(serviceProvider.GetOutputDevice(), Logs));
+
         // Register the xUnit test framework using the proper registration method
         testApplicationBuilder.RegisterTestFramework(
             _ => new XunitFrameworkCapabilities(),
             (capabilities, serviceProvider) => new XunitFramework(capabilities, serviceProvider));
 
-        //testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider =>
-        //    new MonitorTestHost(serviceProvider.GetOutputDevice()));
+        testApplication = await testApplicationBuilder.BuildAsync();
 
-        // Build and run the test application
-        using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
+    }
+
+    private async void OnCounterClicked(object? sender, EventArgs e)
+    {
+        count++;
+        Logs.Add("Start running tests");
         await testApplication.RunAsync();
+        Logs.Add("Finished running tests");
     }
 }
 
