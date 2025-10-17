@@ -27,27 +27,27 @@ public static class Program
         testApplicationBuilder.CommandLine.AddProvider(() => new TestingFrameworkCommandLineOptions());
 
         // In-process extensions
-        testApplicationBuilder.TestHost.AddTestHostApplicationLifetime(serviceProvider
-            => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
-        testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
-            => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
-        testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
-            => new DisplayDataConsumer(serviceProvider.GetOutputDevice()));
+        //testApplicationBuilder.TestHost.AddTestHostApplicationLifetime(serviceProvider
+        //    => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
+        //testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
+        //    => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
+        //testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
+        //    => new DisplayDataConsumer(serviceProvider.GetOutputDevice()));
 
-        // Out-of-process extensions
-        testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(_
-            => new SetEnvironmentVariableForTestHost());
-        testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider =>
-            new MonitorTestHost(serviceProvider.GetOutputDevice()));
+        //// Out-of-process extensions
+        //testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(_
+        //    => new SetEnvironmentVariableForTestHost());
+        //testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider =>
+        //    new MonitorTestHost(serviceProvider.GetOutputDevice()));
 
-        // In-process composite extension SessionLifeTimeHandler+DataConsumer
-        CompositeExtensionFactory<DisplayCompositeExtensionFactorySample> compositeExtensionFactory = new(serviceProvider => new DisplayCompositeExtensionFactorySample(serviceProvider.GetOutputDevice()));
-        testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
-        testApplicationBuilder.TestHost.AddDataConsumer(compositeExtensionFactory);
+        //// In-process composite extension SessionLifeTimeHandler+DataConsumer
+        //CompositeExtensionFactory<DisplayCompositeExtensionFactorySample> compositeExtensionFactory = new(serviceProvider => new DisplayCompositeExtensionFactorySample(serviceProvider.GetOutputDevice()));
+        //testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        //testApplicationBuilder.TestHost.AddDataConsumer(compositeExtensionFactory);
 
-        // Register public extensions
-        // Trx
-        testApplicationBuilder.AddTrxReportProvider();
+        //// Register public extensions
+        //// Trx
+        //testApplicationBuilder.AddTrxReportProvider();
 
         using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
         return await testApplication.RunAsync();
