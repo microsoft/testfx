@@ -31,6 +31,9 @@
       <group targetFramework="net9.0">
         <dependency id="MSTest.Analyzers" version="$Version$" />
       </group>
+      <group targetFramework="net10.0">
+        <dependency id="MSTest.Analyzers" version="$Version$" />
+      </group>
     </dependencies>
     <readme>PACKAGE.md</readme>
   </metadata>
@@ -85,6 +88,15 @@
     <file src="net9.0-windows10.0.17763.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net9.0\uwp" />
     <file src="net9.0-windows10.0.17763.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net9.0\uwp" />
     <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net9.0\MSTest.TestFramework.targets" target="build\net9.0\" />
+
+    <!-- net10.0 -->
+    <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" target="buildTransitive\net10.0\" />
+    <file src="net10.0\MSTest.TestFramework.dll" target="lib\net10.0\" />
+    <file src="net10.0\MSTest.TestFramework.xml" target="lib\net10.0\" />
+    <file src="net10.0\**\MSTest.TestFramework.resources.dll" target="lib\net10.0\" />
+    <file src="net10.0\MSTest.TestFramework.Extensions.dll" target="buildTransitive\net10.0\" />
+    <file src="net10.0\MSTest.TestFramework.Extensions.xml" target="buildTransitive\net10.0\" />
+    <file src="$RepoRoot$src\TestFramework\TestFramework.Extensions\build\net10.0\MSTest.TestFramework.targets" target="build\net10.0\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />

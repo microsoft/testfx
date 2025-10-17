@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <!-- While we are referencing MSTest here already, we don't get Microsoft.Testing.Platform.MSBuild props transitively. -->

@@ -11,6 +11,10 @@
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
       </group>
+      <group targetFramework="net10.0">
+        <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />
+        <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
+      </group>
     </dependencies>
     <readme>PACKAGE.md</readme>
   </metadata>
@@ -34,6 +38,15 @@
     <file src="net9.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="buildTransitive\net9.0\" />
     <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net9.0\MSTest.TestAdapter.props" target="build\net9.0\" />
     <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net9.0\MSTest.TestAdapter.targets" target="build\net9.0\" />
+
+    <!-- net10.0 -->
+    <file src="net10.0\buildTransitive\common\MSTest.TestAdapter.props" target="buildTransitive\net10.0\MSTest.TestAdapter.props" />
+    <file src="net10.0\buildTransitive\common\MSTest.TestAdapter.targets" target="buildTransitive\net10.0\MSTest.TestAdapter.targets" />
+    <file src="net10.0\MSTestAdapter.PlatformServices.dll" target="buildTransitive\net10.0\" />
+    <file src="net10.0\MSTest.TestAdapter.dll" target="buildTransitive\net10.0\" />
+    <file src="net10.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="buildTransitive\net10.0\" />
+    <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net10.0\MSTest.TestAdapter.props" target="build\net10.0\" />
+    <file src="$RepoRoot$src\Adapter\MSTest.TestAdapter\build\net10.0\MSTest.TestAdapter.targets" target="build\net10.0\" />
 
     <!-- Localization -->
     <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->
