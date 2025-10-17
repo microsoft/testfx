@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net48;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net462;net48;$(SupportedNetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);$(WinUiMinimum)</TargetFrameworks>
-    <IsNetCoreApp Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
+    <IsNetCoreApp Condition=" $([System.String]::Copy('$(SupportedNetFrameworks)').Contains('$(TargetFramework)')) OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</AssemblyName>
     <UseInternalTestFramework>true</UseInternalTestFramework>

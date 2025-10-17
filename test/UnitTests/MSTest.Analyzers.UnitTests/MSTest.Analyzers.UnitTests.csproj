@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <!-- Don't use net462 as analyzer testing library brings Newtonsoft.Json 9.0.1 via NuGet.Packaging -->
-    <TargetFrameworks>net472;net8.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net8.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">$(SupportedNetFrameworks)</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    
+
     <!-- Analyzers project need to explicitly exclude compile and runtime assets from MSTest.TestFramework NuGet package -->
     <!-- This is to ensure that the assembly built from source is what is being used in tests -->
     <!-- This will exclude compile and runtime assets from NuGet so that they flow via ProjectReference -->
