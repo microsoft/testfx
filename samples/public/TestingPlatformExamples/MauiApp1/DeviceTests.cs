@@ -1,21 +1,41 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.Maui.Devices;
-using Microsoft.Maui.Networking;
-
 using Xunit;
 
 namespace MauiApp1;
 
 public class DeviceTests
 {
+
+    [Fact]
+    public void Button_Clicked()
+    {
+
+        var layout = new Grid();
+
+        var button = new Button
+        {
+            Text = "Text",
+            //  Background = new LinearGradient(Colors.Red, Colors.Orange),
+        };
+
+        layout.Add(button);
+
+        var clicked = false;
+
+        button.Clicked += delegate
+        {
+            clicked = true;
+        };
+
+        // Simulate button click
+        button.SendClicked();
+
+        Assert.Equal(clicked, true);
+    }
+
+
     [Fact]
     public void DeviceInfo_Returns_ValidDeviceType()
     {

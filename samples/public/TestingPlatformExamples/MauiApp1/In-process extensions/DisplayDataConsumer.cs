@@ -1,20 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice;
 
-namespace MauiApp1;
-
+namespace MauiApp1.InProcess;
 internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
@@ -30,6 +24,7 @@ internal sealed class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProd
     public string Description => "This extension display in console the testnode id and display name of TestNodeUpdateMessage data type.";
 
     ObservableCollection<string> _logs;
+
     public DisplayDataConsumer(IOutputDevice outputDevice, ObservableCollection<string> logs)
     {
         _outputDevice = outputDevice;

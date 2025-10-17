@@ -18,6 +18,7 @@ using Xunit;
 using System.Collections.Generic;
 using XUnitTestFx = Xunit.v3;
 using System.Collections.ObjectModel;
+using MauiApp1.InProcess;
 
 namespace MauiApp1;
 
@@ -50,10 +51,10 @@ public partial class MainPage : ContentPage
             "--results-directory", cacheDir
             });
 
-        //testApplicationBuilder.TestHost.AddTestHostApplicationLifetime(serviceProvider
-        //    => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
-        //testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
-        //    => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
+        testApplicationBuilder.TestHost.AddTestHostApplicationLifetime(serviceProvider
+            => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice(), Logs));
+        testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
+            => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice(), Logs));
         testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
             => new DisplayDataConsumer(serviceProvider.GetOutputDevice(), Logs));
 
