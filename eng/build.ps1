@@ -34,6 +34,15 @@ Param(
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
+# Workaround for DOTNET_HOST_PATH not being set by older MSBuild
+# Removal is tracked by https://github.com/dotnet/roslyn/issues/80742
+if (-not $env:DOTNET_HOST_PATH) {
+    $env:DOTNET_HOST_PATH = Join-Path (Join-Path (Join-Path $PSScriptRoot '..') '.dotnet') 'dotnet'
+    if (-not (Test-Path $env:DOTNET_HOST_PATH)) {
+      $env:DOTNET_HOST_PATH = "$($env:DOTNET_HOST_PATH).exe"
+    }
+}
+
 if ($vs -or $vscode) {
     . $PSScriptRoot\common\tools.ps1
 
@@ -52,7 +61,7 @@ if ($vs -or $vscode) {
     # Disable .NET runtime signature validation errors which errors for local builds
     $env:VSDebugger_ValidateDotnetDebugLibSignatures=0;
 
-    # Enables the logginc of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
+    # Enables the logging of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
     $env:_TestingPlatformDiagnostics_=1;
 
     if ($vs) {
