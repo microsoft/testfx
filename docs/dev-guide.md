@@ -186,8 +186,6 @@ To open the Visual Studio Developer Command Prompt:
 3. Run the command prompt as Administrator (if needed)
 4. Navigate to the repository root and run `build.cmd`
 
-Alternatively, you can use the `open-vs.cmd` script which sets up the correct environment.
-
 ## Visual Studio version requirement
 
 If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher. Opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.
