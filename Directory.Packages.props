@@ -57,7 +57,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.6.240923002" />
-    <PackageVersion Include="OpenTelemetry" Version="1.13.0" />
+    <PackageVersion Include="OpenTelemetry" Version="1.13.1" />
     <PackageVersion Include="Polyfill" Version="9.0.0-beta.14" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
