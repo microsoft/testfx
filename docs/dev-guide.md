@@ -167,6 +167,27 @@ If you are working with Visual Studio, we recommend opening it through the `open
 
 Inside Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
 
+## Troubleshooting
+
+### Missing UAP tooling targets
+
+If you encounter errors similar to:
+
+```text
+C:\Users\<username>\.nuget\packages\msbuild.sdk.extras\3.0.44\Build\LanguageTargets\CheckMissing.targets(44,5): error : The specified language targets for uap10.0.16299 is missing. Ensure correct tooling is installed for 'uap'. Missing: 'C:\Program Files\Microsoft Visual Studio\xx\xxxx\MSBuild\Microsoft\WindowsXaml\v18.0\Microsoft.Windows.UI.Xaml.CSharp.targets'
+```
+
+This indicates that MSBuild cannot locate the required Universal Windows Platform (UWP) build targets. To resolve this issue, ensure you run the build using the **Visual Studio Developer Command Prompt** instead of a regular command prompt or PowerShell session. The Developer Command Prompt sets up the necessary environment variables and paths for MSBuild to find all required tooling.
+
+To open the Visual Studio Developer Command Prompt:
+
+1. Open the Start menu
+2. Search for "Developer Command Prompt for VS..."
+3. Run the command prompt as Administrator (if needed)
+4. Navigate to the repository root and run `build.cmd`
+
+Alternatively, you can use the `open-vs.cmd` script which sets up the correct environment.
+
 ## Visual Studio version requirement
 
 If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher. Opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.
