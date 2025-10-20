@@ -136,6 +136,9 @@ extends:
                 /p:ProductsToBuild=$(_Products)
                 /p:Test=false
               name: Build
+              env:
+                # https://github.com/microsoft/testfx/issues/6767
+                DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
               displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
