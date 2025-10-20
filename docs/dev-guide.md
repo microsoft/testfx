@@ -171,20 +171,30 @@ Inside Visual Studio, all projects can be built normally. All but acceptance tes
 
 ### Missing UAP tooling targets
 
+
 If you encounter errors similar to:
 
 ```text
 C:\Users\<username>\.nuget\packages\msbuild.sdk.extras\3.0.44\Build\LanguageTargets\CheckMissing.targets(44,5): error : The specified language targets for uap10.0.16299 is missing. Ensure correct tooling is installed for 'uap'. Missing: 'C:\Program Files\Microsoft Visual Studio\xx\xxxx\MSBuild\Microsoft\WindowsXaml\vXX.0\Microsoft.Windows.UI.Xaml.CSharp.targets'
 ```
 
-This indicates that MSBuild cannot locate the required Universal Windows Platform (UWP) build targets. To resolve this issue, ensure you run the build using the **Visual Studio Developer Command Prompt** instead of a regular command prompt or PowerShell session. The Developer Command Prompt sets up the necessary environment variables and paths for MSBuild to find all required tooling.
+This error means that MSBuild cannot find the required Universal Windows Platform (UWP) build targets. This is usually because:
 
-To open the Visual Studio Developer Command Prompt:
+- The required workloads (such as UWP development) are not installed in the Visual Studio instance being used for the build.
+- The build is being run from a command-line environment that does not match the Visual Studio instance where the workloads are installed.
 
-1. Open the Start menu
-2. Search for "Developer Command Prompt for VS..."
-3. Run the command prompt as Administrator (if needed)
-4. Navigate to the repository root and run `build.cmd`
+**How to resolve:**
+
+1. Make sure the required workloads are installed in the Visual Studio instance you intend to use. (See the Prerequisites section above for the list of workloads.)
+2. If you are building from a regular command prompt or PowerShell, MSBuild will use the latest Visual Studio installed on your system. The required workloads must be installed in that version.
+3. If you have multiple Visual Studio versions and the required workloads are installed in a version that is not the latest, you must use the Developer Command Prompt for that specific Visual Studio version. This ensures MSBuild uses the correct toolset and workloads.
+4. To open the correct Developer Command Prompt:
+  - Open the Start menu
+  - Search for "Developer Command Prompt for VS <version>" (e.g., VS 2022)
+  - Run the command prompt as Administrator (if needed)
+  - Navigate to the repository root and run `build.cmd`
+
+In summary: The required workloads must be installed in the Visual Studio instance being used for the build. If you have multiple Visual Studio installations, always use the Developer Command Prompt for the version with the required workloads, or ensure the latest VS has them installed if using a generic command-line.
 
 ## Visual Studio version requirement
 
