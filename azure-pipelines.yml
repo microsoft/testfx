@@ -107,6 +107,9 @@ stages:
             /p:Test=false
             /p:FastAcceptanceTest=true
           name: Build
+          env:
+            # https://github.com/microsoft/testfx/issues/6767
+            DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
           displayName: Build
 
         - task: PublishBuildArtifacts@1
