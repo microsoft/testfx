@@ -174,7 +174,7 @@ Inside Visual Studio, all projects can be built normally. All but acceptance tes
 If you encounter errors similar to:
 
 ```text
-C:\Users\<username>\.nuget\packages\msbuild.sdk.extras\3.0.44\Build\LanguageTargets\CheckMissing.targets(44,5): error : The specified language targets for uap10.0.16299 is missing. Ensure correct tooling is installed for 'uap'. Missing: 'C:\Program Files\Microsoft Visual Studio\xx\xxxx\MSBuild\Microsoft\WindowsXaml\v18.0\Microsoft.Windows.UI.Xaml.CSharp.targets'
+C:\Users\<username>\.nuget\packages\msbuild.sdk.extras\3.0.44\Build\LanguageTargets\CheckMissing.targets(44,5): error : The specified language targets for uap10.0.16299 is missing. Ensure correct tooling is installed for 'uap'. Missing: 'C:\Program Files\Microsoft Visual Studio\xx\xxxx\MSBuild\Microsoft\WindowsXaml\vXX.0\Microsoft.Windows.UI.Xaml.CSharp.targets'
 ```
 
 This indicates that MSBuild cannot locate the required Universal Windows Platform (UWP) build targets. To resolve this issue, ensure you run the build using the **Visual Studio Developer Command Prompt** instead of a regular command prompt or PowerShell session. The Developer Command Prompt sets up the necessary environment variables and paths for MSBuild to find all required tooling.
