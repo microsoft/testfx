@@ -171,7 +171,6 @@ Inside Visual Studio, all projects can be built normally. All but acceptance tes
 
 ### Missing UAP tooling targets
 
-
 If you encounter errors similar to:
 
 ```text
@@ -189,10 +188,13 @@ This error means that MSBuild cannot find the required Universal Windows Platfor
 2. If you are building from a regular command prompt or PowerShell, MSBuild will use the latest Visual Studio installed on your system. The required workloads must be installed in that version.
 3. If you have multiple Visual Studio versions and the required workloads are installed in a version that is not the latest, you must use the Developer Command Prompt for that specific Visual Studio version. This ensures MSBuild uses the correct toolset and workloads.
 4. To open the correct Developer Command Prompt:
-  - Open the Start menu
-  - Search for "Developer Command Prompt for VS <version>" (e.g., VS 2022)
-  - Run the command prompt as Administrator (if needed)
-  - Navigate to the repository root and run `build.cmd`
+
+   - Open the Start menu
+   - Search for "Developer Command Prompt for VS \<version\>" (e.g., VS 2022)
+   - Run the command prompt as Administrator (if needed)
+   - Navigate to the repository root and run `build.cmd`
+
+5. Alternatively, you can use the `open-vs.cmd` script at the repo root, which sets up the environment for the correct Visual Studio instance.
 
 In summary: The required workloads must be installed in the Visual Studio instance being used for the build. If you have multiple Visual Studio installations, always use the Developer Command Prompt for the version with the required workloads, or ensure the latest VS has them installed if using a generic command-line.
 
