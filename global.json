@@ -19,7 +19,10 @@
       ]
     },
     "vs": {
-      "version": "17.14.10"
+      "version": "17.14.10",
+      "components": [
+        "Microsoft.VisualStudio.Workload.Universal"
+      ]
     }
   },
   "sdk": {
