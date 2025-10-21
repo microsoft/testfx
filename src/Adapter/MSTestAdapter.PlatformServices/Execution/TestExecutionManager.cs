@@ -308,7 +308,7 @@ internal class TestExecutionManager
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
         TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
-        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElement(source))];
+        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElementWithUpdatedSource(source))];
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
@@ -455,7 +455,7 @@ internal class TestExecutionManager
             }
 
             hasAnyRunnableTests = true;
-            var unitTestElement = currentTest.ToUnitTestElement(source);
+            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
 
             testExecutionRecorder.RecordStart(currentTest);
 
@@ -517,7 +517,7 @@ internal class TestExecutionManager
             }
 
             Trait trait = currentTest.Traits.First(t => t.Name == EngineConstants.FixturesTestTrait);
-            var unitTestElement = currentTest.ToUnitTestElement(source);
+            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
             FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
 
             if (fixtureTestResult.IsExecuted)

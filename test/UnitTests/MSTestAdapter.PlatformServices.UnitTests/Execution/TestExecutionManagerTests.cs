@@ -248,7 +248,7 @@ public class TestExecutionManagerTests : TestContainer
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockFileOperations.Verify(
-            fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp")), It.IsAny<bool>()),
+            fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp"))),
             Times.AtLeastOnce);
     }
 
@@ -567,7 +567,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -586,8 +586,8 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
-            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
-                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
+                .Returns((string assemblyName) => originalFileOperation.LoadAssembly(assemblyName));
 
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
@@ -626,7 +626,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -645,8 +645,8 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
-            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
-                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
+                .Returns((string assemblyName) => originalFileOperation.LoadAssembly(assemblyName));
 
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
@@ -727,7 +727,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -750,8 +750,8 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
-            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
-                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
+                .Returns((string assemblyName) => originalFileOperation.LoadAssembly(assemblyName));
 
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
@@ -814,7 +814,7 @@ public class TestExecutionManagerTests : TestContainer
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName)!;
-        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, isAsync: false);
+        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, displayName: null);
         UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }
@@ -824,9 +824,9 @@ public class TestExecutionManagerTests : TestContainer
         var testablePlatformService = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = testablePlatformService;
 
-        testablePlatformService.MockFileOperations.Setup(td => td.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+        testablePlatformService.MockFileOperations.Setup(td => td.LoadAssembly(It.IsAny<string>()))
             .Returns(
-                (string assemblyName, bool reflectionOnly) =>
+                (string assemblyName) =>
                 {
                     string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
                     return Assembly.Load(new AssemblyName(fileNameWithoutExtension));

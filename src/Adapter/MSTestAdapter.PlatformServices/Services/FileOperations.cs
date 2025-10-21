@@ -27,10 +27,8 @@ internal sealed class FileOperations : IFileOperations
     /// Loads an assembly.
     /// </summary>
     /// <param name="assemblyName"> The assembly name. </param>
-    /// <param name="isReflectionOnly">Indicates whether this should be a reflection only load.</param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
-    public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
+    public Assembly LoadAssembly(string assemblyName)
     {
 #if NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 #if WIN_UI
@@ -48,32 +46,10 @@ internal sealed class FileOperations : IFileOperations
 
         return assembly;
 #elif NETFRAMEWORK
-        if (isReflectionOnly)
-        {
-            return Assembly.ReflectionOnlyLoadFrom(assemblyName);
-        }
-        else
-        {
-            Assembly assembly = _assemblyCache.GetOrAdd(assemblyName, Assembly.LoadFrom);
-            return assembly;
-        }
+        Assembly assembly = _assemblyCache.GetOrAdd(assemblyName, Assembly.LoadFrom);
+        return assembly;
 #endif
     }
-
-    /// <summary>
-    /// Gets the path to the .DLL of the assembly.
-    /// </summary>
-    /// <param name="assembly">The assembly.</param>
-    /// <returns>Path to the .DLL of the assembly.</returns>
-    public string? GetAssemblyPath(Assembly assembly)
-#if NETSTANDARD || (NETCOREAPP && !WINDOWS_UWP) || NETFRAMEWORK
-        // This method will never be called in source generator mode, we are providing a different provider for file operations.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-        => assembly.Location;
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-#elif WINDOWS_UWP
-        => null; // TODO: what are the options here?
-#endif
 
     /// <summary>
     /// Verifies if file exists in context.

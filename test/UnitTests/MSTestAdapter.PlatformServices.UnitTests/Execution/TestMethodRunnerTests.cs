@@ -39,8 +39,8 @@ public class TestMethodRunnerTests : TestContainer
         _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         _testMethodAttribute = new TestMethodAttribute();
 
-        _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>());
+        _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", displayName: null);
+        _testContextImplementation = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), null, null);
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
         _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
@@ -387,7 +387,7 @@ public class TestMethodRunnerTests : TestContainer
 
     private async Task RunTestMethodWithEmptyDataSourceShouldFailIfConsiderEmptyDataSourceAsInconclusiveIsNotTrueHelper(bool considerEmptyAsInconclusive)
     {
-        Mock<IReflectionOperations2>? existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
+        Mock<IReflectionOperations>? existingMock = _testablePlatformServiceProvider.MockReflectionOperations;
         try
         {
             // We want this test to go through the "real" reflection to hit the product code path relevant for the test.

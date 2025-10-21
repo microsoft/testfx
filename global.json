@@ -19,7 +19,10 @@
       ]
     },
     "vs": {
-      "version": "17.14.10"
+      "version": "17.14.10",
+      "components": [
+        "Microsoft.VisualStudio.Workload.Universal"
+      ]
     }
   },
   "sdk": {
@@ -36,7 +39,7 @@
     "runner": "Microsoft.Testing.Platform"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25504.3",
+    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25520.4",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

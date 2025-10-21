@@ -141,7 +141,7 @@ public class MSTestDiscovererTests : TestContainer
             .Returns(true);
         _mockTestSourceHandler.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), source)).Returns(true);
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
@@ -163,7 +163,6 @@ public class MSTestDiscovererTests : TestContainer
             <RunSettings>
               <MSTest>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <ForcedLegacyMode>true</ForcedLegacyMode>
                 <IgnoreTestImpact>true</IgnoreTestImpact>
               </MSTest>
             </RunSettings>

@@ -32,4 +32,24 @@ internal interface IReflectionOperations
     /// <param name="type"> The attribute type. </param>
     /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
     object[] GetCustomAttributes(Assembly assembly, Type type);
+
+    ConstructorInfo[] GetDeclaredConstructors(Type classType);
+
+    MethodInfo[] GetDeclaredMethods(Type classType);
+
+    PropertyInfo[] GetDeclaredProperties(Type type);
+
+    Type[] GetDefinedTypes(Assembly assembly);
+
+    MethodInfo[] GetRuntimeMethods(Type type);
+
+    MethodInfo? GetRuntimeMethod(Type declaringType, string methodName, Type[] parameters, bool includeNonPublic);
+
+    PropertyInfo? GetRuntimeProperty(Type classType, string propertyName, bool includeNonPublic);
+
+    Type? GetType(string typeName);
+
+    Type? GetType(Assembly assembly, string typeName);
+
+    object? CreateInstance(Type type, object?[] parameters);
 }

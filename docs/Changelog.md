@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.0.1" />[4.0.1] - 2025-10-14
+
+See full log [of v4.0.0...v4.0.1](https://github.com/microsoft/testfx/compare/v4.0.0...v4.0.1)
+
+### Fixed
+
+* Fix deployment regression by @Youssef1313 in [#6718](https://github.com/microsoft/testfx/pull/6718)
+
+### Artifacts
+
+* MSTest: [4.0.1](https://www.nuget.org/packages/MSTest/4.0.1)
+* MSTest.TestFramework: [4.0.1](https://www.nuget.org/packages/MSTest.TestFramework/4.0.1)
+* MSTest.TestAdapter: [4.0.1](https://www.nuget.org/packages/MSTest.TestAdapter/4.0.1)
+* MSTest.Analyzers: [4.0.1](https://www.nuget.org/packages/MSTest.Analyzers/4.0.1)
+* MSTest.Sdk: [4.0.1](https://www.nuget.org/packages/MSTest.Sdk/4.0.1)
+* MSTest.SourceGeneration: [2.0.0-alpha.25514.6](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.25514.6)
+* MSTest.Engine: [2.0.0-alpha.25514.6](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.25514.6)
+
+## <a name="4.0.0" />[4.0.0] - 2025-10-07
+
+See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v3.11.0...v4.0.0)
+
+### Added
+
+* Support for `CallerArgumentExpression` in all Assert APIs for better messages of assertion failures.
+* Added `Assert.That`, which provides easy way to write any assertion boolean expression with clear error message in case of assertion failures.
+
+### Changed
+
+* Breaking changes: see [Migrate from MSTest v3 to MSTest v4](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-migration-v3-v4).
+
+### Artifacts
+
+* MSTest: [4.0.0](https://www.nuget.org/packages/MSTest/4.0.0)
+* MSTest.TestFramework: [4.0.0](https://www.nuget.org/packages/MSTest.TestFramework/4.0.0)
+* MSTest.TestAdapter: [4.0.0](https://www.nuget.org/packages/MSTest.TestAdapter/4.0.0)
+* MSTest.Analyzers: [4.0.0](https://www.nuget.org/packages/MSTest.Analyzers/4.0.0)
+* MSTest.Sdk: [4.0.0](https://www.nuget.org/packages/MSTest.Sdk/4.0.0)
+* MSTest.SourceGeneration: [2.0.0-alpha.25507.7](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.25507.7)
+* MSTest.Engine: [2.0.0-alpha.25507.7](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.25507.7)
+
 ## <a name="3.11.0" />[3.11.0] - 2025-10-01
 
 See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/v3.10.5...v3.11.0)
