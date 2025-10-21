@@ -16,7 +16,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
 
     public async Task<int> RunAsync()
     {
-        using IActivity? activity = _serviceProvider.GetPlatformOTelService()?.StartActivity("TestHostOrchestratorHost");
+        using IPlatformActivity? activity = _serviceProvider.GetPlatformOTelService()?.StartActivity("TestHostOrchestratorHost");
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
         if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
         {

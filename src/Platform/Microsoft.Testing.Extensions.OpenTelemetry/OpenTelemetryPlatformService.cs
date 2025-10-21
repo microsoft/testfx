@@ -15,9 +15,9 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
     private readonly ActivitySource _activitySource = new(ActivitySourceName, PlatformVersion.Version);
     private readonly Meter _meter = new(MeterName, PlatformVersion.Version);
 
-    public IActivity? TestFrameworkActivity { get; set; }
+    public IPlatformActivity? TestFrameworkActivity { get; set; }
 
-    public IActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default)
+    public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default)
         => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, startTime: startTime, parentId: parentId) is Activity activity
             ? new ActivityWrapper(activity)
             : null;

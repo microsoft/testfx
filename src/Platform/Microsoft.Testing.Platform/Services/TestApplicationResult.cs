@@ -28,7 +28,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly ICounter<int>? _totalUnknownedTests;
     private readonly IHistogram<double>? _totalDuration;
     private readonly bool _isDiscovery;
-    private readonly Dictionary<TestNodeUid, IActivity?> _testActivities = [];
+    private readonly Dictionary<TestNodeUid, IPlatformActivity?> _testActivities = [];
     private int _failedTestsCount;
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
@@ -227,7 +227,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty)
     {
-        if (!_testActivities.TryGetValue(testNode.Uid, out IActivity? activity))
+        if (!_testActivities.TryGetValue(testNode.Uid, out IPlatformActivity? activity))
         {
             return;
         }

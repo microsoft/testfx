@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal interface IActivity : IDisposable
+internal interface IPlatformActivity : IDisposable
 {
     string? Id { get; }
 
-    IActivity SetTag(string key, object? value);
+    IPlatformActivity SetTag(string key, object? value);
 }

@@ -32,7 +32,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         int exitCode = ExitCodes.GenericFailure;
         IPlatformOpenTelemetryService? platformOTelService = null;
-        IActivity? activity = null;
+        IPlatformActivity? activity = null;
         try
         {
             platformOTelService = ServiceProvider.GetPlatformOTelService();
@@ -118,7 +118,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                 // Get the test application lifecycle callbacks to be able to call the before run
                 foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
                 {
-                    using IActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
+                    using IPlatformActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
                     await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
                 }
             }
@@ -136,7 +136,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             {
                 foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
                 {
-                    using IActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
+                    using IPlatformActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
                     await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
                     await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
                 }
@@ -214,7 +214,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
         {
-            using IActivity? activity = otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags());
+            using IPlatformActivity? activity = otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags());
             await testSessionLifetimeHandler.OnTestSessionStartingAsync(testSessionContext).ConfigureAwait(false);
         }
 

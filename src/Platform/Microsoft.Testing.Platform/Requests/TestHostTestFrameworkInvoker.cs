@@ -86,7 +86,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-        using IActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags());
+        using IPlatformActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags());
         otelService?.TestFrameworkActivity = testFrameworkActivity;
         using SemaphoreSlim requestSemaphore = new(0, 1);
         await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);

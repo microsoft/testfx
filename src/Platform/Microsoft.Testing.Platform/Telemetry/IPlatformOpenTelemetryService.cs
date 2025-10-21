@@ -14,9 +14,9 @@ namespace Microsoft.Testing.Platform.Telemetry;
 /// </remarks>
 internal interface IPlatformOpenTelemetryService : IDisposable
 {
-    IActivity? TestFrameworkActivity { get; set; }
+    IPlatformActivity? TestFrameworkActivity { get; set; }
 
-    IActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default);
+    IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default);
 
     ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct;

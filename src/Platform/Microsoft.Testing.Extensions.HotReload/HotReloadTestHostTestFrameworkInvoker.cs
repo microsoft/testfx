@@ -52,7 +52,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
             }
 
             IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-            using (IActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags()))
+            using (IPlatformActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags()))
             {
                 using SemaphoreSlim requestSemaphore = new(1);
                 otelService?.TestFrameworkActivity = testFrameworkActivity;

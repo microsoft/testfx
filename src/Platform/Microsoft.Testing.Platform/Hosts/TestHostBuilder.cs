@@ -133,7 +133,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.TryAddService(configuration);
 
         // When building the otel service, it will register a platform OTel service that we use to compensate the lack of access to System.DiagnosticsSource
-        IActivity? builderActivity = null;
+        IPlatformActivity? builderActivity = null;
         if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
         {
             serviceProvider.AddService(otelService);
