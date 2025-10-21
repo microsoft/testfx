@@ -162,6 +162,47 @@ public sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Comma
         return hashCode.ToHashCode();
     }
 
+    /// <summary>
+    /// Reconstructs the command line from the parsed result.
+    /// </summary>
+    /// <returns>A string representation of the command line.</returns>
+    public string ToCommandLine()
+    {
+        var builder = new StringBuilder();
+        
+        if (ToolName is not null)
+        {
+            builder.Append(ToolName);
+            builder.Append(' ');
+        }
+
+        foreach (CommandLineParseOption option in Options)
+        {
+            builder.Append("--");
+            builder.Append(option.Name);
+            
+            foreach (string arg in option.Arguments)
+            {
+                builder.Append(' ');
+                // Quote arguments that contain spaces
+                if (arg.Contains(' '))
+                {
+                    builder.Append('"');
+                    builder.Append(arg);
+                    builder.Append('"');
+                }
+                else
+                {
+                    builder.Append(arg);
+                }
+            }
+            
+            builder.Append(' ');
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
     /// <inheritdoc />
     public override string ToString()
     {
