@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
   <!-- NuGet properties -->
@@ -30,10 +30,6 @@ This package provides Open Telemetry for the platform.]]>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Polyfills" />
   </ItemGroup>
 
 </Project>
