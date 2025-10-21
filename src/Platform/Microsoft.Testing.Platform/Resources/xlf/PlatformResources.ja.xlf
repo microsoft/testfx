@@ -205,13 +205,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">診断ファイル (レベル '{0}' で非同期フラッシュ): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">診断ファイル (レベル '{0}' で同期フラッシュ): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -781,7 +781,7 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="translated">テレメトリ 
+        <target state="translated">テレメトリ
 ---------
 Microsoft Testing Platform は、お客様のエクスペリエンスの向上に役立てるために使用状況データを収集します。データは Microsoft によって収集され、誰とも共有されません。
 テレメトリをオプトアウトするには、お気に入りのシェルを使用して、TESTINGPLATFORM_TELEMETRY_OPTOUT または DOTNET_CLI_TELEMETRY_OPTOUT 環境変数を '1' または 'true' に設定します。
@@ -991,6 +991,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">合計</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientFactoryAlreadyRegistered">
+        <source>A chat client factory has already been registered.</source>
+        <target state="new">A chat client factory has already been registered.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
         <note />
       </trans-unit>
     </body>

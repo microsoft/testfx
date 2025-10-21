@@ -205,13 +205,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">診斷檔案 (具有非同步排清的層級 '{0}'): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">診斷檔案 (具有同步排清的層級 '{0}'): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -588,7 +588,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' 需要單一非零的正整數值 
+        <target state="translated">'--minimum-expected-tests' 需要單一非零的正整數值
 (例如 '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
@@ -990,6 +990,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">總計</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientFactoryAlreadyRegistered">
+        <source>A chat client factory has already been registered.</source>
+        <target state="new">A chat client factory has already been registered.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
         <note />
       </trans-unit>
     </body>

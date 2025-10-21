@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
+using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -33,6 +34,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly PlatformOutputDeviceManager _outputDisplay = new();
+
+    public IChatClientManager ChatClientManager { get; } = new ChatClientManager();
 
     public ITestFrameworkManager? TestFramework { get; set; }
 
@@ -309,6 +312,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             serviceProvider.GetEnvironment(),
             policiesService);
         serviceProvider.AddService(testApplicationResult);
+
+        // Add Chat Client if AI capabilities are enabled
+        ChatClientManager.RegisterChatClientFactory(serviceProvider);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 

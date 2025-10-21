@@ -205,13 +205,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação assíncrona): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação de sincronização): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -505,7 +505,7 @@ O arquivo será gravado no diretório de saída com o nome log_[yyMMddHHmmssfff]
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Diretório de saída do log de eventos de diagnóstico 
+        <target state="translated">Diretório de saída do log de eventos de diagnóstico
 Se não for especificado, o arquivo será gerado dentro do diretório padrão “TestResults”.</target>
         <note />
       </trans-unit>
@@ -806,7 +806,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Detalhamento da saída ao relatar testes 
+        <target state="translated">Detalhamento da saída ao relatar testes
 Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal”.</target>
         <note />
       </trans-unit>
@@ -990,6 +990,16 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">total</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientFactoryAlreadyRegistered">
+        <source>A chat client factory has already been registered.</source>
+        <target state="new">A chat client factory has already been registered.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
         <note />
       </trans-unit>
     </body>
