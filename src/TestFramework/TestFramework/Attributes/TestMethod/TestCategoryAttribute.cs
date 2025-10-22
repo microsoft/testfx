@@ -18,11 +18,20 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     /// </param>
     public TestCategoryAttribute(string testCategory)
     {
-        List<string> categories =
-        [
-            testCategory
-        ];
-        TestCategories = categories;
+        // Treat empty or whitespace-only strings as null/uncategorized
+        // This ensures empty categories are not added to the list
+        if (string.IsNullOrWhiteSpace(testCategory))
+        {
+            TestCategories = [];
+        }
+        else
+        {
+            List<string> categories =
+            [
+                testCategory
+            ];
+            TestCategories = categories;
+        }
     }
 
     /// <summary>

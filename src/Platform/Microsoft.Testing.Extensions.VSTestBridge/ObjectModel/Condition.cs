@@ -80,8 +80,13 @@ internal sealed class Condition
         switch (Operation)
         {
             case Operation.Equal:
+                // Special case: empty string filter value matches null/empty/whitespace property (uncategorized tests)
+                if (string.IsNullOrWhiteSpace(Value))
+                {
+                    result = multiValue is null or { Length: 0 };
+                }
                 // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
-                if (multiValue != null)
+                else if (multiValue != null)
                 {
                     foreach (string propertyValue in multiValue)
                     {
@@ -96,18 +101,27 @@ internal sealed class Condition
                 break;
 
             case Operation.NotEqual:
-                // all values in multi-valued property should not match 'this.Value' for NotEqual to evaluate true.
-                result = true;
-
-                // if value is null.
-                if (multiValue != null)
+                // Special case: empty string filter value matches null/empty property (uncategorized tests)
+                // So NotEqual to empty string should match tests WITH categories
+                if (string.IsNullOrWhiteSpace(Value))
                 {
-                    foreach (string propertyValue in multiValue)
+                    result = multiValue is not null and { Length: > 0 };
+                }
+                else
+                {
+                    // all values in multi-valued property should not match 'this.Value' for NotEqual to evaluate true.
+                    result = true;
+
+                    // if value is null.
+                    if (multiValue != null)
                     {
-                        result = result && !string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase);
-                        if (!result)
+                        foreach (string propertyValue in multiValue)
                         {
-                            break;
+                            result = result && !string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase);
+                            if (!result)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -115,8 +129,13 @@ internal sealed class Condition
                 break;
 
             case Operation.Contains:
+                // Special case: empty string filter value matches null/empty property (uncategorized tests)
+                if (string.IsNullOrWhiteSpace(Value))
+                {
+                    result = multiValue is null or { Length: 0 };
+                }
                 // if any value in multi-valued property contains 'this.Value' for 'Contains' to be true.
-                if (multiValue != null)
+                else if (multiValue != null)
                 {
                     foreach (string propertyValue in multiValue)
                     {
@@ -132,18 +151,27 @@ internal sealed class Condition
                 break;
 
             case Operation.NotContains:
-                // all values in multi-valued property should not contain 'this.Value' for NotContains to evaluate true.
-                result = true;
-
-                if (multiValue != null)
+                // Special case: empty string filter value matches null/empty property (uncategorized tests)
+                // So NotContains empty string should match tests WITH categories
+                if (string.IsNullOrWhiteSpace(Value))
                 {
-                    foreach (string propertyValue in multiValue)
+                    result = multiValue is not null and { Length: > 0 };
+                }
+                else
+                {
+                    // all values in multi-valued property should not contain 'this.Value' for NotContains to evaluate true.
+                    result = true;
+
+                    if (multiValue != null)
                     {
-                        RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result && !propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
-                        if (!result)
+                        foreach (string propertyValue in multiValue)
                         {
-                            break;
+                            RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
+                            result = result && !propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
+                            if (!result)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -177,15 +205,17 @@ internal sealed class Condition
             ThrownFormatExceptionForInvalidCondition(conditionString);
         }
 
-        for (int index = 0; index < 3; index++)
+        // Property name (parts[0]) and operator (parts[1]) must not be empty
+        if (RoslynString.IsNullOrWhiteSpace(parts[0]) || RoslynString.IsNullOrWhiteSpace(parts[1]))
         {
-            if (RoslynString.IsNullOrWhiteSpace(parts[index]))
-            {
-                ThrownFormatExceptionForInvalidCondition(conditionString);
-            }
-
-            parts[index] = parts[index].Trim();
+            ThrownFormatExceptionForInvalidCondition(conditionString);
         }
+
+        // parts[2] (value) can be empty to support filtering for uncategorized tests
+        // Trim all parts
+        parts[0] = parts[0].Trim();
+        parts[1] = parts[1].Trim();
+        parts[2] = parts[2].Trim();
 
         Operation operation = GetOperator(parts[1]);
         Condition condition = new(parts[0], operation, FilterHelper.Unescape(parts[2]));
