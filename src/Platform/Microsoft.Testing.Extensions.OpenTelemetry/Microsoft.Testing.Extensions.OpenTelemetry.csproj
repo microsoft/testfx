@@ -26,6 +26,11 @@ This package provides Open Telemetry for the platform.]]>
 
   <ItemGroup>
     <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Polyfills" />
   </ItemGroup>
 
   <ItemGroup>
