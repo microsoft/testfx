@@ -266,9 +266,14 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress -p:UsingDotNetTest=true
+          - task: PowerShell@2
             name: Test
             displayName: Test
+            inputs:
+              targetType: filePath
+              filePath: './run.ps1'
+              failOnStderr: true
+              showWarnings: true
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
@@ -279,6 +284,13 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Dumps'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/dumps'
+              ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)_Dumps
             condition: always()
 
           - task: CopyFiles@2
