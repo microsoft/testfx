@@ -33,7 +33,7 @@
   </Folder>
   <Folder Name="/src/1 - Platform and Extensions/">
     <File Path="src/Platform/Directory.Build.props" />
-    <Project Path="src/Platform/Microsoft.Testing.Extensions.AzFoundry/Microsoft.Testing.Extensions.AzFoundry.csproj" Id="60c660b9-6d0c-4967-b21c-e1c34257cc75" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.AzFoundry/Microsoft.Testing.Extensions.AzFoundry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport/Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.CrashDump/Microsoft.Testing.Extensions.CrashDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
