@@ -21,7 +21,7 @@ if (-not $processes) {
     Write-Host "No dotnet processes found."
 }
 
-Start-Sleep -Duration ([TimeSpan]::FromMinutes(30))
+Start-Sleep -Duration ([TimeSpan]::FromMinutes(20))
 
 Write-Host "Timedout!! Dumping now..."
 
@@ -35,7 +35,7 @@ foreach ($process in $processes) {
     try {
         $client = [Microsoft.Diagnostics.NETCore.Client.DiagnosticsClient]::new($process.Id);
         $fullPath =  $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("$dir/$name.dmp")
-        $client.WriteDump("Normal", $fullPath);
+        $client.WriteDump("Triage", $fullPath, $true);
         Write-Host "Dump written"
         try {
             $process.Kill()
