@@ -19,11 +19,14 @@ Write-Host "Getting processes..."
 $processes = Get-Process -Name "Microsoft.Testing*","MSTest*" -ErrorAction Ignore
 
 Write-Host "Got processes..."
+Write-Host $processes
 
 if (-not $processes) {
+    Write-Host "No processes found."
     Set-Content -Path "$dir/output.txt" -Value "No dotnet processes found".
-    Write-Host "No dotnet processes found."
 }
+
+Write-Host "Iterating."
 
 foreach ($process in $processes) {
     $name = "$($process.Id)_$($process.Name)"
