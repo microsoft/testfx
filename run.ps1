@@ -8,24 +8,19 @@ Import-Module "$PSScriptRoot/Microsoft.Diagnostics.NETCore.Client.dll"
 
 $dir = "$PSScriptRoot/dumps"
 
-Start-Sleep -Duration ([TimeSpan]::FromSeconds(2))
+Start-Sleep -Duration ([TimeSpan]::FromMinutes(20))
 
-Write-Host "Waited two seconds.."
+Write-Host "Timedout!! Dumping now..."
 
-$processes = Get-Process -Name "dotnet" -ErrorAction Ignore
+New-Item -ItemType Directory -Path $dir -Force -ErrorAction Ignore
 
-Write-Host "Getting dotnet processes"
+$processes = Get-Process -Name "Microsoft.Testing*","MSTest*" -ErrorAction Ignore
 
 if (-not $processes) {
     Set-Content -Path "$dir/output.txt" -Value "No dotnet processes found".
     Write-Host "No dotnet processes found."
 }
 
-Start-Sleep -Duration ([TimeSpan]::FromMinutes(20))
-
-Write-Host "Timedout!! Dumping now..."
-
-New-Item -ItemType Directory -Path $dir -Force -ErrorAction Ignore
 foreach ($process in $processes) {
     $name = "$($process.Id)_$($process.Name)"
 
