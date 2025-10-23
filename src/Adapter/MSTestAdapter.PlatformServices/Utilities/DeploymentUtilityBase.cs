@@ -53,13 +53,25 @@ internal abstract class DeploymentUtilityBase
     /// Create deployment directories.
     /// </summary>
     /// <param name="runContext">The run context.</param>
+    /// <param name="firstTestSource">
+    /// The path to the test assembly of the first test case. In most cases, all
+    /// test cases belong to the same assembly, but not guaranteed. We are using the path from
+    /// the first test case as a "best effort" implementation. DeploymentItem isn't correctly designed and should be deprecated in future.
+    /// </param>
     /// <returns>TestRunDirectories instance.</returns>
-    public TestRunDirectories CreateDeploymentDirectories(IRunContext? runContext)
+    public TestRunDirectories CreateDeploymentDirectories(IRunContext? runContext, string? firstTestSource)
     {
         string resultsDirectory = GetTestResultsDirectory(runContext);
         string rootDeploymentDirectory = GetRootDeploymentDirectory(resultsDirectory);
 
-        var result = new TestRunDirectories(rootDeploymentDirectory);
+#if NETFRAMEWORK
+        bool isAppDomainCreationDisabled = runContext?.RunSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runContext.RunSettings.SettingsXml);
+#else
+        // AppDomains are only supported in .NET Framework.
+        const bool isAppDomainCreationDisabled = true;
+#endif
+
+        var result = new TestRunDirectories(rootDeploymentDirectory, firstTestSource, isAppDomainCreationDisabled);
 
         FileUtility.CreateDirectoryIfNotExists(rootDeploymentDirectory);
         FileUtility.CreateDirectoryIfNotExists(result.InDirectory);
@@ -221,6 +233,10 @@ internal abstract class DeploymentUtilityBase
                     if (!destToSource.TryGetValue(relativeDestination, out string? value))
                     {
                         destToSource.Add(relativeDestination, fileToDeploy);
+                        if (fileToDeploy == destination)
+                        {
+                            continue;
+                        }
 
                         // Now, finally we can copy the file...
                         destination = FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string? warning);
