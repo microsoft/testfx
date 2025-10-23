@@ -14,7 +14,11 @@ Write-Host "Timedout!! Dumping now..."
 
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Ignore
 
+Write-Host "Getting processes..."
+
 $processes = Get-Process -Name "Microsoft.Testing*","MSTest*" -ErrorAction Ignore
+
+Write-Host "Got processes..."
 
 if (-not $processes) {
     Set-Content -Path "$dir/output.txt" -Value "No dotnet processes found".
