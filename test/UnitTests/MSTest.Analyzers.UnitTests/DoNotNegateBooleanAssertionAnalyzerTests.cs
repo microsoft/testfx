@@ -546,6 +546,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
     public async Task WhenAssertIsTrueWithNegatedNullCheck_Diagnostic()
     {
         string code = """
+            #nullable enable
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -561,6 +562,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             """;
 
         string fixedCode = """
+            #nullable enable
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
