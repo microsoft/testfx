@@ -1594,7 +1594,6 @@ public partial class AssertTests : TestContainer
             stringPreview);
     }
 
-
     public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringOneCharLargerThanPreviewWindow()
     {
         // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
