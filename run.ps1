@@ -36,7 +36,7 @@ foreach ($process in $processes) {
 
     Write-Host "Dumping $name"
 
-    dotnet stack report --process-id $process.Id
+    # dotnet stack report --process-id $process.Id
     try {
         # $client = [Microsoft.Diagnostics.NETCore.Client.DiagnosticsClient]::new($process.Id);
         # $fullPath =  $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("$dir/$name.dmp")
