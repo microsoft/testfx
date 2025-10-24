@@ -1638,11 +1638,7 @@ public partial class AssertTests : TestContainer
             """);
     }
 
-<<<<<<< Updated upstream
-    public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithStartAndEndCut()
-=======
     public void CreateStringPreviews_DiffNeverPointsAtEllipsis_Generated()
->>>>>>> Stashed changes
     {
         // Generate all combinations of string lengths and diff to see if in any of them we point to ellipsis.
         StringBuilder s = new();
