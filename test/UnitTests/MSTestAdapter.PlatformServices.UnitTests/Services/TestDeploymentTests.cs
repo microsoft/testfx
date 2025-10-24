@@ -169,7 +169,7 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
@@ -199,7 +199,7 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseAndHasNoDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
@@ -222,7 +222,7 @@ public class TestDeploymentTests : TestContainer
 
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToTrueButHasNoDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
@@ -393,7 +393,14 @@ public class TestDeploymentTests : TestContainer
     {
         string currentExecutingFolder = Path.GetDirectoryName(typeof(TestDeploymentTests).Assembly.Location)!;
 
-        testRunDirectories = new TestRunDirectories(currentExecutingFolder);
+        const bool isAppDomainCreationDisabled =
+#if NETFRAMEWORK
+            false;
+#else
+            true;
+#endif
+
+        testRunDirectories = new TestRunDirectories(currentExecutingFolder, Path.Combine(currentExecutingFolder, "asm.dll"), isAppDomainCreationDisabled);
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
