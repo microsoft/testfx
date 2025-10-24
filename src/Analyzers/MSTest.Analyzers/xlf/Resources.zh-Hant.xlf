@@ -301,6 +301,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">DataRow 應該有效</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionFix">
+        <source>Use 'Assert.{0}' instead</source>
+        <target state="new">Use 'Assert.{0}' instead</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
+        <source>Use proper Assert methods for all negated assertions</source>
+        <target state="new">Use proper Assert methods for all negated assertions</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
         <source>Do not negate boolean assertions, instead use the opposite assertion</source>
         <target state="translated">請勿否定布林值判斷提示，而是使用相反的判斷提示</target>
