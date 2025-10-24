@@ -10,7 +10,7 @@ Write-Host "Started dotnet test"
 
 dotnet tool install --global dotnet-stack
 
-Start-Sleep -Duration ([TimeSpan]::FromMinutes(1))
+Start-Sleep -Duration ([TimeSpan]::FromMinutes(20))
 
 Write-Host "Timedout!! Dumping now..."
 
