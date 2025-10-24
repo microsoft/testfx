@@ -1,6 +1,10 @@
 Write-Host "Starting dotnet test"
 
-Start-Job { $global:PSScriptRoot = $using:PSScriptRoot; dotnet test --solution NonWindowsTests.slnf --no-build -bl:$PSScriptRoot/artifacts/TestResults/Debug/TestStep.binlog --no-progress -p:UsingDotNetTest=true }
+if ($env:_BuildConfig -eq 'Debug') {
+    Start-Job { $global:PSScriptRoot = $using:PSScriptRoot; dotnet test --solution NonWindowsTests.slnf --no-build -bl:$PSScriptRoot/artifacts/TestResults/Debug/TestStep.binlog --no-progress -p:UsingDotNetTest=true }
+} else {
+    dotnet test --solution NonWindowsTests.slnf --no-build --no-progress -p:UsingDotNetTest=true
+}
 
 Write-Host "Started dotnet test"
 
@@ -22,6 +26,8 @@ $processes = Get-Process -Name "Microsoft.Testing*","MSTest*","dotnet" -ErrorAct
 
 Write-Host "Got processes..."
 Write-Host $processes
+
+ps -eo pid,command
 
 # dotnet stack ps
 
