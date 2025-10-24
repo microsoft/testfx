@@ -23,7 +23,7 @@ $processes = Get-Process -Name "Microsoft.Testing*","MSTest*","dotnet" -ErrorAct
 Write-Host "Got processes..."
 Write-Host $processes
 
-dotnet stack ps
+# dotnet stack ps
 
 if (-not $processes) {
     Write-Host "No processes found."
