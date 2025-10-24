@@ -370,6 +370,21 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>();
     }
+
+    /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a no element (empty collection).
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_AssertCustomMessage_WithEmptyCollection_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList();
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'collection'.");
+    }
     #endregion
 
     #region Contains Tests
