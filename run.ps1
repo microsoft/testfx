@@ -1,10 +1,7 @@
 Write-Host "Starting dotnet test"
 
-if ($env:_BuildConfig -eq 'Debug') {
-    Start-Job { $global:PSScriptRoot = $using:PSScriptRoot; dotnet test --solution NonWindowsTests.slnf --no-build -bl:$PSScriptRoot/artifacts/TestResults/Debug/TestStep.binlog --no-progress -p:UsingDotNetTest=true }
-} else {
-    dotnet test --solution NonWindowsTests.slnf --no-build --no-progress -p:UsingDotNetTest=true
-}
+
+Start-Job { $global:PSScriptRoot = $using:PSScriptRoot; dotnet test --solution NonWindowsTests.slnf --no-build -bl:$PSScriptRoot/artifacts/TestResults/Debug/TestStep.binlog --no-progress -p:UsingDotNetTest=true }
 
 Write-Host "Started dotnet test"
 
