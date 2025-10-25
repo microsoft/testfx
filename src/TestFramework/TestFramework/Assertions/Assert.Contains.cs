@@ -136,6 +136,49 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item.</returns>
+    public static object ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        int actualCount = 0;
+        object? firstItem = null;
+
+        foreach (object? item in collection)
+        {
+            if (actualCount == 0)
+            {
+                firstItem = item;
+            }
+
+            actualCount++;
+
+            // Early exit if we already know there's more than one item
+            if (actualCount > 1)
+            {
+                break;
+            }
+        }
+
+        if (actualCount == 1)
+        {
+            return firstItem!;
+        }
+
+        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+        ThrowAssertContainsSingleFailed(actualCount, userMessage);
+
+        // Unreachable code but compiler cannot work it out
+        return default!;
+    }
+
+    /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
@@ -166,6 +209,52 @@ public sealed partial class Assert
 
         // Unreachable code but compiler cannot work it out
         return default;
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static object ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        var matchingElements = new List<object>();
+
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                matchingElements.Add(item);
+
+                // Early exit optimization - no need to continue if we already have more than one match
+                if (matchingElements.Count > 1)
+                {
+                    break;
+                }
+            }
+        }
+
+        int actualCount = matchingElements.Count;
+        if (actualCount == 1)
+        {
+            return matchingElements[0];
+        }
+
+        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+        ThrowAssertSingleMatchFailed(actualCount, userMessage);
+
+        // Unreachable code but compiler cannot work it out
+        return default!;
     }
 
     #endregion // ContainsSingle
