@@ -63,6 +63,9 @@ jobs:
       -configuration $(_BuildConfig)
       -prepareMachine
       /p:Test=false
+    env:
+      # https://github.com/microsoft/testfx/issues/6767
+      DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
     displayName: Windows Build
 
   - task: CodeQL3000Finalize@0

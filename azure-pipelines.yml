@@ -107,6 +107,9 @@ stages:
             /p:Test=false
             /p:FastAcceptanceTest=true
           name: Build
+          env:
+            # https://github.com/microsoft/testfx/issues/6767
+            DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
           displayName: Build
 
         - task: PublishBuildArtifacts@1
@@ -263,12 +266,18 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress -p:UsingDotNetTest=true
+          - task: PowerShell@2
             name: Test
             displayName: Test
+            inputs:
+              targetType: filePath
+              filePath: './run.ps1'
+              failOnStderr: true
+              showWarnings: true
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_TEST_TRACEFILE: $(Build.SourcesDirectory)/dumps/tracelog.txt
               DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           - task: PublishBuildArtifacts@1
@@ -276,6 +285,13 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
               ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            condition: always()
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Dumps'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/dumps'
+              ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)_Dumps
             condition: always()
 
           - task: CopyFiles@2
