@@ -1483,14 +1483,23 @@ internal static class StringPreviewHelper
         int shorterStringLength = shorterString.Length;
         int longerStringLength = longerString.Length;
 
-        // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ...
-        // make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
-        bool markerPointsAtEllipsis = longerStringLength - shorterStringLength > ellipsisLength && shorterStringLength - diffIndex < ellipsisLength;
+        // End marker will point to the end of the shorter string, but the end of the longer string will be replaced by ... when it reaches the end of the preview.
+        // Make sure we don't point at the dots. To do this we need to make sure the strings are cut at the beginning, rather than preferring the maximum context shown.
+        //
+        // Marker needs to point where ellipsis would be when we shorten the longer string.
+        bool markerPointsAtTheEnd = shorterStringLength - diffIndex <= ellipsisLength;
+        // Strings need to have different lengths, for same length strings we don't add ellipsis.
+        bool stringsHaveDifferentLength = longerStringLength > shorterStringLength;
+        // Shorter string needs to be long enough to fill the preview window to the point where ellipsis shows up (last 3 chars).
+        bool shorterStringIsLongEnoughToFillPreviewWindow = shorterStringLength >= fullPreviewLength - ellipsisLength;
+        bool markerPointsAtEllipsis = markerPointsAtTheEnd && stringsHaveDifferentLength && shorterStringIsLongEnoughToFillPreviewWindow;
         int ellipsisSpaceOrZero = markerPointsAtEllipsis ? ellipsisLength + 2 : 0;
 
-        // Find the end of the string that we will show, either then end of the shorter string, or the end of the preview window.
+        // Find the end of the string that we will show, either the end of the shorter string, or the end of the preview window.
+        int endOfString = Math.Min(diffIndex + contextLength, shorterStringLength);
+
         // Then calculate the start of the preview from that. This makes sure that if diff is close end of the string we show as much as we can.
-        int start = Math.Min(diffIndex + contextLength, shorterStringLength) - fullPreviewLength + ellipsisSpaceOrZero;
+        int start = endOfString - fullPreviewLength + ellipsisSpaceOrZero;
 
         // If the string is shorter than the preview, start cutting from 0, otherwise start cutting from the calculated start.
         int cutStart = Math.Max(0, start);
