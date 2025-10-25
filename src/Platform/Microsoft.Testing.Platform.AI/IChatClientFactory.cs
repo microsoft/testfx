@@ -13,6 +13,7 @@ public interface IChatClientFactory
     /// <summary>
     /// Creates a new instance of <see cref="IChatClient"/>.
     /// </summary>
-    /// <returns>An instance of <see cref="IChatClient"/>.</returns>
-    IChatClient CreateChatClient();
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation that returns an instance of <see cref="IChatClient"/>.</returns>
+    Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken);
 }

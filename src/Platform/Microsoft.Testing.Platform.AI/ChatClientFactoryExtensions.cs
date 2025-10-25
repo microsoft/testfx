@@ -9,9 +9,9 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.AI;
 
 /// <summary>
-/// Extension methods for AI-related functionality.
+/// Extension methods for chat client factory.
 /// </summary>
-public static class AIExtensions
+public static class ChatClientFactoryExtensions
 {
     /// <summary>
     /// Adds a chat client factory to the test application builder.
@@ -32,7 +32,13 @@ public static class AIExtensions
     /// Gets a chat client from the service provider.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
-    /// <returns>An instance of <see cref="IChatClient"/>.</returns>
-    public static IChatClient? GetChatClient(this IServiceProvider serviceProvider)
-        => serviceProvider.GetServiceInternal<IChatClientFactory>()?.CreateChatClient();
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation that returns an instance of <see cref="IChatClient"/>.</returns>
+    public static async Task<IChatClient?> GetChatClientAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        IChatClientFactory? factory = serviceProvider.GetServiceInternal<IChatClientFactory>();
+        return factory is null
+            ? null
+            : await factory.CreateChatClientAsync(cancellationToken).ConfigureAwait(false);
+    }
 }

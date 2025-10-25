@@ -13,7 +13,7 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 #endif
 using Microsoft.Extensions.AI;
-using Microsoft.Testing.Extensions.AzFoundry;
+using Microsoft.Testing.Extensions.AzureFoundry;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.TestHost;
@@ -40,7 +40,7 @@ public class Program
             // testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
             // Add Chat client factory
-            testApplicationBuilder.AddChatClientFactory(_ => new AzureOpenAIChatClientFactory());
+            testApplicationBuilder.AddChatClientFactory(sp => new AzureOpenAIChatClientFactory(sp));
 
             // Test a custom local test framework
             testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));
@@ -108,7 +108,7 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
     {
         try
         {
-            using IChatClient? chatClient = _serviceProvider.GetChatClient();
+            IChatClient? chatClient = await _serviceProvider.GetChatClientAsync(context.CancellationToken);
             if (chatClient != null)
             {
                 ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);

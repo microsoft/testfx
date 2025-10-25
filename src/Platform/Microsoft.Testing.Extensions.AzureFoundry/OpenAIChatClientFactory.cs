@@ -6,34 +6,36 @@ using System.ClientModel;
 using Azure.AI.OpenAI;
 
 using Microsoft.Extensions.AI;
-using Microsoft.Testing.Extensions.AzFoundry.Resources;
+using Microsoft.Testing.Extensions.AzureFoundry.Resources;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Services;
 
-namespace Microsoft.Testing.Extensions.AzFoundry;
+namespace Microsoft.Testing.Extensions.AzureFoundry;
 
 /// <summary>
 /// Factory for creating Azure OpenAI chat clients.
 /// </summary>
 public sealed class AzureOpenAIChatClientFactory : IChatClientFactory
 {
-    private readonly IEnvironment _environment;
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureOpenAIChatClientFactory"/> class.
     /// </summary>
-    /// <param name="environment">The environment abstraction.</param>
-    public AzureOpenAIChatClientFactory(IEnvironment environment)
+    /// <param name="serviceProvider">The service provider.</param>
+    public AzureOpenAIChatClientFactory(IServiceProvider serviceProvider)
     {
-        _environment = environment;
+        _serviceProvider = serviceProvider;
     }
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
     {
-        string? endpoint = _environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-        string? deploymentName = _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
-        string? apiKey = _environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+        IEnvironment environment = _serviceProvider.GetRequiredService<IEnvironment>();
+        string? endpoint = environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        string? deploymentName = environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
+        string? apiKey = environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
         if (string.IsNullOrEmpty(endpoint))
         {
@@ -51,8 +53,8 @@ public sealed class AzureOpenAIChatClientFactory : IChatClientFactory
         }
 
         var client = new AzureOpenAIClient(
-            new Uri(endpoint),
-            new ApiKeyCredential(apiKey));
+            new Uri(endpoint!),
+            new ApiKeyCredential(apiKey!));
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());
     }
