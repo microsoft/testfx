@@ -725,8 +725,8 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="SucceededLowercase" xml:space="preserve">
     <value>succeeded</value>
   </data>
-  <data name="ChatClientFactoryAlreadyRegistered" xml:space="preserve">
-    <value>A chat client factory has already been registered.</value>
+  <data name="ChatClientProviderAlreadyRegistered" xml:space="preserve">
+    <value>A chat client provider has already been registered.</value>
   </data>
   <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
     <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>

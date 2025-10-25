@@ -14,20 +14,26 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions.AzureFoundry;
 
 /// <summary>
-/// Factory for creating Azure OpenAI chat clients.
+/// Provider for creating Azure OpenAI chat clients.
 /// </summary>
-public sealed class AzureOpenAIChatClientFactory : IChatClientFactory
+public sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 {
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AzureOpenAIChatClientFactory"/> class.
+    /// Initializes a new instance of the <see cref="AzureOpenAIChatClientProvider"/> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
-    public AzureOpenAIChatClientFactory(IServiceProvider serviceProvider)
+    public AzureOpenAIChatClientProvider(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
+
+    /// <inheritdoc />
+    public bool SupportsToolCalling => true;
+
+    /// <inheritdoc />
+    public string ModelName => _serviceProvider.GetRequiredService<IEnvironment>().GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)

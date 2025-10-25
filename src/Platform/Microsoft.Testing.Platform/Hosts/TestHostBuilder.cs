@@ -314,7 +314,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.AddService(testApplicationResult);
 
         // Add Chat Client if AI capabilities are enabled
-        ChatClientManager.RegisterChatClientFactory(serviceProvider);
+        ChatClientManager.RegisterChatClientProvider(serviceProvider);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 

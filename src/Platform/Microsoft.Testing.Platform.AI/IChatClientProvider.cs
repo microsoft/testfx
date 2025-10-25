@@ -6,10 +6,20 @@ using Microsoft.Extensions.AI;
 namespace Microsoft.Testing.Platform.AI;
 
 /// <summary>
-/// Factory interface for creating chat clients.
+/// Provider interface for creating and configuring chat clients.
 /// </summary>
-public interface IChatClientFactory
+public interface IChatClientProvider
 {
+    /// <summary>
+    /// Gets a value indicating whether the chat client supports tool calling (e.g., MCP tools or functions).
+    /// </summary>
+    bool SupportsToolCalling { get; }
+
+    /// <summary>
+    /// Gets the name of the model being used by the chat client.
+    /// </summary>
+    string ModelName { get; }
+
     /// <summary>
     /// Creates a new instance of <see cref="IChatClient"/>.
     /// </summary>

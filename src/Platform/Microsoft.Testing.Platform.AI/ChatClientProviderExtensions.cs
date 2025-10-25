@@ -9,23 +9,23 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.AI;
 
 /// <summary>
-/// Extension methods for chat client factory.
+/// Extension methods for chat client provider.
 /// </summary>
-public static class ChatClientFactoryExtensions
+public static class ChatClientProviderExtensions
 {
     /// <summary>
-    /// Adds a chat client factory to the test application builder.
+    /// Adds a chat client provider to the test application builder.
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
-    /// <param name="chatClientFactory">The factory function to create chat client factories.</param>
-    public static void AddChatClientFactory(this ITestApplicationBuilder testApplicationBuilder, Func<IServiceProvider, IChatClientFactory> chatClientFactory)
+    /// <param name="chatClientProvider">The factory function to create chat client providers.</param>
+    public static void AddChatClientProvider(this ITestApplicationBuilder testApplicationBuilder, Func<IServiceProvider, IChatClientProvider> chatClientProvider)
     {
         if (testApplicationBuilder is not TestApplicationBuilder builder)
         {
             throw new InvalidOperationException(PlatformResources.InvalidTestApplicationBuilderTypeForAI);
         }
 
-        builder.ChatClientManager.AddChatClientFactory(chatClientFactory);
+        builder.ChatClientManager.AddChatClientProvider(chatClientProvider);
     }
 
     /// <summary>
@@ -36,9 +36,9 @@ public static class ChatClientFactoryExtensions
     /// <returns>A task representing the asynchronous operation that returns an instance of <see cref="IChatClient"/>.</returns>
     public static async Task<IChatClient?> GetChatClientAsync(this IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
-        IChatClientFactory? factory = serviceProvider.GetServiceInternal<IChatClientFactory>();
-        return factory is null
+        IChatClientProvider? provider = serviceProvider.GetServiceInternal<IChatClientProvider>();
+        return provider is null
             ? null
-            : await factory.CreateChatClientAsync(cancellationToken).ConfigureAwait(false);
+            : await provider.CreateChatClientAsync(cancellationToken).ConfigureAwait(false);
     }
 }

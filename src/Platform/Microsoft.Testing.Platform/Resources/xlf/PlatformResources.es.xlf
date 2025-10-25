@@ -992,9 +992,9 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <target state="translated">total</target>
         <note />
       </trans-unit>
-      <trans-unit id="ChatClientFactoryAlreadyRegistered">
-        <source>A chat client factory has already been registered.</source>
-        <target state="new">A chat client factory has already been registered.</target>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="new">A chat client provider has already been registered.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">

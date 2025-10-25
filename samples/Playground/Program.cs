@@ -39,8 +39,8 @@ public class Program
             // Test MSTest
             // testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
-            // Add Chat client factory
-            testApplicationBuilder.AddChatClientFactory(sp => new AzureOpenAIChatClientFactory(sp));
+            // Add Chat client provider
+            testApplicationBuilder.AddChatClientProvider(sp => new AzureOpenAIChatClientProvider(sp));
 
             // Test a custom local test framework
             testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));

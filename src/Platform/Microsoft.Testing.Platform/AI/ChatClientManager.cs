@@ -8,28 +8,28 @@ namespace Microsoft.Testing.Platform.AI;
 
 internal sealed class ChatClientManager : IChatClientManager
 {
-    private Func<IServiceProvider, object>? _chatClientFactory;
+    private Func<IServiceProvider, object>? _chatClientProvider;
 
-    public void AddChatClientFactory(Func<IServiceProvider, object> chatClientFactory)
+    public void AddChatClientProvider(Func<IServiceProvider, object> chatClientProvider)
     {
-        if (chatClientFactory is null)
+        if (chatClientProvider is null)
         {
-            throw new ArgumentNullException(nameof(chatClientFactory));
+            throw new ArgumentNullException(nameof(chatClientProvider));
         }
 
-        if (_chatClientFactory is not null)
+        if (_chatClientProvider is not null)
         {
-            throw new InvalidOperationException(PlatformResources.ChatClientFactoryAlreadyRegistered);
+            throw new InvalidOperationException(PlatformResources.ChatClientProviderAlreadyRegistered);
         }
 
-        _chatClientFactory = chatClientFactory;
+        _chatClientProvider = chatClientProvider;
     }
 
-    public void RegisterChatClientFactory(ServiceProvider serviceProvider)
+    public void RegisterChatClientProvider(ServiceProvider serviceProvider)
     {
-        if (_chatClientFactory is not null)
+        if (_chatClientProvider is not null)
         {
-            serviceProvider.AddService(_chatClientFactory(serviceProvider));
+            serviceProvider.AddService(_chatClientProvider(serviceProvider));
         }
     }
 }
