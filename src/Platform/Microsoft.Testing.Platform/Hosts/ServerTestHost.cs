@@ -132,6 +132,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
     {
+        using IPlatformActivity? activity = ServiceProvider.GetPlatformOTelService()?.StartActivity("ServerTestHost");
+
         try
         {
             await _logger.LogDebugAsync("Starting server mode").ConfigureAwait(false);

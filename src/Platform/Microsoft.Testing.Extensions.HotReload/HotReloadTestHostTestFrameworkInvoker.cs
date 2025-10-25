@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.Hosting;
 
@@ -28,12 +29,12 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
 
-    public override async Task ExecuteRequestAsync(ITestFramework testFrameworkAdapter, TestExecutionRequest request,
+    public override async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request,
         IMessageBus messageBus, CancellationToken cancellationToken)
     {
         if (!_isHotReloadEnabled)
         {
-            await base.ExecuteRequestAsync(testFrameworkAdapter, request, messageBus, cancellationToken).ConfigureAwait(false);
+            await base.ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -44,16 +45,21 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
         {
             executionCompleted = new();
-            using SemaphoreSlim requestSemaphore = new(1);
             var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
             if (hotReloadOutputDevice is not null)
             {
                 await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
+            IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
+            using (IPlatformActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags()))
+            {
+                using SemaphoreSlim requestSemaphore = new(1);
+                otelService?.TestFrameworkActivity = testFrameworkActivity;
+                await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
+                await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
             if (hotReloadOutputDevice is not null)
             {
