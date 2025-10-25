@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
+    <IsShipping>false</IsShipping>
   </PropertyGroup>
 
   <ItemGroup>
