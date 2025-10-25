@@ -14,7 +14,7 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
-    [DataRow("AppDomainDisabled.runsettings", IgnoreMessage = "https://github.com/microsoft/testfx/issues/6738")]
+    [DataRow("AppDomainDisabled.runsettings")]
     [DataRow("AppDomainEnabled.runsettings")]
     public async Task AssemblyIsLoadedOnceFromDeploymentDirectory(string runsettings)
     {
