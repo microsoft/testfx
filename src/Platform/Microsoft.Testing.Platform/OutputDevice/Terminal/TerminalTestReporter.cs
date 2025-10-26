@@ -474,7 +474,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? errorMessage = index == 0 && customErrorMessage is not null
             ? customErrorMessage
             : exception?.Message;
-        
         string? errorType = exception?.GetType().FullName;
         string? stackTrace = exception?.StackTrace;
         
