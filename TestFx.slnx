@@ -63,6 +63,7 @@
     <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
     <Project Path="src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" />
+    <Project Path="src/Analyzers/Microsoft.Testing.Platform.IPC.SourceGeneration/Microsoft.Testing.Platform.IPC.SourceGeneration.csproj" />
   </Folder>
   <Folder Name="/src/5 - Package/" Id="87d92690-a0c0-3299-b302-eb18ebf7ffb3">
     <Project Path="src/Package/MSTest.Sdk/MSTest.Sdk.csproj" />
@@ -121,6 +122,7 @@
   <Folder Name="/test/UnitTests/" Id="afae3f01-5c40-22b5-606d-a848a5891b0a">
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.IPC.SourceGeneration.UnitTests/Microsoft.Testing.Platform.IPC.SourceGeneration.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
