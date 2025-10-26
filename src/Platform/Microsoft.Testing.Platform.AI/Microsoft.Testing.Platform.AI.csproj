@@ -13,8 +13,4 @@
     <PackageReference Include="Microsoft.Extensions.AI" />
   </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureFoundry" />
-  </ItemGroup>
-
 </Project>
