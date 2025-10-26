@@ -30,6 +30,12 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
     }
 
     /// <inheritdoc />
+    public bool IsAvailable =>
+        !string.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
+        !string.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
+        !string.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
+
+    /// <inheritdoc />
     public bool SupportsToolCalling => true;
 
     /// <inheritdoc />

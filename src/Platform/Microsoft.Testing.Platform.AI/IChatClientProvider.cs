@@ -11,6 +11,12 @@ namespace Microsoft.Testing.Platform.AI;
 public interface IChatClientProvider
 {
     /// <summary>
+    /// Gets a value indicating whether the provider is available and can be used.
+    /// A provider may be registered but not available if required configuration (e.g., environment variables) is missing.
+    /// </summary>
+    bool IsAvailable { get; }
+
+    /// <summary>
     /// Gets a value indicating whether the chat client supports tool calling (e.g., MCP tools or functions).
     /// </summary>
     bool SupportsToolCalling { get; }
