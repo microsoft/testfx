@@ -271,7 +271,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                     if (!alreadyDisposed.Contains(dataConsumer))
                     {
                         await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
-                        alreadyDisposed.Add(service);
+                        alreadyDisposed.Add(dataConsumer);
                     }
                 }
             }
