@@ -60,15 +60,9 @@ public class TaskRunTestMethodAttribute : TestMethodAttribute
             return await ExecuteWithTaskRunAsync(() => _testMethodAttribute.ExecuteAsync(testMethod)).ConfigureAwait(false);
         }
 
-        return await ExecuteWithTaskRunAsync(() => testMethod.InvokeAsync(null)).ConfigureAwait(false);
-    }
-
-    private static async Task<TestResult[]> ExecuteWithTaskRunAsync(Func<Task<TestResult>> executeFunc)
-    {
         // Run the test method in Task.Run so that we can stop awaiting it on timeout
         // while allowing it to complete in the background
-        Task<TestResult> testTask = Task.Run(executeFunc);
-
+        Task<TestResult> testTask = Task.Run(() => testMethod.InvokeAsync(null));
         TestResult result = await testTask.ConfigureAwait(false);
         return [result];
     }
