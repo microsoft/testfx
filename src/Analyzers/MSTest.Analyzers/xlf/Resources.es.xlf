@@ -989,6 +989,21 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Assert.Throws debe contener solo una única instrucción o expresión</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="new">Do not use asserts in catch blocks</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="new">Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use Assert.ThrowsException or Assert.ThrowsExceptionAsync to verify that an exception is thrown, and then make additional assertions on the caught exception outside the try-catch block.</source>
+        <target state="new">Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use Assert.ThrowsException or Assert.ThrowsExceptionAsync to verify that an exception is thrown, and then make additional assertions on the caught exception outside the try-catch block.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
