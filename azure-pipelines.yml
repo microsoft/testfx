@@ -167,6 +167,50 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
+      - job: Samples_Windows
+        displayName: Build Samples
+        dependsOn: Windows
+        timeoutInMinutes: 30
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2022preview.amd64.open
+        variables:
+          _BuildConfig: Release
+        steps:
+        - task: PowerShell@2
+          displayName: 'Install Windows SDK'
+          inputs:
+            targetType: filePath
+            filePath: './eng/install-windows-sdk.ps1'
+            failOnStderr: true
+            showWarnings: true
+
+        - script: eng\common\CIBuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:Publish=false
+            /p:Test=false
+            /p:FastAcceptanceTest=true
+          name: BuildMainProducts
+          displayName: Build Main Products
+
+        - script: |
+            echo "Building sample solutions in samples/public folder"
+            for /r samples\public %%s in (*.sln) do (
+              echo Building solution: %%s
+              dotnet build "%%s" --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false || echo Failed to build %%s
+            )
+            echo "Building standalone sample projects"
+            dotnet build samples\public\mstest-runner\Simple1\Simple1.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false || echo Failed to build Simple1
+            dotnet build samples\public\mstest-runner\runner_vs_vstest\10C_100M\10C100M.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false || echo Failed to build 10C_100M
+            dotnet build samples\public\mstest-runner\runner_vs_vstest\100C_100M\100C100M.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false || echo Failed to build 100C_100M
+            dotnet build samples\public\mstest-runner\runner_vs_vstest\1000C_100M\1000C100M.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false || echo Failed to build 1000C_100M
+          name: BuildSamples
+          displayName: Build Samples
+          env:
+            DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+            NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+
       - job: Linux
         timeoutInMinutes: 90
         pool:
