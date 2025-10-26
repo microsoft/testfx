@@ -48,7 +48,8 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
                 return;
             }
 
-            // Try to get TaskRunTestMethodAttribute symbol (it's a new attribute so it might not exist in older versions)
+            // Try to get TaskRunTestMethodAttribute symbol. It might not exist in older versions,
+            // but that's OK - the analyzer will still work, just without the suppression logic.
             context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTaskRunTestMethodAttribute, out INamedTypeSymbol? taskRunTestMethodAttributeSymbol);
 
             context.RegisterSymbolAction(
@@ -72,10 +73,7 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
             }
 
             // Check if the method uses TaskRunTestMethodAttribute or any derived type
-            if (taskRunTestMethodAttributeSymbol is not null && 
-                attribute.AttributeClass is not null &&
-                (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, taskRunTestMethodAttributeSymbol) ||
-                 attribute.AttributeClass.InheritsFromOrEquals(taskRunTestMethodAttributeSymbol)))
+            if (IsTaskRunTestMethodAttribute(attribute, taskRunTestMethodAttributeSymbol))
             {
                 hasTaskRunTestMethodAttribute = true;
             }
@@ -92,5 +90,16 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
                 context.ReportDiagnostic(syntax.CreateDiagnostic(UseCooperativeCancellationForTimeoutRule));
             }
         }
+    }
+
+    private static bool IsTaskRunTestMethodAttribute(AttributeData attribute, INamedTypeSymbol? taskRunTestMethodAttributeSymbol)
+    {
+        if (taskRunTestMethodAttributeSymbol is null || attribute.AttributeClass is null)
+        {
+            return false;
+        }
+
+        return SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, taskRunTestMethodAttributeSymbol)
+            || attribute.AttributeClass.InheritsFromOrEquals(taskRunTestMethodAttributeSymbol);
     }
 }
