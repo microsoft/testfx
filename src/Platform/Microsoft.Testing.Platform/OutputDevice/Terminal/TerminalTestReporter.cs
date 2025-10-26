@@ -470,7 +470,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private static void FormatErrorMessage(ITerminal terminal, string? customErrorMessage, Exception?[] exceptions, TestOutcome outcome, int index)
     {
         Exception? exception = index < exceptions.Length ? exceptions[index] : null;
-        
         // For the first exception (index 0), use custom error message if provided, otherwise use exception message
         string? errorMessage = index == 0 && customErrorMessage is not null
             ? customErrorMessage
