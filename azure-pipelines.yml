@@ -185,54 +185,14 @@ stages:
             failOnStderr: true
             showWarnings: true
 
-        - script: eng\common\CIBuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            /p:Publish=false
-            /p:Test=false
-            /p:FastAcceptanceTest=true
-          name: BuildMainProducts
-          displayName: Build Main Products
-
-        - script: |
-            setlocal enabledelayedexpansion
-            set "FAILED=0"
-            echo "Building sample solutions in samples/public folder"
-            for /r samples\public %%s in (*.sln) do (
-              echo Building solution: %%s
-              dotnet build "%%s" --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false
-              if !ERRORLEVEL! neq 0 (
-                echo ERROR: Failed to build %%s
-                set "FAILED=1"
-              )
-            )
-            echo "Building standalone sample projects"
-            dotnet build samples\public\mstest-runner\Simple1\Simple1.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false
-            if !ERRORLEVEL! neq 0 (
-              echo ERROR: Failed to build Simple1
-              set "FAILED=1"
-            )
-            dotnet build samples\public\mstest-runner\runner_vs_vstest\10C_100M\10C100M.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false
-            if !ERRORLEVEL! neq 0 (
-              echo ERROR: Failed to build 10C_100M
-              set "FAILED=1"
-            )
-            dotnet build samples\public\mstest-runner\runner_vs_vstest\100C_100M\100C100M.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false
-            if !ERRORLEVEL! neq 0 (
-              echo ERROR: Failed to build 100C_100M
-              set "FAILED=1"
-            )
-            dotnet build samples\public\mstest-runner\runner_vs_vstest\1000C_100M\1000C100M.csproj --configuration $(_BuildConfig) /p:TreatWarningsAsErrors=false
-            if !ERRORLEVEL! neq 0 (
-              echo ERROR: Failed to build 1000C_100M
-              set "FAILED=1"
-            )
-            if "!FAILED!" == "1" (
-              echo One or more samples failed to build
-              exit /b 1
-            )
-          name: BuildSamples
-          displayName: Build Samples
+        - task: PowerShell@2
+          displayName: 'Build Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig)'
+            failOnStderr: false
+            showWarnings: true
           env:
             DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
             NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
