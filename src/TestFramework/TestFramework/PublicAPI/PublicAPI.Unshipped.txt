@@ -1,1 +1,5 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.TaskRunTestMethodAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.TaskRunTestMethodAttribute.ExecuteAsync(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod testMethod) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[]!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.TaskRunTestMethodAttribute.TaskRunTestMethodAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute! testMethodAttribute) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TaskRunTestMethodAttribute.TaskRunTestMethodAttribute(string! callerFilePath = "", int callerLineNumber = -1) -> void

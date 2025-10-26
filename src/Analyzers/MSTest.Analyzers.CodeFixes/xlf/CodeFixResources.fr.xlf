@@ -138,8 +138,33 @@
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
+      <trans-unit id="UseTaskRunTestMethodFix">
+        <source>Use '[TaskRunTestMethod]'</source>
+        <target state="new">Use '[TaskRunTestMethod]'</target>
+        <note />
+      </trans-unit>
         <source>Use 'CooperativeCancellation = true'</source>
+      <trans-unit id="UseTaskRunTestMethodFix">
+        <source>Use '[TaskRunTestMethod]'</source>
+        <target state="new">Use '[TaskRunTestMethod]'</target>
+        <note />
+      </trans-unit>
         <target state="translated">Utilisez 'CooperativeCancellation = true'</target>
+      <trans-unit id="UseTaskRunTestMethodFix">
+        <source>Use '[TaskRunTestMethod]'</source>
+        <target state="new">Use '[TaskRunTestMethod]'</target>
+        <note />
+      </trans-unit>
+        <note />
+      <trans-unit id="UseTaskRunTestMethodFix">
+        <source>Use '[TaskRunTestMethod]'</source>
+        <target state="new">Use '[TaskRunTestMethod]'</target>
+        <note />
+      </trans-unit>
+      </trans-unit>
+      <trans-unit id="UseTaskRunTestMethodFix">
+        <source>Use '[TaskRunTestMethod]'</source>
+        <target state="new">Use '[TaskRunTestMethod]'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">

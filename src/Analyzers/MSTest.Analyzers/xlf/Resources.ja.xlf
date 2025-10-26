@@ -900,18 +900,18 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
-        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="translated">'CooperativeCancellation = true' を明示的にを設定せずに '[Timeout]' を使用することは推奨されません。将来のバージョンでは、協調的キャンセルが既定の動作になります。推奨される動作をオプトインし、破壊的な変更を避けるために、'CooperativeCancellation = true' を設定します。</target>
+        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' or using '[TaskRunTestMethod]' is discouraged as it can lead to dangling tasks. Use '[TaskRunTestMethod]' to run tests in Task.Run with proper timeout handling, or set 'CooperativeCancellation = true' to enable cooperative cancellation behavior.</source>
+        <target state="needs-review-translation">'CooperativeCancellation = true' を明示的にを設定せずに '[Timeout]' を使用することは推奨されません。将来のバージョンでは、協調的キャンセルが既定の動作になります。推奨される動作をオプトインし、破壊的な変更を避けるために、'CooperativeCancellation = true' を設定します。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
-        <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="translated">'[Timeout]' と共に 'CooperativeCancellation = true' を使用して、協調的キャンセルの動作を有効にします</target>
+        <source>Use '[TaskRunTestMethod]' or 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior and avoid dangling tasks</source>
+        <target state="needs-review-translation">'[Timeout]' と共に 'CooperativeCancellation = true' を使用して、協調的キャンセルの動作を有効にします</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
-        <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="translated">'[Timeout]' と共に 'CooperativeCancellation = true' を使用する</target>
+        <source>Use '[TaskRunTestMethod]' or 'CooperativeCancellation = true' with '[Timeout]'</source>
+        <target state="needs-review-translation">'[Timeout]' と共に 'CooperativeCancellation = true' を使用する</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

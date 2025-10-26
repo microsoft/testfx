@@ -900,18 +900,18 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
-        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="translated">L’utilisation de '[Timeout]' sans définir explicitement 'CooperativeCancellation = true' est déconseillée. Dans une future version, l’annulation coopérative deviendra le comportement par défaut. Définissez 'CooperativeCancellation = true' pour adopter le comportement recommandé et éviter les changements incompatibles.</target>
+        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' or using '[TaskRunTestMethod]' is discouraged as it can lead to dangling tasks. Use '[TaskRunTestMethod]' to run tests in Task.Run with proper timeout handling, or set 'CooperativeCancellation = true' to enable cooperative cancellation behavior.</source>
+        <target state="needs-review-translation">L’utilisation de '[Timeout]' sans définir explicitement 'CooperativeCancellation = true' est déconseillée. Dans une future version, l’annulation coopérative deviendra le comportement par défaut. Définissez 'CooperativeCancellation = true' pour adopter le comportement recommandé et éviter les changements incompatibles.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
-        <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="translated">Utilisez 'CooperativeCancellation = true' avec '[Timeout]' pour activer le comportement d’annulation coopératif</target>
+        <source>Use '[TaskRunTestMethod]' or 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior and avoid dangling tasks</source>
+        <target state="needs-review-translation">Utilisez 'CooperativeCancellation = true' avec '[Timeout]' pour activer le comportement d’annulation coopératif</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
-        <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="translated">Utiliser 'CooperativeCancellation = true' avec '[Timeout]'</target>
+        <source>Use '[TaskRunTestMethod]' or 'CooperativeCancellation = true' with '[Timeout]'</source>
+        <target state="needs-review-translation">Utiliser 'CooperativeCancellation = true' avec '[Timeout]'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">

@@ -589,13 +589,13 @@ The type declaring these methods should also respect the following rules:
     <value>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</value>
   </data>
   <data name="UseCooperativeCancellationForTimeoutTitle" xml:space="preserve">
-    <value>Use 'CooperativeCancellation = true' with '[Timeout]'</value>
+    <value>Use '[TaskRunTestMethod]' or 'CooperativeCancellation = true' with '[Timeout]'</value>
   </data>
   <data name="UseCooperativeCancellationForTimeoutMessageFormat" xml:space="preserve">
-    <value>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</value>
+    <value>Use '[TaskRunTestMethod]' or 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior and avoid dangling tasks</value>
   </data>
   <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
-    <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
+    <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' or using '[TaskRunTestMethod]' is discouraged as it can lead to dangling tasks. Use '[TaskRunTestMethod]' to run tests in Task.Run with proper timeout handling, or set 'CooperativeCancellation = true' to enable cooperative cancellation behavior.</value>
   </data>
   <data name="TestContextPropertyUsageTitle" xml:space="preserve">
     <value>TestContext property cannot be accessed in this context</value>

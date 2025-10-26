@@ -48,13 +48,25 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
             return;
         }
 
-        // Register a code action that will invoke the fix
+        // Register code fix to add CooperativeCancellation = true
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseCooperativeCancellationForTimeoutFix,
                 createChangedDocument: c => AddCooperativeCancellationAsync(context.Document, attributeSyntax, c),
-                equivalenceKey: nameof(UseCooperativeCancellationForTimeoutFixer)),
+                equivalenceKey: $"{nameof(UseCooperativeCancellationForTimeoutFixer)}.AddCooperativeCancellation"),
             diagnostic);
+
+        // Register code fix to replace [TestMethod] with [TaskRunTestMethod]
+        // Find the test method to check if it uses [TestMethod] attribute
+        if (attributeSyntax.Parent?.Parent is MethodDeclarationSyntax methodDeclaration)
+        {
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    title: CodeFixResources.UseTaskRunTestMethodFix,
+                    createChangedDocument: c => ReplaceWithTaskRunTestMethodAsync(context.Document, methodDeclaration, c),
+                    equivalenceKey: $"{nameof(UseCooperativeCancellationForTimeoutFixer)}.UseTaskRunTestMethod"),
+                diagnostic);
+        }
     }
 
     private static async Task<Document> AddCooperativeCancellationAsync(Document document, AttributeSyntax attributeSyntax, CancellationToken cancellationToken)
@@ -115,6 +127,47 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
 
         // Replace the old attribute with the new one
         editor.ReplaceNode(attributeSyntax, newAttributeSyntax);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> ReplaceWithTaskRunTestMethodAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
+    {
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+
+        // Find the TestMethod attribute
+        AttributeSyntax? testMethodAttribute = null;
+        foreach (AttributeListSyntax attributeList in methodDeclaration.AttributeLists)
+        {
+            foreach (AttributeSyntax attribute in attributeList.Attributes)
+            {
+                string attributeName = attribute.Name.ToString();
+                if (attributeName is "TestMethod" or "TestMethodAttribute")
+                {
+                    testMethodAttribute = attribute;
+                    break;
+                }
+            }
+
+            if (testMethodAttribute is not null)
+            {
+                break;
+            }
+        }
+
+        if (testMethodAttribute is null)
+        {
+            // No TestMethod attribute found, return unchanged document
+            return document;
+        }
+
+        // Create the new TaskRunTestMethod attribute preserving any arguments
+        AttributeSyntax newAttribute = SyntaxFactory.Attribute(
+            SyntaxFactory.IdentifierName("TaskRunTestMethod"),
+            testMethodAttribute.ArgumentList);
+
+        // Replace the TestMethod attribute with TaskRunTestMethod
+        editor.ReplaceNode(testMethodAttribute, newAttribute);
 
         return editor.GetChangedDocument();
     }
