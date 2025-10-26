@@ -18,20 +18,20 @@ internal sealed class ExceptionFlattener
             return (errorMessage, []);
         }
 
-        List<Exception> exceptions = [exception];
+        List<Exception?> exceptions = [exception];
 
         // Add all inner exceptions. This will flatten top level AggregateExceptions,
         // and all AggregateExceptions that are directly in AggregateExceptions, but won't expand
         // AggregateExceptions that are in non-aggregate exception inner exceptions.
-        IEnumerable<Exception?> aggregateExceptions = exception switch
+        IEnumerable<Exception?> innerExceptionsToProcess = exception switch
         {
             AggregateException aggregate => aggregate.Flatten().InnerExceptions,
             _ => [exception.InnerException],
         };
 
-        foreach (Exception? aggregate in aggregateExceptions)
+        foreach (Exception? innerException in innerExceptionsToProcess)
         {
-            Exception? currentException = aggregate;
+            Exception? currentException = innerException;
             while (currentException is not null)
             {
                 exceptions.Add(currentException);
