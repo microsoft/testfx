@@ -144,4 +144,4 @@ project.fragment.lock.json
 /samples/Playground/
 
 # jetbrains temp
-.idea/
+.idea/global.json.bak

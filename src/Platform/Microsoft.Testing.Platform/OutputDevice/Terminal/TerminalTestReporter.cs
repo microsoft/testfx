@@ -314,14 +314,15 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? standardOutput,
        string? errorOutput)
     {
-        FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
+        (string? customErrorMessage, Exception?[] exceptions) = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             testNodeUid,
             displayName,
             outcome,
             duration,
             informativeMessage,
-            flatExceptions,
+            customErrorMessage,
+            exceptions,
             expected,
             actual,
             standardOutput,
@@ -334,7 +335,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestOutcome outcome,
         TimeSpan duration,
         string? informativeMessage,
-        FlatException[] exceptions,
+        string? customErrorMessage,
+        Exception?[] exceptions,
         string? expected,
         string? actual,
         string? standardOutput,
@@ -380,6 +382,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 outcome,
                 duration,
                 informativeMessage,
+                customErrorMessage,
                 exceptions,
                 expected,
                 actual,
@@ -400,7 +403,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         TestOutcome outcome,
         TimeSpan duration,
         string? informativeMessage,
-        FlatException[] flatExceptions,
+        string? customErrorMessage,
+        Exception?[] exceptions,
         string? expected,
         string? actual,
         string? standardOutput,
@@ -439,14 +443,14 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.AppendLine();
 
         AppendIndentedLine(terminal, informativeMessage, SingleIndentation);
-        FormatErrorMessage(terminal, flatExceptions, outcome, 0);
+        FormatErrorMessage(terminal, customErrorMessage, exceptions, outcome, 0);
         FormatExpectedAndActual(terminal, expected, actual);
-        FormatStackTrace(terminal, flatExceptions, 0);
-        FormatInnerExceptions(terminal, flatExceptions);
+        FormatStackTrace(terminal, exceptions, 0);
+        FormatInnerExceptions(terminal, exceptions);
         FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
     }
 
-    private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
+    private static void FormatInnerExceptions(ITerminal terminal, Exception?[] exceptions)
     {
         if (exceptions.Length == 0)
         {
@@ -458,42 +462,46 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.SetColor(TerminalColor.DarkRed);
             terminal.Append(SingleIndentation);
             terminal.Append("--->");
-            FormatErrorMessage(terminal, exceptions, TestOutcome.Error, i);
+            FormatErrorMessage(terminal, customErrorMessage: null, exceptions, TestOutcome.Error, i);
             FormatStackTrace(terminal, exceptions, i);
         }
     }
 
-    private static void FormatErrorMessage(ITerminal terminal, FlatException[] exceptions, TestOutcome outcome, int index)
+    private static void FormatErrorMessage(ITerminal terminal, string? customErrorMessage, Exception?[] exceptions, TestOutcome outcome, int index)
     {
-        string? firstErrorMessage = GetStringFromIndexOrDefault(exceptions, e => e.ErrorMessage, index);
-        string? firstErrorType = GetStringFromIndexOrDefault(exceptions, e => e.ErrorType, index);
-        string? firstStackTrace = GetStringFromIndexOrDefault(exceptions, e => e.StackTrace, index);
-        if (RoslynString.IsNullOrWhiteSpace(firstErrorMessage) && RoslynString.IsNullOrWhiteSpace(firstErrorType) && RoslynString.IsNullOrWhiteSpace(firstStackTrace))
+        Exception? exception = index < exceptions.Length ? exceptions[index] : null;
+        
+        // For the first exception (index 0), use custom error message if provided, otherwise use exception message
+        string? errorMessage = index == 0 && customErrorMessage is not null
+            ? customErrorMessage
+            : exception?.Message;
+        
+        string? errorType = exception?.GetType().FullName;
+        string? stackTrace = exception?.StackTrace;
+        
+        if (RoslynString.IsNullOrWhiteSpace(errorMessage) && RoslynString.IsNullOrWhiteSpace(errorType) && RoslynString.IsNullOrWhiteSpace(stackTrace))
         {
             return;
         }
 
         terminal.SetColor(TerminalColor.DarkRed);
 
-        if (firstStackTrace is null)
+        if (stackTrace is null)
         {
-            AppendIndentedLine(terminal, firstErrorMessage, SingleIndentation);
+            AppendIndentedLine(terminal, errorMessage, SingleIndentation);
         }
         else if (outcome == TestOutcome.Fail)
         {
             // For failed tests, we don't prefix the message with the exception type because it is most likely an assertion specific exception like AssertionFailedException, and we prefer to show that without the exception type to avoid additional noise.
-            AppendIndentedLine(terminal, firstErrorMessage, SingleIndentation);
+            AppendIndentedLine(terminal, errorMessage, SingleIndentation);
         }
         else
         {
-            AppendIndentedLine(terminal, $"{firstErrorType}: {firstErrorMessage}", SingleIndentation);
+            AppendIndentedLine(terminal, $"{errorType}: {errorMessage}", SingleIndentation);
         }
 
         terminal.ResetColor();
     }
-
-    private static string? GetStringFromIndexOrDefault(FlatException[] exceptions, Func<FlatException, string?> property, int index) =>
-        exceptions.Length >= index + 1 ? property(exceptions[index]) : null;
 
     private static void FormatExpectedAndActual(ITerminal terminal, string? expected, string? actual)
     {
@@ -512,9 +520,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
     }
 
-    private static void FormatStackTrace(ITerminal terminal, FlatException[] exceptions, int index)
+    private static void FormatStackTrace(ITerminal terminal, Exception?[] exceptions, int index)
     {
-        string? stackTrace = GetStringFromIndexOrDefault(exceptions, e => e.StackTrace, index);
+        Exception? exception = index < exceptions.Length ? exceptions[index] : null;
+        string? stackTrace = exception?.StackTrace;
+        
         if (RoslynString.IsNullOrWhiteSpace(stackTrace))
         {
             return;

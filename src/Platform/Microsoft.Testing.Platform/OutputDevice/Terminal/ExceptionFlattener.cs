@@ -5,19 +5,20 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class ExceptionFlattener
 {
-    internal static FlatException[] Flatten(string? errorMessage, Exception? exception)
+    internal static (string? CustomErrorMessage, Exception?[] Exceptions) Flatten(string? errorMessage, Exception? exception)
     {
         if (errorMessage is null && exception is null)
         {
-            return [];
+            return (null, []);
         }
 
-        string? message = !RoslynString.IsNullOrWhiteSpace(errorMessage) ? errorMessage : exception?.Message;
-        string? type = exception?.GetType().FullName;
-        string? stackTrace = exception?.StackTrace;
-        var flatException = new FlatException(message, type, stackTrace);
+        if (exception is null)
+        {
+            // Only have an error message, no exception
+            return (errorMessage, []);
+        }
 
-        List<FlatException> flatExceptions = [flatException];
+        List<Exception> exceptions = [exception];
 
         // Add all inner exceptions. This will flatten top level AggregateExceptions,
         // and all AggregateExceptions that are directly in AggregateExceptions, but won't expand
@@ -25,7 +26,7 @@ internal sealed class ExceptionFlattener
         IEnumerable<Exception?> aggregateExceptions = exception switch
         {
             AggregateException aggregate => aggregate.Flatten().InnerExceptions,
-            _ => [exception?.InnerException],
+            _ => [exception.InnerException],
         };
 
         foreach (Exception? aggregate in aggregateExceptions)
@@ -33,17 +34,13 @@ internal sealed class ExceptionFlattener
             Exception? currentException = aggregate;
             while (currentException is not null)
             {
-                flatExceptions.Add(new FlatException(
-                    aggregate?.Message,
-                    aggregate?.GetType().FullName,
-                    aggregate?.StackTrace));
-
+                exceptions.Add(currentException);
                 currentException = currentException.InnerException;
             }
         }
 
-        return [.. flatExceptions];
+        // Use custom error message if provided and not whitespace, otherwise null
+        string? customMessage = !RoslynString.IsNullOrWhiteSpace(errorMessage) ? errorMessage : null;
+        return (customMessage, [.. exceptions]);
     }
 }
-
-internal sealed record FlatException(string? ErrorMessage, string? ErrorType, string? StackTrace);
