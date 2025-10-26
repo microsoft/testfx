@@ -63,7 +63,6 @@ public sealed class AvoidAssertsInCatchBlocksAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? collectionAssertSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
-        
         INamedTypeSymbol targetType = operation.TargetMethod.ContainingType;
         bool isAssertType =
             targetType.Equals(assertSymbol, SymbolEqualityComparer.Default) ||
