@@ -227,7 +227,7 @@ stages:
               echo ERROR: Failed to build 1000C_100M
               set "FAILED=1"
             )
-            if !FAILED! equ 1 (
+            if "!FAILED!" == "1" (
               echo One or more samples failed to build
               exit /b 1
             )
