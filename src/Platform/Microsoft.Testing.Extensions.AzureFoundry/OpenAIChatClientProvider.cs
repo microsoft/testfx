@@ -16,32 +16,31 @@ namespace Microsoft.Testing.Extensions.AzureFoundry;
 /// <summary>
 /// Provider for creating Azure OpenAI chat clients.
 /// </summary>
-public sealed class AzureOpenAIChatClientProvider : IChatClientProvider
+internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IEnvironment _environment;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureOpenAIChatClientProvider"/> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
-    public AzureOpenAIChatClientProvider(IServiceProvider serviceProvider)
+    internal AzureOpenAIChatClientProvider(IServiceProvider serviceProvider)
     {
-        _serviceProvider = serviceProvider;
+        _environment = serviceProvider.GetRequiredService<IEnvironment>();
     }
 
     /// <inheritdoc />
     public bool SupportsToolCalling => true;
 
     /// <inheritdoc />
-    public string ModelName => _serviceProvider.GetRequiredService<IEnvironment>().GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
+    public string ModelName => _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
     {
-        IEnvironment environment = _serviceProvider.GetRequiredService<IEnvironment>();
-        string? endpoint = environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-        string? deploymentName = environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
-        string? apiKey = environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+        string? endpoint = _environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        string? deploymentName = _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
+        string? apiKey = _environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
         if (string.IsNullOrEmpty(endpoint))
         {
