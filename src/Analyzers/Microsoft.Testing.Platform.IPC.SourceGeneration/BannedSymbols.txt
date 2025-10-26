@@ -1,0 +1,2 @@
+T:System.Reflection.Assembly.Location
+T:System.Reflection.AssemblyName.CodeBase
