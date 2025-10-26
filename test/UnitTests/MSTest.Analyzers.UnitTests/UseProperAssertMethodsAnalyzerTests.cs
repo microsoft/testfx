@@ -3113,4 +3113,38 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithUserDefinedComparisonOperatorsThenNoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyCustomType
+            {
+                public static bool operator >(MyCustomType x, MyCustomType y) => true;
+                public static bool operator <(MyCustomType x, MyCustomType y) => false;
+                public static bool operator >=(MyCustomType x, MyCustomType y) => true;
+                public static bool operator <=(MyCustomType x, MyCustomType y) => false;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new MyCustomType();
+                    var b = new MyCustomType();
+                    // These should NOT trigger diagnostics because they're user-defined operators from non-BCL types
+                    Assert.IsTrue(a > b);
+                    Assert.IsTrue(a >= b);
+                    Assert.IsTrue(a < b);
+                    Assert.IsTrue(a <= b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
