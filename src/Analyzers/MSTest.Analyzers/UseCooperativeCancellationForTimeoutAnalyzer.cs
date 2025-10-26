@@ -43,16 +43,21 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTimeoutAttribute, out INamedTypeSymbol? timeoutAttributeSymbol))
+            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTimeoutAttribute, out INamedTypeSymbol? timeoutAttributeSymbol))
             {
-                context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, timeoutAttributeSymbol),
-                    SymbolKind.Method);
+                return;
             }
+
+            // Try to get TaskRunTestMethodAttribute symbol (it's a new attribute so it might not exist in older versions)
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTaskRunTestMethodAttribute, out INamedTypeSymbol? taskRunTestMethodAttributeSymbol);
+
+            context.RegisterSymbolAction(
+                context => AnalyzeSymbol(context, timeoutAttributeSymbol, taskRunTestMethodAttributeSymbol),
+                SymbolKind.Method);
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol timeoutAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol timeoutAttributeSymbol, INamedTypeSymbol? taskRunTestMethodAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
@@ -66,9 +71,11 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
                 timeoutAttribute = attribute;
             }
 
-            // Check if the method uses TaskRunTestMethodAttribute
-            string? attributeName = attribute.AttributeClass?.Name;
-            if (attributeName is "TaskRunTestMethodAttribute" or "TaskRunTestMethod")
+            // Check if the method uses TaskRunTestMethodAttribute or any derived type
+            if (taskRunTestMethodAttributeSymbol is not null && 
+                attribute.AttributeClass is not null &&
+                (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, taskRunTestMethodAttributeSymbol) ||
+                 attribute.AttributeClass.InheritsFromOrEquals(taskRunTestMethodAttributeSymbol)))
             {
                 hasTaskRunTestMethodAttribute = true;
             }
