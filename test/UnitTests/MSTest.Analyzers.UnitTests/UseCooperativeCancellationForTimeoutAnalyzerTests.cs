@@ -465,7 +465,7 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
             public class MyTestClass
             {
                 [TaskRunTestMethod]
-                [{|#0:Timeout(5000)|}]
+                [Timeout(5000)]
                 public void MyTestMethod()
                 {
                 }
@@ -477,5 +477,25 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
             VerifyCS.Diagnostic().WithLocation(0),
             fixedCodeWithTaskRunTestMethod,
             codeFixIndex: 1); // Second code fix option
+    }
+
+    [TestMethod]
+    public async Task WhenTaskRunTestMethodAttributeWithTimeout_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TaskRunTestMethod]
+                [Timeout(5000)]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }

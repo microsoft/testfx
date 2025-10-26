@@ -57,17 +57,27 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzer : DiagnosticAna
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
         AttributeData? timeoutAttribute = null;
+        bool hasTaskRunTestMethodAttribute = false;
+
         foreach (AttributeData attribute in methodSymbol.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, timeoutAttributeSymbol))
             {
                 timeoutAttribute = attribute;
-                break;
+            }
+
+            // Check if the method uses TaskRunTestMethodAttribute
+            string? attributeName = attribute.AttributeClass?.Name;
+            if (attributeName is "TaskRunTestMethodAttribute" or "TaskRunTestMethod")
+            {
+                hasTaskRunTestMethodAttribute = true;
             }
         }
 
-        // Report diagnostic if CooperativeCancellation is not explicitly set to true
+        // Don't report diagnostic if using TaskRunTestMethodAttribute (it provides Task.Run behavior)
+        // or if CooperativeCancellation is explicitly set to true
         if (timeoutAttribute is not null
+            && !hasTaskRunTestMethodAttribute
             && !timeoutAttribute.NamedArguments.Any(x => x.Key == "CooperativeCancellation" && x.Value.Value is bool boolValue && boolValue))
         {
             if (timeoutAttribute.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
