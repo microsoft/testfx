@@ -46,6 +46,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
             {
+                // Performance note: Registers for all invocations. Early exit in AnalyzeOperation is critical.
                 context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
             }
         });
@@ -54,6 +55,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
+        // Performance: Early exit for non-Assert.IsTrue/IsFalse calls.
         if (invocationOperation.TargetMethod.Name is not "IsTrue" and not "IsFalse"
             || !SymbolEqualityComparer.Default.Equals(invocationOperation.TargetMethod.ContainingType, assertSymbol))
         {

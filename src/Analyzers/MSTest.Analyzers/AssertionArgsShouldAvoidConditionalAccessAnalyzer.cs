@@ -78,6 +78,9 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
 
         context.RegisterCompilationStartAction(context =>
         {
+            // Performance note: This analyzer registers for OperationKind.Invocation THREE times (once for each assert type).
+            // Each registration is called for EVERY method invocation. The early exit checks in AnalyzeOperation are critical
+            // for performance, ensuring we only analyze actual assert method calls.
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
             {
                 context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, AssertSupportedMethodNames), OperationKind.Invocation);
@@ -99,6 +102,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
 
+        // Performance: Early exit for non-matching invocations. This check filters out the vast majority of method calls.
         // This is not an invocation of the expected assertion methods.
         (_, int argumentCountToCheck) = supportedMethodNames.FirstOrDefault(x => x.MethodName == invocationOperation.TargetMethod.Name);
         if (argumentCountToCheck == 0

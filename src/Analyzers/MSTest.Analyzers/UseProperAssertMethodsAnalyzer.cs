@@ -233,6 +233,9 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             INamedTypeSymbol objectTypeSymbol = context.Compilation.GetSpecialType(SpecialType.System_Object);
 
+            // Performance note: This analyzer registers for OperationKind.Invocation, which means it is called
+            // for EVERY method invocation in the compilation. The early exit check in AnalyzeInvocationOperation
+            // ensures that we only perform expensive analysis for Assert method calls, minimizing the performance impact.
             context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol), OperationKind.Invocation);
         });
     }
@@ -241,6 +244,8 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
+        // Performance: Early exit for non-Assert method calls. This is critical since this method is invoked
+        // for every method call in the compilation. Most invocations will be filtered out by this check.
         if (!SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertTypeSymbol))
         {
             return;
