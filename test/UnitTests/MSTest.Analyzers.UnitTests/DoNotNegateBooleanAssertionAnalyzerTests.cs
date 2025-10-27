@@ -390,32 +390,32 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
     public async Task WhenAssertIsTrueWithDoubleNegation_Diagnostic()
     {
         string code = """
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void TestMethod()
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
             {
-                bool condition = true;
-                [|Assert.IsTrue(!!condition)|];
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    [|Assert.IsTrue(!!condition)|];
+                }
             }
-        }
-        """;
+            """;
 
         string fixcode = """
-        using Microsoft.VisualStudio.TestTools.UnitTesting;
-        [TestClass]
-        public class MyTestClass
-        {
-            [TestMethod]
-            public void TestMethod()
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
             {
-                bool condition = true;
-                Assert.IsFalse(condition);
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    Assert.IsFalse(condition);
+                }
             }
-        }
-        """;
+            """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixcode);
     }
