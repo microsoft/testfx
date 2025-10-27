@@ -5,4 +5,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0058 | Usage | Warning | AvoidAssertsInCatchBlocksAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0058)
+MSTEST0058 | Usage | Info | AvoidAssertsInCatchBlocksAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0058)
