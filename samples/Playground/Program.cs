@@ -17,6 +17,7 @@ using Microsoft.Testing.Extensions.AzureFoundry;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Playground;
 
@@ -37,13 +38,13 @@ public class Program
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
             // Test MSTest
-            // testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+            testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
             // Add Chat client provider
             // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
 
             // Test a custom local test framework
-            testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));
+            // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));
 
             // Custom test host controller extension
             // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
@@ -54,7 +55,7 @@ public class Program
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
-            // return await testApplication.RunAsync();
+            return await testApplication.RunAsync();
         }
         else
         {
@@ -114,7 +115,7 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
                 ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);
             }
 
-            // MyService.DoSomething();
+            MyService.DoSomething();
         }
         catch (Exception e)
         {
