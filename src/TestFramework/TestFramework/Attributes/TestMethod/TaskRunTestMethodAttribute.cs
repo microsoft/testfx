@@ -26,7 +26,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// which can still lead to issues, but the test runner will not block waiting for it to complete.
 /// </para>
 /// </remarks>
-[AttributeUsage(AttributeTargets.Method)]
 public class TaskRunTestMethodAttribute : TestMethodAttribute
 {
     private readonly TestMethodAttribute? _testMethodAttribute;
