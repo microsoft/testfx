@@ -20,12 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
+internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
     internal sealed class SynchronizedStringBuilder
     {
@@ -57,10 +52,6 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     }
 
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
-
-    // This should be removed. Don't rely on it.
-    // We only keep it for public constructor, but we don't pass it by the adapter.
-    private readonly StringWriter? _stringWriter;
 
     /// <summary>
     /// Properties.
@@ -103,45 +94,41 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
+    /// <param name="testClassFullName">The test class full name.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, TestRunCancellationToken? testRunCancellationToken)
-        : this(testMethod, null!, properties)
-    {
-        _messageLogger = messageLogger;
-        _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
-    /// </summary>
-    /// <param name="testMethod">The test method.</param>
-    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
-    /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-        _stringWriter = stringWriter;
-        if (testMethod is null)
+        testClassFullName ??= testMethod?.FullClassName;
+        if (testClassFullName is null && testMethod is null)
         {
             _properties = new Dictionary<string, object?>(properties);
         }
         else
         {
-            _properties = new Dictionary<string, object?>(properties.Count + 4);
+            _properties = new Dictionary<string, object?>(properties.Count + 2);
             foreach (KeyValuePair<string, object?> kvp in properties)
             {
                 _properties[kvp.Key] = kvp.Value;
             }
 
-            _properties[FullyQualifiedTestClassNameLabel] = testMethod.FullClassName;
-            _properties[ManagedTypeLabel] = testMethod.ManagedTypeName;
-            _properties[ManagedMethodLabel] = testMethod.ManagedMethodName;
-            _properties[TestNameLabel] = testMethod.Name;
+            if (testClassFullName is not null)
+            {
+                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+            }
+
+            if (testMethod is not null)
+            {
+                _properties.Add(TestNameLabel, testMethod.Name);
+            }
         }
+
+        _messageLogger = messageLogger;
+        _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
     internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
@@ -160,38 +147,7 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => _properties;
-
-#if !WINDOWS_UWP && !WIN_UI
-    /// <inheritdoc/>
-    public override string? TestRunDirectory => base.TestRunDirectory;
-
-    /// <inheritdoc/>
-    public override string? DeploymentDirectory => base.DeploymentDirectory;
-
-    /// <inheritdoc/>
-    public override string? ResultsDirectory => base.ResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestRunResultsDirectory => base.TestRunResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestResultsDirectory => base.TestResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
-
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    public override string ManagedType => base.ManagedType!;
-
-    /// <inheritdoc/>
-    public override string ManagedMethod => base.ManagedMethod!;
-#endif
-
-    /// <inheritdoc/>
-    public override string TestName => base.TestName!;
-#endif
+    public override IDictionary<string, object?> Properties => _properties;
 
     /// <summary>
     /// Gets the inner test context object.
@@ -218,7 +174,6 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     {
         string? msg = message?.Replace("\0", "\\0");
         GetTestContextMessagesStringBuilder().Append(msg);
-        _stringWriter?.Write(msg);
     }
 
     /// <summary>
@@ -231,7 +186,6 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         GetTestContextMessagesStringBuilder().Append(message);
-        _stringWriter?.Write(message);
     }
 
     /// <summary>
@@ -243,7 +197,6 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     {
         string? msg = message?.Replace("\0", "\\0");
         GetTestContextMessagesStringBuilder().AppendLine(msg);
-        _stringWriter?.Write(msg);
     }
 
     /// <summary>
@@ -256,7 +209,6 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         GetTestContextMessagesStringBuilder().AppendLine(message);
-        _stringWriter?.Write(message);
     }
 
     /// <summary>
@@ -354,10 +306,7 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
     /// Clears the previous testContext writeline messages.
     /// </summary>
     public void ClearDiagnosticMessages()
-    {
-        _testContextMessageStringBuilder?.Clear();
-        (_stringWriter as ThreadSafeStringWriter)?.ToStringAndClear();
-    }
+        => _testContextMessageStringBuilder?.Clear();
 
     /// <inheritdoc/>
     public void SetDisplayName(string? displayName)
@@ -431,14 +380,8 @@ public sealed class TestContextImplementation : TestContext, ITestContext, IDisp
 
     private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
     {
-        // Prefer writing to the current test context instead of 'this'.
-        // This is just a hack to preserve backward compatibility.
-        // It's relevant for cases where users store 'TestContext' in a static field.
-        // Then, they write to the "wrong" test context.
-        // Here, we are correcting user's fault by finding out the correct TestContext that should receive the message.
-        TestContextImplementation @this = CurrentTestContext ?? this;
-        _ = @this._testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref @this._testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return @this._testContextMessageStringBuilder;
+        _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
+        return _testContextMessageStringBuilder;
     }
 
     internal string? GetOut()

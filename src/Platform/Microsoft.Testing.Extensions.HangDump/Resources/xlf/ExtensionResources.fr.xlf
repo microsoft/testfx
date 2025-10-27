@@ -7,6 +7,31 @@
         <target state="translated">Création du fichier de vidage «{0}»</target>
         <note />
       </trans-unit>
+      <trans-unit id="DumpingProcess">
+        <source>Dumping process {0} - {1}</source>
+        <target state="translated">Vidage du processus {0} – {1}</target>
+        <note>0 is pid, 1 is the name of the process</note>
+      </trans-unit>
+      <trans-unit id="DumpingProcessTree">
+        <source>Dumping this process tree (from bottom):</source>
+        <target state="translated">Vider cet arbre de processus (à partir du bas) :</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorGettingParentOfProcess">
+        <source>Error getting parent of process {0} - {1}: {2}"</source>
+        <target state="translated">Désolé, erreur lors de l’obtention du parent du processus {0} – {1} : {2} »</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorKillingProcess">
+        <source>Error while killing process {0} - {1}: {2}</source>
+        <target state="translated">Désolé, erreur lors de l’arrêt du processus {0} – {1} : {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorWhileDumpingProcess">
+        <source>Error while taking dump of process {0} - {1}: {2}</source>
+        <target state="translated">Désolé, erreur lors du vidage du processus {0} – {1} : {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception from the system</note>
+      </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
         <target state="translated">Fichier de vidage de blocage</target>

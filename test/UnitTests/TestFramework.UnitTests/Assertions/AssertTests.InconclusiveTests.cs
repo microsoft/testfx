@@ -14,12 +14,4 @@ public partial class AssertTests
         action.Should().Throw<AssertInconclusiveException>()
             .And.Message.Should().Contain("Assert.Inconclusive failed. {");
     }
-
-    // See https://github.com/dotnet/sdk/issues/25373
-    [SuppressMessage("Usage", "CA2241:Provide correct arguments to formatting methods", Justification = "We want to test invalid format")]
-    public void InconclusiveThrowsWhenMessageContainsInvalidStringFormatComposite()
-    {
-        Action action = () => Assert.Inconclusive("{", "arg");
-        action.Should().Throw<FormatException>();
-    }
 }

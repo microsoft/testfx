@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -26,6 +27,7 @@ public class TestExecutionManagerTests : TestContainer
     private readonly TestRunCancellationToken _cancellationToken;
     private readonly TestExecutionManager _testExecutionManager;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
+    private readonly Mock<ITestSourceHandler> _mockTestSourceHandler;
 
     private readonly TestProperty[] _tcmKnownProperties =
     [
@@ -56,6 +58,7 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle = new TestableFrameworkHandle();
         _cancellationToken = new TestRunCancellationToken();
         _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockTestSourceHandler = new Mock<ITestSourceHandler>();
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
@@ -245,7 +248,7 @@ public class TestExecutionManagerTests : TestContainer
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockFileOperations.Verify(
-            fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp")), It.IsAny<bool>()),
+            fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp"))),
             Times.AtLeastOnce);
     }
 
@@ -357,7 +360,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
 
         Verify(_frameworkHandle.TestCaseStartList.Contains("PassingTest"));
         Verify(_frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed"));
@@ -379,7 +382,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
 
         Verify(
             DummyTestClass.TestContextProperties!.Contains(
@@ -391,7 +394,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await _testExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
 
         Verify(DummyTestClass.TestContextProperties is not null);
     }
@@ -405,7 +408,7 @@ public class TestExecutionManagerTests : TestContainer
             ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) => testsCount += tests.Count(),
         };
 
-        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await testableTestExecutionManager.RunTestsAsync(sources, _runContext, _frameworkHandle, _mockTestSourceHandler.Object, _cancellationToken);
         Verify(testsCount == 4);
     }
 
@@ -564,7 +567,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -577,14 +580,14 @@ public class TestExecutionManagerTests : TestContainer
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
             testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>())).
+                Returns((MemberInfo memberInfo) => originalReflectionOperation.GetCustomAttributes(memberInfo));
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
-            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
-                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
+                .Returns((string assemblyName) => originalFileOperation.LoadAssembly(assemblyName));
 
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
@@ -623,7 +626,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -636,14 +639,14 @@ public class TestExecutionManagerTests : TestContainer
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
             testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>())).
+                Returns((MemberInfo memberInfo) => originalReflectionOperation.GetCustomAttributes(memberInfo));
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
-            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
-                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
+                .Returns((string assemblyName) => originalFileOperation.LoadAssembly(assemblyName));
 
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
@@ -724,7 +727,7 @@ public class TestExecutionManagerTests : TestContainer
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
-            var originalReflectionOperation = new ReflectionOperations2();
+            var originalReflectionOperation = new ReflectionOperations();
             var originalFileOperation = new FileOperations();
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
@@ -737,8 +740,8 @@ public class TestExecutionManagerTests : TestContainer
                         : originalReflectionOperation.GetCustomAttributes(asm, type));
 
             testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>())).
+                Returns((MemberInfo memberInfo) => originalReflectionOperation.GetCustomAttributes(memberInfo));
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>())).
@@ -747,8 +750,8 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetType(It.IsAny<Assembly>(), It.IsAny<string>()))
                 .Returns((Assembly asm, string m) => originalReflectionOperation.GetType(asm, m));
 
-            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
-                .Returns((string assemblyName, bool reflectionOnly) => originalFileOperation.LoadAssembly(assemblyName, reflectionOnly));
+            testablePlatformService.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
+                .Returns((string assemblyName) => originalFileOperation.LoadAssembly(assemblyName));
 
             testablePlatformService.MockReflectionOperations.Setup(fo => fo.GetRuntimeMethods(It.IsAny<Type>()))
                 .Returns((Type t) => originalReflectionOperation.GetRuntimeMethods(t));
@@ -811,7 +814,7 @@ public class TestExecutionManagerTests : TestContainer
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName)!;
-        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, isAsync: false);
+        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, displayName: null);
         UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }
@@ -821,9 +824,9 @@ public class TestExecutionManagerTests : TestContainer
         var testablePlatformService = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = testablePlatformService;
 
-        testablePlatformService.MockFileOperations.Setup(td => td.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+        testablePlatformService.MockFileOperations.Setup(td => td.LoadAssembly(It.IsAny<string>()))
             .Returns(
-                (string assemblyName, bool reflectionOnly) =>
+                (string assemblyName) =>
                 {
                     string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
                     return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
@@ -1133,6 +1136,6 @@ internal class TestableTestExecutionManager : TestExecutionManager
         return Task.CompletedTask;
     }
 
-    internal override UnitTestDiscoverer GetUnitTestDiscoverer() => new TestableUnitTestDiscoverer();
+    internal override UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new TestableUnitTestDiscoverer(testSourceHandler);
 }
 #endregion

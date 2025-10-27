@@ -132,31 +132,6 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">不要在值類型中使用 'Assert.AreSame' 或 'Assert.AreNotSame'</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
-        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="translated">將 '{0}' 取代為具有 string.Format 或字串內插補點的格式參數</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersTitle">
-        <source>Avoid using Assert methods with format parameters</source>
-        <target state="translated">避免使用 Assert 方法搭配格式參數</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="translated">偏好 'Assert.ThrowsExactly' 或 'Assert.ThrowsExactlyAsync' 而不是 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您判斷提示例外狀況的額外屬性。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="translated">偏好 'Assert.ThrowsExactly/ThrowsExactlyAsync' 而不是 '[ExpectedException]'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
-        <source>Avoid '[ExpectedException]'</source>
-        <target state="translated">避免 '[ExpectedException]'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
         <target state="translated">移除 'DynamicDataSourceType' 引數，以使用預設的自動偵測行為</target>
@@ -662,6 +637,26 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">屬性 'TestContext' 應為有效</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
+        <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
+        <target state="translated">TestMethodAttribute 衍生類別 '{0}' 應在其建構函式中新增 CallerFilePath 和 CallerLineNumber 參數</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
+        <source>TestMethodAttribute derived class should propagate source information</source>
+        <target state="translated">TestMethodAttribute 衍生類別應傳遞來源資訊</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
+        <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
+        <target state="translated">請使用 'DisplayName' 屬性，而非將字串引數傳遞給 TestMethodAttribute</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
+        <source>TestMethodAttribute should set DisplayName correctly</source>
+        <target state="translated">TestMethodAttribute 應正確設定 DisplayName 屬性</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">測試方法 '{0}' 簽章無效</target>
@@ -680,21 +675,6 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
         <target state="translated">使用 TestContext.CancellationToken 而不是 TestContext.CancellationTokenSource.Token</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
-        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">如不使用 'ClassCleanupBehavior.EndOfClass'，則預設會在組件結尾執行 '[ClassCleanup]'，而非在類別的結尾執行。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">搭配使用 'ClassCleanupBehavior.EndOfClass' 和 '[ClassCleanup]'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">搭配使用 'ClassCleanupBehavior.EndOfClass' 和 '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
@@ -942,16 +922,6 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' 只能在測試類或測試方法上指定</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsMessageFormat">
-        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="translated">使用 'Assert.ThrowsExactly' 而非 'Assert.ThrowsException'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsTitle">
-        <source>Use newer methods to assert exceptions</source>
-        <target state="translated">使用較新的方法判斷例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

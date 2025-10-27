@@ -22,7 +22,7 @@ public class TestPropertyAttributeTests : TestContainer
     {
         _typeCache = new TypeCache(new ReflectHelper());
         var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>())).Returns(GetType().Assembly);
+        testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>())).Returns(GetType().Assembly);
         PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
         ReflectHelper.Instance.ClearCache();
@@ -40,12 +40,15 @@ public class TestPropertyAttributeTests : TestContainer
 
     #region GetTestMethodInfo tests
 
+    private static TestContextImplementation CreateTestContextImplementationForMethod(TestMethod testMethod)
+        => new(testMethod, null, new Dictionary<string, object?>(), null, null);
+
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
         string className = typeof(DummyTestClassBase).FullName!;
-        var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
+        var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
+        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
@@ -73,9 +76,9 @@ public class TestPropertyAttributeTests : TestContainer
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsTestMethod()
     {
         string className = typeof(DummyTestClassDerived).FullName!;
-        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
+        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
+        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,
@@ -118,9 +121,9 @@ public class TestPropertyAttributeTests : TestContainer
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsNotTestMethod()
     {
         string className = typeof(DummyTestClassDerived).FullName!;
-        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, isAsync: false);
+        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
 
-        var testContext = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object?>());
+        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
         _ = _typeCache.GetTestMethodInfo(
             testMethod,

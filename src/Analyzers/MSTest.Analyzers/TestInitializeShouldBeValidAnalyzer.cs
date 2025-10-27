@@ -18,7 +18,8 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    /// <inheritdoc cref="Resources.TestInitializeShouldBeValidTitle" />
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestInitializeShouldBeValidRuleId,
         new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
         new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),

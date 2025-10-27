@@ -83,6 +83,21 @@
         <target state="translated">AreSame()에 값 형식을 전달하면 안 됩니다. Object로 변환된 값은 동일한 값으로 간주되지 않습니다. AreEqual()을 사용해 보세요. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertThatDetailsPrefix">
+        <source>Details:</source>
+        <target state="translated">세부 정보:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedFormat">
+        <source>Assert.That({0}) failed.</source>
+        <target state="translated">Assert.That({0})이(가) 실패했습니다.</target>
+        <note>{0} is the user code expression</note>
+      </trans-unit>
+      <trans-unit id="AssertThatMessageFormat">
+        <source>Message: {0}</source>
+        <target state="translated">메시지: {0}</target>
+        <note>{0} user provided message</note>
+      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
         <target state="translated">두 컬렉션이 모두 비어 있습니다. {0}</target>
@@ -102,6 +117,21 @@
         <source>Both collections contain the same elements. {0}</source>
         <target state="translated">두 컬렉션에 같은 요소가 포함되어 있습니다. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="translated">'{0}' 식: '{1}'.</target>
+        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
+        <target state="translated">' {0}' 식: '{1}', '{2}' 식: '{3}', '{4}' 식: '{5}'.</target>
+        <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
+        <target state="translated">'{0}' 식: '{1}', '{2}' 식: '{3}'.</target>
+        <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
@@ -216,6 +246,11 @@ Full Actual: {4}</target>
         <target state="translated">{1} 크기 컬렉션이 필요합니다. 실제: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="translated">현재 테스트와 관련된 'TestContext.{0}' 속성은 어셈블리나 클래스 픽스처 실행 중에는 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
@@ -293,7 +328,7 @@ Actual: {1}</target>
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
-        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection.</target>
+        <target state="translated">컬렉션에 &lt;{0}&gt; 요소가 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">
@@ -314,31 +349,6 @@ Actual: {1}</target>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
         <target state="translated">(개체)</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">예상 예외 형식은 System.Exception이거나 System.Exception에서 파생된 형식이어야 합니다.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">테스트 메서드에서 예외를 throw하지 않았습니다. 예외는 테스트 메서드에 정의된 {0} 특성에 의해 예상되었습니다.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">테스트 메서드에서 예상 예외 {0}을(를) throw하지 않았습니다. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외를 예상했습니다. 예외 메시지: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외 또는 해당 예외에서 파생된 형식을 예상했습니다. 예외 메시지: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

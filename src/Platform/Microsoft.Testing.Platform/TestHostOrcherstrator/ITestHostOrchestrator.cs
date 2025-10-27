@@ -5,5 +5,5 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
 internal interface ITestHostOrchestrator : IExtension
 {
-    Task<int> OrchestrateTestHostExecutionAsync();
+    Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken);
 }

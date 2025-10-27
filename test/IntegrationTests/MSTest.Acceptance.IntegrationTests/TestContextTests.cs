@@ -391,7 +391,7 @@ public class TestContextDisplayName
 {
     public TestContext TestContext { get; set; }
 
-    [TestMethod("Custom name")]
+    [TestMethod(DisplayName = "Custom name")]
     public void TestCustomName()
     {
         Assert.AreEqual("Custom name", TestContext.TestDisplayName);
@@ -403,14 +403,14 @@ public class TestContextDisplayName
         Assert.AreEqual("TestMethod", TestContext.TestDisplayName);
     }
 
-    [TestMethod("Custom name")]
+    [TestMethod(DisplayName = "Custom name")]
     [DataRow(42)]
     public void TestCustomNameDataRow(int i)
     {
         Assert.AreEqual("Custom name (42)", TestContext.TestDisplayName);
     }
 
-    [TestMethod("Custom name")]
+    [TestMethod(DisplayName = "Custom name")]
     [DynamicData(nameof(Data))]
     public void TestCustomNameDynamicData(bool b)
     {

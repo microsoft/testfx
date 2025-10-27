@@ -10,8 +10,6 @@ public static class TargetFrameworks
         "net9.0",
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
         "net8.0",
-        "net7.0",
-        "net6.0",
 #endif
     ];
 

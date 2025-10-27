@@ -132,31 +132,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Nepoužívejte Assert.AreSame ani Assert.AreNotSame s typy hodnot.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
-        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="translated">Nahraďte {0} parametry formátu pomocí string.Format nebo interpolace řetězce.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersTitle">
-        <source>Avoid using Assert methods with format parameters</source>
-        <target state="translated">Vyhněte se použití metod Assert s parametry formátu</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="translated">Preferujte Assert.ThrowsExactly nebo Assert.ThrowsExactlyAsync před [ExpectedException], protože zajišťuje, že očekávanou výjimku vyvolá pouze očekávané volání. Rozhraní API pro vyhodnocení také poskytují větší flexibilitu a umožňují vyhodnocovat další vlastnosti výjimky.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="translated">Preferovat Assert.ThrowsExactly/ThrowsExactlyAsync před [ExpectedException]</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
-        <source>Avoid '[ExpectedException]'</source>
-        <target state="translated">Vyhněte se [ExpectedException]</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
         <target state="translated">Pokud chcete použít výchozí chování automatického zjišťování, odeberte argument DynamicDataSourceType.</target>
@@ -662,6 +637,26 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Vlastnost TestContext by měla být platná.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
+        <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
+        <target state="translated">Odvozená třída TestMethodAttribute {0} by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
+        <source>TestMethodAttribute derived class should propagate source information</source>
+        <target state="translated">Odvozená třída TestMethodAttribute by měla šířit informace o zdroji</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
+        <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
+        <target state="translated">Místo předání řetězcového argumentu atributu TestMethodAttribute použijte vlastnost DisplayName</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
+        <source>TestMethodAttribute should set DisplayName correctly</source>
+        <target state="translated">TestMethodAttribute by měl správně nastavit DisplayName</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">Signatura {0} metody Test je neplatná.</target>
@@ -680,21 +675,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
         <target state="translated">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
-        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">Když nepoužijete ClassCleanupBehavior.EndOfClass, [ClassCleanup] se ve výchozím nastavení spustí na konci sestavení, nikoli na konci třídy.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">S [ClassCleanup] použijte ClassCleanupBehavior.EndOfClass.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">S [ClassCleanup] použijte ClassCleanupBehavior.EndOfClass.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
@@ -942,16 +922,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">[DeploymentItem] se dá zadat jenom pro testovací třídu nebo testovací metodu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsMessageFormat">
-        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="translated">Místo Assert.ThrowsException použijte Assert.ThrowsExactly.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsTitle">
-        <source>Use newer methods to assert exceptions</source>
-        <target state="translated">Pro vyhodnocení výjimek použijte novější metody.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

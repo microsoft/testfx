@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -14,15 +15,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class UnitTestDiscoverer
 {
-    private readonly AssemblyEnumeratorWrapper _assemblyEnumeratorWrapper;
-
-    internal UnitTestDiscoverer()
-    {
-        _assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
-        _testMethodFilter = new TestMethodFilter();
-    }
-
     private readonly TestMethodFilter _testMethodFilter;
+
+    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler)
+    {
+        _testMethodFilter = new TestMethodFilter();
+        _testSource = testSourceHandler;
+    }
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -56,19 +55,33 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext? discoveryContext)
     {
-        ICollection<UnitTestElement>? testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, out List<string> warnings);
 
-        bool treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
-
-        // log the warnings
-        foreach (string warning in warnings)
+        if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
-                source,
-                warning);
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
-            logger.SendMessage(treatDiscoveryWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning, message);
+            if (warnings.Count > 0)
+            {
+                throw new MSTestException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.DiscoveryErrors,
+                            source,
+                            warnings.Count,
+                            string.Join(Environment.NewLine, warnings)));
+            }
+        }
+        else
+        {
+            // log the warnings
+            foreach (string warning in warnings)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                    "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
+                    source,
+                    warning);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
+                logger.SendMessage(TestMessageLevel.Warning, message);
+            }
         }
 
         // No tests found => nothing to do
@@ -82,119 +95,57 @@ internal class UnitTestDiscoverer
             testElements.Count,
             source);
 
-        SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
+        SendTestCases(testElements, discoverySink, discoveryContext, logger);
     }
 
-    internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
+    private readonly ITestSourceHandler _testSource;
+
+    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
-        bool shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
         bool hasAnyRunnableTests = false;
         var fixtureTests = new List<TestCase>();
 
-        var navigationSessions = new Dictionary<string, object?>();
-        try
+        // Get filter expression and skip discovery in case filter expression has parsing error.
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
+        if (filterHasError)
         {
-            if (shouldCollectSourceInformation)
-            {
-                navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
-            }
-
-            // Get filter expression and skip discovery in case filter expression has parsing error.
-            ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
-            if (filterHasError)
-            {
-                return;
-            }
-
-            foreach (UnitTestElement testElement in testElements)
-            {
-                var testCase = testElement.ToTestCase();
-                bool hasFixtureTraits = testElement.Traits?.Any(t => t.Name == EngineConstants.FixturesTestTrait) == true;
-
-                // Filter tests based on test case filters
-                if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
-                {
-                    // If test is a fixture test, add it to the list of fixture tests.
-                    if (hasFixtureTraits)
-                    {
-                        fixtureTests.Add(testCase);
-                    }
-
-                    continue;
-                }
-
-                if (!hasAnyRunnableTests)
-                {
-                    hasAnyRunnableTests = !hasFixtureTraits;
-                }
-
-                if (!shouldCollectSourceInformation)
-                {
-                    discoverySink.SendTestCase(testCase);
-                    continue;
-                }
-
-                string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
-
-                if (!navigationSessions.TryGetValue(testSource, out object? testNavigationSession))
-                {
-                    testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
-                    navigationSessions.Add(testSource, testNavigationSession);
-                }
-
-                if (testNavigationSession == null)
-                {
-                    discoverySink.SendTestCase(testCase);
-                    continue;
-                }
-
-                string className = testElement.TestMethod.DeclaringClassFullName
-                                ?? testElement.TestMethod.FullClassName;
-
-                string methodName = testElement.TestMethod.Name;
-
-                // If it is async test method use compiler generated type and method name for navigation data.
-                if (!StringEx.IsNullOrEmpty(testElement.AsyncTypeName))
-                {
-                    className = testElement.AsyncTypeName;
-
-                    // compiler generated method name is "MoveNext".
-                    methodName = "MoveNext";
-                }
-
-                PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
-                    testNavigationSession,
-                    className,
-                    methodName,
-                    out int minLineNumber,
-                    out string? fileName);
-
-                if (!StringEx.IsNullOrEmpty(fileName))
-                {
-                    testCase.LineNumber = minLineNumber;
-                    testCase.CodeFilePath = fileName;
-                }
-
-                discoverySink.SendTestCase(testCase);
-            }
-
-            // If there are runnable tests, then add all fixture tests to the discovery sink.
-            // Scenarios:
-            // 1. Execute only a fixture test => In this case, we do not need to track any other fixture tests. Selected fixture test will be tracked as will be marked as skipped.
-            // 2. Execute a runnable test => In this case, case add all fixture tests. We will update status of only those fixtures which are triggered by the selected test.
-            if (hasAnyRunnableTests)
-            {
-                foreach (TestCase testCase in fixtureTests)
-                {
-                    discoverySink.SendTestCase(testCase);
-                }
-            }
+            return;
         }
-        finally
+
+        foreach (UnitTestElement testElement in testElements)
         {
-            foreach (object? navigationSession in navigationSessions.Values)
+            var testCase = testElement.ToTestCase();
+            bool hasFixtureTraits = testElement.Traits?.Any(t => t.Name == EngineConstants.FixturesTestTrait) == true;
+
+            // Filter tests based on test case filters
+            if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
             {
-                PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
+                // If test is a fixture test, add it to the list of fixture tests.
+                if (hasFixtureTraits)
+                {
+                    fixtureTests.Add(testCase);
+                }
+
+                continue;
+            }
+
+            if (!hasAnyRunnableTests)
+            {
+                hasAnyRunnableTests = !hasFixtureTraits;
+            }
+
+            discoverySink.SendTestCase(testCase);
+        }
+
+        // If there are runnable tests, then add all fixture tests to the discovery sink.
+        // Scenarios:
+        // 1. Execute only a fixture test => In this case, we do not need to track any other fixture tests. Selected fixture test will be tracked as will be marked as skipped.
+        // 2. Execute a runnable test => In this case, case add all fixture tests. We will update status of only those fixtures which are triggered by the selected test.
+        if (hasAnyRunnableTests)
+        {
+            foreach (TestCase testCase in fixtureTests)
+            {
+                discoverySink.SendTestCase(testCase);
             }
         }
     }

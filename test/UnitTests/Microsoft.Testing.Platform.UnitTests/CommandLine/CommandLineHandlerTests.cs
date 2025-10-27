@@ -205,8 +205,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -223,8 +223,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -241,8 +241,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -272,8 +272,8 @@ public sealed class CommandLineHandlerTests
         string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
-        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
-            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
+        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data, CancellationToken _) =>
             {
                 Assert.Contains("Invalid command line arguments:", ((TextOutputDeviceData)data).Text);
                 Assert.Contains("Unexpected argument", ((TextOutputDeviceData)data).Text);

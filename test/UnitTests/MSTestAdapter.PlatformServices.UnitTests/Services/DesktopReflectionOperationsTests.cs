@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using MSTestAdapter.PlatformServices.UnitTests.Utilities;
@@ -20,7 +20,7 @@ public class DesktopReflectionOperationsTests : TestContainer
     {
         MethodInfo methodInfo = typeof(ReflectionUtilityTests.DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
@@ -33,7 +33,7 @@ public class DesktopReflectionOperationsTests : TestContainer
     {
         Type type = typeof(ReflectionUtilityTests.DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributes(type, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);

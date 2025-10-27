@@ -30,36 +30,37 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </list>
 /// </remarks>
 #pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved// XML comment has cref attribute that could not be resolved
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public class TestMethodAttribute : Attribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
     /// </summary>
-    public TestMethodAttribute()
-    : this(null)
+    public TestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
     {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">Display name for the test.</param>
-    public TestMethodAttribute(string? displayName)
-    {
-        DisplayName = displayName;
-        UseAsync = GetType() == typeof(TestMethodAttribute);
+        DeclaringFilePath = callerFilePath;
+        DeclaringLineNumber = callerLineNumber <= 0 ? null : callerLineNumber;
     }
 
     /// <summary>
     /// Gets display name for the test.
     /// </summary>
-    public string? DisplayName { get; }
+    public string? DisplayName { get; init; }
 
-    /// <inheritdoc cref="ExecuteAsync(ITestMethod)" />
-    public virtual TestResult[] Execute(ITestMethod testMethod) => [testMethod.Invoke(null)];
+    /// <summary>
+    /// Gets the strategy for unfolding parameterized tests.
+    /// </summary>
+    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; init; } = TestDataSourceUnfoldingStrategy.Auto;
 
-    private protected virtual bool UseAsync { get; }
+    /// <summary>
+    /// Gets the file path that declares the attribute.
+    /// </summary>
+    public string DeclaringFilePath { get; }
+
+    /// <summary>
+    /// Gets the line number within <see cref="DeclaringFilePath"/> that declares the attribute.
+    /// </summary>
+    public int? DeclaringLineNumber { get; }
 
     /// <summary>
     /// Executes a test method.
@@ -67,8 +68,6 @@ public class TestMethodAttribute : Attribute
     /// <param name="testMethod">The test method to execute.</param>
     /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
-    internal virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
-        => UseAsync
-        ? [await testMethod.InvokeAsync(null).ConfigureAwait(false)]
-        : Execute(testMethod);
+    public virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        => [await testMethod.InvokeAsync(null).ConfigureAwait(false)];
 }

@@ -38,8 +38,6 @@ public class TestMethodInfoTests : TestContainer
 
     private readonly TestClassInfo _testClassInfo;
 
-    private readonly ExpectedExceptionAttribute _expectedException;
-
     public TestMethodInfoTests()
     {
         _constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
@@ -48,10 +46,9 @@ public class TestMethodInfoTests : TestContainer
         _testMethodAttribute = new TestMethodAttribute();
 
         _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
-        var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null!, "test"), new Dictionary<string, object?>());
+        var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", displayName: null);
+        _testContextImplementation = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>(), null, null);
         _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
-        _expectedException = new ExpectedExceptionAttribute(typeof(DivideByZeroException));
 
         _testMethodInfo = new TestMethodInfo(
             _methodInfo,
@@ -335,8 +332,10 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception.StackTraceInformation is not null);
+        // NOTE: On net8.0 and later, the first frame is System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
+        // So, we do a consistent Contains check to check that the stack trace is there.
         Verify(
-            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            exception.StackTraceInformation.ErrorStackTrace.Contains(
             "   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
     }
 
@@ -562,7 +561,6 @@ public class TestMethodInfoTests : TestContainer
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
         };
 
         // Act.
@@ -592,7 +590,6 @@ public class TestMethodInfoTests : TestContainer
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
         };
 
         // Act.
@@ -633,7 +630,6 @@ public class TestMethodInfoTests : TestContainer
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
         };
 
         // Act.
@@ -648,7 +644,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal));
 #endif
     }
@@ -669,7 +665,6 @@ public class TestMethodInfoTests : TestContainer
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
         };
 
         // Act.
@@ -684,7 +679,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
 #endif
     }
@@ -861,7 +856,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
 #endif
     }
@@ -888,7 +883,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(expectedErrorMessage == exception.Message);
         Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__", StringComparison.Ordinal));
 #endif
     }
@@ -1100,54 +1095,6 @@ public class TestMethodInfoTests : TestContainer
         Verify(!testCleanupCalled);
     }
 
-    public async Task TestMethodInfoInvokeShouldSetResultAsPassedIfExpectedExceptionIsThrown()
-    {
-        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
-        };
-
-        TestResult result = await testMethodInfo.InvokeAsync(null);
-
-        Verify(result.Outcome == UTF.UnitTestOutcome.Passed);
-    }
-
-    public async Task TestMethodInfoInvokeShouldSetResultAsFailedIfExceptionDifferentFromExpectedExceptionIsThrown()
-    {
-        DummyTestClass.TestMethodBody = o => throw new IndexOutOfRangeException();
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
-        };
-
-        TestResult result = await testMethodInfo.InvokeAsync(null);
-
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-        string message = "Test method threw exception System.IndexOutOfRangeException, but exception System.DivideByZeroException was expected. " +
-            "Exception message: System.IndexOutOfRangeException: Index was outside the bounds of the array.";
-        Verify(message == result.TestFailureException!.Message);
-    }
-
-    public async Task TestMethodInfoInvokeShouldSetResultAsFailedWhenExceptionIsExpectedButIsNotThrown()
-    {
-        DummyTestClass.TestMethodBody = o => { };
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
-        };
-        TestResult result = await testMethodInfo.InvokeAsync(null);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-        string message = "Test method did not throw expected exception System.DivideByZeroException.";
-        Verify(result.TestFailureException!.Message.Contains(message));
-    }
-
     public async Task TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
     {
         DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
@@ -1155,7 +1102,6 @@ public class TestMethodInfoTests : TestContainer
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
         };
         TestResult result = await testMethodInfo.InvokeAsync(null);
         Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
@@ -1179,298 +1125,11 @@ public class TestMethodInfoTests : TestContainer
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
-            ExpectedException = _expectedException,
         };
 
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         Verify(testOutcome == UTF.UnitTestOutcome.Inconclusive);
-    }
-
-    public async Task HandleMethodExceptionShouldInvokeVerifyOfCustomExpectedException()
-    {
-        CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Attempted to divide by zero");
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = customExpectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        TestResult result = await method.InvokeAsync(null);
-        Verify(customExpectedException.IsVerifyInvoked);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Passed);
-    }
-
-    public async Task HandleMethodExceptionShouldSetOutcomeAsFailedIfVerifyOfExpectedExceptionThrows()
-    {
-        CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Custom Exception");
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = customExpectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        TestResult result = await method.InvokeAsync(null);
-        Verify(result.TestFailureException!.Message == "The exception message doesn't contain the string defined in the exception attribute");
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-    }
-
-    public async Task HandleMethodExceptionShouldSetOutcomeAsInconclusiveIfVerifyOfExpectedExceptionThrowsAssertInconclusiveException()
-    {
-        CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Custom Exception");
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = customExpectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
-        TestResult result = await method.InvokeAsync(null);
-        string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
-        Verify(result.TestFailureException!.Message == message);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
-    }
-
-    public async Task HandleMethodExceptionShouldInvokeVerifyOfDerivedCustomExpectedException()
-    {
-        DerivedCustomExpectedExceptionAttribute derivedCustomExpectedException = new(typeof(DivideByZeroException), "Attempted to divide by zero");
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = derivedCustomExpectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        TestResult result = await method.InvokeAsync(null);
-        Verify(derivedCustomExpectedException.IsVerifyInvoked);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Passed);
-    }
-
-    public async Task VerifyShouldNotThrowIfThrownExceptionCanBeAssignedToExpectedException()
-    {
-        ExpectedExceptionAttribute expectedException = new(typeof(Exception))
-        {
-            AllowDerivedTypes = true,
-        };
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = expectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        TestResult result = await method.InvokeAsync(null);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Passed);
-    }
-
-    public async Task VerifyShouldThrowExceptionIfThrownExceptionCannotBeAssignedToExpectedException()
-    {
-        ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException), "Custom Exception")
-        {
-            AllowDerivedTypes = true,
-        };
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = expectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new ArgumentNullException();
-        TestResult result = await method.InvokeAsync(null);
-        string message = "Test method threw exception System.ArgumentNullException, but exception System.DivideByZeroException" +
-            " or a type derived from it was expected. Exception message: System.ArgumentNullException: Value cannot be null.";
-        Verify(result.TestFailureException!.Message == message);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-    }
-
-    public async Task VerifyShouldRethrowExceptionIfThrownExceptionIsAssertFailedException()
-    {
-        ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException))
-        {
-            AllowDerivedTypes = true,
-        };
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = expectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new AssertFailedException();
-        TestResult result = await method.InvokeAsync(null);
-        string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException' was thrown.";
-        Verify(result.TestFailureException!.Message == message);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-    }
-
-    public async Task VerifyShouldRethrowExceptionIfThrownExceptionIsAssertInconclusiveException()
-    {
-        ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException))
-        {
-            AllowDerivedTypes = true,
-        };
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = expectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
-        TestResult result = await method.InvokeAsync(null);
-        string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
-        Verify(result.TestFailureException!.Message == message);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
-    }
-
-    public async Task VerifyShouldThrowIfThrownExceptionIsNotSameAsExpectedException()
-    {
-        ExpectedExceptionAttribute expectedException = new(typeof(Exception));
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = expectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
-        TestResult result = await method.InvokeAsync(null);
-        string message = "Test method threw exception System.DivideByZeroException, but exception System.Exception was expected. " +
-            "Exception message: System.DivideByZeroException: Attempted to divide by zero.";
-        Verify(result.TestFailureException!.Message == message);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
-    }
-
-    public async Task VerifyShouldRethrowIfThrownExceptionIsAssertExceptionWhichIsNotSameAsExpectedException()
-    {
-        ExpectedExceptionAttribute expectedException = new(typeof(Exception));
-        var method = new TestMethodInfo(
-            _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(0),
-            Executor = _testMethodAttribute,
-            ExpectedException = expectedException,
-        };
-
-        DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
-        TestResult result = await method.InvokeAsync(null);
-        string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
-        Verify(result.TestFailureException!.Message == message);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
-    }
-
-    public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_DifferentConcreteType()
-    {
-        MethodInfo testMethodInfo = typeof(DummyTestClassForExpectedException).GetMethod(nameof(DummyTestClassForExpectedException.DummyTestMethod1))!;
-        TestClassInfo classInfo = new(
-            typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
-            isParameterlessConstructor: true,
-            new TestClassAttribute(),
-            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
-
-        TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-        });
-        UTF.Assert.AreEqual("The test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1' has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.", ex.Message);
-    }
-
-    public void ResolveExpectedExceptionShouldThrowWhenAttributeIsDefinedTwice_SameConcreteType()
-    {
-        MethodInfo testMethodInfo = typeof(DummyTestClassForExpectedException).GetMethod(nameof(DummyTestClassForExpectedException.DummyTestMethod1))!;
-        TestClassInfo classInfo = new(
-            typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
-            isParameterlessConstructor: true,
-            new TestClassAttribute(),
-            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
-
-        TypeInspectionException ex = UTF.Assert.ThrowsException<TypeInspectionException>(() => new TestMethodInfo(testMethodInfo, classInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-        });
-        UTF.Assert.AreEqual("The test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests+DummyTestClassForExpectedException.DummyTestMethod1' has multiple attributes derived from 'ExpectedExceptionBaseAttribute' defined on it. Only one such attribute is allowed.", ex.Message);
-    }
-
-    public void ResolveExpectedExceptionHelperShouldReturnExpectedExceptionAttributeIfPresent()
-    {
-        Type type = typeof(DummyTestClassForExpectedException);
-        MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassForExpectedException.TestMethodWithExpectedException))!;
-        TestClassInfo classInfo = new(
-            typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
-            isParameterlessConstructor: true,
-            new TestClassAttribute(),
-            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
-
-        var testMethodInfo = new TestMethodInfo(methodInfo, classInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-        };
-
-        Verify(testMethodInfo.ExpectedException is not null);
-        Verify(((ExpectedExceptionAttribute)testMethodInfo.ExpectedException).ExceptionType == typeof(DivideByZeroException));
-    }
-
-    public void ResolveExpectedExceptionHelperShouldReturnNullIfExpectedExceptionAttributeIsNotPresent()
-    {
-        Type type = typeof(DummyTestClassForExpectedException);
-        MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassForExpectedException.TestMethodWithoutExpectedException))!;
-        TestClassInfo classInfo = new(
-            typeof(DummyTestClassForExpectedException),
-            typeof(DummyTestClassForExpectedException).GetConstructor([])!,
-            isParameterlessConstructor: true,
-            new TestClassAttribute(),
-            new TestAssemblyInfo(typeof(DummyTestClassForExpectedException).Assembly));
-
-        var testMethodInfo = new TestMethodInfo(methodInfo, classInfo, _testContextImplementation)
-        {
-            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-            Executor = _testMethodAttribute,
-        };
-
-        Verify(testMethodInfo.ExpectedException is null);
     }
 
     #endregion
@@ -1855,98 +1514,6 @@ public class TestMethodInfoTests : TestContainer
         }
 
         public void DummyTestCleanupMethod() => DummyTestCleanupMethodBody!(this);
-    }
-
-    #region Dummy implementation
-
-    /// <summary>
-    ///  Custom Expected exception attribute which overrides the Verify method.
-    /// </summary>
-    public class CustomExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
-    {
-        public CustomExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
-            : base(noExceptionMessage) => ExceptionType = exceptionType;
-
-        public bool IsVerifyInvoked { get; set; }
-
-        public Type ExceptionType { get; private set; }
-
-        protected internal override void Verify(Exception exception)
-        {
-            IsVerifyInvoked = true;
-            if (exception is AssertInconclusiveException)
-            {
-                throw new AssertInconclusiveException();
-            }
-            else if (!exception.Message.Contains(NoExceptionMessage))
-            {
-                throw new InvalidOperationException("The exception message doesn't contain the string defined in the exception attribute");
-            }
-        }
-    }
-
-    /// <summary>
-    ///  Custom Expected exception attribute which overrides the Verify method.
-    /// </summary>
-    public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
-    {
-        public DerivedCustomExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
-            : base(exceptionType, noExceptionMessage) => ExceptionType = exceptionType;
-
-        public new Type ExceptionType { get; private set; }
-
-        public new bool IsVerifyInvoked { get; set; }
-
-        protected internal override void Verify(Exception exception)
-        {
-            IsVerifyInvoked = true;
-            if (exception is AssertInconclusiveException)
-            {
-                throw new AssertInconclusiveException();
-            }
-            else if (!exception.Message.Contains(NoExceptionMessage))
-            {
-                throw new InvalidOperationException("The exception message doesn't contain the string defined in the exception attribute");
-            }
-        }
-    }
-
-    #endregion
-
-    public class DummyTestClassForExpectedException
-    {
-        private class MyExpectedException1Attribute : ExpectedExceptionBaseAttribute
-        {
-            protected internal override void Verify(Exception exception) => throw new NotImplementedException();
-        }
-
-        [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-        public class MyExpectedException2Attribute : ExpectedExceptionBaseAttribute
-        {
-            protected internal override void Verify(Exception exception) => throw new NotImplementedException();
-        }
-
-        [ExpectedException(typeof(Exception))]
-        [MyExpectedException1]
-
-        public void DummyTestMethod1()
-        {
-        }
-
-        [MyExpectedException2]
-        [MyExpectedException2]
-        public void DummyTestMethod2()
-        {
-        }
-
-        [ExpectedException(typeof(DivideByZeroException))]
-        public void TestMethodWithExpectedException()
-        {
-        }
-
-        public void TestMethodWithoutExpectedException()
-        {
-        }
     }
 
 #if NET6_0_OR_GREATER

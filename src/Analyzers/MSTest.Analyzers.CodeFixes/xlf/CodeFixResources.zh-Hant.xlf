@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddCallerInfoParametersFix">
+        <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
+        <target state="translated">新增 '[CallerFilePath]' 和 '[CallerLineNumber]' 參數</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">新增 '[TestClass]'</target>
@@ -22,14 +27,9 @@
         <target state="translated">使用 '{0}'</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
-        <source>Use interpolated string instead of format parameters</source>
-        <target state="translated">請使用差補字串而不是格式參數</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
-        <source>Use 'string.Format' instead of format parameters</source>
-        <target state="translated">請使用 'string.Format' 而不是格式參數</target>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="translated">使用指派而非 'out' 參數</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -52,14 +52,14 @@
         <target state="translated">修正簽章</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
-        <source>Fix signature</source>
-        <target state="translated">修正簽章</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">將 'TestContext.CancellationToken' 引數傳遞給方法呼叫</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="translated">移除 'ClassCleanupBehavior' 參數</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -117,14 +117,19 @@
         <target state="translated">修正測試方法簽章</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
-        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="translated">使用 'Assert.ThrowsException&lt;T&gt;' 取代 '[ExpectedException]' 属性</target>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="translated">將 'Execute' 覆寫改為 'ExecuteAsync'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">新增 '[TestMethod]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseContainsKeyInsteadOfContainsFix">
+        <source>Use 'ContainsKey' instead of 'Contains'</source>
+        <target state="translated">使用 'ContainsKey' 而非 'Contains'</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
@@ -137,9 +142,9 @@
         <target state="translated">使用 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseNewerAssertThrows">
-        <source>Use '{0}'</source>
-        <target state="translated">使用 '{0}'</target>
+      <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
+        <source>Use 'DisplayName' property instead of string argument</source>
+        <target state="translated">使用 'DisplayName' 屬性取代字串引數</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

@@ -31,7 +31,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         string diagPathPattern = Path.Combine(diagPath, @"abcd_.*.diag").Replace(@"\", @"\\");
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic --diagnostic-output-fileprefix abcd", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic --diagnostic-file-prefix abcd", cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
@@ -61,7 +61,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         Assert.IsTrue(Directory.CreateDirectory(diagPath).Exists);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--diagnostic --diagnostic-output-fileprefix abcde --diagnostic-output-directory {diagPath}", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--diagnostic --diagnostic-file-prefix abcde --diagnostic-output-directory {diagPath}", cancellationToken: TestContext.CancellationToken);
 
         await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
     }
@@ -71,10 +71,10 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_WhenDiagnosticOutputFilePrefixButNotDiagnosticIsSpecified_ReportGenerationFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-output-fileprefix cccc", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-file-prefix cccc", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'--diagnostic-output-fileprefix' requires '--diagnostic' to be provided");
+        testHostResult.AssertOutputContains("'--diagnostic-file-prefix' requires '--diagnostic' to be provided");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -93,7 +93,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_WhenDiagnosticFilePrefixAndDiagnosticOutputDirectoryButNotDiagnosticAreSpecified_ReportGenerationFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-output-fileprefix aaaa --diagnostic-output-directory cccc", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-file-prefix aaaa --diagnostic-output-directory cccc", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'--diagnostic-output-directory' requires '--diagnostic' to be provided");

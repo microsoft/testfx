@@ -6,5 +6,5 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// The assembly cleanup attribute.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public sealed class AssemblyCleanupAttribute : Attribute;

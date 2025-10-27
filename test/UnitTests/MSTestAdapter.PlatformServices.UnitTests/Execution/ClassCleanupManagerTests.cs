@@ -20,7 +20,7 @@ public class ClassCleanupManagerTests : TestContainer
         MethodInfo classCleanupMethodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeClassCleanupMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
         // Full class name must agree between unitTestElement.TestMethod.FullClassName and testMethod.FullClassName;
         string fullClassName = methodInfo.DeclaringType!.FullName!;
-        TestMethod testMethod = new(nameof(FakeTestClass.FakeTestMethod), fullClassName, typeof(FakeTestClass).Assembly.FullName!, isAsync: false);
+        TestMethod testMethod = new(nameof(FakeTestClass.FakeTestMethod), fullClassName, typeof(FakeTestClass).Assembly.FullName!, displayName: null);
 
         // Setting 2 of the same test to run, we should run assembly cleanup after both these tests
         // finish, not after the first one finishes.
@@ -30,7 +30,7 @@ public class ClassCleanupManagerTests : TestContainer
             new(testMethod)
         ];
 
-        var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, reflectHelper);
+        var classCleanupManager = new ClassCleanupManager(testsToRun);
 
         TestClassInfo testClassInfo = new(typeof(FakeTestClass), null!, true, new TestClassAttribute(), null!)
         {

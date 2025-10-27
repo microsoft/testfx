@@ -267,27 +267,12 @@ public partial class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.TestMethod.Name == "MethodWithVoidReturnType");
         Verify(typeof(DummyTestClass).FullName == testElement.TestMethod.FullClassName);
         Verify(testElement.TestMethod.AssemblyName == "DummyAssemblyName");
-        Verify(!testElement.TestMethod.IsAsync);
-    }
-
-    public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
-    {
-        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("AsyncMethodWithTaskReturnType")!;
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
-
-        string? expectedAsyncTaskName = methodInfo.GetCustomAttribute<AsyncStateMachineAttribute>()!.StateMachineType.FullName;
-
-        Verify(testElement is not null);
-        Verify(expectedAsyncTaskName == testElement.AsyncTypeName);
     }
 
     public void GetTestFromMethodShouldSetTestCategory()
@@ -298,7 +283,7 @@ public partial class TypeEnumeratorTests : TestContainer
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestCategoryAttribute("foo"), new TestCategoryAttribute("bar"));
         string[] testCategories = ["foo", "bar"];
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testCategories.SequenceEqual(testElement.TestCategory));
@@ -311,7 +296,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DoNotParallelizeAttribute());
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.DoNotParallelize);
@@ -328,7 +313,7 @@ public partial class TypeEnumeratorTests : TestContainer
             new TestPropertyAttribute("foo", "bar"),
             new TestPropertyAttribute("fooprime", "barprime"));
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.Traits!.Length == 2);
@@ -350,7 +335,7 @@ public partial class TypeEnumeratorTests : TestContainer
             new TestPropertyAttribute("fooprime", "barprime"),
             new OwnerAttribute("mike"));
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.Traits!.Length == 3);
@@ -369,7 +354,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestPropertyAttribute("foo", "bar"), new TestPropertyAttribute("fooprime", "barprime"), new PriorityAttribute(1));
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.Traits!.Length == 3);
@@ -388,7 +373,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new PriorityAttribute(1));
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.Priority == 1);
@@ -401,7 +386,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DescriptionAttribute("Dummy description"));
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement.Traits is not null);
         Verify(testElement.Traits.Any(t => t.Name == "Description" && t.Value == "Dummy description"));
@@ -414,7 +399,7 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new WorkItemAttribute(123), new WorkItemAttribute(345));
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(new string[] { "123", "345" }.SequenceEqual(testElement.WorkItemIds));
     }
@@ -425,33 +410,9 @@ public partial class TypeEnumeratorTests : TestContainer
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement.WorkItemIds is null);
-    }
-
-    public void GetTestFromMethodShouldSetCssIteration()
-    {
-        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new CssIterationAttribute("234"));
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
-
-        Verify(testElement.CssIteration == "234");
-    }
-
-    public void GetTestFromMethodShouldSetCssProjectStructure()
-    {
-        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new CssProjectStructureAttribute("ProjectStructure123"));
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
-
-        Verify(testElement.CssProjectStructure == "ProjectStructure123");
     }
 
     public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
@@ -465,7 +426,7 @@ public partial class TypeEnumeratorTests : TestContainer
             td => td.GetDeploymentItems(It.IsAny<MethodInfo>(), It.IsAny<Type>(), _warnings))
             .Returns((KeyValuePair<string, string>[])null!);
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.DeploymentItems is null);
@@ -482,29 +443,11 @@ public partial class TypeEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockTestDeployment.Setup(
             td => td.GetDeploymentItems(methodInfo, typeof(DummyTestClass), _warnings)).Returns(deploymentItems);
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
         Verify(testElement.DeploymentItems is not null);
         Verify(deploymentItems.SequenceEqual(testElement.DeploymentItems));
-    }
-
-    public void GetTestFromMethodShouldSetDeclaringAssemblyName()
-    {
-        const bool isMethodFromSameAssembly = false;
-
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
-
-        // Setup mocks
-        string otherAssemblyName = "ADifferentAssembly";
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetAssemblyPath(It.IsAny<Assembly>()))
-            .Returns(otherAssemblyName);
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, isMethodFromSameAssembly, _warnings);
-
-        Verify(testElement is not null);
-        Verify(otherAssemblyName == testElement.TestMethod.DeclaringAssemblyName);
     }
 
     public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
@@ -514,10 +457,10 @@ public partial class TypeEnumeratorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType))!;
         methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestMethodAttribute());
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
-        Verify(testElement.DisplayName == "MethodWithVoidReturnType");
+        Verify(testElement.TestMethod.DisplayName == "MethodWithVoidReturnType");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromTestMethodAttribute()
@@ -525,12 +468,12 @@ public partial class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType))!;
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestMethodAttribute("Test method display name."));
+        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new TestMethodAttribute() { DisplayName = "Test method display name." });
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
+        Verify(testElement.TestMethod.DisplayName == "Test method display name.");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
@@ -538,12 +481,12 @@ public partial class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType))!;
-        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DataTestMethodAttribute("Test method display name."));
+        methodInfo = new MockedMethodInfoWithExtraAttributes(methodInfo, new DataTestMethodAttribute() { DisplayName = "Test method display name." });
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         Verify(testElement is not null);
-        Verify(testElement.DisplayName == "Test method display name.");
+        Verify(testElement.TestMethod.DisplayName == "Test method display name.");
     }
 
     #endregion
@@ -560,14 +503,13 @@ public partial class TypeEnumeratorTests : TestContainer
             rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameAssembly);
     }
 
-    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName, TestIdGenerationStrategy idGenerationStrategy = TestIdGenerationStrategy.FullyQualified)
+    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
         => new(
             type,
             assemblyName,
             _mockReflectHelper.Object,
             _mockTypeValidator.Object,
-            _mockTestMethodValidator.Object,
-            idGenerationStrategy);
+            _mockTestMethodValidator.Object);
 
     #endregion
 }

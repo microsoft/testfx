@@ -72,16 +72,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // Contains list of assembly/class names for which we have already added fixture tests.
         var fixturesTests = new HashSet<string>();
 
-        Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
+        Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
-        Type[] types = GetTypes(assembly, assemblyFileName, warnings);
+        Type[] types = GetTypes(assembly);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
-        TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(assembly);
-
-        // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
-        // causing a breaking change.
-        DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
-        DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
@@ -90,16 +84,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
-#pragma warning disable CS0612 // Type or member is obsolete
-#pragma warning disable CS0618 // Type or member is obsolete
-            null => (ReflectHelper.GetTestDataSourceDiscoveryOption(assembly), testIdGenerationStrategy) switch
-#pragma warning restore CS0612 // Type or member is obsolete
+            null => ReflectHelper.GetTestDataSourceDiscoveryOption(assembly) switch
             {
-                (TestDataSourceDiscoveryOption.DuringExecution, _) => TestDataSourceUnfoldingStrategy.Fold,
-                // When using legacy strategy, there is no point in trying to "read" data during discovery
-                // as the ID generator will ignore it.
-                (null, TestIdGenerationStrategy.Legacy) => TestDataSourceUnfoldingStrategy.Fold,
-#pragma warning restore CS0618 // Type or member is obsolete
+                TestDataSourceDiscoveryOption.DuringExecution => TestDataSourceUnfoldingStrategy.Fold,
                 _ => TestDataSourceUnfoldingStrategy.Unfold,
             },
         };
@@ -107,7 +94,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, testIdGenerationStrategy, fixturesTests);
+                dataSourcesUnfoldingStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
@@ -118,10 +105,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Gets the types defined in an assembly.
     /// </summary>
     /// <param name="assembly">The reflected assembly.</param>
-    /// <param name="assemblyFileName">The file name of the assembly.</param>
-    /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
+    internal static Type[] GetTypes(Assembly assembly)
     {
         try
         {
@@ -129,60 +114,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
         catch (ReflectionTypeLoadException ex)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"MSTestExecutor.TryGetTests: {Resource.TestAssembly_AssemblyDiscoveryFailure}", assemblyFileName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
-
             if (ex.LoaderExceptions != null)
             {
-                // If not able to load all type, log a warning and continue with loaded types.
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, GetLoadExceptionDetails(ex));
+                if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
+                {
+                    // This exception might be more clear than the ReflectionTypeLoadException, so we throw it.
+                    throw singleLoaderException;
+                }
 
-                warningMessages?.Add(message);
-
+                // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
                 }
             }
 
-            // We already logged a warning or error.
-            // So don't return types that failed to load.
-            // The intent of the catch is to gracefully run the types that we could load.
-            return ex.Types is null ? [] : [.. ex.Types.Where(t => t is not null)!];
+            throw;
         }
-    }
-
-    /// <summary>
-    /// Formats load exception as multi-line string, each line contains load error message.
-    /// </summary>
-    /// <param name="ex">The exception.</param>
-    /// <returns>Returns loader exceptions as a multi-line string.</returns>
-    internal static string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
-    {
-        DebugEx.Assert(ex != null, "exception should not be null.");
-
-        var map = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
-        var errorDetails = new StringBuilder();
-
-        if (ex.LoaderExceptions?.Length > 0)
-        {
-            // Loader exceptions can contain duplicates, leave only unique exceptions.
-            foreach (Exception? loaderException in ex.LoaderExceptions)
-            {
-                DebugEx.Assert(loaderException != null, "loader exception should not be null.");
-                string line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
-                if (map.TryAdd(line, null))
-                {
-                    errorDetails.AppendLine(line);
-                }
-            }
-        }
-        else
-        {
-            errorDetails.AppendLine(ex.Message);
-        }
-
-        return errorDetails.ToString();
     }
 
     /// <summary>
@@ -192,14 +140,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
-    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
@@ -208,7 +155,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        TestIdGenerationStrategy testIdGenerationStrategy,
         HashSet<string> fixturesTests)
     {
         string? typeFullName = null;
@@ -217,7 +163,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
+            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
             List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
 
             if (unitTestCases != null)
@@ -325,13 +271,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
         static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy, MethodInfo methodInfo)
         {
             string displayName = $"[{fixtureType}] {methodName}";
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, displayName, TestIdGenerationStrategy.FullyQualified)
+            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, displayName, null)
             {
                 MethodInfo = methodInfo,
             };
             return new UnitTestElement(method)
             {
-                DisplayName = displayName,
                 Traits = [new Trait(EngineConstants.FixturesTestTrait, fixtureType)],
             };
         }
@@ -346,10 +291,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        // If the global strategy is to fold and local uses Auto then return false
+        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
+            && test.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto)
+        {
+            return false;
+        }
+
+        // If the data source specifies the unfolding strategy as fold then return false
+        if (test.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
+        {
+            return false;
+        }
+
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo, inherit: false).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];
@@ -357,10 +315,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             bool isDataDriven = false;
+            int globalTestCaseIndex = 0;
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, dataSourcesUnfoldingStrategy, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -390,23 +349,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
     {
-        var unfoldingCapability = dataSource as ITestDataSourceUnfoldingCapability;
-
-        // If the global strategy is to fold and local has no strategy or uses Auto then return false
-        if (dataSourcesUnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold
-            && (unfoldingCapability is null || unfoldingCapability.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Auto))
-        {
-            return false;
-        }
-
-        // If the data source specifies the unfolding strategy as fold then return false
-        if (unfoldingCapability?.UnfoldingStrategy == TestDataSourceUnfoldingStrategy.Fold)
-        {
-            return false;
-        }
-
         // Otherwise, unfold the data source and verify it can be serialized.
         IEnumerable<object?[]>? data;
 
@@ -426,16 +370,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
+            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
             tests.Add(discoveredTest);
 
             return true;
         }
 
-        var testDisplayNameFirstSeen = new Dictionary<string, int>();
         var discoveredTests = new List<UnitTestElement>();
-        int index = 0;
 
         foreach (object?[] dataOrTestDataRow in data)
         {
@@ -467,8 +408,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = displayNameFromTestDataRow ?? dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
-            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
+            discoveredTest.TestMethod.DisplayName = displayNameFromTestDataRow
+                ?? dataSource.GetDisplayName(methodInfo, d)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
+                ?? discoveredTest.TestMethod.DisplayName;
 
             // Merge test categories from the test data row with the existing categories
             if (testCategoriesFromTestDataRow is { Count: > 0 })
@@ -478,30 +421,17 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     : [.. testCategoriesFromTestDataRow];
             }
 
-            // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
-                && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out int firstIndexSeen))
-            {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
-                warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
-
-                // Duplicated display name so bail out. Caller will handle adding the original test.
-                return false;
-            }
-#pragma warning restore CS0618 // Type or member is obsolete
-
             try
             {
                 discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
                 discoveredTest.TestMethod.ActualData = d;
+                discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
                 discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
             }
             catch (SerializationException ex)
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, globalTestCaseIndex, discoveredTest.TestMethod.DisplayName);
                 warning += Environment.NewLine;
                 warning += ex.ToString();
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
@@ -512,7 +442,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             discoveredTests.Add(discoveredTest);
-            testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
+            globalTestCaseIndex++;
         }
 
         tests.AddRange(discoveredTests);

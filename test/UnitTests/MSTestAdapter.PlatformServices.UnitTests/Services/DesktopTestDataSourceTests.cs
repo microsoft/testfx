@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
 using System.Data;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -32,7 +32,7 @@ public class DesktopTestDataSourceTests : TestContainer
         DataSourceAttribute dataSourceAttribute = new(
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
-        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>(false))
+        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>())
             .Returns([dataSourceAttribute]);
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
@@ -51,7 +51,7 @@ public class DesktopTestDataSourceTests : TestContainer
         DataSourceAttribute dataSourceAttribute = new(
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
-        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>(false))
+        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>())
             .Returns([dataSourceAttribute]);
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 

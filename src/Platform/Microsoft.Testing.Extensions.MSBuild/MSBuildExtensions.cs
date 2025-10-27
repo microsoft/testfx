@@ -23,14 +23,12 @@ public static class MSBuildExtensions
         builder.TestHost.AddTestHostApplicationLifetime(
             serviceProvider => new MSBuildTestApplicationLifecycleCallbacks(
                 serviceProvider.GetConfiguration(),
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestApplicationCancellationTokenSource()));
+                serviceProvider.GetCommandLineOptions()));
 
         ((TestApplicationBuilder)builder).TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
             serviceProvider => new MSBuildOrchestratorLifetime(
                 serviceProvider.GetConfiguration(),
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetTestApplicationCancellationTokenSource()));
+                serviceProvider.GetCommandLineOptions()));
 
         CompositeExtensionFactory<MSBuildConsumer> compositeExtensionFactory
             = new(serviceProvider => new MSBuildConsumer(

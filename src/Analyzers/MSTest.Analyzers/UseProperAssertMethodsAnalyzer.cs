@@ -79,7 +79,7 @@ namespace MSTest.Analyzers;
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
+public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 {
     private enum NullCheckStatus
     {
@@ -211,12 +211,14 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         MessageFormat,
         null,
         Category.Usage,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -484,10 +486,9 @@ internal sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
-        // Check if the type implements IEnumerable<T> (but is not string)
-        // Note: Assert.Contains/IsEmpty/HasCount for collections accept IEnumerable<T>, but not IEnumerable.
+        // Check if the type implements IEnumerable (but is not string)
         => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
-            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T) &&
+            i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable) &&
             // object is coming from BCL and it's expected to always have a public key.
             type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
             type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);

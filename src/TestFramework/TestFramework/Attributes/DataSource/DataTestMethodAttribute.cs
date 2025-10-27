@@ -13,23 +13,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [EditorBrowsable(EditorBrowsableState.Never)]
 public class DataTestMethodAttribute : TestMethodAttribute
 {
-    private protected override bool UseAsync => GetType() == typeof(DataTestMethodAttribute);
-
     /// <summary>
     /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
     /// </summary>
-    public DataTestMethodAttribute()
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display name for the test.
-    /// </param>
-    public DataTestMethodAttribute(string? displayName)
-        : base(displayName)
+    public DataTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+        : base(callerFilePath, callerLineNumber)
     {
     }
 }

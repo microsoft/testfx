@@ -4,6 +4,135 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.0.1" />[4.0.1] - 2025-10-14
+
+See full log [of v4.0.0...v4.0.1](https://github.com/microsoft/testfx/compare/v4.0.0...v4.0.1)
+
+### Fixed
+
+* Fix deployment regression by @Youssef1313 in [#6718](https://github.com/microsoft/testfx/pull/6718)
+
+### Artifacts
+
+* MSTest: [4.0.1](https://www.nuget.org/packages/MSTest/4.0.1)
+* MSTest.TestFramework: [4.0.1](https://www.nuget.org/packages/MSTest.TestFramework/4.0.1)
+* MSTest.TestAdapter: [4.0.1](https://www.nuget.org/packages/MSTest.TestAdapter/4.0.1)
+* MSTest.Analyzers: [4.0.1](https://www.nuget.org/packages/MSTest.Analyzers/4.0.1)
+* MSTest.Sdk: [4.0.1](https://www.nuget.org/packages/MSTest.Sdk/4.0.1)
+* MSTest.SourceGeneration: [2.0.0-alpha.25514.6](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.25514.6)
+* MSTest.Engine: [2.0.0-alpha.25514.6](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.25514.6)
+
+## <a name="4.0.0" />[4.0.0] - 2025-10-07
+
+See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v3.11.0...v4.0.0)
+
+### Added
+
+* Support for `CallerArgumentExpression` in all Assert APIs for better messages of assertion failures.
+* Added `Assert.That`, which provides easy way to write any assertion boolean expression with clear error message in case of assertion failures.
+
+### Changed
+
+* Breaking changes: see [Migrate from MSTest v3 to MSTest v4](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-migration-v3-v4).
+
+### Artifacts
+
+* MSTest: [4.0.0](https://www.nuget.org/packages/MSTest/4.0.0)
+* MSTest.TestFramework: [4.0.0](https://www.nuget.org/packages/MSTest.TestFramework/4.0.0)
+* MSTest.TestAdapter: [4.0.0](https://www.nuget.org/packages/MSTest.TestAdapter/4.0.0)
+* MSTest.Analyzers: [4.0.0](https://www.nuget.org/packages/MSTest.Analyzers/4.0.0)
+* MSTest.Sdk: [4.0.0](https://www.nuget.org/packages/MSTest.Sdk/4.0.0)
+* MSTest.SourceGeneration: [2.0.0-alpha.25507.7](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.25507.7)
+* MSTest.Engine: [2.0.0-alpha.25507.7](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.25507.7)
+
+## <a name="3.11.0" />[3.11.0] - 2025-10-01
+
+See full log [of v3.10.5...v3.11.0](https://github.com/microsoft/testfx/compare/v3.10.5...v3.11.0)
+
+### Added
+
+* Allow to opt-out of Microsoft.NET.Test.Sdk by @Evangelink in [#6233](https://github.com/microsoft/testfx/pull/6233)
+* Add analyzer to flag Assert.Throws with multiple statements (MSTEST0051) by @Copilot in [#6190](https://github.com/microsoft/testfx/pull/6190)
+* Add field support to DynamicDataAttribute by @Copilot in [#6203](https://github.com/microsoft/testfx/pull/6203)
+* Add analyzer for DynamicDataSourceType usage (MSTEST0052) by @Copilot in [#6261](https://github.com/microsoft/testfx/pull/6261)
+* Enhance Assert.AreEqual string comparison with smart context windowing and visual difference indicators by @Copilot in [#6163](https://github.com/microsoft/testfx/pull/6163)
+* MSTEST0037: Recognize IsTrue(collection.\[Count|Length] \[==|>|!=] 0) patterns and cleanup by @Youssef1313 in [#6416](https://github.com/microsoft/testfx/pull/6416)
+* Improve collection.Count/Length detection in MSTEST0037 by @Youssef1313 in [#6428](https://github.com/microsoft/testfx/pull/6428)
+* Add analyzer for Assert APIs with format parameters (MSTEST0053) by @Copilot in [#6294](https://github.com/microsoft/testfx/pull/6294)
+* Add analyzer and codefix to move from `TestContext.CancellationTokenSource.Token` to `TestContext.CancellationToken` by @Copilot in [#6429](https://github.com/microsoft/testfx/)pull/6429
+* Add analyzer for ignoring string method return values (MSTEST0055) by @Copilot in [#6482](https://github.com/microsoft/testfx/pull/6482)
+* Is subsetof return non subset values of the superset (relates to #662) by @AtolagbeMuiz in [#6292](https://github.com/microsoft/testfx/pull/6292)
+* Implement assert contains overload to accept non-generic collection by @AtolagbeMuiz in [#6417](https://github.com/microsoft/testfx/pull/6417)
+* Fix swapped expected/actual analyzer to handle typeof() expressions by @Copilot in [#6555](https://github.com/microsoft/testfx/pull/6555)
+
+### Fixed
+
+* Fix equal sign in file name by @nohwnd in [#6389](https://github.com/microsoft/testfx/pull/6389)
+* Fix MSTEST0046 code fix removing empty lines by preserving leading trivia by @Copilot in [#6363](https://github.com/microsoft/testfx/pull/6363)
+* Fix OneLoc syntax: Replace natural language locking instructions with proper {Locked=""} format by @Copilot in [#6442](https://github.com/microsoft/testfx/pull/6442)
+* Fix some bugs with TestMethodShouldBeValidCodeFix by @Evangelink in [#6450](https://github.com/microsoft/testfx/pull/6450)
+* Fix MSTEST0017 false positive when comparing literals to properties with "expected" names by @Copilot in [#6456](https://github.com/microsoft/testfx/pull/6456)
+* More async usage by @Youssef1313 in [#6582](https://github.com/microsoft/testfx/pull/6582)
+* Fix MSTEST0025 false positive for reference types in Assert.IsNull() by @Copilot in [#6601](https://github.com/microsoft/testfx/pull/6601)
+* Fix MSTEST0037 false positive for Contains with type different from the generic parameter of `IEnumerable<T>` by @Youssef1313 in [#6607](https://github.com/microsoft/testfx/pull/6607)
+* Don't suggest HasCount when Length/Count access is on the "expected" side by @Youssef1313 in [#6608](https://github.com/microsoft/testfx/pull/6608)
+* Fix flow cancellation token codefix to use named arg when necessary by @Youssef1313 in [#6617](https://github.com/microsoft/testfx/pull/6617)
+* Performance improvements:
+  * Performance: Reduce unnecessary logic in UpdateInfoIfTestInitializeOrCleanupMethod by @Youssef1313 in [#6318](https://github.com/microsoft/testfx/pull/6318)
+  * Avoid ManagedNameHelper when possible by @Youssef1313 in [#6319](https://github.com/microsoft/testfx/pull/6319)
+  * Avoid accessing TestCase.Traits when possible by @Youssef1313 in [#6353](https://github.com/microsoft/testfx/pull/6353)
+  * Cleanup TestContextImplementation by @Youssef1313 in [#6352](https://github.com/microsoft/testfx/pull/6352)
+  * Prevent unnecessary `List<TestCase>` allocations by @Youssef1313 in [#6370](https://github.com/microsoft/testfx/pull/6370)
+  * Avoid iterator allocations by @Youssef1313 in [#6369](https://github.com/microsoft/testfx/pull/6369)
+  * Optimize tcm properties by @Youssef1313 in [#6372](https://github.com/microsoft/testfx/pull/6372)
+  * Early exit RunTestCleanupMethodAsync if no cleanups by @Youssef1313 in [#6379](https://github.com/microsoft/testfx/pull/6379)
+  * Don't store fixture tests when the feature isn't used by @Youssef1313 in [#6378](https://github.com/microsoft/testfx/pull/6378)
+  * Avoid LINQ in TryExecuteFoldedDataDrivenTestsAsync by @Youssef1313 in [#6376](https://github.com/microsoft/testfx/pull/6376)
+
+### Housekeeping
+
+* Update copilot-instructions.md by @nohwnd in [#6280](https://github.com/microsoft/testfx/pull/6280)
+* Fix missing "throw" for unreachable code path in FormatStringComparisonMessage by @Youssef1313 in [#6299](https://github.com/microsoft/testfx/pull/6299)
+* Made changes to dev-guide by @AtolagbeMuiz in [#6254](https://github.com/microsoft/testfx/pull/6254)
+* Fix build incrementality by @Youssef1313 in [#6443](https://github.com/microsoft/testfx/pull/6443)
+* Make acceptance tests cancellable quickly by @Evangelink in [#6502](https://github.com/microsoft/testfx/pull/6502)
+* Remove extra reference to MSTest.Analyzers by @Youssef1313 in [#6548](https://github.com/microsoft/testfx/pull/6548)
+* Fix typo in protocol introduction by @nohwnd in [#6588](https://github.com/microsoft/testfx/pull/6588)
+* Update Playwright version to 1.55.0 by @Youssef1313 in [#6631](https://github.com/microsoft/testfx/pull/6631)
+* Update AspireHostingTestingVersion to 9.5.0 by @Youssef1313 in [#6629](https://github.com/microsoft/testfx/pull/6629)
+
+### New Contributors
+
+* @AtolagbeMuiz made their first contribution in [#6254](https://github.com/microsoft/testfx/pull/6254)
+
+### Artifacts
+
+* MSTest: [3.11.0](https://www.nuget.org/packages/MSTest/3.11.0)
+* MSTest.TestFramework: [3.11.0](https://www.nuget.org/packages/MSTest.TestFramework/3.11.0)
+* MSTest.TestAdapter: [3.11.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.11.0)
+* MSTest.Analyzers: [3.11.0](https://www.nuget.org/packages/MSTest.Analyzers/3.11.0)
+* MSTest.Sdk: [3.11.0](https://www.nuget.org/packages/MSTest.Sdk/3.11.0)
+* MSTest.SourceGeneration: [1.0.0-alpha.25501.5](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25501.5)
+* MSTest.Engine: [1.0.0-alpha.25501.5](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25501.5)
+
+## <a name="3.10.5" />[3.10.5] - 2025-09-30
+
+See full log [of v3.10.4...v3.10.5](https://github.com/microsoft/testfx/compare/v3.10.4...v3.10.5)
+
+### Fixed
+
+* Include TestFramework.Extensions.dll in TestAdapter NuGet package for .NET Framework by @Youssef1313 in [#6625](https://github.com/microsoft/testfx/pull/6625)
+
+### Artifacts
+
+* MSTest: [3.10.5](https://www.nuget.org/packages/MSTest/3.10.5)
+* MSTest.TestFramework: [3.10.5](https://www.nuget.org/packages/MSTest.TestFramework/3.10.5)
+* MSTest.TestAdapter: [3.10.5](https://www.nuget.org/packages/MSTest.TestAdapter/3.10.5)
+* MSTest.Analyzers: [3.10.5](https://www.nuget.org/packages/MSTest.Analyzers/3.10.5)
+* MSTest.Sdk: [3.10.5](https://www.nuget.org/packages/MSTest.Sdk/3.10.5)
+* MSTest.SourceGeneration: [1.0.0-alpha.25480.6](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25480.6)
+* MSTest.Engine: [1.0.0-alpha.25480.6](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25480.6)
+
 ## <a name="3.10.4" />[3.10.4] - 2025-09-02
 
 See full log [of v3.10.3...v3.10.4](https://github.com/microsoft/testfx/compare/v3.10.3...v3.10.4)

@@ -224,6 +224,11 @@
         <target state="translated">Detección de pruebas de</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="translated">duración</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Error del proveedor "{0}" (UID: {1}) con el error: {2}</target>
@@ -758,6 +763,11 @@ Toma un argumento como cadena con el formato &lt;value&gt;[h|m|s] donde 'value' 
         <target state="translated">Iniciando sesión de prueba. La ruta de acceso del archivo de registro es '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="translated">correcto</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Ya se ha establecido una fábrica "ITestExecutionFilterFactory"</target>
@@ -975,6 +985,11 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">No se ejecutaron pruebas</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="translated">total</target>
         <note />
       </trans-unit>
     </body>

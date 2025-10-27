@@ -83,6 +83,21 @@
         <target state="translated">No pase tipos de valor a AreSame(). Los valores convertidos a Object no serán nunca iguales. Considere el uso de AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertThatDetailsPrefix">
+        <source>Details:</source>
+        <target state="translated">Detalles:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatFailedFormat">
+        <source>Assert.That({0}) failed.</source>
+        <target state="translated">Error de Assert.That({0}).</target>
+        <note>{0} is the user code expression</note>
+      </trans-unit>
+      <trans-unit id="AssertThatMessageFormat">
+        <source>Message: {0}</source>
+        <target state="translated">Mensaje: {0}</target>
+        <note>{0} user provided message</note>
+      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
         <target state="translated">Ambas colecciones están vacías. {0}</target>
@@ -102,6 +117,21 @@
         <source>Both collections contain the same elements. {0}</source>
         <target state="translated">Ambas colecciones tienen los mismos elementos. {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
+        <source>'{0}' expression: '{1}'.</source>
+        <target state="translated">Expresión "{0}": "{1}".</target>
+        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
+        <target state="translated">Expresión "{0}": "{1}", expresión "{2}": "{3}", expresión "{4}": "{5}".</target>
+        <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
+      </trans-unit>
+      <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
+        <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
+        <target state="translated">Expresión "{0}": "{1}", expresión "{2}": "{3}".</target>
+        <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
@@ -216,6 +246,11 @@ Full Actual: {4}</target>
         <target state="translated">Se esperaba una colección de tamaño {1}. Real: {2}. {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidAccessToTestContextProperty">
+        <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
+        <target state="translated">La propiedad "TestContext.{0}" está relacionado con la prueba actual y no está disponible durante los accesorios de ensamblado o clase.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">Dirección URL de vale de GitHub no válida</target>
@@ -293,7 +328,7 @@ Actual: {1}</target>
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
-        <target state="new">Element(s) &lt;{0}&gt; is/are not present in the collection.</target>
+        <target state="translated">Los elementos &lt;{0}&gt; no están presentes en la colección.</target>
         <note />
       </trans-unit>
       <trans-unit id="StartsWithFail">
@@ -314,31 +349,6 @@ Actual: {1}</target>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
         <target state="translated">(objeto)</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
-        <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">El tipo de excepción esperado debe ser System.Exception o un tipo derivado de System.Exception.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoExceptionDefault">
-        <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">El método de prueba no inició una excepción. El atributo {0} definido en el método de prueba esperaba una excepción.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodNoException">
-        <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">El método de prueba no inició la excepción esperada {0}. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongException">
-        <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">El método de prueba inició la excepción {0}, pero se esperaba la excepción {1}. Mensaje de la excepción: {2}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
-        <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">El método de prueba inició la excepción {0}, pero se esperaba la excepción {1} o un tipo derivado de ella. Mensaje de la excepción: {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">

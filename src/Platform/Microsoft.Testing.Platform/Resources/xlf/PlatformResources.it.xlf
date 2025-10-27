@@ -224,6 +224,11 @@
         <target state="translated">Individuazione di test da</target>
         <note />
       </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="translated">durata</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Provider '{0}' (UID: {1}) non riuscito con errore: {2}</target>
@@ -758,6 +763,11 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
         <target state="translated">Avvio della sessione di test. Il percorso del file di log è '{0}'.</target>
         <note />
       </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="translated">riusciti</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">È già impostata una factory 'ITestExecutionFilterFactory'</target>
@@ -975,6 +985,11 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
         <target state="translated">Nessun test eseguito</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="translated">totali</target>
         <note />
       </trans-unit>
     </body>

@@ -47,7 +47,7 @@ namespace MSTest.Analyzers;
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
+public sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     /// <summary>
     /// Key to retrieve the proper assert method name from the properties bag.
@@ -66,9 +66,11 @@ internal sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
 
+    /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);

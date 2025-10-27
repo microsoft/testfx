@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddCallerInfoParametersFix">
+        <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
+        <target state="translated">添加参数‘[CallerFilePath]’和‘[CallerLineNumber]’</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">添加 “[TestClass]”</target>
@@ -22,14 +27,9 @@
         <target state="translated">使用“{0}”</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
-        <source>Use interpolated string instead of format parameters</source>
-        <target state="translated">使用内插字符串而不是格式参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
-        <source>Use 'string.Format' instead of format parameters</source>
-        <target state="translated">使用 'string.Format' 而不是格式参数</target>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="translated">使用赋值替代参数‘out’</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -52,14 +52,14 @@
         <target state="translated">修复签名</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
-        <source>Fix signature</source>
-        <target state="translated">修复签名</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">将 'TestContext.CancellationToken' 参数传递给方法调用</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="translated">删除参数‘ClassCleanupBehavior’</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -117,14 +117,19 @@
         <target state="translated">修复测试方法签名</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
-        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="translated">使用“Assert.ThrowsException&lt;T&gt;”而不是“[ExpectedException]”属性</target>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="translated">将‘Execute’重写为‘ExecuteAsync’</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">添加“[TestMethod]”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseContainsKeyInsteadOfContainsFix">
+        <source>Use 'ContainsKey' instead of 'Contains'</source>
+        <target state="translated">使用‘ContainsKey’而不是‘Contains’</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
@@ -137,9 +142,9 @@
         <target state="translated">使用 'CooperativeCancellation = true'</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseNewerAssertThrows">
-        <source>Use '{0}'</source>
-        <target state="translated">使用“{0}”</target>
+      <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
+        <source>Use 'DisplayName' property instead of string argument</source>
+        <target state="translated">使用属性‘DisplayName’替代字符串参数</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">

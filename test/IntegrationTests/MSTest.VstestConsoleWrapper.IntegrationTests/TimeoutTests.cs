@@ -12,7 +12,7 @@ public class TimeoutTests : CLITestBase
 
     [TestMethod]
     [DataRow("net462")]
-    [DataRow("netcoreapp3.1")]
+    [DataRow("net8.0")]
     public void ValidateTimeoutTests(string targetFramework)
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);

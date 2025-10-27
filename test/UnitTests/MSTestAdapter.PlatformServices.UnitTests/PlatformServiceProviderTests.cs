@@ -34,17 +34,7 @@ public class PlatformServiceProviderTests : TestContainer
 
     public void TestSourceShouldReturnANonNullInstance() => Verify(PlatformServiceProvider.Instance is not null);
 
-    public void TestSourceShouldReturnAValidTestSource() => Verify(PlatformServiceProvider.Instance.TestSource.GetType() == typeof(TestSource));
-
-    public void TestSourceShouldBeCached()
-    {
-        PlatformServices.Interface.ITestSource testSourceInstance = PlatformServiceProvider.Instance.TestSource;
-
-        Verify(testSourceInstance is not null);
-        Verify(testSourceInstance == PlatformServiceProvider.Instance.TestSource);
-    }
-
-    public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
+    public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations));
 
     public void ReflectionOperationsShouldBeCached()
     {
@@ -63,12 +53,13 @@ public class PlatformServiceProviderTests : TestContainer
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, properties, null!, default);
+        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, null, properties, null!, default);
 
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
         Verify(testContext.Context.TestName == "M");
-        Verify(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
-        Verify(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]!));
+        Verify(testContext.Context.Properties.ContainsKey(properties.Single().Key));
+
+        Verify(testContext.Context.Properties.Contains(properties.Single()));
     }
 }

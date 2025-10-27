@@ -6,7 +6,6 @@ using Microsoft.Testing.Extensions;
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
-[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 #if NETCOREAPP
 Console.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);

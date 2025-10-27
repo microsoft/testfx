@@ -17,12 +17,7 @@ public class ParameterizedTestSerializationIssue2390
     {
         object[] array = (object[])nested;
         object actual = Assert.ContainsSingle(array);
-#if NETFRAMEWORK
-        // Buggy behavior, because of app domains.
-        Assert.AreEqual(typeof(int), actual.GetType());
-#else
         Assert.AreEqual(expected.GetType(), actual.GetType());
         Assert.AreEqual(expected, actual);
-#endif
     }
 }

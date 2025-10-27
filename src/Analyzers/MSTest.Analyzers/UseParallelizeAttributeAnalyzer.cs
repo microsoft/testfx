@@ -21,13 +21,15 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseParallelizeAttributeAnalyzerTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseParallelizeAttributeAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.UseParallelizeAttributeAnalyzerDescription), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+
+    /// <inheritdoc cref="Resources.UseParallelizeAttributeAnalyzerTitle" />
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseParallelizedAttributeRuleId,
         Title,
         MessageFormat,
         Description,
         Category.Performance,
-        DiagnosticSeverity.Info,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

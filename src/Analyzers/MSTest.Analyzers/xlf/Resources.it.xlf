@@ -132,31 +132,6 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">Non usare 'Assert.AreSame' o 'Assert.AreNotSame' con i tipi di valore</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersMessageFormat">
-        <source>Replace '{0}' with format parameters with string.Format or string interpolation</source>
-        <target state="translated">Sostituire '{0}' con i parametri di formato utilizzando string.Format o l'interpolazione di stringa</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersTitle">
-        <source>Avoid using Assert methods with format parameters</source>
-        <target state="translated">Evitare di usare metodi Assert con parametri di formato</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="translated">Preferire 'Assert.ThrowsExactly' o 'Assert.ThrowsExactlyAsync' a '[ExpectedException]' perché assicura che solo la chiamata prevista generi l'eccezione prevista. Le API di asserzione offrono anche maggiore flessibilità e consentono di dichiarare proprietà aggiuntive dell'eccezione.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="translated">Preferire 'Assert.ThrowsExactly/ThrowsExactlyAsync' a '[ExpectedException]'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
-        <source>Avoid '[ExpectedException]'</source>
-        <target state="translated">Evita '[ExpectedException]'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
         <target state="translated">Rimuovere l'argomento 'DynamicDataSourceType' per utilizzare il comportamento di rilevamento automatico predefinito</target>
@@ -662,6 +637,26 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">La proprietà 'TestContext' deve essere valida</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
+        <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
+        <target state="translated">La classe derivata TestMethodAttribute '{0}' deve aggiungere i parametri CallerFilePath e CallerLineNumber al costruttore</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
+        <source>TestMethodAttribute derived class should propagate source information</source>
+        <target state="translated">La classe derivata TestMethodAttribute deve propagare le informazioni di origine</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
+        <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
+        <target state="translated">Usare la proprietà 'DisplayName' anziché passare un argomento stringa a TestMethodAttribute</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
+        <source>TestMethodAttribute should set DisplayName correctly</source>
+        <target state="translated">TestMethodAttribute deve impostare correttamente DisplayName</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">La firma del metodo di test '{0}' non è valida</target>
@@ -680,21 +675,6 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
         <target state="translated">Usare TestContext.CancellationToken invece di TestContext.CancellationTokenSource.Token</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
-        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">Se non si usa 'ClassCleanupBehavior.EndOfClass', '[ClassCleanup]' verrà eseguito per impostazione predefinita alla fine dell'assembly e non alla fine della classe.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">Usare 'ClassCleanupBehavior.EndOfClass' con '[ClassCleanup]'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">Usare 'ClassCleanupBehavior.EndOfClass' con '[ClassCleanup]'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
@@ -942,16 +922,6 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">'[DeploymentItem]' può essere specificato solo per la classe di test o il metodo di test</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsMessageFormat">
-        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="translated">Usare 'Assert.ThrowsExactly' invece di 'Assert.ThrowsException'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsTitle">
-        <source>Use newer methods to assert exceptions</source>
-        <target state="translated">Usa metodi più recenti per dichiarare le eccezioni</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

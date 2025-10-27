@@ -10,13 +10,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 /// <summary>
 /// The test run directories.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
 [Serializable]
-public class TestRunDirectories
+internal sealed class TestRunDirectories
 {
     /// <summary>
     /// The default deployment root directory. We do not want to localize it.
@@ -37,35 +32,30 @@ public class TestRunDirectories
     /// Initializes a new instance of the <see cref="TestRunDirectories"/> class.
     /// </summary>
     /// <param name="rootDirectory">The root directory path.</param>
-    public TestRunDirectories(string rootDirectory)
+    /// <param name="firstTestSource">
+    /// The path to the test assembly of the first test case. In most cases, all
+    /// test cases belong to the same assembly, but not guaranteed. We are using the path from
+    /// the first test case as a "best effort" implementation. DeploymentItem isn't correctly designed and should be deprecated in future.
+    /// </param>
+    /// <param name="isAppDomainCreationDisabled">Whether or not app domain is disabled.</param>
+    public TestRunDirectories(string rootDirectory, string? firstTestSource, bool isAppDomainCreationDisabled)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDirectory), "rootDirectory");
 
         RootDeploymentDirectory = rootDirectory;
-    }
-
-    [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
-    private void OnRootDeploymentDirectoryUpdated()
-    {
         InDirectory = Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
-        OutDirectory = Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+
+        OutDirectory = isAppDomainCreationDisabled && firstTestSource is not null
+            ? Path.GetDirectoryName(firstTestSource)!
+            : Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+
         InMachineNameDirectory = Path.Combine(InDirectory, Environment.MachineName);
     }
 
     /// <summary>
-    /// Gets or sets the root deployment directory.
+    /// Gets the root deployment directory.
     /// </summary>
-    public string RootDeploymentDirectory
-    {
-        get;
-        // TODO: Remove the setter as a breaking change and simplify the code.
-        [MemberNotNull(nameof(InDirectory), nameof(OutDirectory), nameof(InMachineNameDirectory))]
-        set
-        {
-            field = value;
-            OnRootDeploymentDirectoryUpdated();
-        }
-    }
+    public string RootDeploymentDirectory { get; }
 
     /// <summary>
     /// Gets the In directory.

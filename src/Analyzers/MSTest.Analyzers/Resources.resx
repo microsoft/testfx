@@ -180,15 +180,6 @@ The type declaring these methods should also respect the following rules:
   <data name="AssertionArgsShouldBePassedInCorrectOrderTitle" xml:space="preserve">
     <value>Assertion arguments should be passed in the correct order</value>
   </data>
-  <data name="AvoidExpectedExceptionAttributeDescription" xml:space="preserve">
-    <value>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</value>
-  </data>
-  <data name="AvoidExpectedExceptionAttributeMessageFormat" xml:space="preserve">
-    <value>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</value>
-  </data>
-  <data name="AvoidExpectedExceptionAttributeTitle" xml:space="preserve">
-    <value>Avoid '[ExpectedException]'</value>
-  </data>
   <data name="ClassCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
 -it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
@@ -471,15 +462,6 @@ The type declaring these methods should also respect the following rules:
   <data name="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat" xml:space="preserve">
     <value>Review or remove the assertion as its condition is known to be always true</value>
   </data>
-  <data name="UseClassCleanupBehaviorEndOfClassTitle" xml:space="preserve">
-    <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
-  </data>
-  <data name="UseClassCleanupBehaviorEndOfClassDescription" xml:space="preserve">
-    <value>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</value>
-  </data>
-  <data name="UseClassCleanupBehaviorEndOfClassMessageFormat" xml:space="preserve">
-    <value>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</value>
-  </data>
   <data name="DynamicDataShouldBeValidTitle" xml:space="preserve">
     <value>DynamicData should be valid</value>
   </data>
@@ -560,12 +542,6 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</value>
-  </data>
-  <data name="UseNewerAssertThrowsTitle" xml:space="preserve">
-    <value>Use newer methods to assert exceptions</value>
-  </data>
-  <data name="UseNewerAssertThrowsMessageFormat" xml:space="preserve">
-    <value>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</value>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesTitle" xml:space="preserve">
     <value>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</value>
@@ -678,6 +654,18 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
   </data>
+  <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle" xml:space="preserve">
+    <value>TestMethodAttribute should set DisplayName correctly</value>
+  </data>
+  <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat" xml:space="preserve">
+    <value>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</value>
+  </data>
+  <data name="TestMethodAttributeShouldPropagateSourceInformationTitle" xml:space="preserve">
+    <value>TestMethodAttribute derived class should propagate source information</value>
+  </data>
+  <data name="TestMethodAttributeShouldPropagateSourceInformationMessageFormat" xml:space="preserve">
+    <value>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</value>
+  </data>
   <data name="UseCancellationTokenPropertyTitle" xml:space="preserve">
     <value>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</value>
   </data>
@@ -686,12 +674,6 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseCancellationTokenPropertyDescription" xml:space="preserve">
     <value>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</value>
-  </data>
-  <data name="AvoidAssertFormatParametersTitle" xml:space="preserve">
-    <value>Avoid using Assert methods with format parameters</value>
-  </data>
-  <data name="AvoidAssertFormatParametersMessageFormat" xml:space="preserve">
-    <value>Replace '{0}' with format parameters with string.Format or string interpolation</value>
   </data>
   <data name="IgnoreStringMethodReturnValueTitle" xml:space="preserve">
     <value>Do not ignore the return value of string methods</value>

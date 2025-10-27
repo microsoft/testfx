@@ -15,10 +15,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
-    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
+    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-file-prefix";
     public const string DiagnosticOutputDirectoryOptionKey = "diagnostic-output-directory";
     public const string DiagnosticVerbosityOptionKey = "diagnostic-verbosity";
-    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-filelogger-synchronouswrite";
+    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-synchronous-write";
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";

@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class TestSessionContext(CancellationToken cancellationToken) : ITestSessionContext
 {
-    public SessionUid SessionId { get; } = new(Guid.NewGuid().ToString());
+    public SessionUid SessionUid { get; } = new(Guid.NewGuid().ToString());
 
     public CancellationToken CancellationToken { get; } = cancellationToken;
 }
