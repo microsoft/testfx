@@ -65,10 +65,10 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
     }
 
     private static async Task<Document> FixNegatedAssertionAsync(
-    Document document,
-    InvocationExpressionSyntax invocation,
-    string properAssertMethodName,
-    CancellationToken cancellationToken)
+        Document document,
+        InvocationExpressionSyntax invocation,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
