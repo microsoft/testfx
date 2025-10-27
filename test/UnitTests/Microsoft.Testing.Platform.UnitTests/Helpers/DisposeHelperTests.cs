@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using AwesomeAssertions;
-
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -22,7 +20,7 @@ public class DisposeHelperTests
         await DisposeHelper.DisposeAsync(extension);
 
         // Assert
-        extension.CleanupCallCount.Should().Be(1, "CleanupAsync should be called exactly once");
+        Assert.AreEqual(1, extension.CleanupCallCount, "CleanupAsync should be called exactly once");
     }
 
     [TestMethod]
@@ -35,7 +33,7 @@ public class DisposeHelperTests
         await DisposeHelper.DisposeAsync(extension);
 
         // Assert
-        extension.CleanupCallCount.Should().Be(1, "CleanupAsync should be called exactly once even when extension implements both ITestHostApplicationLifetime and IAsyncCleanableExtension");
+        Assert.AreEqual(1, extension.CleanupCallCount, "CleanupAsync should be called exactly once even when extension implements both ITestHostApplicationLifetime and IAsyncCleanableExtension");
     }
 
     [TestMethod]
@@ -49,7 +47,7 @@ public class DisposeHelperTests
         await DisposeHelper.DisposeAsync(extension);
 
         // Assert
-        extension.CleanupCallCount.Should().Be(2, "Each call to DisposeHelper.DisposeAsync should call CleanupAsync");
+        Assert.AreEqual(2, extension.CleanupCallCount, "Each call to DisposeHelper.DisposeAsync should call CleanupAsync");
     }
 
     [TestMethod]
@@ -65,7 +63,7 @@ public class DisposeHelperTests
         await DisposeHelper.DisposeAsync(extension);
 
         // 2. Verify that the extension was disposed once
-        extension.CleanupCallCount.Should().Be(1, "CleanupAsync should be called once after first disposal");
+        Assert.AreEqual(1, extension.CleanupCallCount, "CleanupAsync should be called once after first disposal");
 
         // 3. Second disposal attempt happens in DisposeServiceProviderAsync during final cleanup
         // This should not call CleanupAsync again if the extension is tracked in alreadyDisposed list
