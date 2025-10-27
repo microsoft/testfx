@@ -40,7 +40,7 @@ public class Program
             // testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
             // Add Chat client provider
-            testApplicationBuilder.AddAzureOpenAIChatClientProvider();
+            // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
 
             // Test a custom local test framework
             testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));
@@ -54,7 +54,7 @@ public class Program
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
-            return await testApplication.RunAsync();
+            // return await testApplication.RunAsync();
         }
         else
         {
@@ -77,10 +77,10 @@ public class Program
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
-
-            return 0;
 #endif
         }
+
+        return 0;
     }
 }
 
@@ -114,7 +114,7 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
                 ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);
             }
 
-            MyService.DoSomething();
+            // MyService.DoSomething();
         }
         catch (Exception e)
         {
