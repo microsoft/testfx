@@ -691,6 +691,6 @@ The type declaring these methods should also respect the following rules:
     <value>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</value>
   </data>
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
-    <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
+    <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
   </data>
 </root>
