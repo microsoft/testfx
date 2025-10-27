@@ -38,10 +38,12 @@ internal sealed class SerializerGenerator : IIncrementalGenerator
         // Generate serializers for each type
         context.RegisterSourceOutput(serializableTypesProvider, (spc, typeInfo) =>
         {
-            if (typeInfo is not null)
+            if (typeInfo is null)
             {
-                GenerateSerializer(spc, typeInfo);
+                return;
             }
+
+            GenerateSerializer(spc, typeInfo);
         });
     }
 
@@ -99,21 +101,23 @@ internal sealed class SerializerGenerator : IIncrementalGenerator
         // Get all properties
         foreach (ISymbol member in typeSymbol.GetMembers())
         {
-            if (member is IPropertySymbol propertySymbol && propertySymbol.DeclaredAccessibility == Accessibility.Public)
+            if (member is not IPropertySymbol propertySymbol || propertySymbol.DeclaredAccessibility != Accessibility.Public)
             {
-                PropertyKind kind = GetPropertyKind(propertySymbol.Type);
-                bool isArray = propertySymbol.Type is IArrayTypeSymbol;
-                
-                properties.Add(new Models.PropertyInfo
-                {
-                    Name = propertySymbol.Name,
-                    TypeName = propertySymbol.Type.Name,
-                    FullyQualifiedTypeName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                    IsNullable = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated,
-                    IsArray = isArray,
-                    Kind = kind,
-                });
+                continue;
             }
+
+            PropertyKind kind = GetPropertyKind(propertySymbol.Type);
+            bool isArray = propertySymbol.Type is IArrayTypeSymbol;
+            
+            properties.Add(new Models.PropertyInfo
+            {
+                Name = propertySymbol.Name,
+                TypeName = propertySymbol.Type.Name,
+                FullyQualifiedTypeName = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                IsNullable = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated,
+                IsArray = isArray,
+                Kind = kind,
+            });
         }
 
         return properties.ToImmutable();
@@ -181,33 +185,31 @@ internal sealed class SerializerGenerator : IIncrementalGenerator
             if (typeInfo.Properties.Length == 0)
             {
                 sb.AppendLine($"return new {typeInfo.TypeName}();");
+                return;
             }
-            else
-            {
-                // For simple types with ordered properties, deserialize in order
-                if (AreAllPropertiesSimple(typeInfo.Properties))
-                {
-                    var propertyReads = new List<string>();
-                    foreach (var property in typeInfo.Properties)
-                    {
-                        propertyReads.Add(GetReadExpression(property));
-                    }
 
-                    sb.AppendLine($"return new {typeInfo.TypeName}(");
-                    sb.IndentationLevel++;
-                    for (int i = 0; i < propertyReads.Count; i++)
-                    {
-                        string comma = i < propertyReads.Count - 1 ? "," : ");";
-                        sb.AppendLine($"{propertyReads[i]}{comma}");
-                    }
-                    sb.IndentationLevel--;
-                }
-                else
-                {
-                    sb.AppendLine("// TODO: Implement complex deserialization logic");
-                    sb.AppendLine($"throw new NotImplementedException(\"Deserialization for {typeInfo.TypeName} needs manual implementation\");");
-                }
+            // For simple types with ordered properties, deserialize in order
+            if (!AreAllPropertiesSimple(typeInfo.Properties))
+            {
+                sb.AppendLine("// TODO: Implement complex deserialization logic");
+                sb.AppendLine($"throw new NotImplementedException(\"Deserialization for {typeInfo.TypeName} needs manual implementation\");");
+                return;
             }
+
+            var propertyReads = new List<string>();
+            foreach (var property in typeInfo.Properties)
+            {
+                propertyReads.Add(GetReadExpression(property));
+            }
+
+            sb.AppendLine($"return new {typeInfo.TypeName}(");
+            sb.IndentationLevel++;
+            for (int i = 0; i < propertyReads.Count; i++)
+            {
+                string comma = i < propertyReads.Count - 1 ? "," : ");";
+                sb.AppendLine($"{propertyReads[i]}{comma}");
+            }
+            sb.IndentationLevel--;
         }
     }
 
@@ -218,23 +220,21 @@ internal sealed class SerializerGenerator : IIncrementalGenerator
             if (typeInfo.Properties.Length == 0)
             {
                 sb.AppendLine("// Empty request/response - nothing to serialize");
+                return;
             }
-            else
+
+            sb.AppendLine($"var request = ({typeInfo.TypeName})objectToSerialize;");
+            
+            if (!AreAllPropertiesSimple(typeInfo.Properties))
             {
-                sb.AppendLine($"var request = ({typeInfo.TypeName})objectToSerialize;");
-                
-                if (AreAllPropertiesSimple(typeInfo.Properties))
-                {
-                    foreach (var property in typeInfo.Properties)
-                    {
-                        GenerateWriteStatement(sb, property);
-                    }
-                }
-                else
-                {
-                    sb.AppendLine("// TODO: Implement complex serialization logic");
-                    sb.AppendLine($"throw new NotImplementedException(\"Serialization for {typeInfo.TypeName} needs manual implementation\");");
-                }
+                sb.AppendLine("// TODO: Implement complex serialization logic");
+                sb.AppendLine($"throw new NotImplementedException(\"Serialization for {typeInfo.TypeName} needs manual implementation\");");
+                return;
+            }
+
+            foreach (var property in typeInfo.Properties)
+            {
+                GenerateWriteStatement(sb, property);
             }
         }
     }
