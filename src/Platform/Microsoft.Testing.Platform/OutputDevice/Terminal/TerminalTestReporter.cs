@@ -476,7 +476,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
             : exception?.Message;
         string? errorType = exception?.GetType().FullName;
         string? stackTrace = exception?.StackTrace;
-        
         if (RoslynString.IsNullOrWhiteSpace(errorMessage) && RoslynString.IsNullOrWhiteSpace(errorType) && RoslynString.IsNullOrWhiteSpace(stackTrace))
         {
             return;
