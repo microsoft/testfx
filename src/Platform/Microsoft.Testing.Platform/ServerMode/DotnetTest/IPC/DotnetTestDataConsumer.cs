@@ -278,7 +278,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 string? message = i == 0 && customErrorMessage is not null
                     ? customErrorMessage
                     : ex?.Message;
-                
                 exceptionMessages[i] = new ExceptionMessage(message, ex?.GetType().FullName, ex?.StackTrace);
             }
 
