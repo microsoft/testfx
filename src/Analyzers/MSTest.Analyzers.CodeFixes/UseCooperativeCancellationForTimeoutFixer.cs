@@ -134,40 +134,68 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
     private static async Task<Document> ReplaceWithTaskRunTestMethodAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxNode root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
-        // Find the TestMethod attribute
+        if (root is null)
+        {
+            return document;
+        }
+
+        // Find the TestMethod and Timeout attributes
         AttributeSyntax? testMethodAttribute = null;
+        AttributeSyntax? timeoutAttribute = null;
+        int timeoutValue = 0;
+
         foreach (AttributeListSyntax attributeList in methodDeclaration.AttributeLists)
         {
             foreach (AttributeSyntax attribute in attributeList.Attributes)
             {
                 string attributeName = attribute.Name.ToString();
+                
                 if (attributeName is "TestMethod" or "TestMethodAttribute")
                 {
                     testMethodAttribute = attribute;
-                    break;
                 }
-            }
-
-            if (testMethodAttribute is not null)
-            {
-                break;
+                else if (attributeName is "Timeout" or "TimeoutAttribute")
+                {
+                    timeoutAttribute = attribute;
+                    
+                    // Extract timeout value from the first argument
+                    if (attribute.ArgumentList?.Arguments.Count > 0)
+                    {
+                        var firstArg = attribute.ArgumentList.Arguments[0];
+                        if (firstArg.Expression is LiteralExpressionSyntax literalExpr &&
+                            literalExpr.Token.Value is int value)
+                        {
+                            timeoutValue = value;
+                        }
+                    }
+                }
             }
         }
 
-        if (testMethodAttribute is null)
+        if (testMethodAttribute is null || timeoutAttribute is null)
         {
-            // No TestMethod attribute found, return unchanged document
+            // Can't apply the fix without both attributes
             return document;
         }
 
-        // Create the new TaskRunTestMethod attribute preserving any arguments
+        // Create the new TaskRunTestMethod attribute with timeout parameter
+        AttributeArgumentSyntax timeoutArg = SyntaxFactory.AttributeArgument(
+            SyntaxFactory.LiteralExpression(
+                SyntaxKind.NumericLiteralExpression,
+                SyntaxFactory.Literal(timeoutValue)));
+
         AttributeSyntax newAttribute = SyntaxFactory.Attribute(
             SyntaxFactory.IdentifierName("TaskRunTestMethod"),
-            testMethodAttribute.ArgumentList);
+            SyntaxFactory.AttributeArgumentList(
+                SyntaxFactory.SingletonSeparatedList(timeoutArg)));
 
         // Replace the TestMethod attribute with TaskRunTestMethod
         editor.ReplaceNode(testMethodAttribute, newAttribute);
+        
+        // Remove the Timeout attribute
+        editor.RemoveNode(timeoutAttribute);
 
         return editor.GetChangedDocument();
     }

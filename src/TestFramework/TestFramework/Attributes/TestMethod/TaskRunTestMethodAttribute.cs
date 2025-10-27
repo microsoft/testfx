@@ -4,28 +4,20 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// The TaskRun test method attribute.
+/// Test method attribute that runs tests in a Task.Run with non-cooperative timeout handling.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This attribute is designed to handle test method execution with timeout by running the test code within a <see cref="Task.Run"/>.
-/// This allows the test runner to stop watching the task in case of timeout, preventing dangling tasks that can lead to
-/// confusion or errors because the test method is still running in the background.
+/// This attribute runs test methods in <see cref="Task.Run"/> and implements non-cooperative timeout handling.
+/// When a timeout occurs, the test is marked as timed out and the test runner stops awaiting the task,
+/// allowing it to complete in the background. This prevents blocking but may lead to dangling tasks.
 /// </para>
 /// <para>
-/// When a timeout occurs:
-/// <list type="bullet">
-/// <item><description>The test is marked as timed out.</description></item>
-/// <item><description>The cancellation token from <see cref="TestContext.CancellationToken"/> is canceled.</description></item>
-/// <item><description>The test runner stops awaiting the test task, allowing it to complete in the background.</description></item>
-/// </list>
-/// </para>
-/// <para>
-/// For best results, test methods should observe the cancellation token and cancel cooperatively.
-/// If the test method does not handle cancellation properly, the task may continue running after the timeout,
-/// which can still lead to issues, but the test runner will not block waiting for it to complete.
+/// For cooperative timeout handling where tests are awaited until completion, use <see cref="TimeoutAttribute"/>
+/// with <c>CooperativeCancellation = true</c> instead.
 /// </para>
 /// </remarks>
+[AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public sealed class TaskRunTestMethodAttribute : TestMethodAttribute
 {
     private readonly TestMethodAttribute? _testMethodAttribute;
@@ -33,9 +25,11 @@ public sealed class TaskRunTestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskRunTestMethodAttribute"/> class.
     /// </summary>
-    public TaskRunTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+    /// <param name="timeout">The timeout in milliseconds. If not specified or 0, no timeout is applied.</param>
+    public TaskRunTestMethodAttribute(int timeout = 0, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
         : base(callerFilePath, callerLineNumber)
     {
+        Timeout = timeout;
     }
 
     /// <summary>
@@ -43,12 +37,21 @@ public sealed class TaskRunTestMethodAttribute : TestMethodAttribute
     /// This constructor is intended to be called by test class attributes to wrap an existing test method attribute.
     /// </summary>
     /// <param name="testMethodAttribute">The wrapped test method.</param>
-    public TaskRunTestMethodAttribute(TestMethodAttribute testMethodAttribute)
+    /// <param name="timeout">The timeout in milliseconds. If not specified or 0, no timeout is applied.</param>
+    public TaskRunTestMethodAttribute(TestMethodAttribute testMethodAttribute, int timeout = 0)
         : base(testMethodAttribute.DeclaringFilePath, testMethodAttribute.DeclaringLineNumber ?? -1)
-        => _testMethodAttribute = testMethodAttribute;
+    {
+        _testMethodAttribute = testMethodAttribute;
+        Timeout = timeout;
+    }
 
     /// <summary>
-    /// Executes a test method by wrapping it in a <see cref="Task.Run"/> to allow timeout handling.
+    /// Gets the timeout in milliseconds.
+    /// </summary>
+    public int Timeout { get; }
+
+    /// <summary>
+    /// Executes a test method with non-cooperative timeout handling.
     /// </summary>
     /// <param name="testMethod">The test method to execute.</param>
     /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
@@ -56,22 +59,96 @@ public sealed class TaskRunTestMethodAttribute : TestMethodAttribute
     {
         if (_testMethodAttribute is not null)
         {
-            return await ExecuteWithTaskRunAsync(() => _testMethodAttribute.ExecuteAsync(testMethod)).ConfigureAwait(false);
+            return await ExecuteWithTimeoutAsync(() => _testMethodAttribute.ExecuteAsync(testMethod), testMethod).ConfigureAwait(false);
         }
 
-        return await ExecuteWithTaskRunAsync(async () =>
+        return await ExecuteWithTimeoutAsync(async () =>
         {
             TestResult result = await testMethod.InvokeAsync(null).ConfigureAwait(false);
             return new[] { result };
-        }).ConfigureAwait(false);
+        }, testMethod).ConfigureAwait(false);
     }
 
-    private static async Task<TestResult[]> ExecuteWithTaskRunAsync(Func<Task<TestResult[]>> executeFunc)
+    private async Task<TestResult[]> ExecuteWithTimeoutAsync(Func<Task<TestResult[]>> executeFunc, ITestMethod testMethod)
     {
-        // Run the test method in Task.Run so that we can stop awaiting it on timeout
-        // while allowing it to complete in the background
-        Task<TestResult[]> testTask = Task.Run(executeFunc);
-        TestResult[] results = await testTask.ConfigureAwait(false);
-        return results;
+        if (Timeout <= 0)
+        {
+            // No timeout, run directly with Task.Run
+            return await RunOnThreadPoolOrCustomThreadAsync(executeFunc).ConfigureAwait(false);
+        }
+
+        // Run with timeout
+        Task<TestResult[]> testTask = RunOnThreadPoolOrCustomThreadAsync(executeFunc);
+        Task completedTask = await Task.WhenAny(testTask, Task.Delay(Timeout)).ConfigureAwait(false);
+
+        if (completedTask == testTask)
+        {
+            // Test completed before timeout
+            return await testTask.ConfigureAwait(false);
+        }
+
+        // Timeout occurred - return timeout result and let task continue in background
+        return
+        [
+            new TestResult
+            {
+                Outcome = UnitTestOutcome.Timeout,
+                TestFailureException = new TestFailedException(
+                    UnitTestOutcome.Timeout,
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Test '{0}.{1}' exceeded timeout of {2}ms.",
+                        testMethod.TestClassName,
+                        testMethod.TestMethodName,
+                        Timeout)),
+            },
+        ];
+    }
+
+    private static Task<TestResult[]> RunOnThreadPoolOrCustomThreadAsync(Func<Task<TestResult[]>> executeFunc)
+    {
+        // Check if we need to handle STA threading
+        // If current thread is STA and we're on Windows, create a new STA thread
+        // Otherwise, use Task.Run (thread pool)
+#if NETFRAMEWORK
+        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+        {
+            return RunOnSTAThreadAsync(executeFunc);
+        }
+#else
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+            Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+        {
+            return RunOnSTAThreadAsync(executeFunc);
+        }
+#endif
+
+        // Use thread pool for non-STA scenarios
+        return Task.Run(executeFunc);
+    }
+
+    private static Task<TestResult[]> RunOnSTAThreadAsync(Func<Task<TestResult[]>> executeFunc)
+    {
+        var tcs = new TaskCompletionSource<TestResult[]>();
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                TestResult[] result = executeFunc().GetAwaiter().GetResult();
+                tcs.SetResult(result);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        })
+        {
+            Name = "TaskRunTestMethodAttribute STA thread",
+        };
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+
+        return tcs.Task;
     }
 }

@@ -464,8 +464,7 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TaskRunTestMethod]
-                [Timeout(5000)]
+                [TaskRunTestMethod(5000)]
                 public void MyTestMethod()
                 {
                 }
@@ -488,12 +487,15 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TaskRunTestMethod]
-                [Timeout(5000)]
+                [TaskRunTestMethod(5000)]
                 public void MyTestMethod()
                 {
                 }
             }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
