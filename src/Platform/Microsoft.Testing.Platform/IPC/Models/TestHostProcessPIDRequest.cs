@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.Testing.Platform.IPC.Models;
 
 [Embedded]
+[GenerateSerializer(TestHostProcessPIDRequestFieldsId.MessagesSerializerId)]
 internal sealed class TestHostProcessPIDRequest(int pid) : IRequest
 {
     public int PID { get; } = pid;

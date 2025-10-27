@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.Testing.Platform.IPC.Models;
 
 [Embedded]
+[GenerateSerializer(VoidResponseFieldsId.MessagesSerializerId)]
 internal sealed class VoidResponse : IResponse
 {
     public static readonly VoidResponse CachedInstance = new();

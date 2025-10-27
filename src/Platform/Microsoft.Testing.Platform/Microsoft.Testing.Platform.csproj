@@ -86,6 +86,12 @@ This package provides the core platform and the .NET implementation of the proto
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Analyzers\Microsoft.Testing.Platform.IPC.SourceGeneration\Microsoft.Testing.Platform.IPC.SourceGeneration.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
   <!-- NuGet package layout -->
   <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
   <ItemGroup>
