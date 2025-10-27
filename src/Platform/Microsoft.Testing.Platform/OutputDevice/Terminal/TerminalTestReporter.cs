@@ -521,7 +521,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
     {
         Exception? exception = index < exceptions.Length ? exceptions[index] : null;
         string? stackTrace = exception?.StackTrace;
-        
         if (RoslynString.IsNullOrWhiteSpace(stackTrace))
         {
             return;
