@@ -64,8 +64,10 @@ internal sealed class GeneratorTester
             {
                 if (Net80MetadataReferences is null)
                 {
+                    string nuGetConfigFilePath = Path.Combine(RootFinder.Find(), "NuGet.config");
+
                     Net80MetadataReferences =
-                        await ReferenceAssemblies.Net.Net80.ResolveAsync(LanguageNames.CSharp, cancellationToken);
+                        await ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfigFilePath).ResolveAsync(LanguageNames.CSharp, cancellationToken);
 
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
