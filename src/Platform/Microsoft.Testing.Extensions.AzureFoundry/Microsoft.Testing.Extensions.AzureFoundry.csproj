@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
+    <IsShipping>false</IsShipping>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+  </PropertyGroup>
+
+  <!-- NuGet package layout -->
+  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <TfmSpecificPackageFile Include="buildTransitive/**">
+      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.AI\Microsoft.Testing.Platform.AI.csproj" />
+  </ItemGroup>
+
+</Project>
