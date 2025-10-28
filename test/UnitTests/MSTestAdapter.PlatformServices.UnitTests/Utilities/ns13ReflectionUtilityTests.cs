@@ -70,7 +70,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -83,7 +83,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
@@ -96,7 +96,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
@@ -105,11 +105,11 @@ public class ReflectionUtilityTests : TestContainer
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
+    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
         Type type = typeof(DummyTestClass);
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);

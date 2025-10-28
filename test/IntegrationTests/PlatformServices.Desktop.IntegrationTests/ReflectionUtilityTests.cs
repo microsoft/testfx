@@ -94,7 +94,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -108,7 +108,7 @@ public class ReflectionUtilityTests : TestContainer
         MethodInfo methodInfo =
             _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -121,7 +121,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, null);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
@@ -134,7 +134,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(TestPropertyAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -147,7 +147,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2")!;
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(CategoryArrayAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(CategoryArrayAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -160,7 +160,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -173,7 +173,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
