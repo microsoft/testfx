@@ -83,6 +83,7 @@ This package provides the core platform and the .NET implementation of the proto
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EasyNamedPipes.SourceGenerator" />
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 

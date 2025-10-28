@@ -29,11 +29,11 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         namedPipeBase.RegisterSerializer(new TestHostProcessExitRequestSerializer(), typeof(TestHostProcessExitRequest));
         namedPipeBase.RegisterSerializer(new TestHostProcessPIDRequestSerializer(), typeof(TestHostProcessPIDRequest));
-        namedPipeBase.RegisterSerializer(new CommandLineOptionMessagesSerializer(), typeof(CommandLineOptionMessages));
-        namedPipeBase.RegisterSerializer(new DiscoveredTestMessagesSerializer(), typeof(DiscoveredTestMessages));
-        namedPipeBase.RegisterSerializer(new TestResultMessagesSerializer(), typeof(TestResultMessages));
-        namedPipeBase.RegisterSerializer(new FileArtifactMessagesSerializer(), typeof(FileArtifactMessages));
-        namedPipeBase.RegisterSerializer(new TestSessionEventSerializer(), typeof(TestSessionEvent));
-        namedPipeBase.RegisterSerializer(new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+        namedPipeBase.RegisterSerializer(CommandLineOptionMessagesSerializer.Instance, typeof(CommandLineOptionMessages));
+        namedPipeBase.RegisterSerializer(DiscoveredTestMessagesSerializer.Instance, typeof(DiscoveredTestMessages));
+        namedPipeBase.RegisterSerializer(TestResultMessagesSerializer.Instance, typeof(TestResultMessages));
+        namedPipeBase.RegisterSerializer(FileArtifactMessagesSerializer.Instance, typeof(FileArtifactMessages));
+        namedPipeBase.RegisterSerializer(TestSessionEventSerializer.Instance, typeof(TestSessionEvent));
+        namedPipeBase.RegisterSerializer(HandshakeMessageSerializer.Instance, typeof(HandshakeMessage));
     }
 }
