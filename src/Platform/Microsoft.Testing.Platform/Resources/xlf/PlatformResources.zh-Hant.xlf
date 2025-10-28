@@ -588,7 +588,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' 需要單一非零的正整數值
+        <target state="translated">'--minimum-expected-tests' 需要單一非零的正整數值 
 (例如 '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
