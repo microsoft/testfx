@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    $CommonMetadataElements$
+    <dependencies>
+      <group targetFramework="netstandard2.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="MSTest.Analyzers" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
+      </group>
+
+      <group targetFramework="netcoreapp3.1">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="MSTest.Analyzers" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
+      </group>
+
+      <group targetFramework="net6.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="MSTest.Analyzers" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
+      </group>
+
+      <group targetFramework="net7.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="MSTest.Analyzers" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
+      </group>
+
+      <group targetFramework="net8.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="MSTest.Analyzers" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
+      </group>
+
+      <group targetFramework="net9.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="MSTest.Analyzers" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    $CommonFileElements$
+  </files>
+</package>

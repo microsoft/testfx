@@ -1,0 +1,4 @@
+#nullable enable
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.DebugOrTraceTrxMessage!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardErrorTrxMessage!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage.<Clone>$() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.StandardOutputTrxMessage!

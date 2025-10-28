@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <Import Project="../../Directory.Build.targets" />
+
+  <!-- Pack config -->
+  <PropertyGroup>
+    <PackageTags Condition=" '$(PackageTags)' == '' ">$(CommonPackageTags)</PackageTags>
+    <PackageReadmeFile Condition=" '$(PackageReadmeFile)' == '' and Exists('PACKAGE.md') ">PACKAGE.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- Add a package README file from. -->
+  <ItemGroup Condition=" '$(PackageReadmeFile)' != '' ">
+    <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

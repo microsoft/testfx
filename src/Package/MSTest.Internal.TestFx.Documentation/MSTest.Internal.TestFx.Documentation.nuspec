@@ -1,0 +1,18 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    $CommonMetadataElements$
+  </metadata>
+  <files>
+    $CommonFileElements$
+
+    <file src="$ArtifactsBinDir$TestFramework\$Configuration$\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\Core" />
+    <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
+    
+    <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
+
+    <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\uap10.*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
+
+    <file src="$ArtifactsBinDir$TestFramework.Extensions\$Configuration$\net*.0-windows*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
+  </files>
+</package>

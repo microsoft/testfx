@@ -1,0 +1,14 @@
+#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.DeploymentItemAttribute(string? path, string? outputDirectory) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.DeploymentItemAttribute(string? path) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDeploymentDir.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDir.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestLogsDir.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string?
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string?

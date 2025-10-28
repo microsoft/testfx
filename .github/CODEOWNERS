@@ -1,0 +1,4 @@
+# https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-on-github/about-code-owners
+
+src/Package/MSTest.Sdk @MarcoRossignoli
+src/Platform @MarcoRossignoli @Evangelink
