@@ -9,23 +9,13 @@ using Microsoft.Testing.Platform.Messages;
 
 #if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
-
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
-
 #endif
+
 using Microsoft.Extensions.AI;
-using Microsoft.Testing.Extensions.AzureFoundry;
 using Microsoft.Testing.Platform.AI;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-
-using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Trace;
 
 namespace Playground;
 
@@ -75,7 +65,6 @@ public class Program
             //         metrics.AddTestingPlatformInstrumentation();
             //         metrics.AddOtlpExporter();
             //     });
-
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
             return await testApplication.RunAsync();
         }
