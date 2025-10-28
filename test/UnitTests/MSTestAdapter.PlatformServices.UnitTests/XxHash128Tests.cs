@@ -23,7 +23,7 @@ public class XxHash128Tests : TestContainer
         action.Should().Throw<ArgumentNullException>();
 
         action = () => XxHash128.Hash([1, 2, 3], new byte[7]);
-        action.Should().Throw<ArgumentNullException>();
+        action.Should().Throw<ArgumentException>();
     }
 
     public void Hash_OneShot_Expected()
