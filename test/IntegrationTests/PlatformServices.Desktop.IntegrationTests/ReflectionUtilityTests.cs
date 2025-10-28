@@ -186,7 +186,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Assembly asm = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
 
-        List<Attribute> attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
