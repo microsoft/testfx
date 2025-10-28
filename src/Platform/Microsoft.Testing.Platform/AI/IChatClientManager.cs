@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.AI;
 
 internal interface IChatClientManager
 {
-    void SetChatClientProviderFactory(Func<IServiceProvider, object> chatClientProviderFactory);
+    void AddChatClientProvider(Func<IServiceProvider, object> chatClientProviderFactory);
 
-    void InstantiateChatClientProvider(ServiceProvider serviceProvider);
+    void BuildChatClients(ServiceProvider serviceProvider);
 }

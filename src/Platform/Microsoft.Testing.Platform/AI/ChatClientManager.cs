@@ -10,7 +10,7 @@ internal sealed class ChatClientManager : IChatClientManager
 {
     private Func<IServiceProvider, object>? _chatClientProviderFactory;
 
-    public void SetChatClientProviderFactory(Func<IServiceProvider, object> chatClientProviderFactory)
+    public void AddChatClientProvider(Func<IServiceProvider, object> chatClientProviderFactory)
     {
         if (chatClientProviderFactory is null)
         {
@@ -25,7 +25,7 @@ internal sealed class ChatClientManager : IChatClientManager
         _chatClientProviderFactory = chatClientProviderFactory;
     }
 
-    public void InstantiateChatClientProvider(ServiceProvider serviceProvider)
+    public void BuildChatClients(ServiceProvider serviceProvider)
     {
         if (_chatClientProviderFactory is not null)
         {
