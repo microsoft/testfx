@@ -25,7 +25,7 @@ public static class ChatClientProviderExtensions
             throw new InvalidOperationException(PlatformResources.InvalidTestApplicationBuilderTypeForAI);
         }
 
-        builder.ChatClientManager.AddChatClientProvider(chatClientProvider);
+        builder.ChatClientManager.SetChatClientProviderFactory(chatClientProvider);
     }
 
     /// <summary>

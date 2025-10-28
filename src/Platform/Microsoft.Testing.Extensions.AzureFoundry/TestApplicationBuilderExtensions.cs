@@ -3,6 +3,8 @@
 
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.AzureFoundry;
 
@@ -16,5 +18,5 @@ public static class TestApplicationBuilderExtensions
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     public static void AddAzureOpenAIChatClientProvider(this ITestApplicationBuilder testApplicationBuilder)
-        => testApplicationBuilder.AddChatClientProvider(sp => new AzureOpenAIChatClientProvider(sp));
+        => testApplicationBuilder.AddChatClientProvider(sp => new AzureOpenAIChatClientProvider(sp.GetRequiredService<IEnvironment>()));
 }

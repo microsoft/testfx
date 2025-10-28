@@ -64,10 +64,10 @@ public interface IChatClientProvider
     bool IsAvailable { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the chat client supports tool calling
+    /// Gets a value indicating whether the chat client has tool capability
     /// (e.g., MCP tools or functions).
     /// </summary>
-    bool SupportsToolCalling { get; }
+    bool HasToolsCapability { get; }
 
     /// <summary>
     /// Gets the name of the model being used by the chat client.
@@ -85,7 +85,7 @@ public interface IChatClientProvider
 
 - Uses `Microsoft.Extensions.AI.IChatClient` as the return type, leveraging the industry-standard abstraction
 - `IsAvailable` allows providers to validate configuration before being used
-- `SupportsToolCalling` enables extensions to use advanced features when available
+- `HasToolsCapability` enables extensions to use advanced features when available
 - `ModelName` provides transparency about which AI model is being used
 
 ##### 2. ChatClientManager (Internal)
@@ -95,13 +95,15 @@ The platform includes an internal manager that handles provider registration:
 ```csharp
 internal interface IChatClientManager
 {
-    void AddChatClientProvider(Func<IServiceProvider, object> chatClientProvider);
-    void RegisterChatClientProvider(ServiceProvider serviceProvider);
+    void SetChatClientProviderFactory(Func<IServiceProvider, object> chatClientProviderFactory);
+    void InstantiateChatClientProvider(ServiceProvider serviceProvider);
 }
 ```
 
 **Design Decisions:**
 
+- `SetChatClientProviderFactory`: Stores the factory function that will create the provider instance
+- `InstantiateChatClientProvider`: Invokes the factory function and registers the provider instance to the service provider
 - Only one provider can be registered at a time (enforced with an exception)
 - Provider registration is deferred until the service provider is fully built
 - The manager integrates with the existing platform service provider pattern

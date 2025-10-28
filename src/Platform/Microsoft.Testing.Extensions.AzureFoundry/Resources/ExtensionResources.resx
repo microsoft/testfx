@@ -117,13 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AzureOpenAIEndpointNotSet" xml:space="preserve">
-    <value>AZURE_OPENAI_ENDPOINT environment variable is not set.</value>
-  </data>
-  <data name="AzureOpenAIDeploymentNameNotSet" xml:space="preserve">
-    <value>AZURE_OPENAI_DEPLOYMENT_NAME environment variable is not set.</value>
-  </data>
-  <data name="AzureOpenAIApiKeyNotSet" xml:space="preserve">
-    <value>AZURE_OPENAI_API_KEY environment variable is not set.</value>
+  <data name="EnvironmentVariableNotSet" xml:space="preserve">
+    <value>Environment variable '{0}' is not set.</value>
   </data>
 </root>

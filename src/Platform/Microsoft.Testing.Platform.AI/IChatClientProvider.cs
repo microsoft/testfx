@@ -8,6 +8,7 @@ namespace Microsoft.Testing.Platform.AI;
 /// <summary>
 /// Provider interface for creating and configuring chat clients.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/experimental")]
 public interface IChatClientProvider
 {
     /// <summary>
@@ -17,9 +18,9 @@ public interface IChatClientProvider
     bool IsAvailable { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the chat client supports tool calling (e.g., MCP tools or functions).
+    /// Gets a value indicating whether the chat client has tool capability (e.g., MCP tools or functions).
     /// </summary>
-    bool SupportsToolCalling { get; }
+    bool HasToolsCapability { get; }
 
     /// <summary>
     /// Gets the name of the model being used by the chat client.

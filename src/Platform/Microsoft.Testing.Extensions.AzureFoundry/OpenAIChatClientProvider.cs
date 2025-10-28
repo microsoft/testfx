@@ -7,9 +7,9 @@ using Azure.AI.OpenAI;
 
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Extensions.AzureFoundry.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.AzureFoundry;
 
@@ -23,20 +23,18 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureOpenAIChatClientProvider"/> class.
     /// </summary>
-    /// <param name="serviceProvider">The service provider.</param>
-    internal AzureOpenAIChatClientProvider(IServiceProvider serviceProvider)
-    {
-        _environment = serviceProvider.GetRequiredService<IEnvironment>();
-    }
+    /// <param name="environment">The environment service.</param>
+    internal AzureOpenAIChatClientProvider(IEnvironment environment)
+        => _environment = environment;
 
     /// <inheritdoc />
     public bool IsAvailable =>
-        !string.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
-        !string.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
-        !string.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
+        !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
+        !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
+        !RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
 
     /// <inheritdoc />
-    public bool SupportsToolCalling => true;
+    public bool HasToolsCapability => true;
 
     /// <inheritdoc />
     public string ModelName => _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
@@ -48,19 +46,19 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
         string? deploymentName = _environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME");
         string? apiKey = _environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-        if (string.IsNullOrEmpty(endpoint))
+        if (RoslynString.IsNullOrEmpty(endpoint))
         {
-            throw new InvalidOperationException(ExtensionResources.AzureOpenAIEndpointNotSet);
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_ENDPOINT"));
         }
 
-        if (string.IsNullOrEmpty(deploymentName))
+        if (RoslynString.IsNullOrEmpty(deploymentName))
         {
-            throw new InvalidOperationException(ExtensionResources.AzureOpenAIDeploymentNameNotSet);
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_DEPLOYMENT_NAME"));
         }
 
-        if (string.IsNullOrEmpty(apiKey))
+        if (RoslynString.IsNullOrEmpty(apiKey))
         {
-            throw new InvalidOperationException(ExtensionResources.AzureOpenAIApiKeyNotSet);
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_API_KEY"));
         }
 
         var client = new AzureOpenAIClient(
