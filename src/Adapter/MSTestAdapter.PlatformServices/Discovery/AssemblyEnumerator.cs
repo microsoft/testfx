@@ -72,7 +72,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // Contains list of assembly/class names for which we have already added fixture tests.
         var fixturesTests = new HashSet<string>();
 
-        Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
+        Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
         bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
@@ -277,7 +277,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             };
             return new UnitTestElement(method)
             {
-                DisplayName = displayName,
                 Traits = [new Trait(EngineConstants.FixturesTestTrait, fixtureType)],
             };
         }
@@ -320,7 +319,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.DisplayName), tempListOfTests, ref globalTestCaseIndex))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -371,9 +370,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
             discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null)
-                ?? discoveredTest.DisplayName;
-            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
+            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
             tests.Add(discoveredTest);
 
             return true;
@@ -411,11 +408,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             UnitTestElement discoveredTest = test.Clone();
-            discoveredTest.DisplayName = displayNameFromTestDataRow
+            discoveredTest.TestMethod.DisplayName = displayNameFromTestDataRow
                 ?? dataSource.GetDisplayName(methodInfo, d)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
-                ?? discoveredTest.DisplayName;
-            discoveredTest.TestMethod.DisplayName = discoveredTest.DisplayName ?? discoveredTest.TestMethod.DisplayName;
+                ?? discoveredTest.TestMethod.DisplayName;
 
             // Merge test categories from the test data row with the existing categories
             if (testCategoriesFromTestDataRow is { Count: > 0 })
@@ -435,7 +431,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
             catch (SerializationException ex)
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, globalTestCaseIndex, discoveredTest.DisplayName);
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, globalTestCaseIndex, discoveredTest.TestMethod.DisplayName);
                 warning += Environment.NewLine;
                 warning += ex.ToString();
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);

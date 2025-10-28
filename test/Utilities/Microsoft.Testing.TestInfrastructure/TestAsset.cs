@@ -109,16 +109,12 @@ public class TestAsset : IDisposable
     {
         string publicFeedsFragment = addPublicFeeds
             ? """
-                    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-                    <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
+                <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
             """
             : string.Empty;
 
         string publicFeedsMapping = addPublicFeeds
             ? """
-            <packageSource key="nuget.org">
-                <package pattern="*" />
-            </packageSource>
             <packageSource key="test-tools">
                 <package pattern="*" />
             </packageSource>

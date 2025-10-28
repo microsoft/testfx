@@ -15,4 +15,8 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
 </Project>

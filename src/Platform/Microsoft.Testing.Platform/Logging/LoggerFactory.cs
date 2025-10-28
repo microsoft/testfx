@@ -61,15 +61,22 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        foreach (IAsyncDisposable asyncDisposable in _loggerProviders.OfType<IAsyncDisposable>())
+        foreach (ILoggerProvider loggerProvider in _loggerProviders)
         {
             // FileLoggerProvider is special and needs to be disposed manually.
-            if (asyncDisposable is FileLoggerProvider)
+            if (loggerProvider is FileLoggerProvider)
             {
                 continue;
             }
 
-            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            if (loggerProvider is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            }
+            else if (loggerProvider is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
     }
 #endif

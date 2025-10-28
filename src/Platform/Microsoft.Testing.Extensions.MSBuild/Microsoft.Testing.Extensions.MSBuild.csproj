@@ -7,8 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

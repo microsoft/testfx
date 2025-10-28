@@ -18,10 +18,9 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLifetimeHandler,
 #if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
+    IAsyncDisposable,
 #endif
+    IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -267,7 +266,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        await DisposeHelper.DisposeAsync(_namedPipeClient).ConfigureAwait(false);
+        _namedPipeClient?.Dispose();
 
         // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
         // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
@@ -277,12 +276,12 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
         }
 
-        _pipeNameDescription?.Dispose();
         _mutexCreated.Dispose();
         _signalActivity.Dispose();
         _activityIndicatorMutex?.Dispose();
     }
-#else
+#endif
+
     public void Dispose()
     {
         _namedPipeClient?.Dispose();
@@ -295,10 +294,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _singleConnectionNamedPipeServer?.Dispose();
         }
 
-        _pipeNameDescription?.Dispose();
         _mutexCreated.Dispose();
         _signalActivity.Dispose();
         _activityIndicatorMutex?.Dispose();
     }
-#endif
 }

@@ -47,7 +47,7 @@ internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerP
     public async ValueTask DisposeAsync()
     {
         await DisposeHelper.DisposeAsync(_innerHost).ConfigureAwait(false);
-        await _namedPipeClient.DisposeAsync().ConfigureAwait(false);
+        _namedPipeClient.Dispose();
     }
 #endif
 }

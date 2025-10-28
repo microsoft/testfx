@@ -96,9 +96,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [field: AllowNull]
     [field: MaybeNull]
     [AllowNull]
-    public IReflectionOperations2 ReflectionOperations
+    public IReflectionOperations ReflectionOperations
     {
-        get => field ??= new ReflectionOperations2();
+        get => field ??= new ReflectionOperations();
         private set;
     }
 

@@ -113,17 +113,16 @@ internal sealed class TestDeployment : ITestDeployment
     /// <summary>
     /// Deploy files related to the list of tests specified.
     /// </summary>
-    /// <param name="tests"> The tests. </param>
+    /// <param name="testCases"> The tests. </param>
     /// <param name="runContext"> The run context. </param>
     /// <param name="frameworkHandle"> The framework handle. </param>
     /// <returns> Return true if deployment is done. </returns>
-    [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
-    public bool Deploy(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle)
+    public bool Deploy(IEnumerable<TestCase> testCases, IRunContext? runContext, IFrameworkHandle frameworkHandle)
     {
 #if WINDOWS_UWP
         return false;
 #else
-        DebugEx.Assert(tests != null, "tests");
+        DebugEx.Assert(testCases != null, "tests");
 
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
         // even if test host is kept alive.
@@ -131,7 +130,7 @@ internal sealed class TestDeployment : ITestDeployment
 
         _adapterSettings = MSTestSettingsProvider.Settings;
         bool canDeploy = CanDeploy();
-        bool hasDeploymentItems = tests.Any(DeploymentItemUtility.HasDeploymentItems);
+        bool hasDeploymentItems = testCases.Any(DeploymentItemUtility.HasDeploymentItems);
 
         // deployment directories should not be created in this case,simply return
         if (!canDeploy && hasDeploymentItems)
@@ -139,7 +138,8 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 
-        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext);
+        string? firstTestSource = testCases.FirstOrDefault()?.Source;
+        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
 
         // Deployment directories are created but deployment will not happen.
         // This is added just to keep consistency with MSTest v1 behavior.
@@ -154,7 +154,7 @@ internal sealed class TestDeployment : ITestDeployment
 #endif
         {
             // Group the tests by source
-            var testsBySource = from test in tests
+            var testsBySource = from test in testCases
                                 group test by test.Source into testGroup
                                 select new { Source = testGroup.Key, Tests = testGroup };
 

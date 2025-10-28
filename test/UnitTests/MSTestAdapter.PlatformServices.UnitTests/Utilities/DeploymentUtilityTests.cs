@@ -59,9 +59,9 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldReturnFalseWhenNoDeploymentItemsOnTestCase()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), Path.Combine(RootDeploymentDirectory, "asm.dll"));
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
-        var testRunDirectories = new TestRunDirectories(RootDeploymentDirectory);
+        var testRunDirectories = new TestRunDirectories(RootDeploymentDirectory, Path.Combine(RootDeploymentDirectory, "asm.dll"), isAppDomainCreationDisabled: true);
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
             .Returns(true);
@@ -415,7 +415,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object);
+        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object, null);
 
         // Assert.
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
@@ -432,7 +432,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object);
+        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object, null);
 
         // Assert.
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
@@ -448,7 +448,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        _deploymentUtility.CreateDeploymentDirectories(null);
+        _deploymentUtility.CreateDeploymentDirectories(null, null);
 
         // Assert.
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
@@ -473,7 +473,14 @@ public class DeploymentUtilityTests : TestContainer
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
 
-        testRunDirectories = new TestRunDirectories(currentExecutingFolder);
+        const bool isAppDomainCreationDisabled =
+#if NETFRAMEWORK
+            false;
+#else
+            true;
+#endif
+
+        testRunDirectories = new TestRunDirectories(currentExecutingFolder, Path.Combine(currentExecutingFolder, "asm.dll"), isAppDomainCreationDisabled);
 
         return testCase;
     }

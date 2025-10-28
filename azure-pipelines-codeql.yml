@@ -35,7 +35,7 @@ schedules:
     branches:
       include:
       - main
-      - rel/3.7
+      - rel/4.0
     always: true
 
 jobs:

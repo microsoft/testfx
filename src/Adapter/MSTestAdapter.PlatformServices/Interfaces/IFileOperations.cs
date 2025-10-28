@@ -14,23 +14,10 @@ internal interface IFileOperations
     /// <param name="assemblyName">
     /// The name of the assembly.
     /// </param>
-    /// <param name="isReflectionOnly">
-    /// Indicates whether this should be a reflection only load.
-    /// </param>
     /// <returns>
     /// A handle to the loaded assembly.
     /// </returns>
-    /// <remarks>
-    /// A platform can choose how it wants the assembly loaded. (ReflectionOnlyLoad/Load etc).
-    /// </remarks>
-    Assembly LoadAssembly(string assemblyName, bool isReflectionOnly);
-
-    /// <summary>
-    /// Gets the path to the .DLL of the assembly.
-    /// </summary>
-    /// <param name="assembly">The assembly.</param>
-    /// <returns>Path to the .DLL of the assembly.</returns>
-    string? GetAssemblyPath(Assembly assembly);
+    Assembly LoadAssembly(string assemblyName);
 
     /// <summary>
     /// Verify if a file exists in the current context.

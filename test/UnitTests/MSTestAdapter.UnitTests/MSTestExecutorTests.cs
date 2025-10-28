@@ -47,7 +47,6 @@ public class MSTestExecutorTests : TestContainer
             <RunSettings>
               <MSTest>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <ForcedLegacyMode>true</ForcedLegacyMode>
                 <IgnoreTestImpact>true</IgnoreTestImpact>
               </MSTest>
             </RunSettings>
@@ -93,7 +92,6 @@ public class MSTestExecutorTests : TestContainer
             <RunSettings>
               <MSTest>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <ForcedLegacyMode>true</ForcedLegacyMode>
                 <IgnoreTestImpact>true</IgnoreTestImpact>
               </MSTest>
             </RunSettings>

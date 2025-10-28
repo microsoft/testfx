@@ -4,6 +4,7 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -25,7 +26,7 @@ public class TestCaseExtensionsTests : TestContainer
         testCase.SetPropertyValue(EngineConstants.TestCategoryProperty, testCategories);
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
 
-        var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
+        UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         resultUnitTestElement.Priority.Should().Be(2);
         resultUnitTestElement.TestCategory.Should().Equal(testCategories);
@@ -40,7 +41,7 @@ public class TestCaseExtensionsTests : TestContainer
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
 
-        var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
+        UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         // These are set for testCase by default by ObjectModel.
         resultUnitTestElement.Priority.Should().Be(0);
@@ -53,7 +54,7 @@ public class TestCaseExtensionsTests : TestContainer
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
         testCase.SetPropertyValue(EngineConstants.DeclaringClassNameProperty, "DummyDeclaringClassName");
 
-        var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
+        UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
         resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().Be("DummyDeclaringClassName");

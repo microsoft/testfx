@@ -50,7 +50,7 @@ public class FileOperationsTests : TestContainer
         string filePath = typeof(FileOperationsTests).Assembly.Location;
 
         // This should not throw.
-        _fileOperations.LoadAssembly(filePath, false);
+        _fileOperations.LoadAssembly(filePath);
     }
 
 #if !WIN_UI

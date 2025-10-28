@@ -47,7 +47,7 @@ internal interface IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    IReflectionOperations2 ReflectionOperations { get; }
+    IReflectionOperations ReflectionOperations { get; }
 
     /// <summary>
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.

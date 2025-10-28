@@ -68,11 +68,19 @@ internal static class TestCaseExtensions
     /// <param name="testCase"> The test case. </param>
     /// <param name="source"> The source. If deployed this is the full path of the source in the deployment directory. </param>
     /// <returns> The converted <see cref="UnitTestElement"/>. </returns>
-    internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
+    internal static UnitTestElement ToUnitTestElementWithUpdatedSource(this TestCase testCase, string source)
     {
         if (testCase.LocalExtensionData is UnitTestElement unitTestElement)
         {
-            return unitTestElement;
+            // If the requested source is different, clone it with updated source.
+            // This can happen when there are deployment items in tests.
+            // In this case, the source would be the path of the deployment directory.
+            // If we don't return UnitTestElement with the correct path to deployment directory, we will
+            // end up trying to load the test assembly twice in the same appdomain, once with the default context and once in a LoadFrom context.
+            // See https://github.com/microsoft/testfx/issues/6713
+            return unitTestElement.TestMethod.AssemblyName != source
+                ? unitTestElement.CloneWithUpdatedSource(source)
+                : unitTestElement;
         }
 
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
@@ -102,7 +110,6 @@ internal static class TestCaseExtensions
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,
             UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
-            DisplayName = testCase.DisplayName,
         };
 
         if (testCase.Traits.Any())

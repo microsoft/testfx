@@ -32,7 +32,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         var testAssemblySettings = new TestAssemblySettings();
 
         // Load the source.
-        Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
+        Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source);
 
         ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 

@@ -20,7 +20,7 @@ public class UnitTestElementTests : TestContainer
 
     public UnitTestElementTests()
     {
-        _testMethod = new TestMethod("M", "C", "A", true);
+        _testMethod = new TestMethod("M", "C", "A", displayName: null);
         _unitTestElement = new UnitTestElement(_testMethod);
     }
 
@@ -66,7 +66,7 @@ public class UnitTestElementTests : TestContainer
 
     public void ToTestCaseShouldSetDisplayNameIfPresent()
     {
-        _unitTestElement.DisplayName = "Display Name";
+        _unitTestElement.TestMethod.DisplayName = "Display Name";
         var testCase = _unitTestElement.ToTestCase();
 
         testCase.DisplayName.Should().Be("Display Name");

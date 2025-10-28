@@ -12,16 +12,9 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Extensions.Policy;
 
-internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,
-#if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
-#endif
+internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -75,15 +68,5 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime,
     public Task AfterRunAsync(int exitCode, CancellationToken cancellation)
         => Task.CompletedTask;
 
-#if NETCOREAPP
-    public async ValueTask DisposeAsync()
-    {
-        if (Client is not null)
-        {
-            await Client.DisposeAsync().ConfigureAwait(false);
-        }
-    }
-#else
     public void Dispose() => Client?.Dispose();
-#endif
 }

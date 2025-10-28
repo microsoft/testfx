@@ -11,7 +11,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment;
 
 public class TestRunDirectoriesTests : TestContainer
 {
-    private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp");
+    private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp", @"C:\temp\asm.dll", isAppDomainCreationDisabled: false);
 
     public void InDirectoryShouldReturnCorrectDirectory()
         => _testRunDirectories.InDirectory.Should().Be(@"C:\temp\In");

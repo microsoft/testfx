@@ -28,10 +28,9 @@ internal sealed class TrxProcessLifetimeHandler :
     IDataProducer,
     IOutputDeviceDataProducer,
 #if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
+    IAsyncDisposable,
 #endif
+    IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -231,21 +230,11 @@ internal sealed class TrxProcessLifetimeHandler :
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
-    {
-        await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
-
-        // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription.Dispose();
-    }
-#else
-    public void Dispose()
-    {
-        _singleConnectionNamedPipeServer?.Dispose();
-
-        // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription.Dispose();
-    }
+        => await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
 #endif
+
+    public void Dispose()
+        => _singleConnectionNamedPipeServer?.Dispose();
 
     private sealed class ExtensionInfo : IExtension
     {
