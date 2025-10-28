@@ -72,6 +72,24 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         testHostResult.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
     }
 
+    [TestMethod]
+    public async Task CrashDump_WithChildProcess_CollectsMultipleDumps()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // TODO: Investigate failures on macos
+            return;
+        }
+
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDumpWithChild", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
+        Assert.IsTrue(dumpFiles.Length >= 2, $"Expected at least 2 dump files (parent and child), but found {dumpFiles.Length}. Dumps: {string.Join(", ", dumpFiles.Select(Path.GetFileName))}\n{testHostResult}");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "CrashDumpFixture";
@@ -80,6 +98,11 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         {
             yield return (AssetName, AssetName,
                 Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+            yield return ("CrashDumpWithChildFixture", "CrashDumpWithChildFixture",
+                SourcesWithChild
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
@@ -148,6 +171,113 @@ public class DummyTestFramework : ITestFramework
     public Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         Environment.FailFast("CrashDump");
+        context.Complete();
+        return Task.CompletedTask;
+    }
+}
+""";
+
+        private const string SourcesWithChild = """
+#file CrashDumpWithChild.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
+    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Program.cs
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Globalization;
+using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Services;
+
+public class Startup
+{
+    public static async Task<int> Main(string[] args)
+    {
+        Process self = Process.GetCurrentProcess();
+        string path = self.MainModule!.FileName!;
+
+        // Handle child process execution
+        if (args.Length > 0 && args[0] == "--child")
+        {
+            // Child process crashes immediately
+            Environment.FailFast("Child process crash");
+            return 1;
+        }
+
+        // Start a child process that will also crash (only when running as testhost controller)
+        if (args.Any(a => a == "--internal-testhostcontroller-pid"))
+        {
+            try
+            {
+                var childProcess = Process.Start(new ProcessStartInfo(path, "--child")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                });
+                
+                if (childProcess != null)
+                {
+                    // Give child process time to start and crash
+                    Thread.Sleep(500);
+                }
+            }
+            catch
+            {
+                // Ignore any errors starting child process
+            }
+        }
+
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
+        builder.AddCrashDumpProvider();
+        using ITestApplication app = await builder.BuildAsync();
+        return await app.RunAsync();
+    }
+}
+
+public class DummyTestFramework : ITestFramework
+{
+    public string Uid => nameof(DummyTestFramework);
+
+    public string Version => "2.0.0";
+
+    public string DisplayName => nameof(DummyTestFramework);
+
+    public string Description => nameof(DummyTestFramework);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
+    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+        // Parent process crashes
+        Environment.FailFast("Parent process crash");
         context.Complete();
         return Task.CompletedTask;
     }
