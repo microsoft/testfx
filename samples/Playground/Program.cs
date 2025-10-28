@@ -11,7 +11,12 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
+
 #endif
+using Microsoft.Extensions.AI;
+using Microsoft.Testing.Extensions.AzureFoundry;
+using Microsoft.Testing.Platform.AI;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Services;
@@ -43,11 +48,14 @@ public class Program
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
+            // Add Chat client provider
+            // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
+
             // Test a custom local test framework
-            // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyAdapter());
+            // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));
 
             // Custom test host controller extension
-            testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
+            // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
 
             // Enable Trx
             // testApplicationBuilder.AddTrxReportProvider();
@@ -56,17 +64,17 @@ public class Program
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
 
             // Enable OTel
-            testApplicationBuilder.AddOpenTelemetryProvider(
-                tracing =>
-                {
-                    tracing.AddTestingPlatformInstrumentation();
-                    tracing.AddOtlpExporter();
-                },
-                metrics =>
-                {
-                    metrics.AddTestingPlatformInstrumentation();
-                    metrics.AddOtlpExporter();
-                });
+            // testApplicationBuilder.AddOpenTelemetryProvider(
+            //     tracing =>
+            //     {
+            //         tracing.AddTestingPlatformInstrumentation();
+            //         tracing.AddOtlpExporter();
+            //     },
+            //     metrics =>
+            //     {
+            //         metrics.AddTestingPlatformInstrumentation();
+            //         metrics.AddOtlpExporter();
+            //     });
 
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
             return await testApplication.RunAsync();
@@ -92,15 +100,19 @@ public class Program
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
-
-            return 0;
 #endif
         }
+
+        return 0;
     }
 }
 
 internal sealed class DummyAdapter : ITestFramework, IDataProducer
 {
+    private readonly IServiceProvider _serviceProvider;
+
+    public DummyAdapter(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+
     public string Uid => nameof(DummyAdapter);
 
     public string Version => string.Empty;
@@ -119,6 +131,12 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
     {
         try
         {
+            IChatClient? chatClient = await _serviceProvider.GetChatClientAsync(context.CancellationToken);
+            if (chatClient != null)
+            {
+                ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);
+            }
+
             MyService.DoSomething();
         }
         catch (Exception e)
