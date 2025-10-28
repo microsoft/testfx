@@ -1000,8 +1000,8 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
-        <source>Using asserts in catch blocks is problematic because the test will pass when no exception is thrown by the code in try block. Remove try catch block, and use Assert.ThrowsException or Assert.ThrowsExceptionAsync to verify that an exception of the given type is thrown, and to capture the exception object. Make additional assertions on the caught exception if needed.</source>
-        <target state="new">Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use Assert.ThrowsException or Assert.ThrowsExceptionAsync to verify that an exception is thrown, and then make additional assertions on the caught exception outside the try-catch block.</target>
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="new">Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</target>
         <note />
       </trans-unit>
     </body>
