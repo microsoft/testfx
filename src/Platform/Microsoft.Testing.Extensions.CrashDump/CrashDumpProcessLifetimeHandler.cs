@@ -66,17 +66,23 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID)), cancellation).ConfigureAwait(false);
 
         string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
-        if (File.Exists(expectedDumpFile))
+        string dumpDirectory = Path.GetDirectoryName(expectedDumpFile)!;
+
+        // Collect all dump files in the directory to capture crashes from child processes
+        bool foundExpectedDump = false;
+        foreach (string dumpFile in Directory.GetFiles(dumpDirectory, "*.dmp"))
         {
-            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
+            if (string.Equals(dumpFile, expectedDumpFile, StringComparison.OrdinalIgnoreCase))
+            {
+                foundExpectedDump = true;
+            }
+
+            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
         }
-        else
+
+        if (!foundExpectedDump)
         {
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellation).ConfigureAwait(false);
-            foreach (string dumpFile in Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp"))
-            {
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-            }
         }
     }
 }
