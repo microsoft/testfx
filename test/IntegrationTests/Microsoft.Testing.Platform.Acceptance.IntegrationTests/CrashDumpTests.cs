@@ -85,9 +85,9 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDumpWithChild", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-        
+
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
-        Assert.IsTrue(dumpFiles.Length >= 2, $"Expected at least 2 dump files (parent and child), but found {dumpFiles.Length}. Dumps: {string.Join(", ", dumpFiles.Select(Path.GetFileName))}\n{testHostResult}");
+        Assert.IsGreaterThanOrEqualTo(2, dumpFiles.Length, $"Expected at least 2 dump files (parent and child), but found {dumpFiles.Length}. Dumps: {string.Join(", ", dumpFiles.Select(Path.GetFileName))}\n{testHostResult}");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
