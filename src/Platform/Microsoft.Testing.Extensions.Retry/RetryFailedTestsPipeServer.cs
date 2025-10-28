@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.RetryFailedTestsProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -27,11 +29,11 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             serviceProvider.GetTask(),
             serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
 
-        _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
+        _singleConnectionNamedPipeServer.RegisterSerializer(FailedTestRequestSerializer.Instance, typeof(FailedTestRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(GetListOfFailedTestsRequestSerializer.Instance, typeof(GetListOfFailedTestsRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(GetListOfFailedTestsResponseSerializer.Instance, typeof(GetListOfFailedTestsResponse));
+        _singleConnectionNamedPipeServer.RegisterSerializer(TotalTestsRunRequestSerializer.Instance, typeof(TotalTestsRunRequest));
         _failedTests = failedTests;
     }
 
@@ -52,7 +54,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         if (request is FailedTestRequest failed)
         {
             FailedUID ??= [];
-            FailedUID.Add(failed.Uid);
+            FailedUID.Add(failed.UID);
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 

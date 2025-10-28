@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.RetryFailedTestsProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+
 using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
@@ -8,7 +11,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -51,11 +53,11 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
         logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
 
         Client = new(pipeName[0]);
-        Client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        Client.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
-        Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
-        Client.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        Client.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        Client.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
+        Client.RegisterSerializer(FailedTestRequestSerializer.Instance, typeof(FailedTestRequest));
+        Client.RegisterSerializer(GetListOfFailedTestsRequestSerializer.Instance, typeof(GetListOfFailedTestsRequest));
+        Client.RegisterSerializer(GetListOfFailedTestsResponseSerializer.Instance, typeof(GetListOfFailedTestsResponse));
+        Client.RegisterSerializer(TotalTestsRunRequestSerializer.Instance, typeof(TotalTestsRunRequest));
         await Client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
         GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken).ConfigureAwait(false);

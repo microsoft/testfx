@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+using EasyNamedPipes.GeneratedSerializers.TrxReportProtocol;
+
 using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
@@ -8,7 +11,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -64,9 +66,9 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
                 string namedPipeName = _environment.GetEnvironmentVariable(TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME)
                     ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
                 NamedPipeClient = new NamedPipeClient(namedPipeName, _environment);
-                NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+                NamedPipeClient.RegisterSerializer(ReportFileNameRequestSerializer.Instance, typeof(ReportFileNameRequest));
+                NamedPipeClient.RegisterSerializer(TestAdapterInformationRequestSerializer.Instance, typeof(TestAdapterInformationRequest));
+                NamedPipeClient.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
 
                 // Connect to the named pipe server
                 await NamedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);

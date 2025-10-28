@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -93,7 +92,7 @@ public sealed class ProtocolTests
         });
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        HandshakeMessageSerializer.Instance.Serialize(message, stream);
         stream.Seek(0, SeekOrigin.Begin);
         var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
 

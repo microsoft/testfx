@@ -13,7 +13,6 @@ using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -550,7 +549,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         // Create client to connect to the monitor
         NamedPipeClient client = new(pipeName, environment);
-        client.RegisterAllSerializers();
+        client.RegisterPlatformSerializers();
 
         // Connect to the monitor
         await logger.LogDebugAsync($"Connecting to named pipe '{pipeName}'").ConfigureAwait(false);

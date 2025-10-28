@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.MSBuildProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -8,7 +11,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
@@ -51,10 +53,10 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
         }
 
         PipeClient = new(msbuildInfo[0]);
-        PipeClient.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-        PipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        PipeClient.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
-        PipeClient.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
+        PipeClient.RegisterSerializer(ModuleInfoRequestSerializer.Instance, typeof(ModuleInfoRequest));
+        PipeClient.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
+        PipeClient.RegisterSerializer(FailedTestInfoRequestSerializer.Instance, typeof(FailedTestInfoRequest));
+        PipeClient.RegisterSerializer(RunSummaryInfoRequestSerializer.Instance, typeof(RunSummaryInfoRequest));
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
         await PipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);

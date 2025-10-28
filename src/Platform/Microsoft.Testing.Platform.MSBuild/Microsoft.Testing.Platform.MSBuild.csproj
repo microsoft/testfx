@@ -6,10 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\**\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
+    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\EasyNamedPipes.SourceGenerator\EasyNamedPipes.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,13 +61,6 @@ This package provides MSBuild integration of the platform, its extensions and co
       <BuildOutputInPackage Include="@(RuntimeTargetsCopyLocalItems-&gt;HasMetadata('NuGetPackageId'))" TargetPath="%(RuntimeCopyLocalPaths.DestinationSubPath)" />
     </ItemGroup>
   </Target>
-
-  <ItemGroup>
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\MSBuildConstants.cs" Link="MSBuildConstants.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\FailedTestInfoRequestSerializer.cs" Link="Serializers/FailedTestInfoRequestSerializer.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\ModuleInfoRequestSerializer.cs" Link="Serializers/ModuleInfoRequestSerializer.cs" />
-    <Compile Include="..\Microsoft.Testing.Extensions.MSBuild\Serializers\RunSummaryRequestSerializer.cs" Link="Serializers/RunSummaryRequestSerializer.cs" />
-  </ItemGroup>
 
   <!-- Generates NuGet package layout inside artifacts to make it testable with simple imports -->
   <Target Name="ReproNugetPackageLayout" AfterTargets="Build" Condition=" '$(TargetFramework)' != '' ">

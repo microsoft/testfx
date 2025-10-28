@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -97,7 +96,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
                 ServiceProvider.GetTask(), cancellationToken);
-            testHostControllerIpc.RegisterAllSerializers();
+            testHostControllerIpc.RegisterPlatformSerializers();
 
 #if NET8_0_OR_GREATER
             // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.

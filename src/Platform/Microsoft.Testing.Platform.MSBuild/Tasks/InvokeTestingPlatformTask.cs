@@ -3,6 +3,9 @@
 
 #pragma warning disable CS8618 // Properties below are set by MSBuild.
 
+using EasyNamedPipes.GeneratedSerializers.MSBuildProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
@@ -10,7 +13,6 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.MSBuild.Tasks;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -348,10 +350,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 while (!_waitForConnections.IsCancellationRequested)
                 {
                     NamedPipeServer pipeServer = new(_pipeNameDescription, HandleRequestAsync, new SystemEnvironment(), new MSBuildLogger(), new SystemTask(), maxNumberOfServerInstances: 100, CancellationToken.None);
-                    pipeServer.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-                    pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                    pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
-                    pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
+                    pipeServer.RegisterSerializer(ModuleInfoRequestSerializer.Instance, typeof(ModuleInfoRequest));
+                    pipeServer.RegisterSerializer(VoidResponseSerializer.Instance, typeof(IPC.Models.VoidResponse));
+                    pipeServer.RegisterSerializer(FailedTestInfoRequestSerializer.Instance, typeof(FailedTestInfoRequest));
+                    pipeServer.RegisterSerializer(RunSummaryInfoRequestSerializer.Instance, typeof(RunSummaryInfoRequest));
                     await pipeServer.WaitConnectionAsync(_waitForConnections.Token).ConfigureAwait(false);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
@@ -457,7 +459,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 }
             }
 
-            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+            return Task.FromResult<IResponse>(IPC.Models.VoidResponse.CachedInstance);
         }
 
         if (request is FailedTestInfoRequest failedTestInfoRequest)

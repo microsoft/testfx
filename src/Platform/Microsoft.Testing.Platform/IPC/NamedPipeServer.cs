@@ -3,6 +3,8 @@
 
 using System.IO.Pipes;
 
+using EasyNamedPipes;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -11,7 +13,7 @@ using Microsoft.Testing.Platform.Resources;
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
-internal sealed class NamedPipeServer : NamedPipeBase, IServer
+internal sealed class NamedPipeServer : EasyNamedPipes.NamedPipeBase, IServer
 {
 #pragma warning disable CA1416 // Validate platform compatibility
     private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous

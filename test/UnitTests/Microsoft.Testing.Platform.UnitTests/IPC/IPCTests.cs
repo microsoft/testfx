@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestProtocol;
+
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -129,10 +133,10 @@ public sealed class IPCTests
             new Mock<ILogger>().Object,
             new SystemTask(),
             CancellationToken.None);
-        singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        singleConnectionNamedPipeServer.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
-        singleConnectionNamedPipeServer.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
-        singleConnectionNamedPipeServer.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
+        singleConnectionNamedPipeServer.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
+        singleConnectionNamedPipeServer.RegisterSerializer(TextMessageSerializer.Instance, typeof(TextMessage));
+        singleConnectionNamedPipeServer.RegisterSerializer(IntMessageSerializer.Instance, typeof(IntMessage));
+        singleConnectionNamedPipeServer.RegisterSerializer(LongMessageSerializer.Instance, typeof(LongMessage));
         await singleConnectionNamedPipeServer.WaitConnectionAsync(CancellationToken.None);
         manualResetEventSlim.Wait(_testContext.CancellationToken);
 
@@ -239,36 +243,12 @@ public sealed class IPCTests
 
     private abstract record BaseMessage : IRequest;
 
+    [PipeSerializableMessage("TestProtocol", 2)]
     private sealed record TextMessage(string Text) : BaseMessage;
 
-    private sealed class TextMessageSerializer : BaseSerializer, INamedPipeSerializer
-    {
-        public int Id => 2;
-
-        public object Deserialize(Stream stream) => new TextMessage(ReadString(stream));
-
-        public void Serialize(object objectToSerialize, Stream stream) => WriteString(stream, ((TextMessage)objectToSerialize).Text);
-    }
-
+    [PipeSerializableMessage("TestProtocol", 3)]
     private sealed record IntMessage(int Integer) : BaseMessage;
 
-    private sealed class IntMessageSerializer : BaseSerializer, INamedPipeSerializer
-    {
-        public int Id => 3;
-
-        public object Deserialize(Stream stream) => new IntMessage(ReadInt(stream));
-
-        public void Serialize(object objectToSerialize, Stream stream) => WriteInt(stream, ((IntMessage)objectToSerialize).Integer);
-    }
-
+    [PipeSerializableMessage("TestProtocol", 4)]
     private sealed record LongMessage(long Long) : BaseMessage;
-
-    private sealed class LongMessageSerializer : BaseSerializer, INamedPipeSerializer
-    {
-        public int Id => 4;
-
-        public object Deserialize(Stream stream) => new LongMessage(ReadInt(stream));
-
-        public void Serialize(object objectToSerialize, Stream stream) => WriteLong(stream, ((LongMessage)objectToSerialize).Long);
-    }
 }

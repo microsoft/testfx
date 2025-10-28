@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.MSBuildProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -8,7 +11,6 @@ using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
@@ -49,8 +51,8 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
         }
 
         using var pipeClient = new NamedPipeClient(msbuildInfo[0]);
-        pipeClient.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-        pipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        pipeClient.RegisterSerializer(ModuleInfoRequestSerializer.Instance, typeof(ModuleInfoRequest));
+        pipeClient.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
         using var cancellationTokenSource = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
         await pipeClient.ConnectAsync(linkedCancellationToken.Token).ConfigureAwait(false);

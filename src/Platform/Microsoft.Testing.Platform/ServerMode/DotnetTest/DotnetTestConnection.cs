@@ -6,7 +6,6 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
@@ -53,7 +52,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             }
 
             _dotnetTestPipeClient = new(arguments[0], _environment);
-            _dotnetTestPipeClient.RegisterAllSerializers();
+            _dotnetTestPipeClient.RegisterPlatformSerializers();
 
             await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }

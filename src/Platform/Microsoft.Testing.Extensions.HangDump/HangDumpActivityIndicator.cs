@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.HangDumpProtocol;
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.HangDump.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
@@ -10,7 +13,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
@@ -65,10 +67,10 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
                 ?? throw new InvalidOperationException($"Expected {pipeNameEnvironmentVariable} environment variable set.");
             _namedPipeClient = new NamedPipeClient(namedPipeName, _environment);
-            _namedPipeClient.RegisterSerializer(new ActivityIndicatorMutexNameRequestSerializer(), typeof(ActivityIndicatorMutexNameRequest));
-            _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-            _namedPipeClient.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
-            _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
+            _namedPipeClient.RegisterSerializer(ActivityIndicatorMutexNameRequestSerializer.Instance, typeof(ActivityIndicatorMutexNameRequest));
+            _namedPipeClient.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
+            _namedPipeClient.RegisterSerializer(SessionEndSerializerRequestSerializer.Instance, typeof(SessionEndSerializerRequest));
+            _namedPipeClient.RegisterSerializer(ConsumerPipeNameRequestSerializer.Instance, typeof(ConsumerPipeNameRequest));
         }
     }
 

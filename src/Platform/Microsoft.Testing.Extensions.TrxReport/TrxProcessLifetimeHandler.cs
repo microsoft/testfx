@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.TestHostProtocol;
+using EasyNamedPipes.GeneratedSerializers.TrxReportProtocol;
+
 using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
@@ -13,7 +16,6 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -104,9 +106,9 @@ internal sealed class TrxProcessLifetimeHandler :
             async () =>
             {
                 _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellation);
-                _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+                _singleConnectionNamedPipeServer.RegisterSerializer(ReportFileNameRequestSerializer.Instance, typeof(ReportFileNameRequest));
+                _singleConnectionNamedPipeServer.RegisterSerializer(TestAdapterInformationRequestSerializer.Instance, typeof(TestAdapterInformationRequest));
+                _singleConnectionNamedPipeServer.RegisterSerializer(VoidResponseSerializer.Instance, typeof(VoidResponse));
                 await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation).ConfigureAwait(false);
             }, cancellation);
 
