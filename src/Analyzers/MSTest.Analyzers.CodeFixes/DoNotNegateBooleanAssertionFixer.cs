@@ -28,7 +28,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
-        => FixAll.Instance;
+        => WellKnownFixAllProviders.BatchFixer;
 
     /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
