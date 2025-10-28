@@ -272,7 +272,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="translated">无法将日志写入通道。遗漏的日志内容:
+        <target state="translated">无法将日志写入通道。遗漏的日志内容: 
 {0}</target>
         <note />
       </trans-unit>

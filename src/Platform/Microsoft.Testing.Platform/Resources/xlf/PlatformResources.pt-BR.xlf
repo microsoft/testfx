@@ -505,7 +505,7 @@ O arquivo será gravado no diretório de saída com o nome log_[yyMMddHHmmssfff]
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Diretório de saída do log de eventos de diagnóstico
+        <target state="translated">Diretório de saída do log de eventos de diagnóstico 
 Se não for especificado, o arquivo será gerado dentro do diretório padrão “TestResults”.</target>
         <note />
       </trans-unit>
@@ -806,7 +806,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Detalhamento da saída ao relatar testes
+        <target state="translated">Detalhamento da saída ao relatar testes 
 Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal”.</target>
         <note />
       </trans-unit>
