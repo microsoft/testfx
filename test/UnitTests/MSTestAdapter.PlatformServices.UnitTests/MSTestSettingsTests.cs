@@ -156,37 +156,6 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
     }
 
-    public void ForcedLegacyModeIsByDefaultFalseWhenNotSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-              </MSTest>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
-
-        adapterSettings.ForcedLegacyMode.Should().BeFalse();
-    }
-
-    public void ForcedLegacyModeShouldBeConsumedFromRunSettingsWhenSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-                <ForcedLegacyMode>true</ForcedLegacyMode>
-              </MSTest>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
-
-        adapterSettings.ForcedLegacyMode.Should().BeTrue();
-    }
-
     public void TestSettingsFileIsByDefaultNullWhenNotSpecified()
     {
         string runSettingsXml =
@@ -309,37 +278,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
 
         adapterSettings.TestTimeout.Should().Be(0);
-    }
-
-    public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
-
-        adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors.Should().BeFalse();
-    }
-
-    public void TreatClassCleanupWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-                <TreatClassAndAssemblyCleanupWarningsAsErrors>True</TreatClassAndAssemblyCleanupWarningsAsErrors>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
-
-        adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors.Should().BeTrue();
     }
 
     public void TreatDiscoveryWarningsAsErrorsShouldBeTrueByDefault()
@@ -834,7 +772,6 @@ public class MSTestSettingsTests : TestContainer
         dummyPlatformSpecificSetting.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.ForcedLegacyMode.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().Be("DummyPath\\\\TestSettings1.testsettings");
     }
@@ -938,7 +875,6 @@ public class MSTestSettingsTests : TestContainer
         dummyPlatformSpecificSetting.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.ForcedLegacyMode.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
     }
 
@@ -954,11 +890,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-<<<<<<< HEAD
-        adapterSettings.ForcedLegacyMode.Should().BeFalse();
-=======
-        Verify(!adapterSettings.MapInconclusiveToFailed);
->>>>>>> main
+        adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
     }
 
     public void CurrentSettingShouldReturnCachedLoadedSettings()
@@ -1011,9 +943,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.CurrentSettings.CaptureDebugTraces.Should().BeFalse();
         MSTestSettings.CurrentSettings.MapInconclusiveToFailed.Should().BeTrue();
         MSTestSettings.CurrentSettings.MapNotRunnableToFailed.Should().BeTrue();
-        MSTestSettings.CurrentSettings.ForcedLegacyMode.Should().BeTrue();
         MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
-        MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors.Should().BeTrue();
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
     }
 
@@ -1074,11 +1004,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-<<<<<<< HEAD
-        adapterSettings.ForcedLegacyMode.Should().BeFalse();
-=======
-        Verify(!adapterSettings.MapInconclusiveToFailed);
->>>>>>> main
+        adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromMSTestSection()
@@ -1103,18 +1029,10 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.Should().NotBeNull();
 
-<<<<<<< HEAD
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.ForcedLegacyMode.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
-=======
-        Verify(adapterSettings.MapInconclusiveToFailed);
-        Verify(adapterSettings.MapNotRunnableToFailed);
-        Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(!string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
->>>>>>> main
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromMSTestV2Section()
@@ -1141,7 +1059,6 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.ForcedLegacyMode.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
     }
@@ -1174,7 +1091,6 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
         adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
-        adapterSettings.ForcedLegacyMode.Should().BeFalse();
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().BeNullOrEmpty();
     }
@@ -1205,25 +1121,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeFalse();
     }
 
-<<<<<<< HEAD
-    public void IsLegacyScenarioReturnsFalseWhenForcedLegacyModeIsSetToTrue()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-                 <ForcedLegacyMode>true</ForcedLegacyMode>
-               </MSTest>
-            </RunSettings>
-            """;
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeFalse();
-    }
-
-=======
->>>>>>> main
     public void IsLegacyScenarioReturnsTrueWhenTestSettingsFileIsGiven()
     {
         string runSettingsXml =
@@ -1341,7 +1238,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
 
         // Assert
-<<<<<<< HEAD
         settings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         settings.OrderTestsByNameInClass.Should().BeTrue();
         settings.CaptureDebugTraces.Should().BeTrue();
@@ -1350,19 +1246,7 @@ public class MSTestSettingsTests : TestContainer
         settings.MapNotRunnableToFailed.Should().BeTrue();
         settings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
         settings.ConsiderEmptyDataSourceAsInconclusive.Should().BeTrue();
-        settings.TreatClassAndAssemblyCleanupWarningsAsErrors.Should().BeTrue();
         settings.ConsiderFixturesAsSpecialTests.Should().BeTrue();
-=======
-        Verify(settings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify(settings.OrderTestsByNameInClass);
-        Verify(settings.CaptureDebugTraces);
-        Verify(settings.CooperativeCancellationTimeout);
-        Verify(settings.MapInconclusiveToFailed);
-        Verify(settings.MapNotRunnableToFailed);
-        Verify(settings.TreatDiscoveryWarningsAsErrors);
-        Verify(settings.ConsiderEmptyDataSourceAsInconclusive);
-        Verify(settings.ConsiderFixturesAsSpecialTests);
->>>>>>> main
 
         settings.TestTimeout.Should().Be(60);
         settings.AssemblyInitializeTimeout.Should().Be(300);

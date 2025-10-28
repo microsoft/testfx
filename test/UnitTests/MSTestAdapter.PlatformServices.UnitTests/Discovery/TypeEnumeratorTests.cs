@@ -465,27 +465,6 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.DeploymentItems.Should().BeEquivalentTo(deploymentItems);
     }
 
-<<<<<<< HEAD
-    public void GetTestFromMethodShouldSetDeclaringAssemblyName()
-    {
-        const bool isMethodFromSameAssembly = false;
-
-        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType")!;
-
-        // Setup mocks
-        string otherAssemblyName = "ADifferentAssembly";
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetAssemblyPath(It.IsAny<Assembly>()))
-            .Returns(otherAssemblyName);
-
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, isMethodFromSameAssembly, _warnings);
-
-        testElement.Should().NotBeNull();
-        testElement.TestMethod.DeclaringAssemblyName.Should().Be(otherAssemblyName);
-    }
-
-=======
->>>>>>> main
     public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
