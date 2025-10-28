@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
@@ -11,14 +11,16 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 public class ReflectionUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
+    private readonly ReflectionOperations _reflectionOperations = new();
+
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -28,10 +30,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 3);
+        Verify(attributes.Length == 3);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
         string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived", "DummyA : base"];
@@ -42,10 +44,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 1);
+        Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -55,10 +57,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -68,10 +70,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 1);
+        Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -81,10 +83,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : derived", "DummyA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -94,10 +96,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 1);
+        Verify(attributes.Length == 1);
 
         string[] expectedAttributes = ["DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -107,10 +109,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));

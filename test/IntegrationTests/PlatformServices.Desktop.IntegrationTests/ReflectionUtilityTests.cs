@@ -3,7 +3,7 @@
 
 using AwesomeAssertions;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using SampleFrameworkExtensions;
 
@@ -14,9 +14,11 @@ namespace PlatformServices.Desktop.ComponentTests;
 public class ReflectionUtilityTests : TestContainer
 {
     private readonly Assembly _testAsset;
+    private readonly ReflectionOperations _reflectionOperations;
 
     public ReflectionUtilityTests()
     {
+        _reflectionOperations = new ReflectionOperations();
         DirectoryInfo currentAssemblyDirectory = new FileInfo(typeof(ReflectionUtilityTests).Assembly.Location).Directory;
         string testAssetPath =
             Path.Combine(
@@ -39,7 +41,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -52,7 +54,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
@@ -66,7 +68,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -79,7 +81,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -92,7 +94,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -106,7 +108,7 @@ public class ReflectionUtilityTests : TestContainer
         MethodInfo methodInfo =
             _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -119,7 +121,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, null);
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, null);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
@@ -132,7 +134,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(TestPropertyAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(TestPropertyAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -145,7 +147,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(CategoryArrayAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(methodInfo, typeof(CategoryArrayAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -158,7 +160,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -171,7 +173,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass");
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributesCore(type, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -184,7 +186,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Assembly asm = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
 
-        List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
+        List<Attribute> attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);

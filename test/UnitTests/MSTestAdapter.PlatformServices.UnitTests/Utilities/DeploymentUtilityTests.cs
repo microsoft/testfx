@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -23,7 +24,7 @@ public class DeploymentUtilityTests : TestContainer
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
     private readonly Mock<FileUtility> _mockFileUtility;
     private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
     private readonly Mock<IRunContext> _mockRunContext;
@@ -39,13 +40,13 @@ public class DeploymentUtilityTests : TestContainer
 
     public DeploymentUtilityTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
+        _mockReflectHelper = new Mock<ReflectHelper>();
         _mockFileUtility = new Mock<FileUtility>();
         _mockAssemblyUtility = new Mock<AssemblyUtility>();
         _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectHelper.Object),
             _mockAssemblyUtility.Object,
             _mockFileUtility.Object);
 
