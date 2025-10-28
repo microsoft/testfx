@@ -112,7 +112,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                         Assert.IsFalse(y == null);
                         Assert.IsFalse(null == x);
                         Assert.IsFalse(null == y);
-            
+
                         // Assert.IsFalse: not null comparisons
                         Assert.IsFalse(x is not null);
                         Assert.IsFalse(y is not null);
@@ -120,13 +120,13 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                         Assert.IsFalse(y != null);
                         Assert.IsFalse(null != x);
                         Assert.IsFalse(null != y);
-            
+
                         // Assert.IsFalse: two pointers equality comparisons
                         Assert.IsFalse(x == x);
                         Assert.IsFalse(x == y);
                         Assert.IsFalse(y == x);
                         Assert.IsFalse(y == y);
-            
+
                         // Assert.IsFalse: two pointers inequality comparisons
                         Assert.IsFalse(x != x);
                         Assert.IsFalse(x != y);
@@ -2960,8 +2960,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            [],
-            {
+            [
                 // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
                 // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsTrue'
@@ -2974,7 +2973,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreEqual", "IsTrue"),
                 // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsTrue'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreNotEqual", "IsTrue"),
-            },
+            ],
             fixedCode);
     }
 
@@ -3027,8 +3026,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            [],
-            {
+            [
                 // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
                 // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsTrue'
@@ -3041,7 +3039,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreEqual", "IsTrue"),
                 // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsTrue'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreNotEqual", "IsTrue"),
-            },
+            ],
             fixedCode);
     }
 
@@ -3094,8 +3092,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            new[]
-            {
+            [
                 // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsFalse'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsLessThanOrEqualTo", "IsFalse"),
                 // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsFalse'
@@ -3108,7 +3105,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreNotEqual", "IsFalse"),
                 // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsFalse'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreEqual", "IsFalse"),
-            },
+            ],
             fixedCode);
     }
 
