@@ -715,8 +715,6 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
             }
             """;
 
-        // TODO: Formatting is so broken here.
-        // See https://github.com/microsoft/testfx/issues/4570
         string fixedCode = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -730,9 +728,9 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests
                     Assert.ThrowsExactly<Exception>(() =>
                     {
                         foreach (var x in new[] { 1, 2, 3 })
-                    {
-                        Console.WriteLine(x);
-                    }
+                        {
+                            Console.WriteLine(x);
+                        }
                     });
                 }
             }

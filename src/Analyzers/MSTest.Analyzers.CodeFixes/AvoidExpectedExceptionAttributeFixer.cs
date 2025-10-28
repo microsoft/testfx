@@ -175,7 +175,7 @@ public sealed class AvoidExpectedExceptionAttributeFixer : CodeFixProvider
             // This is the case when the last statement of the method body is a loop for example (e.g, for, foreach, while, do while).
             // It can also happen for using statement, or switch statement.
             // In that case, we need to wrap in a block syntax (i.e, curly braces)
-            StatementSyntax expressionToUseAsStatement => SyntaxFactory.Block(expressionToUseAsStatement),
+            StatementSyntax expressionToUseAsStatement => SyntaxFactory.Block(expressionToUseAsStatement.WithoutTrivia()).NormalizeWhitespace(),
             _ => expressionToUseInLambda.WithoutTrivia(),
         };
 
