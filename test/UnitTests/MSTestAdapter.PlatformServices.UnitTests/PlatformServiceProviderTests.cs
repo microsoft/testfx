@@ -39,7 +39,7 @@ public class PlatformServiceProviderTests : TestContainer
         => PlatformServiceProvider.Instance.Should().NotBeNull();
 
     public void ReflectionOperationsShouldReturnAValidInstance()
-        => PlatformServiceProvider.Instance.ReflectionOperations.Should().BeOfType<ReflectionOperations2>();
+        => PlatformServiceProvider.Instance.ReflectionOperations.Should().BeOfType<ReflectionOperations>();
 
     public void ReflectionOperationsShouldBeCached()
     {

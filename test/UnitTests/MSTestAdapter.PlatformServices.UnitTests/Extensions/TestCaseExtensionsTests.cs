@@ -30,7 +30,6 @@ public class TestCaseExtensionsTests : TestContainer
 
         resultUnitTestElement.Priority.Should().Be(2);
         resultUnitTestElement.TestCategory.Should().Equal(testCategories);
-        resultUnitTestElement.DisplayName.Should().Be("DummyDisplayName");
         resultUnitTestElement.TestMethod.Name.Should().Be("DummyMethod");
         resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
         resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().BeNull();

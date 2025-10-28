@@ -69,7 +69,6 @@ public class AssemblyEnumeratorTests : TestContainer
         // Constructor has the side effect of populating the passed settings to MSTestSettings.CurrentSettings
         _ = new AssemblyEnumerator(adapterSettings);
 
-        MSTestSettings.CurrentSettings.ForcedLegacyMode.Should().BeTrue();
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
     }
 

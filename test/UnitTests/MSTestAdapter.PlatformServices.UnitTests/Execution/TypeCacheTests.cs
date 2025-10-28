@@ -779,7 +779,7 @@ public class TypeCacheTests : TestContainer
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));
 
-        _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
+        _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>()), Times.Once);
         _typeCache.ClassInfoCache.Should().HaveCount(1);
     }
 

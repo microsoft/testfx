@@ -19,7 +19,7 @@ public class FileOperationsTests : TestContainer
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         string filePath = "temp<>txt";
-        Action action = () => _fileOperations.LoadAssembly(filePath, false);
+        Action action = () => _fileOperations.LoadAssembly(filePath);
 
 #if NETCOREAPP
         action.Should().Throw<FileNotFoundException>();
@@ -36,14 +36,14 @@ public class FileOperationsTests : TestContainer
         // This test is checking that. It still fails with FileNotFoundException, because the file does not exist, but it should not throw FileLoadException.
         // (The FileLoadException used for the unparseable name is weird choice, and confusing to me, but that is what the runtime decided to do. No dll is being loaded.)
         string filePath = "temp=txt";
-        Action action = () => _fileOperations.LoadAssembly(filePath, false);
+        Action action = () => _fileOperations.LoadAssembly(filePath);
 
         action.Should().Throw<FileNotFoundException>();
 #endif
     }
 
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound() =>
-        new Action(() => _fileOperations.LoadAssembly("temptxt", false)).Should().Throw<FileNotFoundException>();
+        new Action(() => _fileOperations.LoadAssembly("temptxt")).Should().Throw<FileNotFoundException>();
 
     public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
     {

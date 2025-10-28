@@ -68,7 +68,6 @@ public sealed class UnitTestRunnerTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
-        MSTestSettings.CurrentSettings.ForcedLegacyMode.Should().BeTrue();
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
     }
 

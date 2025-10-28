@@ -282,12 +282,9 @@ public partial class TypeEnumeratorTests : TestContainer
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("AsyncMethodWithTaskReturnType")!;
 
-        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
-
-        string? expectedAsyncTaskName = methodInfo.GetCustomAttribute<AsyncStateMachineAttribute>()!.StateMachineType.FullName;
+        MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         testElement.Should().NotBeNull();
-        testElement.AsyncTypeName.Should().Be(expectedAsyncTaskName);
     }
 
     public void GetTestFromMethodShouldSetTestCategory()
@@ -475,7 +472,6 @@ public partial class TypeEnumeratorTests : TestContainer
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         testElement.Should().NotBeNull();
-        testElement.DisplayName.Should().Be("MethodWithVoidReturnType");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromTestMethodAttribute()
@@ -488,7 +484,6 @@ public partial class TypeEnumeratorTests : TestContainer
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         testElement.Should().NotBeNull();
-        testElement.DisplayName.Should().Be("Test method display name.");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
@@ -501,7 +496,6 @@ public partial class TypeEnumeratorTests : TestContainer
         MSTest.TestAdapter.ObjectModel.UnitTestElement testElement = typeEnumerator.GetTestFromMethod(methodInfo, _warnings);
 
         testElement.Should().NotBeNull();
-        testElement.DisplayName.Should().Be("Test method display name.");
     }
 
     #endregion
