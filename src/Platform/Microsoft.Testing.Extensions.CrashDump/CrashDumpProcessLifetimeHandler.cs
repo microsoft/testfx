@@ -67,7 +67,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
         string? dumpDirectory = Path.GetDirectoryName(expectedDumpFile);
-        if (string.IsNullOrEmpty(dumpDirectory) || !Directory.Exists(dumpDirectory))
+        if (RoslynString.IsNullOrEmpty(dumpDirectory) || !Directory.Exists(dumpDirectory))
         {
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellation).ConfigureAwait(false);
             return;
