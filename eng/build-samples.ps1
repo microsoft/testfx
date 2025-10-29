@@ -32,7 +32,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$samplesFolder = Join-Path $repoRoot "samples" "public"
+$samplesFolder = Join-Path (Join-Path $repoRoot "samples") "public"
 
 # Detect if running in CI to disable colors
 $isCI = $env:TF_BUILD -eq 'true' -or $env:CI -eq 'true'
