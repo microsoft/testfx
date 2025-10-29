@@ -215,9 +215,9 @@ public class TestClassInfoTests : TestContainer
 
         TestResult result = GetResultOrRunClassInitialize(null);
         var exception = result.TestFailureException as TestFailedException;
-        exception.Should().NotBeNull();
+        exception.Should().NotBeNull()
+            .WithMessage("TestContext cannot be Null.");
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
-        exception.Message.Should().Be("TestContext cannot be Null.");
     }
 
     public void RunClassInitializeShouldExecuteClassInitialize()
