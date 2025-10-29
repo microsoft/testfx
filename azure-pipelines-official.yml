@@ -139,6 +139,9 @@ extends:
                 /p:Test=false
               name: Build
               displayName: Build
+              env:
+                # https://github.com/microsoft/testfx/issues/6767
+                DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations
