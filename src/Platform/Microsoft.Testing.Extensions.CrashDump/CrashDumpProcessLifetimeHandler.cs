@@ -57,38 +57,26 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
     {
         if (cancellation.IsCancellationRequested
-            || testHostProcessInformation.HasExitedGracefully
             || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
         {
             return;
         }
 
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
-        await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID)), cancellation).ConfigureAwait(false);
 
         string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
         string? dumpDirectory = Path.GetDirectoryName(expectedDumpFile);
         if (RoslynString.IsNullOrEmpty(dumpDirectory) || !Directory.Exists(dumpDirectory))
         {
-            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellation).ConfigureAwait(false);
             return;
         }
 
         // Collect all dump files in the directory to capture crashes from child processes
-        bool foundExpectedDump = false;
+        // We check for any dumps in the directory, even if the main process exited gracefully,
+        // because child processes might have crashed
         foreach (string dumpFile in Directory.GetFiles(dumpDirectory, "*.dmp"))
         {
-            if (string.Equals(dumpFile, expectedDumpFile, StringComparison.OrdinalIgnoreCase))
-            {
-                foundExpectedDump = true;
-            }
-
             await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-        }
-
-        if (!foundExpectedDump)
-        {
-            await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellation).ConfigureAwait(false);
         }
     }
 }

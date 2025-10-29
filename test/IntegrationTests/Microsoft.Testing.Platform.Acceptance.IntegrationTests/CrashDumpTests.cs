@@ -224,7 +224,7 @@ public class Startup
             return 1;
         }
 
-        // Start a child process that will also crash (only when running as testhost controller)
+        // Start a child process that will also crash (when running under testhost controller)
         if (args.Any(a => a == "--internal-testhostcontroller-pid"))
         {
             try
