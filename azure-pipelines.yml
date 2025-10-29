@@ -168,7 +168,7 @@ stages:
             condition: failed()
 
       - job: Samples_Windows
-        displayName: Build Samples
+        displayName: 'Build Samples'
         dependsOn: Windows
         timeoutInMinutes: 30
         pool:
