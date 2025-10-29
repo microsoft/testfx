@@ -62,16 +62,6 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeCompilation(CompilationAnalysisContext context)
     {
-        bool hasTestAdapter = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.IsMSTestTestAdapterReferenced", out string? isAdapterReferenced) &&
-            bool.TryParse(isAdapterReferenced, out bool isAdapterReferencedValue) &&
-            isAdapterReferencedValue;
-
-        if (!hasTestAdapter)
-        {
-            // We shouldn't produce a diagnostic if only the test framework is referenced, but not the adapter.
-            return;
-        }
-
         INamedTypeSymbol? parallelizeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute);
         INamedTypeSymbol? doNotParallelizeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
 
@@ -94,8 +84,20 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         {
             // Both attributes are present - this is an error
             context.ReportNoLocationDiagnostic(DoNotUseBothAttributesRule);
+            return;
         }
-        else if (!hasParallelizeAttribute && !hasDoNotParallelizeAttribute)
+
+        bool hasTestAdapter = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.IsMSTestTestAdapterReferenced", out string? isAdapterReferenced) &&
+            bool.TryParse(isAdapterReferenced, out bool isAdapterReferencedValue) &&
+            isAdapterReferencedValue;
+
+        if (!hasTestAdapter)
+        {
+            // We shouldn't produce a diagnostic if only the test framework is referenced, but not the adapter.
+            return;
+        }
+
+        if (!hasParallelizeAttribute && !hasDoNotParallelizeAttribute)
         {
             // We cannot provide any good location for assembly level missing attributes
             context.ReportNoLocationDiagnostic(Rule);
