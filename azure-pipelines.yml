@@ -108,6 +108,9 @@ stages:
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
+          env:
+            # https://github.com/microsoft/testfx/issues/6767
+            DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
         - task: PublishBuildArtifacts@1
           displayName: 'Publish NuGet packages'
@@ -168,7 +171,7 @@ stages:
             condition: failed()
 
       - job: WindowsSamples
-        timeoutInMinutes: 90
+        timeoutInMinutes: 30
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2022preview.amd64.open
@@ -186,6 +189,14 @@ stages:
             filePath: './eng/install-windows-sdk.ps1'
             failOnStderr: true
             showWarnings: true
+
+        - task: PowerShell@2
+          displayName: 'Build Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig)'
+            failOnStderr: false
 
       - job: Linux
         timeoutInMinutes: 90
