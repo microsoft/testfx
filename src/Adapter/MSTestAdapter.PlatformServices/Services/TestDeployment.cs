@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -38,7 +39,7 @@ internal sealed class TestDeployment : ITestDeployment
     /// Initializes a new instance of the <see cref="TestDeployment"/> class.
     /// </summary>
     public TestDeployment()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new DeploymentUtility(), new FileUtility())
+        : this(new DeploymentItemUtility(ReflectHelper.Instance), new DeploymentUtility(), new FileUtility())
     {
     }
 

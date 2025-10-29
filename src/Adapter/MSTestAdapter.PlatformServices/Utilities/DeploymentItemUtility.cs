@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,8 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// </summary>
 internal sealed class DeploymentItemUtility
 {
-    // REVIEW: it would be better if this was a ReflectionHelper, because helper is able to cache. But we don't have reflection helper here, because this is platform services dll.
-    private readonly ReflectionUtility _reflectionUtility;
+    private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
     /// A cache for class level deployment items.
@@ -25,10 +25,10 @@ internal sealed class DeploymentItemUtility
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItemUtility"/> class.
     /// </summary>
-    /// <param name="reflectionUtility"> The reflect helper. </param>
-    internal DeploymentItemUtility(ReflectionUtility reflectionUtility)
+    /// <param name="reflectHelper"> The reflect helper. </param>
+    internal DeploymentItemUtility(ReflectHelper reflectHelper)
     {
-        _reflectionUtility = reflectionUtility;
+        _reflectHelper = reflectHelper;
         _classLevelDeploymentItems = [];
     }
 
@@ -42,9 +42,7 @@ internal sealed class DeploymentItemUtility
     {
         if (!_classLevelDeploymentItems.TryGetValue(type, out IList<DeploymentItem>? value))
         {
-            IReadOnlyList<object> deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
-                type,
-                typeof(DeploymentItemAttribute));
+            IEnumerable<DeploymentItemAttribute> deploymentItemAttributes = _reflectHelper.GetAttributes<DeploymentItemAttribute>(type);
             value = GetDeploymentItems(deploymentItemAttributes, warnings);
             _classLevelDeploymentItems[type] = value;
         }
@@ -61,7 +59,8 @@ internal sealed class DeploymentItemUtility
     internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IEnumerable<DeploymentItem> classLevelDeploymentItems,
         ICollection<string> warnings)
     {
-        List<DeploymentItem> testLevelDeploymentItems = GetDeploymentItems(_reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
+        IEnumerable<DeploymentItemAttribute> deploymentItemAttributes = _reflectHelper.GetAttributes<DeploymentItemAttribute>(method);
+        List<DeploymentItem> testLevelDeploymentItems = GetDeploymentItems(deploymentItemAttributes, warnings);
 
         return ToKeyValuePairs(Concat(testLevelDeploymentItems, classLevelDeploymentItems));
     }
@@ -174,11 +173,11 @@ internal sealed class DeploymentItemUtility
         return false;
     }
 
-    private static List<DeploymentItem> GetDeploymentItems(IEnumerable deploymentItemAttributes, ICollection<string> warnings)
+    private static List<DeploymentItem> GetDeploymentItems(IEnumerable<DeploymentItemAttribute> deploymentItemAttributes, ICollection<string> warnings)
     {
         var deploymentItems = new List<DeploymentItem>();
 
-        foreach (DeploymentItemAttribute deploymentItemAttribute in deploymentItemAttributes.Cast<DeploymentItemAttribute>())
+        foreach (DeploymentItemAttribute deploymentItemAttribute in deploymentItemAttributes)
         {
             if (IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out string? warning))
             {

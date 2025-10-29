@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -23,7 +24,7 @@ public class DeploymentItemUtilityTests : TestContainer
         TestPropertyAttributes.Hidden,
         typeof(TestCase));
 
-    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly ICollection<string> _warnings;
 
@@ -32,8 +33,8 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public DeploymentItemUtilityTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
+        _mockReflectHelper = new Mock<ReflectHelper>();
+        _deploymentItemUtility = new DeploymentItemUtility(_mockReflectHelper.Object);
         _warnings = [];
     }
 
@@ -41,7 +42,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
     {
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(typeof(DeploymentItemUtilityTests), typeof(DeploymentItemAttribute)))
+        _mockReflectHelper.Setup(x => x.GetAttributes<DeploymentItemAttribute>(typeof(DeploymentItemUtilityTests)))
             .Returns([]);
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
@@ -162,7 +163,7 @@ public class DeploymentItemUtilityTests : TestContainer
     public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
     {
         MethodInfo method = typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems")!;
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
+        _mockReflectHelper.Setup(x => x.GetAttributes<DeploymentItemAttribute>(method))
             .Returns([]);
 
         Verify(_deploymentItemUtility.GetDeploymentItems(method, null!, _warnings) is null);
@@ -207,7 +208,7 @@ public class DeploymentItemUtilityTests : TestContainer
         };
 
         MethodInfo method = typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems")!;
-        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
+        _mockReflectHelper.Setup(x => x.GetAttributes<DeploymentItemAttribute>(method))
             .Returns([]);
 
         // Act.
@@ -426,11 +427,9 @@ public class DeploymentItemUtilityTests : TestContainer
             deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        _mockReflectionUtility.Setup(
-            ru =>
-            ru.GetCustomAttributes(
-                memberInfo,
-                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
+        _mockReflectHelper.Setup(
+            rh =>
+            rh.GetAttributes<DeploymentItemAttribute>(memberInfo)).Returns(deploymentItemAttributes);
     }
 
     #endregion

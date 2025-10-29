@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -22,7 +23,7 @@ public class TestDeploymentTests : TestContainer
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
     private readonly Mock<FileUtility> _mockFileUtility;
 
 #pragma warning disable IDE0044 // Add readonly modifier
@@ -31,7 +32,7 @@ public class TestDeploymentTests : TestContainer
 
     public TestDeploymentTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
+        _mockReflectHelper = new Mock<ReflectHelper>();
         _mockFileUtility = new Mock<FileUtility>();
         _warnings = [];
 
@@ -50,7 +51,7 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentItemsReturnsDeploymentItems()
     {
         // Arrange.
-        var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionUtility.Object), null!, null!);
+        var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectHelper.Object), null!, null!);
 
         // setup mocks
         KeyValuePair<string, string>[] methodLevelDeploymentItems =
@@ -179,7 +180,7 @@ public class TestDeploymentTests : TestContainer
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectHelper.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -202,7 +203,7 @@ public class TestDeploymentTests : TestContainer
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectHelper.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -225,7 +226,7 @@ public class TestDeploymentTests : TestContainer
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectHelper.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -255,7 +256,7 @@ public class TestDeploymentTests : TestContainer
         ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectHelper.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -368,11 +369,9 @@ public class TestDeploymentTests : TestContainer
             deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        _mockReflectionUtility.Setup(
-            ru =>
-            ru.GetCustomAttributes(
-                memberInfo,
-                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
+        _mockReflectHelper.Setup(
+            rh =>
+            rh.GetAttributes<DeploymentItemAttribute>(memberInfo)).Returns(deploymentItemAttributes);
     }
 
     private static TestCase GetTestCase(string source)
@@ -416,7 +415,7 @@ public class TestDeploymentTests : TestContainer
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(testRunDirectories.RootDeploymentDirectory);
 
-        var deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
+        var deploymentItemUtility = new DeploymentItemUtility(_mockReflectHelper.Object);
 
         return new TestDeployment(
             deploymentItemUtility,

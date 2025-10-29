@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
@@ -12,14 +12,16 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 public class ReflectionUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
+    private readonly ReflectionOperations _reflectionOperations = new();
+
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
         Assembly asm = typeof(DummyTestClass).Assembly;
 
-        List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(attributes.Count == 2);
+        Verify(attributes.Length == 2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
