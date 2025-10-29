@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Threading.Tasks;
+using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -93,15 +93,20 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassCleanupMethodBody = null!;
     }
 
-    public void TestClassInfoClassAttributeGetsAReferenceToTheTestClassAttribute() => Verify(_testClassAttribute == _testClassInfo.ClassAttribute);
+    public void TestClassInfoClassAttributeGetsAReferenceToTheTestClassAttribute()
+        => _testClassInfo.ClassAttribute.Should().Be(_testClassAttribute);
 
-    public void TestClassInfoClassTypeGetsAReferenceToTheActualTypeForTheTestClass() => Verify(typeof(DummyTestClass) == _testClassInfo.ClassType);
+    public void TestClassInfoClassTypeGetsAReferenceToTheActualTypeForTheTestClass()
+        => _testClassInfo.ClassType.Should().Be<DummyTestClass>();
 
-    public void TestClassInfoConstructorGetsTheConstructorInfoForTestClass() => Verify(_testClassConstructor == _testClassInfo.Constructor);
+    public void TestClassInfoConstructorGetsTheConstructorInfoForTestClass()
+        => _testClassInfo.Constructor.Should().BeSameAs(_testClassConstructor);
 
-    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass() => Verify(_testClassInfo.TestContextProperty == _testClassType.GetProperty("TestContext"));
+    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass()
+        => _testClassInfo.TestContextProperty.Should().BeSameAs(_testClassType.GetProperty("TestContext"));
 
-    public void TestClassInfoParentGetsAReferenceToTheParentAssemblyForTheTestClass() => Verify(_testAssemblyInfo == _testClassInfo.Parent);
+    public void TestClassInfoParentGetsAReferenceToTheParentAssemblyForTheTestClass()
+        => _testClassInfo.Parent.Should().Be(_testAssemblyInfo);
 
     public void TestClassInfoClassInitializeMethodSetShouldThrowForMultipleClassInitializeMethods()
     {
@@ -111,7 +116,7 @@ public class TestClassInfoTests : TestContainer
             _testClassInfo.ClassInitializeMethod = _testClassType.GetMethods().First();
         }
 
-        VerifyThrows<TypeInspectionException>(Action);
+        new Action(Action).Should().Throw<TypeInspectionException>();
     }
 
     public void TestClassInfoClassCleanupMethodSetShouldThrowForMultipleClassCleanupMethods()
@@ -122,7 +127,7 @@ public class TestClassInfoTests : TestContainer
             _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
         }
 
-        VerifyThrows<TypeInspectionException>(Action);
+        new Action(Action).Should().Throw<TypeInspectionException>();
     }
 
     private static TestContextImplementation CreateDummyTestContextImplementation()
@@ -137,8 +142,8 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation()); // call cleanup without calling init
-        Verify(ex is null);
-        Verify(classCleanupCallCount == 0);
+        ex.Should().BeNull();
+        classCleanupCallCount.Should().Be(0);
     }
 
     public async Task TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
@@ -152,8 +157,8 @@ public class TestClassInfoTests : TestContainer
         GetResultOrRunClassInitialize();
         TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation()); // call cleanup without calling init
 
-        Verify(ex is null);
-        Verify(classCleanupCallCount == 1);
+        ex.Should().BeNull();
+        classCleanupCallCount.Should().Be(1);
     }
 
     public async Task TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodWhenTestClassInitializedIsCalled()
@@ -167,25 +172,25 @@ public class TestClassInfoTests : TestContainer
         GetResultOrRunClassInitialize();
         TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
-        Verify(ex is null);
-        Verify(classCleanupCallCount == 1);
+        ex.Should().BeNull();
+        classCleanupCallCount.Should().Be(1);
     }
 
-    public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod() => Verify(!_testClassInfo.HasExecutableCleanupMethod);
+    public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod() => _testClassInfo.HasExecutableCleanupMethod.Should().BeFalse();
 
     public void TestClassInfoHasExecutableCleanupMethodShouldReturnTrueEvenIfClassInitializeThrowsAnException()
     {
         _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
         _testClassInfo.ClassInitializationException = new NotImplementedException();
 
-        Verify(_testClassInfo.HasExecutableCleanupMethod);
+        _testClassInfo.HasExecutableCleanupMethod.Should().BeTrue();
     }
 
     public void TestClassInfoHasExecutableCleanupMethodShouldReturnTrueIfClassHasCleanupMethod()
     {
         _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
 
-        Verify(_testClassInfo.HasExecutableCleanupMethod);
+        _testClassInfo.HasExecutableCleanupMethod.Should().BeTrue();
     }
 
     #region Run Class Initialize tests
@@ -199,7 +204,7 @@ public class TestClassInfoTests : TestContainer
 
         GetResultOrRunClassInitialize(null);
 
-        Verify(classInitCallCount == 0);
+        classInitCallCount.Should().Be(0);
     }
 
     public void RunClassInitializeShouldThrowIfTestContextIsNull()
@@ -210,9 +215,9 @@ public class TestClassInfoTests : TestContainer
 
         TestResult result = GetResultOrRunClassInitialize(null);
         var exception = result.TestFailureException as TestFailedException;
-        Verify(exception is not null);
-        Verify(result.Outcome == UTF.UnitTestOutcome.Error);
-        Verify(exception.Message == "TestContext cannot be Null.");
+        exception.Should().NotBeNull();
+        result.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
+        exception.Message.Should().Be("TestContext cannot be Null.");
     }
 
     public void RunClassInitializeShouldExecuteClassInitialize()
@@ -222,12 +227,12 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         GetResultOrRunClassInitialize();
-        Verify(classInitCallCount == 1);
-        Verify(_testClassInfo.IsClassInitializeExecuted);
+        classInitCallCount.Should().Be(1);
+        _testClassInfo.IsClassInitializeExecuted.Should().BeTrue();
 
         GetResultOrRunClassInitialize();
-        Verify(classInitCallCount == 1);
-        Verify(_testClassInfo.IsClassInitializeExecuted);
+        classInitCallCount.Should().Be(1);
+        _testClassInfo.IsClassInitializeExecuted.Should().BeTrue();
     }
 
     public void RunClassInitializeShouldSetClassInitializeExecutedFlag()
@@ -237,7 +242,7 @@ public class TestClassInfoTests : TestContainer
 
         GetResultOrRunClassInitialize();
 
-        Verify(_testClassInfo.IsClassInitializeExecuted);
+        _testClassInfo.IsClassInitializeExecuted.Should().BeTrue();
     }
 
     public void RunClassInitializeShouldOnlyRunOnce()
@@ -249,7 +254,7 @@ public class TestClassInfoTests : TestContainer
         GetResultOrRunClassInitialize();
         GetResultOrRunClassInitialize();
 
-        Verify(classInitCallCount == 1, "Class Initialize called only once");
+        classInitCallCount.Should().Be(1, "Class Initialize called only once");
     }
 
     public void RunClassInitializeShouldRunOnlyOnceIfThereIsNoDerivedClassInitializeAndSetClassInitializeExecutedFlag()
@@ -259,10 +264,10 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassInitMethods.Add(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod")!);
 
         GetResultOrRunClassInitialize();
-        Verify(_testClassInfo.IsClassInitializeExecuted);
+        _testClassInfo.IsClassInitializeExecuted.Should().BeTrue();
 
         GetResultOrRunClassInitialize();
-        Verify(classInitCallCount == 1);
+        classInitCallCount.Should().Be(1);
     }
 
     public void RunClassInitializeShouldSetClassInitializationExceptionOnException()
@@ -273,7 +278,7 @@ public class TestClassInfoTests : TestContainer
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
 
-        Verify(_testClassInfo.ClassInitializationException is not null);
+        _testClassInfo.ClassInitializationException.Should().NotBeNull();
     }
 
     public void RunClassInitializeShouldExecuteBaseClassInitializeMethod()
@@ -287,7 +292,7 @@ public class TestClassInfoTests : TestContainer
 
         GetResultOrRunClassInitialize();
 
-        Verify(classInitCallCount == 2);
+        classInitCallCount.Should().Be(2);
     }
 
     public void RunClassInitializeShouldNotExecuteBaseClassInitializeMethodIfClassInitializeHasExecuted()
@@ -301,10 +306,10 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod")!;
 
         GetResultOrRunClassInitialize();
-        Verify(_testClassInfo.IsClassInitializeExecuted);
+        _testClassInfo.IsClassInitializeExecuted.Should().BeTrue();
 
         GetResultOrRunClassInitialize(); // this one shouldn't run
-        Verify(classInitCallCount == 3);
+        classInitCallCount.Should().Be(3);
     }
 
     public void RunClassInitializeShouldExecuteBaseClassInitializeIfDerivedClassInitializeIsNull()
@@ -315,7 +320,7 @@ public class TestClassInfoTests : TestContainer
 
         GetResultOrRunClassInitialize();
 
-        Verify(classInitCallCount == 1);
+        classInitCallCount.Should().Be(1);
     }
 
     public void RunClassInitializeShouldNotExecuteBaseClassIfBaseClassInitializeIsNull()
@@ -327,7 +332,7 @@ public class TestClassInfoTests : TestContainer
 
         GetResultOrRunClassInitialize();
 
-        Verify(classInitCallCount == 1);
+        classInitCallCount.Should().Be(1);
     }
 
     public void RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions()
@@ -339,16 +344,14 @@ public class TestClassInfoTests : TestContainer
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
 
-        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(
-            exception.Message
-            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>", StringComparison.Ordinal));
+        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>", StringComparison.Ordinal).Should().BeTrue();
 #endif
-        Verify(exception.InnerException!.GetType() == typeof(ArgumentException));
-        Verify(exception.InnerException.InnerException!.GetType() == typeof(InvalidOperationException));
+        exception.InnerException.Should().BeOfType<ArgumentException>();
+        exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
     }
 
     public void RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure()
@@ -359,15 +362,13 @@ public class TestClassInfoTests : TestContainer
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
 
-        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(
-            exception.Message
-            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>", StringComparison.Ordinal));
+        exception.StackTraceInformation!.ErrorStackTrace.Contains(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>", StringComparison.Ordinal).Should().BeTrue();
 #endif
-        Verify(exception.InnerException!.GetType() == typeof(AssertFailedException));
+        exception.InnerException.Should().BeOfType<AssertFailedException>();
     }
 
     public void RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
@@ -378,15 +379,13 @@ public class TestClassInfoTests : TestContainer
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
 
-        Verify(exception.Outcome == UTF.UnitTestOutcome.Inconclusive);
-        Verify(
-            exception.Message
-            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.Contains(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>", StringComparison.Ordinal));
+        exception.StackTraceInformation!.ErrorStackTrace.Contains(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>", StringComparison.Ordinal).Should().BeTrue();
 #endif
-        Verify(exception.InnerException!.GetType() == typeof(AssertInconclusiveException));
+        exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
     }
 
     public void RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
@@ -397,13 +396,11 @@ public class TestClassInfoTests : TestContainer
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
 
-        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(
-            exception.Message
-            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.");
 #if DEBUG
-        Verify(exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
+        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal).Should().BeTrue();
 #endif
     }
 
@@ -415,13 +412,13 @@ public class TestClassInfoTests : TestContainer
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
-        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(exception.Message == "Cached Test failure");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Message.Should().Be("Cached Test failure");
     }
 
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => Verify(tc == _testContext);
+        DummyTestClass.ClassInitializeMethodBody = tc => (tc == _testContext).Should().BeTrue();
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         GetResultOrRunClassInitialize();
@@ -439,16 +436,13 @@ public class TestClassInfoTests : TestContainer
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
         Assert.IsNotNull(exception);
 
-        Verify(exception.Outcome == UTF.UnitTestOutcome.Failed);
-        Verify(
-            exception.Message
-            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.InvalidOperationException: I fail..");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.InvalidOperationException: I fail..");
 #if DEBUG
-        Verify(
-            exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
+        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal).Should().BeTrue();
 #endif
-        Verify(exception.InnerException!.GetType() == typeof(InvalidOperationException));
+        exception.InnerException.Should().BeOfType<InvalidOperationException>();
     }
 
     private TestResult GetResultOrRunClassInitialize()
@@ -472,8 +466,8 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(ex is null);
-        Verify(classCleanupCallCount == 1);
+        ex.Should().BeNull();
+        classCleanupCallCount.Should().Be(1);
     }
 
     public async Task RunClassCleanupShouldNotInvokeIfClassCleanupIsNull()
@@ -487,8 +481,8 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(ex is null);
-        Verify(classCleanupCallCount == 0);
+        ex.Should().BeNull();
+        classCleanupCallCount.Should().Be(0);
     }
 
     public async Task RunClassCleanupShouldReturnAssertFailureExceptionDetails()
@@ -502,14 +496,13 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(classCleanupException is not null);
-        Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: Assert.Fail failed. Test Failure."));
+        classCleanupException.Should().NotBeNull();
+        classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal).Should().BeTrue();
+        classCleanupException.Message.Contains("Error Message: Assert.Fail failed. Test Failure.").Should().BeTrue();
 #if DEBUG
-        Verify(
-    classCleanupException.Message.Contains(
-    $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>"),
-    $"Value: {classCleanupException.Message}");
+        classCleanupException.Message.Should().Contain(
+            $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>",
+            $"Value: {classCleanupException.Message}");
 #endif
     }
 
@@ -524,12 +517,12 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(classCleanupException is not null);
-        Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: Assert.Inconclusive failed. Test Inconclusive."));
+        classCleanupException.Should().NotBeNull();
+        classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal).Should().BeTrue();
+        classCleanupException.Message.Contains("Error Message: Assert.Inconclusive failed. Test Inconclusive.").Should().BeTrue();
 #if DEBUG
-        Verify(
-            classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>"),
+        classCleanupException.Message.Should().Contain(
+            $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>",
             $"Value: {classCleanupException.Message}");
 #endif
     }
@@ -545,10 +538,10 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(classCleanupException is not null);
-        Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: System.ArgumentException: Argument Exception. Stack Trace:"));
-        Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>"));
+        classCleanupException.Should().NotBeNull();
+        classCleanupException.Message.Should().StartWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.");
+        classCleanupException.Message.Should().Contain("Error Message: System.ArgumentException: Argument Exception. Stack Trace:");
+        classCleanupException.Message.Should().Contain($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>");
     }
 
     public async Task RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
@@ -564,10 +557,10 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(classCleanupException is not null);
-        Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed.", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("Error Message: System.ArgumentException: Argument Exception. Stack Trace:"));
-        Verify(classCleanupException.Message.Contains($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>"));
+        classCleanupException.Should().NotBeNull();
+        classCleanupException.Message.Should().StartWith("Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed.");
+        classCleanupException.Message.Should().Contain("Error Message: System.ArgumentException: Argument Exception. Stack Trace:");
+        classCleanupException.Message.Should().Contain($"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>");
     }
 
     public async Task RunBaseClassCleanupEvenIfThereIsNoDerivedClassCleanup()
@@ -583,27 +576,27 @@ public class TestClassInfoTests : TestContainer
         TestFailedException? ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert
-        Verify(ex is null);
-        Verify(_testClassInfo.HasExecutableCleanupMethod);
-        Verify(classCleanupCallCount == 0, "DummyBaseTestClass.CleanupClassMethod call count");
+        ex.Should().BeNull();
+        _testClassInfo.HasExecutableCleanupMethod.Should().BeTrue();
+        classCleanupCallCount.Should().Be(0, "DummyBaseTestClass.CleanupClassMethod call count");
 
         // Act 2
         GetResultOrRunClassInitialize(null);
         ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert 2
-        Verify(ex is null);
-        Verify(_testClassInfo.HasExecutableCleanupMethod);
-        Verify(_testClassInfo.IsClassInitializeExecuted);
-        Verify(classCleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
+        ex.Should().BeNull();
+        _testClassInfo.HasExecutableCleanupMethod.Should().BeTrue();
+        _testClassInfo.IsClassInitializeExecuted.Should().BeTrue();
+        classCleanupCallCount.Should().Be(1, "DummyBaseTestClass.CleanupClassMethod call count");
 
         // Act 3
         ex = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
         // Assert 3
-        Verify(ex is null);
-        Verify(_testClassInfo.HasExecutableCleanupMethod);
-        Verify(classCleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
+        ex.Should().BeNull();
+        _testClassInfo.HasExecutableCleanupMethod.Should().BeTrue();
+        classCleanupCallCount.Should().Be(1, "DummyBaseTestClass.CleanupClassMethod call count");
     }
 
     public async Task RunClassCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
@@ -617,9 +610,9 @@ public class TestClassInfoTests : TestContainer
         GetResultOrRunClassInitialize(null);
         TestFailedException? classCleanupException = await _testClassInfo.ExecuteClassCleanupAsync(CreateDummyTestContextImplementation());
 
-        Verify(classCleanupException is not null);
-        Verify(classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.InvalidOperationException: I fail..", StringComparison.Ordinal));
-        Verify(classCleanupException.Message.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()"));
+        classCleanupException.Should().NotBeNull();
+        classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.InvalidOperationException: I fail..", StringComparison.Ordinal).Should().BeTrue();
+        classCleanupException.Message.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()").Should().BeTrue();
     }
 
     #endregion
