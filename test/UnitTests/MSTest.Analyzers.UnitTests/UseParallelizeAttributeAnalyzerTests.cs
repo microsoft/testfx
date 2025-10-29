@@ -67,4 +67,32 @@ public class UseParallelizeAttributeAnalyzerTests
         await VerifyAsync(code, includeTestAdapter: true);
         await VerifyAsync(code, includeTestAdapter: false);
     }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSet_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+            [assembly: DoNotParallelize]
+            """;
+
+        await VerifyAsync(code, includeTestAdapter: true, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
+        await VerifyAsync(code, includeTestAdapter: false, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
+    }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSetInDifferentOrder_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DoNotParallelize]
+            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+            """;
+
+        await VerifyAsync(code, includeTestAdapter: true, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
+        await VerifyAsync(code, includeTestAdapter: false, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
+    }
 }
