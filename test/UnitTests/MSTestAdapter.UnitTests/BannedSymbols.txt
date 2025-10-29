@@ -1,0 +1,1 @@
+T:Microsoft.VisualStudio.TestTools.UnitTesting.Assert; Use AwesomeAssertions for testing in this project.

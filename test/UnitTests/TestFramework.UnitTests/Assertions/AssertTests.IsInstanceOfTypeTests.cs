@@ -12,21 +12,21 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'null'.");
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(5, null);
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'.");
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void InstanceOfTypeShouldPassOnSameInstance() => Assert.IsInstanceOfType(5, typeof(int));
@@ -37,21 +37,21 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: 'null'. User-provided message");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'null'. User-provided message");
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(5, null, "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message");
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void InstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
@@ -63,7 +63,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .And.Message.Should().Be($"Assert.IsInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -72,7 +72,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsInstanceOfType(5, null, $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -81,7 +81,7 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls Expected type:<System.String>. Actual type:<System.Int32>.");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -108,14 +108,14 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'null'.");
     }
 
     public void IsInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()
     {
         Action action = () => Assert.IsInstanceOfType<string>(5);
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenValueIsNull_Fails()
