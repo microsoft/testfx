@@ -34,6 +34,12 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $samplesFolder = Join-Path (Join-Path $repoRoot "samples") "public"
 
+# Source the arcade tools to get access to InitializeDotNetCli
+. (Join-Path $PSScriptRoot "common\tools.ps1")
+
+# Initialize .NET CLI to ensure correct SDK version is available
+$dotnetPath = InitializeDotNetCli -install:$true
+
 # Detect if running in CI to disable colors
 $isCI = $env:TF_BUILD -eq 'true' -or $env:CI -eq 'true'
 
@@ -50,16 +56,16 @@ $solutions = Get-ChildItem -Path $samplesFolder -Filter "*.sln" -Recurse
 
 foreach ($solution in $solutions) {
     Write-Host "Building solution: $($solution.FullName)"
-    
+
     $buildArgs = @(
         "build",
         $solution.FullName,
         "--configuration", $Configuration,
         "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
     )
-    
-    & dotnet $buildArgs
-    
+
+    & $dotnetPath $buildArgs
+
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: Failed to build $($solution.Name)"
         $failed = $true
@@ -69,7 +75,7 @@ foreach ($solution in $solutions) {
         Write-Host "SUCCESS: Built $($solution.Name)"
         $successCount++
     }
-    
+
     Write-Host ""
 }
 
