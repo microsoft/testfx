@@ -56,9 +56,16 @@ internal static class FixtureMethodFixer
             fixedMethodDeclaration = fixedMethodDeclaration.WithTypeParameterList(null);
         }
 
-        // Remove return and yield return statements from body if needed
-        if (fixedMethodDeclaration.Body is not null)
+        // If the method is abstract (no body), add an empty body
+        if (fixedMethodDeclaration.Body is null)
         {
+            fixedMethodDeclaration = fixedMethodDeclaration
+                .WithBody(SyntaxFactory.Block())
+                .WithSemicolonToken(default);
+        }
+        else
+        {
+            // Remove return and yield return statements from body if needed
             SyntaxList<StatementSyntax> statements = fixedMethodDeclaration.Body.Statements;
             IEnumerable<StatementSyntax> filteredStatements = statements
                 .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
