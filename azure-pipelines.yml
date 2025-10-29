@@ -108,9 +108,6 @@ stages:
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
-          env:
-            # https://github.com/microsoft/testfx/issues/6767
-            DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
         - task: PublishBuildArtifacts@1
           displayName: 'Publish NuGet packages'
@@ -187,18 +184,6 @@ stages:
             filePath: './eng/install-windows-sdk.ps1'
             failOnStderr: true
             showWarnings: true
-
-        - task: PowerShell@2
-          displayName: 'Build Samples'
-          inputs:
-            targetType: filePath
-            filePath: './eng/build-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig)'
-            failOnStderr: false
-            showWarnings: true
-          env:
-            DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-            NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
 
       - job: Linux
         timeoutInMinutes: 90
