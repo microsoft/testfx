@@ -24,7 +24,7 @@ internal sealed class ReflectionOperations : IReflectionOperations
          => [.. GetCustomAttributesCore(memberInfo, type: null)];
 #else
     {
-        object[] attributes = memberInfo.GetCustomAttributes(typeof(Attribute), inherit: true);
+        object[] attributes = memberInfo.GetCustomAttributes(inherit: true);
 
         // Ensures that when the return of this method is used here:
         // https://github.com/microsoft/testfx/blob/e101a9d48773cc935c7b536d25d378d9a3211fee/src/Adapter/MSTest.TestAdapter/Helpers/ReflectHelper.cs#L461
