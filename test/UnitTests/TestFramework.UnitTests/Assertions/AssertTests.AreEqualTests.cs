@@ -1524,11 +1524,13 @@ public partial class AssertTests : TestContainer
         int length = 1;
         int diffIndex = 0;
         string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
-        stringPreview.Should().Be("""
+        StringPreviewsAreEqual(
+            """
             "X"
             "X"
             _^
-            """);
+            """,
+            stringPreview);
     }
 
     public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithEndCut()
@@ -1537,11 +1539,12 @@ public partial class AssertTests : TestContainer
         int length = preview + 10;
         int diffIndex = 0;
         string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex, preview));
-        stringPreview.Should().Be("""
+        StringPreviewsAreEqual(
+            """
             "X12345..."
             "X12345..."
             _^
-            """);
+            """, stringPreview);
     }
 
     public void CreateStringPreviews_DiffPointsToCorrectPlaceInShortenedStringWithStartCut()
@@ -1550,11 +1553,13 @@ public partial class AssertTests : TestContainer
         int length = 10;
         int diffIndex = 9;
         string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(length, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        stringPreview.Should().Be("""
+        StringPreviewsAreEqual(
+            """
             "...45678X"
             "...45678X"
             _________^
-            """);
+            """,
+            stringPreview);
     }
 
     public void CreateStringPreviews_ShowWholeStringWhenDifferenceIsAtTheEndAndJustOneStringDoesNotFit()
@@ -1563,11 +1568,13 @@ public partial class AssertTests : TestContainer
         int length = 50;
         int diffIndex = 16;
         string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        stringPreview.Should().Be("""
+        StringPreviewsAreEqual(
+            """
             "0123456789012345X7890"
             "0123456789012345X7..."
             _________________^
-            """);
+            """,
+            stringPreview);
     }
 
     public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis()
@@ -1578,11 +1585,44 @@ public partial class AssertTests : TestContainer
         int diffIndex = 24;
 
         string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(length, diffIndex), diffIndex: diffIndex, preview));
-        stringPreview.Should().Be("""
+        StringPreviewsAreEqual(
+            """
             "...8901234567890123X"
             "...8901234567890123X56..."
             ____________________^
-            """);
+            """,
+            stringPreview);
+    }
+
+    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringOneCharLargerThanPreviewWindow()
+    {
+        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
+        int preview = 15;
+        int diffIndex = preview - 1;
+
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(preview, diffIndex), DigitString(preview + 1, diffIndex), diffIndex: diffIndex, preview));
+        StringPreviewsAreEqual(
+            """
+            "...890123X"
+            "...890123X5"
+            __________^
+            """,
+            stringPreview);
+    }
+
+    public void CreateStringPreviews_MakeSureWeDontPointToEndEllipsis_WhenLongerStringIsBarelyLonger()
+    {
+        // We will mask last 3 chars of the string, so we need to make sure that the diff index is not pointing to the end ellipsis.
+        int preview = 25;
+
+        string stringPreview = FormatStringPreview(StringPreviewHelper.CreateStringPreviews("01234567890123456789012345678901234567890123X", "01234567890123456789012345678901234567890123X56", diffIndex: 44, preview));
+        StringPreviewsAreEqual(
+            """
+            "...8901234567890123X"
+            "...8901234567890123X56"
+            ____________________^
+            """,
+            stringPreview);
     }
 
     public void CreateStringPreviews_DiffPointsAfterLastCharacterWhenStringsAreAllTheSameCharactersUntilTheEndOfTheShorterOne()
@@ -1595,6 +1635,45 @@ public partial class AssertTests : TestContainer
             "aaaX"
             ____^
             """);
+    }
+
+    public void CreateStringPreviews_DiffNeverPointsAtEllipsis_Generated()
+    {
+        // Generate all combinations of string lengths and diff to see if in any of them we point to ellipsis.
+        StringBuilder s = new();
+        foreach (int a in Enumerable.Range(1, 20))
+        {
+            foreach (int e in Enumerable.Range(1, 20))
+            {
+                foreach (int d in Enumerable.Range(1, Math.Min(a, e)))
+                {
+                    string p = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString(e, d), DigitString(a, d), diffIndex: d, 11));
+
+                    string[] lines = p.Split("\n");
+                    int diffIndicator = lines[2].IndexOf('^');
+                    bool line0PointsOnEllipsis = lines[0].Length > diffIndicator && lines[0][diffIndicator] == '.';
+                    bool line1PointsOnEllipsis = lines[1].Length > diffIndicator && lines[1][diffIndicator] == '.';
+
+                    if (line0PointsOnEllipsis || line1PointsOnEllipsis)
+                    {
+                        string text = $"""
+                            Failed for:
+                            Expected={e}, Actual={a}, DiffIndex={d}
+                            string result = FormatStringPreview(StringPreviewHelper.CreateStringPreviews(DigitString({e}, {d}), DigitString({a}, {d}), diffIndex: {d}, 11));
+                            {p}
+                            """;
+
+                        s.AppendLine(text);
+                        s.AppendLine();
+                    }
+                }
+            }
+        }
+
+        if (s.Length > 0)
+        {
+            throw new InvalidOperationException($"Some combinations pointed to ellipsis:\n{s}");
+        }
     }
 
     private string FormatStringPreview(Tuple<string, string, int> tuple)
@@ -1627,5 +1706,20 @@ public partial class AssertTests : TestContainer
         }
 
         return result.ToString();
+    }
+
+    private void StringPreviewsAreEqual(string expected, string actual)
+    {
+        if (expected != actual)
+        {
+            throw new InvalidOperationException(
+                $"""
+                Actual:
+                {actual}
+
+                Expected:
+                {expected}
+                """);
+        }
     }
 }
