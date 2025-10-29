@@ -1,6 +1,6 @@
 # 001 - Microsoft.Testing.Platform JSON-RPC Protocol (formerly MSTest Runner Protocol)
 
-Microsoft.Testing.Platform projects builds into a self-contained executable that can be invoked to run tests.
+Microsoft.Testing.Platform projects builds into a self-sufficient executable that can be invoked to run tests.
 The protocol describes the communication between the client (IDE/CLI/CI) and a test runner executable (also referred to as the server).
 
 The communication is based on JSON-RPC and describes the RPC messages sent in order to support running of tests.
