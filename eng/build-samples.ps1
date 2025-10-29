@@ -34,8 +34,11 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $samplesFolder = Join-Path $repoRoot "samples" "public"
 
-Write-Host "Building samples in: $samplesFolder" -ForegroundColor Cyan
-Write-Host "Configuration: $Configuration" -ForegroundColor Cyan
+# Detect if running in CI to disable colors
+$isCI = $env:TF_BUILD -eq 'true' -or $env:CI -eq 'true'
+
+Write-Host "Building samples in: $samplesFolder"
+Write-Host "Configuration: $Configuration"
 Write-Host ""
 
 $failed = $false
@@ -46,7 +49,7 @@ $failureCount = 0
 $solutions = Get-ChildItem -Path $samplesFolder -Filter "*.sln" -Recurse
 
 foreach ($solution in $solutions) {
-    Write-Host "Building solution: $($solution.FullName)" -ForegroundColor Yellow
+    Write-Host "Building solution: $($solution.FullName)"
     
     $buildArgs = @(
         "build",
@@ -58,29 +61,29 @@ foreach ($solution in $solutions) {
     & dotnet $buildArgs
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Failed to build $($solution.Name)" -ForegroundColor Red
+        Write-Host "ERROR: Failed to build $($solution.Name)"
         $failed = $true
         $failureCount++
     }
     else {
-        Write-Host "SUCCESS: Built $($solution.Name)" -ForegroundColor Green
+        Write-Host "SUCCESS: Built $($solution.Name)"
         $successCount++
     }
     
     Write-Host ""
 }
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Build Summary:" -ForegroundColor Cyan
-Write-Host "  Total solutions: $($solutions.Count)" -ForegroundColor Cyan
-Write-Host "  Succeeded: $successCount" -ForegroundColor Green
-Write-Host "  Failed: $failureCount" -ForegroundColor Red
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "========================================"
+Write-Host "Build Summary:"
+Write-Host "  Total solutions: $($solutions.Count)"
+Write-Host "  Succeeded: $successCount"
+Write-Host "  Failed: $failureCount"
+Write-Host "========================================"
 
 if ($failed) {
-    Write-Host "One or more samples failed to build" -ForegroundColor Red
+    Write-Host "One or more samples failed to build"
     exit 1
 }
 
-Write-Host "All samples built successfully!" -ForegroundColor Green
+Write-Host "All samples built successfully!"
 exit 0
