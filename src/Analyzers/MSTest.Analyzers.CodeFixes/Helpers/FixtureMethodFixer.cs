@@ -78,29 +78,27 @@ internal static class FixtureMethodFixer
         // Start with existing modifiers
         SyntaxTokenList modifiers = methodDeclaration.Modifiers;
 
-        // Remove all accessibility modifiers
+        // Remove all accessibility modifiers and abstract modifier
         modifiers = SyntaxFactory.TokenList(modifiers.Where(m =>
             !m.IsKind(SyntaxKind.PublicKeyword) &&
             !m.IsKind(SyntaxKind.PrivateKeyword) &&
             !m.IsKind(SyntaxKind.ProtectedKeyword) &&
-            !m.IsKind(SyntaxKind.InternalKeyword)));
-
-        // Remove abstract modifier if present
-        modifiers = SyntaxFactory.TokenList(modifiers.Where(m => !m.IsKind(SyntaxKind.AbstractKeyword)));
+            !m.IsKind(SyntaxKind.InternalKeyword) &&
+            !m.IsKind(SyntaxKind.AbstractKeyword)));
 
         // Handle static modifier
         bool hasStaticModifier = modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword));
         if (shouldBeStatic && !hasStaticModifier)
         {
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+            modifiers = modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.StaticKeyword));
         }
         else if (!shouldBeStatic && hasStaticModifier)
         {
             modifiers = SyntaxFactory.TokenList(modifiers.Where(m => !m.IsKind(SyntaxKind.StaticKeyword)));
         }
 
-        // Add public at the beginning
-        modifiers = SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddRange(modifiers);
+        // Add public at the beginning (before static if present)
+        modifiers = modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.PublicKeyword));
 
         return modifiers;
     }
@@ -132,7 +130,8 @@ internal static class FixtureMethodFixer
             return SyntaxFactory.ParameterList();
         }
 
-        TypeSyntax testContextType = SyntaxFactory.ParseTypeName(testContextTypeSymbol.ToDisplayString());
+        // Use simple name "TestContext" instead of fully qualified name
+        TypeSyntax testContextType = SyntaxFactory.IdentifierName("TestContext");
         ParameterSyntax testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
             .WithType(testContextType);
 
