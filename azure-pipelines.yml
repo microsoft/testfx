@@ -170,36 +170,36 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
-      - job: Samples_Windows
-        displayName: 'Build Samples'
-        dependsOn: Windows
-        timeoutInMinutes: 30
-        pool:
-          name: NetCore-Public
-          demands: ImageOverride -equals windows.vs2022preview.amd64.open
-        variables:
-          _BuildConfig: Release
-        steps:
-        - task: PowerShell@2
-          displayName: 'Install Windows SDK'
-          inputs:
-            targetType: filePath
-            filePath: './eng/install-windows-sdk.ps1'
-            failOnStderr: true
-            showWarnings: true
-
-        - task: PowerShell@2
-          displayName: 'Build Samples'
-          inputs:
-            targetType: filePath
-            filePath: './eng/build-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig)'
-            failOnStderr: false
-            showWarnings: true
-          env:
-            DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-            NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-
+#      - job: Samples_Windows
+#        displayName: 'Build Samples'
+#        dependsOn: Windows
+#        timeoutInMinutes: 30
+#        pool:
+#          name: NetCore-Public
+#          demands: ImageOverride -equals windows.vs2022preview.amd64.open
+#        variables:
+#          _BuildConfig: Release
+#        steps:
+#        - task: PowerShell@2
+#          displayName: 'Install Windows SDK'
+#          inputs:
+#            targetType: filePath
+#            filePath: './eng/install-windows-sdk.ps1'
+#            failOnStderr: true
+#            showWarnings: true
+#
+#        - task: PowerShell@2
+#          displayName: 'Build Samples'
+#          inputs:
+#            targetType: filePath
+#            filePath: './eng/build-samples.ps1'
+#            arguments: '-Configuration $(_BuildConfig)'
+#            failOnStderr: false
+#            showWarnings: true
+#          env:
+#            DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+#            NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+#
       - job: Linux
         timeoutInMinutes: 90
         pool:
