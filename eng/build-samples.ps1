@@ -38,10 +38,8 @@ $samplesFolder = Join-Path (Join-Path $repoRoot "samples") "public"
 . (Join-Path $PSScriptRoot "common\tools.ps1")
 
 # Initialize .NET CLI to ensure correct SDK version is available
-$dotnetPath = InitializeDotNetCli -install:$true
-
-# Detect if running in CI to disable colors
-$isCI = $env:TF_BUILD -eq 'true' -or $env:CI -eq 'true'
+$dotnetRoot = InitializeDotNetCli -install:$true
+$dotnetPath = Join-Path $dotnetRoot "dotnet.exe"
 
 Write-Host "Building samples in: $samplesFolder"
 Write-Host "Configuration: $Configuration"
