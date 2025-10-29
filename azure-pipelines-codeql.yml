@@ -64,6 +64,9 @@ jobs:
       -prepareMachine
       /p:Test=false
     displayName: Windows Build
+    env:
+      # https://github.com/microsoft/testfx/issues/6767
+      DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
   - task: CodeQL3000Finalize@0
     displayName: CodeQL Finalize

@@ -108,6 +108,9 @@ stages:
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
+          env:
+            # https://github.com/microsoft/testfx/issues/6767
+            DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
         - task: PublishBuildArtifacts@1
           displayName: 'Publish NuGet packages'
