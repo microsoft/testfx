@@ -167,13 +167,17 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
-      - job: Samples_Windows
-        displayName: 'Build Samples'
-        dependsOn: Windows
-        timeoutInMinutes: 30
+      - job: WindowsSamples
+        timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2022preview.amd64.open
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
         steps:
         - task: PowerShell@2
           displayName: 'Install Windows SDK'
