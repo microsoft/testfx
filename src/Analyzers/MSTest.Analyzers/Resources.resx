@@ -689,7 +689,7 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="Parallelize","DoNotParallelize"}</comment>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat" xml:space="preserve">
-    <value>Assembly has both [Parallelize] and [DoNotParallelize] attributes which creates ambiguity</value>
+    <value>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</value>
     <comment>{Locked="[Parallelize]","[DoNotParallelize]"}</comment>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription" xml:space="preserve">
