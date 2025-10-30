@@ -25,21 +25,21 @@
 [CmdletBinding()]
 param(
     [string]$Configuration = "Release",
-    [bool]$TreatWarningsAsErrors = $false
+    [switch]$TreatWarningsAsErrors
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$samplesFolder = Join-Path (Join-Path $repoRoot "samples") "public"
+$samplesFolder = "$repoRoot/samples/public"
 
 # Source the arcade tools to get access to InitializeDotNetCli
-. (Join-Path $PSScriptRoot "common\tools.ps1")
+. "$PSScriptRoot/common/tools.ps1"
 
 # Initialize .NET CLI to ensure correct SDK version is available
 $dotnetRoot = InitializeDotNetCli -install:$true
-$dotnetPath = Join-Path $dotnetRoot "dotnet.exe"
+$dotnetPath = "$dotnetRoot/dotnet.exe"
 
 Write-Host "Building samples in: $samplesFolder"
 Write-Host "Configuration: $Configuration"
