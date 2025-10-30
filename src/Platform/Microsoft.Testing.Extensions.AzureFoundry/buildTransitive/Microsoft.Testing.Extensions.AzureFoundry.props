@@ -1,3 +1,3 @@
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\buildMultiTargeting\Microsoft.Testing.Extensions.AzureFoundry.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\build\Microsoft.Testing.Extensions.AzureFoundry.props" />
 </Project>
