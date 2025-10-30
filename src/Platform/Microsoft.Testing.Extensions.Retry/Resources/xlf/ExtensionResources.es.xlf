@@ -81,7 +81,7 @@ Moviendo los archivos de recursos del último intento al directorio de resultado
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
+        <source>Retry failed tests the given number of times</source>
         <target state="translated">Habilitar pruebas con errores de reintento</target>
         <note />
       </trans-unit>
