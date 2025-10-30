@@ -31,6 +31,17 @@ public sealed class DeadlockTests : AcceptanceTestBase<DeadlockTests.TestAssetFi
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DeadlockCaseAssemblyCleanupWaitingOnTestMethod(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter FullyQualifiedName~DeadlockCase3", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "DeadlockTests";
@@ -150,6 +161,40 @@ public class DeadlockCase2
     [TestMethod]
     public void Test2()
     {
+    }
+}
+
+[TestClass]
+public class DeadlockCase3
+{
+    // This repro is intended to deadlock when Test1 is called asynchronously like await Test1(), but then AssemblyCleanup is called with GetAwaiter().GetResult().
+    // When await Test1() is called, we return a Task that will complete in ~1second on a custom thread we created.
+    // After that Task completes, the continuation will run on that exact same custom thread.
+    // If the continuation calls AssemblyCleanup().GetAwaiter().GetResult(), then we are blocking that custom thread waiting for AssemblyCleanup to complete.
+    // But AssemblyCleanup cannot complete until that custom thread calls _cts.SetResult(), which it cannot do because it is blocked waiting for AssemblyCleanup to complete.
+    // So we deadlock.
+    // This repro is related to https://github.com/microsoft/testfx/issues/6575
+    private static TaskCompletionSource<object> _cts = new();
+
+    [AssemblyCleanup]
+    public static async Task AssemblyCleanup()
+    {
+        await _cts.Task;
+    }
+
+    [TestMethod]
+    public async Task Test1()
+    {
+        var cts1 = new TaskCompletionSource<object>();
+        var t = new Thread(() =>
+        {
+            Thread.Sleep(1000);
+            cts1.SetResult(null);
+            Thread.Sleep(1000);
+            _cts.SetResult(null);
+        });
+        t.Start();
+        await cts1.Task;
     }
 }
 

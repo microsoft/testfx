@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Threading.Tasks;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -308,9 +310,9 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #endregion
 
-    #region InvokeAsSynchronousTask tests
+    #region GetInvokeResultAsync tests
 
-    public void MethodInfoInvokeAsSynchronousTaskWaitsForCompletionOfAMethodWhichReturnsTask()
+    public async Task MethodInfoGetInvokeResultAsyncTaskWaitsForCompletionOfAMethodWhichReturnsTask()
     {
         bool testMethodCalled = false;
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
@@ -324,12 +326,16 @@ public class MethodInfoExtensionsTests : TestContainer
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyAsyncMethod = typeof(DummyTestClass2).GetMethod("DummyAsyncMethod")!;
 
-        dummyAsyncMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        Task? task = dummyAsyncMethod.GetInvokeResultAsync(dummyTestClass, 10, 20);
+        if (task is not null)
+        {
+            await task;
+        }
 
         testMethodCalled.Should().BeTrue();
     }
 
-    public void MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
+    public async Task MethodInfoGetInvokeResultAsyncTaskExecutesAMethodWhichDoesNotReturnATask()
     {
         bool testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
@@ -343,19 +349,27 @@ public class MethodInfoExtensionsTests : TestContainer
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("DummyMethod")!;
 
-        dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, 10, 20);
+        if (task is not null)
+        {
+            await task;
+        }
 
         testMethodCalled.Should().BeTrue();
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
+    public async Task GetInvokeResultAsyncShouldThrowIfParametersWereExpectedButWereNotProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
+            Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, null);
+            if (task is not null)
+            {
+                await task;
+            }
         }
         catch (TestFailedException ex)
         {
@@ -364,23 +378,30 @@ public class MethodInfoExtensionsTests : TestContainer
         }
     }
 
-    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
+    public async Task GetInvokeResultAsyncShouldNotThrowIfParametersWereExpectedAndWereProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
 
-        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
-        Action();
+        Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, 10, 20);
+        if (task is not null)
+        {
+            await task;
+        }
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButIncorrectCountOfParametersWasProvided()
+    public async Task GetInvokeResultAsyncShouldThrowIfParametersWereExpectedButIncorrectCountOfParametersWasProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 1);
+            Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, 1);
+            if (task is not null)
+            {
+                await task;
+            }
         }
         catch (TestFailedException ex)
         {
@@ -396,14 +417,18 @@ public class MethodInfoExtensionsTests : TestContainer
         }
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButIncorrectTypesOfParametersWereProvided()
+    public async Task GetInvokeResultAsyncShouldThrowIfParametersWereExpectedButIncorrectTypesOfParametersWereProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, "10", "20");
+            Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, "10", "20");
+            if (task is not null)
+            {
+                await task;
+            }
         }
         catch (TestFailedException ex)
         {
@@ -419,7 +444,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
     }
 
-    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndTheProvidedParametersCanImplicitlyConvertToTheExpectedParameters()
+    public async Task GetInvokeResultAsyncShouldNotThrowIfParametersWereExpectedAndTheProvidedParametersCanImplicitlyConvertToTheExpectedParameters()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
@@ -429,8 +454,11 @@ public class MethodInfoExtensionsTests : TestContainer
         // do its work.
         byte ten = 10;
         byte twenty = 20;
-        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, ten, twenty);
-        Action();
+        Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, ten, twenty);
+        if (task is not null)
+        {
+            await task;
+        }
     }
 
     #endregion
