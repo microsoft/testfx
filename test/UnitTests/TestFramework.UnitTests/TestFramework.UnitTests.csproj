@@ -25,6 +25,6 @@
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Polyfill" PrivateAssets="all" />
-</ItemGroup>
+  </ItemGroup>
 
 </Project>
