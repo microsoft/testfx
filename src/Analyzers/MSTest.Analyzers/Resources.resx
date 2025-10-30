@@ -685,7 +685,7 @@ The type declaring these methods should also respect the following rules:
     <value>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</value>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle" xml:space="preserve">
-    <value>Do not use both Parallelize and DoNotParallelize attributes</value>
+    <value>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</value>
     <comment>{Locked="Parallelize","DoNotParallelize"}</comment>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat" xml:space="preserve">
