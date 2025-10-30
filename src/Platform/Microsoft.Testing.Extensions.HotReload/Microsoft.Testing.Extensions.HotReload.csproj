@@ -32,6 +32,7 @@ This package extends Microsoft Testing Platform to provide Hot Reload support.]]
   <ItemGroup>
     <None Include="buildTransitive/**" PackagePath="buildTransitive" Pack="true" />
     <None Include="build/**" PackagePath="build" Pack="true" />
+    <None Include="$(RepoRoot)/LICENSE.PLATFORMTOOLS.txt" Pack="true" PackagePath="License.txt" />
   </ItemGroup>
 
   <ItemGroup>
