@@ -6,6 +6,16 @@ This sample demonstrates how to use the `Microsoft.Testing.Extensions.Retry` ext
 
 The Retry extension is a testing platform-level feature that allows you to automatically retry tests that fail. When enabled, if a test fails, the entire test suite will be re-run up to a specified number of times until all tests pass or the maximum retry count is reached.
 
+### Important: Difference from [Retry] Attribute
+
+There are **two different retry mechanisms** in the MSTest ecosystem:
+
+1. **`Microsoft.Testing.Extensions.Retry`** (this sample): A **platform-level** extension that retries the **entire test suite** when any test fails. Activated via `--retry-failed-tests` command-line option.
+
+2. **`[Retry]` attribute**: A **framework-level** attribute that retries individual test methods. Applied directly to test methods like `[TestMethod]` and `[Retry(3)]`.
+
+Use the platform-level retry extension when you want to handle environment-level failures that affect multiple tests. Use the `[Retry]` attribute when specific test methods are known to be flaky.
+
 ## Key Features
 
 - Automatically retries failed tests
