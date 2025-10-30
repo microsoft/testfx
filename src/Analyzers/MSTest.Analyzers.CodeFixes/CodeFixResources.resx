@@ -207,4 +207,12 @@
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
   </data>
+  <data name="RemoveParallelizeAttributeFix" xml:space="preserve">
+    <value>Remove '[Parallelize]' attribute</value>
+    <comment>{Locked="[Parallelize]"}</comment>
+  </data>
+  <data name="RemoveDoNotParallelizeAttributeFix" xml:space="preserve">
+    <value>Remove '[DoNotParallelize]' attribute</value>
+    <comment>{Locked="[DoNotParallelize]"}</comment>
+  </data>
 </root>

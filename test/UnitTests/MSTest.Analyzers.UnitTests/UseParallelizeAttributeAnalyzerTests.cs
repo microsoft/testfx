@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Testing;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.RemoveConflictingParallelizationAttributeFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -110,5 +110,51 @@ public class UseParallelizeAttributeAnalyzerTests
             includeTestAdapter: false,
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1),
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0));
+    }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSet_CodeFixRemovesParallelize()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+            [assembly: DoNotParallelize]
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DoNotParallelize]
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0).WithArguments(),
+            fixedCode,
+            0);
+    }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSet_CodeFixRemovesDoNotParallelize()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+            [assembly: DoNotParallelize]
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1).WithArguments(),
+            fixedCode,
+            1);
     }
 }
