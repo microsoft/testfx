@@ -1,39 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
-    
-    <!-- Enable MSTest runner -->
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    
-    <!-- Disable auto-generation of Program.cs so we can provide our own -->
-    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>
   </PropertyGroup>
-
-  <ItemGroup>
-    <!--
-      MSTest meta package is the recommended way to reference MSTest.
-      It's equivalent to referencing:
-          Microsoft.NET.Test.Sdk
-          MSTest.TestAdapter
-          MSTest.TestFramework
-          MSTest.Analyzers
-    -->
-    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
-
-    <!--
-      Microsoft.Testing.Extensions.Retry provides retry capabilities
-      for failed tests at the testing platform level.
-    -->
-    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(TestingPlatformVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-  </ItemGroup>
 
 </Project>
