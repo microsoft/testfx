@@ -216,7 +216,6 @@ public sealed class TestApplicationResultTests
     {
         yield return [new FailedTestNodeStateProperty()];
         yield return [new ErrorTestNodeStateProperty()];
-        yield return [new CancelledTestNodeStateProperty()];
         yield return [new TimeoutTestNodeStateProperty()];
     }
 

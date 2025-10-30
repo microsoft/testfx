@@ -19,7 +19,6 @@ internal static class TestNodePropertiesCategories
             typeof(FailedTestNodeStateProperty),
             typeof(ErrorTestNodeStateProperty),
             typeof(TimeoutTestNodeStateProperty),
-            typeof(CancelledTestNodeStateProperty),
         ];
 
     public static Type[] WellKnownTestNodeTestRunOutcomeFailedProperties { get; } =
@@ -27,6 +26,5 @@ internal static class TestNodePropertiesCategories
             typeof(FailedTestNodeStateProperty),
             typeof(ErrorTestNodeStateProperty),
             typeof(TimeoutTestNodeStateProperty),
-            typeof(CancelledTestNodeStateProperty),
         ];
 }
