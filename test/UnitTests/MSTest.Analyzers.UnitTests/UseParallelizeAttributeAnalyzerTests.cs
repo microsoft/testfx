@@ -157,4 +157,55 @@ public class UseParallelizeAttributeAnalyzerTests
             fixedCode,
             1);
     }
+
+    [TestMethod]
+    public async Task WhenBothAttributesSetWithMultipleAttributesInList_CodeFixRemovesOnlyTargetAttribute()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [AttributeUsage(AttributeTargets.Assembly)]
+            public class MyAsmAttribute : Attribute { }
+
+            [assembly: {|#0:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}, MyAsm]
+            [assembly: {|#1:DoNotParallelize|}, MyAsm]
+            """;
+
+        string fixedCodeRemovingParallelize = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [AttributeUsage(AttributeTargets.Assembly)]
+            public class MyAsmAttribute : Attribute { }
+
+            [assembly: MyAsm]
+            [assembly: DoNotParallelize, MyAsm]
+            """;
+
+        string fixedCodeRemovingDoNotParallelize = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [AttributeUsage(AttributeTargets.Assembly)]
+            public class MyAsmAttribute : Attribute { }
+
+            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel), MyAsm]
+            [assembly: MyAsm]
+            """;
+
+        // Test removing Parallelize attribute
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0).WithArguments(),
+            fixedCodeRemovingParallelize,
+            0);
+
+        // Test removing DoNotParallelize attribute
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1).WithArguments(),
+            fixedCodeRemovingDoNotParallelize,
+            1);
+    }
 }
