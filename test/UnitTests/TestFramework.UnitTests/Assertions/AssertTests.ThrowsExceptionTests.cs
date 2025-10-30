@@ -68,8 +68,8 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsAsync<ArgumentException>(() => throw new Exception());
         Action action = t.Wait;
-        AggregateException ex = action.Should().Throw<AggregateException>().Which;
-        ex.InnerException.Should().BeOfType<AssertFailedException>()
+        action.Should().Throw<AggregateException>()
+            .WithInnerException<AssertFailedException>()
             .WithMessage("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.Exception>. 'action' expression: '() => throw new Exception()'.");
     }
 
@@ -77,8 +77,8 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsExactlyAsync<ArgumentException>(() => throw new ArgumentNullException());
         Action action = t.Wait;
-        AggregateException ex = action.Should().Throw<AggregateException>().Which;
-        ex.InnerException.Should().BeOfType<AssertFailedException>()
+        action.Should().Throw<AggregateException>()
+            .WithInnerException<AssertFailedException>()
             .WithMessage("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.ArgumentNullException>. 'action' expression: '() => throw new ArgumentNullException()'.");
     }
 

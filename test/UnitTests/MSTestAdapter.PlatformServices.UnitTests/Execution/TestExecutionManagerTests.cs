@@ -879,6 +879,7 @@ public class TestExecutionManagerTests : TestContainer
     #region Dummy implementation
 
     [DummyTestClass]
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is a MSTest sample class so it's expected to use MSTest assertions")]
     internal class DummyTestClass
     {
         public static IDictionary<string, object>? TestContextProperties { get; set; }

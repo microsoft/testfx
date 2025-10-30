@@ -215,8 +215,8 @@ public class TestClassInfoTests : TestContainer
 
         TestResult result = GetResultOrRunClassInitialize(null);
         var exception = result.TestFailureException as TestFailedException;
-        exception.Should().NotBeNull()
-            .WithMessage("TestContext cannot be Null.");
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be("TestContext cannot be Null.");
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
     }
 
@@ -272,12 +272,14 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldSetClassInitializationExceptionOnException()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.ClassInitializeMethodBody = tc => Assert.Inconclusive("Test Inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
 
+        exception.Should().NotBeNull();
         _testClassInfo.ClassInitializationException.Should().NotBeNull();
     }
 
@@ -342,8 +344,8 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassInitMethods.Add(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod")!);
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
 
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.");
 #if DEBUG
@@ -356,12 +358,14 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.ClassInitializeMethodBody = tc => Assert.Fail("Test failure");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
 
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
 #if DEBUG
@@ -373,12 +377,14 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.ClassInitializeMethodBody = tc => Assert.Inconclusive("Test Inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
 
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
 #if DEBUG
@@ -394,8 +400,8 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
 
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.");
 #if DEBUG
@@ -411,7 +417,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializationException = new TestFailedException(UTF.UnitTestOutcome.Failed, "Cached Test failure");
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Cached Test failure");
     }
@@ -434,8 +440,8 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
 
         var exception = GetResultOrRunClassInitialize().TestFailureException as TestFailedException;
-        Assert.IsNotNull(exception);
 
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.InvalidOperationException: I fail..");
 #if DEBUG
@@ -488,7 +494,9 @@ public class TestClassInfoTests : TestContainer
     public async Task RunClassCleanupShouldReturnAssertFailureExceptionDetails()
     {
         // Arrange
-        DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Fail("Test Failure");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.ClassCleanupMethodBody = () => Assert.Fail("Test Failure");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
@@ -509,7 +517,9 @@ public class TestClassInfoTests : TestContainer
     public async Task RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails()
     {
         // Arrange
-        DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.ClassCleanupMethodBody = () => Assert.Inconclusive("Test Inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
@@ -626,7 +636,7 @@ public class TestClassInfoTests : TestContainer
 
         public TestContext BaseTestContext { get; set; } = null!;
 
-        [ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+        [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
         public static void InitClassMethod(TestContext testContext) => ClassInitMethodBody?.Invoke(testContext);
 
         public static void ClassCleanupMethod() => CleanupClassMethodBody?.Invoke();
@@ -641,7 +651,7 @@ public class TestClassInfoTests : TestContainer
 
         public TestContext TestContext { get; set; } = null!;
 
-        [ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+        [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
         public static void InitBaseClassMethod(TestContext testContext) => ClassInitializeMethodBody?.Invoke(testContext);
 
         public static void CleanupClassMethod() => ClassCleanupMethodBody?.Invoke();

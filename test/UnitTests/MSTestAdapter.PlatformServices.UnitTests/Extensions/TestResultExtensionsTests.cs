@@ -26,7 +26,7 @@ public class TestResultExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
     {
-        var result = new TestResult { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive };
+        var result = new TestResult { TestFailureException = new Exception(), Outcome = UnitTestOutcome.Inconclusive };
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         convertedResult.Outcome.Should().Be(VSTestTestOutcome.Skipped);
