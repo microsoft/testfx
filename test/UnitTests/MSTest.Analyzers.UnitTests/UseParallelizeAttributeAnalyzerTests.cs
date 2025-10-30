@@ -74,12 +74,20 @@ public class UseParallelizeAttributeAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
-            [assembly: DoNotParallelize]
+            {|#0:[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]|}
+            {|#1:[assembly: DoNotParallelize]|}
             """;
 
-        await VerifyAsync(code, includeTestAdapter: true, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
-        await VerifyAsync(code, includeTestAdapter: false, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
+        await VerifyAsync(
+            code,
+            includeTestAdapter: true,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
+        await VerifyAsync(
+            code,
+            includeTestAdapter: false,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
     }
 
     [TestMethod]
@@ -88,11 +96,19 @@ public class UseParallelizeAttributeAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            [assembly: DoNotParallelize]
-            [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+            {|#0:[assembly: DoNotParallelize]|}
+            {|#1:[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]|}
             """;
 
-        await VerifyAsync(code, includeTestAdapter: true, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
-        await VerifyAsync(code, includeTestAdapter: false, VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithNoLocation());
+        await VerifyAsync(
+            code,
+            includeTestAdapter: true,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0));
+        await VerifyAsync(
+            code,
+            includeTestAdapter: false,
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1),
+            VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0));
     }
 }

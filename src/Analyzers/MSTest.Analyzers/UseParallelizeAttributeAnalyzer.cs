@@ -65,25 +65,35 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? parallelizeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute);
         INamedTypeSymbol? doNotParallelizeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
 
-        bool hasParallelizeAttribute = false;
-        bool hasDoNotParallelizeAttribute = false;
+        AttributeData? parallelizeAttribute = null;
+        AttributeData? doNotParallelizeAttribute = null;
         foreach (AttributeData attribute in context.Compilation.Assembly.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, parallelizeAttributeSymbol))
             {
-                hasParallelizeAttribute = true;
+                parallelizeAttribute = attribute;
             }
 
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, doNotParallelizeAttributeSymbol))
             {
-                hasDoNotParallelizeAttribute = true;
+                doNotParallelizeAttribute = attribute;
             }
         }
 
-        if (hasParallelizeAttribute && hasDoNotParallelizeAttribute)
+        if (parallelizeAttribute is not null && doNotParallelizeAttribute is not null)
         {
             // Both attributes are present - this is an error
-            context.ReportNoLocationDiagnostic(DoNotUseBothAttributesRule);
+            // Report on both attribute locations
+            if (parallelizeAttribute.ApplicationSyntaxReference is not null)
+            {
+                context.ReportDiagnostic(parallelizeAttribute.ApplicationSyntaxReference.CreateDiagnostic(DoNotUseBothAttributesRule, context.CancellationToken));
+            }
+
+            if (doNotParallelizeAttribute.ApplicationSyntaxReference is not null)
+            {
+                context.ReportDiagnostic(doNotParallelizeAttribute.ApplicationSyntaxReference.CreateDiagnostic(DoNotUseBothAttributesRule, context.CancellationToken));
+            }
+
             return;
         }
 
@@ -97,7 +107,7 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!hasParallelizeAttribute && !hasDoNotParallelizeAttribute)
+        if (parallelizeAttribute is null && doNotParallelizeAttribute is null)
         {
             // We cannot provide any good location for assembly level missing attributes
             context.ReportNoLocationDiagnostic(Rule);
