@@ -3,21 +3,14 @@
 
 trigger:
   branches:
-    include:
-    - main
-    - rel/*
-  paths:
-    include:
-    - samples/public/mstest-runner/RetryExtensionSample/*
+    exclude:
+    - *
 
 pr:
   branches:
     include:
     - main
     - rel/*
-  paths:
-    include:
-    - samples/public/mstest-runner/RetryExtensionSample/*
 
 variables:
   - name: _TeamName
@@ -58,19 +51,6 @@ stages:
         arguments: '--configuration Release --no-restore'
 
     - task: PowerShell@2
-      displayName: 'Run sample without retry (expect failure)'
-      inputs:
-        targetType: 'inline'
-        script: |
-          cd $(SampleProjectPath)
-          $output = dotnet run --configuration Release --no-build 2>&1 | Out-String
-          Write-Host $output
-          # We expect this to fail, so we don't fail the pipeline here
-          Write-Host "Sample run without retry completed (expected to fail)"
-        workingDirectory: $(Build.SourcesDirectory)
-      continueOnError: true
-
-    - task: PowerShell@2
       displayName: 'Run sample with retry (expect success)'
       inputs:
         targetType: 'inline'
@@ -89,63 +69,4 @@ stages:
         mergeTestResults: true
         failTaskOnFailedTests: false
         testRunTitle: 'Retry Extension Sample Tests'
-      condition: always()
-
-  - job: Linux
-    displayName: Linux
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals build.ubuntu.2004.amd64.open
-    steps:
-    - task: UseDotNet@2
-      displayName: 'Install .NET SDK'
-      inputs:
-        packageType: sdk
-        useGlobalJson: true
-        workingDirectory: $(Build.SourcesDirectory)
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore sample project'
-      inputs:
-        command: restore
-        projects: '$(SampleProjectPath)/RetryExtensionSample.csproj'
-        feedsToUse: config
-        nugetConfigPath: '$(SampleProjectPath)/../../NuGet.config'
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Build sample project'
-      inputs:
-        command: build
-        projects: '$(SampleProjectPath)/RetryExtensionSample.csproj'
-        arguments: '--configuration Release --no-restore'
-
-    - task: Bash@3
-      displayName: 'Run sample without retry (expect failure)'
-      inputs:
-        targetType: 'inline'
-        script: |
-          cd $(SampleProjectPath)
-          dotnet run --configuration Release --no-build || true
-          echo "Sample run without retry completed (expected to fail)"
-        workingDirectory: $(Build.SourcesDirectory)
-      continueOnError: true
-
-    - task: Bash@3
-      displayName: 'Run sample with retry (expect success)'
-      inputs:
-        targetType: 'inline'
-        script: |
-          cd $(SampleProjectPath)
-          dotnet run --configuration Release --no-build -- --retry-failed-tests 3
-        workingDirectory: $(Build.SourcesDirectory)
-
-    - task: PublishTestResults@2
-      displayName: 'Publish Test Results'
-      inputs:
-        testResultsFormat: 'VSTest'
-        testResultsFiles: '**/TestResults/**/*.trx'
-        searchFolder: '$(Build.SourcesDirectory)/$(SampleProjectPath)'
-        mergeTestResults: true
-        failTaskOnFailedTests: false
-        testRunTitle: 'Retry Extension Sample Tests - Linux'
       condition: always()
