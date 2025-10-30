@@ -132,7 +132,9 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldSetAssemblyInitializationExceptionOnException()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = _ => UTF.Assert.Inconclusive("Test Inconclusive");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.AssemblyInitializeMethodBody = _ => Assert.Inconclusive("Test Inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         Action action = () => _testAssemblyInfo.RunAssemblyInitialize(_testContext);
@@ -143,7 +145,9 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionOnAssertionFailure()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.AssemblyInitializeMethodBody = tc => Assert.Fail("Test failure");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         TestFailedException exception = new Action(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)).Should().Throw<TestFailedException>().Which;
@@ -158,7 +162,9 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.AssemblyInitializeMethodBody = tc => Assert.Inconclusive("Test Inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         TestFailedException exception = new Action(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)).Should().Throw<TestFailedException>().Which;
@@ -256,7 +262,9 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.AssemblyCleanupMethodBody = () => Assert.Fail("Test Failure.");
+#pragma warning restore RS0030 // Do not use banned APIs
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;
@@ -266,7 +274,9 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.AssemblyCleanupMethodBody = () => Assert.Inconclusive("Test Inconclusive.");
+#pragma warning restore RS0030 // Do not use banned APIs
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = _testAssemblyInfo.ExecuteAssemblyCleanup(GetTestContext())?.Message;

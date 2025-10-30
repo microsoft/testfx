@@ -423,7 +423,7 @@ public class TestMethodRunnerTests : TestContainer
             {
                 Func<Task> func = testMethodRunner.RunTestMethodAsync;
                 (await func.Should().ThrowAsync<ArgumentException>())
-                    .And.Message.Should().Be(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, nameof(DummyTestClassEmptyDataSource.EmptyProperty), typeof(DummyTestClassEmptyDataSource).FullName));
+                    .WithMessage(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, nameof(DummyTestClassEmptyDataSource.EmptyProperty), typeof(DummyTestClassEmptyDataSource).FullName));
             }
         }
         finally

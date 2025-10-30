@@ -55,8 +55,8 @@ public class XxHash128Tests : TestContainer
             // Validate `XxHash128.HashToUInt128`
             // Verify(new UInt128(test.HashHigh, test.HashLow) == XxHash128.HashToUInt128(input, test.Seed));
 #endif
-            Assert.IsFalse(XxHash128.TryHash(input, new byte[15], out int bytesWritten, test.Seed));
-            Assert.AreEqual(0, bytesWritten);
+            XxHash128.TryHash(input, new byte[15], out int bytesWritten, test.Seed).Should().BeFalse();
+            bytesWritten.Should().Be(0);
 
             // Validate `XxHash128.TryHash` with and without a seed
             if (test.Seed == 0)

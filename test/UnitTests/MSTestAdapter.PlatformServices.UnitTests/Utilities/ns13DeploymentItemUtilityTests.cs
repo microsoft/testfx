@@ -340,45 +340,42 @@ public class DeploymentItemUtilityTests : TestContainer
     {
         DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(Resource.DeploymentItemOutputDirectoryCannotBeNull, warning);
+        warning.Should().Contain(Resource.DeploymentItemOutputDirectoryCannotBeNull);
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
     {
         DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(
+        warning.Should().Contain(
             string.Format(
                 CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 "C:<>",
-                _defaultDeploymentItemOutputDirectory),
-            warning);
+                _defaultDeploymentItemOutputDirectory));
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
     {
         DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(
+        warning.Should().Contain(
             string.Format(
                 CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 _defaultDeploymentItemPath,
-                "<>"),
-            warning);
+                "<>"));
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
     {
         DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(
+        warning.Should().Contain(
            string.Format(
                CultureInfo.InvariantCulture,
                Resource.DeploymentItemOutputDirectoryMustBeRelative,
-               "C:\\temp"),
-           warning);
+               "C:\\temp"));
     }
 
     public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()

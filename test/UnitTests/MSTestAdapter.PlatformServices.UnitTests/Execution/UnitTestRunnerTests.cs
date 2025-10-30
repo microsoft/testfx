@@ -343,7 +343,9 @@ public sealed class UnitTestRunnerTests : TestContainer
         public TestContext TestContext { get; set; } = null!;
 
         [TestMethod]
+#pragma warning disable RS0030 // Do not use banned APIs
         public void TestMethodToTestInProgress() => Assert.AreEqual(UTF.UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
+#pragma warning restore RS0030 // Do not use banned APIs
     }
 
     [DummyTestClass]

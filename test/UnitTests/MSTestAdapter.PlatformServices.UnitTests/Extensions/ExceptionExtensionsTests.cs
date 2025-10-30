@@ -190,8 +190,8 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException("inner most", null)));
         Exception actual = exception.GetRealException();
 
-        actual.Should().BeOfType<TargetInvocationException>();
-        actual.Message.Should().Be("inner most");
+        actual.Should().BeOfType<TargetInvocationException>()
+            .Which.Message.Should().Be("inner most");
     }
 
     public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTypeInitialization()
@@ -223,8 +223,8 @@ public class ExceptionExtensionsTests : TestContainer
         var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("inner most", null)));
         Exception actual = exception.GetRealException();
 
-        actual.Should().BeOfType<TypeInitializationException>();
-        actual.Message.Should().Be("The type initializer for 'inner most' threw an exception.");
+        actual.Should().BeOfType<TypeInitializationException>()
+            .Which.Message.Should().Be("The type initializer for 'inner most' threw an exception.");
     }
     #endregion
 }

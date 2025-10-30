@@ -33,7 +33,7 @@ public class UnitTestResultTests : TestContainer
     public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
     {
         var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
-        TestFailedException ex = new(TestTools.UnitTesting.UnitTestOutcome.Error, "DummyMessage", stackTrace);
+        TestFailedException ex = new(UTF.UnitTestOutcome.Error, "DummyMessage", stackTrace);
 
         UnitTestResult result = new(ex);
 

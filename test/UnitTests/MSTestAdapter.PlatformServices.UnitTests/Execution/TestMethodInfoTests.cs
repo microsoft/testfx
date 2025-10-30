@@ -121,7 +121,9 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeAsyncShouldHandleAssertInconclusive()
     {
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => UTF.Assert.Inconclusive());
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => Assert.Inconclusive());
+#pragma warning restore RS0030 // Do not use banned APIs
         MethodInfo asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
 
         var method = new TestMethodInfo(
@@ -159,7 +161,9 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldHandleAssertInconclusive()
     {
-        DummyTestClass.TestMethodBody = d => UTF.Assert.Inconclusive();
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestMethodBody = d => Assert.Inconclusive();
+#pragma warning restore RS0030 // Do not use banned APIs
         MethodInfo dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod")!;
 
         var method = new TestMethodInfo(
@@ -616,7 +620,9 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => UTF.Assert.Fail("dummyFailMessage");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestInitializeMethodBody = classInstance => Assert.Fail("dummyFailMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
         string errorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -651,7 +657,9 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => UTF.Assert.Inconclusive("dummyFailMessage");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestInitializeMethodBody = classInstance => Assert.Inconclusive("dummyFailMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
         string errorMessage = string.Format(
             CultureInfo.InvariantCulture,
@@ -835,7 +843,9 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => UTF.Assert.Inconclusive("Test inconclusive");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestCleanupMethodBody = classInstance => Assert.Inconclusive("Test inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         string expectedErrorMessage = string.Format(
@@ -862,7 +872,9 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => UTF.Assert.Fail("Test failed");
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestCleanupMethodBody = classInstance => Assert.Fail("Test failed");
+#pragma warning restore RS0030 // Do not use banned APIs
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
 
         string expectedErrorMessage = string.Format(
