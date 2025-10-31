@@ -56,6 +56,7 @@ internal sealed class FastFilter
                     matched = true;
                     break;
                 }
+
                 continue;
             }
 
