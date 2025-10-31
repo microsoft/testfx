@@ -74,8 +74,8 @@ public class UseParallelizeAttributeAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {|#0:[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]|}
-            {|#1:[assembly: DoNotParallelize]|}
+            [assembly: {|#0:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}]
+            [assembly: {|#1:DoNotParallelize|}]
             """;
 
         await VerifyAsync(
@@ -96,8 +96,8 @@ public class UseParallelizeAttributeAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {|#0:[assembly: DoNotParallelize]|}
-            {|#1:[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]|}
+            [assembly: {|#0:DoNotParallelize|}]
+            [assembly: {|#1:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}]
             """;
 
         await VerifyAsync(
@@ -119,11 +119,11 @@ public class UseParallelizeAttributeAnalyzerTests
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
 
-            [AttributeUsage(AttributeTargets.Assembly)]
-            public class MyAsmAttribute : Attribute { }
-
             [assembly: {|#0:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}, MyAsm]
             [assembly: {|#1:DoNotParallelize|}, MyAsm]
+
+            [AttributeUsage(AttributeTargets.Assembly)]
+            public class MyAsmAttribute : Attribute { }
             """;
 
         await VerifyAsync(
