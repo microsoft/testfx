@@ -7,5 +7,4 @@ namespace Microsoft.Testing.Platform.Requests;
 /// Represents a filter that does nothing.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-[SuppressMessage("ApiDesign", "RS0016:Add public types and members to the declared API", Justification = "Experimental API")]
 public sealed class NopFilter : ITestExecutionFilter;

@@ -81,8 +81,8 @@ Moving last attempt asset files to the default result directory
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">啟用重試失敗的測試</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="needs-review-translation">啟用重試失敗的測試</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
