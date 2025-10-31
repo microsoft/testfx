@@ -167,7 +167,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                 testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
-                TestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContextForAssemblyInit);
+                TestResult assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
 
                 if (assemblyInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                 {
@@ -212,7 +212,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                RunAssemblyCleanupIfNeeded(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result);
+                await RunAssemblyCleanupIfNeededAsync(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result).ConfigureAwait(false);
             }
 
             return result;
@@ -239,13 +239,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
     }
 
-    private static TestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private static async Task<TestResult> RunAssemblyInitializeIfNeededAsync(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         var result = new TestResult { Outcome = UnitTestOutcome.Passed };
 
         try
         {
-            testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
+            await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
         }
         catch (TestFailedException ex)
         {
@@ -268,7 +268,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static void RunAssemblyCleanupIfNeeded(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
+    private static async Task RunAssemblyCleanupIfNeededAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
     {
         if (!classCleanupManager.ShouldRunEndOfAssemblyCleanup)
         {
@@ -280,7 +280,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
             foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
             {
-                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
                 if (results.Length > 0 && ex is not null)
                 {
