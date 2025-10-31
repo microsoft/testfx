@@ -39,7 +39,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -75,7 +75,37 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool b = true;
+            
+                    Assert.IsFalse(true);
+                    Assert.IsFalse(false);
+                    Assert.IsFalse(b);
+                    Assert.IsFalse(GetBoolean());
+                    Assert.IsFalse(GetBoolean());
+                    Assert.IsFalse(GetBoolean());
+
+                    Assert.IsTrue(true);
+                    Assert.IsTrue(false);
+                    Assert.IsTrue(b);
+                    Assert.IsTrue(GetBoolean());
+                    Assert.IsTrue(GetBoolean());
+                    Assert.IsTrue(GetBoolean());
+                }
+
+                private bool GetBoolean() => true;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -362,7 +392,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -383,7 +413,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -403,7 +433,41 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        string fixcode = """
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    Assert.IsTrue(condition);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithTripleNegation_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    [|Assert.IsTrue(!!!condition)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             [TestClass]
             public class MyTestClass
@@ -417,8 +481,9 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixcode);
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
 
     [TestMethod]
     public async Task WhenMultipleNegatedAssertions_FixAll()
@@ -598,7 +663,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -624,6 +689,6 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 }

@@ -91,6 +91,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
         for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
         {
             ArgumentSyntax arg = invocation.ArgumentList.Arguments[i];
+            // Check if it's the first positional argument or explicitly named 'condition'
             if (arg.NameColon?.Name.Identifier.ValueText == "condition" || (arg.NameColon == null && i == 0))
             {
                 conditionArgument = arg;
@@ -106,59 +107,100 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
 
         ExpressionSyntax argumentExpression = conditionArgument.Expression;
 
-        // Remove ALL negations (for double negation in one step)
-        ExpressionSyntax unnegatedExpression = RemoveAllNegations(argumentExpression);
+        // Start with the CURRENT method name (not the diagnostic suggestion)
+        string currentMethodName = memberAccess.Name.Identifier.ValueText;
+        ExpressionSyntax currentExpression = argumentExpression;
 
-        if (unnegatedExpression == argumentExpression)
+        // Iteratively remove negations one at a time
+        while (true)
         {
-            // No negation found, nothing to fix
+            ExpressionSyntax unnegatedExpression = RemoveNegation(currentExpression);
+
+            // If no negation was removed, we're done
+            if (unnegatedExpression == currentExpression)
+            {
+                break;
+            }
+
+            // A negation was removed, so flip the method name
+            currentMethodName = currentMethodName == "IsTrue" ? "IsFalse" : "IsTrue";
+            currentExpression = unnegatedExpression;
+        }
+
+        // If nothing changed, return the original document
+        if (currentExpression == argumentExpression && currentMethodName == memberAccess.Name.Identifier.ValueText)
+        {
             return document;
         }
 
-        // Always swap the method name
-        IdentifierNameSyntax newMethodName = SyntaxFactory.IdentifierName(properAssertMethodName);
-        MemberAccessExpressionSyntax newMemberAccess = memberAccess.WithName(newMethodName);
-        ArgumentSyntax newArgument = conditionArgument.WithExpression(unnegatedExpression);
+        // Create the new method name identifier
+        IdentifierNameSyntax newMethodName = SyntaxFactory.IdentifierName(currentMethodName);
 
+        // Create the new member access expression
+        MemberAccessExpressionSyntax newMemberAccess = memberAccess.WithName(newMethodName);
+
+        // Create the new argument with the unnegated expression
+        ArgumentSyntax newArgument = conditionArgument.WithExpression(currentExpression);
+
+        // Replace the condition argument in the arguments list
         SeparatedSyntaxList<ArgumentSyntax> newArguments = invocation.ArgumentList.Arguments.Replace(
             invocation.ArgumentList.Arguments[conditionArgumentIndex],
             newArgument);
         ArgumentListSyntax newArgumentList = invocation.ArgumentList.WithArguments(newArguments);
 
+        // Create the new invocation expression
         InvocationExpressionSyntax newInvocation = invocation
             .WithExpression(newMemberAccess)
             .WithArgumentList(newArgumentList);
 
+        // Replace the old invocation with the new one
         editor.ReplaceNode(invocation, newInvocation);
+
         return editor.GetChangedDocument();
     }
 
-    private static ExpressionSyntax RemoveAllNegations(ExpressionSyntax expression)
+    private static ExpressionSyntax RemoveNegation(ExpressionSyntax expression)
     {
-        // Walk down parentheses and negations until we find the core expression
-        ExpressionSyntax current = expression;
-
-        while (true)
+        // Handle parenthesized expressions - unwrap to find the negation
+        if (expression is ParenthesizedExpressionSyntax parenthesized)
         {
-            // Remove parentheses
-            if (current is ParenthesizedExpressionSyntax parenthesized)
+            // Check if what's inside is a negation
+            if (parenthesized.Expression is PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } innerPrefixUnary)
             {
-                current = parenthesized.Expression;
-                continue;
+                // Remove the parentheses and the negation, return the operand (unwrapped)
+                return UnwrapParentheses(innerPrefixUnary.Operand);
             }
 
-            // Remove negation
-            if (current is PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } prefixUnary)
+            // Recursively check inside parentheses
+            ExpressionSyntax inner = RemoveNegation(parenthesized.Expression);
+            if (inner != parenthesized.Expression)
             {
-                current = prefixUnary.Operand;
-                continue;
+                // We removed a negation from inside - return without the outer parentheses (unwrapped)
+                return UnwrapParentheses(inner);
             }
 
-            // No more parentheses or negations
-            break;
+            // No negation inside, return as-is
+            return expression;
         }
 
-        return current;
+        // Handle logical not operator (!) - remove ONLY this one negation
+        if (expression is PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } prefixUnary)
+        {
+            // Return the operand directly (unwrapped)
+            return UnwrapParentheses(prefixUnary.Operand);
+        }
+
+        return expression;
+    }
+
+    private static ExpressionSyntax UnwrapParentheses(ExpressionSyntax expression)
+    {
+        // Recursively unwrap all unnecessary parentheses
+        while (expression is ParenthesizedExpressionSyntax parenthesized)
+        {
+            expression = parenthesized.Expression;
+        }
+        return expression;
     }
 
     private sealed class FixAll : DocumentBasedFixAllProvider
@@ -224,17 +266,37 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
                 }
 
                 ExpressionSyntax argumentExpression = conditionArgument.Expression;
-                ExpressionSyntax unnegatedExpression = RemoveAllNegations(argumentExpression);
 
-                if (unnegatedExpression == argumentExpression)
+                // Start with the CURRENT method name (not the diagnostic suggestion)
+                string currentMethodName = memberAccess.Name.Identifier.ValueText;
+                ExpressionSyntax currentExpression = argumentExpression;
+
+                // Iteratively remove negations one at a time
+                while (true)
+                {
+                    ExpressionSyntax unnegatedExpression = RemoveNegation(currentExpression);
+
+                    // If no negation was removed, we're done
+                    if (unnegatedExpression == currentExpression)
+                    {
+                        break;
+                    }
+
+                    // A negation was removed, so flip the method name
+                    currentMethodName = currentMethodName == "IsTrue" ? "IsFalse" : "IsTrue";
+                    currentExpression = unnegatedExpression;
+                }
+
+                // If nothing changed, skip this invocation
+                if (currentExpression == argumentExpression && currentMethodName == memberAccess.Name.Identifier.ValueText)
                 {
                     continue;
                 }
 
                 // Create the new method name identifier
-                IdentifierNameSyntax newMethodName = SyntaxFactory.IdentifierName(properAssertMethodName);
+                IdentifierNameSyntax newMethodName = SyntaxFactory.IdentifierName(currentMethodName);
                 MemberAccessExpressionSyntax newMemberAccess = memberAccess.WithName(newMethodName);
-                ArgumentSyntax newArgument = conditionArgument.WithExpression(unnegatedExpression);
+                ArgumentSyntax newArgument = conditionArgument.WithExpression(currentExpression);
 
                 SeparatedSyntaxList<ArgumentSyntax> newArguments = invocation.ArgumentList.Arguments.Replace(
                     invocation.ArgumentList.Arguments[conditionArgumentIndex],
