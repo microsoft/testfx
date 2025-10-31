@@ -82,7 +82,7 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="translated">Activer les nouvelles tentatives de tests ayant échoué</target>
+        <target state="needs-review-translation">Activer les nouvelles tentatives de tests ayant échoué</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
