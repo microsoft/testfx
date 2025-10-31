@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -50,7 +52,7 @@ public class DesktopTestDeploymentTests : TestContainer
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
 
         string? warning;
         string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
@@ -75,7 +77,7 @@ public class DesktopTestDeploymentTests : TestContainer
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
 
         string? warning;
         string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".exe";
@@ -105,7 +107,7 @@ public class DesktopTestDeploymentTests : TestContainer
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object).Should().BeTrue();
 
         // matched twice because root deployment and out directory are same in net core
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(testRunDirectories.RootDeploymentDirectory), Times.Once);
