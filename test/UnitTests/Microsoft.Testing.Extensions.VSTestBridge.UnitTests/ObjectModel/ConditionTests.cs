@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 
-[TestGroup]
+[TestClass]
 public class ConditionTests
 {
     [TestMethod]
@@ -16,7 +14,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Equal, string.Empty);
         bool result = condition.Evaluate(propertyName => null);
 
-        result.Should().BeTrue();
+        Assert.IsTrue(result);
     }
 
     [TestMethod]
@@ -25,7 +23,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Equal, string.Empty);
         bool result = condition.Evaluate(propertyName => Array.Empty<string>());
 
-        result.Should().BeTrue();
+        Assert.IsTrue(result);
     }
 
     [TestMethod]
@@ -34,7 +32,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Equal, string.Empty);
         bool result = condition.Evaluate(propertyName => new[] { "CategoryA" });
 
-        result.Should().BeFalse();
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
@@ -43,7 +41,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.NotEqual, string.Empty);
         bool result = condition.Evaluate(propertyName => null);
 
-        result.Should().BeFalse();
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
@@ -52,7 +50,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.NotEqual, string.Empty);
         bool result = condition.Evaluate(propertyName => Array.Empty<string>());
 
-        result.Should().BeFalse();
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
@@ -61,7 +59,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.NotEqual, string.Empty);
         bool result = condition.Evaluate(propertyName => new[] { "CategoryA" });
 
-        result.Should().BeTrue();
+        Assert.IsTrue(result);
     }
 
     [TestMethod]
@@ -70,7 +68,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Contains, string.Empty);
         bool result = condition.Evaluate(propertyName => null);
 
-        result.Should().BeTrue();
+        Assert.IsTrue(result);
     }
 
     [TestMethod]
@@ -79,7 +77,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Contains, string.Empty);
         bool result = condition.Evaluate(propertyName => new[] { "CategoryA" });
 
-        result.Should().BeFalse();
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
@@ -88,7 +86,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.NotContains, string.Empty);
         bool result = condition.Evaluate(propertyName => null);
 
-        result.Should().BeFalse();
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
@@ -97,7 +95,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.NotContains, string.Empty);
         bool result = condition.Evaluate(propertyName => new[] { "CategoryA" });
 
-        result.Should().BeTrue();
+        Assert.IsTrue(result);
     }
 
     [TestMethod]
@@ -106,7 +104,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Equal, "CategoryA");
         bool result = condition.Evaluate(propertyName => new[] { "CategoryA" });
 
-        result.Should().BeTrue();
+        Assert.IsTrue(result);
     }
 
     [TestMethod]
@@ -115,7 +113,7 @@ public class ConditionTests
         var condition = new Condition("TestCategory", Operation.Equal, "CategoryA");
         bool result = condition.Evaluate(propertyName => new[] { "CategoryB" });
 
-        result.Should().BeFalse();
+        Assert.IsFalse(result);
     }
 
     [TestMethod]
@@ -123,9 +121,9 @@ public class ConditionTests
     {
         Condition condition = Condition.Parse("TestCategory=");
 
-        condition.Name.Should().Be("TestCategory");
-        condition.Operation.Should().Be(Operation.Equal);
-        condition.Value.Should().Be(string.Empty);
+        Assert.AreEqual("TestCategory", condition.Name);
+        Assert.AreEqual(Operation.Equal, condition.Operation);
+        Assert.AreEqual(string.Empty, condition.Value);
     }
 
     [TestMethod]
@@ -133,9 +131,9 @@ public class ConditionTests
     {
         Condition condition = Condition.Parse("TestCategory=   ");
 
-        condition.Name.Should().Be("TestCategory");
-        condition.Operation.Should().Be(Operation.Equal);
-        condition.Value.Should().Be(string.Empty);
+        Assert.AreEqual("TestCategory", condition.Name);
+        Assert.AreEqual(Operation.Equal, condition.Operation);
+        Assert.AreEqual(string.Empty, condition.Value);
     }
 
     [TestMethod]
@@ -143,9 +141,9 @@ public class ConditionTests
     {
         Condition condition = Condition.Parse("TestCategory!=");
 
-        condition.Name.Should().Be("TestCategory");
-        condition.Operation.Should().Be(Operation.NotEqual);
-        condition.Value.Should().Be(string.Empty);
+        Assert.AreEqual("TestCategory", condition.Name);
+        Assert.AreEqual(Operation.NotEqual, condition.Operation);
+        Assert.AreEqual(string.Empty, condition.Value);
     }
 
     [TestMethod]
@@ -153,9 +151,9 @@ public class ConditionTests
     {
         Condition condition = Condition.Parse("TestCategory~");
 
-        condition.Name.Should().Be("TestCategory");
-        condition.Operation.Should().Be(Operation.Contains);
-        condition.Value.Should().Be(string.Empty);
+        Assert.AreEqual("TestCategory", condition.Name);
+        Assert.AreEqual(Operation.Contains, condition.Operation);
+        Assert.AreEqual(string.Empty, condition.Value);
     }
 
     [TestMethod]
@@ -163,8 +161,8 @@ public class ConditionTests
     {
         Condition condition = Condition.Parse("TestCategory!~");
 
-        condition.Name.Should().Be("TestCategory");
-        condition.Operation.Should().Be(Operation.NotContains);
-        condition.Value.Should().Be(string.Empty);
+        Assert.AreEqual("TestCategory", condition.Name);
+        Assert.AreEqual(Operation.NotContains, condition.Operation);
+        Assert.AreEqual(string.Empty, condition.Value);
     }
 }
