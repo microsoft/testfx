@@ -317,7 +317,9 @@ internal static class SerializerUtilities
                                     break;
                                 }
 
+#pragma warning disable CS0618 // Type or member is obsolete
                             case CancelledTestNodeStateProperty canceledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
                                 {
                                     properties["execution-state"] = "canceled";
                                     properties["error.message"] = canceledTestNodeStateProperty.Explanation ?? canceledTestNodeStateProperty.Exception?.Message;

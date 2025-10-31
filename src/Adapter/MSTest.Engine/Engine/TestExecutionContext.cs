@@ -55,7 +55,9 @@ internal sealed class TestExecutionContext : ITestExecutionContext
             // We want to consider user timeouts as failures if they didn't use our cancellation token
             OperationCanceledException canceledException
                 when canceledException.CancellationToken == _originalCancellationToken || canceledException.CancellationToken == CancellationToken
+#pragma warning disable CS0618 // Type or member is obsolete
                 => new CancelledTestNodeStateProperty(ExceptionFlattener.FlattenOrUnwrap(exception)),
+#pragma warning restore CS0618 // Type or member is obsolete
             OperationCanceledException canceledException when canceledException.CancellationToken == timeoutCancellationToken
                 => new TimeoutTestNodeStateProperty(ExceptionFlattener.FlattenOrUnwrap(exception)),
             AssertFailedException => new FailedTestNodeStateProperty(ExceptionFlattener.FlattenOrUnwrap(exception), exception.Message),

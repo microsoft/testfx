@@ -437,6 +437,7 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquat
 /// <summary>
 /// Property that represents an eventual cancellation of a test node.
 /// </summary>
+[Obsolete("CancelledTestNodeStateProperty is obsolete. Test frameworks should throw OperationCanceledException using the cancellation token passed by Microsoft.Testing.Platform instead of using this state.")]
 public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEquatable<CancelledTestNodeStateProperty>
 {
     /// <summary>

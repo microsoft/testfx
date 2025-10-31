@@ -356,7 +356,9 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                         OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
                         break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
+#pragma warning restore CS0618 // Type or member is obsolete
                         OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
                         break;
 

@@ -125,7 +125,9 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             cancellationToken).ConfigureAwait(false);
                         break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                     case CancelledTestNodeStateProperty canceledState:
+#pragma warning restore CS0618 // Type or member is obsolete
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
                             isCanceled: true,
