@@ -81,7 +81,7 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
+        <source>Retry failed tests the given number of times</source>
         <target state="translated">Habilitar repetição de testes com falha</target>
         <note />
       </trans-unit>

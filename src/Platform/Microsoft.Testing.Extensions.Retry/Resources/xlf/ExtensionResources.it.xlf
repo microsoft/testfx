@@ -81,7 +81,7 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
+        <source>Retry failed tests the given number of times</source>
         <target state="translated">Abilita la ripetizione dei test non riusciti</target>
         <note />
       </trans-unit>

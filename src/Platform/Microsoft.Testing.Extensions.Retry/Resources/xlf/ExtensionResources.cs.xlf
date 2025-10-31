@@ -81,7 +81,7 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
+        <source>Retry failed tests the given number of times</source>
         <target state="translated">Povolit opakování neúspěšných testů</target>
         <note />
       </trans-unit>
