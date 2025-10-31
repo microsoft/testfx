@@ -85,6 +85,7 @@ internal sealed class Condition
                 {
                     result = multiValue is null or { Length: 0 };
                 }
+
                 // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
                 else if (multiValue != null)
                 {
