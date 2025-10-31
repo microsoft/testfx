@@ -82,7 +82,7 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="translated">失敗したテストの再試行を有効にする</target>
+        <target state="new">Retry failed tests the given number of times</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
