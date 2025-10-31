@@ -21,9 +21,6 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        // Opt-out telemetry
-        Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-
         ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
         // Register our simple test framework
