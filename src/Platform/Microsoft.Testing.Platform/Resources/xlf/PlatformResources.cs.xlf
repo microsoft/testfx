@@ -994,12 +994,12 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       </trans-unit>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
-        <target state="new">A chat client provider has already been registered.</target>
+        <target state="translated">Zprostředkovatel klienta chatu již byl zaregistrován.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
         <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Rozšíření AI fungují jenom s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
         <note />
       </trans-unit>
     </body>
