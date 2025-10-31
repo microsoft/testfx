@@ -990,19 +990,19 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <note />
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
-        <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration that can lead to unexpected test execution behavior.</source>
-        <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration that can lead to unexpected test execution behavior.</target>
-        <note />
+        <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</source>
+        <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</target>
+        <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
-        <source>Assembly has both [Parallelize] and [DoNotParallelize] attributes which creates ambiguity</source>
-        <target state="new">Assembly has both [Parallelize] and [DoNotParallelize] attributes which creates ambiguity</target>
-        <note />
+        <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
+        <target state="new">Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</target>
+        <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
-        <source>Do not use both Parallelize and DoNotParallelize attributes</source>
-        <target state="new">Do not use both Parallelize and DoNotParallelize attributes</target>
-        <note />
+        <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
+        <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
+        <note>{Locked="Parallelize","DoNotParallelize"}</note>
       </trans-unit>
     </body>
   </file>
