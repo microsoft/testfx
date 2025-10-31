@@ -152,16 +152,6 @@
         <target state="translated">'{0}' kullan</target>
         <note />
       </trans-unit>
-      <trans-unit id="RemoveParallelizeAttributeFix">
-        <source>Remove '[Parallelize]' attribute</source>
-        <target state="new">Remove '[Parallelize]' attribute</target>
-        <note>{Locked="[Parallelize]"}</note>
-      </trans-unit>
-      <trans-unit id="RemoveDoNotParallelizeAttributeFix">
-        <source>Remove '[DoNotParallelize]' attribute</source>
-        <target state="new">Remove '[DoNotParallelize]' attribute</target>
-        <note>{Locked="[DoNotParallelize]"}</note>
-      </trans-unit>
     </body>
   </file>
 </xliff>
