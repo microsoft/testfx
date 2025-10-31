@@ -74,9 +74,16 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
             ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
             properties.Add(ProperAssertMethodNameKey, properAssertMethodName);
 
-            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(
-                Rule,
-                properties: properties.ToImmutable()));
+            Location? conditionArgumentLocation = conditionArgument.Syntax.GetLocation();
+            ImmutableArray<Location> additionalLocations = conditionArgumentLocation != null
+                ? ImmutableArray.Create(conditionArgumentLocation)
+                : ImmutableArray<Location>.Empty;
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                 Rule,
+                 invocationOperation.Syntax.GetLocation(),
+                 additionalLocations: additionalLocations,
+                 properties: properties.ToImmutable()));
         }
     }
 }

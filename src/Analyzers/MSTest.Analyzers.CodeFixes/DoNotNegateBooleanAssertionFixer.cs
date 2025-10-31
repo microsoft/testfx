@@ -54,12 +54,51 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
             return;
         }
 
+        // Retrieve the condition argument from the additional locations provided by the analyzer
+        if (diagnostic.AdditionalLocations.Count == 0)
+        {
+            return;
+        }
+
+        // Find the argument node that corresponds to the additional location
+        SyntaxNode? argumentNode = root.FindNode(diagnostic.AdditionalLocations[0].SourceSpan);
+
+        // Walk up to find the ArgumentSyntax if we got a child node
+        while (argumentNode is not null and not ArgumentSyntax)
+        {
+            argumentNode = argumentNode.Parent;
+        }
+
+        if (argumentNode is not ArgumentSyntax conditionArgument)
+        {
+            return;
+        }
+
+        // Find this argument in the invocation's argument list
+        int conditionArgumentIndex = -1;
+        for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
+        {
+            if (invocation.ArgumentList.Arguments[i].Span == conditionArgument.Span)
+            {
+                conditionArgumentIndex = i;
+                break;
+            }
+        }
+
+        if (conditionArgumentIndex == -1)
+        {
+            return;
+        }
+
+        // Get the actual argument from the invocation
+        conditionArgument = invocation.ArgumentList.Arguments[conditionArgumentIndex];
+
         string title = string.Format(System.Globalization.CultureInfo.InvariantCulture, Resources.DoNotNegateBooleanAssertionFix, properAssertMethodName);
 
         context.RegisterCodeFix(
             CodeAction.Create(
                 title,
-                cancellationToken => FixNegatedAssertionAsync(context.Document, invocation, properAssertMethodName, cancellationToken),
+                cancellationToken => FixNegatedAssertionAsync(context.Document, invocation, conditionArgument, cancellationToken),
                 equivalenceKey: nameof(DoNotNegateBooleanAssertionFixer)),
             diagnostic);
     }
@@ -67,7 +106,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
     private static async Task<Document> FixNegatedAssertionAsync(
         Document document,
         InvocationExpressionSyntax invocation,
-        string properAssertMethodName,
+        ArgumentSyntax conditionArgument,
         CancellationToken cancellationToken)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
@@ -78,36 +117,9 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
             return document;
         }
 
-        // Get the argument list
-        if (invocation.ArgumentList.Arguments.Count == 0)
-        {
-            return document;
-        }
-
-        // Find the 'condition' argument (should be the first one or named 'condition')
-        ArgumentSyntax? conditionArgument = null;
-        int conditionArgumentIndex = -1;
-
-        for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
-        {
-            ArgumentSyntax arg = invocation.ArgumentList.Arguments[i];
-            // Check if it's the first positional argument or explicitly named 'condition'
-            if (arg.NameColon?.Name.Identifier.ValueText == "condition" || (arg.NameColon == null && i == 0))
-            {
-                conditionArgument = arg;
-                conditionArgumentIndex = i;
-                break;
-            }
-        }
-
-        if (conditionArgument == null || conditionArgumentIndex == -1)
-        {
-            return document;
-        }
-
         ExpressionSyntax argumentExpression = conditionArgument.Expression;
 
-        // Start with the CURRENT method name (not the diagnostic suggestion)
+        // Start with the CURRENT method name
         string currentMethodName = memberAccess.Name.Identifier.ValueText;
         ExpressionSyntax currentExpression = argumentExpression;
 
@@ -141,6 +153,22 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
 
         // Create the new argument with the unnegated expression
         ArgumentSyntax newArgument = conditionArgument.WithExpression(currentExpression);
+
+        // Find the index of the condition argument in the invocation's argument list
+        int conditionArgumentIndex = -1;
+        for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
+        {
+            if (invocation.ArgumentList.Arguments[i].Span == conditionArgument.Span)
+            {
+                conditionArgumentIndex = i;
+                break;
+            }
+        }
+
+        if (conditionArgumentIndex == -1)
+        {
+            return document;
+        }
 
         // Replace the condition argument in the arguments list
         SeparatedSyntaxList<ArgumentSyntax> newArguments = invocation.ArgumentList.Arguments.Replace(
@@ -200,6 +228,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
         {
             expression = parenthesized.Expression;
         }
+
         return expression;
     }
 
@@ -235,39 +264,52 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
                     continue;
                 }
 
+                // Retrieve the condition argument from the additional locations
+                if (diagnostic.AdditionalLocations.Count == 0)
+                {
+                    continue;
+                }
+
+                // Find the argument node that corresponds to the additional location
+                SyntaxNode? argumentNode = root.FindNode(diagnostic.AdditionalLocations[0].SourceSpan);
+
+                // Walk up to find the ArgumentSyntax if we got a child node
+                while (argumentNode is not null and not ArgumentSyntax)
+                {
+                    argumentNode = argumentNode.Parent;
+                }
+
+                if (argumentNode is not ArgumentSyntax conditionArgument)
+                {
+                    continue;
+                }
+
+                // Find this argument in the invocation's argument list by span
+                int conditionArgumentIndex = -1;
+                for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
+                {
+                    if (invocation.ArgumentList.Arguments[i].Span == conditionArgument.Span)
+                    {
+                        conditionArgumentIndex = i;
+                        conditionArgument = invocation.ArgumentList.Arguments[i];
+                        break;
+                    }
+                }
+
+                if (conditionArgumentIndex == -1)
+                {
+                    continue;
+                }
+
                 // Get the member access expression
                 if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
                 {
                     continue;
                 }
 
-                if (invocation.ArgumentList.Arguments.Count == 0)
-                {
-                    continue;
-                }
-
-                ArgumentSyntax? conditionArgument = null;
-                int conditionArgumentIndex = -1;
-
-                for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
-                {
-                    ArgumentSyntax arg = invocation.ArgumentList.Arguments[i];
-                    if (arg.NameColon?.Name.Identifier.ValueText == "condition" || (arg.NameColon == null && i == 0))
-                    {
-                        conditionArgument = arg;
-                        conditionArgumentIndex = i;
-                        break;
-                    }
-                }
-
-                if (conditionArgument == null || conditionArgumentIndex == -1)
-                {
-                    continue;
-                }
-
                 ExpressionSyntax argumentExpression = conditionArgument.Expression;
 
-                // Start with the CURRENT method name (not the diagnostic suggestion)
+                // Start with the CURRENT method name
                 string currentMethodName = memberAccess.Name.Identifier.ValueText;
                 ExpressionSyntax currentExpression = argumentExpression;
 

@@ -484,7 +484,6 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
-
     [TestMethod]
     public async Task WhenMultipleNegatedAssertions_FixAll()
     {
