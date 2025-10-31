@@ -12,13 +12,8 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-<<<<<<< HEAD
     <AspireHostingTestingVersion>9.5.0</AspireHostingTestingVersion>
-    <MicrosoftBuildVersion>17.11.4</MicrosoftBuildVersion>
-=======
-    <AspireHostingTestingVersion>9.5.1</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
->>>>>>> Update Microsoft.Build.Utilities.Core to 17.11.48
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
