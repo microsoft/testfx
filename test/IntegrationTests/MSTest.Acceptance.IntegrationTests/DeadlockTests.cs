@@ -176,15 +176,21 @@ public class DeadlockCase3
     // This repro is related to https://github.com/microsoft/testfx/issues/6575
     private static TaskCompletionSource<object> _cts = new();
 
+    private static bool _runningThisClass;
+
     [AssemblyCleanup]
     public static async Task AssemblyCleanup()
     {
-        await _cts.Task;
+        if (_runningThisClass)
+        {
+            await _cts.Task;
+        }
     }
 
     [TestMethod]
     public async Task Test1()
     {
+        _runningThisClass = true;
         var cts1 = new TaskCompletionSource<object>();
         var t = new Thread(() =>
         {
