@@ -184,6 +184,7 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle.TestCaseEndList.Should().BeEmpty();
     }
 
+#if !WINDOWS_UWP && !WIN_UI
     public async Task RunTestsForTestShouldDeployBeforeExecution()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -203,6 +204,7 @@ public class TestExecutionManagerTests : TestContainer
         _callers[0].Should().Be("Deploy", "Deploy should be called before execution.");
         _callers[1].Should().Be("LoadAssembly", "Deploy should be called before execution.");
     }
+#endif
 
     public async Task RunTestsForTestShouldCleanupAfterExecution()
     {
@@ -211,8 +213,11 @@ public class TestExecutionManagerTests : TestContainer
 
         // Setup mocks.
         TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
+
+#if !WINDOWS_UWP && !WIN_UI
         testablePlatformService.MockTestDeployment.Setup(
             td => td.Cleanup()).Callback(() => SetCaller("Cleanup"));
+#endif
 
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -220,6 +225,7 @@ public class TestExecutionManagerTests : TestContainer
         _callers.LastOrDefault().Should().Be("Cleanup", "Cleanup should be called after execution.");
     }
 
+#if !WINDOWS_UWP && !WIN_UI
     public async Task RunTestsForTestShouldNotCleanupOnTestFailure()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -252,6 +258,7 @@ public class TestExecutionManagerTests : TestContainer
             fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp"))),
             Times.AtLeastOnce);
     }
+#endif
 
     public async Task RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {

@@ -1,21 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
-#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -24,7 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed class TestDeployment : ITestDeployment
 {
-#if !WINDOWS_UWP
     #region Service Utility Variables
 
     private readonly DeploymentItemUtility _deploymentItemUtility;
@@ -65,7 +60,6 @@ internal sealed class TestDeployment : ITestDeployment
     /// Leaving this as a static variable since the testContext needs to be filled in with this information.
     /// </remarks>
     internal static TestRunDirectories? RunDirectories { get; private set; }
-#endif
 
     /// <summary>
     /// The get deployment items.
@@ -75,18 +69,13 @@ internal sealed class TestDeployment : ITestDeployment
     /// <param name="warnings"> The warnings. </param>
     /// <returns> A string of deployment items. </returns>
     public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings) =>
-#if WINDOWS_UWP
-        null;
-#else
         _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
-#endif
 
     /// <summary>
     /// Cleanup deployment item directories.
     /// </summary>
     public void Cleanup()
     {
-#if !WINDOWS_UWP
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
@@ -96,7 +85,6 @@ internal sealed class TestDeployment : ITestDeployment
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
         }
-#endif
     }
 
     /// <summary>
@@ -104,11 +92,7 @@ internal sealed class TestDeployment : ITestDeployment
     /// </summary>
     /// <returns> The deployment output directory. </returns>
     public string? GetDeploymentDirectory() =>
-#if WINDOWS_UWP
-        null;
-#else
         RunDirectories?.OutDirectory;
-#endif
 
     /// <summary>
     /// Deploy files related to the list of tests specified.
@@ -119,9 +103,6 @@ internal sealed class TestDeployment : ITestDeployment
     /// <returns> Return true if deployment is done. </returns>
     public bool Deploy(IEnumerable<TestCase> testCases, IRunContext? runContext, IFrameworkHandle frameworkHandle)
     {
-#if WINDOWS_UWP
-        return false;
-#else
         DebugEx.Assert(testCases != null, "tests");
 
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
@@ -170,10 +151,8 @@ internal sealed class TestDeployment : ITestDeployment
         }
 
         return true;
-#endif
     }
 
-#if !WINDOWS_UWP
     internal static IDictionary<string, object> GetDeploymentInformation(string? source)
     {
         var properties = new Dictionary<string, object>(capacity: 8);
@@ -215,5 +194,5 @@ internal sealed class TestDeployment : ITestDeployment
 
         return true;
     }
-#endif
 }
+#endif

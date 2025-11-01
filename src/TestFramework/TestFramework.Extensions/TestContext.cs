@@ -17,16 +17,7 @@ public abstract class TestContext
 {
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
     internal static readonly string TestNameLabel = nameof(TestName);
-#if WINDOWS_UWP || WIN_UI
-    internal static readonly string TestRunDirectoryLabel = "TestRunDirectory";
-    internal static readonly string DeploymentDirectoryLabel = "DeploymentDirectory";
-    internal static readonly string ResultsDirectoryLabel = "ResultsDirectory";
-    internal static readonly string TestRunResultsDirectoryLabel = "TestRunResultsDirectory";
-    internal static readonly string TestResultsDirectoryLabel = "TestResultsDirectory";
-    internal static readonly string TestDirLabel = "TestDir";
-    internal static readonly string TestDeploymentDirLabel = "TestDeploymentDir";
-    internal static readonly string TestLogsDirLabel = "TestLogsDir";
-#else
+#if !WINDOWS_UWP && !WIN_UI
     internal static readonly string TestRunDirectoryLabel = nameof(TestRunDirectory);
     internal static readonly string DeploymentDirectoryLabel = nameof(DeploymentDirectory);
     internal static readonly string ResultsDirectoryLabel = nameof(ResultsDirectory);

@@ -78,7 +78,9 @@ internal static class EngineConstants
 
     internal static readonly TestProperty PriorityProperty = TestProperty.Register("MSTestDiscoverer.Priority", PriorityLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+#if !WINDOWS_UWP && !WIN_UI
     internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
+#endif
 
     internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscoverer.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -143,7 +145,9 @@ internal static class EngineConstants
     private const string DeclaringClassNameLabel = "DeclaringClassName";
     private const string TestCategoryLabel = "TestCategory";
     private const string PriorityLabel = "Priority";
+#if !WINDOWS_UWP && !WIN_UI
     private const string DeploymentItemsLabel = "DeploymentItems";
+#endif
     private const string DoNotParallelizeLabel = "DoNotParallelize";
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";

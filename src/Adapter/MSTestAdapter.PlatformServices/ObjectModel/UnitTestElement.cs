@@ -60,10 +60,12 @@ internal sealed class UnitTestElement
     /// </summary>
     public bool DoNotParallelize { get; set; }
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets the deployment items for the test method.
     /// </summary>
     public KeyValuePair<string, string>[]? DeploymentItems { get; set; }
+#endif
 
     internal string? DeclaringFilePath { get; set; }
 
@@ -156,11 +158,13 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.WorkItemIdsProperty, WorkItemIds);
         }
 
+#if !WINDOWS_UWP && !WIN_UI
         // The list of items to deploy before running this test.
         if (DeploymentItems is { Length: > 0 })
         {
             testCase.SetPropertyValue(EngineConstants.DeploymentItemsProperty, DeploymentItems);
         }
+#endif
 
         // Set the Do not parallelize state if present
         if (DoNotParallelize)

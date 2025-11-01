@@ -427,6 +427,7 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.WorkItemIds.Should().BeNull();
     }
 
+#if !WINDOWS_UWP && !WIN_UI
     public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
@@ -461,6 +462,7 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.DeploymentItems.Should().NotBeNull();
         testElement.DeploymentItems.Should().BeEquivalentTo(deploymentItems);
     }
+#endif
 
     public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
     {

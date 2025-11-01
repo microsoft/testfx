@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -487,3 +488,4 @@ public class DeploymentUtilityTests : TestContainer
 
     #endregion
 }
+#endif

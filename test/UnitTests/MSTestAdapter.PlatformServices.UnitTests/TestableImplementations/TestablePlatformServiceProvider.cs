@@ -23,7 +23,9 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<ITestSourceHost> MockTestSourceHost { get; } = new();
 
+#if !WINDOWS_UWP && !WIN_UI
     public Mock<ITestDeployment> MockTestDeployment { get; } = new();
+#endif
 
     public Mock<ISettingsProvider> MockSettingsProvider { get; } = new();
 
@@ -39,7 +41,9 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IAdapterTraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => throw new NotSupportedException(); }
 
+#if !WINDOWS_UWP && !WIN_UI
     public ITestDeployment TestDeployment => MockTestDeployment.Object;
+#endif
 
     public ISettingsProvider SettingsProvider => MockSettingsProvider.Object;
 
