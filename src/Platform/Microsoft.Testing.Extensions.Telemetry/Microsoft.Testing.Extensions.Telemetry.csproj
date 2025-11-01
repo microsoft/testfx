@@ -29,16 +29,8 @@ This package provides telemetry for the platform.]]>
   <!-- Nuget package layout -->
   <!-- Nuget folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
   <ItemGroup>
-    <Content Include="buildMultiTargeting/**">
-      <Pack>true</Pack>
-      <PackagePath>buildMultiTargeting</PackagePath>
-    </Content>
-    <TfmSpecificPackageFile Include="buildTransitive/**">
-      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
-    <TfmSpecificPackageFile Include="build/**">
-      <PackagePath>build/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
+    <None Include="buildTransitive/**" PackagePath="buildTransitive" Pack="true" />
+    <None Include="build/**" PackagePath="build" Pack="true" />
   </ItemGroup>
 
   <ItemGroup>

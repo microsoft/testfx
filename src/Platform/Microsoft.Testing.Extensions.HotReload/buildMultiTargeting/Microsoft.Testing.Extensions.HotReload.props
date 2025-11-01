@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<Project>
-  <ItemGroup>
-    <TestingPlatformBuilderHook Include="593E3C73-086F-4D71-AE3B-F13C6022845E" >
-      <DisplayName>Microsoft.Testing.Extensions.HotReload</DisplayName>
-      <TypeFullName>Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook</TypeFullName>
-    </TestingPlatformBuilderHook>
-  </ItemGroup>
-</Project>

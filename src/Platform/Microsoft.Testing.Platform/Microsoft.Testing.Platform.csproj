@@ -91,16 +91,9 @@ This package provides the core platform and the .NET implementation of the proto
   <!-- NuGet package layout -->
   <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
   <ItemGroup>
-    <Content Include="buildMultiTargeting/**">
-      <Pack>true</Pack>
-      <PackagePath>buildMultiTargeting</PackagePath>
-    </Content>
-    <TfmSpecificPackageFile Include="buildTransitive/**">
-      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
-    <TfmSpecificPackageFile Include="build/**">
-      <PackagePath>build/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
+    <None Include="buildMultiTargeting/**" PackagePath="buildMultiTargeting" Pack="true" />
+    <None Include="buildTransitive/**" PackagePath="buildTransitive" Pack="true" />
+    <None Include="build/**" PackagePath="build" Pack="true" />
   </ItemGroup>
 
 </Project>

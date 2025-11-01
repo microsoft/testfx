@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<Project>
-  <ItemGroup>
-    <TestingPlatformBuilderHook Include="AEC35708-DBA0-458A-ADF0-AA8CC384D0CE" >
-      <DisplayName>Microsoft.Testing.Extensions.Retry</DisplayName>
-      <TypeFullName>Microsoft.Testing.Extensions.Retry.TestingPlatformBuilderHook</TypeFullName>
-    </TestingPlatformBuilderHook>
-  </ItemGroup>
-</Project>

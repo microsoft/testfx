@@ -1,3 +1,8 @@
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\buildMultiTargeting\Microsoft.Testing.Extensions.AzureFoundry.props" />
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="3D8F9C1A-7B2E-4F6D-A9C3-5E8B4D1F7A6C" >
+      <DisplayName>Microsoft.Testing.Extensions.AzureFoundry</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.AzureFoundry.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
 </Project>
