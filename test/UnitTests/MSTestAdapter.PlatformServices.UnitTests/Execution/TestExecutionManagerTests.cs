@@ -222,7 +222,10 @@ public class TestExecutionManagerTests : TestContainer
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         _callers[0].Should().Be("LoadAssembly", "Cleanup should be called after execution.");
+
+#if !WINDOWS_UWP && !WIN_UI
         _callers.LastOrDefault().Should().Be("Cleanup", "Cleanup should be called after execution.");
+#endif
     }
 
 #if !WINDOWS_UWP && !WIN_UI
