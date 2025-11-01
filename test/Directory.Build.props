@@ -6,6 +6,13 @@
   <!-- Build & pack tests -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+
+    <!-- Workaround: createdump doesn't work correctly on the apphost on macOS. -->
+    <!-- But it works correctly on the dotnet process. -->
+    <!-- So, disable apphost on macOS for now. -->
+    <!-- Related: https://github.com/dotnet/runtime/issues/119945 -->
+    <UseAppHost Condition="'$(OS)' == 'OSX'">false</UseAppHost>
+
     <!-- Prevent arcade from adding Microsoft.NET.Test.Sdk -->
     <ExcludeMicrosoftNetTestSdk>true</ExcludeMicrosoftNetTestSdk>
     <PublishAot Condition=" '$(PublishAot)' == '' ">false</PublishAot>

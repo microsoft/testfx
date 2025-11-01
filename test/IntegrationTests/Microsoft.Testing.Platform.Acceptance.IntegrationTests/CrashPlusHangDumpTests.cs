@@ -9,12 +9,6 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
     [TestMethod]
     public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -38,12 +32,6 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
     [TestMethod]
     public async Task CrashPlusHangDump_InCaseOfHang_CreateHangDump()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -85,7 +73,13 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
   <PropertyGroup>
     <TargetFramework>$TargetFrameworks$</TargetFramework>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
+
+    <!-- Workaround: createdump doesn't work correctly on the apphost on macOS. -->
+    <!-- But it works correctly on the dotnet process. -->
+    <!-- So, disable apphost on macOS for now. -->
+    <!-- Related: https://github.com/dotnet/runtime/issues/119945 -->
+    <UseAppHost Condition="'$(OS)' == 'OSX'">false</UseAppHost>
+
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>

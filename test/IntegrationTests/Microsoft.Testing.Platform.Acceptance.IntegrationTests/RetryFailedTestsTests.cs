@@ -146,14 +146,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-    {
-        // TODO: Crash dump is not working properly on macos, so we skip the test for now
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
-
-        await RetryHelper.RetryAsync(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -188,7 +181,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                     Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
                 }
             }, 3, TimeSpan.FromSeconds(5));
-    }
 
     [TestMethod]
     public async Task RetryFailedTests_PassingFromFirstTime_UsingTestTarget_MoveFiles_Succeeds()
@@ -235,7 +227,13 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
+
+        <!-- Workaround: createdump doesn't work correctly on the apphost on macOS. -->
+        <!-- But it works correctly on the dotnet process. -->
+        <!-- So, disable apphost on macOS for now. -->
+        <!-- Related: https://github.com/dotnet/runtime/issues/119945 -->
+        <UseAppHost Condition="'$(OS)' == 'OSX'">false</UseAppHost>
+
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
