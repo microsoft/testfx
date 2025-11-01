@@ -10,12 +10,6 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
@@ -27,12 +21,6 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_CustomDumpName_CreateDump()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
@@ -47,12 +35,6 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_Formats_CreateDump(string format)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-type {format} --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
@@ -92,7 +74,13 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
+
+    <!-- Workaround: createdump doesn't work correctly on the apphost on macOS. -->
+    <!-- But it works correctly on the dotnet process. -->
+    <!-- So, disable apphost on macOS for now. -->
+    <!-- Related: https://github.com/dotnet/runtime/issues/119945 -->
+    <UseAppHost Condition="'$(OS)' == 'OSX'">false</UseAppHost>
+
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
