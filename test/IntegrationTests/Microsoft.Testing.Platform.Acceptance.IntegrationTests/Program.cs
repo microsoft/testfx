@@ -3,6 +3,8 @@
 
 using Microsoft.Testing.Extensions;
 
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
+
 // Opt-out telemetry
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
