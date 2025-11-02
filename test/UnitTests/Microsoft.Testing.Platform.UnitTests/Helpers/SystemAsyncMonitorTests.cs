@@ -17,7 +17,6 @@ public sealed class SystemAsyncMonitorTests
         bool lockState = false;
         List<Task> tasks = [];
         var stopwatch = Stopwatch.StartNew();
-
         for (int i = 0; i < 3; i++)
         {
             tasks.Add(Task.Run(TestLock, TestContext.CancellationToken));
