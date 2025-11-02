@@ -316,7 +316,7 @@ internal sealed class TestMethodRunner
         else if (!actualDataAlreadyHandledDuringDiscovery && TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
         {
             // SPECIAL CASE:
-            // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+            // This condition is a duplicate of the condition in GetInvokeResultAsync.
             //
             // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
             //
@@ -327,7 +327,7 @@ internal sealed class TestMethodRunner
             //
             // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
             // Note that normally, the array in this code path represents the arguments of the test method.
-            // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+            // However, GetInvokeResultAsync uses the above check to mean "the whole array is the single argument to the test method"
         }
         else if (!actualDataAlreadyHandledDuringDiscovery && data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {

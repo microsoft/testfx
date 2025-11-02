@@ -21,7 +21,6 @@ pr:
       - CONTRIBUTING.md
       - README.md
       - SECURITY.md
-      - src/**/*.xlf
       - azure-pipelines-official.yml
 
 parameters:

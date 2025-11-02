@@ -81,8 +81,8 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Włącz testy zakończone niepowodzeniem ponowień</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="new">Retry failed tests the given number of times</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
