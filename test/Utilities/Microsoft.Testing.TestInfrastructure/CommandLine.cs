@@ -86,5 +86,11 @@ public sealed class CommandLine : IDisposable
         return firstChar == byteOrderMark ? outputLine[1..] : outputLine;
     }
 
-    public void Dispose() => _process?.Kill();
+    public void Dispose()
+    {
+        if (_process?.HasExited == false)
+        {
+            _process.Kill();
+        }
+    }
 }
