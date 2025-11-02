@@ -82,7 +82,7 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="new">Retry failed tests the given number of times</target>
+        <target state="translated">Fehlgeschlagene Tests erneut ausführen (siehe Angabe zur Anzahl der Wiederholungsversuche)</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
