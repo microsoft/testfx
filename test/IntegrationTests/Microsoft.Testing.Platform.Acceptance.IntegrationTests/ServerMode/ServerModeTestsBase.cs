@@ -69,7 +69,4 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
 
         return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler);
     }
-
-    [GeneratedRegex(@"Starting server. Listening on port '(\d+)'")]
-    private static partial Regex ParsePort();
 }
