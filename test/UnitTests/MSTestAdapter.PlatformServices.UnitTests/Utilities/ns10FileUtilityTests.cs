@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using Moq;
@@ -22,13 +24,13 @@ public class FileUtilityTests : TestContainer
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
     {
         string fileName = "galaxy";
-        Verify(fileName == FileUtility.ReplaceInvalidFileNameCharacters(fileName));
+        FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be(fileName);
     }
 
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
         string fileName = "galaxy<>far:far?away";
-        Verify(FileUtility.ReplaceInvalidFileNameCharacters(fileName) == "galaxy__far_far_away");
+        FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be("galaxy__far_far_away");
     }
 
     #region AddFilesFromDirectory tests
@@ -42,7 +44,7 @@ public class FileUtilityTests : TestContainer
 
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
 
-        Verify(topLevelFiles.SequenceEqual(files));
+        topLevelFiles.SequenceEqual(files).Should().BeTrue();
     }
 
     public void AddFilesInADirectoryShouldReturnAllFilesUnderSubFolders()
@@ -62,7 +64,7 @@ public class FileUtilityTests : TestContainer
 
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("MainClock", false);
 
-        Verify(allFiles.SequenceEqual(files));
+        allFiles.SequenceEqual(files).Should().BeTrue();
     }
 
     public void AddFilesInADirectoryShouldReturnAllFilesUnderSubFoldersEvenIfAFolderIsEmpty()
@@ -85,7 +87,7 @@ public class FileUtilityTests : TestContainer
         string[] expectedFiles = new string[allFiles.Length - 1];
         Array.Copy(allFiles, 0, expectedFiles, 0, 6);
 
-        Verify(expectedFiles.SequenceEqual(files));
+        expectedFiles.SequenceEqual(files).Should().BeTrue();
     }
 
     public void AddFilesWithIgnoreDirectory()
@@ -119,11 +121,11 @@ public class FileUtilityTests : TestContainer
             Console.WriteLine($"File to validate {sourceFile}");
             if (sourceFile.Contains("Results"))
             {
-                Verify(!files.Any(file => file.Contains("Results")), $"{sourceFile} returned in the list from AddFilesFromDirectory");
+                files.Any(file => file.Contains("Results")).Should().BeFalse($"{sourceFile} returned in the list from AddFilesFromDirectory");
             }
             else
             {
-                Verify(files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
+                files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)).Should().BeTrue($"{sourceFile} not returned in the list from AddFilesFromDirectory");
             }
         }
     }
@@ -156,7 +158,7 @@ public class FileUtilityTests : TestContainer
         // Validate
         foreach (string sourceFile in allFiles)
         {
-            Verify(files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
+            files.Any(file => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)).Should().BeTrue($"{sourceFile} not returned in the list from AddFilesFromDirectory");
         }
     }
 
