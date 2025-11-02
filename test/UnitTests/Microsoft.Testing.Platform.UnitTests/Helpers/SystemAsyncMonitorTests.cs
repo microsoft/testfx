@@ -17,19 +17,13 @@ public sealed class SystemAsyncMonitorTests
         bool lockState = false;
         List<Task> tasks = [];
         var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                tasks.Add(Task.Run(TestLock, TestContext.CancellationToken));
-            }
 
-            await Task.WhenAll([.. tasks]);
-        }
-        finally
+        for (int i = 0; i < 3; i++)
         {
-            stopwatch.Stop();
+            tasks.Add(Task.Run(TestLock, TestContext.CancellationToken));
         }
+
+        await Task.WhenAll([.. tasks]);
 
         Assert.IsGreaterThan(3000, stopwatch.ElapsedMilliseconds);
 
