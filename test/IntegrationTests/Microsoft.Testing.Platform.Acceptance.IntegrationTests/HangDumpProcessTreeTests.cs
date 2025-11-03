@@ -11,18 +11,19 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
     public async Task HangDump_DumpAllChildProcesses_CreateDump(string tfm)
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDumpWithChild", tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
-            new Dictionary<string, string?>
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"--project {AssetFixture.TargetAssetPath} -f {tfm} --hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new Dictionary<string, string?>
             {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
             },
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
+        result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
-        Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {testHostResult}");
+        Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {result}");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
