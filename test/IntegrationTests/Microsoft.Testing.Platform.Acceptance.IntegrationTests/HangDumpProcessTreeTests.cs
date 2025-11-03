@@ -89,6 +89,7 @@ public class Startup
     {
         Process self = Process.GetCurrentProcess();
         string path = self.MainModule!.FileName!;
+        string argPrefix = path.EndsWith("dotnet") ? $"exec \"{Assembly.GetEntryAssembly().Location}\" " : string.Empty;
 
         if (args[0] == "--child")
         {
@@ -96,7 +97,7 @@ public class Startup
 
             if (child != 0)
             {
-                var process = Process.Start(new ProcessStartInfo(path, $"--child {child - 1}")
+                var process = Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child {child - 1}")
                 {
                     UseShellExecute = false,
                 });
@@ -117,8 +118,7 @@ public class Startup
         // We are running under testhost controller, don't start extra processes when we are the controller.
         if (args.Any(a => a == "--internal-testhostcontroller-pid"))
         {
-
-            Process.Start(new ProcessStartInfo(path, $"--child 2")
+            Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child 2")
             {
                 UseShellExecute = false,
             });
