@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 using Moq;
 
-using MSTestAdapter.PlatformServices.Tests.Utilities;
+using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 

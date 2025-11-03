@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Services;
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class TestSourceTests : TestContainer
 {
