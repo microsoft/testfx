@@ -49,6 +49,9 @@ This package extends Microsoft Testing Platform to provide a retry policy system
       <PackagePath>build/$(TargetFramework)</PackagePath>
     </TfmSpecificPackageFile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Q:\dev\testfx\src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />

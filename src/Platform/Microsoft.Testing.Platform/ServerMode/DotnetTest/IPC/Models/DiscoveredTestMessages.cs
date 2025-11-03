@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 51)]
 internal sealed record DiscoveredTestMessage(
     [property: PipePropertyId(1)] string? Uid,
     [property: PipePropertyId(2)] string? DisplayName,

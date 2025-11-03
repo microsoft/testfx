@@ -3,6 +3,8 @@
 
 using System.IO.Pipes;
 
+using EasyNamedPipes;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;

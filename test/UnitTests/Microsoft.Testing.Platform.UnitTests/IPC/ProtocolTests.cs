@@ -1,8 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using EasyNamedPipes.GeneratedSerializers.DotNetTestProtocol;
+
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -17,9 +18,9 @@ public sealed class ProtocolTests
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         var stream = new MemoryStream();
-        new TestResultMessagesSerializer().Serialize(message, stream);
+        TestResultMessagesSerializer.Instance.Serialize(message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (TestResultMessages)new TestResultMessagesSerializer().Deserialize(stream);
+        var actual = (TestResultMessages)TestResultMessagesSerializer.Instance.Deserialize(stream);
         Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
 #if NET8_0_OR_GREATER
         Assert.AreEqual(System.Text.Json.JsonSerializer.Serialize(message), System.Text.Json.JsonSerializer.Serialize(actual));
@@ -30,7 +31,7 @@ public sealed class ProtocolTests
     [TestMethod]
     public void DiscoveredTestMessagesSerializeDeserialize()
     {
-        var serializer = new DiscoveredTestMessagesSerializer();
+        var serializer = DiscoveredTestMessagesSerializer.Instance;
         var stream = new MemoryStream();
 
         var message = new DiscoveredTestMessages(
@@ -93,9 +94,9 @@ public sealed class ProtocolTests
         });
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        HandshakeMessageSerializer.Instance.Serialize(message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+        var actual = (HandshakeMessage)HandshakeMessageSerializer.Instance.Deserialize(stream);
 
         Assert.IsNotNull(actual.Properties);
         Assert.IsNotNull(message.Properties);
@@ -119,9 +120,9 @@ public sealed class ProtocolTests
         var message = new HandshakeMessage([]);
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        HandshakeMessageSerializer.Instance.Serialize(message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+        var actual = (HandshakeMessage)HandshakeMessageSerializer.Instance.Deserialize(stream);
 
         Assert.IsNotNull(actual.Properties);
         Assert.IsNotNull(message.Properties);
@@ -136,9 +137,9 @@ public sealed class ProtocolTests
         var message = new HandshakeMessage(null);
 
         var stream = new MemoryStream();
-        new HandshakeMessageSerializer().Serialize(message, stream);
+        HandshakeMessageSerializer.Instance.Serialize(message, stream);
         stream.Seek(0, SeekOrigin.Begin);
-        var actual = (HandshakeMessage)new HandshakeMessageSerializer().Deserialize(stream);
+        var actual = (HandshakeMessage)HandshakeMessageSerializer.Instance.Deserialize(stream);
 
         Assert.IsNotNull(actual.Properties);
         Assert.IsNull(message.Properties);

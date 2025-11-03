@@ -5,6 +5,7 @@ using EasyNamedPipes;
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 31)]
 internal sealed record CommandLineOptionMessage(
     [property: PipePropertyId(1)] string? Name,
     [property: PipePropertyId(2)] string? Description,

@@ -5,6 +5,7 @@ using EasyNamedPipes;
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 71)]
 internal sealed record FileArtifactMessage(
     [property: PipePropertyId(1)] string? FullPath,
     [property: PipePropertyId(2)] string? DisplayName,

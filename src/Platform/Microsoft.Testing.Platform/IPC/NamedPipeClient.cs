@@ -7,6 +7,8 @@ using System.Buffers;
 
 using System.IO.Pipes;
 
+using EasyNamedPipes;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 

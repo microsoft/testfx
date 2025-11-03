@@ -5,6 +5,7 @@ using EasyNamedPipes;
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 61)]
 internal sealed record SuccessfulTestResultMessage(
     [property: PipePropertyId(1)] string? Uid,
     [property: PipePropertyId(2)] string? DisplayName,
@@ -15,6 +16,13 @@ internal sealed record SuccessfulTestResultMessage(
     [property: PipePropertyId(7)] string? ErrorOutput,
     [property: PipePropertyId(8)] string? SessionUid);
 
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 62)]
+internal sealed record ExceptionMessage(
+    [property: PipePropertyId(1)] string? ErrorMessage,
+    [property: PipePropertyId(2)] string? ErrorType,
+    [property: PipePropertyId(3)] string? StackTrace);
+
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 63)]
 internal sealed record FailedTestResultMessage(
     [property: PipePropertyId(1)] string? Uid,
     [property: PipePropertyId(2)] string? DisplayName,
@@ -25,11 +33,6 @@ internal sealed record FailedTestResultMessage(
     [property: PipePropertyId(7)] string? StandardOutput,
     [property: PipePropertyId(8)] string? ErrorOutput,
     [property: PipePropertyId(9)] string? SessionUid);
-
-internal sealed record ExceptionMessage(
-    [property: PipePropertyId(1)] string? ErrorMessage,
-    [property: PipePropertyId(2)] string? ErrorType,
-    [property: PipePropertyId(3)] string? StackTrace);
 
 [PipeSerializableMessage(ProtocolConstants.ProtocolName, 6)]
 internal sealed record TestResultMessages(
