@@ -48,13 +48,25 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
             return;
         }
 
-        // Register a code action that will invoke the fix
+        // Register code fix to add CooperativeCancellation = true
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseCooperativeCancellationForTimeoutFix,
                 createChangedDocument: c => AddCooperativeCancellationAsync(context.Document, attributeSyntax, c),
-                equivalenceKey: nameof(UseCooperativeCancellationForTimeoutFixer)),
+                equivalenceKey: $"{nameof(UseCooperativeCancellationForTimeoutFixer)}.AddCooperativeCancellation"),
             diagnostic);
+
+        // Register code fix to replace [TestMethod] with [TaskRunTestMethod]
+        // Find the test method to check if it uses [TestMethod] attribute
+        if (attributeSyntax.Parent?.Parent is MethodDeclarationSyntax methodDeclaration)
+        {
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    title: CodeFixResources.UseTaskRunTestMethodFix,
+                    createChangedDocument: c => ReplaceWithTaskRunTestMethodAsync(context.Document, methodDeclaration, c),
+                    equivalenceKey: $"{nameof(UseCooperativeCancellationForTimeoutFixer)}.UseTaskRunTestMethod"),
+                diagnostic);
+        }
     }
 
     private static async Task<Document> AddCooperativeCancellationAsync(Document document, AttributeSyntax attributeSyntax, CancellationToken cancellationToken)
@@ -115,6 +127,75 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
 
         // Replace the old attribute with the new one
         editor.ReplaceNode(attributeSyntax, newAttributeSyntax);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> ReplaceWithTaskRunTestMethodAsync(Document document, MethodDeclarationSyntax methodDeclaration, CancellationToken cancellationToken)
+    {
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        SyntaxNode root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+        if (root is null)
+        {
+            return document;
+        }
+
+        // Find the TestMethod and Timeout attributes
+        AttributeSyntax? testMethodAttribute = null;
+        AttributeSyntax? timeoutAttribute = null;
+        int timeoutValue = 0;
+
+        foreach (AttributeListSyntax attributeList in methodDeclaration.AttributeLists)
+        {
+            foreach (AttributeSyntax attribute in attributeList.Attributes)
+            {
+                string attributeName = attribute.Name.ToString();
+                
+                if (attributeName is "TestMethod" or "TestMethodAttribute")
+                {
+                    testMethodAttribute = attribute;
+                }
+                else if (attributeName is "Timeout" or "TimeoutAttribute")
+                {
+                    timeoutAttribute = attribute;
+                    
+                    // Extract timeout value from the first argument
+                    if (attribute.ArgumentList?.Arguments.Count > 0)
+                    {
+                        var firstArg = attribute.ArgumentList.Arguments[0];
+                        if (firstArg.Expression is LiteralExpressionSyntax literalExpr &&
+                            literalExpr.Token.Value is int value)
+                        {
+                            timeoutValue = value;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (testMethodAttribute is null || timeoutAttribute is null)
+        {
+            // Can't apply the fix without both attributes
+            return document;
+        }
+
+        // Create the new TaskRunTestMethod attribute with timeout parameter
+        AttributeArgumentSyntax timeoutArg = SyntaxFactory.AttributeArgument(
+            SyntaxFactory.LiteralExpression(
+                SyntaxKind.NumericLiteralExpression,
+                SyntaxFactory.Literal(timeoutValue)));
+
+        AttributeSyntax newAttribute = SyntaxFactory.Attribute(
+            SyntaxFactory.IdentifierName("TaskRunTestMethod"),
+            SyntaxFactory.AttributeArgumentList(
+                SyntaxFactory.SingletonSeparatedList(timeoutArg)));
+
+        // Replace the TestMethod attribute with TaskRunTestMethod
+        editor.ReplaceNode(testMethodAttribute, newAttribute);
+        
+        // Remove the Timeout attribute
+        editor.RemoveNode(timeoutAttribute);
 
         return editor.GetChangedDocument();
     }
