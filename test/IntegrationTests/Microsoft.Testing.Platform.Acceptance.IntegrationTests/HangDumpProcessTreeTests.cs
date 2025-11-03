@@ -19,6 +19,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
             },
+            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
