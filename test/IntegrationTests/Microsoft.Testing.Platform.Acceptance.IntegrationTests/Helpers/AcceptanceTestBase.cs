@@ -153,18 +153,22 @@ public class UnitTest1
         string vswherePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
         string path = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken);
 
-        // WORKAROUND: Allow SDK to consider preview versions when running under a stable VS.
-        // https://github.com/dotnet/sdk/issues/51525
-        string installationVersion = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property installationVersion", cancellationToken);
-        string instanceId = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property instanceId", cancellationToken);
-        var version = Version.Parse(installationVersion);
-        string settingsFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Microsoft",
-            "VisualStudio",
-            version.Major + ".0_" + instanceId,
-            "sdk.txt");
-        File.WriteAllText(settingsFilePath, "UsePreviews=True");
+        if (string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            // WORKAROUND: Allow SDK to consider preview versions when running under a stable VS.
+            // https://github.com/dotnet/sdk/issues/51525
+            string installationVersion = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property installationVersion", cancellationToken);
+            string instanceId = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property instanceId", cancellationToken);
+            var version = Version.Parse(installationVersion);
+            string settingsFilePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Microsoft",
+                "VisualStudio",
+                version.Major + ".0_" + instanceId,
+                "sdk.txt");
+            File.WriteAllText(settingsFilePath, "UsePreviews=True");
+        }
+
         return path;
     }
 
