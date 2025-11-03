@@ -13,7 +13,7 @@ internal sealed record FileArtifactMessage(
     [property: PipePropertyId(5)] string? TestDisplayName,
     [property: PipePropertyId(6)] string? SessionUid);
 
-[PipeSerializableMessage("DotNetTestProtocol", 7)]
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 7)]
 internal sealed record FileArtifactMessages(
     [property: PipePropertyId(1)] string? ExecutionId,
     [property: PipePropertyId(2)] string? InstanceId,

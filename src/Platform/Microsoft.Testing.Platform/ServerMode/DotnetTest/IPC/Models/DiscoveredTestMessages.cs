@@ -18,7 +18,7 @@ internal sealed record DiscoveredTestMessage(
     [property: PipePropertyId(8)] string[]? ParameterTypeFullNames,
     [property: PipePropertyId(9)] TestMetadataProperty[] Traits);
 
-[PipeSerializableMessage("DotNetTestProtocol", 5)]
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 5)]
 internal sealed record DiscoveredTestMessages(
     [property: PipePropertyId(1)] string? ExecutionId,
     [property: PipePropertyId(2)] string? InstanceId,

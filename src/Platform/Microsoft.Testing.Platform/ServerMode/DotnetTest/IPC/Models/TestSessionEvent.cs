@@ -5,7 +5,7 @@ using EasyNamedPipes;
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-[PipeSerializableMessage("DotNetTestProtocol", 8)]
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 8)]
 internal sealed record TestSessionEvent(
     [property: PipePropertyId(1)] byte? SessionType,
     [property: PipePropertyId(2)] string? SessionUid,

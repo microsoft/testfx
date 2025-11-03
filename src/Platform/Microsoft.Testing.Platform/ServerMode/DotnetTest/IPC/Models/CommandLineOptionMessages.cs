@@ -11,7 +11,7 @@ internal sealed record CommandLineOptionMessage(
     [property: PipePropertyId(3)] bool? IsHidden,
     [property: PipePropertyId(4)] bool? IsBuiltIn);
 
-[PipeSerializableMessage("DotNetTestProtocol", 3)]
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 3)]
 internal sealed record CommandLineOptionMessages(
     [property: PipePropertyId(1)] string? ModulePath,
     [property: PipePropertyId(2)] CommandLineOptionMessage[]? CommandLineOptionMessageList) : IRequest;

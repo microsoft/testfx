@@ -31,7 +31,7 @@ internal sealed record ExceptionMessage(
     [property: PipePropertyId(2)] string? ErrorType,
     [property: PipePropertyId(3)] string? StackTrace);
 
-[PipeSerializableMessage("DotNetTestProtocol", 6)]
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 6)]
 internal sealed record TestResultMessages(
     [property: PipePropertyId(1)] string? ExecutionId,
     [property: PipePropertyId(2)] string? InstanceId,

@@ -5,7 +5,7 @@ using EasyNamedPipes;
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-[PipeSerializableMessage("DotNetTestProtocol", 9)]
+[PipeSerializableMessage(ProtocolConstants.ProtocolName, 9)]
 internal sealed record HandshakeMessage(
     [property: PipePropertyId(1)] Dictionary<byte, string>? Properties)
     : IRequest, IResponse;

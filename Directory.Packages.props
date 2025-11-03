@@ -41,6 +41,7 @@
   <ItemGroup Label="Product dependencies">
     <!-- If this gets updated, please revise if the explicit dependency on System.Diagnostics.DiagnosticSource is still needed -->
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+
     <!-- This comes transitvely via Microsoft.ApplicationInsights, but we want to upgrade it because 5.0.0 is not maintained -->
     <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildVersion)" />
