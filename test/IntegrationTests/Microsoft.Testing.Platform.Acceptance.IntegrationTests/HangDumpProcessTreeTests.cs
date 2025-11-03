@@ -10,12 +10,6 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
     [TestMethod]
     public async Task HangDump_DumpAllChildProcesses_CreateDump(string tfm)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDumpWithChild", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -52,7 +46,13 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
+
+    <!-- Workaround: createdump doesn't work correctly on the apphost on macOS. -->
+    <!-- But it works correctly on the dotnet process. -->
+    <!-- So, disable apphost on macOS for now. -->
+    <!-- Related: https://github.com/dotnet/runtime/issues/119945 -->
+    <UseAppHost Condition="'$(OS)' == 'OSX'">false</UseAppHost>
+
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
