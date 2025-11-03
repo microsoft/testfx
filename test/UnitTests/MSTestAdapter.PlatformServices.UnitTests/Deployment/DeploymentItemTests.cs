@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resourc
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Deployment;
+namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 
 public class DeploymentItemTests : TestContainer
 {

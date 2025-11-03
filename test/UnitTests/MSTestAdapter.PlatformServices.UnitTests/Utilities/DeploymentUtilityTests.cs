@@ -13,8 +13,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
-using MSTestAdapter.PlatformServices.Tests.Utilities;
-
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
