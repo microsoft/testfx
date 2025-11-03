@@ -160,12 +160,13 @@ public class UnitTest1
             string installationVersion = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property installationVersion", cancellationToken);
             string instanceId = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property instanceId", cancellationToken);
             var version = Version.Parse(installationVersion);
-            string settingsFilePath = Path.Combine(
+            string directory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "Microsoft",
                 "VisualStudio",
-                version.Major + ".0_" + instanceId,
-                "sdk.txt");
+                version.Major + ".0_" + instanceId);
+            Directory.CreateDirectory(directory);
+            string settingsFilePath = Path.Combine(directory, "sdk.txt");
             File.WriteAllText(settingsFilePath, "UsePreviews=True");
         }
 
