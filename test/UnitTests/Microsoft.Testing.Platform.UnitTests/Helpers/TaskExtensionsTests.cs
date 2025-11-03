@@ -83,7 +83,7 @@ public sealed class TaskExtensionsTests
                     waitException.Set();
                     throw new InvalidOperationException();
                 }, TestContext.CancellationToken).WithCancellationAsync(token));
-#if !NETFRAMEWORK // Polyfill bug in Task.WhenAsync implementation :/
+#if !NETFRAMEWORK // Polyfill bug in Task.WaitAsync implementation :/
         Assert.AreEqual(token, ex.CancellationToken);
 #endif
         waitException.WaitOne();
