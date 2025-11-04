@@ -110,21 +110,35 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 DateTimeOffset startTime = DateTimeOffset.UtcNow;
                 bool isSuccessRun = false;
                 bool isSuccessTeardown = false;
+                List<StepTimingInfo> stepTimings = new();
 
                 try
                 {
-                    object? testClassInstance = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, startTime, PublishNodeUpdateAsync);
+                    (object? testClassInstance, StepTimingInfo? setupTiming) = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, PublishNodeUpdateAsync);
+                    if (setupTiming is not null)
+                    {
+                        stepTimings.Add(setupTiming);
+                    }
+
                     if (testClassInstance is not null)
                     {
-                        isSuccessRun = await RunTestMethodAsync(testClassInstance, publicMethod, testNode, startTime, PublishNodeUpdateAsync);
+                        (isSuccessRun, StepTimingInfo? testTiming) = await RunTestMethodAsync(testClassInstance, publicMethod, testNode, PublishNodeUpdateAsync);
+                        if (testTiming is not null)
+                        {
+                            stepTimings.Add(testTiming);
+                        }
                     }
 
                     // Always call teardown even if previous steps failed because we want to try to clean as much as we can.
-                    isSuccessTeardown = await RunTestTeardownAsync(testClassInstance, testContainerType, teardownMethod, testNode, startTime, PublishNodeUpdateAsync);
+                    (isSuccessTeardown, StepTimingInfo? teardownTiming) = await RunTestTeardownAsync(testClassInstance, testContainerType, teardownMethod, testNode, PublishNodeUpdateAsync);
+                    if (teardownTiming is not null)
+                    {
+                        stepTimings.Add(teardownTiming);
+                    }
                 }
                 finally
                 {
-                    testNode.Properties.Add(CreateTimingProperty(startTime));
+                    testNode.Properties.Add(CreateTimingProperty(startTime, stepTimings));
                 }
 
                 if (isSuccessRun && isSuccessTeardown)
@@ -208,30 +222,38 @@ internal sealed class TestFrameworkEngine : IDataProducer
         return false;
     }
 
-    private async Task<object?> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
-        DateTimeOffset startTime, Func<TestNode, Task> publishNodeUpdateAsync)
+    private async Task<(object?, StepTimingInfo?)> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
+        Func<TestNode, Task> publishNodeUpdateAsync)
     {
+        DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
         try
         {
             _logger.LogDebug($"Executing test '{testNode.DisplayName}' setup (ctor for '{testContainerType.FullName}')");
-            return setupMethod.Invoke(null);
+            object? instance = setupMethod.Invoke(null);
+            DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
+            return (instance, new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)));
         }
         catch (Exception ex)
         {
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test setup", realException);
+            DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
+            
             TestNode errorNode = CloneTestNode(testNode);
-            errorNode.Properties.Add(CreateTimingProperty(startTime));
+            errorNode.Properties.Add(new TimingProperty(
+                new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime),
+                [new StepTimingInfo("init", "Test initialization", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime))]));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
             await publishNodeUpdateAsync(errorNode);
-            return null;
+            return (null, null);
         }
     }
 
-    private async Task<bool> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, TestNode testNode,
-        DateTimeOffset startTime, Func<TestNode, Task> publishNodeUpdateAsync)
+    private async Task<(bool, StepTimingInfo?)> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, TestNode testNode,
+        Func<TestNode, Task> publishNodeUpdateAsync)
     {
+        DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
         try
         {
             _logger.LogDebug($"Executing test '{testNode.DisplayName}'");
@@ -240,25 +262,31 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 await task;
             }
 
-            return true;
+            DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
+            return (true, new StepTimingInfo("test", "Test method execution", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)));
         }
         catch (Exception ex)
         {
             Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
             _logger.LogError("Error during test", realException);
+            DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
+            
             TestNode errorNode = CloneTestNode(testNode);
-            errorNode.Properties.Add(CreateTimingProperty(startTime));
+            errorNode.Properties.Add(new TimingProperty(
+                new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime),
+                [new StepTimingInfo("test", "Test method execution", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime))]));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
             errorNode.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
             await publishNodeUpdateAsync(errorNode);
 
-            return false;
+            return (false, null);
         }
     }
 
-    private async Task<bool> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, TestNode testNode,
-        DateTimeOffset startTime, Func<TestNode, Task> publishNodeUpdateAsync)
+    private async Task<(bool, StepTimingInfo?)> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, TestNode testNode,
+        Func<TestNode, Task> publishNodeUpdateAsync)
     {
+        DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
         try
         {
             if (testClassInstance is not null)
@@ -267,26 +295,31 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 teardownMethod.Invoke(testClassInstance, null);
             }
 
-            return true;
+            DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
+            return (true, new StepTimingInfo("cleanup", "Test cleanup", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime)));
         }
         catch (Exception ex)
         {
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test teardown", realException);
+            DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
+            
             TestNode errorNode = CloneTestNode(testNode);
-            errorNode.Properties.Add(CreateTimingProperty(startTime));
+            errorNode.Properties.Add(new TimingProperty(
+                new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime),
+                [new StepTimingInfo("cleanup", "Test cleanup", new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime))]));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             await publishNodeUpdateAsync(errorNode);
 
-            return false;
+            return (false, null);
         }
     }
 
-    private static TimingProperty CreateTimingProperty(DateTimeOffset startTime)
+    private static TimingProperty CreateTimingProperty(DateTimeOffset startTime, List<StepTimingInfo> stepTimings)
     {
         DateTimeOffset endTime = DateTimeOffset.UtcNow;
         TimeSpan duration = endTime - startTime;
-        return new TimingProperty(new TimingInfo(startTime, endTime, duration));
+        return new TimingProperty(new TimingInfo(startTime, endTime, duration), [.. stepTimings]);
     }
 
     private static TestNode CloneTestNode(TestNode testNode)
