@@ -90,7 +90,7 @@ public class Startup
     {
         Process self = Process.GetCurrentProcess();
         string path = self.MainModule!.FileName!;
-        string argPrefix = path.EndsWith("dotnet") ? $"exec \"{Assembly.GetEntryAssembly().Location}\" " : string.Empty;
+        string argPrefix = path.EndsWith("dotnet") ? $"exec \"{Assembly.GetEntryAssembly()!.Location}\" " : string.Empty;
 
         if (args[0] == "--child")
         {
