@@ -33,7 +33,9 @@ public class DesktopThreadOperationsTests : TestContainer
         var cancellationTokenSource = new CancellationTokenSource();
 
         // act
-        cancellationTokenSource.CancelAfter(100);
+        // Give more time for thread creation and Task.Run setup to ensure cancellation
+        // is detected during the Wait() call rather than timing out
+        cancellationTokenSource.CancelAfter(500);
         bool result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
