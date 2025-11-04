@@ -21,12 +21,5 @@ internal static class DumpWorkaround
     /// Related: https://github.com/dotnet/runtime/issues/119945
     /// </remarks>
     public static string GetGlobalPropertiesWorkaround()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return "-p:UseAppHost=false";
-        }
-
-        return string.Empty;
-    }
+        => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "-p:UseAppHost=false" : string.Empty;
 }
