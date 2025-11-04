@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 internal static class DumpWorkaround
 {
     /// <summary>
-    /// Gets MSBuild global properties to work around crash dump issues on macOS.
+    /// Gets MSBuild global properties to work around crash/hang dump issues on macOS.
     /// </summary>
     /// <returns>
     /// On macOS, returns "-p:UseAppHost=false" to work around createdump not working correctly on apphost.
