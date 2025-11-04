@@ -107,16 +107,29 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 progressNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
                 await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, progressNode));
 
-                bool isSuccessRun = false;
+                DateTimeOffset startTime = DateTimeOffset.UtcNow;
+                bool isSuccessRun;
+                bool isSuccessTeardown;
 
-                object? testClassInstance = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, PublishNodeUpdateAsync);
-                if (testClassInstance is not null)
+                try
                 {
-                    isSuccessRun = await RunTestMethodAsync(testClassInstance, publicMethod, testNode, PublishNodeUpdateAsync);
-                }
+                    isSuccessRun = false;
 
-                // Always call teardown even if previous steps failed because we want to try to clean as much as we can.
-                bool isSuccessTeardown = await RunTestTeardownAsync(testClassInstance, testContainerType, teardownMethod, testNode, PublishNodeUpdateAsync);
+                    object? testClassInstance = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, startTime, PublishNodeUpdateAsync);
+                    if (testClassInstance is not null)
+                    {
+                        isSuccessRun = await RunTestMethodAsync(testClassInstance, publicMethod, testNode, startTime, PublishNodeUpdateAsync);
+                    }
+
+                    // Always call teardown even if previous steps failed because we want to try to clean as much as we can.
+                    isSuccessTeardown = await RunTestTeardownAsync(testClassInstance, testContainerType, teardownMethod, testNode, startTime, PublishNodeUpdateAsync);
+                }
+                finally
+                {
+                    DateTimeOffset endTime = DateTimeOffset.UtcNow;
+                    TimeSpan duration = endTime - startTime;
+                    testNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, duration)));
+                }
 
                 if (isSuccessRun && isSuccessTeardown)
                 {
@@ -200,7 +213,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     }
 
     private async Task<object?> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+        DateTimeOffset startTime, Func<TestNode, Task> publishNodeUpdateAsync)
     {
         try
         {
@@ -212,6 +225,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test setup", realException);
             TestNode errorNode = CloneTestNode(testNode);
+            DateTimeOffset endTime = DateTimeOffset.UtcNow;
+            errorNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, endTime - startTime)));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
             await publishNodeUpdateAsync(errorNode);
@@ -220,7 +235,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     }
 
     private async Task<bool> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+        DateTimeOffset startTime, Func<TestNode, Task> publishNodeUpdateAsync)
     {
         try
         {
@@ -237,6 +252,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
             _logger.LogError("Error during test", realException);
             TestNode errorNode = CloneTestNode(testNode);
+            DateTimeOffset endTime = DateTimeOffset.UtcNow;
+            errorNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, endTime - startTime)));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
             errorNode.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
             await publishNodeUpdateAsync(errorNode);
@@ -246,7 +263,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
     }
 
     private async Task<bool> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, TestNode testNode,
-        Func<TestNode, Task> publishNodeUpdateAsync)
+        DateTimeOffset startTime, Func<TestNode, Task> publishNodeUpdateAsync)
     {
         try
         {
@@ -263,6 +280,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test teardown", realException);
             TestNode errorNode = CloneTestNode(testNode);
+            DateTimeOffset endTime = DateTimeOffset.UtcNow;
+            errorNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, endTime - startTime)));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             await publishNodeUpdateAsync(errorNode);
 
