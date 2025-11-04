@@ -108,13 +108,11 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 await messageBus.PublishAsync(this, new TestNodeUpdateMessage(request.Session.SessionUid, progressNode));
 
                 DateTimeOffset startTime = DateTimeOffset.UtcNow;
-                bool isSuccessRun;
-                bool isSuccessTeardown;
+                bool isSuccessRun = false;
+                bool isSuccessTeardown = false;
 
                 try
                 {
-                    isSuccessRun = false;
-
                     object? testClassInstance = await TryRunSetupMethodAsync(testContainerType, setupMethod, testNode, startTime, PublishNodeUpdateAsync);
                     if (testClassInstance is not null)
                     {
@@ -126,9 +124,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 }
                 finally
                 {
-                    DateTimeOffset endTime = DateTimeOffset.UtcNow;
-                    TimeSpan duration = endTime - startTime;
-                    testNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, duration)));
+                    testNode.Properties.Add(CreateTimingProperty(startTime));
                 }
 
                 if (isSuccessRun && isSuccessTeardown)
@@ -225,8 +221,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test setup", realException);
             TestNode errorNode = CloneTestNode(testNode);
-            DateTimeOffset endTime = DateTimeOffset.UtcNow;
-            errorNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, endTime - startTime)));
+            errorNode.Properties.Add(CreateTimingProperty(startTime));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             errorNode.Properties.Add(new TrxExceptionProperty(ex.Message, ex.StackTrace));
             await publishNodeUpdateAsync(errorNode);
@@ -252,8 +247,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
             _logger.LogError("Error during test", realException);
             TestNode errorNode = CloneTestNode(testNode);
-            DateTimeOffset endTime = DateTimeOffset.UtcNow;
-            errorNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, endTime - startTime)));
+            errorNode.Properties.Add(CreateTimingProperty(startTime));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(realException));
             errorNode.Properties.Add(new TrxExceptionProperty(realException.Message, realException.StackTrace));
             await publishNodeUpdateAsync(errorNode);
@@ -280,13 +274,19 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test teardown", realException);
             TestNode errorNode = CloneTestNode(testNode);
-            DateTimeOffset endTime = DateTimeOffset.UtcNow;
-            errorNode.Properties.Add(new TimingProperty(new TimingInfo(startTime, endTime, endTime - startTime)));
+            errorNode.Properties.Add(CreateTimingProperty(startTime));
             errorNode.Properties.Add(new ErrorTestNodeStateProperty(ex));
             await publishNodeUpdateAsync(errorNode);
 
             return false;
         }
+    }
+
+    private static TimingProperty CreateTimingProperty(DateTimeOffset startTime)
+    {
+        DateTimeOffset endTime = DateTimeOffset.UtcNow;
+        TimeSpan duration = endTime - startTime;
+        return new TimingProperty(new TimingInfo(startTime, endTime, duration));
     }
 
     private static TestNode CloneTestNode(TestNode testNode)
