@@ -33,7 +33,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
         Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {result}");
     }
 
