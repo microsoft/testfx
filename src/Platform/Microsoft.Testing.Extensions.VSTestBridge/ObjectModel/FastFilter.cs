@@ -48,6 +48,7 @@ internal sealed class FastFilter
         {
             // Special case: if filter contains empty string, check if property is null/empty (uncategorized)
             bool hasEmptyStringFilter = FilterProperties[name].Any(string.IsNullOrWhiteSpace);
+
             // If there is no value corresponding to given name, treat it as unmatched unless filtering for empty string.
             if (!TryGetPropertyValue(name, propertyValueProvider, out string? singleValue, out string[]? multiValues))
             {
