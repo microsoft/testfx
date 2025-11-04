@@ -302,7 +302,6 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex.InnerException ?? ex;
             _logger.LogError("Error during test teardown", realException);
             DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
-            
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new TimingProperty(
                 new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime),
