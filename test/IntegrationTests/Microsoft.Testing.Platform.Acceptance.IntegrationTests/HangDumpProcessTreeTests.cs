@@ -14,7 +14,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
