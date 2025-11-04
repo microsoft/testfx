@@ -254,7 +254,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="needs-review-translation">El valor "{0}" no está dentro del rango esperado [{1}, {2}]. {3}</target>
+        <target state="new">Value '{0}' is not within the expected range [{1}..{2}]. {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">

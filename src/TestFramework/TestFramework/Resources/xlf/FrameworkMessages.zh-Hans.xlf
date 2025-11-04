@@ -254,7 +254,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="needs-review-translation">值“{0}”不在预期范围 [{1}, {2}] 内。{3}</target>
+        <target state="new">Value '{0}' is not within the expected range [{1}..{2}]. {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
