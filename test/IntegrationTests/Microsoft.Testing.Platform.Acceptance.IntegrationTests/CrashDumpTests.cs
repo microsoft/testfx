@@ -14,7 +14,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --crashdump --results-directory {resultDirectory}",
+            $"run --no-build --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --crashdump --results-directory {resultDirectory}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -31,7 +31,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}",
+            $"run --no-build --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -51,7 +51,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-type {format} --results-directory {resultDirectory}",
+            $"run --no-build --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-type {format} --results-directory {resultDirectory}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -69,7 +69,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-type invalid --results-directory {resultDirectory}",
+            $"run --no-build --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-type invalid --results-directory {resultDirectory}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
