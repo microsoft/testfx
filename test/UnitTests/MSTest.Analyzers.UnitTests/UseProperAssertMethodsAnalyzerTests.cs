@@ -112,7 +112,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                         Assert.IsFalse(y == null);
                         Assert.IsFalse(null == x);
                         Assert.IsFalse(null == y);
-            
+
                         // Assert.IsFalse: not null comparisons
                         Assert.IsFalse(x is not null);
                         Assert.IsFalse(y is not null);
@@ -120,13 +120,13 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                         Assert.IsFalse(y != null);
                         Assert.IsFalse(null != x);
                         Assert.IsFalse(null != y);
-            
+
                         // Assert.IsFalse: two pointers equality comparisons
                         Assert.IsFalse(x == x);
                         Assert.IsFalse(x == y);
                         Assert.IsFalse(y == x);
                         Assert.IsFalse(y == y);
-            
+
                         // Assert.IsFalse: two pointers inequality comparisons
                         Assert.IsFalse(x != x);
                         Assert.IsFalse(x != y);
@@ -2908,4 +2908,240 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
+
+    #region BCL Types with IComparable Tests
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithTimeSpanComparison()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    {|#0:Assert.IsTrue(ts2 > ts1)|};
+                    {|#1:Assert.IsTrue(ts2 >= ts1)|};
+                    {|#2:Assert.IsTrue(ts1 < ts2)|};
+                    {|#3:Assert.IsTrue(ts1 <= ts2)|};
+                    {|#4:Assert.IsTrue(ts1 == ts1)|};
+                    {|#5:Assert.IsTrue(ts1 != ts2)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    Assert.IsGreaterThan(ts1, ts2);
+                    Assert.IsGreaterThanOrEqualTo(ts1, ts2);
+                    Assert.IsLessThan(ts2, ts1);
+                    Assert.IsLessThanOrEqualTo(ts2, ts1);
+                    Assert.AreEqual(ts1, ts1);
+                    Assert.AreNotEqual(ts2, ts1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsGreaterThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsLessThan", "IsTrue"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsLessThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreEqual", "IsTrue"),
+                // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreNotEqual", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithDateTimeComparison()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var dt1 = DateTime.Today;
+                    var dt2 = DateTime.Today.AddDays(1);
+                    {|#0:Assert.IsTrue(dt2 > dt1)|};
+                    {|#1:Assert.IsTrue(dt2 >= dt1)|};
+                    {|#2:Assert.IsTrue(dt1 < dt2)|};
+                    {|#3:Assert.IsTrue(dt1 <= dt2)|};
+                    {|#4:Assert.IsTrue(dt1 == dt1)|};
+                    {|#5:Assert.IsTrue(dt1 != dt2)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var dt1 = DateTime.Today;
+                    var dt2 = DateTime.Today.AddDays(1);
+                    Assert.IsGreaterThan(dt1, dt2);
+                    Assert.IsGreaterThanOrEqualTo(dt1, dt2);
+                    Assert.IsLessThan(dt2, dt1);
+                    Assert.IsLessThanOrEqualTo(dt2, dt1);
+                    Assert.AreEqual(dt1, dt1);
+                    Assert.AreNotEqual(dt2, dt1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsGreaterThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsLessThan", "IsTrue"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsLessThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreEqual", "IsTrue"),
+                // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreNotEqual", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithTimeSpanComparison()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    {|#0:Assert.IsFalse(ts2 > ts1)|};
+                    {|#1:Assert.IsFalse(ts2 >= ts1)|};
+                    {|#2:Assert.IsFalse(ts1 < ts2)|};
+                    {|#3:Assert.IsFalse(ts1 <= ts2)|};
+                    {|#4:Assert.IsFalse(ts1 == ts1)|};
+                    {|#5:Assert.IsFalse(ts1 != ts2)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    Assert.IsLessThanOrEqualTo(ts1, ts2);
+                    Assert.IsLessThan(ts1, ts2);
+                    Assert.IsGreaterThanOrEqualTo(ts2, ts1);
+                    Assert.IsGreaterThan(ts2, ts1);
+                    Assert.AreNotEqual(ts1, ts1);
+                    Assert.AreEqual(ts2, ts1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsLessThanOrEqualTo", "IsFalse"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsLessThan", "IsFalse"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsGreaterThanOrEqualTo", "IsFalse"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsGreaterThan", "IsFalse"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreNotEqual", "IsFalse"),
+                // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreEqual", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    #endregion
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithUserDefinedComparisonOperatorsThenNoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyCustomType
+            {
+                public static bool operator >(MyCustomType x, MyCustomType y) => true;
+                public static bool operator <(MyCustomType x, MyCustomType y) => false;
+                public static bool operator >=(MyCustomType x, MyCustomType y) => true;
+                public static bool operator <=(MyCustomType x, MyCustomType y) => false;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new MyCustomType();
+                    var b = new MyCustomType();
+                    // These should NOT trigger diagnostics because they're user-defined operators from non-BCL types
+                    Assert.IsTrue(a > b);
+                    Assert.IsTrue(a >= b);
+                    Assert.IsTrue(a < b);
+                    Assert.IsTrue(a <= b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
