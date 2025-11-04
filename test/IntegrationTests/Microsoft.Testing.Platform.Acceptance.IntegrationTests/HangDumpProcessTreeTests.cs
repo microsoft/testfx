@@ -10,19 +10,11 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
     [TestMethod]
     public async Task HangDump_DumpAllChildProcesses_CreateDump(string tfm)
     {
-        string globalProperties = string.Empty;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Workaround: createdump doesn't work correctly on the apphost on macOS.
-            // But it works correctly on the dotnet process.
-            // So, disable apphost on macOS for now.
-            // Related: https://github.com/dotnet/runtime/issues/119945
-            globalProperties = "-p:UseAppHost=false";
-        }
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"run --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
