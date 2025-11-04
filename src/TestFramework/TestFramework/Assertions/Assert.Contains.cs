@@ -668,7 +668,7 @@ public sealed partial class Assert
     {
         if (maxValue.CompareTo(minValue) <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than the minimum value.");
+            throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanMinValue);
         }
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)

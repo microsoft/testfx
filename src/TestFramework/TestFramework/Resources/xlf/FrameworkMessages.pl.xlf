@@ -253,8 +253,13 @@ Rzeczywiste: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">Wartość „{0}” nie mieści się w oczekiwanym zakresie [{1}, {2}]. {3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="needs-review-translation">Wartość „{0}” nie mieści się w oczekiwanym zakresie [{1}, {2}]. {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
+        <source>The maximum value must be greater than the minimum value.</source>
+        <target state="new">The maximum value must be greater than the minimum value.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
