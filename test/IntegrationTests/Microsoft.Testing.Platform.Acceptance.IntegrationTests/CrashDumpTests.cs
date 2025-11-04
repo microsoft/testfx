@@ -10,15 +10,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)
     {
-        string globalProperties = string.Empty;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Workaround: createdump doesn't work correctly on the apphost on macOS.
-            // But it works correctly on the dotnet process.
-            // So, disable apphost on macOS for now.
-            // Related: https://github.com/dotnet/runtime/issues/119945
-            globalProperties = "-p:UseAppHost=false";
-        }
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
@@ -35,15 +27,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_CustomDumpName_CreateDump()
     {
-        string globalProperties = string.Empty;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Workaround: createdump doesn't work correctly on the apphost on macOS.
-            // But it works correctly on the dotnet process.
-            // So, disable apphost on macOS for now.
-            // Related: https://github.com/dotnet/runtime/issues/119945
-            globalProperties = "-p:UseAppHost=false";
-        }
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
@@ -63,15 +47,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_Formats_CreateDump(string format)
     {
-        string globalProperties = string.Empty;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Workaround: createdump doesn't work correctly on the apphost on macOS.
-            // But it works correctly on the dotnet process.
-            // So, disable apphost on macOS for now.
-            // Related: https://github.com/dotnet/runtime/issues/119945
-            globalProperties = "-p:UseAppHost=false";
-        }
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
@@ -89,15 +65,7 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
-        string globalProperties = string.Empty;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Workaround: createdump doesn't work correctly on the apphost on macOS.
-            // But it works correctly on the dotnet process.
-            // So, disable apphost on macOS for now.
-            // Related: https://github.com/dotnet/runtime/issues/119945
-            globalProperties = "-p:UseAppHost=false";
-        }
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
 
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
