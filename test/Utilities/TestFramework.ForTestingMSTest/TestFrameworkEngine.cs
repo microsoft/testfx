@@ -269,7 +269,6 @@ internal sealed class TestFrameworkEngine : IDataProducer
             Exception realException = ex is TargetInvocationException ? ex.InnerException! : ex;
             _logger.LogError("Error during test", realException);
             DateTimeOffset stepEndTime = DateTimeOffset.UtcNow;
-            
             TestNode errorNode = CloneTestNode(testNode);
             errorNode.Properties.Add(new TimingProperty(
                 new TimingInfo(stepStartTime, stepEndTime, stepEndTime - stepStartTime),
