@@ -213,39 +213,43 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                 _bannerDisplayed = true;
 
-                if (bannerMessage is not null)
+                // Skip the banner when in server mode
+                if (!_isServerMode)
                 {
-                    _terminalTestReporter.WriteMessage(bannerMessage);
-                }
-                else
-                {
-                    StringBuilder stringBuilder = new();
-                    stringBuilder.Append(_platformInformation.Name);
-
-                    if (_platformInformation.Version is { } version)
+                    if (bannerMessage is not null)
                     {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                        if (_platformInformation.CommitHash is { } commitHash)
+                        _terminalTestReporter.WriteMessage(bannerMessage);
+                    }
+                    else
+                    {
+                        StringBuilder stringBuilder = new();
+                        stringBuilder.Append(_platformInformation.Name);
+
+                        if (_platformInformation.Version is { } version)
                         {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
+                            if (_platformInformation.CommitHash is { } commitHash)
+                            {
+                                stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
+                            }
                         }
-                    }
 
-                    if (_platformInformation.BuildDate is { } buildDate)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
-                    }
+                        if (_platformInformation.BuildDate is { } buildDate)
+                        {
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
+                        }
 
-                    if (_runtimeFeature.IsDynamicCodeSupported)
-                    {
-                        stringBuilder.Append(" [");
-                        stringBuilder.Append(_longArchitecture);
-                        stringBuilder.Append(" - ");
-                        stringBuilder.Append(_runtimeFramework);
-                        stringBuilder.Append(']');
-                    }
+                        if (_runtimeFeature.IsDynamicCodeSupported)
+                        {
+                            stringBuilder.Append(" [");
+                            stringBuilder.Append(_longArchitecture);
+                            stringBuilder.Append(" - ");
+                            stringBuilder.Append(_runtimeFramework);
+                            stringBuilder.Append(']');
+                        }
 
-                    _terminalTestReporter.WriteMessage(stringBuilder.ToString());
+                        _terminalTestReporter.WriteMessage(stringBuilder.ToString());
+                    }
                 }
             }
 
