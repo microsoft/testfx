@@ -206,50 +206,46 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            if (!_bannerDisplayed)
+            if (!_bannerDisplayed && !_isServerMode)
             {
                 // skip the banner for the children processes
                 _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
 
                 _bannerDisplayed = true;
 
-                // Skip the banner when in server mode
-                if (!_isServerMode)
+                if (bannerMessage is not null)
                 {
-                    if (bannerMessage is not null)
+                    _terminalTestReporter.WriteMessage(bannerMessage);
+                }
+                else
+                {
+                    StringBuilder stringBuilder = new();
+                    stringBuilder.Append(_platformInformation.Name);
+
+                    if (_platformInformation.Version is { } version)
                     {
-                        _terminalTestReporter.WriteMessage(bannerMessage);
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
+                        if (_platformInformation.CommitHash is { } commitHash)
+                        {
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
+                        }
                     }
-                    else
+
+                    if (_platformInformation.BuildDate is { } buildDate)
                     {
-                        StringBuilder stringBuilder = new();
-                        stringBuilder.Append(_platformInformation.Name);
-
-                        if (_platformInformation.Version is { } version)
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                            if (_platformInformation.CommitHash is { } commitHash)
-                            {
-                                stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
-                            }
-                        }
-
-                        if (_platformInformation.BuildDate is { } buildDate)
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
-                        }
-
-                        if (_runtimeFeature.IsDynamicCodeSupported)
-                        {
-                            stringBuilder.Append(" [");
-                            stringBuilder.Append(_longArchitecture);
-                            stringBuilder.Append(" - ");
-                            stringBuilder.Append(_runtimeFramework);
-                            stringBuilder.Append(']');
-                        }
-
-                        _terminalTestReporter.WriteMessage(stringBuilder.ToString());
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
                     }
+
+                    if (_runtimeFeature.IsDynamicCodeSupported)
+                    {
+                        stringBuilder.Append(" [");
+                        stringBuilder.Append(_longArchitecture);
+                        stringBuilder.Append(" - ");
+                        stringBuilder.Append(_runtimeFramework);
+                        stringBuilder.Append(']');
+                    }
+
+                    _terminalTestReporter.WriteMessage(stringBuilder.ToString());
                 }
             }
 
