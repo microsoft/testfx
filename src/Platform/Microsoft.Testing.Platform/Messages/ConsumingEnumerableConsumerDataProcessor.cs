@@ -13,6 +13,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
     private readonly Queue<(IDataProducer DataProducer, IData Data)> _payloads = [];
     private readonly SemaphoreSlim _signal = new(0);
+    private readonly SemaphoreSlim _lockSemaphore = new(1, 1);
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
@@ -37,26 +38,42 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
     public async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
-        if (_isAddingCompleted)
+        await _lockSemaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
+        try
         {
-            throw new UnreachableException();
-        }
+            if (_isAddingCompleted)
+            {
+                throw new UnreachableException();
+            }
 
-        Interlocked.Increment(ref _totalPayloadReceived);
-        _payloads.Enqueue((dataProducer, data));
-        _signal.Release();
+            Interlocked.Increment(ref _totalPayloadReceived);
+            _payloads.Enqueue((dataProducer, data));
+            _signal.Release();
+        }
+        finally
+        {
+            _lockSemaphore.Release();
+        }
     }
 
     private async Task ConsumeAsync()
     {
         try
         {
-            while (true)
+            while (!_isAddingCompleted || _signal.CurrentCount > 0 || _payloads.Count > 0)
             {
                 await _signal.WaitAsync(_cancellationToken).ConfigureAwait(false);
+                await _lockSemaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
                 IDataProducer dataProducer;
                 IData data;
-                (dataProducer, data) = _payloads.Dequeue();
+                try
+                {
+                    (dataProducer, data) = _payloads.Dequeue();
+                }
+                finally
+                {
+                    _lockSemaphore.Release();
+                }
 
                 try
                 {
@@ -164,7 +181,6 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     {
         // Signal that no more items will be added to the collection
         _isAddingCompleted = true;
-        _signal.Release();
 
         // Wait for the consumer to complete
         await _consumeTask.ConfigureAwait(false);
