@@ -10,7 +10,6 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
-    // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
     private readonly Queue<(IDataProducer DataProducer, IData Data)> _payloads = [];
     private readonly SemaphoreSlim _signal = new(0);
     private readonly object _lock = new();
