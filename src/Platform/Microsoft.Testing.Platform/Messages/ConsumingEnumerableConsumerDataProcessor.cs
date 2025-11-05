@@ -10,20 +10,16 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
-    private readonly Queue<(IDataProducer DataProducer, IData Data)> _payloads = [];
-    private readonly SemaphoreSlim _signal = new(0);
-    private readonly object _lock = new();
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
+    private readonly SingleConsumerUnboundedChannel<(IDataProducer DataProducer, IData Data)> _channel = new();
 
     // This is needed to avoid possible race condition between drain and _totalPayloadProcessed race condition.
     // This is the "logical" consume workflow state.
     private readonly TaskCompletionSource<object> _consumerState = new();
     private readonly Task _consumeTask;
-    private bool _disposed;
     private long _totalPayloadReceived;
     private long _totalPayloadProcessed;
-    private bool _isAddingCompleted;
 
     public AsyncConsumerDataProcessor(IDataConsumer dataConsumer, ITask task, CancellationToken cancellationToken)
     {
@@ -35,89 +31,59 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
     public IDataConsumer DataConsumer { get; }
 
-    public async Task PublishAsync(IDataProducer dataProducer, IData data)
+    public Task PublishAsync(IDataProducer dataProducer, IData data)
     {
-        lock (_lock)
-        {
-            if (_isAddingCompleted)
-            {
-                throw new UnreachableException();
-            }
-
-            Interlocked.Increment(ref _totalPayloadReceived);
-            _payloads.Enqueue((dataProducer, data));
-            _signal.Release();
-        }
+        _cancellationToken.ThrowIfCancellationRequested();
+        Interlocked.Increment(ref _totalPayloadReceived);
+        _channel.Write((dataProducer, data));
+        return Task.CompletedTask;
     }
 
     private async Task ConsumeAsync()
     {
         try
         {
-            while (true)
+            while (await _channel.WaitToReadAsync().ConfigureAwait(false))
             {
-                await _signal.WaitAsync(_cancellationToken).ConfigureAwait(false);
-
-                IDataProducer dataProducer;
-                IData data;
-                lock (_lock)
+                while (_channel.TryRead(out (IDataProducer DataProducer, IData Data) item))
                 {
-                    if (_payloads.Count == 0)
-                    {
-                        if (_isAddingCompleted)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            throw new UnreachableException();
-                        }
-                    }
-
-                    (dataProducer, data) = _payloads.Dequeue();
-                }
-
-                try
-                {
-                    // We don't enqueue the data if the consumer is the producer of the data.
-                    // We could optimize this if and make a get with type/all but producers, but it
-                    // could be over-engineering.
-                    if (dataProducer.Uid == DataConsumer.Uid)
-                    {
-                        continue;
-                    }
-
                     try
                     {
-                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
-                    }
+                        // We don't enqueue the data if the consumer is the producer of the data.
+                        // We could optimize this if and make a get with type/all but producers, but it
+                        // could be over-engineering.
+                        if (item.DataProducer.Uid == DataConsumer.Uid)
+                        {
+                            continue;
+                        }
 
-                    // We let the catch below to handle the graceful cancellation of the process
-                    catch (Exception ex) when (ex is not OperationCanceledException)
+                        try
+                        {
+                            await DataConsumer.ConsumeAsync(item.DataProducer, item.Data, _cancellationToken).ConfigureAwait(false);
+                        }
+
+                        // We let the catch below to handle the graceful cancellation of the process
+                        catch (Exception ex) when (ex is not OperationCanceledException)
+                        {
+                            // If we're draining before to increment the _totalPayloadProcessed we need to signal that we should throw because
+                            // it's possible we have a race condition where the payload check at line 106 return false and the current task is not yet in a
+                            // "faulted state".
+                            _consumerState.SetException(ex);
+
+                            // We let current task to move to fault state, checked inside CompleteAddingAsync.
+                            throw;
+                        }
+                    }
+                    finally
                     {
-                        // If we're draining before to increment the _totalPayloadProcessed we need to signal that we should throw because
-                        // it's possible we have a race condition where the payload check at line 106 return false and the current task is not yet in a
-                        // "faulted state".
-                        _consumerState.SetException(ex);
-
-                        // We let current task to move to fault state, checked inside CompleteAddingAsync.
-                        throw;
+                        Interlocked.Increment(ref _totalPayloadProcessed);
                     }
-                }
-                finally
-                {
-                    Interlocked.Increment(ref _totalPayloadProcessed);
                 }
             }
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
         {
             // Ignore we're shutting down
-        }
-        catch (ObjectDisposedException)
-        {
-            // It's rare but possible that we DrainDataAsync/CompleteAddingAsync/Dispose and we didn't reach yet the GetConsumingEnumerable wait point
-            // after the last item elaboration. If this happen and the _payload is disposed and not "completed" we get an ObjectDisposedException.
         }
         catch (Exception ex)
         {
@@ -135,13 +101,18 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         _consumerState.SetResult(new object());
     }
 
+    public async Task CompleteAddingAsync()
+    {
+        // Signal that no more items will be added to the collection
+        // It's possible that we call this method multiple times
+        _channel.Complete();
+
+        // Wait for the consumer to complete
+        await _consumeTask.ConfigureAwait(false);
+    }
+
     public async Task<long> DrainDataAsync()
     {
-        if (_isAddingCompleted)
-        {
-            throw new InvalidOperationException("Unexpected IsAddingCompleted state");
-        }
-
         // We go volatile because we race with Interlocked.Increment in PublishAsync
         long totalPayloadProcessed = Volatile.Read(ref _totalPayloadProcessed);
         long totalPayloadReceived = Volatile.Read(ref _totalPayloadReceived);
@@ -179,28 +150,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         return _totalPayloadReceived;
     }
 
-    public async Task CompleteAddingAsync()
-    {
-        // Signal that no more items will be added to the collection
-        lock (_lock)
-        {
-            _isAddingCompleted = true;
-            _signal.Release();
-        }
-
-        // Wait for the consumer to complete
-        await _consumeTask.ConfigureAwait(false);
-    }
-
     public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _signal.Dispose();
-        _disposed = true;
-    }
+        => _channel.Complete();
 }
 #endif
