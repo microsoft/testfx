@@ -1,0 +1,13 @@
+root = false
+
+[*.cs]
+# They are copy of .NET runtime code and we don't want analyzers noise here.
+dotnet_analyzer_diagnostic.severity = suggestion
+dotnet_analyzer_diagnostic.category-Style.severity = none
+dotnet_diagnostic.IDE0073.severity = none
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.IDE2003.severity = none
+dotnet_diagnostic.IDE1006.severity = none
+dotnet_diagnostic.SA1311.severity = none
+dotnet_diagnostic.CA1068.severity = none
