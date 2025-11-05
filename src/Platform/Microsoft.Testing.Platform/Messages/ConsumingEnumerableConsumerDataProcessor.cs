@@ -37,6 +37,11 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
     public Task PublishAsync(IDataProducer dataProducer, IData data)
     {
+        if (_isAddingCompleted)
+        {
+            throw new UnreachableException();
+        }
+
         Interlocked.Increment(ref _totalPayloadReceived);
         _payloads.Enqueue((dataProducer, data));
         _signal.Release();
@@ -47,7 +52,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     {
         try
         {
-            while (!_isAddingCompleted || _signal.CurrentCount > 0)
+            while (!_isAddingCompleted || _signal.CurrentCount > 0 || !_payloads.IsEmpty)
             {
                 await _signal.WaitAsync(_cancellationToken).ConfigureAwait(false);
                 if (!_payloads.TryDequeue(out (IDataProducer DataProducer, IData Data) payload))
