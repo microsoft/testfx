@@ -11,8 +11,9 @@ namespace Microsoft.Testing.Platform.Messages;
 internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
-    private readonly ConcurrentQueue<(IDataProducer DataProducer, IData Data)> _payloads = [];
+    private readonly Queue<(IDataProducer DataProducer, IData Data)> _payloads = [];
     private readonly SemaphoreSlim _signal = new(0);
+    private readonly SemaphoreSlim _lockSemaphore = new(1, 1);
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
@@ -35,29 +36,43 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
     public IDataConsumer DataConsumer { get; }
 
-    public Task PublishAsync(IDataProducer dataProducer, IData data)
+    public async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
-        if (_isAddingCompleted)
+        await _lockSemaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
+        try
         {
-            throw new UnreachableException();
-        }
+            if (_isAddingCompleted)
+            {
+                throw new UnreachableException();
+            }
 
-        Interlocked.Increment(ref _totalPayloadReceived);
-        _payloads.Enqueue((dataProducer, data));
-        _signal.Release();
-        return Task.CompletedTask;
+            Interlocked.Increment(ref _totalPayloadReceived);
+            _payloads.Enqueue((dataProducer, data));
+            _signal.Release();
+        }
+        finally
+        {
+            _lockSemaphore.Release();
+        }
     }
 
     private async Task ConsumeAsync()
     {
         try
         {
-            while (!_isAddingCompleted || _signal.CurrentCount > 0 || !_payloads.IsEmpty)
+            while (!_isAddingCompleted || _signal.CurrentCount > 0 || _payloads.Count > 0)
             {
                 await _signal.WaitAsync(_cancellationToken).ConfigureAwait(false);
-                if (!_payloads.TryDequeue(out (IDataProducer DataProducer, IData Data) payload))
+                await _lockSemaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
+                IDataProducer dataProducer;
+                IData data;
+                try
                 {
-                    throw new UnreachableException();
+                    (dataProducer, data) = _payloads.Dequeue();
+                }
+                finally
+                {
+                    _lockSemaphore.Release();
                 }
 
                 try
@@ -65,14 +80,14 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
                     // We don't enqueue the data if the consumer is the producer of the data.
                     // We could optimize this if and make a get with type/all but producers, but it
                     // could be over-engineering.
-                    if (payload.DataProducer.Uid == DataConsumer.Uid)
+                    if (dataProducer.Uid == DataConsumer.Uid)
                     {
                         continue;
                     }
 
                     try
                     {
-                        await DataConsumer.ConsumeAsync(payload.DataProducer, payload.Data, _cancellationToken).ConfigureAwait(false);
+                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
                     }
 
                     // We let the catch below to handle the graceful cancellation of the process
