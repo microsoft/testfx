@@ -11,8 +11,8 @@ namespace Microsoft.Testing.Platform.Messages;
 internal sealed class AsyncConsumerDataProcessor : IDisposable
 {
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
-    private readonly BlockingCollection<(IDataProducer DataProducer, IData Data)> _payloads = [];
-
+    private readonly ConcurrentQueue<(IDataProducer DataProducer, IData Data)> _payloads = [];
+    private readonly SemaphoreSlim _signal = new(0);
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
@@ -23,6 +23,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     private bool _disposed;
     private long _totalPayloadReceived;
     private long _totalPayloadProcessed;
+    private bool _isAddingCompleted;
 
     public AsyncConsumerDataProcessor(IDataConsumer dataConsumer, ITask task, CancellationToken cancellationToken)
     {
@@ -37,7 +38,8 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     public Task PublishAsync(IDataProducer dataProducer, IData data)
     {
         Interlocked.Increment(ref _totalPayloadReceived);
-        _payloads.Add((dataProducer, data), _cancellationToken);
+        _payloads.Enqueue((dataProducer, data));
+        _signal.Release();
         return Task.CompletedTask;
     }
 
@@ -45,21 +47,27 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     {
         try
         {
-            foreach ((IDataProducer dataProducer, IData data) in _payloads.GetConsumingEnumerable(_cancellationToken))
+            while (!_isAddingCompleted || _signal.CurrentCount > 0)
             {
+                await _signal.WaitAsync(_cancellationToken).ConfigureAwait(false);
+                if (!_payloads.TryDequeue(out (IDataProducer DataProducer, IData Data) payload))
+                {
+                    throw new UnreachableException();
+                }
+
                 try
                 {
                     // We don't enqueue the data if the consumer is the producer of the data.
                     // We could optimize this if and make a get with type/all but producers, but it
                     // could be over-engineering.
-                    if (dataProducer.Uid == DataConsumer.Uid)
+                    if (payload.DataProducer.Uid == DataConsumer.Uid)
                     {
                         continue;
                     }
 
                     try
                     {
-                        await DataConsumer.ConsumeAsync(dataProducer, data, _cancellationToken).ConfigureAwait(false);
+                        await DataConsumer.ConsumeAsync(payload.DataProducer, payload.Data, _cancellationToken).ConfigureAwait(false);
                     }
 
                     // We let the catch below to handle the graceful cancellation of the process
@@ -107,7 +115,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
     public async Task<long> DrainDataAsync()
     {
-        if (_payloads.IsAddingCompleted)
+        if (_isAddingCompleted)
         {
             throw new InvalidOperationException("Unexpected IsAddingCompleted state");
         }
@@ -152,7 +160,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     public async Task CompleteAddingAsync()
     {
         // Signal that no more items will be added to the collection
-        _payloads.CompleteAdding();
+        _isAddingCompleted = true;
 
         // Wait for the consumer to complete
         await _consumeTask.ConfigureAwait(false);
@@ -165,7 +173,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
             return;
         }
 
-        _payloads.Dispose();
+        _signal.Dispose();
         _disposed = true;
     }
 }
