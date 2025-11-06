@@ -43,7 +43,7 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
     {
         try
         {
-            while (await _channel.WaitToReadAsync().ConfigureAwait(false))
+            while (await _channel.WaitToReadAsync(_cancellationToken).ConfigureAwait(false))
             {
                 while (_channel.TryRead(out (IDataProducer DataProducer, IData Data) item))
                 {

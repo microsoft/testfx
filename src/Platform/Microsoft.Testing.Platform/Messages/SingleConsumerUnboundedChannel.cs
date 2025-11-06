@@ -19,6 +19,8 @@ internal sealed class SingleConsumerUnboundedChannel<T>
     // If Complete is called instead, we complete this task with value false.
     private TaskCompletionSource<bool>? _waitingReader;
 
+    private CancellationTokenRegistration? _cancellationRegistration;
+
     // A flag indicating whether or not complete has been called.
     private bool _completed;
 
@@ -43,7 +45,9 @@ internal sealed class SingleConsumerUnboundedChannel<T>
             if (_waitingReader is { } waitingReader)
             {
                 _waitingReader = null;
-                waitingReader.SetResult(true);
+                _cancellationRegistration?.Dispose();
+                _cancellationRegistration = null;
+                waitingReader.TrySetResult(true);
             }
         }
     }
@@ -51,7 +55,7 @@ internal sealed class SingleConsumerUnboundedChannel<T>
     public bool TryRead(out T item)
         => _items.TryDequeue(out item);
 
-    public Task<bool> WaitToReadAsync()
+    public Task<bool> WaitToReadAsync(CancellationToken cancellationToken)
     {
         // We have something already in the channel.
         // We return true.
@@ -82,6 +86,7 @@ internal sealed class SingleConsumerUnboundedChannel<T>
             }
 
             _waitingReader = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _cancellationRegistration = cancellationToken.Register(static (tcs, ct) => ((TaskCompletionSource<bool>)tcs!).TrySetCanceled(ct), _waitingReader);
             return _waitingReader.Task;
         }
     }
@@ -97,7 +102,9 @@ internal sealed class SingleConsumerUnboundedChannel<T>
             if (_waitingReader is { } waitingReader)
             {
                 _waitingReader = null;
-                waitingReader.SetResult(false);
+                _cancellationRegistration?.Dispose();
+                _cancellationRegistration = null;
+                waitingReader.TrySetResult(false);
             }
         }
     }
