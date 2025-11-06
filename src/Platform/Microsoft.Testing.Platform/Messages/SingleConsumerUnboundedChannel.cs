@@ -90,6 +90,11 @@ internal sealed class SingleConsumerUnboundedChannel<T>
                 throw new UnreachableException();
             }
 
+            // Without RunContinuationsAsynchronously, task continuation will run inline inside of the SetResult call.
+            // This task completes under a lock, and we don't want to run arbitrary code while holding the lock.
+            // NOTE: For the net8.0+ implementation where we use .NET channels, we create the channel with
+            // AllowSynchronousContinuations = false
+            // This achieves the same effect.
             _waitingReader = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             _cancellationRegistration = cancellationToken.Register(tcs => ((TaskCompletionSource<bool>)tcs!).TrySetCanceled(cancellationToken), _waitingReader);
             return _waitingReader.Task;
