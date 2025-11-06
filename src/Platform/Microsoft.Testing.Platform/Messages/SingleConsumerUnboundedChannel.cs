@@ -91,7 +91,7 @@ internal sealed class SingleConsumerUnboundedChannel<T>
             }
 
             _waitingReader = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _cancellationRegistration = cancellationToken.Register(static (tcs, ct) => ((TaskCompletionSource<bool>)tcs!).TrySetCanceled(ct), _waitingReader);
+            _cancellationRegistration = cancellationToken.Register(tcs => ((TaskCompletionSource<bool>)tcs!).TrySetCanceled(cancellationToken), _waitingReader);
             return _waitingReader.Task;
         }
     }
