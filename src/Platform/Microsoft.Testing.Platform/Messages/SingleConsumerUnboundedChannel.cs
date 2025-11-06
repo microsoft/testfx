@@ -17,7 +17,7 @@ internal sealed class SingleConsumerUnboundedChannel<T>
     // and return its task.
     // Later, when something is published, we complete this task with value true.
     // If Complete is called instead, we complete this task with value false.
-    private TaskCompletionSource<bool>? _waitingReaders;
+    private TaskCompletionSource<bool>? _waitingReader;
 
     // A flag indicating whether or not complete has been called.
     private bool _completed;
@@ -40,9 +40,11 @@ internal sealed class SingleConsumerUnboundedChannel<T>
 
             // If WaitToReadAsync was called previously, we want to complete the task it returned.
             // We complete it with value true because we have an item that can be read now.
-            TaskCompletionSource<bool>? waitingReaders = _waitingReaders;
-            _waitingReaders = null;
-            waitingReaders?.SetResult(true);
+            if (_waitingReader is { } waitingReader)
+            {
+                _waitingReader = null;
+                waitingReader.SetResult(true);
+            }
         }
     }
 
@@ -72,8 +74,15 @@ internal sealed class SingleConsumerUnboundedChannel<T>
                 return FalseTask;
             }
 
-            _waitingReaders ??= new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            return _waitingReaders.Task;
+            if (_waitingReader is not null)
+            {
+                // Two calls happened to WaitToReadAsync without anything being written in between.
+                // This indicates multiple consumers (or single consumer calling this twice without await), which should never happen.
+                throw new UnreachableException();
+            }
+
+            _waitingReader = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _waitingReader.Task;
         }
     }
 
@@ -85,9 +94,11 @@ internal sealed class SingleConsumerUnboundedChannel<T>
 
             // If there was previously a call to WaitToReadAsync, and we had no items in the queue, and we are completing now.
             // Then there is nothing to read. So we set the task value to false.
-            TaskCompletionSource<bool>? waitingReaders = _waitingReaders;
-            _waitingReaders = null;
-            waitingReaders?.SetResult(false);
+            if (_waitingReader is { } waitingReader)
+            {
+                _waitingReader = null;
+                waitingReader.SetResult(false);
+            }
         }
     }
 }
