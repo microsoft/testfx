@@ -57,6 +57,11 @@ internal sealed class SingleConsumerUnboundedChannel<T>
 
     public Task<bool> WaitToReadAsync(CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled<bool>(cancellationToken);
+        }
+
         // We have something already in the channel.
         // We return true.
         if (!_items.IsEmpty)
