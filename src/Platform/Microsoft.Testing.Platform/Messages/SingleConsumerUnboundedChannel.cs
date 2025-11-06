@@ -26,7 +26,7 @@ internal sealed class SingleConsumerUnboundedChannel<T>
 
     // It's safe to lock on _items rather than a dedicated lock object.
     // It's a private field and we own it.
-    // There is no need to add an extra object for no value.
+    // This avoids allocating additional object that adds no value.
     private object SyncObj => _items;
 
     public void Write(T item)
