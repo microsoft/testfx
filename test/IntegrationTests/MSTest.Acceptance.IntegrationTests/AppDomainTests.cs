@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -121,6 +122,114 @@ namespace AppDomainTests
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath} --list-tests{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, compilationResult.ExitCode);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task RunTests_With_VSTestConsole_Directly(bool? disableAppDomain)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0]));
+
+        // Build the test project
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath} -c Debug",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, buildResult.ExitCode, $"Build failed: {buildResult.StandardOutput}");
+
+        // Get the DLL path
+        string dllPath = Path.Combine(testAsset.TargetAssetPath, "bin", "Debug", TargetFrameworks.NetFramework[0], $"{AssetName}.dll");
+        Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
+
+        // Prepare run settings
+        string runSettings = disableAppDomain switch
+        {
+            true => "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>",
+            false => "<RunSettings><RunConfiguration><DisableAppDomain>false</DisableAppDomain></RunConfiguration></RunSettings>",
+            null => string.Empty,
+        };
+
+        // Run tests using vstest.console.exe directly
+        string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
+        string arguments = $"\"{vstestConsolePath}\" \"{dllPath}\"";
+        if (!string.IsNullOrEmpty(runSettings))
+        {
+            string runSettingsPath = Path.Combine(testAsset.TargetAssetPath, "test.runsettings");
+            await File.WriteAllTextAsync(runSettingsPath, runSettings);
+            arguments += $" /Settings:\"{runSettingsPath}\"";
+        }
+
+        using var commandLine = new CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            arguments,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        
+        Assert.AreEqual(0, exitCode, $"Tests failed: {commandLine.StandardOutput}");
+        Assert.IsTrue(commandLine.StandardOutput.Contains("Passed   2") || commandLine.StandardOutput.Contains("Passed: 2"), 
+            $"Expected 2 passed tests but got: {commandLine.StandardOutput}");
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task DiscoverTests_With_VSTestConsole_Directly(bool? disableAppDomain)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0]));
+
+        // Build the test project
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath} -c Debug",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, buildResult.ExitCode, $"Build failed: {buildResult.StandardOutput}");
+
+        // Get the DLL path
+        string dllPath = Path.Combine(testAsset.TargetAssetPath, "bin", "Debug", TargetFrameworks.NetFramework[0], $"{AssetName}.dll");
+        Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
+
+        // Prepare run settings
+        string runSettings = disableAppDomain switch
+        {
+            true => "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>",
+            false => "<RunSettings><RunConfiguration><DisableAppDomain>false</DisableAppDomain></RunConfiguration></RunSettings>",
+            null => string.Empty,
+        };
+
+        // Run discovery using vstest.console.exe directly
+        string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
+        string arguments = $"\"{vstestConsolePath}\" \"{dllPath}\" /ListTests";
+        if (!string.IsNullOrEmpty(runSettings))
+        {
+            string runSettingsPath = Path.Combine(testAsset.TargetAssetPath, "test.runsettings");
+            await File.WriteAllTextAsync(runSettingsPath, runSettings);
+            arguments += $" /Settings:\"{runSettingsPath}\"";
+        }
+
+        using var commandLine = new CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            arguments,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        
+        Assert.AreEqual(0, exitCode, $"Discovery failed: {commandLine.StandardOutput}");
+        Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod1"), 
+            $"Expected to find TestMethod1 but got: {commandLine.StandardOutput}");
+        Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod2"), 
+            $"Expected to find TestMethod2 but got: {commandLine.StandardOutput}");
     }
 
     public TestContext TestContext { get; set; }
