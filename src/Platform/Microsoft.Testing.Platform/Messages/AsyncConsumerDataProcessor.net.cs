@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Messages;
 
 [DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
-internal sealed class AsyncConsumerDataProcessor : IDisposable, IAsyncConsumerDataProcessor
+internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
 {
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
