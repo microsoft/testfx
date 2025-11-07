@@ -22,6 +22,9 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly Dictionary<Type, List<IAsyncConsumerDataProcessor>> _dataTypeConsumers = [];
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+#if !NETCOREAPP
+    private readonly bool _forceBlockingCollection;
+#endif
     private bool _disabled;
 
     public AsynchronousMessageBus(
@@ -37,6 +40,12 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         _environment = environment;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
+#if !NETCOREAPP
+        // Note: This env variable is only present temporarily.
+        // Please, don't use it except for working around an issue that was reported to microsoft/testfx repo **and** a team member instructs you to do so.
+        // This env variable is undocumented and we will remove it in a soon release.
+        _forceBlockingCollection = _environment.GetEnvironmentVariable("MicrosoftTestingPlatform.MessageBus.UseBlockingCollection") == "1";
+#endif
     }
 
     public override IDataConsumer[] DataConsumerServices
@@ -66,7 +75,13 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
                 if (!_consumerProcessor.TryGetValue(consumer, out IAsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
                 {
+#if !NETCOREAPP
+                    asyncMultiProducerMultiConsumerDataProcessor = _forceBlockingCollection
+                        ? new BlockingCollectionConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken)
+                        : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
+#else
                     asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
+#endif
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
                 }
 
