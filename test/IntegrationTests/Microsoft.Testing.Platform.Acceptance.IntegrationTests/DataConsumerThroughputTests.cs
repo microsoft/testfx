@@ -21,11 +21,7 @@ public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroug
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
-        // The test should complete in a reasonable time (30 seconds).
-        // Before the fix, this could take 20+ seconds on .NET Framework.
-        // After the fix, it should complete much faster (typically < 5 seconds).
-        Assert.IsLessThan(stopwatch.Elapsed.TotalSeconds, 30,
-            $"Test took {stopwatch.Elapsed.TotalSeconds:F2} seconds, which exceeds the reasonable threshold of 30 seconds.");
+        Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
