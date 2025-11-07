@@ -14,9 +14,6 @@ public sealed class AppDomainTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "AppDomainTests";
 
-    private const string RunSettingsWithDisableAppDomainTrue = "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>";
-    private const string RunSettingsWithDisableAppDomainFalse = "<RunSettings><RunConfiguration><DisableAppDomain>false</DisableAppDomain></RunConfiguration></RunSettings>";
-
     private const string SingleTestSourceCode = """
 #file AppDomainTests.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
@@ -152,18 +149,16 @@ namespace AppDomainTests
         string dllPath = GetTestDllPath(testAsset.TargetAssetPath, TargetFrameworks.NetFramework[0]);
         Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
 
-        // Prepare run settings
-        string runSettings = GetRunSettingsXml(disableAppDomain);
-
         // Run tests using vstest.console.exe directly
         string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
-        string arguments = $"\"{dllPath}\"";
-        if (!string.IsNullOrEmpty(runSettings))
+        string disableAppDomainCommand = disableAppDomain switch
         {
-            string runSettingsPath = Path.Combine(testAsset.TargetAssetPath, "test.runsettings");
-            await File.WriteAllTextAsync(runSettingsPath, runSettings);
-            arguments += $" /Settings:\"{runSettingsPath}\"";
-        }
+            true => " -- RunConfiguration.DisableAppDomain=true",
+            false => " -- RunConfiguration.EnableAppDomain=false",
+            null => string.Empty,
+        };
+
+        string arguments = $"\"{dllPath}\"{disableAppDomainCommand}";
 
         using var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
@@ -200,18 +195,15 @@ namespace AppDomainTests
         string dllPath = GetTestDllPath(testAsset.TargetAssetPath, TargetFrameworks.NetFramework[0]);
         Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
 
-        // Prepare run settings
-        string runSettings = GetRunSettingsXml(disableAppDomain);
-
         // Run discovery using vstest.console.exe directly
         string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
-        string arguments = $"\"{dllPath}\" /ListTests";
-        if (!string.IsNullOrEmpty(runSettings))
+        string disableAppDomainCommand = disableAppDomain switch
         {
-            string runSettingsPath = Path.Combine(testAsset.TargetAssetPath, "test.runsettings");
-            await File.WriteAllTextAsync(runSettingsPath, runSettings);
-            arguments += $" /Settings:\"{runSettingsPath}\"";
-        }
+            true => " -- RunConfiguration.DisableAppDomain=true",
+            false => " -- RunConfiguration.EnableAppDomain=false",
+            null => string.Empty,
+        };
+        string arguments = $"\"{dllPath}\" /ListTests{disableAppDomainCommand}";
 
         using var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
@@ -228,13 +220,6 @@ namespace AppDomainTests
 
     private static string GetTestDllPath(string assetPath, string targetFramework) =>
         Path.Combine(assetPath, "bin", "Debug", targetFramework, $"{AssetName}.dll");
-
-    private static string GetRunSettingsXml(bool? disableAppDomain) => disableAppDomain switch
-    {
-        true => RunSettingsWithDisableAppDomainTrue,
-        false => RunSettingsWithDisableAppDomainFalse,
-        null => string.Empty,
-    };
 
     public TestContext TestContext { get; set; }
 }
