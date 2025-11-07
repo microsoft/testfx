@@ -14,6 +14,9 @@ public sealed class AppDomainTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "AppDomainTests";
 
+    private const string RunSettingsWithDisableAppDomainTrue = "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>";
+    private const string RunSettingsWithDisableAppDomainFalse = "<RunSettings><RunConfiguration><DisableAppDomain>false</DisableAppDomain></RunConfiguration></RunSettings>";
+
     private const string SingleTestSourceCode = """
 #file AppDomainTests.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
@@ -146,16 +149,11 @@ namespace AppDomainTests
         Assert.AreEqual(0, buildResult.ExitCode, $"Build failed: {buildResult.StandardOutput}");
 
         // Get the DLL path
-        string dllPath = Path.Combine(testAsset.TargetAssetPath, "bin", "Debug", TargetFrameworks.NetFramework[0], $"{AssetName}.dll");
+        string dllPath = GetTestDllPath(testAsset.TargetAssetPath, TargetFrameworks.NetFramework[0]);
         Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
 
         // Prepare run settings
-        string runSettings = disableAppDomain switch
-        {
-            true => "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>",
-            false => "<RunSettings><RunConfiguration><DisableAppDomain>false</DisableAppDomain></RunConfiguration></RunSettings>",
-            null => string.Empty,
-        };
+        string runSettings = GetRunSettingsXml(disableAppDomain);
 
         // Run tests using vstest.console.exe directly
         string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
@@ -199,16 +197,11 @@ namespace AppDomainTests
         Assert.AreEqual(0, buildResult.ExitCode, $"Build failed: {buildResult.StandardOutput}");
 
         // Get the DLL path
-        string dllPath = Path.Combine(testAsset.TargetAssetPath, "bin", "Debug", TargetFrameworks.NetFramework[0], $"{AssetName}.dll");
+        string dllPath = GetTestDllPath(testAsset.TargetAssetPath, TargetFrameworks.NetFramework[0]);
         Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
 
         // Prepare run settings
-        string runSettings = disableAppDomain switch
-        {
-            true => "<RunSettings><RunConfiguration><DisableAppDomain>true</DisableAppDomain></RunConfiguration></RunSettings>",
-            false => "<RunSettings><RunConfiguration><DisableAppDomain>false</DisableAppDomain></RunConfiguration></RunSettings>",
-            null => string.Empty,
-        };
+        string runSettings = GetRunSettingsXml(disableAppDomain);
 
         // Run discovery using vstest.console.exe directly
         string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
@@ -232,6 +225,16 @@ namespace AppDomainTests
         Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod2"), 
             $"Expected to find TestMethod2 but got: {commandLine.StandardOutput}");
     }
+
+    private static string GetTestDllPath(string assetPath, string targetFramework) =>
+        Path.Combine(assetPath, "bin", "Debug", targetFramework, $"{AssetName}.dll");
+
+    private static string GetRunSettingsXml(bool? disableAppDomain) => disableAppDomain switch
+    {
+        true => RunSettingsWithDisableAppDomainTrue,
+        false => RunSettingsWithDisableAppDomainFalse,
+        null => string.Empty,
+    };
 
     public TestContext TestContext { get; set; }
 }
