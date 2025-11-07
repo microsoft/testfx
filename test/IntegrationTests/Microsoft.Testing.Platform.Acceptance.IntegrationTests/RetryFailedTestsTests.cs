@@ -209,11 +209,37 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : ITestAssetFixture
     {
+        private readonly ConcurrentDictionary<string, TestAsset> _testAssets = new();
+        private readonly TempDirectory _tempDirectory = new();
+        private bool _disposedValue;
+
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        private string GetAssetPath(string assetID)
+            => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
+                ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
+                : testAsset.TargetAssetPath;
+
+        public async Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
+            foreach (var asset in GetAssetsToGenerate())
+            {
+                TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.ID, asset.Code, _tempDirectory);
+                DotnetMuxerResult result = await DotnetCli.RunAsync(
+                    $"build {testAsset.TargetAssetPath} -c Release {globalProperties}",
+                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+                    callerMemberName: asset.Name,
+                    cancellationToken: cancellationToken);
+                testAsset.DotnetResult = result;
+                _testAssets.TryAdd(asset.ID, testAsset);
+            }
+        }
+
+        private IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
             yield return (AssetName, AssetName,
                 TestCode
@@ -229,7 +255,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>$([MSBuild]::IsOSPlatform('OSX') == 'false')</UseAppHost>
+        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
@@ -411,6 +437,21 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     }
 }
 """;
+        }
+
+        public void Dispose()
+        {
+            if (!_disposedValue)
+            {
+                foreach (var assetPair in _testAssets)
+                {
+                    assetPair.Value.Dispose();
+                }
+
+                _tempDirectory.Dispose();
+                _disposedValue = true;
+            }
+        }
     }
 
     public TestContext TestContext { get; set; }
