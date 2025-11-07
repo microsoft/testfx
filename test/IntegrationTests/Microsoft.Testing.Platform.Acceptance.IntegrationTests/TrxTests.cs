@@ -219,8 +219,7 @@ Out of process file artifacts produced:
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
-        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'">true</UseAppHost>
+        <UseAppHost>$([MSBuild]::IsOSPlatform('OSX') == 'false')</UseAppHost>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
@@ -303,8 +302,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
-        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'">true</UseAppHost>
+        <UseAppHost>$([MSBuild]::IsOSPlatform('OSX') == 'false')</UseAppHost>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
