@@ -30,7 +30,9 @@ public class DesktopSettingsProviderTests : TestContainer
         IDictionary<string, object> properties = _settingsProvider.GetProperties(null);
 
         properties.Should().NotBeNull();
+#if !WINDOWS_UWP && !WIN_UI
         properties.Count.Should().BeGreaterThan(0);
+#endif
     }
 
     public void SettingsShouldReturnDefaultSettingsIfNotInitialized()

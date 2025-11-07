@@ -7,8 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Services;
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class ThreadOperationsTests : TestContainer
 {

@@ -151,8 +151,32 @@ public class UnitTest1
     private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
     {
         string vswherePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
+        string path = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken);
+
+        if (string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            // WORKAROUND: Allow SDK to consider preview versions when running under a stable VS.
+            // https://github.com/dotnet/sdk/issues/51525
+            string installationVersion = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property installationVersion", cancellationToken);
+            string instanceId = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-property instanceId", cancellationToken);
+            var version = Version.Parse(installationVersion);
+            string directory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Microsoft",
+                "VisualStudio",
+                version.Major + ".0_" + instanceId);
+            Directory.CreateDirectory(directory);
+            string settingsFilePath = Path.Combine(directory, "sdk.txt");
+            File.WriteAllText(settingsFilePath, "UsePreviews=True");
+        }
+
+        return path;
+    }
+
+    private static async Task<string> RunAndGetSingleLineStandardOutputAsync(string vswherePath, string arg, CancellationToken cancellationToken)
+    {
         var commandLine = new TestInfrastructure.CommandLine();
-        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken: cancellationToken);
+        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild {arg}", cancellationToken: cancellationToken);
 
         string? path = null;
         using (var stringReader = new StringReader(commandLine.StandardOutput))

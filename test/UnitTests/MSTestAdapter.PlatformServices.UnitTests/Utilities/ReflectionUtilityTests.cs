@@ -7,12 +7,25 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-#pragma warning disable SA1649 // File name must match first type name
 public class ReflectionUtilityTests : TestContainer
-#pragma warning restore SA1649 // File name must match first type name
 {
+#if NETFRAMEWORK
+    public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
+    {
+        Assembly asm = typeof(DummyTestClass).Assembly;
+
+        List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+
+        attributes.Should().NotBeNull();
+        attributes.Count.Should().Be(2);
+
+        string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
+        expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)).Should().BeTrue();
+    }
+#endif
+
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;

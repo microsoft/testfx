@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -12,11 +13,9 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-#pragma warning disable SA1649 // File name must match first type name
 public class DeploymentItemUtilityTests : TestContainer
-#pragma warning restore SA1649 // File name must match first type name
 {
     internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
         "MSTestDiscoverer.DeploymentItems",
@@ -432,3 +431,4 @@ public class DeploymentItemUtilityTests : TestContainer
 
     #endregion
 }
+#endif

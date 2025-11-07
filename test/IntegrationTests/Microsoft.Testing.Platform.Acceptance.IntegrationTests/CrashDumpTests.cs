@@ -10,21 +10,33 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)
     {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --crashdump --results-directory {resultDirectory}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found '{tfm}'\n{testHostResult}'");
+        Assert.IsNotNull(dumpFile, $"Dump file not found '{tfm}'\n{result}'");
     }
 
     [TestMethod]
     public async Task CrashDump_CustomDumpName_CreateDump()
     {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         Assert.IsNotNull(Directory.GetFiles(resultDirectory, "customdumpname.dmp", SearchOption.AllDirectories).SingleOrDefault(), "Dump file not found");
     }
 
@@ -35,23 +47,35 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
     [TestMethod]
     public async Task CrashDump_Formats_CreateDump(string format)
     {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-type {format} --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-type {format} --results-directory {resultDirectory}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
         string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found '{format}'\n{testHostResult}'");
+        Assert.IsNotNull(dumpFile, $"Dump file not found '{format}'\n{result}'");
         File.Delete(dumpFile);
     }
 
     [TestMethod]
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump  --crashdump-type invalid --results-directory {resultDirectory}", cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {TargetFrameworks.NetCurrent} {globalProperties} --crashdump --crashdump-type invalid --results-directory {resultDirectory}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
+        result.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
