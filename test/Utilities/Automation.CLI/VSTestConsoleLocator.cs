@@ -43,7 +43,7 @@ public static class VSTestConsoleLocator
 
     private static string GetNugetPackageFolder()
     {
-        string nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+        string? nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
         {
             Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
@@ -51,7 +51,12 @@ public static class VSTestConsoleLocator
             return nugetPackagesFolderPath;
         }
 
-        string userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
+        string? userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
+        if (string.IsNullOrEmpty(userProfile))
+        {
+            throw new InvalidOperationException("USERPROFILE environment variable is not set");
+        }
+
         nugetPackagesFolderPath = Path.Combine(userProfile, ".nuget", "packages");
         Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
