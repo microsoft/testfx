@@ -27,9 +27,6 @@ public sealed class AsyncConsumerDataProcessorTests
         // Act - Publish data that will cause the consumer to throw
         await processor.PublishAsync(producer, new DummyData());
 
-        // Wait a bit to ensure the consume task has started processing
-        await Task.Delay(50);
-
         // Assert - DrainDataAsync should rethrow the exception from the consumer
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await processor.DrainDataAsync());
@@ -78,9 +75,6 @@ public sealed class AsyncConsumerDataProcessorTests
         await processor.PublishAsync(producer, new DummyData());
         await processor.PublishAsync(producer, new DummyData());
         await processor.PublishAsync(producer, new DummyData());
-
-        // Wait a bit to ensure processing has started
-        await Task.Delay(100);
 
         // Assert - DrainDataAsync should rethrow the exception
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -194,8 +188,8 @@ public sealed class AsyncConsumerDataProcessorTests
 
         public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
         {
-            _itemCount++;
-            if (_itemCount == _throwOnItemNumber)
+            int currentCount = Interlocked.Increment(ref _itemCount);
+            if (currentCount == _throwOnItemNumber)
             {
                 throw _exceptionToThrow;
             }
@@ -206,7 +200,9 @@ public sealed class AsyncConsumerDataProcessorTests
 
     private sealed class SimpleConsumer : IDataConsumer
     {
-        public int ConsumedCount { get; private set; }
+        private int _consumedCount;
+
+        public int ConsumedCount => _consumedCount;
 
         public Type[] DataTypesConsumed => [typeof(DummyData)];
         public string Uid => nameof(SimpleConsumer);
@@ -217,7 +213,7 @@ public sealed class AsyncConsumerDataProcessorTests
 
         public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
         {
-            ConsumedCount++;
+            Interlocked.Increment(ref _consumedCount);
             return Task.CompletedTask;
         }
     }
