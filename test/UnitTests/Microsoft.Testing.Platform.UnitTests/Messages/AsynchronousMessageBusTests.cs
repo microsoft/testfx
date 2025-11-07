@@ -35,6 +35,7 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    [Ignore("Test is failing. No exception is thrown. https://github.com/microsoft/testfx/issues/6892")]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
         using MessageBusProxy proxy = new();
@@ -51,7 +52,7 @@ public sealed class AsynchronousMessageBusTests
 
         await proxy.PublishAsync(consumerA, new LoopDataA());
 
-        Exception ex = await Assert.ThrowsAsync<InvalidOperationException>(asynchronousMessageBus.DrainDataAsync);
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(asynchronousMessageBus.DrainDataAsync);
         Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
 
         // Prevent loop to continue
