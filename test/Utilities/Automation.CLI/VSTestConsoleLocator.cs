@@ -73,13 +73,8 @@ public static class VSTestConsoleLocator
         var cpmXml = new XmlDocument();
         cpmXml.Load(xmlTextReader);
 
-        XmlNode? testSdkVersion = cpmXml.DocumentElement?.SelectSingleNode("PropertyGroup/MicrosoftNETTestSdkVersion");
-        if (testSdkVersion is null)
-        {
-            throw new InvalidOperationException($"Could not find MicrosoftNETTestSdkVersion in {cpmFilePath}");
-        }
-
-        return testSdkVersion.InnerText;
+        return cpmXml.DocumentElement?.SelectSingleNode("PropertyGroup/MicrosoftNETTestSdkVersion")?.InnerText
+            ?? throw new InvalidOperationException($"Could not find MicrosoftNETTestSdkVersion in {cpmFilePath}");
     }
 
     private static string GetArtifactsBinFolderPath()
