@@ -4,6 +4,7 @@
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -158,7 +159,7 @@ namespace AppDomainTests
 
         // Run tests using vstest.console.exe directly
         string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
-        string arguments = $"\"{vstestConsolePath}\" \"{dllPath}\"";
+        string arguments = $"\"{dllPath}\"";
         if (!string.IsNullOrEmpty(runSettings))
         {
             string runSettingsPath = Path.Combine(testAsset.TargetAssetPath, "test.runsettings");
@@ -168,7 +169,7 @@ namespace AppDomainTests
 
         using var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            arguments,
+            $"\"{vstestConsolePath}\" {arguments}",
             workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
         
@@ -211,7 +212,7 @@ namespace AppDomainTests
 
         // Run discovery using vstest.console.exe directly
         string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
-        string arguments = $"\"{vstestConsolePath}\" \"{dllPath}\" /ListTests";
+        string arguments = $"\"{dllPath}\" /ListTests";
         if (!string.IsNullOrEmpty(runSettings))
         {
             string runSettingsPath = Path.Combine(testAsset.TargetAssetPath, "test.runsettings");
@@ -221,7 +222,7 @@ namespace AppDomainTests
 
         using var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            arguments,
+            $"\"{vstestConsolePath}\" {arguments}",
             workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
         
