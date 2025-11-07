@@ -19,7 +19,6 @@
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
     <PackageReference Include="StreamJsonRpc" />
-    <PackageReference Include="Microsoft.TestPlatform" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
