@@ -71,6 +71,7 @@ public sealed class TaskExtensionsTests
     }
 
     [TestMethod]
+    [Ignore("https://github.com/microsoft/testfx/issues/6907")]
     public async Task CancellationAsync_ObserveException_Succeeds()
     {
         ManualResetEvent waitException = new(false);
@@ -90,6 +91,7 @@ public sealed class TaskExtensionsTests
     }
 
     [TestMethod]
+    [Ignore("https://github.com/microsoft/testfx/issues/6907")]
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
     {
         ManualResetEvent waitException = new(false);
