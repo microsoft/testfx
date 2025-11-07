@@ -167,7 +167,7 @@ namespace AppDomainTests
             cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, exitCode, $"Tests failed.\nStdOut: {commandLine.StandardOutput}\nStdErr: {commandLine.ErrorOutput}");
-        Assert.IsTrue(commandLine.StandardOutput.Contains("Passed   2") || commandLine.StandardOutput.Contains("Passed: 2"), 
+        Assert.IsTrue(commandLine.StandardOutput.Contains("Passed   2") || commandLine.StandardOutput.Contains("Passed: 2"),
             $"Expected 2 passed tests but got: {commandLine.StandardOutput}");
     }
 
@@ -212,9 +212,9 @@ namespace AppDomainTests
             cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, exitCode, $"Discovery failed.\nStdOut: {commandLine.StandardOutput}\nStdErr: {commandLine.ErrorOutput}");
-        Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod1"), 
+        Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod1"),
             $"Expected to find TestMethod1 but got: {commandLine.StandardOutput}");
-        Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod2"), 
+        Assert.IsTrue(commandLine.StandardOutput.Contains("AppDomainTests.UnitTest1.TestMethod2"),
             $"Expected to find TestMethod2 but got: {commandLine.StandardOutput}");
     }
 
