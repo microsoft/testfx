@@ -8,7 +8,7 @@ trigger:
 pr:
   branches:
     include:
-    - *
+    - "*"
   paths:
     exclude:
       - .github/*
