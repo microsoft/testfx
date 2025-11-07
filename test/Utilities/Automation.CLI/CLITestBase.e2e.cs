@@ -15,7 +15,7 @@ public abstract partial class CLITestBase
     protected CLITestBase()
     {
         s_vsTestConsoleWrapper = new(
-            GetConsoleRunnerPath(),
+            VSTestConsoleLocator.GetConsoleRunnerPath(),
             new()
             {
                 EnvironmentVariables = new()
@@ -65,51 +65,7 @@ public abstract partial class CLITestBase
         }
     }
 
-    public static string GetNugetPackageFolder()
-    {
-        string nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
-        if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
-        {
-            Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
-            return nugetPackagesFolderPath;
-        }
-
-        string userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
-        nugetPackagesFolderPath = Path.Combine(userProfile, ".nuget", "packages");
-        Assert.IsTrue(Directory.Exists(nugetPackagesFolderPath), $"NuGet package folder '{nugetPackagesFolderPath}' should exist");
-
-        return nugetPackagesFolderPath;
-    }
-
-    /// <summary>
-    /// Gets the path to <c>vstest.console.exe</c>.
-    /// </summary>
-    /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
-    public static string GetConsoleRunnerPath()
-    {
-        string testPlatformNuGetPackageFolder = Path.Combine(
-            GetNugetPackageFolder(),
-            TestPlatformCLIPackageName,
-            GetTestPlatformVersion());
-        if (!Directory.Exists(testPlatformNuGetPackageFolder))
-        {
-            throw new DirectoryNotFoundException($"Test platform NuGet package folder '{testPlatformNuGetPackageFolder}' does not exist");
-        }
-
-        string vstestConsolePath = Path.Combine(
-            testPlatformNuGetPackageFolder,
-            "tools",
-            "net462",
-            "Common7",
-            "IDE",
-            "Extensions",
-            "TestPlatform",
-            "vstest.console.exe");
-        return !File.Exists(vstestConsolePath)
-            ? throw new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}")
-            : vstestConsolePath;
-    }
 
     /// <summary>
     /// Validate if the discovered tests list contains provided tests.
