@@ -191,7 +191,8 @@ internal class MSTestAdapterSettings
         // Otherwise, we will not merge app.config properly, nor we will have correct BaseDirectory of current domain.
 #if NETFRAMEWORK
         if (AppDomain.CurrentDomain.Id == 1 &&
-            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) &&
+            (AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) ||
+             AppDomain.CurrentDomain.FriendlyName.StartsWith("vstest.console.", StringComparison.Ordinal)) &&
             AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal))
         {
             disableAppDomain = false;
