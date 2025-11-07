@@ -51,7 +51,7 @@ public sealed class AsynchronousMessageBusTests
 
         await proxy.PublishAsync(consumerA, new LoopDataA());
 
-        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(asynchronousMessageBus.DrainDataAsync);
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(asynchronousMessageBus.DrainDataAsync);
         Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
 
         // Prevent loop to continue
