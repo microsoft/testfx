@@ -35,7 +35,6 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
-    [Ignore("Test is failing. No exception is thrown. https://github.com/microsoft/testfx/issues/6892")]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
         using MessageBusProxy proxy = new();
