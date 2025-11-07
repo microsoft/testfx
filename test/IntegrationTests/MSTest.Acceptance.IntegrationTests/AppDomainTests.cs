@@ -163,7 +163,6 @@ namespace AppDomainTests
         using var commandLine = new CommandLine();
         await commandLine.RunAsync(
             $"\"{vstestConsolePath}\" {arguments}",
-            workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
     }
 
@@ -204,7 +203,6 @@ namespace AppDomainTests
         using var commandLine = new CommandLine();
         await commandLine.RunAsync(
             $"\"{vstestConsolePath}\" {arguments}",
-            workingDirectory: testAsset.TargetAssetPath,
             cancellationToken: TestContext.CancellationToken);
     }
 
