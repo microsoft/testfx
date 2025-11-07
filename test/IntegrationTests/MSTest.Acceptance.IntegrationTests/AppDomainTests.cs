@@ -92,7 +92,7 @@ namespace AppDomainTests
         string disableAppDomainCommand = disableAppDomain switch
         {
             true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.EnableAppDomain=false",
+            false => " -- RunConfiguration.DisableAppDomain=false",
             null => string.Empty,
         };
 
@@ -117,7 +117,7 @@ namespace AppDomainTests
         string disableAppDomainCommand = disableAppDomain switch
         {
             true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.EnableAppDomain=false",
+            false => " -- RunConfiguration.DisableAppDomain=false",
             null => string.Empty,
         };
 
@@ -154,7 +154,7 @@ namespace AppDomainTests
         string disableAppDomainCommand = disableAppDomain switch
         {
             true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.EnableAppDomain=false",
+            false => " -- RunConfiguration.DisableAppDomain=false",
             null => string.Empty,
         };
 
@@ -195,7 +195,7 @@ namespace AppDomainTests
         string disableAppDomainCommand = disableAppDomain switch
         {
             true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.EnableAppDomain=false",
+            false => " -- RunConfiguration.DisableAppDomain=false",
             null => string.Empty,
         };
         string arguments = $"\"{dllPath}\" /ListTests{disableAppDomainCommand}";
