@@ -13,7 +13,7 @@ public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroug
     public async Task MultipleDataConsumers_ShouldCompleteInReasonableTime(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        
+
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         stopwatch.Stop();
