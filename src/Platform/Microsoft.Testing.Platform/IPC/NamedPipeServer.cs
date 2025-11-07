@@ -340,7 +340,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             try
             {
-            // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
+                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
                 await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutException)
