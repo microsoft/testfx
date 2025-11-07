@@ -97,6 +97,13 @@ internal sealed class UnitTestElement
         return clone;
     }
 
+    internal UnitTestElement CloneWithUpdatedSource(string source)
+    {
+        var clone = (UnitTestElement)MemberwiseClone();
+        clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
+        return clone;
+    }
+
     /// <summary>
     /// Convert the UnitTestElement instance to an Object Model testCase instance.
     /// </summary>
