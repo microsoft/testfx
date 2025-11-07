@@ -40,12 +40,6 @@ Out of process file artifacts produced:
     [TestMethod]
     public async Task Trx_WhenTestHostCrash_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -225,7 +219,8 @@ Out of process file artifacts produced:
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'">true</UseAppHost>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
@@ -308,7 +303,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'">true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>

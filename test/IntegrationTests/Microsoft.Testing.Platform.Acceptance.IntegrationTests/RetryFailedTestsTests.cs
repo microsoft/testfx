@@ -147,12 +147,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
     {
-        // TODO: Crash dump is not working properly on macos, so we skip the test for now
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
-
         await RetryHelper.RetryAsync(
             async () =>
             {
@@ -235,7 +229,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'">true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
