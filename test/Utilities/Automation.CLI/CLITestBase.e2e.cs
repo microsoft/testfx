@@ -65,8 +65,6 @@ public abstract partial class CLITestBase
         }
     }
 
-
-
     /// <summary>
     /// Validate if the discovered tests list contains provided tests.
     /// </summary>
