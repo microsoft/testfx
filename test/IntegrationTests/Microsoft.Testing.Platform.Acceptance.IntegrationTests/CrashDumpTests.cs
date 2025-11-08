@@ -98,7 +98,13 @@ public sealed class CrashDumpTests : AcceptanceTestBase<CrashDumpTests.TestAsset
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
+
+    <!-- Workaround: createdump doesn't work correctly on the apphost on macOS. -->
+    <!-- But it works correctly on the dotnet process. -->
+    <!-- So, disable apphost on macOS for now. -->
+    <!-- Related: https://github.com/dotnet/runtime/issues/119945 -->
+    <UseAppHost Condition="'$(OS)' == 'OSX'">false</UseAppHost>
+
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
