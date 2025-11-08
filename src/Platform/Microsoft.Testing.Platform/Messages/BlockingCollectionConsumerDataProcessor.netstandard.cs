@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
-using System.Threading.Channels;
+#if !NETCOREAPP
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -10,33 +9,25 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-[DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
-internal sealed class AsyncConsumerDataProcessor : IDisposable
+internal sealed class BlockingCollectionConsumerDataProcessor : IAsyncConsumerDataProcessor
 {
+    // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
+    private readonly BlockingCollection<(IDataProducer DataProducer, IData Data)> _payloads = [];
+
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
-    private readonly Channel<(IDataProducer DataProducer, IData Data)> _channel = Channel.CreateUnbounded<(IDataProducer DataProducer, IData Data)>(new UnboundedChannelOptions
-    {
-        // We process only 1 data at a time
-        SingleReader = true,
-
-        // We don't know how many threads will call the publish on the message bus
-        SingleWriter = false,
-
-        // We want to unlink the publish that's the message bus
-        AllowSynchronousContinuations = false,
-    });
 
     // This is needed to avoid possible race condition between drain and _totalPayloadProcessed race condition.
     // This is the "logical" consume workflow state.
-    private readonly TaskCompletionSource _consumerState = new();
+    private readonly TaskCompletionSource<object> _consumerState = new();
     private readonly Task _consumeTask;
+    private bool _disposed;
     private long _totalPayloadReceived;
     private long _totalPayloadProcessed;
 
-    public AsyncConsumerDataProcessor(IDataConsumer consumer, ITask task, CancellationToken cancellationToken)
+    public BlockingCollectionConsumerDataProcessor(IDataConsumer dataConsumer, ITask task, CancellationToken cancellationToken)
     {
-        DataConsumer = consumer;
+        DataConsumer = dataConsumer;
         _task = task;
         _cancellationToken = cancellationToken;
         _consumeTask = task.Run(ConsumeAsync, cancellationToken);
@@ -44,20 +35,19 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
 
     public IDataConsumer DataConsumer { get; }
 
-    public async Task PublishAsync(IDataProducer dataProducer, IData data)
+    public Task PublishAsync(IDataProducer dataProducer, IData data)
     {
         Interlocked.Increment(ref _totalPayloadReceived);
-        await _channel.Writer.WriteAsync((dataProducer, data), _cancellationToken).ConfigureAwait(false);
+        _payloads.Add((dataProducer, data), _cancellationToken);
+        return Task.CompletedTask;
     }
 
     private async Task ConsumeAsync()
     {
         try
         {
-            while (await _channel.Reader.WaitToReadAsync(_cancellationToken).ConfigureAwait(false))
+            foreach ((IDataProducer dataProducer, IData data) in _payloads.GetConsumingEnumerable(_cancellationToken))
             {
-                (IDataProducer dataProducer, IData data) = await _channel.Reader.ReadAsync(_cancellationToken).ConfigureAwait(false);
-
                 try
                 {
                     // We don't enqueue the data if the consumer is the producer of the data.
@@ -95,6 +85,11 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         {
             // Ignore we're shutting down
         }
+        catch (ObjectDisposedException)
+        {
+            // It's rare but possible that we DrainDataAsync/CompleteAddingAsync/Dispose and we didn't reach yet the GetConsumingEnumerable wait point
+            // after the last item elaboration. If this happen and the _payload is disposed and not "completed" we get an ObjectDisposedException.
+        }
         catch (Exception ex)
         {
             // For all other exception we signal the state if not already faulted
@@ -108,21 +103,16 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         }
 
         // We're exiting gracefully, signal the correct state.
-        _consumerState.SetResult();
-    }
-
-    public async Task CompleteAddingAsync()
-    {
-        // Signal that no more items will be added to the collection
-        // It's possible that we call this method multiple times
-        _channel.Writer.TryComplete();
-
-        // Wait for the consumer to complete
-        await _consumeTask.ConfigureAwait(false);
+        _consumerState.SetResult(new object());
     }
 
     public async Task<long> DrainDataAsync()
     {
+        if (_payloads.IsAddingCompleted)
+        {
+            throw new InvalidOperationException("Unexpected IsAddingCompleted state");
+        }
+
         // We go volatile because we race with Interlocked.Increment in PublishAsync
         long totalPayloadProcessed = Volatile.Read(ref _totalPayloadProcessed);
         long totalPayloadReceived = Volatile.Read(ref _totalPayloadReceived);
@@ -160,10 +150,24 @@ internal sealed class AsyncConsumerDataProcessor : IDisposable
         return _totalPayloadReceived;
     }
 
-    // At this point we simply signal the channel as complete and we don't wait for the consumer to complete.
-    // We expect that the CompleteAddingAsync() is already done correctly and so we prefer block the loop and in
-    // case get exception inside the PublishAsync()
+    public async Task CompleteAddingAsync()
+    {
+        // Signal that no more items will be added to the collection
+        _payloads.CompleteAdding();
+
+        // Wait for the consumer to complete
+        await _consumeTask.ConfigureAwait(false);
+    }
+
     public void Dispose()
-        => _channel.Writer.TryComplete();
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _payloads.Dispose();
+        _disposed = true;
+    }
 }
 #endif
