@@ -991,17 +991,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksTitle">
         <source>Do not use asserts in catch blocks</source>
-        <target state="new">Do not use asserts in catch blocks</target>
+        <target state="translated">N’utilisez pas d’assertions dans les blocs catch</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
         <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
-        <target state="new">Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</target>
+        <target state="translated">N’utilisez pas d’assertions dans les blocs catch, car elles peuvent ne pas faire échouer le test si aucune exception n’est levée</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
-        <target state="new">Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</target>
+        <target state="translated">L’utilisation d’assertions dans les blocs catch pose problème, car le test réussit même si aucune exception n’est levée et que le bloc catch n’est jamais exécuté. Utilisez « Assert.Throws », « Assert.ThrowsExactly », « Assert.ThrowsAsync » ou « Assert.ThrowsExactlyAsync » pour vérifier qu’une exception est levée, puis effectuez des assertions supplémentaires sur l’exception capturée sans utiliser le bloc try-catch.</target>
         <note />
       </trans-unit>
     </body>
