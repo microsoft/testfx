@@ -254,12 +254,12 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="new">Value '{0}' is not within the expected range [{1}..{2}]. {3}</target>
+        <target state="translated">Hodnota {0} není v očekávaném rozsahu [{1}..{2}]. {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
         <source>The maximum value must be greater than the minimum value.</source>
-        <target state="new">The maximum value must be greater than the minimum value.</target>
+        <target state="translated">Maximální hodnota musí být větší než minimální hodnota.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
