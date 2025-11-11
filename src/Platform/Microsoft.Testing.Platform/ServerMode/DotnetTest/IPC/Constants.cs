@@ -38,4 +38,5 @@ internal static class HandshakeMessagePropertyNames
 internal static class ProtocolConstants
 {
     internal const string Version = "1.0.0";
+    internal const string ProtocolName = "DotNetTestProtocol";
 }
