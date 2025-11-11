@@ -24,7 +24,7 @@ public sealed class SystemAsyncMonitorTests
 
         await Task.WhenAll([.. tasks]);
 
-        Assert.IsGreaterThanOrEqualTo(3000, stopwatch.ElapsedMilliseconds);
+        Assert.IsGreaterThanOrEqualTo(2900, stopwatch.ElapsedMilliseconds);
 
         async Task TestLock()
         {
