@@ -5,7 +5,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class ProcessFactory
 {
-    public static IProcessHandle Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
+    public static (IProcessHandle Handle, Task OutputAndErrorTask) Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
     {
         string fullPath = config.FileName; // Path.GetFullPath(startInfo.FileName);
         string workingDirectory = config.WorkingDirectory
@@ -61,32 +61,34 @@ public static class ProcessFactory
             process.Exited += (s, e) => config.OnExit.Invoke(processHandle, process.ExitCode);
         }
 
-        if (config.OnStandardOutput != null)
-        {
-            process.OutputDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                {
-                    config.OnStandardOutput(processHandle, e.Data);
-                }
-            };
-        }
-
-        if (config.OnErrorOutput != null)
-        {
-            process.ErrorDataReceived += (s, e) =>
-            {
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                {
-                    config.OnErrorOutput(processHandle, e.Data);
-                }
-            };
-        }
-
         if (!process.Start())
         {
             throw new InvalidOperationException("Process failed to start");
         }
+
+        Task outputTask = Task.Factory.StartNew(
+            () =>
+            {
+                while (process.StandardOutput.ReadLine() is string line)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        config.OnStandardOutput?.Invoke(processHandle, line);
+                    }
+                }
+            }, TaskCreationOptions.LongRunning);
+
+        Task errorTask = Task.Factory.StartNew(
+            () =>
+            {
+                while (process.StandardError.ReadLine() is string line)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        config.OnErrorOutput?.Invoke(processHandle, line);
+                    }
+                }
+            }, TaskCreationOptions.LongRunning);
 
         try
         {
@@ -100,16 +102,6 @@ public static class ProcessFactory
 
         processHandleInfo.Id = process.Id;
 
-        if (config.OnStandardOutput != null)
-        {
-            process.BeginOutputReadLine();
-        }
-
-        if (config.OnErrorOutput != null)
-        {
-            process.BeginErrorReadLine();
-        }
-
-        return processHandle;
+        return (processHandle, Task.WhenAll(outputTask, errorTask));
     }
 }
