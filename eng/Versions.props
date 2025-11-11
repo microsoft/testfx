@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup Label="Version settings">
     <!-- MSTest version -->
-    <VersionPrefix>3.11.1</VersionPrefix>
+    <VersionPrefix>3.11.2</VersionPrefix>
     <!-- Testing Platform version -->
-    <TestingPlatformVersionPrefix>1.9.1</TestingPlatformVersionPrefix>
+    <TestingPlatformVersionPrefix>1.9.2</TestingPlatformVersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
