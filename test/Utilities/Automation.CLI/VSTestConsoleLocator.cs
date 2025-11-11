@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.TestInfrastructure;
 
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
@@ -37,8 +39,16 @@ public static class VSTestConsoleLocator
             "TestPlatform",
             "vstest.console.exe");
         return !File.Exists(vstestConsolePath)
-            ? throw new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}")
+            ? throw GetExceptionForVSTestConsoleNotFound(vstestConsolePath)
             : vstestConsolePath;
+
+        InvalidOperationException GetExceptionForVSTestConsoleNotFound(string expectedPath)
+        {
+            string[] files = Directory.GetFiles(testPlatformNuGetPackageFolder, "vstest.console.exe", SearchOption.AllDirectories);
+            return files.Length == 0
+                ? new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}")
+                : new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}. Found in:{Environment.NewLine}{string.Join(Environment.NewLine, files)}");
+        }
     }
 
     private static string GetNugetPackageFolder()
@@ -65,7 +75,7 @@ public static class VSTestConsoleLocator
 
     private static string GetTestPlatformVersion()
     {
-        string cpmFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", "Directory.Packages.props");
+        string cpmFilePath = Path.Combine(RootFinder.Find(), "Directory.Packages.props");
         using FileStream fileStream = File.OpenRead(cpmFilePath);
 #pragma warning disable CA3075 // Insecure DTD processing in XML
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
@@ -75,15 +85,5 @@ public static class VSTestConsoleLocator
 
         return cpmXml.DocumentElement?.SelectSingleNode("PropertyGroup/MicrosoftNETTestSdkVersion")?.InnerText
             ?? throw new InvalidOperationException($"Could not find MicrosoftNETTestSdkVersion in {cpmFilePath}");
-    }
-
-    private static string GetArtifactsBinFolderPath()
-    {
-        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-
-        string artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
-        Assert.IsTrue(Directory.Exists(artifactsBinFolder));
-
-        return artifactsBinFolder;
     }
 }
