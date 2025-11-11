@@ -67,7 +67,7 @@ internal sealed class BlockingCollectionConsumerDataProcessor : IAsyncConsumerDa
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
                         // If we're draining before to increment the _totalPayloadProcessed we need to signal that we should throw because
-                        // it's possible we have a race condition where the payload check at line 106 return false and the current task is not yet in a
+                        // it's possible we have a race condition where the payload counting in DrainDataAsync returns false and the current task is not yet in a
                         // "faulted state".
                         _consumerState.SetException(ex);
 
