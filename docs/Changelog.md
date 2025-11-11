@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.0.2" />[4.0.2] - 2025-11-11
+
+See full log [of v4.0.1...v4.0.2](https://github.com/microsoft/testfx/compare/v4.0.1...v4.0.2)
+
+### Fixed
+
+* Fix DisableAppDomain default value when not running in isolation under VSTest by @Copilot in [#6909](https://github.com/microsoft/testfx/pull/6909)
+* Update Microsoft.NET.Test.Sdk version to 18.0.1 by @nohwnd in [#6924](https://github.com/microsoft/testfx/pull/6924)
+
+### Housekeeping
+
+* Update Microsoft.Build.Utilities.Core to 17.11.48 by @Youssef1313 in [#6846](https://github.com/microsoft/testfx/pull/6846)
+
+### Artifacts
+
+* MSTest: [4.0.2](https://www.nuget.org/packages/MSTest/4.0.2)
+* MSTest.TestFramework: [4.0.2](https://www.nuget.org/packages/MSTest.TestFramework/4.0.2)
+* MSTest.TestAdapter: [4.0.2](https://www.nuget.org/packages/MSTest.TestAdapter/4.0.2)
+* MSTest.Analyzers: [4.0.2](https://www.nuget.org/packages/MSTest.Analyzers/4.0.2)
+* MSTest.Sdk: [4.0.2](https://www.nuget.org/packages/MSTest.Sdk/4.0.2)
+* MSTest.SourceGeneration: [2.0.0-alpha.25561.4](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.25561.4)
+* MSTest.Engine: [2.0.0-alpha.25561.4](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.25561.4)
+
 ## <a name="4.0.1" />[4.0.1] - 2025-10-14
 
 See full log [of v4.0.0...v4.0.1](https://github.com/microsoft/testfx/compare/v4.0.0...v4.0.1)
@@ -44,6 +67,28 @@ See full log [of v3.11.0...v4.0.0](https://github.com/microsoft/testfx/compare/v
 * MSTest.Sdk: [4.0.0](https://www.nuget.org/packages/MSTest.Sdk/4.0.0)
 * MSTest.SourceGeneration: [2.0.0-alpha.25507.7](https://www.nuget.org/packages/MSTest.SourceGeneration/2.0.0-alpha.25507.7)
 * MSTest.Engine: [2.0.0-alpha.25507.7](https://www.nuget.org/packages/MSTest.Engine/2.0.0-alpha.25507.7)
+
+## <a name="3.11.1" />[3.11.1] - 2025-11-11
+
+See full log [of v3.11.0...v3.11.1](https://github.com/microsoft/testfx/compare/v3.11.0...v3.11.1)
+
+### Fixed
+
+* Fix deployment regression by @Youssef1313 in [#6904](https://github.com/microsoft/testfx/pull/6904)
+
+### Housekeeping
+
+* Update Microsoft.Build.Utilities.Core to 17.11.48 by @Youssef1313 in [#6847](https://github.com/microsoft/testfx/pull/6847)
+
+### Artifacts
+
+* MSTest: [3.11.1](https://www.nuget.org/packages/MSTest/3.11.1)
+* MSTest.TestFramework: [3.11.1](https://www.nuget.org/packages/MSTest.TestFramework/3.11.1)
+* MSTest.TestAdapter: [3.11.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.11.1)
+* MSTest.Analyzers: [3.11.1](https://www.nuget.org/packages/MSTest.Analyzers/3.11.1)
+* MSTest.Sdk: [3.11.1](https://www.nuget.org/packages/MSTest.Sdk/3.11.1)
+* MSTest.SourceGeneration: [1.0.0-alpha.25561.5](https://www.nuget.org/packages/MSTest.SourceGeneration/1.0.0-alpha.25561.5)
+* MSTest.Engine: [1.0.0-alpha.25561.5](https://www.nuget.org/packages/MSTest.Engine/1.0.0-alpha.25561.5)
 
 ## <a name="3.11.0" />[3.11.0] - 2025-10-01
 
