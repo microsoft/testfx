@@ -206,7 +206,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            if (!_bannerDisplayed)
+            if (!_bannerDisplayed && !_isServerMode)
             {
                 // skip the banner for the children processes
                 _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
