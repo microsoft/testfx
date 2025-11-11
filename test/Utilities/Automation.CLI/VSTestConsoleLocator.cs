@@ -10,7 +10,7 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 /// </summary>
 public static class VSTestConsoleLocator
 {
-    private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
+    private const string TestPlatformPackageName = "Microsoft.TestPlatform";
 
     /// <summary>
     /// Gets the path to <c>vstest.console.exe</c>.
@@ -20,7 +20,7 @@ public static class VSTestConsoleLocator
     {
         string testPlatformNuGetPackageFolder = Path.Combine(
             GetNugetPackageFolder(),
-            TestPlatformCLIPackageName,
+            TestPlatformPackageName,
             GetTestPlatformVersion());
         if (!Directory.Exists(testPlatformNuGetPackageFolder))
         {
