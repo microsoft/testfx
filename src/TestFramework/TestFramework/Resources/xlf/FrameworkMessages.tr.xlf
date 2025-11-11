@@ -254,12 +254,12 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="new">Value '{0}' is not within the expected range [{1}..{2}]. {3}</target>
+        <target state="translated">Değer '{0}' beklenen aralık [{1}..{2}] içinde değil. {3}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
         <source>The maximum value must be greater than the minimum value.</source>
-        <target state="new">The maximum value must be greater than the minimum value.</target>
+        <target state="translated">En yüksek değer, en düşük değerden büyük olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
