@@ -15,7 +15,7 @@ See full log [of v4.0.1...v4.0.2](https://github.com/microsoft/testfx/compare/v4
 
 ### Housekeeping
 
-* Update Microsoft.Build.Utilities.Core to 17.11.48 by @Youssef1313 in #6770 (backport to rel/4.0) by @youssef-backport-bot in https://github.com/microsoft/testfx/pull/6846
+* Update Microsoft.Build.Utilities.Core to 17.11.48 by @Youssef1313 in [#6846](https://github.com/microsoft/testfx/pull/6846)
 
 ### Artifacts
 
