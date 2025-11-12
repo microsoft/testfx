@@ -68,6 +68,12 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzer 
 
         foreach (IMethodSymbol constructor in namedTypeSymbol.Constructors)
         {
+            // Skip static constructors as they cannot have caller info parameters
+            if (constructor.IsStatic)
+            {
+                continue;
+            }
+
             // Check if constructor has CallerFilePath and CallerLineNumber parameters
             bool hasCallerFilePath = false;
             bool hasCallerLineNumber = false;
