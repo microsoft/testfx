@@ -693,4 +693,16 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
     <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
   </data>
+  <data name="DoNotDuplicateTestMethodTitle" xml:space="preserve">
+    <value>Test methods should not be duplicated</value>
+    <comment>Title for the diagnostic that detects duplicate test methods</comment>
+  </data>
+  <data name="DoNotDuplicateTestMethodDescription" xml:space="preserve">
+    <value>MSTest will only execute one test method when multiple test methods with the same name exist in a test class. Having duplicate test methods can lead to confusion and unexpected test results. Each test method in a class should have a unique name or signature.</value>
+    <comment>Description for the diagnostic that detects duplicate test methods</comment>
+  </data>
+  <data name="DoNotDuplicateTestMethodMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' is duplicated in test class '{1}'</value>
+    <comment>Message format for the diagnostic. {0} = method name, {1} = class name</comment>
+  </data>
 </root>
