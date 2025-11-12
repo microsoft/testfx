@@ -711,7 +711,7 @@ public class TestClass
         => await DoWork("CLASSINIT", "ClassInit", testContext);
 
     [Timeout(1000, CooperativeCancellation = true)]
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static async Task ClassCleanup(TestContext testContext)
         => await DoWork("CLASSCLEANUP", "ClassCleanup", testContext);
 
