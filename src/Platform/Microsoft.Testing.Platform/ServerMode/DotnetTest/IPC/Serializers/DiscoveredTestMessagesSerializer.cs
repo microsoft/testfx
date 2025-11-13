@@ -234,8 +234,8 @@ internal sealed class DiscoveredTestMessagesSerializer : BaseSerializer, INamedP
                 }
             }
 
-            Guard.NotNull(key);
-            Guard.NotNull(value);
+            Ensure.NotNull(key);
+            Ensure.NotNull(value);
             traits[i] = new TestMetadataProperty(key, value);
         }
 
