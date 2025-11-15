@@ -169,7 +169,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
+          demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         strategy:
           matrix:
             Release:
