@@ -42,18 +42,15 @@ internal sealed partial class FilterExpression
 
     private FilterExpression(FilterExpression left, FilterExpression right, bool areJoinedByAnd)
     {
-        Guard.NotNull(left);
-        Guard.NotNull(right);
+        Ensure.NotNull(left);
+        Ensure.NotNull(right);
         _left = left;
         _right = right;
         _areJoinedByAnd = areJoinedByAnd;
     }
 
-    private FilterExpression(Condition condition)
-    {
-        Guard.NotNull(condition);
-        _condition = condition;
-    }
+    private FilterExpression(Condition condition) =>
+        _condition = Ensure.NotNull(condition);
 
     /// <summary>
     /// Create a new filter expression 'And'ing 'this' with 'filter'.
@@ -148,7 +145,7 @@ internal sealed partial class FilterExpression
     /// </summary>
     internal static FilterExpression Parse(string filterString, out FastFilter? fastFilter)
     {
-        Guard.NotNull(filterString);
+        Ensure.NotNull(filterString);
 
         // Below parsing doesn't error out on pattern (), so explicitly search for that (empty parenthesis).
         Match invalidInput = GetEmptyParenthesisPattern().Match(filterString);
@@ -312,7 +309,7 @@ internal sealed partial class FilterExpression
     /// <returns> True if evaluation is successful. </returns>
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(propertyValueProvider);
+        Ensure.NotNull(propertyValueProvider);
 
         return IterateFilterExpression<bool>((current, result) =>
         {
@@ -335,7 +332,7 @@ internal sealed partial class FilterExpression
 
     internal static IEnumerable<string> TokenizeFilterExpressionString(string str)
     {
-        Guard.NotNull(str);
+        Ensure.NotNull(str);
         return TokenizeFilterExpressionStringHelper(str);
 
         static IEnumerable<string> TokenizeFilterExpressionStringHelper(string s)

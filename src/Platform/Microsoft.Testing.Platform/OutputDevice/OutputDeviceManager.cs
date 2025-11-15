@@ -11,11 +11,8 @@ internal sealed class PlatformOutputDeviceManager
 {
     private Func<IServiceProvider, IPlatformOutputDevice>? _platformOutputDeviceFactory;
 
-    public void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> platformOutputDeviceFactory)
-    {
-        Guard.NotNull(platformOutputDeviceFactory);
-        _platformOutputDeviceFactory = platformOutputDeviceFactory;
-    }
+    public void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> platformOutputDeviceFactory) =>
+        _platformOutputDeviceFactory = Ensure.NotNull(platformOutputDeviceFactory);
 
     internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
     {

@@ -31,9 +31,7 @@ internal sealed class FilterExpressionWrapper
     /// </summary>
     public FilterExpressionWrapper(string filterString, FilterOptions? options)
     {
-        Guard.NotNullOrEmpty(filterString);
-
-        FilterString = filterString;
+        FilterString = Ensure.NotNullOrEmpty(filterString);
         FilterOptions = options;
 
         try
@@ -109,7 +107,7 @@ internal sealed class FilterExpressionWrapper
     /// </summary>
     public bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(propertyValueProvider);
+        Ensure.NotNull(propertyValueProvider);
 
         return UseFastFilter
             ? _fastFilter.Evaluate(propertyValueProvider)

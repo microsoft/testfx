@@ -27,7 +27,7 @@ internal sealed class UnitTestElement
     /// <exception cref="ArgumentNullException"> Thrown when method is null. </exception>
     public UnitTestElement(TestMethod testMethod)
     {
-        Guard.NotNull(testMethod);
+        Ensure.NotNull(testMethod);
 
         DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
         TestMethod = testMethod;

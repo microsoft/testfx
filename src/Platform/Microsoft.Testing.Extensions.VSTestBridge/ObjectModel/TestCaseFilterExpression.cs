@@ -27,8 +27,7 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
     /// </summary>
     public TestCaseFilterExpression(FilterExpressionWrapper filterWrapper)
     {
-        Guard.NotNull(filterWrapper);
-        _filterWrapper = filterWrapper;
+        _filterWrapper = Ensure.NotNull(filterWrapper);
         _validForMatch = RoslynString.IsNullOrEmpty(filterWrapper.ParseError);
     }
 
@@ -56,8 +55,8 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
     /// </summary>
     public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(testCase);
-        Guard.NotNull(propertyValueProvider);
+        Ensure.NotNull(testCase);
+        Ensure.NotNull(propertyValueProvider);
 
         return _validForMatch && _filterWrapper.Evaluate(propertyValueProvider);
     }

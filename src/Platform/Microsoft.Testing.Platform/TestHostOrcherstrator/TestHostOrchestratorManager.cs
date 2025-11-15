@@ -13,7 +13,7 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
     {
-        Guard.NotNull(factory);
+        Ensure.NotNull(factory);
         _factories ??= [];
         _factories.Add(factory);
     }
@@ -48,7 +48,7 @@ internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
 
     public void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
     {
-        Guard.NotNull(testHostOrchestratorApplicationLifetimeFactory);
+        Ensure.NotNull(testHostOrchestratorApplicationLifetimeFactory);
         _testHostOrchestratorApplicationLifetimeFactories.Add(testHostOrchestratorApplicationLifetimeFactory);
     }
 
