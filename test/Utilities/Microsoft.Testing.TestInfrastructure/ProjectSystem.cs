@@ -84,7 +84,7 @@ public class CSharpProject : Project
     {
         Ensure.NotNullOrWhiteSpace(solutionFolder);
         Ensure.NotNullOrWhiteSpace(projectName);
-        Ensure.NotEmpty(tfms);
+        Ensure.NotNullOrEmpty(tfms);
 
         _projectFileName = $"{projectName}.csproj";
         ProjectFile = Path.Combine(FolderPath, _projectFileName);
