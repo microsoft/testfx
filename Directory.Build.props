@@ -75,7 +75,7 @@
 
   <!-- Polyfill config -->
   <PropertyGroup>
-    <PolyGuard>true</PolyGuard>
+    <PolyEnsure>true</PolyEnsure>
     <PolyStringInterpolation>true</PolyStringInterpolation>
     <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
   </PropertyGroup>

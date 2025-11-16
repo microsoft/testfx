@@ -38,8 +38,8 @@ EndGlobal
     public VSSolution(string? solutionFolder, string? solutionName)
         : base(solutionFolder)
     {
-        Guard.NotNullOrWhiteSpace(solutionFolder);
-        Guard.NotNullOrWhiteSpace(solutionName);
+        Ensure.NotNullOrWhiteSpace(solutionFolder);
+        Ensure.NotNullOrWhiteSpace(solutionName);
 
         _solutionFileName = $"{solutionName}.sln";
         SolutionFile = Path.Combine(FolderPath, _solutionFileName);
@@ -82,9 +82,9 @@ public class CSharpProject : Project
     public CSharpProject(string solutionFolder, string projectName, params string[]? tfms)
        : base(Path.Combine(solutionFolder, projectName))
     {
-        Guard.NotNullOrWhiteSpace(solutionFolder);
-        Guard.NotNullOrWhiteSpace(projectName);
-        Guard.NotEmpty(tfms);
+        Ensure.NotNullOrWhiteSpace(solutionFolder);
+        Ensure.NotNullOrWhiteSpace(projectName);
+        Ensure.NotNullOrEmpty(tfms);
 
         _projectFileName = $"{projectName}.csproj";
         ProjectFile = Path.Combine(FolderPath, _projectFileName);

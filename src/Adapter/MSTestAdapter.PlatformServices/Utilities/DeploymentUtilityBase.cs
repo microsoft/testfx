@@ -137,8 +137,8 @@ internal abstract class DeploymentUtilityBase
     /// <returns>Returns a list of deployment warnings.</returns>
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSourceHandler, string deploymentDirectory, string resultsDirectory)
     {
-        Guard.NotNullOrWhiteSpace(deploymentDirectory);
-        Guard.NotNullOrWhiteSpace(testSourceHandler);
+        Ensure.NotNullOrWhiteSpace(deploymentDirectory);
+        Ensure.NotNullOrWhiteSpace(testSourceHandler);
         ApplicationStateGuard.Ensure(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
         ApplicationStateGuard.Ensure(FileUtility.DoesFileExist(testSourceHandler), $"TestSource {testSourceHandler} does not exist.");
 
@@ -153,7 +153,7 @@ internal abstract class DeploymentUtilityBase
         // Copy the deployment items. (As deployment item can correspond to directories as well, so each deployment item may map to n files)
         foreach (DeploymentItem deploymentItem in deploymentItems)
         {
-            Guard.NotNull(deploymentItem);
+            Ensure.NotNull(deploymentItem);
 
             // Validate the output directory.
             if (!IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
@@ -411,7 +411,7 @@ internal abstract class DeploymentUtilityBase
 
     private bool Deploy(string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
     {
-        Guard.NotNull(runDirectories);
+        Ensure.NotNull(runDirectories);
         if (EqtTrace.IsInfoEnabled)
         {
             EqtTrace.Info("MSTestExecutor: Found that deployment items for source {0} are: ", source);

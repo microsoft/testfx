@@ -11,9 +11,6 @@ internal sealed class LoggerFactoryProxy : ILoggerFactory
             ? throw new InvalidOperationException(Resources.PlatformResources.LoggerFactoryNotReady)
             : _loggerFactory.CreateLogger(categoryName);
 
-    public void SetLoggerFactory(ILoggerFactory loggerFactory)
-    {
-        Guard.NotNull(loggerFactory);
-        _loggerFactory = loggerFactory;
-    }
+    public void SetLoggerFactory(ILoggerFactory loggerFactory) =>
+        _loggerFactory = Ensure.NotNull(loggerFactory);
 }
