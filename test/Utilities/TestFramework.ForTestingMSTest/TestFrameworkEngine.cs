@@ -110,7 +110,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 DateTimeOffset startTime = DateTimeOffset.UtcNow;
                 bool isSuccessRun = false;
                 bool isSuccessTeardown = false;
-                List<StepTimingInfo> stepTimings = new();
+                List<StepTimingInfo> stepTimings = [];
 
                 try
                 {
@@ -222,7 +222,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         return false;
     }
 
-    private async Task<(object?, StepTimingInfo?)> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
+    private async Task<(object? TestClassInstance, StepTimingInfo? SetupTiming)> TryRunSetupMethodAsync(TypeInfo testContainerType, ConstructorInfo setupMethod, TestNode testNode,
         Func<TestNode, Task> publishNodeUpdateAsync)
     {
         DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
@@ -249,7 +249,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         }
     }
 
-    private async Task<(bool, StepTimingInfo?)> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, TestNode testNode,
+    private async Task<(bool IsSuccess, StepTimingInfo? TestTiming)> RunTestMethodAsync(object testClassInstance, MethodInfo publicMethod, TestNode testNode,
         Func<TestNode, Task> publishNodeUpdateAsync)
     {
         DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
@@ -281,7 +281,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
         }
     }
 
-    private async Task<(bool, StepTimingInfo?)> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, TestNode testNode,
+    private async Task<(bool IsSuccess, StepTimingInfo? TeardownTiming)> RunTestTeardownAsync(object? testClassInstance, TypeInfo testContainerType, MethodInfo teardownMethod, TestNode testNode,
         Func<TestNode, Task> publishNodeUpdateAsync)
     {
         DateTimeOffset stepStartTime = DateTimeOffset.UtcNow;
