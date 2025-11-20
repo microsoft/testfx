@@ -693,4 +693,13 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
     <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
   </data>
+  <data name="AvoidBlockingCallsInTestsTitle" xml:space="preserve">
+    <value>Avoid using Thread.Sleep or Task.Wait in test methods</value>
+  </data>
+  <data name="AvoidBlockingCallsInTestsMessageFormat" xml:space="preserve">
+    <value>Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</value>
+  </data>
+  <data name="AvoidBlockingCallsInTestsDescription" xml:space="preserve">
+    <value>Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</value>
+  </data>
 </root>
