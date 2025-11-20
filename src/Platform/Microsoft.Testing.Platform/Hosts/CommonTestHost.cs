@@ -20,6 +20,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 /// </summary>
 internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 {
+    private readonly List<object> _alreadyDisposedServices = [];
+
     public ServiceProvider ServiceProvider => serviceProvider;
 
     protected IPushOnlyProtocol? PushOnlyProtocol => ServiceProvider.GetService<IPushOnlyProtocol>();
@@ -69,7 +71,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
         finally
         {
-            await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true).ConfigureAwait(false);
+            await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: _alreadyDisposedServices, isProcessShutdown: true).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
 
@@ -121,6 +123,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             {
                 await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
                 await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
+                _alreadyDisposedServices.Add(testApplicationLifecycleCallbacks);
             }
 #pragma warning restore CS0618 // Type or member is obsolete
         }
@@ -244,7 +247,6 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             if (!isProcessShutdown &&
                 service is ITelemetryCollector or
                  ITestHostApplicationLifetime or
-                 ITestHostApplicationLifetime or
                  IPushOnlyProtocol)
             {
                 continue;
@@ -269,7 +271,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                     if (!alreadyDisposed.Contains(dataConsumer))
                     {
                         await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
-                        alreadyDisposed.Add(service);
+                        alreadyDisposed.Add(dataConsumer);
                     }
                 }
             }
