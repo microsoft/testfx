@@ -28,8 +28,7 @@ internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironment
 
     public string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-        !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
