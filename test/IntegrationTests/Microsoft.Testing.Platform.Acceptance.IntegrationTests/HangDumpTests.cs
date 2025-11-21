@@ -32,6 +32,34 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
+    public async Task HangDump_WithDotnetTest_CreateDump()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // TODO: Investigate failures on macos
+            return;
+        }
+
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "4000" },
+                { "SLEEPTIMEMS2", "600000" },
+            },
+            workingDirectory: AssetFixture.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        testResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
+        Assert.IsNotNull(dumpFile, $"Dump file not found when running with 'dotnet test'\n{testResult}'");
+    }
+
+    [TestMethod]
     public async Task HangDump_CustomFileName_CreateDump()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -126,35 +154,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type.
             Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'
             """);
-    }
-
-    [TestMethod]
-    public async Task HangDump_WithDotnetTest_CreateDump()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
-        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
-        Directory.CreateDirectory(resultDirectory);
-
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test \"{AssetFixture.TargetAssetPath}\" -p:Configuration=Release -- --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            environmentVariables: new Dictionary<string, string?>
-            {
-                { "SLEEPTIMEMS1", "4000" },
-                { "SLEEPTIMEMS2", "600000" },
-            },
-            workingDirectory: AssetFixture.TargetAssetPath,
-            failIfReturnValueIsNotZero: false,
-            cancellationToken: TestContext.CancellationToken);
-
-        testResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-        string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found when running with 'dotnet test'\n{testResult}'");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
