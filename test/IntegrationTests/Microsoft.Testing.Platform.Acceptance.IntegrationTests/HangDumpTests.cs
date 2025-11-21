@@ -43,7 +43,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test --project \"{AssetFixture.TargetAssetPath}\" --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
+            $"test --project \"{AssetFixture.TargetAssetPath}\" -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
