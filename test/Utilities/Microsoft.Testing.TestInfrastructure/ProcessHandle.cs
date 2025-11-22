@@ -24,6 +24,8 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
 
     public TextReader StandardOutput => _process.StandardOutput;
 
+    public bool HasExited => _process.HasExited;
+
     public int ExitCode => _process.ExitCode;
 
     public async Task<int> WaitForExitAsync(CancellationToken cancellationToken = default)
