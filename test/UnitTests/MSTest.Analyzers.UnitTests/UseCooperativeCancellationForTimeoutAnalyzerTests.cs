@@ -440,4 +440,64 @@ public sealed class UseCooperativeCancellationForTimeoutAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTimeoutAttributeWithoutCooperativeCancellation_CodeFixOffersTaskRunTestMethod()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:Timeout(5000)|}]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCodeWithTaskRunTestMethod = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TaskRunTestMethod(5000)]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0),
+            fixedCodeWithTaskRunTestMethod,
+            codeFixIndex: 1); // Second code fix option
+    }
+
+    [TestMethod]
+    public async Task WhenTaskRunTestMethodAttributeWithTimeout_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TaskRunTestMethod(5000)]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
