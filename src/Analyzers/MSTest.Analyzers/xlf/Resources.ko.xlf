@@ -301,6 +301,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">DataRow는 유효해야 함</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotDuplicateTestMethodMessageFormat">
+        <source>Test method '{0}' is duplicated in test class '{1}'</source>
+        <target state="new">Test method '{0}' is duplicated in test class '{1}'</target>
+        <note>Message format for the diagnostic. {0} = method name, {1} = class name</note>
+      </trans-unit>
+      <trans-unit id="DoNotDuplicateTestMethodTitle">
+        <source>Test methods should not be duplicated</source>
+        <target state="new">Test methods should not be duplicated</target>
+        <note>Title for the diagnostic that detects duplicate test methods</note>
+      </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
         <source>Do not negate boolean assertions, instead use the opposite assertion</source>
         <target state="translated">부울 어설션을 부정하지 말고 반대 어설션을 사용하세요</target>
