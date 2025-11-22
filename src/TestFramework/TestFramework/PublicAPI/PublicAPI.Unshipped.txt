@@ -1,1 +1,3 @@
 #nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Collections.IEnumerable! collection, string? message = "", string! collectionExpression = "") -> object!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Func<object!, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> object!
