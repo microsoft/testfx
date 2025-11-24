@@ -24,11 +24,8 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public string Description => string.Empty;
 
-    public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
-    {
-        Guard.NotNull(telemetryFactory);
-        _telemetryFactory = telemetryFactory;
-    }
+    public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory) =>
+        _telemetryFactory = Ensure.NotNull(telemetryFactory);
 
     public async Task<ITelemetryCollector> BuildAsync(ServiceProvider serviceProvider, ILoggerFactory loggerFactory, TestApplicationOptions testApplicationOptions)
     {

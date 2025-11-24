@@ -17,11 +17,8 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
     private const string ConfigurationFileNameSuffix = "testconfig.json";
     private readonly IFileSystem _fileSystem;
 
-    internal ConfigurationFileTask(IFileSystem? fileSystem)
-    {
-        Guard.NotNull(fileSystem);
-        _fileSystem = fileSystem;
-    }
+    internal ConfigurationFileTask(IFileSystem? fileSystem) =>
+        _fileSystem = Ensure.NotNull(fileSystem);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfigurationFileTask"/> class.

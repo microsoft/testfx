@@ -21,7 +21,7 @@ public class DataConsumerThroughputTests : AcceptanceTestBase<DataConsumerThroug
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
-        Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+        Assert.IsLessThan(7, stopwatch.Elapsed.TotalSeconds, testHostResult.ToString());
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)

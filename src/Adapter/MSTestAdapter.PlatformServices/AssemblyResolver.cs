@@ -99,7 +99,7 @@ internal
     /// </remarks>
     public AssemblyResolver(IList<string> directories)
     {
-        Guard.NotNullOrEmpty(directories);
+        Ensure.NotNullOrEmpty(directories);
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
