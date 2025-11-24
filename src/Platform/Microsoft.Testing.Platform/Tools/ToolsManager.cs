@@ -11,7 +11,7 @@ internal sealed class ToolsManager : IToolsManager
 
     public void AddTool(Func<IServiceProvider, ITool> toolFactory)
     {
-        Ensure.NotNull(toolFactory);
+        Guard.NotNull(toolFactory);
         _toolsFactories.Add(toolFactory);
     }
 

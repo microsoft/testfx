@@ -38,12 +38,14 @@ internal sealed class TestMethod : ITestMethod
     internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
         string fullClassName, string assemblyName, string? displayName, string? parameterTypes)
     {
+        Guard.NotNullOrWhiteSpace(assemblyName);
+
         Name = name;
         DisplayName = displayName ?? name;
         FullClassName = fullClassName;
         ParameterTypes = parameterTypes;
 
-        AssemblyName = Ensure.NotNullOrWhiteSpace(assemblyName);
+        AssemblyName = assemblyName;
 
         if (hierarchyValues is null)
         {

@@ -131,8 +131,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Ensure.NotNull(testMethod);
-        Ensure.NotNull(testContextProperties);
+        Guard.NotNull(testMethod);
+        Guard.NotNull(testContextProperties);
 
         ITestContext? testContextForTestExecution = null;
         ITestContext? testContextForAssemblyInit = null;

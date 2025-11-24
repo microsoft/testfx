@@ -22,8 +22,8 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     /// <param name="isBuiltIn">Indicates whether the command line option is built-in.</param>
     internal CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, bool isBuiltIn)
     {
-        Ensure.NotNullOrWhiteSpace(name);
-        Ensure.NotNullOrWhiteSpace(description);
+        Guard.NotNullOrWhiteSpace(name);
+        Guard.NotNullOrWhiteSpace(description);
         ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), PlatformResources.CommandLineInvalidArityErrorMessage);
 
         string errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name);

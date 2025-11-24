@@ -208,7 +208,7 @@ public sealed partial class Assert
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, CultureInfo culture, out bool shouldAppend)
         {
-            Ensure.NotNull(culture);
+            Guard.NotNull(culture);
             shouldAppend = AreEqualFailing(expected, actual, ignoreCase, culture);
             if (shouldAppend)
             {
@@ -314,7 +314,7 @@ public sealed partial class Assert
 
         public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, out bool shouldAppend)
         {
-            Ensure.NotNull(culture);
+            Guard.NotNull(culture);
             shouldAppend = AreNotEqualFailing(notExpected, actual, ignoreCase, culture);
             if (shouldAppend)
             {

@@ -69,7 +69,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
     {
-        Ensure.NotNull(pipeNameDescription);
+        Guard.NotNull(pipeNameDescription);
 #pragma warning disable CA1416 // Validate platform compatibility
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
 #pragma warning restore CA1416
