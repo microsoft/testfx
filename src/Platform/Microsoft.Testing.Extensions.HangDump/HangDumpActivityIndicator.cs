@@ -55,8 +55,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _environment = environment;
         _task = task;
         _clock = clock;
-        if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-            !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName))
         {
             string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.MutexNameSuffix)
                 ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.MutexNameSuffix} environment variable set.");
@@ -82,8 +81,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-        !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
