@@ -1004,15 +1004,15 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">예외가 발생하지 않고 catch 블록이 실행되지 않더라도 테스트가 통과하기 때문에 catch 블록에서 어설션을 사용하는 것은 문제가 됩니다. 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' 또는 'Assert.ThrowsExactlyAsync'를 사용하여 예외가 발생했는지 확인한 다음 try-catch 블록을 사용하지 않고 catch된 예외에 대해 추가 어설션을 만듭니다.</target>
         <note />
       </trans-unit>
-          <trans-unit id="AvoidBlockingCallsInTestsTitle">
+          <trans-unit id="AvoidSleepAndDelayInTestsTitle">
         <source>Avoid using Thread.Sleep or Task.Wait in test methods</source>
         <target state="new">Avoid using Thread.Sleep or Task.Wait in test methods</target>
         <note /></trans-unit>
-      <trans-unit id="AvoidBlockingCallsInTestsMessageFormat">
+      <trans-unit id="AvoidSleepAndDelayInTestsMessageFormat">
         <source>Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</source>
         <target state="new">Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</target>
         <note /></trans-unit>
-      <trans-unit id="AvoidBlockingCallsInTestsDescription">
+      <trans-unit id="AvoidSleepAndDelayInTestsDescription">
         <source>Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</source>
         <target state="new">Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</target>
         <note /></trans-unit>

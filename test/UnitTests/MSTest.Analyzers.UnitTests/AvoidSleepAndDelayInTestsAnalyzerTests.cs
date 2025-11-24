@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
-    MSTest.Analyzers.AvoidBlockingCallsInTestsAnalyzer,
+    MSTest.Analyzers.AvoidSleepAndDelayInTestsAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestClass]
-public sealed class AvoidBlockingCallsInTestsAnalyzerTests
+public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
 {
     [TestMethod]
     public async Task WhenTestMethodUsesThreadSleep_Diagnostic()

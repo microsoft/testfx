@@ -14,27 +14,27 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0059: <inheritdoc cref="Resources.AvoidBlockingCallsInTestsTitle"/>.
+/// MSTEST0059: <inheritdoc cref="Resources.AvoidSleepAndDelayInTestsTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class AvoidBlockingCallsInTestsAnalyzer : DiagnosticAnalyzer
+public sealed class AvoidSleepAndDelayInTestsAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.AvoidBlockingCallsInTestsTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidBlockingCallsInTestsDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidBlockingCallsInTestsMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.AvoidSleepAndDelayInTestsTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidSleepAndDelayInTestsDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidSleepAndDelayInTestsMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor AvoidBlockingCallsInTestsRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AvoidBlockingCallsInTestsRuleId,
+    internal static readonly DiagnosticDescriptor AvoidSleepAndDelayInTestsRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AvoidSleepAndDelayInTestsRuleId,
         Title,
         MessageFormat,
         Description,
         Category.Design,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true);
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: false);
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(AvoidBlockingCallsInTestsRule);
+        = ImmutableArray.Create(AvoidSleepAndDelayInTestsRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -94,14 +94,14 @@ public sealed class AvoidBlockingCallsInTestsAnalyzer : DiagnosticAnalyzer
         // Check if the invocation is Thread.Sleep
         if (SymbolEqualityComparer.Default.Equals(method.ContainingType, threadSymbol) && method.Name == "Sleep")
         {
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(AvoidBlockingCallsInTestsRule, "Thread.Sleep"));
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(AvoidSleepAndDelayInTestsRule, "Thread.Sleep"));
             return;
         }
 
         // Check if the invocation is Task.Wait
         if (SymbolEqualityComparer.Default.Equals(method.ContainingType, taskSymbol) && method.Name == "Wait")
         {
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(AvoidBlockingCallsInTestsRule, "Task.Wait"));
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(AvoidSleepAndDelayInTestsRule, "Task.Wait"));
             return;
         }
     }

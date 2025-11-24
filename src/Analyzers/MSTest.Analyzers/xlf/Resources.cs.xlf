@@ -1004,15 +1004,15 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch.</target>
         <note />
       </trans-unit>
-          <trans-unit id="AvoidBlockingCallsInTestsTitle">
+          <trans-unit id="AvoidSleepAndDelayInTestsTitle">
         <source>Avoid using Thread.Sleep or Task.Wait in test methods</source>
         <target state="new">Avoid using Thread.Sleep or Task.Wait in test methods</target>
         <note /></trans-unit>
-      <trans-unit id="AvoidBlockingCallsInTestsMessageFormat">
+      <trans-unit id="AvoidSleepAndDelayInTestsMessageFormat">
         <source>Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</source>
         <target state="new">Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</target>
         <note /></trans-unit>
-      <trans-unit id="AvoidBlockingCallsInTestsDescription">
+      <trans-unit id="AvoidSleepAndDelayInTestsDescription">
         <source>Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</source>
         <target state="new">Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</target>
         <note /></trans-unit>
