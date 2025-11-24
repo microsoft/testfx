@@ -1067,4 +1067,6 @@ public class UnitTest1
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }
