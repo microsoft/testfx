@@ -257,9 +257,9 @@ Gerçekte olan: {2}</target>
         <target state="translated">Değer '{0}' beklenen aralık [{1}..{2}] içinde değil. {3}</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
-        <source>The maximum value must be greater than the minimum value.</source>
-        <target state="translated">En yüksek değer, en düşük değerden büyük olmalıdır.</target>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal the minimum value.</source>
+        <target state="new">The maximum value must be greater than or equal the minimum value.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

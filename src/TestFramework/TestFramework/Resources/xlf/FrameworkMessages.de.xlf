@@ -257,9 +257,9 @@ Tatsächlich: {2}</target>
         <target state="translated">Der Wert „{0}“ liegt nicht im erwarteten Bereich [{1}..{2}]. {3}</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
-        <source>The maximum value must be greater than the minimum value.</source>
-        <target state="translated">Der Höchstwert muss größer als der Mindestwert sein.</target>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal the minimum value.</source>
+        <target state="new">The maximum value must be greater than or equal the minimum value.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
