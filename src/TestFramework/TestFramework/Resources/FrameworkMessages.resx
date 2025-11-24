@@ -385,6 +385,6 @@ Actual: {2}</value>
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
   </data>
   <data name="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue" xml:space="preserve">
-    <value>The maximum value must be greater than or equal the minimum value.</value>
+    <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
 </root>
