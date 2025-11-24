@@ -32,7 +32,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodUsesTaskWait_Diagnostic()
+    public async Task WhenTestMethodUsesTaskDelay_Diagnostic()
     {
         string code = """
             using System.Threading.Tasks;
@@ -44,8 +44,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    Task task = Task.CompletedTask;
-                    [|task.Wait()|];
+                    [|Task.Delay(1000)|];
                 }
             }
             """;
@@ -54,7 +53,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodUsesTaskWaitWithTimeout_Diagnostic()
+    public async Task WhenTestMethodUsesTaskDelayWithoutAwait_Diagnostic()
     {
         string code = """
             using System.Threading.Tasks;
@@ -66,8 +65,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    Task task = Task.CompletedTask;
-                    [|task.Wait(1000)|];
+                    var task = [|Task.Delay(100)|];
                 }
             }
             """;
@@ -222,7 +220,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenNonTestMethodUsesTaskWait_NoDiagnostic()
+    public async Task WhenNonTestMethodUsesTaskDelay_NoDiagnostic()
     {
         string code = """
             using System.Threading.Tasks;
@@ -233,8 +231,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
             {
                 public void NonTestMethod()
                 {
-                    Task task = Task.CompletedTask;
-                    task.Wait();
+                    Task.Delay(100);
                 }
             }
             """;
@@ -243,7 +240,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodUsesTaskDelay_NoDiagnostic()
+    public async Task WhenTestMethodAwaitsTaskDelay_NoDiagnostic()
     {
         string code = """
             using System.Threading.Tasks;
@@ -256,6 +253,28 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
                 public async Task MyTestMethod()
                 {
                     await Task.Delay(100);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodUsesTaskWait_NoDiagnostic()
+    {
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Task task = Task.CompletedTask;
+                    task.Wait();
                 }
             }
             """;
@@ -286,7 +305,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenMultipleBlockingCallsInTestMethod_MultipleDiagnostics()
+    public async Task WhenMultipleDelaysInTestMethod_MultipleDiagnostics()
     {
         string code = """
             using System.Threading;
@@ -300,8 +319,7 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzerTests
                 public void MyTestMethod()
                 {
                     [|Thread.Sleep(100)|];
-                    Task task = Task.CompletedTask;
-                    [|task.Wait()|];
+                    [|Task.Delay(50)|];
                     [|Thread.Sleep(200)|];
                 }
             }

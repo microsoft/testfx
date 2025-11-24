@@ -1005,16 +1005,16 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <note />
       </trans-unit>
           <trans-unit id="AvoidSleepAndDelayInTestsTitle">
-        <source>Avoid using Thread.Sleep or Task.Wait in test methods</source>
-        <target state="new">Avoid using Thread.Sleep or Task.Wait in test methods</target>
+        <source>Avoid using Thread.Sleep or Task.Delay in test methods</source>
+        <target state="new">Avoid using Thread.Sleep or Task.Delay in test methods</target>
         <note /></trans-unit>
       <trans-unit id="AvoidSleepAndDelayInTestsMessageFormat">
         <source>Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</source>
         <target state="new">Avoid using '{0}' in test methods as it can cause flakiness. Consider using asynchronous alternatives.</target>
         <note /></trans-unit>
       <trans-unit id="AvoidSleepAndDelayInTestsDescription">
-        <source>Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</source>
-        <target state="new">Using 'Thread.Sleep' or 'Task.Wait' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' or 'await task' instead.</target>
+        <source>Using 'Thread.Sleep' or 'Task.Delay' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' with a cancellation token or 'await task' instead.</source>
+        <target state="new">Using 'Thread.Sleep' or 'Task.Delay' in test methods can lead to flaky tests when operations don't complete within the specified time frame. Consider using asynchronous alternatives like 'await Task.Delay' with a cancellation token or 'await task' instead.</target>
         <note /></trans-unit>
     </body>
   </file>

@@ -98,10 +98,10 @@ public sealed class AvoidSleepAndDelayInTestsAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // Check if the invocation is Task.Wait
-        if (SymbolEqualityComparer.Default.Equals(method.ContainingType, taskSymbol) && method.Name == "Wait")
+        // Check if the invocation is Task.Delay
+        if (SymbolEqualityComparer.Default.Equals(method.ContainingType, taskSymbol) && method.Name == "Delay")
         {
-            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(AvoidSleepAndDelayInTestsRule, "Task.Wait"));
+            context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(AvoidSleepAndDelayInTestsRule, "Task.Delay"));
             return;
         }
     }
