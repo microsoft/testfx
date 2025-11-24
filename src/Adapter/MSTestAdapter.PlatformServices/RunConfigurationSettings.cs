@@ -78,7 +78,7 @@ internal sealed class RunConfigurationSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static RunConfigurationSettings ToSettings(XmlReader reader)
     {
-        Ensure.NotNull(reader);
+        Guard.NotNull(reader);
 
         // Expected format of the xml is: -
         //

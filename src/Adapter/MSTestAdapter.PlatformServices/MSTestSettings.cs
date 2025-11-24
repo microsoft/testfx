@@ -382,7 +382,7 @@ internal sealed class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        Ensure.NotNull(reader);
+        Guard.NotNull(reader);
 
         // Expected format of the xml is: -
         //

@@ -33,8 +33,8 @@ public class Logger
             return;
         }
 
-        Ensure.NotNull(format);
-        Ensure.NotNull(args);
+        Guard.NotNull(format);
+        Guard.NotNull(args);
 
         string message = args.Length == 0
             ? format

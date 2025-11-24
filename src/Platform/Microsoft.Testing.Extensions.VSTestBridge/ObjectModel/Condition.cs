@@ -74,7 +74,7 @@ internal sealed class Condition
     /// </summary>
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Ensure.NotNull(propertyValueProvider);
+        Guard.NotNull(propertyValueProvider);
         bool result = false;
         string[]? multiValue = GetPropertyValue(propertyValueProvider);
         switch (Operation)
@@ -272,7 +272,7 @@ internal sealed class Condition
 
     internal static IEnumerable<string> TokenizeFilterConditionString(string str)
     {
-        return TokenizeFilterConditionStringWorker(Ensure.NotNull(str));
+        return TokenizeFilterConditionStringWorker(Guard.NotNull(str));
 
         static IEnumerable<string> TokenizeFilterConditionStringWorker(string s)
         {
