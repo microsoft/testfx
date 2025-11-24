@@ -299,7 +299,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<ArgumentOutOfRangeException>()
-            .And.Message.Should().Contain("The maximum value must be greater than or equal the minimum value");
+            .And.Message.Should().Contain("The maximum value must be greater than or equal to the minimum value");
     }
 
     public void IsInRange_WithMaxValueEqualToMinValue_Int_ShouldPassIfValueIsEqual()
