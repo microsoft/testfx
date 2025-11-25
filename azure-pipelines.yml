@@ -190,7 +190,7 @@ stages:
           inputs:
             targetType: filePath
             filePath: './eng/build-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig)'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors'
             failOnStderr: false
 
       - job: Linux
