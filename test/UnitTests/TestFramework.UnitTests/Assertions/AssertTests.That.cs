@@ -1098,7 +1098,52 @@ public partial class AssertTests : TestContainer
 
         public int GetValueWithSideEffect()
         {
+            if (_c < 10)
+            {
+                GetValueWithSideEffect();
+            }
+
             _c++;
+            return _c;
+        }
+    }
+
+    public void That_DoesEvaluateTwice_WhenMethodIsLeaf2()
+    {
+        var box = new BoxOfShapes();
+
+        // Compare to 0 to force failure.
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() != box.GetValueWithSideEffect());
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            non
+            """);
+    }
+
+    private class Shape
+    {
+        public string Name { get; set; }
+
+        public override string ToString()
+        {
+            return $"Shape: {Name}";
+        }
+    }
+
+    private class BoxOfShapes
+    {
+        private Shape? _c;
+
+        public Shape GetValueWithSideEffect()
+        {
+            if (_c == null)
+            {
+                _c = new Shape() { Name = "Square" };
+                return _c;
+            }
+
+            _c.Name = "Circle";
             return _c;
         }
     }
