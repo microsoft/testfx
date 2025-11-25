@@ -384,7 +384,7 @@ Actual: {2}</value>
   <data name="ReturnedSubsetValueMessage" xml:space="preserve">
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
   </data>
-  <data name="IsInRangeMaxValueMustBeGreaterThanMinValue" xml:space="preserve">
-    <value>The maximum value must be greater than the minimum value.</value>
+  <data name="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue" xml:space="preserve">
+    <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
 </root>

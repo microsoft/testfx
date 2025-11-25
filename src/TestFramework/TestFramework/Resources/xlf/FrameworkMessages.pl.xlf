@@ -257,9 +257,9 @@ Rzeczywiste: {2}</target>
         <target state="translated">Wartość „{0}” nie mieści się w oczekiwanym zakresie [{1}..{2}]. {3}</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
-        <source>The maximum value must be greater than the minimum value.</source>
-        <target state="translated">Wartość maksymalna musi być większa niż wartość minimalna.</target>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="new">The maximum value must be greater than or equal to the minimum value.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
