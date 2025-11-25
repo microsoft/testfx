@@ -30,14 +30,6 @@ public abstract partial class CLITestBase
         return versionPropsXml;
     }
 
-    protected static string GetTestPlatformVersion()
-    {
-        XmlDocument cpmXml = ReadCPMFile();
-        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode("PropertyGroup/MicrosoftNETTestSdkVersion");
-
-        return testSdkVersion.InnerText;
-    }
-
     protected static string GetArtifactsBinFolderPath()
     {
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;

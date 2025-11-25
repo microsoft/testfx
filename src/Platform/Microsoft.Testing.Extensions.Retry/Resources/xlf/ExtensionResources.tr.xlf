@@ -81,8 +81,8 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Başarısız testleri yeniden denemeyi etkinleştir</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">Başarısız testleri belirtilen sayıda yeniden deneyin</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">

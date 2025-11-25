@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -19,13 +20,14 @@ public static class TestApplicationBuilderExtensions
 {
     // NOTE: We intentionally use this class and not VSTestBridgeExtensionBaseCapabilities because
     // we don't want MSTest to use vstestProvider capability
-    private sealed class MSTestCapabilities : ITrxReportCapability
+    private sealed class MSTestCapabilities : IInternalVSTestBridgeTrxReportCapability
     {
+        public bool IsTrxEnabled { get; private set; }
+
         bool ITrxReportCapability.IsSupported { get; } = true;
 
         void ITrxReportCapability.Enable()
-        {
-        }
+            => IsTrxEnabled = true;
     }
 
     /// <summary>

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -41,13 +43,13 @@ public class ClassCleanupManagerTests : TestContainer
         classCleanupManager.MarkTestComplete(testMethodInfo, out bool shouldRunEndOfClassCleanup);
 
         // The cleanup should not run here yet, we have 1 remaining test to run.
-        Assert.IsFalse(shouldRunEndOfClassCleanup);
-        Assert.IsFalse(classCleanupManager.ShouldRunEndOfAssemblyCleanup);
+        shouldRunEndOfClassCleanup.Should().BeFalse();
+        classCleanupManager.ShouldRunEndOfAssemblyCleanup.Should().BeFalse();
 
         classCleanupManager.MarkTestComplete(testMethodInfo, out shouldRunEndOfClassCleanup);
         // The cleanup should run here.
-        Assert.IsTrue(shouldRunEndOfClassCleanup);
-        Assert.IsTrue(classCleanupManager.ShouldRunEndOfAssemblyCleanup);
+        shouldRunEndOfClassCleanup.Should().BeTrue();
+        classCleanupManager.ShouldRunEndOfAssemblyCleanup.Should().BeTrue();
     }
 
     [TestClass]

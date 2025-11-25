@@ -123,11 +123,13 @@ internal static class TestCaseExtensions
             testElement.WorkItemIds = workItemIds;
         }
 
+#if !WINDOWS_UWP && !WIN_UI
         KeyValuePair<string, string>[]? deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(EngineConstants.DeploymentItemsProperty, null);
         if (deploymentItems is { Length: > 0 })
         {
             testElement.DeploymentItems = deploymentItems;
         }
+#endif
 
         testElement.DoNotParallelize = testCase.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false);
 

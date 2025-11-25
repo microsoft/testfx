@@ -229,10 +229,6 @@ internal sealed class TestClassInfo
     /// </summary>
     public Queue<MethodInfo> BaseTestCleanupMethodsQueue { get; } = new();
 
-    /// <inheritdoc cref="RunClassInitializeAsync(TestContext)" />
-    public void RunClassInitialize(TestContext testContext)
-        => RunClassInitializeAsync(testContext).GetAwaiter().GetResult();
-
     /// <summary>
     /// Runs the class initialize method.
     /// </summary>

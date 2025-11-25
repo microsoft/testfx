@@ -241,7 +241,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
                 state = TestStates.Cancelled;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;

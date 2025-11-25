@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP && !WIN_UI
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -10,11 +13,9 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-#pragma warning disable SA1649 // File name must match first type name
 public class DeploymentItemUtilityTests : TestContainer
-#pragma warning restore SA1649 // File name must match first type name
 {
     internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
         "MSTestDiscoverer.DeploymentItems",
@@ -45,8 +46,8 @@ public class DeploymentItemUtilityTests : TestContainer
             .Returns([]);
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
-        Verify(deploymentItems is not null);
-        Verify(deploymentItems.Count == 0);
+        deploymentItems.Should().NotBeNull();
+        deploymentItems.Count.Should().Be(0);
     }
 
     public void GetClassLevelDeploymentItemsShouldReturnADeploymentItem()
@@ -66,7 +67,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
         };
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
+        expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()).Should().BeTrue();
     }
 
     public void GetClassLevelDeploymentItemsShouldReturnMoreThanOneDeploymentItems()
@@ -97,7 +98,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 deploymentItemAttributes[1].Value),
         };
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
+        expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()).Should().BeTrue();
     }
 
     public void GetClassLevelDeploymentItemsShouldNotReturnDuplicateDeploymentItemEntries()
@@ -125,7 +126,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory)
         ];
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
+        expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()).Should().BeTrue();
     }
 
     public void GetClassLevelDeploymentItemsShouldReportWarningsForInvalidDeploymentItems()
@@ -150,9 +151,9 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
         };
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
-        Verify(_warnings.Count == 1);
-        Verify(_warnings.ToArray()[0].Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty));
+        expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()).Should().BeTrue();
+        _warnings.Count.Should().Be(1);
+        _warnings.ToArray()[0].Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty).Should().BeTrue();
     }
 
     #endregion
@@ -165,7 +166,7 @@ public class DeploymentItemUtilityTests : TestContainer
         _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
             .Returns([]);
 
-        Verify(_deploymentItemUtility.GetDeploymentItems(method, null!, _warnings) is null);
+        _deploymentItemUtility.GetDeploymentItems(method, null!, _warnings).Should().BeNull();
     }
 
     public void GetDeploymentItemsShouldReturnMethodLevelDeploymentItemsOnly()
@@ -190,7 +191,7 @@ public class DeploymentItemUtilityTests : TestContainer
             null!,
             _warnings);
 
-        Verify(deploymentItemAttributes.SequenceEqual(deploymentItems));
+        deploymentItemAttributes.SequenceEqual(deploymentItems).Should().BeTrue();
     }
 
     public void GetDeploymentItemsShouldReturnClassLevelDeploymentItemsOnly()
@@ -224,7 +225,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory)
         ];
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
+        expectedDeploymentItems.SequenceEqual(deploymentItems).Should().BeTrue();
     }
 
     public void GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems()
@@ -265,7 +266,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
         };
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
+        expectedDeploymentItems.SequenceEqual(deploymentItems).Should().BeTrue();
     }
 
     public void GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItemsWithoutDuplicates()
@@ -315,7 +316,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
         };
 
-        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
+        expectedDeploymentItems.SequenceEqual(deploymentItems).Should().BeTrue();
     }
 
     #endregion
@@ -324,68 +325,63 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out string? warning));
-
-        Verify(Resource.DeploymentItemPathCannotBeNullOrEmpty.Contains(warning));
+        DeploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeFalse();
+        Resource.DeploymentItemPathCannotBeNullOrEmpty.Should().Contain(warning!);
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsEmpty()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out string? warning));
-
-        Verify(Resource.DeploymentItemPathCannotBeNullOrEmpty.Contains(warning));
+        DeploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeFalse();
+        Resource.DeploymentItemPathCannotBeNullOrEmpty.Should().Contain(warning!);
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsNull()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out string? warning));
+        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(Resource.DeploymentItemOutputDirectoryCannotBeNull, warning);
+        warning.Should().Contain(Resource.DeploymentItemOutputDirectoryCannotBeNull);
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out string? warning));
+        DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(
+        warning.Should().Contain(
             string.Format(
                 CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 "C:<>",
-                _defaultDeploymentItemOutputDirectory),
-            warning);
+                _defaultDeploymentItemOutputDirectory));
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out string? warning));
+        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(
+        warning.Should().Contain(
             string.Format(
                 CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 _defaultDeploymentItemPath,
-                "<>"),
-            warning);
+                "<>"));
     }
 
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
     {
-        Verify(!DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out string? warning));
+        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out string? warning).Should().BeFalse();
 
-        StringAssert.Contains(
+        warning.Should().Contain(
            string.Format(
                CultureInfo.InvariantCulture,
                Resource.DeploymentItemOutputDirectoryMustBeRelative,
-               "C:\\temp"),
-           warning);
+               "C:\\temp"));
     }
 
     public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()
     {
-        Verify(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out string? warning));
+        DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out string? warning).Should().BeTrue();
 
-        Verify(warning is null);
+        warning.Should().BeNull();
     }
     #endregion
 
@@ -396,7 +392,7 @@ public class DeploymentItemUtilityTests : TestContainer
         TestCase testCase = new("A.C.M", new Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemsProperty, null);
 
-        Verify(!DeploymentItemUtility.HasDeploymentItems(testCase));
+        DeploymentItemUtility.HasDeploymentItems(testCase).Should().BeFalse();
     }
 
     public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
@@ -410,7 +406,7 @@ public class DeploymentItemUtilityTests : TestContainer
         ];
         testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 
-        Verify(DeploymentItemUtility.HasDeploymentItems(testCase));
+        DeploymentItemUtility.HasDeploymentItems(testCase).Should().BeTrue();
     }
 
     #endregion
@@ -435,3 +431,4 @@ public class DeploymentItemUtilityTests : TestContainer
 
     #endregion
 }
+#endif

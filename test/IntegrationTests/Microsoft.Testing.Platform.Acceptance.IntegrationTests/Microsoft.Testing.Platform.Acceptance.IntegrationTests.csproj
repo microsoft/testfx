@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers" />
     <Using Include="Microsoft.Testing.Platform.Builder" />
     <Using Include="Microsoft.Testing.Platform.Extensions" />
