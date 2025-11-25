@@ -52,9 +52,6 @@ $failureCount = 0
 # Find all solution files in samples/public
 $solutions = Get-ChildItem -Path $samplesFolder -Filter "*.sln" -Recurse
 
-# Exclude RunnerVsVSTest.sln as it's too slow for CI
-$solutions = $solutions | Where-Object { $_.Name -ne "RunnerVsVSTest.sln" }
-
 foreach ($solution in $solutions) {
     Write-Host "Building solution: $($solution.FullName)"
 
