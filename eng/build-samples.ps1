@@ -55,14 +55,32 @@ $solutions = Get-ChildItem -Path $samplesFolder -Filter "*.sln" -Recurse
 foreach ($solution in $solutions) {
     Write-Host "Building solution: $($solution.FullName)"
 
-    $buildArgs = @(
-        "build",
-        $solution.FullName,
-        "--configuration", $Configuration,
-        "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
-    )
+    # UWP projects require MSBuild instead of dotnet build
+    $isUwpSolution = $solution.Name -eq "BlankUwpNet9App.sln"
 
-    & $dotnetPath $buildArgs
+    if ($isUwpSolution) {
+        $msbuildPath = InitializeVisualStudioMSBuild -install:$true
+
+        $buildArgs = @(
+            $solution.FullName,
+            "/p:Configuration=$Configuration",
+            "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors",
+            "/p:Platform=x64",
+            "/v:minimal"
+        )
+
+        & $msbuildPath $buildArgs
+    }
+    else {
+        $buildArgs = @(
+            "build",
+            $solution.FullName,
+            "--configuration", $Configuration,
+            "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
+        )
+
+        & $dotnetPath $buildArgs
+    }
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: Failed to build $($solution.Name)"

@@ -12,3 +12,5 @@ dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity 
 
 # CA2007: Consider calling ConfigureAwait on the awaited task
 dotnet_diagnostic.CA2007.severity = none
+
+dotnet_diagnostic.MSTEST0001.severity = none
