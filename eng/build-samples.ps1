@@ -59,6 +59,23 @@ foreach ($solution in $solutions) {
     $isUwpSolution = $solution.Name -eq "BlankUwpNet9App.sln"
 
     if ($isUwpSolution) {
+        # Restore NuGet packages first for UWP projects
+        $restoreArgs = @(
+            "restore",
+            $solution.FullName,
+            "/p:Configuration=$Configuration",
+            "/p:Platform=x64"
+        )
+
+        & $dotnetPath $restoreArgs
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERROR: Failed to restore packages for $($solution.Name)"
+            $failed = $true
+            $failureCount++
+            continue
+        }
+
         $msbuildPath = InitializeVisualStudioMSBuild -install:$true
 
         $buildArgs = @(
