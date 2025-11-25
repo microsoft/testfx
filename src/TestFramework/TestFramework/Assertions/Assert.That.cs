@@ -123,6 +123,8 @@ public static partial class AssertExtensions
 
         try
         {
+            bool hasChildren = false;
+
             // First, recursively evaluate all sub-expressions (depth-first traversal).
             // This ensures that when we evaluate a parent expression, all its children
             // are already cached and can be replaced with constant values.
@@ -132,11 +134,13 @@ public static partial class AssertExtensions
                     // Evaluate both operands before evaluating the binary operation
                     EvaluateAllSubExpressions(binaryExpr.Left, cache);
                     EvaluateAllSubExpressions(binaryExpr.Right, cache);
+                    hasChildren = true;
                     break;
 
                 case UnaryExpression unaryExpr:
                     // Evaluate the operand before evaluating the unary operation
                     EvaluateAllSubExpressions(unaryExpr.Operand, cache);
+                    hasChildren = true;
                     break;
 
                 case MemberExpression memberExpr:
@@ -144,6 +148,7 @@ public static partial class AssertExtensions
                     if (memberExpr.Expression is not null)
                     {
                         EvaluateAllSubExpressions(memberExpr.Expression, cache);
+                        hasChildren = true;
                     }
 
                     break;
@@ -153,11 +158,13 @@ public static partial class AssertExtensions
                     if (callExpr.Object is not null)
                     {
                         EvaluateAllSubExpressions(callExpr.Object, cache);
+                        hasChildren = true;
                     }
 
                     foreach (Expression argument in callExpr.Arguments)
                     {
                         EvaluateAllSubExpressions(argument, cache);
+                        hasChildren = true;
                     }
 
                     break;
@@ -167,6 +174,7 @@ public static partial class AssertExtensions
                     EvaluateAllSubExpressions(conditionalExpr.Test, cache);
                     EvaluateAllSubExpressions(conditionalExpr.IfTrue, cache);
                     EvaluateAllSubExpressions(conditionalExpr.IfFalse, cache);
+                    hasChildren = true;
                     break;
 
                 case InvocationExpression invocationExpr:
@@ -177,6 +185,7 @@ public static partial class AssertExtensions
                         EvaluateAllSubExpressions(argument, cache);
                     }
 
+                    hasChildren = true;
                     break;
 
                 case NewExpression newExpr:
@@ -184,6 +193,7 @@ public static partial class AssertExtensions
                     foreach (Expression argument in newExpr.Arguments)
                     {
                         EvaluateAllSubExpressions(argument, cache);
+                        hasChildren = true;
                     }
 
                     break;
@@ -199,6 +209,7 @@ public static partial class AssertExtensions
                         }
                     }
 
+                    hasChildren = true;
                     break;
 
                 case NewArrayExpression newArrayExpr:
@@ -206,6 +217,7 @@ public static partial class AssertExtensions
                     foreach (Expression expression in newArrayExpr.Expressions)
                     {
                         EvaluateAllSubExpressions(expression, cache);
+                        hasChildren = true;
                     }
 
                     break;
@@ -213,18 +225,32 @@ public static partial class AssertExtensions
                 case TypeBinaryExpression typeBinaryExpr:
                     // For type checks (e.g., obj is Type), evaluate the object being tested
                     EvaluateAllSubExpressions(typeBinaryExpr.Expression, cache);
+                    hasChildren = true;
                     break;
             }
 
-            // Now build a new expression that replaces sub-expressions with their cached values.
-            // This is crucial: by replacing evaluated sub-expressions with constants, we ensure
-            // that compiling and invoking this expression won't cause side effects to re-execute.
-            Expression replacedExpr = ReplaceSubExpressionsWithConstants(expr, cache);
+            // Evaluate the current expression and cache the result.
+            // For non-leaf expressions (hasChildren == true), we replace sub-expressions with their cached values first.
+            // For leaf expressions (hasChildren == false), we evaluate them directly.
+            if (hasChildren)
+            {
+                // Now build a new expression that replaces sub-expressions with their cached values.
+                // This is crucial: by replacing evaluated sub-expressions with constants, we ensure
+                // that compiling and invoking this expression won't cause side effects to re-execute.
+                Expression replacedExpr = ReplaceSubExpressionsWithConstants(expr, cache);
 
-            // Evaluate the replaced expression - this is now safe because all sub-expressions
-            // that could have side effects have been replaced with their constant values.
-            object? result = Expression.Lambda(replacedExpr).Compile().DynamicInvoke();
-            cache[expr] = result;
+                // Evaluate the replaced expression - this is now safe because all sub-expressions
+                // that could have side effects have been replaced with their constant values.
+                object? result = Expression.Lambda(replacedExpr).Compile().DynamicInvoke();
+                cache[expr] = result;
+            }
+            else
+            {
+                // This is a leaf expression (no children to evaluate).
+                // Evaluate it directly and cache the result.
+                object? result = Expression.Lambda(expr).Compile().DynamicInvoke();
+                cache[expr] = result;
+            }
         }
         catch
         {
@@ -1147,17 +1173,40 @@ public static partial class AssertExtensions
     /// </summary>
     private static bool TryAddExpressionValue(Expression expr, string displayName, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache)
     {
-        // Don't overwrite existing entries
-        if (details.ContainsKey(displayName))
-        {
-            return false;
-        }
-
         // Use cached value if available
         if (evaluationCache.TryGetValue(expr, out object? cachedValue))
         {
+            // If the key already exists, check if it has the same value
+            if (details.TryGetValue(displayName, out object? existingValue))
+            {
+                // If values are different, add with a suffix to show multiple evaluations
+                if (!Equals(existingValue, cachedValue))
+                {
+                    int counter = 2;
+                    string numberedName;
+                    do
+                    {
+                        numberedName = $"{displayName} ({counter})";
+                        counter++;
+                    }
+                    while (details.ContainsKey(numberedName));
+
+                    details[numberedName] = cachedValue;
+                    return true;
+                }
+
+                // Same value, don't add duplicate
+                return false;
+            }
+
             details[displayName] = cachedValue;
             return true;
+        }
+
+        // Don't add if key already exists and we don't have a cached value
+        if (details.ContainsKey(displayName))
+        {
+            return false;
         }
 
         // Mark as failed if we couldn't evaluate it

@@ -479,10 +479,10 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}
+                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.InvariantCulture)}
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.CurrentCulture)}
+                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.InvariantCulture)}
                   year = 2023
                 """);
     }
@@ -1047,34 +1047,48 @@ public partial class AssertTests : TestContainer
     {
         var box = new Box();
 
-        // If we evaluate twice, box.GetNumber() is called once on comparison, and once when message for assertion is built.
+        // If we evaluate twice, box.GetValueWithSideEffect() is called once on comparison, and once when message for assertion is built.
         // We compare to 0 to force failure.
-        Action act = () => Assert.That(() => box.GetNumber() == 0);
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() == 0);
 
-        // GetNumber() should report 1, which is the value when we evaluate only once.
+        // GetValueWithSideEffect() should report 1, which is the value when we evaluate only once.
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => box.GetNumber() == 0) failed.
+            Assert.That(() => box.GetValueWithSideEffect() == 0) failed.
             Details:
-              box.GetNumber() = 1
+              box.GetValueWithSideEffect() = 1
             """);
 
         // We call again, this should be second call now.
-        box.GetNumber().Should().Be(2);
+        box.GetValueWithSideEffect().Should().Be(2);
     }
 
-    public void That_DoesEvaluateTwice()
+    public void That_DoesNotEvaluateTwice_WhenAssertionFails_NoSideEffect()
+    {
+        int i = 1;
+        Action act = () => Assert.That(() => i + i == 0);
+
+        act.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+            Assert.That(() => i + i == 0) failed.
+            Details:
+              i = 1
+            """);
+    }
+
+    public void That_DoesEvaluateTwice_WhenMethodIsLeaf()
     {
         var box = new Box();
 
         // Compare to 0 to force failure.
-        Action act = () => Assert.That(() => box.GetNumber() + box.GetNumber() == 0);
+        Action act = () => Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0);
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => box.GetNumber() + box.GetNumber() == 0) failed.
+            Assert.That(() => box.GetValueWithSideEffect() + box.GetValueWithSideEffect() == 0) failed.
             Details:
-              box.GetNumber() = 1
+              box.GetValueWithSideEffect() = 1
+              box.GetValueWithSideEffect() (2) = 2
             """);
     }
 
@@ -1082,7 +1096,7 @@ public partial class AssertTests : TestContainer
     {
         private int _c;
 
-        public int GetNumber()
+        public int GetValueWithSideEffect()
         {
             _c++;
             return _c;
