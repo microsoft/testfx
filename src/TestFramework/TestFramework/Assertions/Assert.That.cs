@@ -11,7 +11,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public static partial class AssertExtensions
 {
     // Constants for standardized display values
-    private const string FailedToEvaluate = "<Failed to evaluate>";
     private const string NullDisplay = "null";
     private const string NullAngleBrackets = "<null>";
 
@@ -105,7 +104,7 @@ public static partial class AssertExtensions
         }
 
         // Fallback - this should not happen if EvaluateAllSubExpressions works correctly
-        return false;
+        throw ApplicationStateGuard.Unreachable();
     }
 
     /// <summary>
@@ -231,7 +230,7 @@ public static partial class AssertExtensions
         {
             // If evaluation fails (e.g., null reference, division by zero), mark it as failed
             // rather than throwing. This allows us to continue and provide diagnostic information.
-            cache[expr] = FailedToEvaluate;
+            cache[expr] = FrameworkMessages.AssertThatFailedToEvaluate;
         }
     }
 
@@ -486,7 +485,7 @@ public static partial class AssertExtensions
         // Use cached value if available, otherwise mark as failed
         details[displayName] = evaluationCache.TryGetValue(memberExpr, out object? cachedValue)
             ? cachedValue
-            : FailedToEvaluate;
+            : FrameworkMessages.AssertThatFailedToEvaluate;
 
         // Skip Func and Action delegates as they don't provide useful information in assertion failures
         if (IsFuncOrActionType(cachedValue?.GetType()))
@@ -969,7 +968,6 @@ public static partial class AssertExtensions
     /// <summary>
     /// Removes parentheses that wrap the entire expression and cleans up excessive
     /// consecutive parentheses (e.g., "(((x)))" becomes "x", "((x) &amp;&amp; (y))" becomes "(x) &amp;&amp; (y)").
-
     /// </summary>
     private static string CleanParentheses(string input)
     {
@@ -1163,7 +1161,7 @@ public static partial class AssertExtensions
         }
 
         // Mark as failed if we couldn't evaluate it
-        details[displayName] = FailedToEvaluate;
+        details[displayName] = FrameworkMessages.AssertThatFailedToEvaluate;
         return true;
     }
 

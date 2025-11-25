@@ -323,6 +323,11 @@ Real: {2}</target>
         <target state="translated">Los elementos &lt;{0}&gt; no están presentes en la colección.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">La cadena "{0}" no empieza con la cadena "{1}". {2}</target>

@@ -322,8 +322,11 @@ Rzeczywiste: {2}</target>
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">Elementy &lt;{0}&gt; nie występują w kolekcji.</target>
         <note />
-      </trans-unit>
-      <trans-unit id="StartsWithFail">
+      </trans-unit>      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>      <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">Ciąg „{0}” nie rozpoczyna się od ciągu „{1}”. {2}</target>
         <note />

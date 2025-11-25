@@ -322,8 +322,11 @@ Réel : {2}</target>
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">L’élément ou les éléments &lt;{0}&gt; n’est ou ne sont pas présent(s) dans la collection.</target>
         <note />
-      </trans-unit>
-      <trans-unit id="StartsWithFail">
+      </trans-unit>      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>      <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' ne commence pas par la chaîne '{1}'. {2}</target>
         <note />

@@ -323,6 +323,11 @@ Actual: {2}</source>
         <target state="translated">集合中不存在元素 &lt;{0}&gt;。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">字符串 '{0}' 不以字符串 '{1}' 开头。{2}</target>

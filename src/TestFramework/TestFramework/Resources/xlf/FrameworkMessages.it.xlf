@@ -323,6 +323,11 @@ Effettivo: {2}</target>
         <target state="translated">Gli elementi &lt;{0}&gt; non sono presenti nella raccolta.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">La stringa '{0}' non inizia con la stringa '{1}'. {2}</target>

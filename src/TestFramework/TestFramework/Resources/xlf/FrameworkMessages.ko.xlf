@@ -322,8 +322,11 @@ Actual: {2}</source>
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">컬렉션에 &lt;{0}&gt; 요소가 없습니다.</target>
         <note />
-      </trans-unit>
-      <trans-unit id="StartsWithFail">
+      </trans-unit>      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>      <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">'{0}' 문자열이 '{1}' 문자열로 시작되지 않습니다. {2}</target>
         <note />

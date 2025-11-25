@@ -322,8 +322,11 @@ Actual: {2}</source>
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">要素 &lt;{0}&gt; がコレクション内に存在しません。</target>
         <note />
-      </trans-unit>
-      <trans-unit id="StartsWithFail">
+      </trans-unit>      <trans-unit id="AssertThatFailedToEvaluate">
+        <source>&lt;Failed to evaluate&gt;</source>
+        <target state="new">&lt;Failed to evaluate&gt;</target>
+        <note />
+      </trans-unit>      <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
         <target state="translated">文字列 '{0}' は文字列 '{1}' で始まりません。{2}</target>
         <note />
