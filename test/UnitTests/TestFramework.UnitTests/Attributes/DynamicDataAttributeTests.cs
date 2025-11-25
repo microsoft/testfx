@@ -27,7 +27,7 @@ public class DynamicDataAttributeTests : TestContainer
         _dynamicDataAttribute = new DynamicDataAttribute("ABC");
         Action action = () => _dynamicDataAttribute.GetData(_testMethodInfo);
         action.Should().Throw<InvalidOperationException>()
-            .And.Message.Should().Be(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType!.FullName));
+            .WithMessage(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType!.FullName));
     }
 
     public void GetDataShouldReadDataFromProperty()

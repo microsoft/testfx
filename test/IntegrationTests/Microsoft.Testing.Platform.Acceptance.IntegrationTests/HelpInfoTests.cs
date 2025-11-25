@@ -322,7 +322,7 @@ Options:
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
     --retry-failed-tests
-        Enable retry failed tests
+        Retry failed tests the given number of times
     --retry-failed-tests-max-percentage
         Disable retry mechanism if the percentage of failed tests is greater than the specified value
     --retry-failed-tests-max-tests
@@ -586,7 +586,7 @@ Registered command line providers:
       --retry-failed-tests
         Arity: 1
         Hidden: False
-        Description: Enable retry failed tests
+        Description: Retry failed tests the given number of times
       --retry-failed-tests-max-percentage
         Arity: 1
         Hidden: False

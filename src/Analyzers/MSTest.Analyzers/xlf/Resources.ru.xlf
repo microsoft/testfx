@@ -1001,6 +1001,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Assert.Throws должен содержать только одну инструкцию/выражение</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="translated">Не используйте утверждения в блоках catch</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="translated">Не используйте утверждения в блоках catch, так как с ними тест может не завершаться сбоем, если не возникает исключение</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="translated">Использование утверждений в блоках catch является проблематичным, так как тест будет пройден, даже если не возникает исключение, а блок catch не выполняется. Используйте "Assert.Throws", "Assert.ThrowsExactly", "Assert.ThrowsAsync" или "Assert.ThrowsExactlyAsync" для проверки возникновения исключения, а затем выполните дополнительные утверждения перехваченного исключения без применения блока try-catch.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

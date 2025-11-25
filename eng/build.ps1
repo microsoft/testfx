@@ -52,7 +52,7 @@ if ($vs -or $vscode) {
     # Disable .NET runtime signature validation errors which errors for local builds
     $env:VSDebugger_ValidateDotnetDebugLibSignatures=0;
 
-    # Enables the logginc of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
+    # Enables the logging of Json RPC messages if diagnostic logging for Test Explorer is enabled in Visual Studio.
     $env:_TestingPlatformDiagnostics_=1;
 
     if ($vs) {

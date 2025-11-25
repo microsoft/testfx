@@ -481,4 +481,88 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzerT
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenDerivedTestMethodAttributeWithStaticConstructor_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                static MyTestMethodAttribute()
+                {
+                }
+
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedTestMethodAttributeWithStaticField_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethodAttribute : TestMethodAttribute
+            {
+                static DateTimeOffset s_field = new();
+
+                public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedTestMethodAttributeWithStaticConstructorAndMissingCallerInfo_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class SomeTestMethodAttribute : TestMethodAttribute
+            {
+                static SomeTestMethodAttribute()
+                {
+                }
+
+                public [|SomeTestMethodAttribute|]()
+                    : base()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.CompilerServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class SomeTestMethodAttribute : TestMethodAttribute
+            {
+                static SomeTestMethodAttribute()
+                {
+                }
+
+                public SomeTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

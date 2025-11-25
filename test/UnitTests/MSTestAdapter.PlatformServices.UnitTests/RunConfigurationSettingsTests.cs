@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -46,10 +48,10 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.Reset();
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
 
-        Verify(settings is not null);
+        settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        Verify(settings.ExecutionApartmentState is null);
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     #endregion
@@ -61,7 +63,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings.ExecutionApartmentState is null);
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -69,7 +71,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings.ExecutionApartmentState is null);
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -78,7 +80,7 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings.ExecutionApartmentState is null);
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
@@ -97,10 +99,10 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings is not null);
+        settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        Verify(settings.ExecutionApartmentState is null);
+        settings.ExecutionApartmentState.Should().BeNull();
     }
 
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
@@ -120,10 +122,10 @@ public class RunConfigurationSettingsTests : TestContainer
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Verify(settings is not null);
+        settings.Should().NotBeNull();
 
         // Validating the default value of a random setting.
-        Verify(settings.ExecutionApartmentState == ApartmentState.STA);
+        settings.ExecutionApartmentState.Should().Be(ApartmentState.STA);
     }
 
     #endregion
@@ -147,8 +149,8 @@ public class RunConfigurationSettingsTests : TestContainer
         RunConfigurationSettings.SetRunConfigurationSettingsFromConfig(mockConfig.Object, settings);
 
         // Assert
-        Verify(settings is not null);
-        Verify(settings.ExecutionApartmentState == ApartmentState.STA);
+        settings.Should().NotBeNull();
+        settings.ExecutionApartmentState.Should().Be(ApartmentState.STA);
     }
 
     #endregion
