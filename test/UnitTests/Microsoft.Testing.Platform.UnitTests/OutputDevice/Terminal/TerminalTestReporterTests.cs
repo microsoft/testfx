@@ -216,27 +216,27 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[32mpassed␛[m PassedTest1␛[90m(10s 000ms)␛[m
+            ␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[33mskipped␛[m SkippedTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[31mfailed␛[m FailedTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
             ␛[31m  Tests failed
             ␛[m␛[31m  Expected
             ␛[31m    ABC
@@ -316,27 +316,27 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[32mpassed␛[m PassedTest1␛[90m(10s 000ms)␛[m
+            ␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[33mskipped␛[m SkippedTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[31mfailed␛[m FailedTest1␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
             ␛[31m  Tests failed
             ␛[m␛[31m  Expected
                 ABC
@@ -437,7 +437,7 @@ public sealed class TerminalTestReporterTests
 
         // Note: The progress is drawn after each completed event.
         string expected = $"""
-            {busyIndicatorString}␛[?25l␛[32mpassed␛[m PassedTest1␛[90m(10s 000ms)␛[m
+            {busyIndicatorString}␛[?25l␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
@@ -449,7 +449,7 @@ public sealed class TerminalTestReporterTests
               InProgressTest2␛[2147483643G(31s)
               InProgressTest3␛[2147483644G(1s)
             ␛[7F
-            ␛[J␛[33mskipped␛[m SkippedTest1␛[90m(10s 000ms)␛[m
+            ␛[J␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
