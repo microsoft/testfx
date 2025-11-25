@@ -10,8 +10,11 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 #endif
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
+[Embedded]
 internal abstract class BaseSerializer
 {
 #if NETCOREAPP

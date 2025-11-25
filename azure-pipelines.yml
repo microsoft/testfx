@@ -8,8 +8,7 @@ trigger:
 pr:
   branches:
     include:
-    - main
-    - rel/*
+    - "*"
   paths:
     exclude:
       - .github/*
@@ -21,7 +20,6 @@ pr:
       - CONTRIBUTING.md
       - README.md
       - SECURITY.md
-      - src/**/*.xlf
       - azure-pipelines-official.yml
 
 parameters:
@@ -60,7 +58,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals windows.vs2022preview.amd64.open
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
         strategy:
           matrix:
             Release:
@@ -171,7 +169,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
+          demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         strategy:
           matrix:
             Release:

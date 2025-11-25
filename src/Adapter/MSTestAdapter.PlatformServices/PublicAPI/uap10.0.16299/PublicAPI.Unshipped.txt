@@ -1,4 +1,0 @@
-#nullable enable
-*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerManager.Close(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener! traceListener) -> void
-*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.Close() -> void
-*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.Dispose() -> void

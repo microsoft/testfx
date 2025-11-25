@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -22,26 +24,29 @@ public class PlatformServiceProviderTests : TestContainer
         }
     }
 
-    public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault() => Verify(PlatformServiceProvider.Instance.GetType() == typeof(PlatformServiceProvider));
+    public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault()
+        => PlatformServiceProvider.Instance.Should().BeOfType<PlatformServiceProvider>();
 
     public void ProviderServiceInstanceShouldReturnTheInstanceSet()
     {
         // If this test fails most other tests would too since this
         // defines our mocking for the Service provider.
         PlatformServiceProvider.Instance = new TestablePlatformServiceProvider();
-        Verify(PlatformServiceProvider.Instance.GetType() == typeof(TestablePlatformServiceProvider));
+        PlatformServiceProvider.Instance.Should().BeOfType<TestablePlatformServiceProvider>();
     }
 
-    public void TestSourceShouldReturnANonNullInstance() => Verify(PlatformServiceProvider.Instance is not null);
+    public void TestSourceShouldReturnANonNullInstance()
+        => PlatformServiceProvider.Instance.Should().NotBeNull();
 
-    public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations2));
+    public void ReflectionOperationsShouldReturnAValidInstance()
+        => PlatformServiceProvider.Instance.ReflectionOperations.Should().BeOfType<ReflectionOperations>();
 
     public void ReflectionOperationsShouldBeCached()
     {
         PlatformServices.Interface.IReflectionOperations reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
 
-        Verify(reflectionOperationsInstance is not null);
-        Verify(reflectionOperationsInstance == PlatformServiceProvider.Instance.ReflectionOperations);
+        reflectionOperationsInstance.Should().NotBeNull();
+        reflectionOperationsInstance.Should().Be(PlatformServiceProvider.Instance.ReflectionOperations);
     }
 
     public void GetTestContextShouldReturnAValidTestContext()
@@ -56,10 +61,9 @@ public class PlatformServiceProviderTests : TestContainer
         PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, null, properties, null!, default);
 
         // Assert.
-        Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
-        Verify(testContext.Context.TestName == "M");
-        Verify(testContext.Context.Properties.ContainsKey(properties.Single().Key));
-
-        Verify(testContext.Context.Properties.Contains(properties.Single()));
+        testContext.Context.FullyQualifiedTestClassName.Should().Be("A.C.M");
+        testContext.Context.TestName.Should().Be("M");
+        testContext.Context.Properties.Should().ContainKey(properties.Single().Key);
+        testContext.Context.Properties.Should().Contain(properties.Single());
     }
 }

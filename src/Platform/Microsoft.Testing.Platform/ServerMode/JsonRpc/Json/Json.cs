@@ -248,7 +248,9 @@ internal sealed class Json
                                 break;
                             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
                         case CancelledTestNodeStateProperty canceledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
                             {
                                 properties.Add(("execution-state", "canceled"));
                                 Exception? exception = canceledTestNodeStateProperty.Exception;

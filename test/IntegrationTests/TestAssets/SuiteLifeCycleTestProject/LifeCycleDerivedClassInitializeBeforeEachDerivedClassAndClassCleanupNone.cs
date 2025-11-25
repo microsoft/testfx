@@ -9,13 +9,12 @@ namespace SuiteLifeCycleTestProject;
 public sealed class LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone
     : LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone
 {
-    private static TestContext s_testContext = null!;
-
     public TestContext DerivedClassTestContext { get; set; } = null!;
 
-    public LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone()
+    public LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone(TestContext testContext)
+        : base(testContext)
     {
-        s_testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
+        testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
         Console.WriteLine("Console: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
         Trace.WriteLine("Trace: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
         Debug.WriteLine("Debug: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called");
@@ -24,8 +23,7 @@ public sealed class LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClas
     [ClassInitialize]
     public static void DerivedClassInitialize(TestContext testContext)
     {
-        s_testContext = testContext;
-        s_testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
+        testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
         Console.WriteLine("Console: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
         Trace.WriteLine("Trace: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
         Debug.WriteLine("Debug: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called");
@@ -59,9 +57,9 @@ public sealed class LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClas
     }
 
     [ClassCleanup]
-    public static void DerivedClassCleanup()
+    public static void DerivedClassCleanup(TestContext testContext)
     {
-        s_testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
+        testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
         Console.WriteLine("Console: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
         Trace.WriteLine("Trace: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
         Debug.WriteLine("Debug: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");

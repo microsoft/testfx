@@ -65,23 +65,21 @@ public sealed class IPCTests
 
         await waitTask;
 #if NETCOREAPP
-        await namedPipeClient1.DisposeAsync();
+        namedPipeClient1.Dispose();
         await openedPipe[0].DisposeAsync();
 #else
         namedPipeClient1.Dispose();
         openedPipe[0].Dispose();
 #endif
-        pipeNameDescription.Dispose();
 
         // Verify double dispose
 #if NETCOREAPP
-        await namedPipeClient1.DisposeAsync();
+        namedPipeClient1.Dispose();
         await openedPipe[0].DisposeAsync();
 #else
         namedPipeClient1.Dispose();
         openedPipe[0].Dispose();
 #endif
-        pipeNameDescription.Dispose();
     }
 
     [TestMethod]
@@ -159,14 +157,12 @@ public sealed class IPCTests
         }
 
 #if NETCOREAPP
-        await namedPipeClient.DisposeAsync();
+        namedPipeClient.Dispose();
         await singleConnectionNamedPipeServer.DisposeAsync();
 #else
         namedPipeClient.Dispose();
         singleConnectionNamedPipeServer.Dispose();
 #endif
-
-        pipeNameDescription.Dispose();
     }
 
     [TestMethod]

@@ -989,6 +989,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Assert.Throws는 단일 문/식만 포함해야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="translated">catch 블록에서 어설션 사용 안 함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="translated">예외가 발생하지 않으면 테스트가 실패하지 않을 수 있으니 catch 블록에서 어설션을 사용하지 마세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="translated">예외가 발생하지 않고 catch 블록이 실행되지 않더라도 테스트가 통과하기 때문에 catch 블록에서 어설션을 사용하는 것은 문제가 됩니다. 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' 또는 'Assert.ThrowsExactlyAsync'를 사용하여 예외가 발생했는지 확인한 다음 try-catch 블록을 사용하지 않고 catch된 예외에 대해 추가 어설션을 만듭니다.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

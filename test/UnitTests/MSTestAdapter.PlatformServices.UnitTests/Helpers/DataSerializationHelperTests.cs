@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
@@ -15,9 +17,9 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
-        Verify(actual[0]!.GetType() == typeof(DateTimeOffset));
-        Verify(actual[0]!.Equals(source));
+        actual!.Length.Should().Be(1);
+        actual[0].Should().BeOfType<DateTimeOffset>();
+        actual[0]!.Equals(source).Should().BeTrue();
     }
 
     public void DataSerializerShouldRoundTripDateTime()
@@ -26,10 +28,10 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
-        Verify(actual[0]!.GetType() == typeof(DateTime));
-        Verify(actual[0]!.Equals(source));
-        Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
+        actual!.Length.Should().Be(1);
+        actual[0].Should().BeOfType<DateTime>();
+        actual[0]!.Equals(source).Should().BeTrue();
+        ((DateTime)actual[0]!).Kind.Equals(source.Kind).Should().BeTrue();
     }
 
     public void DataSerializerShouldRoundTripDateTimeOfKindLocal()
@@ -38,10 +40,10 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
-        Verify(actual[0]!.GetType() == typeof(DateTime));
-        Verify(actual[0]!.Equals(source));
-        Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
+        actual!.Length.Should().Be(1);
+        actual[0].Should().BeOfType<DateTime>();
+        actual[0]!.Equals(source).Should().BeTrue();
+        ((DateTime)actual[0]!).Kind.Equals(source.Kind).Should().BeTrue();
     }
 
     public void DataSerializerShouldRoundTripDateTimeOfKindUtc()
@@ -50,10 +52,10 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
-        Verify(actual[0]!.GetType() == typeof(DateTime));
-        Verify(actual[0]!.Equals(source));
-        Verify(((DateTime)actual[0]!).Kind.Equals(source.Kind));
+        actual!.Length.Should().Be(1);
+        actual[0].Should().BeOfType<DateTime>();
+        actual[0]!.Equals(source).Should().BeTrue();
+        ((DateTime)actual[0]!).Kind.Equals(source.Kind).Should().BeTrue();
     }
 
 #if NET7_0_OR_GREATER
@@ -63,9 +65,9 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
-        Verify(actual[0]!.GetType() == typeof(DateOnly));
-        Verify(actual[0]!.Equals(source));
+        actual!.Length.Should().Be(1);
+        actual[0].Should().BeOfType<DateOnly>();
+        actual[0]!.Equals(source).Should().BeTrue();
     }
 
     public void DataSerializerShouldRoundTripTimeOnly()
@@ -74,9 +76,9 @@ public class DataSerializationHelperTests : TestContainer
 
         object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([source]));
 
-        Verify(actual!.Length == 1);
-        Verify(actual[0]!.GetType() == typeof(TimeOnly));
-        Verify(actual[0]!.Equals(source));
+        actual!.Length.Should().Be(1);
+        actual[0].Should().BeOfType<TimeOnly>();
+        actual[0]!.Equals(source).Should().BeTrue();
     }
 #endif
 }

@@ -1,4 +1,1 @@
 #nullable enable
-*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDeploymentDir.get -> string?
-*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDir.get -> string?
-*REMOVED*virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestLogsDir.get -> string?

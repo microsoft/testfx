@@ -97,10 +97,12 @@ internal class TestExecutionManager
     /// </summary>
     private readonly TestMethodFilter _testMethodFilter;
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets a value indicating whether any test executed has failed.
     /// </summary>
     private bool _hasAnyTestFailed;
+#endif
 
     /// <summary>
     /// Runs the tests.
@@ -119,7 +121,11 @@ internal class TestExecutionManager
         _testRunCancellationToken = runCancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
+#if !WINDOWS_UWP && !WIN_UI
         bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+#else
+        const bool isDeploymentDone = false;
+#endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
         CacheSessionParameters(runContext, frameworkHandle);
@@ -127,10 +133,12 @@ internal class TestExecutionManager
         // Execute the tests
         await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).ConfigureAwait(false);
 
+#if !WINDOWS_UWP && !WIN_UI
         if (!_hasAnyTestFailed)
         {
             PlatformServiceProvider.Instance.TestDeployment.Cleanup();
         }
+#endif
     }
 
     internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, TestRunCancellationToken cancellationToken)
@@ -157,7 +165,11 @@ internal class TestExecutionManager
             discoverySink.Tests.Clear();
         }
 
+#if !WINDOWS_UWP && !WIN_UI
         bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+#else
+        const bool isDeploymentDone = false;
+#endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
         CacheSessionParameters(runContext, frameworkHandle);
@@ -165,10 +177,12 @@ internal class TestExecutionManager
         // Run tests.
         await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).ConfigureAwait(false);
 
+#if !WINDOWS_UWP && !WIN_UI
         if (!_hasAnyTestFailed)
         {
             PlatformServiceProvider.Instance.TestDeployment.Cleanup();
         }
+#endif
     }
 
     /// <summary>
@@ -212,7 +226,9 @@ internal class TestExecutionManager
             if (testResult.Outcome == TestOutcome.Failed)
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+#if !WINDOWS_UWP && !WIN_UI
                 _hasAnyTestFailed = true;
+#endif
             }
 
             try
@@ -260,10 +276,12 @@ internal class TestExecutionManager
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
+#if !WINDOWS_UWP && !WIN_UI
         if (isDeploymentDone)
         {
             source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory()!, Path.GetFileName(source));
         }
+#endif
 
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
@@ -308,7 +326,7 @@ internal class TestExecutionManager
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
         TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
-        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElement(source))];
+        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElementWithUpdatedSource(source))];
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
@@ -455,7 +473,7 @@ internal class TestExecutionManager
             }
 
             hasAnyRunnableTests = true;
-            var unitTestElement = currentTest.ToUnitTestElement(source);
+            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
 
             testExecutionRecorder.RecordStart(currentTest);
 
@@ -517,7 +535,7 @@ internal class TestExecutionManager
             }
 
             Trait trait = currentTest.Traits.First(t => t.Name == EngineConstants.FixturesTestTrait);
-            var unitTestElement = currentTest.ToUnitTestElement(source);
+            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
             FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
 
             if (fixtureTestResult.IsExecuted)

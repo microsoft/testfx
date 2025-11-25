@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
+using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -45,6 +46,8 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         _testApplicationOptions = testApplicationOptions;
         _unhandledExceptionsHandler = unhandledExceptionsHandler;
     }
+
+    public IChatClientManager ChatClientManager => _testHostBuilder.ChatClientManager;
 
     public ITestHostManager TestHost => _testHostBuilder.TestHost;
 

@@ -233,7 +233,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (t == null)
             {
-                Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName, isReflectionOnly: false);
+                Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName);
 
                 // Attempt to load the type from the test assembly.
                 // Allow this call to throw if the type can't be loaded.
@@ -736,6 +736,9 @@ internal sealed class TypeCache : MarshalByRefObject
             // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
             // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
             // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+            // In addition, it also happens when deployment items are used and app domain is disabled.
+            // We explicitly set it to null in this case because the original MethodInfo calculated during discovery cannot be used because
+            // it points to the type loaded from the assembly in bin instead of from deployment directory.
             methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
