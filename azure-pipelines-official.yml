@@ -243,5 +243,3 @@ extends:
             LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
     - template: eng\common\templates-official\post-build\post-build.yml@self
-      parameters:
-        enableSigningValidation: false
