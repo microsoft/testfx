@@ -154,7 +154,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x86.log", SearchOption.AllDirectories).Single();
+        string? outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x86.log", SearchOption.AllDirectories).FirstOrDefault();
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
@@ -245,7 +245,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x64.log", SearchOption.AllDirectories).Single();
+        string? outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x64.log", SearchOption.AllDirectories).FirstOrDefault();
         Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
         string logFileContent = File.ReadAllText(outputFileLog);
         // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
