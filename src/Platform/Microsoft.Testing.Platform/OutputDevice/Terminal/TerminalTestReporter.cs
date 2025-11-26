@@ -305,7 +305,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string testNodeUid,
        string displayName,
        TestOutcome outcome,
-       TimeSpan duration,
+       TimeSpan? duration,
        string? informativeMessage,
        string? errorMessage,
        Exception? exception,
@@ -332,7 +332,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
-        TimeSpan duration,
+        TimeSpan? duration,
         string? informativeMessage,
         FlatException[] exceptions,
         string? expected,
@@ -398,7 +398,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         ITerminal terminal,
         string displayName,
         TestOutcome outcome,
-        TimeSpan duration,
+        TimeSpan? duration,
         string? informativeMessage,
         FlatException[] flatExceptions,
         string? expected,
@@ -432,9 +432,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
         terminal.Append(' ');
         terminal.Append(MakeControlCharactersVisible(displayName, true));
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(' ');
-        AppendLongDuration(terminal, duration);
+
+        if (duration.HasValue)
+        {
+            terminal.Append(' ');
+            AppendLongDuration(terminal, duration.Value);
+        }
 
         terminal.AppendLine();
 
