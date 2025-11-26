@@ -301,14 +301,19 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     private void ConsoleLog(string? message) => _console.WriteLine(message);
 #endif
 
-    private void OnFailedTest(TestNodeUpdateMessage testNodeStateChanged, TestNodeStateProperty state, Exception? exception, TimeSpan duration)
+    private void OnFailedTest(TestNodeUpdateMessage testNodeStateChanged, TestNodeStateProperty state, Exception? exception, TimeSpan? duration)
     {
         _failedTests++;
         var builder = new StringBuilder();
         builder.Append("failed ");
         builder.Append(testNodeStateChanged.TestNode.DisplayName);
-        builder.Append(' ');
-        HumanReadableDurationFormatter.Append(builder, static (builder, s) => builder!.Append(s), duration);
+
+        if (duration.HasValue)
+        {
+            builder.Append(' ');
+            HumanReadableDurationFormatter.Append(builder, static (builder, s) => builder!.Append(s), duration.Value);
+        }
+
         if (state.Explanation is not null)
         {
             builder.AppendLine();
@@ -337,7 +342,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
 
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {

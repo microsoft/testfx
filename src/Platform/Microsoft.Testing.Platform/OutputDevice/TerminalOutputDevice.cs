@@ -394,7 +394,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
