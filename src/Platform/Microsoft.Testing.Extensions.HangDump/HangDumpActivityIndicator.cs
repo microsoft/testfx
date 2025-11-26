@@ -18,10 +18,9 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLifetimeHandler,
 #if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
+    IAsyncDisposable,
 #endif
+    IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -56,8 +55,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _environment = environment;
         _task = task;
         _clock = clock;
-        if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-            !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName))
         {
             string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.MutexNameSuffix)
                 ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.MutexNameSuffix} environment variable set.");
@@ -83,8 +81,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-        !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
@@ -173,7 +170,9 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
             _testsCurrentExecutionState.TryAdd(nodeChangedMessage.TestNode.Uid, (nodeChangedMessage.TestNode.DisplayName, typeof(InProgressTestNodeStateProperty), _clock.UtcNow));
         }
+#pragma warning disable CS0618 // Type or member is obsolete
         else if (state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
+#pragma warning restore CS0618 // Type or member is obsolete
             or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty
             && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)
@@ -267,7 +266,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        await DisposeHelper.DisposeAsync(_namedPipeClient).ConfigureAwait(false);
+        _namedPipeClient?.Dispose();
 
         // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
         // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
@@ -277,12 +276,12 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
         }
 
-        _pipeNameDescription?.Dispose();
         _mutexCreated.Dispose();
         _signalActivity.Dispose();
         _activityIndicatorMutex?.Dispose();
     }
-#else
+#endif
+
     public void Dispose()
     {
         _namedPipeClient?.Dispose();
@@ -295,10 +294,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _singleConnectionNamedPipeServer?.Dispose();
         }
 
-        _pipeNameDescription?.Dispose();
         _mutexCreated.Dispose();
         _signalActivity.Dispose();
         _activityIndicatorMutex?.Dispose();
     }
-#endif
 }

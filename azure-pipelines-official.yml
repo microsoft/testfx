@@ -73,8 +73,10 @@ extends:
       autoBaseline: true
     pool:
       name: $(DncEngInternalBuildPool)
-      image: windows.vs2022preview.amd64
+      image: windows.vs2026preview.scout.amd64
       os: windows
+    settings:
+      networkIsolationPolicy: Permissive,CFSClean
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
@@ -97,7 +99,7 @@ extends:
             timeoutInMinutes: 90
             pool:
               name: $(DncEngInternalBuildPool)
-              image: windows.vs2022preview.amd64
+              image: windows.vs2026preview.scout.amd64
               os: windows
             steps:
             - task: PowerShell@2
@@ -137,6 +139,9 @@ extends:
                 /p:Test=false
               name: Build
               displayName: Build
+              env:
+                # https://github.com/microsoft/testfx/issues/6767
+                DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
               # -ci is allowing to import some environment variables and some required configurations

@@ -476,13 +476,13 @@ public partial class AssertTests : TestContainer
         // Act & Assert
         Action action = () => Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
+            .WithMessage($"""
                 Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
                 Details:
-                  DateTime.MinValue = 1/1/0001 12:00:00 AM
+                  DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}
                   day = 25
                   month = 12
-                  new DateTime(year, month, day) = 12/25/2023 12:00:00 AM
+                  new DateTime(year, month, day) = {new DateTime(year, month, day).ToString(CultureInfo.CurrentCulture)}
                   year = 2023
                 """);
     }
@@ -667,7 +667,7 @@ public partial class AssertTests : TestContainer
 
     public void That_NonGenericCollectionInComparison_FormatsCorrectly()
     {
-        // Arrange - Using ArrayList in a comparison to trigger FormatValue on line 421
+        // Arrange - Using ArrayList in a comparison to trigger FormatValue that formats enumerables
         var arrayList = new ArrayList { 1, 2, 3 };
         int[] expectedItems = [1, 2, 3, 4];
 

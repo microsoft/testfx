@@ -991,6 +991,21 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">Assert.Throws yalnızca tek bir deyim/ifade içermelidir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="translated">Catch bloklarında assert kullanmayın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="translated">Catch bloklarında assert kullanmayın, çünkü özel durum atılmadığında test başarısız olmayabilir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="translated">Catch bloklarında assert kullanmak sorunludur, çünkü özel durum atılmasa ve catch bloğu hiç çalıştırılmasa bile test geçecektir. Bir özel durumun atıldığını doğrulamak için ‘Assert.Throws’, ‘Assert.ThrowsExactly’, ‘Assert.ThrowsAsync’ veya ‘Assert.ThrowsExactlyAsync’ kullanın ve ardından try-catch bloğu kullanmadan yakalanan özel durum üzerinde ek doğrulamalar yapın.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

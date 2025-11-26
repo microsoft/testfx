@@ -35,7 +35,7 @@ schedules:
     branches:
       include:
       - main
-      - rel/3.7
+      - rel/4.0
     always: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
   displayName: CodeQL
   pool:
     name: $(DncEngInternalBuildPool)
-    demands: ImageOverride -equals windows.vs2022preview.amd64
+    demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
   timeoutInMinutes: 90
 
   steps:

@@ -10,19 +10,23 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
     [TestMethod]
     public async Task HangDump_DumpAllChildProcesses_CreateDump(string tfm)
     {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDumpWithChild", tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
-            new Dictionary<string, string?>
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"run -c Release --no-build --project {AssetFixture.TargetAssetPath} -f {tfm} {globalProperties} --hangdump --hangdump-timeout 8s --hangdump-type mini --results-directory {resultDirectory}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new Dictionary<string, string?>
             {
                         { "SLEEPTIMEMS1", "4000" },
                         { "SLEEPTIMEMS2", "600000" },
             },
+            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
-        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
-        Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {testHostResult}");
+
+        result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
+        Assert.HasCount(4, dumpFiles, $"There should be 4 dumps, one for each process in the tree. {result}");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -46,7 +50,6 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
@@ -60,6 +63,7 @@ public sealed class HangDumpProcessTreeTests : AcceptanceTestBase<HangDumpProces
 using System;
 using System.Linq;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
@@ -78,6 +82,7 @@ public class Startup
     {
         Process self = Process.GetCurrentProcess();
         string path = self.MainModule!.FileName!;
+        string argPrefix = path.EndsWith("dotnet") ? $"exec \"{Assembly.GetEntryAssembly()!.Location}\" " : string.Empty;
 
         if (args[0] == "--child")
         {
@@ -85,7 +90,7 @@ public class Startup
 
             if (child != 0)
             {
-                var process = Process.Start(new ProcessStartInfo(path, $"--child {child - 1}")
+                var process = Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child {child - 1}")
                 {
                     UseShellExecute = false,
                 });
@@ -106,8 +111,7 @@ public class Startup
         // We are running under testhost controller, don't start extra processes when we are the controller.
         if (args.Any(a => a == "--internal-testhostcontroller-pid"))
         {
-
-            Process.Start(new ProcessStartInfo(path, $"--child 2")
+            Process.Start(new ProcessStartInfo(path, $"{argPrefix}--child 2")
             {
                 UseShellExecute = false,
             });

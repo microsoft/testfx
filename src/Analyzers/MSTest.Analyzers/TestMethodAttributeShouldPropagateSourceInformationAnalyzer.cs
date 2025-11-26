@@ -66,7 +66,7 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzer 
             return;
         }
 
-        foreach (IMethodSymbol constructor in namedTypeSymbol.Constructors)
+        foreach (IMethodSymbol constructor in namedTypeSymbol.InstanceConstructors)
         {
             // Check if constructor has CallerFilePath and CallerLineNumber parameters
             bool hasCallerFilePath = false;

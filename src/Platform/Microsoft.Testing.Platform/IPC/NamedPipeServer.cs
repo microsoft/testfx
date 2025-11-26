@@ -3,15 +3,14 @@
 
 using System.IO.Pipes;
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-
-#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
-#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[Embedded]
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
 #pragma warning disable CA1416 // Validate platform compatibility
@@ -310,22 +309,17 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // This is unexpected and we throw an exception.
             ApplicationStateGuard.Ensure(_loopTask is not null);
 
-            // To close gracefully we need to ensure that the client closed the stream line 103.
+            // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                    "'{0}' didn't exit as expected",
-#else
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-#endif
                     nameof(InternalLoopAsync)));
             }
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }
@@ -346,7 +340,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             try
             {
-                // To close gracefully we need to ensure that the client closed the stream line 103.
+                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
                 await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutException)
@@ -356,7 +350,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }

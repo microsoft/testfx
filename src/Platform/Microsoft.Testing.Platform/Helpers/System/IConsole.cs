@@ -18,15 +18,15 @@ internal interface IConsole
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
-    public int BufferHeight { get; }
+    int BufferHeight { get; }
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("browser")]
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
-    public int BufferWidth { get; }
+    int BufferWidth { get; }
 
-    public bool IsOutputRedirected { get; }
+    bool IsOutputRedirected { get; }
 
     [UnsupportedOSPlatform("android")]
     [UnsupportedOSPlatform("ios")]

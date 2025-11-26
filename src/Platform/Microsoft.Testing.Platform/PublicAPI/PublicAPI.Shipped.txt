@@ -1,5 +1,6 @@
 #nullable enable
 [TPEXP]const Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.OptionPrefix = '-' -> char
+[TPEXP]const Microsoft.Testing.Platform.Requests.TreeNodeFilter.PathSeparator = '/' -> char
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability
@@ -36,12 +37,19 @@
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext.ExecuteRequestContext(Microsoft.Testing.Platform.Requests.IRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier! executeRequestCompletionNotifier, System.Threading.CancellationToken cancellationToken) -> void
+[TPEXP]Microsoft.Testing.Platform.Helpers.TestApplicationBuilderExtensions
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggerProvider.CreateLogger(string! categoryName) -> Microsoft.Testing.Platform.Logging.ILogger!
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager.AddProvider(System.Func<Microsoft.Testing.Platform.Logging.LogLevel, System.IServiceProvider!, Microsoft.Testing.Platform.Logging.ILoggerProvider!>! loggerProviderFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier
 [TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier.Complete() -> void
+[TPEXP]Microsoft.Testing.Platform.Requests.NopFilter
+[TPEXP]Microsoft.Testing.Platform.Requests.NopFilter.NopFilter() -> void
+[TPEXP]Microsoft.Testing.Platform.Requests.TreeNodeFilter
+[TPEXP]Microsoft.Testing.Platform.Requests.TreeNodeFilter.Filter.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Requests.TreeNodeFilter.MatchesFilter(string! testNodeFullPath, Microsoft.Testing.Platform.Extensions.Messages.PropertyBag! filterableProperties) -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Id.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Version.get -> string!
@@ -62,6 +70,8 @@
 [TPEXP]static Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions.GetCapability<T>(this Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> T?
 [TPEXP]static Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilitiesExtensions.HasCapability<T>(this Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! capabilities) -> bool
 [TPEXP]static Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.Empty.get -> Microsoft.Testing.Platform.CommandLine.CommandLineParseResult!
+[TPEXP]static Microsoft.Testing.Platform.Helpers.TestApplicationBuilderExtensions.AddMaximumFailedTestsService(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+[TPEXP]static Microsoft.Testing.Platform.Helpers.TestApplicationBuilderExtensions.AddTreeNodeFilterService(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
 [TPEXP]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetClientInfo(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IClientInfo!
 Microsoft.Testing.Platform.Builder.ConfigurationOptions
 Microsoft.Testing.Platform.Builder.ConfigurationOptions.ConfigurationOptions() -> void
@@ -142,18 +152,22 @@ Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty
 Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty() -> void
 Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty(string! explanation) -> void
 Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.CancelledTestNodeStateProperty(System.Exception! exception, string? explanation = null) -> void
+Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Exception.get -> System.Exception?
 Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid
 Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.DataWithSessionUid(string! displayName, string? description, Microsoft.Testing.Platform.TestHost.SessionUid sessionUid) -> void
 Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid
 Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty
 Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.DiscoveredTestNodeStateProperty(string? explanation = null) -> void
+Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.ErrorTestNodeStateProperty() -> void
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.ErrorTestNodeStateProperty(string! explanation) -> void
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.ErrorTestNodeStateProperty(System.Exception! exception, string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.Exception.get -> System.Exception?
 Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.Exception.get -> System.Exception?
 Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.FailedTestNodeStateProperty() -> void
 Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.FailedTestNodeStateProperty(string! explanation) -> void
@@ -178,19 +192,23 @@ Microsoft.Testing.Platform.Extensions.Messages.IData.DisplayName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.IDataProducer
 Microsoft.Testing.Platform.Extensions.Messages.IDataProducer.DataTypesProduced.get -> System.Type![]!
 Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.InProgressTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.IProperty
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Column.get -> int
+Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Equals(Microsoft.Testing.Platform.Extensions.Messages.LinePosition other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Line.get -> int
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.LinePosition() -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePosition.LinePosition(int line, int column) -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.End.get -> Microsoft.Testing.Platform.Extensions.Messages.LinePosition
+Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Equals(Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.LinePositionSpan() -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.LinePositionSpan(Microsoft.Testing.Platform.Extensions.Messages.LinePosition start, Microsoft.Testing.Platform.Extensions.Messages.LinePosition end) -> void
 Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Start.get -> Microsoft.Testing.Platform.Extensions.Messages.LinePosition
 Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.PassedTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.PropertyBag
 Microsoft.Testing.Platform.Extensions.Messages.PropertyBag.Add(Microsoft.Testing.Platform.Extensions.Messages.IProperty! property) -> void
@@ -213,21 +231,26 @@ Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact
 Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.FileInfo.get -> System.IO.FileInfo!
 Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.SessionFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.SkippedTestNodeStateProperty(string? explanation = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Equals(Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Id.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.StepTimingInfo(string! id, string! description, Microsoft.Testing.Platform.Extensions.Messages.TimingInfo timing) -> void
 Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Timing.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty
+Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.TestFileLocationProperty(string! filePath, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan lineSpan) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty
+Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Key.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key, string! value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.TestMetadataProperty(string! key, string! value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Value.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.AssemblyFullName.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.MethodArity.get -> int
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.MethodName.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Namespace.get -> string!
@@ -257,6 +280,7 @@ Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage.ParentTestN
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage.TestNode.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage.TestNodeUpdateMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentTestNodeUid = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty
+Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Exception.get -> System.Exception?
 Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Timeout.get -> System.TimeSpan?
 Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Timeout.init -> void
@@ -266,14 +290,16 @@ Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Time
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Duration.get -> System.TimeSpan
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.EndTime.get -> System.DateTimeOffset
+Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Equals(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.StartTime.get -> System.DateTimeOffset
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.TimingInfo() -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.TimingInfo(System.DateTimeOffset startTime, System.DateTimeOffset endTime, System.TimeSpan duration) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty
+Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.TimingProperty? other) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.GlobalTiming.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.StepTimings.get -> Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]!
-Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.TimingProperty(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo globalTiming, Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]! stepTimings) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.TimingProperty(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo globalTiming) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.TimingProperty(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo globalTiming, Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo![]! stepTimings) -> void
 Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer
 Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext
 Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext.CancellationToken.get -> System.Threading.CancellationToken
@@ -389,14 +415,14 @@ Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.Message.get -> string!
 Microsoft.Testing.Platform.OutputDevice.WarningMessageOutputDeviceData.WarningMessageOutputDeviceData(string! message) -> void
 Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest
-Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest.DiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest.DiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> void
+Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest.DiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.IRequest
 Microsoft.Testing.Platform.Requests.IRequest.Session.get -> Microsoft.Testing.Platform.TestHost.TestSessionContext!
 Microsoft.Testing.Platform.Requests.ITestExecutionFilter
 Microsoft.Testing.Platform.Requests.RunTestExecutionRequest
-Microsoft.Testing.Platform.Requests.RunTestExecutionRequest.RunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.RunTestExecutionRequest.RunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> void
+Microsoft.Testing.Platform.Requests.RunTestExecutionRequest.RunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter) -> void
 Microsoft.Testing.Platform.Requests.TestExecutionRequest
 Microsoft.Testing.Platform.Requests.TestExecutionRequest.Filter.get -> Microsoft.Testing.Platform.Requests.ITestExecutionFilter!
 Microsoft.Testing.Platform.Requests.TestExecutionRequest.Session.get -> Microsoft.Testing.Platform.TestHost.TestSessionContext!
@@ -433,18 +459,72 @@ override Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.Equals(
 override Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.CancelledTestNodeStateProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.ErrorTestNodeStateProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.FileLocationProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.LinePosition.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.PropertyBagData.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.StepTimingInfo.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNode.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TimingProperty.ToString() -> string!
 override Microsoft.Testing.Platform.TestHost.SessionUid.ToString() -> string!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
@@ -454,12 +534,18 @@ static Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.operator 
 static Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.operator ==(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity left, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty!
 static Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.InProgressTestNodeStateProperty!
+static Microsoft.Testing.Platform.Extensions.Messages.LinePosition.operator !=(Microsoft.Testing.Platform.Extensions.Messages.LinePosition left, Microsoft.Testing.Platform.Extensions.Messages.LinePosition right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.LinePosition.operator ==(Microsoft.Testing.Platform.Extensions.Messages.LinePosition left, Microsoft.Testing.Platform.Extensions.Messages.LinePosition right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.operator !=(Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan left, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan.operator ==(Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan left, Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty!
 static Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty!
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.implicit operator Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!(string! value) -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.implicit operator string!(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! testNode) -> string!
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.operator !=(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! left, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.operator ==(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! left, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.operator !=(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo left, Microsoft.Testing.Platform.Extensions.Messages.TimingInfo right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.TimingInfo.operator ==(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo left, Microsoft.Testing.Platform.Extensions.Messages.TimingInfo right) -> bool
 static Microsoft.Testing.Platform.Extensions.ValidationResult.Invalid(string! errorMessage) -> Microsoft.Testing.Platform.Extensions.ValidationResult
 static Microsoft.Testing.Platform.Extensions.ValidationResult.InvalidTask(string! errorMessage) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Platform.Extensions.ValidationResult.Valid() -> Microsoft.Testing.Platform.Extensions.ValidationResult
@@ -469,11 +555,11 @@ static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCritical(this Mic
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCriticalAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogDebug(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogDebugAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
-static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
+static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogError(this Microsoft.Testing.Platform.Logging.ILogger! logger, System.Exception! ex) -> void
-static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message, System.Exception! ex) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogErrorAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, System.Exception! ex) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogInformation(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogInformationAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
