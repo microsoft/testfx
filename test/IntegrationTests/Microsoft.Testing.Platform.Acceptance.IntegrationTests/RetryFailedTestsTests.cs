@@ -147,9 +147,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-    {
         // TODO: Crash dump is not working properly on macos, so we skip the test for now
-        await RetryHelper.RetryAsync(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -184,7 +183,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                     Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
                 }
             }, 3, TimeSpan.FromSeconds(5));
-    }
 
     [TestMethod]
     public async Task RetryFailedTests_PassingFromFirstTime_UsingTestTarget_MoveFiles_Succeeds()
