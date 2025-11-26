@@ -50,7 +50,7 @@ $successCount = 0
 $failureCount = 0
 
 # Find all solution files in samples/public
-$solutions = Get-ChildItem -Path $samplesFolder -Filter "*.sln" -Recurse
+$solutions = Get-ChildItem -Path $samplesFolder -Include @("*.sln", "*.slnx") -Recurse
 
 foreach ($solution in $solutions) {
     Write-Host "Building solution: $($solution.FullName)"
