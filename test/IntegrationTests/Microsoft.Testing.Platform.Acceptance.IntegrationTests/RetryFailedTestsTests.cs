@@ -145,14 +145,10 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     [TestMethod]
     // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
     {
         // TODO: Crash dump is not working properly on macos, so we skip the test for now
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
-
         await RetryHelper.RetryAsync(
             async () =>
             {
@@ -314,7 +310,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         bool fail = Environment.GetEnvironmentVariable("FAIL") == "1";
         // Tests are using this env variable so it won't be null.
-        string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!; 
+        string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!;
         bool crash = Environment.GetEnvironmentVariable("CRASH") == "1";
 
         if (TestMethod1(fail, resultDir, crash))
@@ -349,7 +345,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty()) }));
         }
-        
+
         context.Complete();
     }
 
@@ -374,7 +370,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             if (!assert) File.WriteAllText(succeededFile,"");
         }
 
-        return assert;        
+        return assert;
     }
 
     private bool TestMethod2(bool fail, string resultDir)

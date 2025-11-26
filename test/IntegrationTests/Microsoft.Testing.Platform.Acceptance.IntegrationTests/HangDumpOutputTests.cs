@@ -8,14 +8,10 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
 {
     [DataRow("Mini")]
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task HangDump_Outputs_HangingTests_EvenWhenHangingTestsHaveTheSameDisplayName(string format)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
+        // TODO: Investigate failures on macos
         // This test makes sure that when tests have the same display name (e.g. like Test1 from both Class1 and Class2)
         // they will still show up in the hanging tests. This was not the case before when we were just putting them into
         // a dictionary based on DisplayName. In that case both tests were started at the same time, and only 1 entry was added
