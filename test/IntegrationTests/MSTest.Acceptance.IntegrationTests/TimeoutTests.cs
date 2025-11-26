@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-[Ignore("These tests are so flaky, which could be related (at least partially) to https://github.com/microsoft/testfx/issues/5165")]
 public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
 {
     private static readonly Dictionary<string, (string MethodFullName, string Prefix, string EnvVarSuffix, string RunSettingsEntryName)> InfoByKind = new()
@@ -712,7 +711,7 @@ public class TestClass
         => await DoWork("CLASSINIT", "ClassInit", testContext);
 
     [Timeout(1000, CooperativeCancellation = true)]
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static async Task ClassCleanup(TestContext testContext)
         => await DoWork("CLASSCLEANUP", "ClassCleanup", testContext);
 
