@@ -24,8 +24,8 @@ public class PrivateType
     /// <param name="typeName">fully qualified name of the. </param>
     public PrivateType(string assemblyName, string typeName)
     {
-        Ensure.NotNull(typeName);
-        Ensure.NotNull(assemblyName);
+        Guard.NotNull(typeName);
+        Guard.NotNull(assemblyName);
         var asm = Assembly.Load(assemblyName);
 
         ReferencedType = asm.GetType(typeName, true);
@@ -37,7 +37,7 @@ public class PrivateType
     /// </summary>
     /// <param name="type">The wrapped Type to create.</param>
     public PrivateType(Type type) =>
-        ReferencedType = Ensure.NotNull(type);
+        ReferencedType = Guard.NotNull(type);
 
     /// <summary>
     /// Gets the referenced type.
@@ -142,7 +142,7 @@ public class PrivateType
     /// <returns>Result of invocation.</returns>
     public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture, Type[]? typeArguments)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         if (parameterTypes == null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
@@ -185,7 +185,7 @@ public class PrivateType
     /// <returns>element at the specified location.</returns>
     public object GetStaticArrayElement(string name, params int[] indices)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         return GetStaticArrayElement(name, BindToEveryThing, indices);
     }
 
@@ -200,7 +200,7 @@ public class PrivateType
     /// </param>
     public void SetStaticArrayElement(string name, object value, params int[] indices)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         SetStaticArrayElement(name, BindToEveryThing, value, indices);
     }
 
@@ -216,7 +216,7 @@ public class PrivateType
     /// <returns>element at the specified location.</returns>
     public object GetStaticArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         var arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
         return arr.GetValue(indices);
     }
@@ -233,7 +233,7 @@ public class PrivateType
     /// </param>
     public void SetStaticArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         var arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
         arr.SetValue(value, indices);
     }
@@ -245,7 +245,7 @@ public class PrivateType
     /// <returns>The static field.</returns>
     public object GetStaticField(string name)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         return GetStaticField(name, BindToEveryThing);
     }
 
@@ -256,7 +256,7 @@ public class PrivateType
     /// <param name="value">Argument to the invocation.</param>
     public void SetStaticField(string name, object value)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         SetStaticField(name, BindToEveryThing, value);
     }
 
@@ -268,7 +268,7 @@ public class PrivateType
     /// <returns>The static field.</returns>
     public object GetStaticField(string name, BindingFlags bindingFlags)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         return InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -280,7 +280,7 @@ public class PrivateType
     /// <param name="value">Argument to the invocation.</param>
     public void SetStaticField(string name, BindingFlags bindingFlags, object value)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         InvokeHelperStatic(name, BindingFlags.SetField | bindingFlags | BindingFlags.Static, [value], CultureInfo.InvariantCulture);
     }
 
@@ -291,7 +291,7 @@ public class PrivateType
     /// <returns>The static field or property.</returns>
     public object GetStaticFieldOrProperty(string name)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         return GetStaticFieldOrProperty(name, BindToEveryThing);
     }
 
@@ -302,7 +302,7 @@ public class PrivateType
     /// <param name="value">Value to be set to field or property.</param>
     public void SetStaticFieldOrProperty(string name, object value)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         SetStaticFieldOrProperty(name, BindToEveryThing, value);
     }
 
@@ -314,7 +314,7 @@ public class PrivateType
     /// <returns>The static field or property.</returns>
     public object GetStaticFieldOrProperty(string name, BindingFlags bindingFlags)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         return InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -326,7 +326,7 @@ public class PrivateType
     /// <param name="value">Value to be set to field or property.</param>
     public void SetStaticFieldOrProperty(string name, BindingFlags bindingFlags, object value)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         InvokeHelperStatic(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags | BindingFlags.Static, [value], CultureInfo.InvariantCulture);
     }
 
@@ -374,7 +374,7 @@ public class PrivateType
     /// <returns>The static property.</returns>
     public object GetStaticProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         if (parameterTypes == null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.GetProperty, args, null);
@@ -404,7 +404,7 @@ public class PrivateType
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetStaticProperty(string name, BindingFlags bindingFlags, object value, Type[]? parameterTypes, object?[]? args)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
 
         if (parameterTypes != null)
         {
@@ -431,7 +431,7 @@ public class PrivateType
     /// <returns>Result of invocation.</returns>
     private object InvokeHelperStatic(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         try
         {
             return ReferencedType.InvokeMember(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, null, args, culture);

@@ -52,7 +52,7 @@ internal sealed class MSTestSettingsProvider : ISettingsProvider
     public void Load(XmlReader reader)
     {
 #if !WINDOWS_UWP
-        Ensure.NotNull(reader);
+        Guard.NotNull(reader);
         var settings = MSTestAdapterSettings.ToSettings(reader);
         if (!ReferenceEquals(settings, Settings))
         {
