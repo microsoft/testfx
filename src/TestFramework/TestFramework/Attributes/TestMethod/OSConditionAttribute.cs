@@ -21,6 +21,11 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 #endif
 #endif
 
+#if NETFRAMEWORK
+    // Cache the detected OS to avoid repeated reflection calls
+    private static readonly OperatingSystems? s_detectedOS = DetectCurrentOS();
+#endif
+
     private readonly OperatingSystems _operatingSystems;
 
     /// <summary>
@@ -51,7 +56,14 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// </summary>
     public override bool IsConditionMet
 #if NETFRAMEWORK
-        => IsConditionMetNetFramework();
+    {
+        get
+        {
+            // If we couldn't detect the OS via reflection, assume Windows
+            OperatingSystems currentOS = s_detectedOS ?? OperatingSystems.Windows;
+            return (_operatingSystems & currentOS) != 0;
+        }
+    }
 #else
     {
         get
@@ -79,65 +91,62 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 #endif
 
 #if NETFRAMEWORK
-    private bool IsConditionMetNetFramework()
+    private static OperatingSystems? DetectCurrentOS()
     {
         // RuntimeInformation.IsOSPlatform is available in .NET Framework 4.7.1+.
         // For older .NET Framework versions or environments where the API is not available,
-        // we fall back to assuming Windows.
+        // we return null to fall back to assuming Windows.
         // This also handles Mono which supports RuntimeInformation API and can run on non-Windows platforms.
-        Type? runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation, System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")
+        Type? runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation, System.Runtime.InteropServices.RuntimeInformation")
             ?? Type.GetType("System.Runtime.InteropServices.RuntimeInformation, mscorlib");
 
         if (runtimeInformationType is null)
         {
-            // API not available, assume Windows
-            return (_operatingSystems & OperatingSystems.Windows) != 0;
+            return null;
         }
 
         MethodInfo? isOSPlatformMethod = runtimeInformationType.GetMethod("IsOSPlatform", BindingFlags.Public | BindingFlags.Static);
         if (isOSPlatformMethod is null)
         {
-            // API not available, assume Windows
-            return (_operatingSystems & OperatingSystems.Windows) != 0;
+            return null;
         }
 
-        Type? osPlatformType = Type.GetType("System.Runtime.InteropServices.OSPlatform, System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")
+        Type? osPlatformType = Type.GetType("System.Runtime.InteropServices.OSPlatform, System.Runtime.InteropServices.RuntimeInformation")
             ?? Type.GetType("System.Runtime.InteropServices.OSPlatform, mscorlib");
 
         if (osPlatformType is null)
         {
-            // API not available, assume Windows
-            return (_operatingSystems & OperatingSystems.Windows) != 0;
+            return null;
         }
 
-        if (IsOSPlatformViaReflection(isOSPlatformMethod, osPlatformType, "Windows"))
-        {
-            return (_operatingSystems & OperatingSystems.Windows) != 0;
-        }
-        else if (IsOSPlatformViaReflection(isOSPlatformMethod, osPlatformType, "Linux"))
-        {
-            return (_operatingSystems & OperatingSystems.Linux) != 0;
-        }
-        else if (IsOSPlatformViaReflection(isOSPlatformMethod, osPlatformType, "OSX"))
-        {
-            return (_operatingSystems & OperatingSystems.OSX) != 0;
-        }
-        else if (IsOSPlatformViaReflection(isOSPlatformMethod, osPlatformType, "FreeBSD"))
-        {
-            return (_operatingSystems & OperatingSystems.FreeBSD) != 0;
-        }
-
-        return false;
-    }
-
-    private static bool IsOSPlatformViaReflection(MethodInfo isOSPlatformMethod, Type osPlatformType, string osName)
-    {
         MethodInfo? createMethod = osPlatformType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
         if (createMethod is null)
         {
-            return false;
+            return null;
         }
 
+        if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "Windows"))
+        {
+            return OperatingSystems.Windows;
+        }
+        else if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "Linux"))
+        {
+            return OperatingSystems.Linux;
+        }
+        else if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "OSX"))
+        {
+            return OperatingSystems.OSX;
+        }
+        else if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "FreeBSD"))
+        {
+            return OperatingSystems.FreeBSD;
+        }
+
+        return null;
+    }
+
+    private static bool IsOSPlatformViaReflection(MethodInfo isOSPlatformMethod, MethodInfo createMethod, string osName)
+    {
         object? osPlatform = createMethod.Invoke(null, new object[] { osName });
         if (osPlatform is null)
         {
