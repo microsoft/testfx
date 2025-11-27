@@ -138,13 +138,13 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             return false;
         }
 
-        object? osPlatform = createMethod.Invoke(null, [osName]);
+        object? osPlatform = createMethod.Invoke(null, new object[] { osName });
         if (osPlatform is null)
         {
             return false;
         }
 
-        object? result = isOSPlatformMethod.Invoke(null, [osPlatform]);
+        object? result = isOSPlatformMethod.Invoke(null, new object[] { osPlatform });
         return result is true;
     }
 #endif
