@@ -83,18 +83,13 @@ public class UnitTest1
 """;
 
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task NativeAotTests_WillRunWithExitCodeZero()
-    {
         // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
-
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
         // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-        await RetryHelper.RetryAsync(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -124,7 +119,6 @@ public class UnitTest1
                 result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
                 result.AssertExitCodeIs(0);
             }, times: 15, every: TimeSpan.FromSeconds(5));
-    }
 
     public TestContext TestContext { get; set; }
 }

@@ -125,13 +125,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task Invoke_TestTarget_With_Arch_Switch_x86_Should_Work()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         string root = RootFinder.Find();
         string x86Muxer = Path.Combine(root, ".dotnet", "x86");
         var dotnetRootX86 = new Dictionary<string, string?>
@@ -216,13 +212,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task Invoke_TestTarget_With_DOTNET_HOST_PATH_Should_Work()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         string root = RootFinder.Find();
         string dotnetHostPath = Path.Combine(root, ".dotnet", "dotnet.exe");
         var dotnetHostPathEnvVar = new Dictionary<string, string?>
