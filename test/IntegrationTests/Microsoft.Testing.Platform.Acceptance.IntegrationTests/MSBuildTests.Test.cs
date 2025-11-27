@@ -154,9 +154,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string? outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x86.log", SearchOption.AllDirectories).FirstOrDefault();
-        Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
-        string logFileContent = File.ReadAllText(outputFileLog);
+        string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x86.log", SearchOption.AllDirectories);
+        Assert.ContainsSingle(outputLogFiles, $"Was expecting to find a single log file but found {outputLogFiles.Length}");
+        string logFileContent = File.ReadAllText(outputLogFiles[0]);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
 
         // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
@@ -245,9 +245,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string? outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x64.log", SearchOption.AllDirectories).FirstOrDefault();
-        Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
-        string logFileContent = File.ReadAllText(outputFileLog);
+        string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x64.log", SearchOption.AllDirectories);
+        Assert.ContainsSingle(outputLogFiles, $"Was expecting to find a single log file but found {outputLogFiles.Length}");
+        string logFileContent = File.ReadAllText(outputLogFiles[0]);
         // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
         Assert.Contains($"[win-x64 - {TargetFrameworks.NetCurrent}]", logFileContent);
     }
