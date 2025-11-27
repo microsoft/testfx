@@ -8,10 +8,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_DefaultSetting_CreateDump(string tfm)
     {
-        // TODO: Investigate failures on macos
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -28,10 +27,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_WithDotnetTest_CreateDump()
     {
-        // TODO: Investigate failures on macos
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
@@ -53,10 +51,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_CustomFileName_CreateDump()
     {
-        // TODO: Investigate failures on macos
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -72,10 +69,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_PathWithSpaces_CreateDump()
     {
-        // TODO: Investigate failures on macos
         string resultDir = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         string resultDirectory = Path.Combine(resultDir, "directory with spaces");
         Directory.CreateDirectory(resultDirectory);
@@ -98,10 +94,9 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     [DataRow("Triage")]
     [DataRow("Full")]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_Formats_CreateDump(string format)
     {
-        // TODO: Investigate failures on macos
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(

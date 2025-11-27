@@ -13,7 +13,7 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
     private static readonly string WinUITargetFramework = $"{TargetFrameworks.NetCurrent}-windows10.0.19041.0";
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "WinUI is Windows-only")]
     public async Task SimpleWinUITestCase()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, WinUITargetFramework);

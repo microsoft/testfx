@@ -7,10 +7,9 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDumpTests.TestAssetFixture>
 {
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
     {
-        // TODO: Investigate failures on macos
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -32,10 +31,9 @@ public sealed class CrashPlusHangDumpTests : AcceptanceTestBase<CrashPlusHangDum
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task CrashPlusHangDump_InCaseOfHang_CreateHangDump()
     {
-        // TODO: Investigate failures on macos
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
