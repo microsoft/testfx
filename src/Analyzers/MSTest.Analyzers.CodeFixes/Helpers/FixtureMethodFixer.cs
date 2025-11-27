@@ -33,22 +33,10 @@ internal static class FixtureMethodFixer
         var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
 
         // Start with the original method declaration to preserve trivia and body
-        MethodDeclarationSyntax fixedMethodDeclaration = methodDeclaration;
-
-        // Update parameters
-        ParameterListSyntax newParameterList = GetParameterList(isParameterLess, wellKnownTypeProvider);
-        fixedMethodDeclaration = fixedMethodDeclaration.WithParameterList(newParameterList);
-
-        // Update return type
-        TypeSyntax? newReturnType = GetReturnType(methodSymbol, wellKnownTypeProvider);
-        if (newReturnType is not null)
-        {
-            fixedMethodDeclaration = fixedMethodDeclaration.WithReturnType(newReturnType);
-        }
-
-        // Update modifiers (accessibility and static)
-        SyntaxTokenList newModifiers = GetModifiers(methodDeclaration, methodSymbol, shouldBeStatic);
-        fixedMethodDeclaration = fixedMethodDeclaration.WithModifiers(newModifiers);
+        MethodDeclarationSyntax fixedMethodDeclaration = methodDeclaration
+            .WithParameterList(GetParameterList(isParameterLess, wellKnownTypeProvider))
+            .WithReturnType(GetReturnType(methodSymbol, wellKnownTypeProvider))
+            .WithModifiers(GetModifiers(methodDeclaration, shouldBeStatic));
 
         // Remove type parameters if any
         if (fixedMethodDeclaration.TypeParameterList is not null)
@@ -63,54 +51,47 @@ internal static class FixtureMethodFixer
                 .WithBody(SyntaxFactory.Block())
                 .WithSemicolonToken(default);
         }
-        else
+        else if (fixedMethodDeclaration.Body.Statements.Any(s => s.IsKind(SyntaxKind.ReturnStatement) || s.IsKind(SyntaxKind.YieldReturnStatement)))
         {
-            // Remove return and yield return statements from body if needed
-            SyntaxList<StatementSyntax> statements = fixedMethodDeclaration.Body.Statements;
-            IEnumerable<StatementSyntax> filteredStatements = statements
-                .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
+            // Remove return and yield return statements from body
+            SyntaxList<StatementSyntax> filteredStatements = SyntaxFactory.List(
+                fixedMethodDeclaration.Body.Statements
+                    .Where(s => !s.IsKind(SyntaxKind.ReturnStatement) && !s.IsKind(SyntaxKind.YieldReturnStatement)));
 
-            if (statements.Count != filteredStatements.Count())
-            {
-                fixedMethodDeclaration = fixedMethodDeclaration.WithBody(
-                    fixedMethodDeclaration.Body.WithStatements(SyntaxFactory.List(filteredStatements)));
-            }
+            fixedMethodDeclaration = fixedMethodDeclaration.WithBody(
+                fixedMethodDeclaration.Body.WithStatements(filteredStatements));
         }
 
         return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclaration)).Project.Solution;
     }
 
-    private static SyntaxTokenList GetModifiers(MethodDeclarationSyntax methodDeclaration, IMethodSymbol methodSymbol, bool shouldBeStatic)
+    private static SyntaxTokenList GetModifiers(MethodDeclarationSyntax methodDeclaration, bool shouldBeStatic)
     {
-        // Start with existing modifiers
-        SyntaxTokenList modifiers = methodDeclaration.Modifiers;
+        // Remove all accessibility modifiers, abstract modifier, and static modifier
+        SyntaxTokenList modifiers = SyntaxFactory.TokenList(
+            methodDeclaration.Modifiers.Where(m =>
+                !m.IsKind(SyntaxKind.PublicKeyword) &&
+                !m.IsKind(SyntaxKind.PrivateKeyword) &&
+                !m.IsKind(SyntaxKind.ProtectedKeyword) &&
+                !m.IsKind(SyntaxKind.InternalKeyword) &&
+                !m.IsKind(SyntaxKind.AbstractKeyword) &&
+                !m.IsKind(SyntaxKind.StaticKeyword)));
 
-        // Remove all accessibility modifiers and abstract modifier
-        modifiers = SyntaxFactory.TokenList(modifiers.Where(m =>
-            !m.IsKind(SyntaxKind.PublicKeyword) &&
-            !m.IsKind(SyntaxKind.PrivateKeyword) &&
-            !m.IsKind(SyntaxKind.ProtectedKeyword) &&
-            !m.IsKind(SyntaxKind.InternalKeyword) &&
-            !m.IsKind(SyntaxKind.AbstractKeyword)));
-
-        // Handle static modifier
-        bool hasStaticModifier = modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword));
-        if (shouldBeStatic && !hasStaticModifier)
+        // Build new modifier list: public [static] <remaining modifiers>
+        if (shouldBeStatic)
         {
-            modifiers = modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-        }
-        else if (!shouldBeStatic && hasStaticModifier)
-        {
-            modifiers = SyntaxFactory.TokenList(modifiers.Where(m => !m.IsKind(SyntaxKind.StaticKeyword)));
+            return SyntaxFactory.TokenList(
+                SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+                SyntaxFactory.Token(SyntaxKind.StaticKeyword))
+                .AddRange(modifiers);
         }
 
-        // Add public at the beginning (before static if present)
-        modifiers = modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.PublicKeyword));
-
-        return modifiers;
+        // Non-static method
+        return SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+            .AddRange(modifiers);
     }
 
-    private static TypeSyntax? GetReturnType(IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
+    private static TypeSyntax GetReturnType(IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
     {
         if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask1)))
         {
@@ -123,7 +104,7 @@ internal static class FixtureMethodFixer
             return SyntaxFactory.IdentifierName("Task");
         }
 
-        // For void, return a predefined void type
+        // Default to void
         return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword));
     }
 
@@ -132,15 +113,14 @@ internal static class FixtureMethodFixer
         if (isParameterLess
             || !wellKnownTypeProvider.TryGetOrCreateTypeByMetadataName(
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext,
-                out INamedTypeSymbol? testContextTypeSymbol))
+                out _))
         {
             return SyntaxFactory.ParameterList();
         }
 
-        // Use simple name "TestContext" instead of fully qualified name
-        TypeSyntax testContextType = SyntaxFactory.IdentifierName("TestContext");
-        ParameterSyntax testContextParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("testContext"))
-            .WithType(testContextType);
+        ParameterSyntax testContextParameter = SyntaxFactory
+            .Parameter(SyntaxFactory.Identifier("testContext"))
+            .WithType(SyntaxFactory.IdentifierName("TestContext"));
 
         return SyntaxFactory.ParameterList(SyntaxFactory.SingletonSeparatedList(testContextParameter));
     }
