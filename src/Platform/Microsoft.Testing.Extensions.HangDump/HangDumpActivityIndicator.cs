@@ -213,7 +213,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             }
 
             _activityIndicatorMutex.ReleaseMutex();
-            _activityIndicatorMutex.WaitOne(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            _activityIndicatorMutex.WaitOne();
 
             if (_traceLevelEnabled)
             {
