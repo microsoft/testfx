@@ -27,13 +27,14 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_WithDotnetTest_CreateDump()
     {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test --project \"{AssetFixture.TargetAssetPath}\" -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
+            $"test --project \"{AssetFixture.TargetAssetPath}\" -f {TargetFrameworks.NetCurrent} {globalProperties} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
@@ -46,8 +47,32 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 
         // This should be TestHostProcessExitedNonGracefully instead of GenericFailure. This will likely be fixed by https://github.com/dotnet/sdk/pull/51857
         testResult.AssertExitCodeIs(ExitCodes.GenericFailure);
-        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testResult}");
+    }
+
+    [TestMethod]
+    public async Task HangDump_WithDotnetTest_NoHangButOverallTimeGreaterThanTimeout_ShouldPass()
+    {
+        string globalProperties = DumpWorkaround.GetGlobalPropertiesWorkaround();
+
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
+            $"test --project \"{AssetFixture.TargetAssetPath}\" -f {TargetFrameworks.NetCurrent} {globalProperties} --hangdump --hangdump-timeout 7s --results-directory \"{resultDirectory}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "5000" },
+                { "SLEEPTIMEMS2", "5000" },
+            },
+            workingDirectory: AssetFixture.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        testResult.AssertExitCodeIs(ExitCodes.Success);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "*.dmp", SearchOption.AllDirectories);
+        Assert.IsEmpty(dumpFiles);
     }
 
     [TestMethod]
@@ -153,7 +178,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
