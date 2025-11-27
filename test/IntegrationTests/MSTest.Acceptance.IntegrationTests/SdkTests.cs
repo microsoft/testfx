@@ -291,7 +291,6 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [Ignore("https://github.com/microsoft/testfx/issues/6936")]
     public async Task NativeAot_Smoke_Test_Windows()
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
