@@ -147,14 +147,22 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 
     private static bool IsOSPlatformViaReflection(MethodInfo isOSPlatformMethod, MethodInfo createMethod, string osName)
     {
-        object? osPlatform = createMethod.Invoke(null, new object[] { osName });
-        if (osPlatform is null)
+        try
         {
+            object? osPlatform = createMethod.Invoke(null, new object[] { osName });
+            if (osPlatform is null)
+            {
+                return false;
+            }
+
+            object? result = isOSPlatformMethod.Invoke(null, new object[] { osPlatform });
+            return result is true;
+        }
+        catch
+        {
+            // Reflection invocation failed, treat as OS not matching
             return false;
         }
-
-        object? result = isOSPlatformMethod.Invoke(null, new object[] { osPlatform });
-        return result is true;
     }
 #endif
 
