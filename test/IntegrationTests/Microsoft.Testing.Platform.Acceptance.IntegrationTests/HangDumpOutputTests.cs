@@ -8,7 +8,6 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
 {
     [DataRow("Mini")]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_Outputs_HangingTests_EvenWhenHangingTestsHaveTheSameDisplayName(string format)
     {
         // This test makes sure that when tests have the same display name (e.g. like Test1 from both Class1 and Class2)
@@ -51,7 +50,7 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
+    <UseAppHost Condition="!$([MSBuild]::IsOSPlatform('OSX'))">true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
