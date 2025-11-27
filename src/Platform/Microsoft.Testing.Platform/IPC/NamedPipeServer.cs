@@ -309,7 +309,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // This is unexpected and we throw an exception.
             ApplicationStateGuard.Ensure(_loopTask is not null);
 
-            // To close gracefully we need to ensure that the client closed the stream line 103.
+            // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException(string.Format(
@@ -340,7 +340,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             try
             {
-                // To close gracefully we need to ensure that the client closed the stream line 103.
+                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
                 await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutException)

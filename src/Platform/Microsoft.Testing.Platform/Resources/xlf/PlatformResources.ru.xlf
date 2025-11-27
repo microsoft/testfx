@@ -994,12 +994,12 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
-        <target state="new">A chat client provider has already been registered.</target>
+        <target state="translated">Поставщик клиента чата уже зарегистрирован.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
         <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Расширения ИИ работают только с построителями типа "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
         <note />
       </trans-unit>
     </body>

@@ -1,9 +1,0 @@
-#nullable enable
-~System.MarshalByRefObject.GetLifetimeService() -> object (forwarded, contained in mscorlib)
-~System.MarshalByRefObject.MemberwiseClone(bool cloneIdentity) -> System.MarshalByRefObject (forwarded, contained in mscorlib)
-~virtual System.MarshalByRefObject.CreateObjRef(System.Type requestedType) -> System.Runtime.Remoting.ObjRef (forwarded, contained in mscorlib)
-~virtual System.MarshalByRefObject.InitializeLifetimeService() -> object (forwarded, contained in mscorlib)
-System.MarshalByRefObject (forwarded, contained in mscorlib)
-System.MarshalByRefObject.MarshalByRefObject() -> void (forwarded, contained in mscorlib)
-System.SerializableAttribute (forwarded, contained in mscorlib)
-System.SerializableAttribute.SerializableAttribute() -> void (forwarded, contained in mscorlib)

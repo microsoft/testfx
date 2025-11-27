@@ -13,7 +13,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.ThrowAssertFailed("name", "{");
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Contain("name failed. {");
+            .WithMessage("*name failed. {*");
     }
     #endregion
 
@@ -68,18 +68,18 @@ public partial class AssertTests
     {
         Task t = Assert.ThrowsAsync<ArgumentException>(() => throw new Exception());
         Action action = t.Wait;
-        AggregateException ex = action.Should().Throw<AggregateException>().Which;
-        ex.InnerException.Should().BeOfType<AssertFailedException>();
-        ex.InnerException!.Message.Should().Be("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.Exception>. 'action' expression: '() => throw new Exception()'.");
+        action.Should().Throw<AggregateException>()
+            .WithInnerException<AssertFailedException>()
+            .WithMessage("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.Exception>. 'action' expression: '() => throw new Exception()'.");
     }
 
     public void ThrowsExactlyAsync_WhenExceptionIsDerivedFromExpectedType_ShouldThrow()
     {
         Task t = Assert.ThrowsExactlyAsync<ArgumentException>(() => throw new ArgumentNullException());
         Action action = t.Wait;
-        AggregateException ex = action.Should().Throw<AggregateException>().Which;
-        ex.InnerException.Should().BeOfType<AssertFailedException>();
-        ex.InnerException!.Message.Should().Be("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.ArgumentNullException>. 'action' expression: '() => throw new ArgumentNullException()'.");
+        action.Should().Throw<AggregateException>()
+            .WithInnerException<AssertFailedException>()
+            .WithMessage("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentException>. Actual exception type:<System.ArgumentNullException>. 'action' expression: '() => throw new ArgumentNullException()'.");
     }
 
     public void Throws_WithMessageBuilder_Passes()
@@ -105,7 +105,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.Throws failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => { }'. message constructed via builder.");
+            .WithMessage("Assert.Throws failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => { }'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeNull();
@@ -122,7 +122,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.Throws failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => throw new ArgumentOutOfRangeException(\"MyParamNameHere\")'. message constructed via builder.");
+            .WithMessage("Assert.Throws failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => throw new ArgumentOutOfRangeException(\"MyParamNameHere\")'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeOfType<ArgumentOutOfRangeException>();
@@ -152,7 +152,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.ThrowsExactly failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => { }'. message constructed via builder.");
+            .WithMessage("Assert.ThrowsExactly failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => { }'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeNull();
@@ -169,7 +169,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         action.Should().Throw<AssertFailedException>()
-            .And.Message.Should().Be("Assert.ThrowsExactly failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => throw new ArgumentOutOfRangeException(\"MyParamNameHere\")'. message constructed via builder.");
+            .WithMessage("Assert.ThrowsExactly failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => throw new ArgumentOutOfRangeException(\"MyParamNameHere\")'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeOfType<ArgumentOutOfRangeException>();
@@ -199,7 +199,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .And.Message.Should().Be("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => Task.CompletedTask'. message constructed via builder.");
+            .WithMessage("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => Task.CompletedTask'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeNull();
@@ -216,7 +216,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .And.Message.Should().Be("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => Task.FromException(new ArgumentOutOfRangeException(\"MyParamNameHere\"))'. message constructed via builder.");
+            .WithMessage("Assert.ThrowsAsync failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => Task.FromException(new ArgumentOutOfRangeException(\"MyParamNameHere\"))'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeOfType<ArgumentOutOfRangeException>();
@@ -246,7 +246,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .And.Message.Should().Be("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => Task.CompletedTask'. message constructed via builder.");
+            .WithMessage("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentNullException> but no exception was thrown. 'action' expression: '() => Task.CompletedTask'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeNull();
@@ -263,7 +263,7 @@ public partial class AssertTests
             return "message constructed via builder.";
         });
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .And.Message.Should().Be("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => Task.FromException(new ArgumentOutOfRangeException(\"MyParamNameHere\"))'. message constructed via builder.");
+            .WithMessage("Assert.ThrowsExactlyAsync failed. Expected exception type:<System.ArgumentNullException>. Actual exception type:<System.ArgumentOutOfRangeException>. 'action' expression: '() => Task.FromException(new ArgumentOutOfRangeException(\"MyParamNameHere\"))'. message constructed via builder.");
 
         wasBuilderCalled.Should().BeTrue();
         exceptionPassedToBuilder.Should().BeOfType<ArgumentOutOfRangeException>();
