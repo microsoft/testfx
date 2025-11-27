@@ -269,13 +269,6 @@ stages:
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
               DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Test Results folders'
-            inputs:
-              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
-            condition: always()
-
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
             inputs:
