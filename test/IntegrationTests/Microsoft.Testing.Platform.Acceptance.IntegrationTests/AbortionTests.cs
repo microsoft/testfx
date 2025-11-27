@@ -11,15 +11,11 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
     // We retry because sometime the Canceling the session message is not showing up.
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
         // Windows API because this gesture is not easy xplat.
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
