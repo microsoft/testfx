@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -65,14 +65,13 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.UseOSConditionAttributeInsteadOfRuntimeCheckFix,
-                createChangedDocument: ct => AddOSConditionAttributeAsync(context.Document, root, methodDeclaration, ifStatement, osPlatform, isNegated, ct),
+                createChangedDocument: ct => AddOSConditionAttributeAsync(context.Document, methodDeclaration, ifStatement, osPlatform, isNegated, ct),
                 equivalenceKey: nameof(UseOSConditionAttributeInsteadOfRuntimeCheckFixer)),
             diagnostic);
     }
 
     private static async Task<Document> AddOSConditionAttributeAsync(
         Document document,
-        SyntaxNode root,
         MethodDeclarationSyntax methodDeclaration,
         IfStatementSyntax ifStatement,
         string osPlatform,
@@ -92,40 +91,66 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
         // - If isNegated is false (checking if IS on platform, then early return), we want to EXCLUDE this platform
         // - If isNegated is true (checking if NOT on platform, then early return), we want to INCLUDE this platform only
         // Actually:
-        // if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return; => Include Windows only
+        // if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return; => Include Windows only (default, omit ConditionMode)
         // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return; => Exclude Windows
-        string conditionMode = isNegated ? "ConditionMode.Include" : "ConditionMode.Exclude";
 
         // Create the attribute
-        AttributeSyntax osConditionAttribute = SyntaxFactory.Attribute(
-            SyntaxFactory.IdentifierName("OSCondition"),
-            SyntaxFactory.AttributeArgumentList(
-                SyntaxFactory.SeparatedList(new[]
-                {
-                    SyntaxFactory.AttributeArgument(
-                        SyntaxFactory.ParseExpression(conditionMode)),
-                    SyntaxFactory.AttributeArgument(
-                        SyntaxFactory.ParseExpression($"OperatingSystems.{operatingSystem}")),
-                })));
+        AttributeSyntax osConditionAttribute;
+        if (isNegated)
+        {
+            // Include mode is the default, so we only need to specify the operating system
+            osConditionAttribute = SyntaxFactory.Attribute(
+                SyntaxFactory.IdentifierName("OSCondition"),
+                SyntaxFactory.AttributeArgumentList(
+                    SyntaxFactory.SingletonSeparatedList(
+                        SyntaxFactory.AttributeArgument(
+                            SyntaxFactory.ParseExpression($"OperatingSystems.{operatingSystem}")))));
+        }
+        else
+        {
+            // Exclude mode must be explicitly specified
+            osConditionAttribute = SyntaxFactory.Attribute(
+                SyntaxFactory.IdentifierName("OSCondition"),
+                SyntaxFactory.AttributeArgumentList(
+                    SyntaxFactory.SeparatedList(new[]
+                    {
+                        SyntaxFactory.AttributeArgument(
+                            SyntaxFactory.ParseExpression("ConditionMode.Exclude")),
+                        SyntaxFactory.AttributeArgument(
+                            SyntaxFactory.ParseExpression($"OperatingSystems.{operatingSystem}")),
+                    })));
+        }
 
         // Check if the method already has an OSCondition attribute
         bool hasOSConditionAttribute = methodDeclaration.AttributeLists
             .SelectMany(al => al.Attributes)
             .Any(a => a.Name.ToString() is "OSCondition" or "OSConditionAttribute");
 
+        // Track the if statement on the original method before making any modifications
+        MethodDeclarationSyntax trackedMethod = methodDeclaration.TrackNodes(ifStatement);
+        IfStatementSyntax? trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);
+
+        if (trackedIfStatement is null)
+        {
+            return document;
+        }
+
+        // Remove the if statement from the method body
+        MethodDeclarationSyntax newMethod = trackedMethod.RemoveNode(trackedIfStatement, SyntaxRemoveOptions.KeepNoTrivia)!;
+
         if (!hasOSConditionAttribute)
         {
             // Add the attribute to the method
+            // Use CarriageReturnLineFeed to match the formatting of attributes added by the editor
             AttributeListSyntax newAttributeList = SyntaxFactory.AttributeList(
                 SyntaxFactory.SingletonSeparatedList(osConditionAttribute))
-                .WithTrailingTrivia(SyntaxFactory.EndOfLine("\n"));
+                .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
 
-            MethodDeclarationSyntax newMethod = methodDeclaration.AddAttributeLists(newAttributeList);
-            editor.ReplaceNode(methodDeclaration, newMethod);
+            newMethod = newMethod.AddAttributeLists(newAttributeList);
         }
 
-        // Remove the if statement
-        editor.RemoveNode(ifStatement);
+        // Replace the entire method declaration with the modified version
+        editor.ReplaceNode(methodDeclaration, newMethod);
 
         return editor.GetChangedDocument();
     }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -58,8 +58,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
                 [TestMethod]
+                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
@@ -97,8 +97,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Include, OperatingSystems.Windows)]
                 [TestMethod]
+                [OSCondition(OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
@@ -136,8 +136,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Include, OperatingSystems.Linux)]
                 [TestMethod]
+                [OSCondition(OperatingSystems.Linux)]
                 public void TestMethod()
                 {
                 }
@@ -175,8 +175,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Include, OperatingSystems.OSX)]
                 [TestMethod]
+                [OSCondition(OperatingSystems.OSX)]
                 public void TestMethod()
                 {
                 }
@@ -238,6 +238,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
     public async Task WhenRuntimeCheckWithElseBranch_NoDiagnostic()
     {
         string code = """
+            using System;
             using System.Runtime.InteropServices;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -254,12 +255,13 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
                     else
                     {
                         // Do something
+                        Console.WriteLine("Running on Windows");
                     }
                 }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -288,8 +290,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Include, OperatingSystems.Windows)]
                 [TestMethod]
+                [OSCondition(OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
@@ -328,8 +330,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
                 [TestMethod]
+                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
@@ -367,8 +369,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Include, OperatingSystems.Linux)]
                 [TestMethod]
+                [OSCondition(OperatingSystems.Linux)]
                 public void TestMethod()
                 {
                 }
@@ -407,8 +409,8 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
                 [TestMethod]
+                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }
