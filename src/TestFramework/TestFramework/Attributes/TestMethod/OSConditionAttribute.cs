@@ -23,7 +23,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 
 #if NETFRAMEWORK
     // Cache the detected OS to avoid repeated reflection calls
-    private static readonly OperatingSystems? s_detectedOS = DetectCurrentOS();
+    private static readonly OperatingSystems? DetectedOS = DetectCurrentOS();
 #endif
 
     private readonly OperatingSystems _operatingSystems;
@@ -60,7 +60,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         get
         {
             // If we couldn't detect the OS via reflection, assume Windows
-            OperatingSystems currentOS = s_detectedOS ?? OperatingSystems.Windows;
+            OperatingSystems currentOS = DetectedOS ?? OperatingSystems.Windows;
             return (_operatingSystems & currentOS) != 0;
         }
     }
