@@ -24,12 +24,15 @@ namespace MSTest.Analyzers;
 [Shared]
 public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixProvider
 {
+    /// <inheritdoc />
     public override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(DiagnosticIds.UseOSConditionAttributeInsteadOfRuntimeCheckRuleId);
 
+    /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
         => WellKnownFixAllProviders.BatchFixer;
 
+    /// <inheritdoc />
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
