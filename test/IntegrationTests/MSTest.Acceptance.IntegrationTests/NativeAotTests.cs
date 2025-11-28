@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-[Ignore("https://github.com/microsoft/testfx/issues/6936")]
 public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string SourceCode = """
