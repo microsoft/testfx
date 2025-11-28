@@ -205,7 +205,8 @@ public class TempDirectory : IDisposable
         <PackageReference Include="Microsoft.Testing.Platform" Version="{AppVersion.DefaultSemVer}" Condition="'$(UsingMSTestSdk)' != 'true' AND '$(EnableMicrosoftTestingPlatform)' == 'true'" />
     </ItemGroup>
 
-    <Target Name="WorkaroundMacOSDumpIssue" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('OSX')) AND '$(UseAppHost)' != 'false' AND '$(OutputType)' == 'Exe' AND '$(TargetFramework)' != '' AND '$(RunCommand)' != ''">
+    <!-- Note: Generally, RunCommand should never be dotnet if UseAppHost is not false. However, because VSTest sets OutputType late in its targets, it breaks assumptions in SDK. So we special case that here. -->
+    <Target Name="WorkaroundMacOSDumpIssue" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('OSX')) AND '$(UseAppHost)' != 'false' AND '$(OutputType)' == 'Exe' AND '$(TargetFramework)' != '' AND '$(RunCommand)' != '' AND '$(RunCommand)' != 'dotnet'">
         <Exec Command="codesign --sign - --force --entitlements '$(MSBuildThisFileDirectory)mtp-test-entitlements.plist' '$(RunCommand)'" />
     </Target>
 </Project>
