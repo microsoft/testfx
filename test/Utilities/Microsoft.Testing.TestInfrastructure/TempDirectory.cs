@@ -204,7 +204,30 @@ public class TempDirectory : IDisposable
         -->
         <PackageReference Include="Microsoft.Testing.Platform" Version="{AppVersion.DefaultSemVer}" Condition="'$(UsingMSTestSdk)' != 'true' AND '$(EnableMicrosoftTestingPlatform)' == 'true'" />
     </ItemGroup>
+
+    <Target Name="WorkaroundMacOSDumpIssue" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('OSX')) AND '$(UseAppHost)' != 'false'">
+        <Exec Command="codesign --sign - --entitlements '$(MSBuildThisFileDirectory)/mtp-test-entitlements.plist' '$(RunCommand)' />
+    </Target>
 </Project>
+""");
+
+        File.WriteAllText(System.IO.Path.Combine(directoryPath, "mtp-test-entitlements.plist"), """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+    <key>com.apple.security.cs.allow-jit</key>
+        <true/>
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+        <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+        <true/>
+    <key>com.apple.security.cs.debugger</key>
+        <true/>
+    <key>com.apple.security.get-task-allow</key>
+        <true/>
+    </dict>
+</plist>
 """);
 
         string directoryPackagesProps = System.IO.Path.Combine(directoryPath, "Directory.Packages.props");
