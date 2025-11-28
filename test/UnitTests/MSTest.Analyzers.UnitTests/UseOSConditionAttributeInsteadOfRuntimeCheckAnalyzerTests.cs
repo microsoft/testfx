@@ -298,4 +298,123 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenRuntimeCheckWithLeadingComment_Diagnostic()
+    {
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    // Skip on Windows
+                    [|if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRuntimeCheckWithTrailingComment_Diagnostic()
+    {
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        return;
+                    }|] // This test only runs on Linux
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [OSCondition(ConditionMode.Include, OperatingSystems.Linux)]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenRuntimeCheckWithCommentInsideBlock_Diagnostic()
+    {
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        // Early exit for Windows
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
