@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 internal sealed class HangDumpConfiguration
 {
     public const string PipeName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
-    public const string MutexNameSuffix = "TESTINGPLATFORM_HANGDUMP_MUTEXNAME_SUFFIX";
+    public const string NamedPipeNameSuffix = "TESTINGPLATFORM_HANGDUMP_NAMEDPIPE_NAME_SUFFIX";
 
     public HangDumpConfiguration(ITestApplicationModuleInfo testApplicationModuleInfo, PipeNameDescription pipeNameDescription, string mutexSuffix)
     {

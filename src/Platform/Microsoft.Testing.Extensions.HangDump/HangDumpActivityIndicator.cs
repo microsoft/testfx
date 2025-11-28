@@ -52,8 +52,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _clock = clock;
         if (_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName))
         {
-            string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.MutexNameSuffix)
-                ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.MutexNameSuffix} environment variable set.");
+            string namedPipeSuffix = _environment.GetEnvironmentVariable(HangDumpConfiguration.NamedPipeNameSuffix)
+                ?? throw new InvalidOperationException($"Expected {HangDumpConfiguration.NamedPipeNameSuffix} environment variable set.");
             // @Marco: Why do we need to duplicate logic here instead of using HangDumpConfiguration.PipeNameKey?
             string pipeNameEnvironmentVariable = $"{HangDumpConfiguration.PipeName}_{FNV_1aHashHelper.ComputeStringHash(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}_{namedPipeSuffix}";
             string namedPipeName = _environment.GetEnvironmentVariable(pipeNameEnvironmentVariable)
