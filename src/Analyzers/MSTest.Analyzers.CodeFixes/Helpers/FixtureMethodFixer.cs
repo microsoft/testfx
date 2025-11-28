@@ -40,8 +40,17 @@ internal static class FixtureMethodFixer
                         GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider))))
             .WithReturnType(GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider));
 
+        if (fixedMethodDeclarationNode is MethodDeclarationSyntax m && m.Body is { Statements.Count: > 0 } body)
+        {
+            fixedMethodDeclarationNode = m.WithBody(body.WithStatements(SyntaxFactory.List(GetStatements(body))));
+        }
+
         return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode));
     }
+
+    private static IEnumerable<StatementSyntax> GetStatements(BlockSyntax blockSyntax)
+        => blockSyntax.Statements
+            .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
 
     private static SyntaxNode UpdateModifiers(SyntaxGenerator generator, SyntaxNode declaration, bool shouldBeStatic)
     {
