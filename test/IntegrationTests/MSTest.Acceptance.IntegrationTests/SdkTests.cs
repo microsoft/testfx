@@ -308,7 +308,7 @@ namespace MSTestSdkTest
                     SingleTestSourceCode
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                     // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.Current)
+                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                     .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
@@ -316,14 +316,14 @@ namespace MSTestSdkTest
                     addPublicFeeds: true);
 
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -r {RID} -f {TargetFrameworks.Current} {testAsset.TargetAssetPath}",
+                    $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
                     retryCount: 0, cancellationToken: TestContext.CancellationToken);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputDoesNotContain("warning");
 
-                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.Current, verb: Verb.publish);
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
                 TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
                 testHostResult.AssertExitCodeIs(ExitCodes.Success);
