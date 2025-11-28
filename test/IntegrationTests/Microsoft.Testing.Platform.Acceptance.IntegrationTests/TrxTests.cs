@@ -219,7 +219,7 @@ Out of process file artifacts produced:
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-    <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
+        <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
