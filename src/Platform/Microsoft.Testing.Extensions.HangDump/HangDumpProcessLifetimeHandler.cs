@@ -246,7 +246,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _logger.LogDebug($"Open activity mutex '{_activityTimerMutexName}'");
 
-        if (!Mutex.TryOpenExisting(_activityTimerMutexName, out _activityIndicatorMutex))
+        if (!Mutex.TryOpenExisting($"Global\\{_activityTimerMutexName}", out _activityIndicatorMutex))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MutexDoesNotExistErrorMessage, _activityTimerMutexName));
         }

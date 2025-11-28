@@ -198,7 +198,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     private Task SignalActivityIndicatorAsync()
     {
-        _activityIndicatorMutex = new Mutex(true, _mutexName);
+        _activityIndicatorMutex = new Mutex(true, $"Global\\{_mutexName}");
         _mutexCreated.Set();
 
         while (!_exitSignalActivityIndicatorAsync)
