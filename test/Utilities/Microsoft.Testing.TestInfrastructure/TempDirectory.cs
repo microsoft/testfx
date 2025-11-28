@@ -206,7 +206,7 @@ public class TempDirectory : IDisposable
     </ItemGroup>
 
     <Target Name="WorkaroundMacOSDumpIssue" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('OSX')) AND '$(UseAppHost)' != 'false'">
-        <Exec Command="codesign --sign - --force --entitlements '$(MSBuildThisFileDirectory)/mtp-test-entitlements.plist' '$(RunCommand)'" />
+        <Exec Command="codesign --sign - --force --entitlements '$(MSBuildThisFileDirectory)mtp-test-entitlements.plist' '$(TargetDir)$(AssemblyName)'" />
     </Target>
 </Project>
 """);
