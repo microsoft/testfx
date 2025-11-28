@@ -91,8 +91,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
         var conditionalOperation = (IConditionalOperation)context.Operation;
 
         // Only analyze if statements (not ternary expressions)
-        if (conditionalOperation.WhenFalse is not null &&
-            conditionalOperation.WhenFalse is not IBlockOperation { Operations.Length: 0 })
+        if (conditionalOperation.WhenFalse is not null and not IBlockOperation { Operations.Length: 0 })
         {
             // Has an else branch with content - more complex scenario, skip for now
             return;
