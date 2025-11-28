@@ -8,7 +8,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_DefaultSetting_CreateDump(string tfm)
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
@@ -27,7 +26,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_WithDotnetTest_CreateDump()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
@@ -51,7 +49,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_CustomFileName_CreateDump()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
@@ -69,7 +66,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_PathWithSpaces_CreateDump()
     {
         string resultDir = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
@@ -94,7 +90,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     [DataRow("Triage")]
     [DataRow("Full")]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_Formats_CreateDump(string format)
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
@@ -153,7 +148,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
