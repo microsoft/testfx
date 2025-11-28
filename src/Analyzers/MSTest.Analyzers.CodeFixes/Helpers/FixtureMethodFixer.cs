@@ -12,7 +12,7 @@ namespace MSTest.Analyzers.Helpers;
 
 internal static class FixtureMethodFixer
 {
-    public static async Task<Solution> FixSignatureAsync(Document document, SyntaxNode root, SyntaxNode node,
+    public static async Task<Document> FixSignatureAsync(Document document, SyntaxNode root, SyntaxNode node,
         bool isParameterLess, bool shouldBeStatic, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -22,7 +22,7 @@ internal static class FixtureMethodFixer
         var methodSymbol = (IMethodSymbol?)semanticModel.GetDeclaredSymbol(node, cancellationToken);
         if (methodSymbol is null)
         {
-            return document.Project.Solution;
+            return document;
         }
 
         var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
@@ -40,7 +40,7 @@ internal static class FixtureMethodFixer
                         GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider))))
             .WithReturnType(GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider));
 
-        return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
+        return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode));
     }
 
     private static SyntaxNode UpdateModifiers(SyntaxGenerator generator, SyntaxNode declaration, bool shouldBeStatic)
