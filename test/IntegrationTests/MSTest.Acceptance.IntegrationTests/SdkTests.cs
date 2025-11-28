@@ -291,7 +291,6 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [Ignore("https://github.com/microsoft/testfx/issues/6936")]
     public async Task NativeAot_Smoke_Test_Windows()
         // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
         // or sometimes doesn't fail but the native code generation is not done.
@@ -308,9 +307,8 @@ namespace MSTestSdkTest
                     AssetName,
                     SingleTestSourceCode
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    // temporarily set test to be on net9.0 as it's fixing one error that started to happen:  error IL3000: System.Net.Quic.MsQuicApi..cctor
-                    // see https://github.com/dotnet/sdk/issues/44880.
-                    .PatchCodeWithReplace("$TargetFramework$", "net9.0")
+                    // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
+                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                     .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
@@ -318,14 +316,14 @@ namespace MSTestSdkTest
                     addPublicFeeds: true);
 
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -r {RID} -f net9.0 {testAsset.TargetAssetPath}",
+                    $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
                     retryCount: 0, cancellationToken: TestContext.CancellationToken);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputDoesNotContain("warning");
 
-                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, "net9.0", verb: Verb.publish);
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
                 TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
                 testHostResult.AssertExitCodeIs(ExitCodes.Success);
