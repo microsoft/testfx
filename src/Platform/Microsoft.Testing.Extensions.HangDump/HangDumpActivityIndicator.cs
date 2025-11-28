@@ -62,6 +62,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _namedPipeClient.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
             _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
+            _namedPipeClient.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
         }
     }
 
