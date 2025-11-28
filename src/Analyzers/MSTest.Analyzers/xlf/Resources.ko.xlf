@@ -1004,6 +1004,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">예외가 발생하지 않고 catch 블록이 실행되지 않더라도 테스트가 통과하기 때문에 catch 블록에서 어설션을 사용하는 것은 문제가 됩니다. 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' 또는 'Assert.ThrowsExactlyAsync'를 사용하여 예외가 발생했는지 확인한 다음 try-catch 블록을 사용하지 않고 catch된 예외에 대해 추가 어설션을 만듭니다.</target>
         <note />
       </trans-unit>
+          <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
+        <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

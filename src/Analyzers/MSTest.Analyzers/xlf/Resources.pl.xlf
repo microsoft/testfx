@@ -1004,6 +1004,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Używanie asercji w blokach catch jest problematyczne, ponieważ test zakończy się powodzeniem, nawet jeśli nie zostanie zgłoszony żaden wyjątek i blok catch nigdy nie zostanie wykonany. Użyj instrukcji „Assert.Throws”, „Assert.ThrowsExactly”, „Assert.ThrowsAsync” lub „Assert.ThrowsExactlyAsync”, aby sprawdzić, czy zgłoszono wyjątek, a następnie wykonaj dodatkowe asercje dla przechwyconego wyjątku bez użycia bloku try-catch.</target>
         <note />
       </trans-unit>
+          <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
+        <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
