@@ -5,20 +5,19 @@ using Analyzer.Utilities;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 
 namespace MSTest.Analyzers.Helpers;
 
 internal static class FixtureMethodFixer
 {
-    private const SyntaxNode? VoidReturnTypeNode = null;
-
     public static async Task<Solution> FixSignatureAsync(Document document, SyntaxNode root, SyntaxNode node,
         bool isParameterLess, bool shouldBeStatic, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        SemanticModel? semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
         var methodSymbol = (IMethodSymbol?)semanticModel.GetDeclaredSymbol(node, cancellationToken);
         if (methodSymbol is null)
@@ -29,49 +28,51 @@ internal static class FixtureMethodFixer
         var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
         var syntaxGenerator = SyntaxGenerator.GetGenerator(document);
 
-        SyntaxNode fixedMethodDeclarationNode = syntaxGenerator.MethodDeclaration(
-            methodSymbol.Name,
-            GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider),
-            typeParameters: null,
-            GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider),
-            Accessibility.Public,
-            GetModifiers(methodSymbol, shouldBeStatic),
-            GetStatements(node, syntaxGenerator));
+        SyntaxNode fixedMethodDeclarationNode = node;
+        fixedMethodDeclarationNode = syntaxGenerator.WithAccessibility(fixedMethodDeclarationNode, Accessibility.Public);
+        fixedMethodDeclarationNode = syntaxGenerator.WithTypeParameters(fixedMethodDeclarationNode);
+        fixedMethodDeclarationNode = UpdateModifiers(syntaxGenerator, fixedMethodDeclarationNode, shouldBeStatic);
 
-        // Copy the attributes from the old method to the new method.
-        fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
+        fixedMethodDeclarationNode = ((MethodDeclarationSyntax)fixedMethodDeclarationNode)
+            .WithParameterList(
+                SyntaxFactory.ParameterList(
+                    SyntaxFactory.SeparatedList(
+                        GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider))))
+            .WithReturnType(GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider));
 
         return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
     }
 
-    private static IEnumerable<SyntaxNode> GetStatements(SyntaxNode node, SyntaxGenerator syntaxGenerator)
-        => syntaxGenerator.GetStatements(node)
-            .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
-
-    private static DeclarationModifiers GetModifiers(IMethodSymbol methodSymbol, bool shouldBeStatic)
+    private static SyntaxNode UpdateModifiers(SyntaxGenerator generator, SyntaxNode declaration, bool shouldBeStatic)
     {
-        DeclarationModifiers newModifiers = methodSymbol.IsAsync
-            ? DeclarationModifiers.Async
-            : DeclarationModifiers.None;
+        DeclarationModifiers oldModifiers = generator.GetModifiers(declaration);
+        DeclarationModifiers newModifiers = oldModifiers.WithIsStatic(shouldBeStatic).WithIsAbstract(false);
 
-        return newModifiers.WithIsStatic(shouldBeStatic);
+        declaration = generator.WithModifiers(declaration, newModifiers);
+        if (oldModifiers.IsAbstract)
+        {
+            // This will remove the semicolon from the method declaration, and replace it with braces.
+            declaration = generator.WithStatements(declaration, []);
+        }
+
+        return declaration;
     }
 
-    private static SyntaxNode? GetReturnType(SyntaxGenerator syntaxGenerator, IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
+    private static TypeSyntax GetReturnType(SyntaxGenerator syntaxGenerator, IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
     {
         if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask1)))
         {
-            return syntaxGenerator.IdentifierName("ValueTask");
+            return (TypeSyntax)syntaxGenerator.IdentifierName("ValueTask");
         }
 
         if (methodSymbol.IsAsync
             || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1)))
         {
-            return syntaxGenerator.IdentifierName("Task");
+            return (TypeSyntax)syntaxGenerator.IdentifierName("Task");
         }
 
         // For all other cases return void.
-        return VoidReturnTypeNode;
+        return SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword));
     }
 
     private static IEnumerable<SyntaxNode> GetParameters(SyntaxGenerator syntaxGenerator, bool isParameterLess,
