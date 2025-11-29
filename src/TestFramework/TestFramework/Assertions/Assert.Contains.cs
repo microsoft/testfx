@@ -228,32 +228,35 @@ public sealed partial class Assert
     /// <returns>The item that matches the predicate.</returns>
     public static object ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        var matchingElements = new List<object>();
+        object? firstMatch = null;
+        int matchCount = 0;
 
         foreach (object? item in collection)
         {
             if (predicate(item))
             {
-                matchingElements.Add(item);
+                if (matchCount == 0)
+                {
+                    firstMatch = item;
+                }
+
+                matchCount++;
 
                 // Early exit optimization - no need to continue if we already have more than one match
-                if (matchingElements.Count > 1)
+                if (matchCount > 1)
                 {
                     break;
                 }
             }
         }
 
-        int actualCount = matchingElements.Count;
-        if (actualCount == 1)
+        if (matchCount == 1)
         {
-            return matchingElements[0];
+            return firstMatch!;
         }
 
         string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-        ThrowAssertSingleMatchFailed(actualCount, userMessage);
-
-        // Unreachable code but compiler cannot work it out
+        ThrowAssertSingleMatchFailed(matchCount, userMessage);
         return default!;
     }
 
