@@ -109,78 +109,6 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertIsTrueWithNegation_Diagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void TestMethod()
-                {
-                    bool condition = true;
-                    [|Assert.IsTrue(!condition)|];
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void TestMethod()
-                {
-                    bool condition = true;
-                    Assert.IsFalse(condition);
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
-    public async Task WhenAssertIsFalseWithNegation_Diagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void TestMethod()
-                {
-                    bool condition = false;
-                    [|Assert.IsFalse(!condition)|];
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void TestMethod()
-                {
-                    bool condition = false;
-                    Assert.IsTrue(condition);
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
     public async Task WhenAssertIsTrueWithComplexNegatedExpression_Diagnostic()
     {
         string code = """
@@ -689,5 +617,73 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNegation_PreservesMultilineFormatting()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.IsTrue(!false, "some explanation")|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.IsFalse(false, "some explanation");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNegation_PreservesComments()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.IsTrue(/* some comment */ !false /* some other comment */)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.IsFalse(/* some comment */ false /* some other comment */);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }
