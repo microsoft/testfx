@@ -93,7 +93,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
         // Get the actual argument from the invocation
         conditionArgument = invocation.ArgumentList.Arguments[conditionArgumentIndex];
 
-        string title = string.Format(System.Globalization.CultureInfo.InvariantCulture, Resources.DoNotNegateBooleanAssertionFix, properAssertMethodName);
+        string title = string.Format(CultureInfo.InvariantCulture, Resources.DoNotNegateBooleanAssertionFix, properAssertMethodName);
 
         context.RegisterCodeFix(
             CodeAction.Create(
