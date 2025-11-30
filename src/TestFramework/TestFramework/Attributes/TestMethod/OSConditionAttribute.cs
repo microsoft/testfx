@@ -21,7 +21,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 #endif
 #endif
 
-#if NETFRAMEWORK
+#if NET462
     // Cache the detected OS to avoid repeated reflection calls
     private static readonly OperatingSystems? DetectedOS = DetectCurrentOS();
 #endif
