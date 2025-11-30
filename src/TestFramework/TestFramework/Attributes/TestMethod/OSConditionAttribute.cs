@@ -55,7 +55,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
     public override bool IsConditionMet
-#if NETFRAMEWORK
+#if NET462
     {
         get
         {
