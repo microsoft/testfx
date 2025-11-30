@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="..\MSTestAdapter.PlatformServices.UnitTests\TestableImplementations\TestablePlatformServiceProvider.cs" Link="TestablePlatformServiceProvider.cs" />
+    <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
     <PackageReference Include="StrongNamer" />
     <PackageReference Include="Polyfill" PrivateAssets="all" />
