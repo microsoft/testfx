@@ -9,7 +9,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 public class FileUtilityTests : TestContainer
 {

@@ -184,7 +184,7 @@
     <value>String '{0}' does not contain string '{1}'. {2}.</value>
   </data>
   <data name="IsInRangeFail" xml:space="preserve">
-    <value>Value '{0}' is not within the expected range [{1}, {2}]. {3}</value>
+    <value>Value '{0}' is not within the expected range [{1}..{2}]. {3}</value>
   </data>
   <data name="ElementNumbersDontMatch" xml:space="preserve">
     <value>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</value>
@@ -383,5 +383,8 @@ Actual: {2}</value>
   </data>
   <data name="ReturnedSubsetValueMessage" xml:space="preserve">
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
+  </data>
+  <data name="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue" xml:space="preserve">
+    <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
 </root>

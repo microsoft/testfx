@@ -11,7 +11,7 @@ using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace MSTestAdapter.PlatformServices.Tests.Extensions;
+namespace MSTestAdapter.PlatformServices.UnitTests.Extensions;
 
 public class ExceptionExtensionsTests : TestContainer
 {

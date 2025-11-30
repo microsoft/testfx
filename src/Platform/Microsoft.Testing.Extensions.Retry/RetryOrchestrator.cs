@@ -214,7 +214,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
 #if NETCOREAPP
                     await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).ConfigureAwait(false);
 #else
-                    // We don't know why but if the cancellation is called quickly in line 171 for netfx we stuck sometime here, like if
+                    // We don't know why but if the cancellation is called quickly in `testHostProcess.Exited`: `processExitedCancellationToken.Cancel();` for netfx we stuck sometime here, like if
                     // the token we pass to the named pipe is not "correctly" verified inside the pipe implementation self.
                     // We fallback with our custom agnostic cancellation mechanism in that case.
                     // We see it happen only in .NET FX and not in .NET Core so for now we don't do it for core.

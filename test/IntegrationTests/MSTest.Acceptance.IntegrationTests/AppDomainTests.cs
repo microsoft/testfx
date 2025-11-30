@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -90,7 +92,7 @@ namespace AppDomainTests
         string disableAppDomainCommand = disableAppDomain switch
         {
             true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.EnableAppDomain=false",
+            false => " -- RunConfiguration.DisableAppDomain=false",
             null => string.Empty,
         };
 
@@ -115,13 +117,97 @@ namespace AppDomainTests
         string disableAppDomainCommand = disableAppDomain switch
         {
             true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.EnableAppDomain=false",
+            false => " -- RunConfiguration.DisableAppDomain=false",
             null => string.Empty,
         };
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {testAsset.TargetAssetPath} --list-tests{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, compilationResult.ExitCode);
     }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task RunTests_With_VSTestConsole_Directly(bool? disableAppDomain)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0]));
+
+        // Build the test project
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath} -c Debug",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, buildResult.ExitCode, $"Build failed: {buildResult.StandardOutput}");
+
+        // Get the DLL path
+        string dllPath = GetTestDllPath(testAsset.TargetAssetPath, TargetFrameworks.NetFramework[0]);
+        Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
+
+        // Run tests using vstest.console.exe directly
+        string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
+        string disableAppDomainCommand = disableAppDomain switch
+        {
+            true => " -- RunConfiguration.DisableAppDomain=true",
+            false => " -- RunConfiguration.DisableAppDomain=false",
+            null => string.Empty,
+        };
+
+        string arguments = $"\"{dllPath}\"{disableAppDomainCommand}";
+
+        using var commandLine = new CommandLine();
+        await commandLine.RunAsync(
+            $"\"{vstestConsolePath}\" {arguments}",
+            cancellationToken: TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task DiscoverTests_With_VSTestConsole_Directly(bool? disableAppDomain)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0]));
+
+        // Build the test project
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath} -c Debug",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, buildResult.ExitCode, $"Build failed: {buildResult.StandardOutput}");
+
+        // Get the DLL path
+        string dllPath = GetTestDllPath(testAsset.TargetAssetPath, TargetFrameworks.NetFramework[0]);
+        Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
+
+        // Run discovery using vstest.console.exe directly
+        string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
+        string disableAppDomainCommand = disableAppDomain switch
+        {
+            true => " -- RunConfiguration.DisableAppDomain=true",
+            false => " -- RunConfiguration.DisableAppDomain=false",
+            null => string.Empty,
+        };
+        string arguments = $"\"{dllPath}\" /ListTests{disableAppDomainCommand}";
+
+        using var commandLine = new CommandLine();
+        await commandLine.RunAsync(
+            $"\"{vstestConsolePath}\" {arguments}",
+            cancellationToken: TestContext.CancellationToken);
+    }
+
+    private static string GetTestDllPath(string assetPath, string targetFramework) =>
+        Path.Combine(assetPath, "bin", "Debug", targetFramework, $"{AssetName}.dll");
 
     public TestContext TestContext { get; set; }
 }

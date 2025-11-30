@@ -253,8 +253,13 @@ Real: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">El valor "{0}" no está dentro del rango esperado [{1}, {2}]. {3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="translated">El valor "{0}" no está dentro del rango esperado [{1}..{2}]. {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">El valor máximo debe ser igual o mayor que el valor mínimo.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
