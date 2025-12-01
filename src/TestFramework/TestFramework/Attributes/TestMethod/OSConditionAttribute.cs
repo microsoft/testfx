@@ -90,7 +90,7 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 #endif
 
-#if NETFRAMEWORK
+#if NET462
     private static OperatingSystems? DetectCurrentOS()
     {
         // RuntimeInformation.IsOSPlatform is available in .NET Framework 4.7.1+.
