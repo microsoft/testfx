@@ -146,14 +146,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-    {
-        // TODO: Crash dump is not working properly on macos, so we skip the test for now
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return;
-        }
-
-        await RetryHelper.RetryAsync(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -188,7 +181,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                     Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
                 }
             }, 3, TimeSpan.FromSeconds(5));
-    }
 
     [TestMethod]
     public async Task RetryFailedTests_PassingFromFirstTime_UsingTestTarget_MoveFiles_Succeeds()
@@ -235,7 +227,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
@@ -314,7 +305,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     {
         bool fail = Environment.GetEnvironmentVariable("FAIL") == "1";
         // Tests are using this env variable so it won't be null.
-        string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!; 
+        string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!;
         bool crash = Environment.GetEnvironmentVariable("CRASH") == "1";
 
         if (TestMethod1(fail, resultDir, crash))
@@ -349,7 +340,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                 new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty()) }));
         }
-        
+
         context.Complete();
     }
 
@@ -374,7 +365,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             if (!assert) File.WriteAllText(succeededFile,"");
         }
 
-        return assert;        
+        return assert;
     }
 
     private bool TestMethod2(bool fail, string resultDir)

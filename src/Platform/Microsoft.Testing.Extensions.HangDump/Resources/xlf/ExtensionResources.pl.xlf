@@ -147,16 +147,6 @@ Prawidłowe opcje to „Mini”, „Sterta", "Klasyfikacja" (dostępne tylko na 
         <target state="translated">Określono co najmniej jeden parametr zrzutu zawieszenia, ale go nie włączono. Dodaj parametr --hangdump do wiersza polecenia</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Nie można odnaleźć obiektu mutex „{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Nazwa obiektu Mutex nie została odebrana po „{0}” s</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">Następujące testy były nadal uruchomione podczas wykonywania zrzutu (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>

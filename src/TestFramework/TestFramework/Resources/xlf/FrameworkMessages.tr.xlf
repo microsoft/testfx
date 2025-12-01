@@ -259,7 +259,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
         <source>The maximum value must be greater than or equal to the minimum value.</source>
-        <target state="new">The maximum value must be greater than or equal to the minimum value.</target>
+        <target state="translated">En büyük değer en küçük değerden büyük veya buna eşit olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

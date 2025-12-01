@@ -259,7 +259,7 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
         <source>The maximum value must be greater than or equal to the minimum value.</source>
-        <target state="new">The maximum value must be greater than or equal to the minimum value.</target>
+        <target state="translated">Der Höchstwert muss größer oder gleich dem Mindestwert sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
