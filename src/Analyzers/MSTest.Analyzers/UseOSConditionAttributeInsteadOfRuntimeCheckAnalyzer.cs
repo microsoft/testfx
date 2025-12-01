@@ -49,17 +49,25 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
         context.RegisterCompilationStartAction(context =>
         {
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol) ||
-                !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemRuntimeInteropServicesRuntimeInformation, out INamedTypeSymbol? runtimeInformationSymbol) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
             {
                 return;
             }
 
-            IMethodSymbol? isOSPlatformMethod = runtimeInformationSymbol.GetMembers("IsOSPlatform")
-                .OfType<IMethodSymbol>()
-                .FirstOrDefault(m => m.Parameters.Length == 1);
+            // Try to get RuntimeInformation.IsOSPlatform method
+            IMethodSymbol? isOSPlatformMethod = null;
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemRuntimeInteropServicesRuntimeInformation, out INamedTypeSymbol? runtimeInformationSymbol))
+            {
+                isOSPlatformMethod = runtimeInformationSymbol.GetMembers("IsOSPlatform")
+                    .OfType<IMethodSymbol>()
+                    .FirstOrDefault(m => m.Parameters.Length == 1);
+            }
 
-            if (isOSPlatformMethod is null)
+            // Try to get OperatingSystem type for IsWindows, IsLinux, etc.
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemOperatingSystem, out INamedTypeSymbol? operatingSystemSymbol);
+
+            // We need at least one of the two types
+            if (isOSPlatformMethod is null && operatingSystemSymbol is null)
             {
                 return;
             }
@@ -81,14 +89,26 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
                     return;
                 }
 
+                IBlockOperation? methodBody = null;
                 blockContext.RegisterOperationAction(
-                    operationContext => AnalyzeIfStatement(operationContext, isOSPlatformMethod, assertSymbol),
+                    operationContext =>
+                    {
+                        // Capture the method body block operation
+                        if (methodBody is null && operationContext.Operation is IBlockOperation block && block.Parent is IMethodBodyOperation)
+                        {
+                            methodBody = block;
+                        }
+                    },
+                    OperationKind.Block);
+
+                blockContext.RegisterOperationAction(
+                    operationContext => AnalyzeIfStatement(operationContext, isOSPlatformMethod, operatingSystemSymbol, assertSymbol, methodBody),
                     OperationKind.Conditional);
             });
         });
     }
 
-    private static void AnalyzeIfStatement(OperationAnalysisContext context, IMethodSymbol isOSPlatformMethod, INamedTypeSymbol assertSymbol)
+    private static void AnalyzeIfStatement(OperationAnalysisContext context, IMethodSymbol? isOSPlatformMethod, INamedTypeSymbol? operatingSystemSymbol, INamedTypeSymbol assertSymbol, IBlockOperation? methodBody)
     {
         var conditionalOperation = (IConditionalOperation)context.Operation;
 
@@ -99,13 +119,24 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
             return;
         }
 
-        // Check if the condition is a RuntimeInformation.IsOSPlatform call (or negation of it)
-        if (!TryGetIsOSPlatformCall(conditionalOperation.Condition, isOSPlatformMethod, out bool isNegated, out string? osPlatform))
+        // Only flag if statements that appear at the very beginning of the method body
+        // This ensures we don't flag if statements that come after other code
+        if (methodBody is not null && methodBody.Operations.Length > 0)
+        {
+            IOperation firstOperation = methodBody.Operations[0];
+            if (firstOperation != conditionalOperation)
+            {
+                return;
+            }
+        }
+
+        // Check if the condition is a RuntimeInformation.IsOSPlatform call or OperatingSystem.Is* call (or negation of it)
+        if (!TryGetOSPlatformFromCondition(conditionalOperation.Condition, isOSPlatformMethod, operatingSystemSymbol, out bool isNegated, out string? osPlatform))
         {
             return;
         }
 
-        // Check if the body contains early return or Assert.Inconclusive
+        // Check if the body contains only early return or Assert.Inconclusive as the first statement
         if (!IsEarlyReturnOrAssertInconclusive(conditionalOperation.WhenTrue, assertSymbol))
         {
             return;
@@ -121,14 +152,14 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
             properties: properties.ToImmutable()));
     }
 
-    private static bool TryGetIsOSPlatformCall(IOperation condition, IMethodSymbol isOSPlatformMethod, out bool isNegated, out string? osPlatform)
+    private static bool TryGetOSPlatformFromCondition(IOperation condition, IMethodSymbol? isOSPlatformMethod, INamedTypeSymbol? operatingSystemSymbol, out bool isNegated, out string? osPlatform)
     {
         isNegated = false;
         osPlatform = null;
 
         IOperation actualCondition = condition;
 
-        // Handle negation: !RuntimeInformation.IsOSPlatform(...)
+        // Handle negation: !RuntimeInformation.IsOSPlatform(...) or !OperatingSystem.IsWindows()
         if (actualCondition is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not } unaryOp)
         {
             isNegated = true;
@@ -138,12 +169,31 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
         // Walk down any conversions
         actualCondition = actualCondition.WalkDownConversion();
 
-        // Check if it's an invocation of RuntimeInformation.IsOSPlatform
-        if (actualCondition is not IInvocationOperation invocation ||
-            !SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.OriginalDefinition, isOSPlatformMethod))
+        if (actualCondition is not IInvocationOperation invocation)
         {
             return false;
         }
+
+        // Check for RuntimeInformation.IsOSPlatform
+        if (isOSPlatformMethod is not null &&
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod, isOSPlatformMethod))
+        {
+            return TryGetOSPlatformFromIsOSPlatformCall(invocation, out osPlatform);
+        }
+
+        // Check for OperatingSystem.Is* methods
+        if (operatingSystemSymbol is not null &&
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, operatingSystemSymbol))
+        {
+            return TryGetOSPlatformFromOperatingSystemCall(invocation, out osPlatform);
+        }
+
+        return false;
+    }
+
+    private static bool TryGetOSPlatformFromIsOSPlatformCall(IInvocationOperation invocation, out string? osPlatform)
+    {
+        osPlatform = null;
 
         // Get the OS platform from the argument
         if (invocation.Arguments.Length != 1)
@@ -173,6 +223,31 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
         return false;
     }
 
+    private static bool TryGetOSPlatformFromOperatingSystemCall(IInvocationOperation invocation, out string? osPlatform)
+    {
+        osPlatform = null;
+
+        // Map OperatingSystem.Is* methods to platform names
+        string methodName = invocation.TargetMethod.Name;
+        osPlatform = methodName switch
+        {
+            "IsWindows" => "Windows",
+            "IsLinux" => "Linux",
+            "IsMacOS" => "OSX",
+            "IsFreeBSD" => "FreeBSD",
+            "IsAndroid" => "Android",
+            "IsIOS" => "iOS",
+            "IsTvOS" => "tvOS",
+            "IsWatchOS" => "watchOS",
+            "IsBrowser" => "Browser",
+            "IsWasi" => "Wasi",
+            "IsMacCatalyst" => "MacCatalyst",
+            _ => null,
+        };
+
+        return osPlatform is not null;
+    }
+
     private static bool IsEarlyReturnOrAssertInconclusive(IOperation? whenTrue, INamedTypeSymbol assertSymbol)
     {
         if (whenTrue is null)
@@ -180,18 +255,16 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
             return false;
         }
 
-        // If it's a block, check its contents
+        // If it's a block, check only the first operation
         if (whenTrue is IBlockOperation blockOperation)
         {
-            foreach (IOperation operation in blockOperation.Operations)
+            if (blockOperation.Operations.Length == 0)
             {
-                if (IsReturnOrAssertInconclusive(operation, assertSymbol))
-                {
-                    return true;
-                }
+                return false;
             }
 
-            return false;
+            // Only check the first operation - must be return or Assert.Inconclusive
+            return IsReturnOrAssertInconclusive(blockOperation.Operations[0], assertSymbol);
         }
 
         // Single statement (not in a block)
