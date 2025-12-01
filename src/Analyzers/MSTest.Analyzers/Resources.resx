@@ -689,6 +689,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DoNotNegateBooleanAssertionFixAllTitle" xml:space="preserve">
     <value>Use proper Assert methods for all negated assertions</value>
+  </data>
   <data name="AvoidAssertsInCatchBlocksTitle" xml:space="preserve">
     <value>Do not use asserts in catch blocks</value>
   </data>
