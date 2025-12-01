@@ -292,13 +292,11 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string err = AzDoEscaper.Escape(message);
-
             string formattedMessage = RoslynString.IsNullOrEmpty(testDisplayName)
-                ? err
-                : $"[{AzDoEscaper.Escape(testDisplayName)}] {err}";
+                ? message
+                : $"[{testDisplayName}] {message}";
 
-            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{formattedMessage}";
+            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Reported full message '{line}'.");
