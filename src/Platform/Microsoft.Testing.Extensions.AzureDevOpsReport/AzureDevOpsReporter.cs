@@ -294,7 +294,7 @@ internal sealed class AzureDevOpsReporter :
 
             string err = AzDoEscaper.Escape(message);
 
-            string formattedMessage = string.IsNullOrEmpty(testDisplayName)
+            string formattedMessage = RoslynString.IsNullOrEmpty(testDisplayName)
                 ? err
                 : $"[{AzDoEscaper.Escape(testDisplayName)}] {err}";
 
