@@ -665,6 +665,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
+                    // Comment on assert call
                     [|Assert.IsTrue(/* some comment */ !false /* some other comment */)|];
                 }
             }
@@ -679,6 +680,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
+                    // Comment on assert call
                     Assert.IsFalse(/* some comment */ false /* some other comment */);
                 }
             }
