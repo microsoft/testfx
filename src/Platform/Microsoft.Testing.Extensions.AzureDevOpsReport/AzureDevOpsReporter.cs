@@ -17,7 +17,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsReporter :
     IDataConsumer,
-    IDataProducer,
     IOutputDeviceDataProducer
 {
     private const string DeterministicBuildRoot = "/_/";
@@ -48,8 +47,6 @@ internal sealed class AzureDevOpsReporter :
     [
         typeof(TestNodeUpdateMessage)
     ];
-
-    public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     /// <inheritdoc />
     public string Uid => nameof(AzureDevOpsReporter);
