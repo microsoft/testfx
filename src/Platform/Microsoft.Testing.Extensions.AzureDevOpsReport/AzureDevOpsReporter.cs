@@ -122,33 +122,35 @@ internal sealed class AzureDevOpsReporter :
 
         TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
 
+        string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
+
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
 #pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelled:
 #pragma warning restore CS0618 // Type or member is obsolete
-                await WriteExceptionAsync(cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
 
-    private async Task WriteExceptionAsync(string? explanation, Exception? exception, CancellationToken cancellationToken)
+    private async Task WriteExceptionAsync(string testDisplayName, string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
             _logger.LogTrace("Failure received.");
         }
 
-        string? line = GetErrorText(explanation, exception, _severity, _fileSystem, _logger);
+        string? line = GetErrorText(testDisplayName, explanation, exception, _severity, _fileSystem, _logger);
         if (line == null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -167,7 +169,7 @@ internal sealed class AzureDevOpsReporter :
         await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
-    internal static /* for testing */ string? GetErrorText(string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger)
+    internal static /* for testing */ string? GetErrorText(string? testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger)
     {
         if (exception == null || exception.StackTrace == null)
         {
@@ -292,7 +294,11 @@ internal sealed class AzureDevOpsReporter :
 
             string err = AzDoEscaper.Escape(message);
 
-            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{err}";
+            string formattedMessage = string.IsNullOrEmpty(testDisplayName)
+                ? err
+                : $"[{AzDoEscaper.Escape(testDisplayName)}] {err}";
+
+            string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{formattedMessage}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Reported full message '{line}'.");
