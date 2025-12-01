@@ -31,7 +31,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test --project \"{AssetFixture.TargetAssetPath}\" -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
@@ -46,6 +46,28 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         testResult.AssertExitCodeIs(ExitCodes.GenericFailure);
         string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testResult}");
+    }
+
+    [TestMethod]
+    public async Task HangDump_WithDotnetTest_NoHangButOverallTimeGreaterThanTimeout_ShouldPass()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 7s --results-directory \"{resultDirectory}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "5000" },
+                { "SLEEPTIMEMS2", "5000" },
+            },
+            workingDirectory: AssetFixture.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        testResult.AssertExitCodeIs(ExitCodes.Success);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        Assert.IsEmpty(dumpFiles);
     }
 
     [TestMethod]

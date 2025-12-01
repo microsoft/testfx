@@ -147,16 +147,6 @@ As opções válidas são ''Mini'', ''Heap'', ''Triage'' (disponível somente no
         <target state="translated">Você especificou um ou mais parâmetros de hang dump, mas não os ativou, adicione --hangdump à linha de comando</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Não é possível localizar o mutex ''{0}''</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">O nome do mutex não foi recebido após ''{0}'' segundos</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">Os testes a seguir ainda estavam em execução quando o despejo foi realizado (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
