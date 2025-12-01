@@ -4,6 +4,8 @@
 using System.Collections.Immutable;
 using System.Composition;
 
+using Analyzer.Utilities;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -35,8 +37,8 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
     {
         Diagnostic diagnostic = context.Diagnostics[0];
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-
         SyntaxNode node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
+
         if (node is not InvocationExpressionSyntax invocation)
         {
             return;
@@ -69,27 +71,7 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
             return;
         }
 
-        // Find this argument in the invocation's argument list
-        int conditionArgumentIndex = -1;
-        for (int i = 0; i < invocation.ArgumentList.Arguments.Count; i++)
-        {
-            if (invocation.ArgumentList.Arguments[i].Span == conditionArgument.Span)
-            {
-                conditionArgumentIndex = i;
-                break;
-            }
-        }
-
-        if (conditionArgumentIndex == -1)
-        {
-            return;
-        }
-
-        // Get the actual argument from the invocation
-        conditionArgument = invocation.ArgumentList.Arguments[conditionArgumentIndex];
-
         string title = string.Format(CultureInfo.InvariantCulture, Resources.DoNotNegateBooleanAssertionFix, properAssertMethodName);
-
         context.RegisterCodeFix(
             CodeAction.Create(
                 title,

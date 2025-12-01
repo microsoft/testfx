@@ -75,9 +75,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
             properties.Add(ProperAssertMethodNameKey, properAssertMethodName);
 
             Location? conditionArgumentLocation = conditionArgument.Syntax.GetLocation();
-            ImmutableArray<Location> additionalLocations = conditionArgumentLocation != null
-                ? ImmutableArray.Create(conditionArgumentLocation)
-                : ImmutableArray<Location>.Empty;
+            var additionalLocations = ImmutableArray.Create(conditionArgumentLocation);
 
             context.ReportDiagnostic(Diagnostic.Create(
                  Rule,
