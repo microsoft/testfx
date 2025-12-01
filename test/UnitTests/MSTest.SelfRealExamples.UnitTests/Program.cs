@@ -10,6 +10,7 @@ ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBui
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
+testApplicationBuilder.AddCrashDumpProvider();
 testApplicationBuilder.AddHangDumpProvider();
 #if ENABLE_CODECOVERAGE
 testApplicationBuilder.AddCodeCoverageProvider();
