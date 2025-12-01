@@ -55,19 +55,14 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
     public override bool IsConditionMet
-#if NET462
     {
         get
         {
+#if NET462
             // If we couldn't detect the OS via reflection, assume Windows
             OperatingSystems currentOS = DetectedOS ?? OperatingSystems.Windows;
             return (_operatingSystems & currentOS) != 0;
-        }
-    }
 #else
-    {
-        get
-        {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return (_operatingSystems & OperatingSystems.Windows) != 0;
@@ -86,9 +81,9 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             }
 
             return false;
+#endif
         }
     }
-#endif
 
 #if NET462
     private static OperatingSystems? DetectCurrentOS()
@@ -99,7 +94,6 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         // This also handles Mono which supports RuntimeInformation API and can run on non-Windows platforms.
         Type? runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation, System.Runtime.InteropServices.RuntimeInformation")
             ?? Type.GetType("System.Runtime.InteropServices.RuntimeInformation, mscorlib");
-
         if (runtimeInformationType is null)
         {
             return null;
@@ -113,31 +107,32 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 
         Type? osPlatformType = Type.GetType("System.Runtime.InteropServices.OSPlatform, System.Runtime.InteropServices.RuntimeInformation")
             ?? Type.GetType("System.Runtime.InteropServices.OSPlatform, mscorlib");
-
         if (osPlatformType is null)
         {
             return null;
         }
 
-        MethodInfo? createMethod = osPlatformType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
-        if (createMethod is null)
-        {
-            return null;
-        }
+        // Use the predefined static properties instead of Create() method
+        // On Mono, the static properties use uppercase strings (e.g., "LINUX") while Create() uses the provided casing,
+        // and IsOSPlatform performs case-sensitive comparison against the predefined values.
+        PropertyInfo? windowsProp = osPlatformType.GetProperty("Windows", BindingFlags.Public | BindingFlags.Static);
+        PropertyInfo? linuxProp = osPlatformType.GetProperty("Linux", BindingFlags.Public | BindingFlags.Static);
+        PropertyInfo? osxProp = osPlatformType.GetProperty("OSX", BindingFlags.Public | BindingFlags.Static);
+        PropertyInfo? freebsdProp = osPlatformType.GetProperty("FreeBSD", BindingFlags.Public | BindingFlags.Static);
 
-        if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "Windows"))
+        if (windowsProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, windowsProp))
         {
             return OperatingSystems.Windows;
         }
-        else if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "Linux"))
+        else if (linuxProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, linuxProp))
         {
             return OperatingSystems.Linux;
         }
-        else if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "OSX"))
+        else if (osxProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, osxProp))
         {
             return OperatingSystems.OSX;
         }
-        else if (IsOSPlatformViaReflection(isOSPlatformMethod, createMethod, "FreeBSD"))
+        else if (freebsdProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, freebsdProp))
         {
             return OperatingSystems.FreeBSD;
         }
@@ -145,24 +140,16 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         return null;
     }
 
-    private static bool IsOSPlatformViaReflection(MethodInfo isOSPlatformMethod, MethodInfo createMethod, string osName)
+    private static bool IsOSPlatformViaProperty(MethodInfo isOSPlatformMethod, PropertyInfo osPlatformProperty)
     {
-        try
+        object? osPlatform = osPlatformProperty.GetValue(null);
+        if (osPlatform is null)
         {
-            object? osPlatform = createMethod.Invoke(null, new object[] { osName });
-            if (osPlatform is null)
-            {
-                return false;
-            }
-
-            object? result = isOSPlatformMethod.Invoke(null, new object[] { osPlatform });
-            return result is true;
-        }
-        catch
-        {
-            // Reflection invocation failed, treat as OS not matching
             return false;
         }
+
+        object? result = isOSPlatformMethod.Invoke(null, [osPlatform]);
+        return result is true;
     }
 #endif
 
