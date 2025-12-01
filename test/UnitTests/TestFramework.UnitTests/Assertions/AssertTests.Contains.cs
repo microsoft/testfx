@@ -359,7 +359,7 @@ public partial class AssertTests : TestContainer
     /// <summary>
     /// Tests the ContainsSingle method without message parameters where the collection has a single element.
     /// </summary>
-    public void ContainsSingle_InNonGenericCollection_NoMessage_WithEmptyCollection_ReturnsNoElement()
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithEmptyCollection_ThrowsException()
     {
         // Arrange
         var collection = new ArrayList();
