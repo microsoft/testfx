@@ -368,7 +368,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.ContainsSingle(collection);
 
         // Assert
-        action.Should().Throw<AssertFailedException>();
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'collection'.");
     }
 
     /// <summary>
