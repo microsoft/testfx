@@ -51,16 +51,9 @@ public sealed class DoNotNegateBooleanAssertionFixer : CodeFixProvider
             return;
         }
 
-        // Retrieve the condition argument from the additional locations provided by the analyzer
-        if (diagnostic.AdditionalLocations.Count == 0)
-        {
-            return;
-        }
-
         // Find the argument node that corresponds to the additional location
         SyntaxNode? argumentNode = root.FindNode(diagnostic.AdditionalLocations[0].SourceSpan);
 
-        // Walk up to find the ArgumentSyntax if we got a child node
         while (argumentNode is not null and not ArgumentSyntax)
         {
             argumentNode = argumentNode.Parent;
