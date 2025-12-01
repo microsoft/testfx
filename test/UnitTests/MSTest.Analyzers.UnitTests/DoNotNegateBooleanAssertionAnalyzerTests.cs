@@ -688,4 +688,74 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNegationAndNamedArgument_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    [|Assert.IsTrue(condition: !condition)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    Assert.IsFalse(condition: condition);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithNegationAndNamedArgument_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                private bool GetBoolean() => true;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.IsFalse(condition: !GetBoolean())|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class MyTestClass
+            {
+                private bool GetBoolean() => true;
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.IsTrue(condition: GetBoolean());
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
