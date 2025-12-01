@@ -3,8 +3,6 @@
 
 using Microsoft.Testing.Extensions;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 [assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.ClassLevel, Workers = 0)]
 
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
@@ -12,7 +10,7 @@ ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBui
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
-
+testApplicationBuilder.AddHangDumpProvider();
 #if ENABLE_CODECOVERAGE
 testApplicationBuilder.AddCodeCoverageProvider();
 #endif
