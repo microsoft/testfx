@@ -182,13 +182,9 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer : Diagn
         }
 
         // Check for OperatingSystem.Is* methods
-        if (operatingSystemSymbol is not null &&
-            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, operatingSystemSymbol))
-        {
-            return TryGetOSPlatformFromOperatingSystemCall(invocation, out osPlatform);
-        }
-
-        return false;
+        return operatingSystemSymbol is not null &&
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, operatingSystemSymbol) &&
+            TryGetOSPlatformFromOperatingSystemCall(invocation, out osPlatform);
     }
 
     private static bool TryGetOSPlatformFromIsOSPlatformCall(IInvocationOperation invocation, out string? osPlatform)
