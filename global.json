@@ -4,13 +4,16 @@
     "runtimes": {
       "dotnet": [
         "8.0.18",
-        "9.0.7"
+        "9.0.7",
+        "10.0.0"
       ],
       "dotnet/x86": [
-        "9.0.7"
+        "9.0.7",
+        "10.0.0"
       ],
       "aspnetcore": [
-        "9.0.7"
+        "9.0.7",
+        "10.0.0"
       ]
     },
     "vs": {
@@ -34,7 +37,7 @@
     "runner": "Microsoft.Testing.Platform"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25575.1",
+    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25578.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

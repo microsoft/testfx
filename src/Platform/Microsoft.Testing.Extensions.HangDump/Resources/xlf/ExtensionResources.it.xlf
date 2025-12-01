@@ -147,16 +147,6 @@ Le opzioni valide sono 'Mini', 'Heap', 'Triage' (disponibile solo in .NET 6+) e 
         <target state="translated">Sono stati specificati uno o più parametri del dump di blocco ma non sono stati abilitati. Aggiungere --hangdump alla riga di comando</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Non è possibile trovare il mutex '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Il nome del mutex non è stato ricevuto dopo '{0}' secondi</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">I seguenti test erano ancora in esecuzione quando è stato eseguito il dump (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
