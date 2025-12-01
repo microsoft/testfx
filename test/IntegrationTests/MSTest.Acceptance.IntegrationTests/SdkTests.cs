@@ -73,8 +73,9 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
+        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
 #endif
 
@@ -98,8 +99,9 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --no-progress --no-ansi", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net9\.0\|x64\) passed");
+        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net10\.0\|x64\) passed");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
+        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net9\.0\|x64\) passed");
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net8\.0\|x64\) passed");
 #endif
 
@@ -305,9 +307,8 @@ namespace MSTestSdkTest
                     AssetName,
                     SingleTestSourceCode
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    // temporarily set test to be on net9.0 as it's fixing one error that started to happen:  error IL3000: System.Net.Quic.MsQuicApi..cctor
-                    // see https://github.com/dotnet/sdk/issues/44880.
-                    .PatchCodeWithReplace("$TargetFramework$", "net9.0")
+                    // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
+                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                     .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
@@ -315,14 +316,14 @@ namespace MSTestSdkTest
                     addPublicFeeds: true);
 
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -r {RID} -f net9.0 {testAsset.TargetAssetPath}",
+                    $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     // We prefer to use the outer retry mechanism as we need some extra checks
                     retryCount: 0, cancellationToken: TestContext.CancellationToken);
                 compilationResult.AssertOutputContains("Generating native code");
                 compilationResult.AssertOutputDoesNotContain("warning");
 
-                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, "net9.0", verb: Verb.publish);
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
                 TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
                 testHostResult.AssertExitCodeIs(ExitCodes.Success);

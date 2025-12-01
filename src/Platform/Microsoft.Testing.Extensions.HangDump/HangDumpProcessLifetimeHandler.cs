@@ -40,19 +40,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly bool _traceEnabled;
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
-    private readonly ManualResetEventSlim _mutexNameReceived = new(false);
     private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
     private readonly List<string> _dumpFiles = [];
 
-    private TimeSpan _activityTimerValue = TimeSpan.FromMinutes(30);
+    private TimeSpan? _activityTimerValue;
+    private Timer? _activityTimer;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
-    private string? _activityTimerMutexName;
-    private bool _exitActivityIndicatorTask;
     private string _dumpType = "Full";
     private string? _dumpFileNamePattern;
-    private Mutex? _activityIndicatorMutex;
     private ITestHostProcessInformation? _testHostProcessInformation;
     private NamedPipeClient? _namedPipeClient;
 
@@ -91,15 +88,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     public Type[] DataTypesProduced => [typeof(FileArtifact)];
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-        !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
 
     public async Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
-        if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTimeoutOptionName, out string[]? timeout))
-        {
-            _activityTimerValue = TimeSpanParser.Parse(timeout[0]);
-        }
+        _activityTimerValue = _commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTimeoutOptionName, out string[]? timeout)
+            ? TimeSpanParser.Parse(timeout[0])
+            : TimeSpan.FromMinutes(30);
 
         if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTypeOptionName, out string[]? dumpType))
         {
@@ -117,10 +112,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             async () =>
         {
             _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
-            _singleConnectionNamedPipeServer.RegisterSerializer(new ActivityIndicatorMutexNameRequestSerializer(), typeof(ActivityIndicatorMutexNameRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
+            _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
             await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}").ConfigureAwait(false);
             await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
         }, cancellationToken);
@@ -128,17 +123,20 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task<IResponse> CallbackAsync(IRequest request)
     {
-        if (request is ActivityIndicatorMutexNameRequest activityIndicatorMutexNameRequest)
-        {
-            await _logger.LogDebugAsync($"Mutex name received by the test host, '{activityIndicatorMutexNameRequest.MutexName}'").ConfigureAwait(false);
-            _activityTimerMutexName = activityIndicatorMutexNameRequest.MutexName;
-            _mutexNameReceived.Set();
-            return VoidResponse.CachedInstance;
-        }
-        else if (request is SessionEndSerializerRequest)
+        if (request is SessionEndSerializerRequest)
         {
             await _logger.LogDebugAsync("Session end received by the test host").ConfigureAwait(false);
-            _exitActivityIndicatorTask = true;
+
+#pragma warning disable IDE0031 // Null check can be simplified - analyzer doesn't consider multigating. But we can fix when https://github.com/dotnet/csharplang/issues/8631 is implemented.
+            if (_activityTimer is not null)
+            {
+#if NETCOREAPP
+                await _activityTimer.DisposeAsync().ConfigureAwait(false);
+#else
+                _activityTimer.Dispose();
+#endif
+            }
+
             _namedPipeClient?.Dispose();
             return VoidResponse.CachedInstance;
         }
@@ -151,6 +149,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             _namedPipeClient.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _waitConsumerPipeName.Set();
+            return VoidResponse.CachedInstance;
+        }
+        else if (request is ActivitySignalRequest)
+        {
+            if (_traceEnabled)
+            {
+                _logger.LogTrace($"Activity signal received by the test host '{_clock.UtcNow}'");
+            }
+
+            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
             return VoidResponse.CachedInstance;
         }
         else
@@ -176,20 +184,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
             await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
 
-            // Keep the custom thread to avoid to waste one from thread pool.
-            _activityIndicatorTask = _task.RunLongRunning(
-                async () =>
-                {
-                    try
-                    {
-                        await ActivityTimerAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception e)
-                    {
-                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())), cancellationToken).ConfigureAwait(false);
-                        throw;
-                    }
-                }, "[HangDump] ActivityTimerAsync", cancellationToken);
+            _activityTimer = new Timer(
+                _ => _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken),
+                null,
+                _activityTimerValue!.Value,
+                TimeSpan.FromMilliseconds(-1));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -224,109 +223,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (!testHostProcessInformation.HasExitedGracefully)
         {
-            _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}', disposing _activityIndicatorMutex(is null: '{_activityIndicatorMutex is null}')");
-            _activityIndicatorMutex?.Dispose();
+            _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
         }
 
         foreach (string dumpFile in _dumpFiles)
         {
             await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), ExtensionResources.HangDumpArtifactDisplayName, ExtensionResources.HangDumpArtifactDescription)).ConfigureAwait(false);
-        }
-    }
-
-    private async Task ActivityTimerAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Wait for mutex name from the test host");
-
-        if (!_mutexNameReceived.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken))
-        {
-            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MutexNameReceptionTimeoutErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
-        }
-
-        ApplicationStateGuard.Ensure(_activityTimerMutexName is not null);
-
-        _logger.LogDebug($"Open activity mutex '{_activityTimerMutexName}'");
-
-        if (!Mutex.TryOpenExisting(_activityTimerMutexName, out _activityIndicatorMutex))
-        {
-            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MutexDoesNotExistErrorMessage, _activityTimerMutexName));
-        }
-
-        bool timeoutFired = false;
-        try
-        {
-            // Don't wait in async in the while, we need thread affinity for the mutex
-            while (true)
-            {
-                if (_traceEnabled)
-                {
-                    _logger.LogTrace("Wait for activity signal");
-                }
-
-                if (!_activityIndicatorMutex.WaitOne(_activityTimerValue))
-                {
-                    timeoutFired = true;
-                    break;
-                }
-
-                if (_traceEnabled)
-                {
-                    _logger.LogTrace($"Activity signal received by the test host '{_clock.UtcNow}'");
-                }
-
-                // We don't release in case of exit because we will release after the timeout check to unblock the client and exit the task
-                if (_exitActivityIndicatorTask)
-                {
-                    break;
-                }
-                else
-                {
-                    _activityIndicatorMutex.ReleaseMutex();
-                }
-            }
-
-            if (_traceEnabled)
-            {
-                _logger.LogTrace("Exit 'ActivityTimerAsync'");
-            }
-        }
-        catch (AbandonedMutexException)
-        {
-            // If the mutex is abandoned from the test host crash we will get an exception
-            _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is abandoned");
-        }
-        catch (ObjectDisposedException)
-        {
-            // If test host exit in a non gracefully way on process exit we dispose the mutex to unlock the activity timer.
-            // In this way we release also the dispose.
-            _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is disposed");
-        }
-
-        if (!timeoutFired)
-        {
-            try
-            {
-                _logger.LogDebug("Timeout is not fired release activity mutex handle to allow test host to close");
-                _activityIndicatorMutex.ReleaseMutex();
-            }
-            catch (AbandonedMutexException)
-            {
-                // If the mutex is abandoned from the test host crash we will get an exception
-                _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is abandoned, during last release");
-            }
-            catch (ObjectDisposedException)
-            {
-                // If test host exit in a non gracefully way on process exit we dispose the mutex to unlock the activity timer.
-                _logger.LogDebug($"Mutex '{_activityTimerMutexName}' is disposed, during last release");
-            }
-        }
-
-        _activityIndicatorMutex.Dispose();
-        _logger.LogDebug("Activity indicator disposed");
-
-        if (timeoutFired)
-        {
-            await TakeDumpOfTreeAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -501,7 +403,18 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         if (_activityIndicatorTask is not null)
         {
-            if (!_activityIndicatorTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            bool waitResult;
+            try
+            {
+                waitResult = _activityIndicatorTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            }
+            catch (Exception e)
+            {
+                _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())), CancellationToken.None).GetAwaiter().GetResult();
+                throw;
+            }
+
+            if (!waitResult)
             {
                 throw new InvalidOperationException($"_activityIndicatorTask didn't exit in {TimeoutHelper.DefaultHangTimeSpanTimeout} seconds");
             }
@@ -509,7 +422,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _namedPipeClient?.Dispose();
         _waitConsumerPipeName.Dispose();
-        _mutexNameReceived.Dispose();
         _singleConnectionNamedPipeServer?.Dispose();
     }
 
@@ -518,12 +430,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         if (_activityIndicatorTask is not null)
         {
-            await _activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            try
+            {
+                await _activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())), CancellationToken.None).ConfigureAwait(false);
+                throw;
+            }
         }
 
         _namedPipeClient?.Dispose();
         _waitConsumerPipeName.Dispose();
-        _mutexNameReceived.Dispose();
         _singleConnectionNamedPipeServer?.Dispose();
     }
 #endif

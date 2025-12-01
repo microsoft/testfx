@@ -733,9 +733,9 @@ public sealed partial class Assert
     public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        if (maxValue.CompareTo(minValue) <= 0)
+        if (maxValue.CompareTo(minValue) < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than the minimum value.");
+            throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue);
         }
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)

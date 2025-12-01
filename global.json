@@ -1,29 +1,30 @@
 {
   "tools": {
-    "dotnet": "10.0.100-rc.2.25464.104",
+    "dotnet": "10.0.100",
     "runtimes": {
       "dotnet": [
-        "3.1.32",
-        "6.0.36",
-        "7.0.20",
         "8.0.18",
-        "9.0.7"
+        "9.0.7",
+        "10.0.0"
       ],
       "dotnet/x86": [
-        "3.1.32",
-        "6.0.36",
-        "9.0.7"
+        "9.0.7",
+        "10.0.0"
       ],
       "aspnetcore": [
-        "9.0.7"
+        "9.0.7",
+        "10.0.0"
       ]
     },
     "vs": {
-      "version": "17.14.10"
+      "version": "17.14.10",
+      "components": [
+        "Microsoft.VisualStudio.Workload.Universal"
+      ]
     }
   },
   "sdk": {
-    "version": "10.0.100-rc.2.25464.104",
+    "version": "10.0.100",
     "paths": [
       ".dotnet",
       "$host$"
@@ -36,7 +37,7 @@
     "runner": "Microsoft.Testing.Platform"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25509.1",
+    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.25578.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

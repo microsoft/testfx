@@ -20,8 +20,8 @@ public sealed class TestResultTests : TestContainer
         };
 
         // We use GetType() == typeof(...) to do a strict type match.
-        testResult.TestFailureException.Should().BeOfType<InvalidOperationException>();
-        testResult.TestFailureException.Message.Should().Be("Failure1");
+        testResult.TestFailureException.Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Be("Failure1");
 
         testResult.TestFailureException = new ArgumentException("Failure2");
         var aggregateException = (AggregateException)testResult.TestFailureException;

@@ -11,19 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class FixtureMethodRunner
 {
-    internal static TestFailedException? RunWithTimeoutAndCancellation(
-        Action action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
-        ExecutionContext? executionContext, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
-        // When a test method is marked with [Timeout], this timeout is applied from ctor to destructor, so we need to take
-        // that into account when processing the OCE of the action.
-        (CancellationTokenSource TokenSource, int Timeout)? testTimeoutInfo = default)
-            => RunWithTimeoutAndCancellationAsync(
-                () =>
-                {
-                    action();
-                    return Task.CompletedTask;
-                }, cancellationTokenSource, timeoutInfo, methodInfo, executionContext, methodCanceledMessageFormat, methodTimedOutMessageFormat, testTimeoutInfo).GetAwaiter().GetResult();
-
     internal static async Task<TestFailedException?> RunWithTimeoutAndCancellationAsync(
         Func<Task> action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
         ExecutionContext? executionContext, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,

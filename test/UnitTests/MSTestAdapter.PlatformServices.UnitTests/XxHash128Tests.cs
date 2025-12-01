@@ -3,6 +3,8 @@
 
 using System.Buffers.Binary;
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 using TestFx.Hashing;
@@ -14,10 +16,14 @@ public class XxHash128Tests : TestContainer
 {
     public void Hash_InvalidInputs_Throws()
     {
-        VerifyThrows<ArgumentNullException>(() => XxHash128.Hash(null!));
-        VerifyThrows<ArgumentNullException>(() => XxHash128.Hash(null!, 42));
+        Action action = () => XxHash128.Hash(null!);
+        action.Should().Throw<ArgumentNullException>();
 
-        VerifyThrows<ArgumentException>(() => XxHash128.Hash([1, 2, 3], new byte[7]));
+        action = () => XxHash128.Hash(null!, 42);
+        action.Should().Throw<ArgumentNullException>();
+
+        action = () => XxHash128.Hash([1, 2, 3], new byte[7]);
+        action.Should().Throw<ArgumentException>();
     }
 
     public void Hash_OneShot_Expected()
@@ -36,12 +42,12 @@ public class XxHash128Tests : TestContainer
             // Validate `byte[] XxHash128.Hash` with and without a seed
             if (test.Seed == 0)
             {
-                Verify(expectedHash128 == ReadHashBigEndian(XxHash128.Hash(input)));
+                ReadHashBigEndian(XxHash128.Hash(input)).Should().Be(expectedHash128);
                 // TestFx-specific: We don't have ROS overload.
                 // Verify(expectedHash128 == ReadHashBigEndian(XxHash128.Hash((ReadOnlySpan<byte>)input)));
             }
 
-            Verify(expectedHash128 == ReadHashBigEndian(XxHash128.Hash(input, test.Seed)));
+            ReadHashBigEndian(XxHash128.Hash(input, test.Seed)).Should().Be(expectedHash128);
             // TestFx-specific: We don't have ROS overload.
             // Verify(expectedHash128 == ReadHashBigEndian(XxHash128.Hash((ReadOnlySpan<byte>)input, test.Seed)));
 #if NET
@@ -49,34 +55,34 @@ public class XxHash128Tests : TestContainer
             // Validate `XxHash128.HashToUInt128`
             // Verify(new UInt128(test.HashHigh, test.HashLow) == XxHash128.HashToUInt128(input, test.Seed));
 #endif
-            Assert.IsFalse(XxHash128.TryHash(input, new byte[15], out int bytesWritten, test.Seed));
-            Assert.AreEqual(0, bytesWritten);
+            XxHash128.TryHash(input, new byte[15], out int bytesWritten, test.Seed).Should().BeFalse();
+            bytesWritten.Should().Be(0);
 
             // Validate `XxHash128.TryHash` with and without a seed
             if (test.Seed == 0)
             {
                 Array.Clear(destination, 0, destination.Length);
-                Verify(XxHash128.TryHash(input, destination, out bytesWritten));
-                Verify(bytesWritten == 16);
-                Verify(expectedHash128 == ReadHashBigEndian(destination));
+                XxHash128.TryHash(input, destination, out bytesWritten).Should().BeTrue();
+                bytesWritten.Should().Be(16);
+                ReadHashBigEndian(destination).Should().Be(expectedHash128);
             }
 
             Array.Clear(destination, 0, destination.Length);
-            Verify(XxHash128.TryHash(input, destination, out bytesWritten, test.Seed));
-            Verify(bytesWritten == 16);
-            Verify(expectedHash128 == ReadHashBigEndian(destination));
+            XxHash128.TryHash(input, destination, out bytesWritten, test.Seed).Should().BeTrue();
+            bytesWritten.Should().Be(16);
+            ReadHashBigEndian(destination).Should().Be(expectedHash128);
 
             // Validate `XxHash128.Hash(span, out int)` with and without a seed
             if (test.Seed == 0)
             {
                 Array.Clear(destination, 0, destination.Length);
-                Verify(XxHash128.Hash(input, destination) == 16);
-                Verify(expectedHash128 == ReadHashBigEndian(destination));
+                XxHash128.Hash(input, destination).Should().Be(16);
+                ReadHashBigEndian(destination).Should().Be(expectedHash128);
             }
 
             Array.Clear(destination, 0, destination.Length);
-            Verify(XxHash128.Hash(input, destination, test.Seed) == 16);
-            Verify(expectedHash128 == ReadHashBigEndian(destination));
+            XxHash128.Hash(input, destination, test.Seed).Should().Be(16);
+            ReadHashBigEndian(destination).Should().Be(expectedHash128);
         }
     }
 
@@ -119,27 +125,27 @@ public class XxHash128Tests : TestContainer
                         // Validate that the hash we get from doing a one-shot of all the data up to this point
                         // matches the incremental hash for the data appended until now.
 #if NET
-                        Verify(XxHash128.HashToUInt128(asciiBytes.AsSpan(0, processed), test.Seed) == hash.GetCurrentHashAsUInt128());
+                        hash.GetCurrentHashAsUInt128().Should().Be(XxHash128.HashToUInt128(asciiBytes.AsSpan(0, processed), test.Seed));
 #endif
                         // TestFx-specific: We don't have TryGetCurrentHash, so we assign GetCurrentHash directly to destination.
                         destination = hash.GetCurrentHash();
                         // Verify(hash.TryGetCurrentHash(destination, out int bytesWritten));
                         // TestFx-specific: We don't have Hash overload for span. So we call ToArray.
-                        Verify(XxHash128.Hash(asciiBytes.AsSpan(0, processed).ToArray(), destination2, test.Seed) == 16);
-                        Verify(destination.SequenceEqual(destination2));
+                        XxHash128.Hash(asciiBytes.AsSpan(0, processed).ToArray(), destination2, test.Seed).Should().Be(16);
+                        destination.Should().Equal(destination2);
                         // Verify(bytesWritten == 16);
                     }
 
                     // Validate the final hash code.
 #if NET
-                    Verify(new UInt128(test.HashHigh, test.HashLow) == hash.GetCurrentHashAsUInt128());
+                    hash.GetCurrentHashAsUInt128().Should().Be(new UInt128(test.HashHigh, test.HashLow));
 #endif
                     Array.Clear(destination, 0, destination.Length);
                     // TestFx-specific: We don't have GetHashAndReset. So, we just call GetCurrentHash followed by Reset.
                     destination = hash.GetCurrentHash();
                     hash.Reset();
                     // Verify(hash.GetHashAndReset(destination) == 16);
-                    Verify(expectedHash128 == ReadHashBigEndian(destination));
+                    ReadHashBigEndian(destination).Should().Be(expectedHash128);
                 }
             }
         }

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -39,14 +41,14 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Workers == -1);
+        settings.Workers.Should().Be(-1);
     }
 
     public void GetSettingsShouldSetParallelWorkers()
@@ -54,7 +56,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -65,7 +67,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Workers == 10);
+        settings.Workers.Should().Be(10);
     }
 
     public void GetSettingsShouldSetParallelWorkersToProcessorCountIfZero()
@@ -73,7 +75,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -84,7 +86,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(Environment.ProcessorCount == settings.Workers);
+        settings.Workers.Should().Be(Environment.ProcessorCount);
     }
 
     public void GetSettingsShouldSetParallelScopeToClassLevelByDefault()
@@ -92,14 +94,14 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Scope == ExecutionScope.ClassLevel);
+        settings.Scope.Should().Be(ExecutionScope.ClassLevel);
     }
 
     public void GetSettingsShouldSetParallelScope()
@@ -107,7 +109,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -118,7 +120,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.Scope == ExecutionScope.MethodLevel);
+        settings.Scope.Should().Be(ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()
@@ -126,14 +128,14 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(settings.CanParallelizeAssembly);
+        settings.CanParallelizeAssembly.Should().BeTrue();
     }
 
     public void GetSettingsShouldSetCanParallelizeAssemblyToFalseIfDoNotParallelizeIsSet()
@@ -141,7 +143,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         // Arrange.
         _testablePlatformServiceProvider
             .MockFileOperations
-            .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
+            .Setup(fo => fo.LoadAssembly(It.IsAny<string>()))
             .Returns(Assembly.GetExecutingAssembly());
         _testablePlatformServiceProvider
             .MockReflectionOperations
@@ -152,6 +154,6 @@ public class TestAssemblySettingsProviderTests : TestContainer
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = new TestAssemblySettingsProvider().GetSettings("Foo");
 
         // Assert.
-        Verify(!settings.CanParallelizeAssembly);
+        settings.CanParallelizeAssembly.Should().BeFalse();
     }
 }

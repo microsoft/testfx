@@ -29,14 +29,7 @@ internal sealed class TestMethod : ITestMethod
     /// <param name="name">The name of the method.</param>
     /// <param name="fullClassName">The full name of the class declaring the method.</param>
     /// <param name="assemblyName">The full assembly name.</param>
-    /// <param name="isAsync">Whether the method is async.</param>
-#pragma warning disable IDE0060 // Remove unused parameter - Public API :/
-    public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
-#pragma warning restore IDE0060 // Remove unused parameter
-        : this(null, null, null, name, fullClassName, assemblyName, null, null)
-    {
-    }
-
+    /// <param name="displayName">The display name of the test method.</param>
     internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
         : this(null, null, null, name, fullClassName, assemblyName, displayName, null)
     {
@@ -75,22 +68,6 @@ internal sealed class TestMethod : ITestMethod
     public string FullClassName { get; }
 
     public string? ParameterTypes { get; }
-
-    /// <summary>
-    /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
-    /// This will be null if AssemblyName is same as DeclaringAssemblyName.
-    /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
-    /// </summary>
-    public string? DeclaringAssemblyName
-    {
-        get;
-
-        set
-        {
-            DebugEx.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
-            field = value;
-        }
-    }
 
     /// <summary>
     /// Gets or sets the declaring class full name.
@@ -155,14 +132,17 @@ internal sealed class TestMethod : ITestMethod
     internal string? TestDataSourceIgnoreMessage { get; set; }
 
     /// <summary>
-    /// Gets or sets the test group set during discovery.
-    /// </summary>
-    internal string? TestGroup { get; set; }
-
-    /// <summary>
     /// Gets or sets the display name set during discovery.
     /// </summary>
     internal string DisplayName { get; set; }
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
+
+    internal TestMethod CloneWithUpdatedSource(string source)
+    {
+        var clone = (TestMethod)MemberwiseClone();
+        AssemblyName = source;
+        MethodInfo = null;
+        return clone;
+    }
 }
