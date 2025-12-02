@@ -111,12 +111,8 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         }
 
         Type? osPlatformType = Type.GetType("System.Runtime.InteropServices.OSPlatform, System.Runtime.InteropServices.RuntimeInformation")
-            ?? Type.GetType("System.Runtime.InteropServices.OSPlatform, mscorlib");
-        if (osPlatformType is null)
-        {
-            // This should not happen, as OSPlatform is required for IsOSPlatform method
-            throw ApplicationStateGuard.Unreachable();
-        }
+            ?? Type.GetType("System.Runtime.InteropServices.OSPlatform, mscorlib")
+            ?? throw ApplicationStateGuard.Unreachable();
 
         // Use the predefined static properties instead of Create() method
         // On Mono, the static properties use uppercase strings (e.g., "LINUX") while Create() uses the provided casing,
