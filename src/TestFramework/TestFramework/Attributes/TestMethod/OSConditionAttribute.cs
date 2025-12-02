@@ -55,14 +55,12 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
     public override bool IsConditionMet
+#if NET462
+        => DetectedOS is not null && (_operatingSystems & DetectedOS) != 0;
+#else
     {
         get
         {
-#if NET462
-            // If we couldn't detect the OS via reflection, assume Windows
-            OperatingSystems currentOS = DetectedOS ?? OperatingSystems.Windows;
-            return (_operatingSystems & currentOS) != 0;
-#else
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return (_operatingSystems & OperatingSystems.Windows) != 0;
@@ -81,11 +79,17 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             }
 
             return false;
-#endif
         }
     }
+#endif
 
 #if NET462
+    /// <summary>
+    /// Detects the current operating system using reflection to maintain compatibility with .NET Framework 4.6.2.
+    /// </summary>
+    /// <returns>
+    /// The detected operating system, or null if the OS could not be determined.
+    /// </returns>
     private static OperatingSystems? DetectCurrentOS()
     {
         // RuntimeInformation.IsOSPlatform is available in .NET Framework 4.7.1+.
@@ -96,20 +100,22 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             ?? Type.GetType("System.Runtime.InteropServices.RuntimeInformation, mscorlib");
         if (runtimeInformationType is null)
         {
-            return null;
+            return OperatingSystems.Windows;
         }
 
         MethodInfo? isOSPlatformMethod = runtimeInformationType.GetMethod("IsOSPlatform", BindingFlags.Public | BindingFlags.Static);
         if (isOSPlatformMethod is null)
         {
-            return null;
+            // Fallback to Windows if the method is not found
+            return OperatingSystems.Windows;
         }
 
         Type? osPlatformType = Type.GetType("System.Runtime.InteropServices.OSPlatform, System.Runtime.InteropServices.RuntimeInformation")
             ?? Type.GetType("System.Runtime.InteropServices.OSPlatform, mscorlib");
         if (osPlatformType is null)
         {
-            return null;
+            // This should not happen, as OSPlatform is required for IsOSPlatform method
+            throw ApplicationStateGuard.Unreachable();
         }
 
         // Use the predefined static properties instead of Create() method
@@ -137,17 +143,13 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
             return OperatingSystems.FreeBSD;
         }
 
+        // Unknown OS
         return null;
     }
 
     private static bool IsOSPlatformViaProperty(MethodInfo isOSPlatformMethod, PropertyInfo osPlatformProperty)
     {
         object? osPlatform = osPlatformProperty.GetValue(null);
-        if (osPlatform is null)
-        {
-            return false;
-        }
-
         object? result = isOSPlatformMethod.Invoke(null, [osPlatform]);
         return result is true;
     }
