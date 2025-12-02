@@ -112,12 +112,9 @@ internal sealed class UnitTestElement
         {
             testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, TestMethod.ManagedTypeName);
             testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, TestMethod.ManagedMethodName);
-            testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.ManagedTypeName);
         }
-        else
-        {
-            testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
-        }
+
+        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
 
         if (TestMethod.ParameterTypes is not null)
         {
