@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Platform.Builder;
-
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.ClassLevel, Workers = 0)]
 
@@ -13,7 +10,8 @@ ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBui
 testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
-
+testApplicationBuilder.AddCrashDumpProvider();
+testApplicationBuilder.AddHangDumpProvider();
 #if ENABLE_CODECOVERAGE
 testApplicationBuilder.AddCodeCoverageProvider();
 #endif
