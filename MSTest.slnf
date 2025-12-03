@@ -2,6 +2,7 @@
   "solution": {
     "path": "TestFx.slnx",
     "projects": [
+      "samples\\FSharpPlayground\\FSharpPlayground.fsproj",
       "samples\\FxExtensibility\\FxExtensibility.csproj",
       "samples\\Playground\\Playground.csproj",
       "src\\Adapter\\MSTest.Engine\\MSTest.Engine.csproj",
