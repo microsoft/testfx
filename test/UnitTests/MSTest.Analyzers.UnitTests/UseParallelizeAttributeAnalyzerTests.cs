@@ -122,7 +122,7 @@ public class UseParallelizeAttributeAnalyzerTests
             [assembly: {|#0:Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)|}, MyAsm]
             [assembly: {|#1:DoNotParallelize|}, MyAsm]
 
-            [AttributeUsage(AttributeTargets.Assembly)]
+            [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
             public class MyAsmAttribute : Attribute { }
             """;
 
