@@ -1016,10 +1016,10 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Использование утверждений в блоках catch является проблематичным, так как тест будет пройден, даже если не возникает исключение, а блок catch не выполняется. Используйте "Assert.Throws", "Assert.ThrowsExactly", "Assert.ThrowsAsync" или "Assert.ThrowsExactlyAsync" для проверки возникновения исключения, а затем выполните дополнительные утверждения перехваченного исключения без применения блока try-catch.</target>
         <note />
       </trans-unit>
-            <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
-        <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</source>
-        <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</target>
-        <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+        <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
+        <target state="new">An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
         <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
@@ -1031,7 +1031,6 @@ The type declaring these methods should also respect the following rules:
         <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
         <note>{Locked="Parallelize","DoNotParallelize"}</note>
       </trans-unit>
-
     </body>
   </file>
 </xliff>
