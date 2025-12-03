@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pl" original="../Resources.resx">
     <body>
@@ -989,7 +989,22 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Element Assert.Throws powinien zawierać tylko jedną instrukcję/wyrażenie</target>
         <note />
       </trans-unit>
-      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="translated">Nie używaj asercji w blokach catch</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="translated">Nie używaj asercji w blokach catch, ponieważ test może nie zakończyć się niepowodzeniem, jeśli nie zostanie zgłoszony żaden wyjątek</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="translated">Używanie asercji w blokach catch jest problematyczne, ponieważ test zakończy się powodzeniem, nawet jeśli nie zostanie zgłoszony żaden wyjątek i blok catch nigdy nie zostanie wykonany. Użyj instrukcji „Assert.Throws”, „Assert.ThrowsExactly”, „Assert.ThrowsAsync” lub „Assert.ThrowsExactlyAsync”, aby sprawdzić, czy zgłoszono wyjątek, a następnie wykonaj dodatkowe asercje dla przechwyconego wyjątku bez użycia bloku try-catch.</target>
+        <note />
+      </trans-unit>
+            <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</source>
         <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</target>
         <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
@@ -1004,6 +1019,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
         <note>{Locked="Parallelize","DoNotParallelize"}</note>
       </trans-unit>
+
     </body>
   </file>
 </xliff>

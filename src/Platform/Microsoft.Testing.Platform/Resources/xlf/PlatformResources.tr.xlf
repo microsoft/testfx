@@ -994,12 +994,12 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       </trans-unit>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
-        <target state="new">A chat client provider has already been registered.</target>
+        <target state="translated">Bir sohbet istemcisi sağlayıcısı zaten kaydedilmiş.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
         <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Yapay zeka uzantıları yalnızca 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' türündeki oluşturucularla çalışır</target>
         <note />
       </trans-unit>
     </body>

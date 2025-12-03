@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -27,16 +29,18 @@ public class DesktopSettingsProviderTests : TestContainer
         // so passing 'null' source will also suffice.
         IDictionary<string, object> properties = _settingsProvider.GetProperties(null);
 
-        Verify(properties is not null);
-        Verify(properties.Count > 0);
+        properties.Should().NotBeNull();
+#if !WINDOWS_UWP && !WIN_UI
+        properties.Count.Should().BeGreaterThan(0);
+#endif
     }
 
     public void SettingsShouldReturnDefaultSettingsIfNotInitialized()
     {
         MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
 
-        Verify(settings is not null);
-        Verify(settings.DeploymentEnabled);
+        settings.Should().NotBeNull();
+        settings.DeploymentEnabled.Should().BeTrue();
     }
 
     public void SettingsShouldReturnInitializedSettings()
@@ -51,11 +55,11 @@ public class DesktopSettingsProviderTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
-        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+        MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeFalse();
     }
 
     public void LoadShouldThrowIfReaderIsNull() =>
-        VerifyThrows<ArgumentNullException>(() => _settingsProvider.Load(null!));
+        new Action(() => _settingsProvider.Load(null!)).Should().Throw<ArgumentNullException>();
 
     public void LoadShouldReadAndFillInSettings()
     {
@@ -69,12 +73,12 @@ public class DesktopSettingsProviderTests : TestContainer
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
-        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+        MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeFalse();
     }
 
     public void LoadShouldReadAndFillInSettingsFromIConfiguration()
     {
-        Verify(MSTestSettingsProvider.Settings.DeploymentEnabled);
+        MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeTrue();
 
         MSTestSettingsProvider.Load(new MockConfiguration(
             new Dictionary<string, string?>()
@@ -82,7 +86,7 @@ public class DesktopSettingsProviderTests : TestContainer
                 ["mstest:deployment:enabled"] = "false",
             }, null));
 
-        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
+        MSTestSettingsProvider.Settings.DeploymentEnabled.Should().BeFalse();
     }
 
     private sealed class MockConfiguration : IConfiguration

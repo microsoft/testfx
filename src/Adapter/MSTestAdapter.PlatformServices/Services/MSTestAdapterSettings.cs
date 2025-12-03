@@ -189,9 +189,11 @@ internal class MSTestAdapterSettings
         bool disableAppDomain = true;
         // HACK: When running VSTest, and VSTest didn't create TestHostAppDomain (default behavior), we must be enabling appdomain in MSTest.
         // Otherwise, we will not merge app.config properly, nor we will have correct BaseDirectory of current domain.
+        // This detects if we run in testhost.*.exe or in vstest.console.exe.This covers all: running with vstest.console.exe because there we can run in both modes, running with dotnet test or VS, because there we can run only in testhost(in isolation).
 #if NETFRAMEWORK
         if (AppDomain.CurrentDomain.Id == 1 &&
-            AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) &&
+            (AppDomain.CurrentDomain.FriendlyName.StartsWith("testhost.", StringComparison.Ordinal) ||
+             AppDomain.CurrentDomain.FriendlyName.StartsWith("vstest.console.", StringComparison.Ordinal)) &&
             AppDomain.CurrentDomain.FriendlyName.EndsWith(".exe", StringComparison.Ordinal))
         {
             disableAppDomain = false;

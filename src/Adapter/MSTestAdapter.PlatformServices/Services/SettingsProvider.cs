@@ -72,7 +72,7 @@ internal sealed class MSTestSettingsProvider : ISettingsProvider
     /// <param name="source">The source.</param>
     /// <returns>A collection of properties.</returns>
     public IDictionary<string, object> GetProperties(string? source)
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
         => TestDeployment.GetDeploymentInformation(source);
 #else
         => new Dictionary<string, object>();

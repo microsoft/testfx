@@ -34,15 +34,6 @@ Param(
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
-# Workaround for DOTNET_HOST_PATH not being set by older MSBuild
-# Removal is tracked by https://github.com/microsoft/testfx/issues/6767
-if (-not $env:DOTNET_HOST_PATH) {
-    $env:DOTNET_HOST_PATH = [System.IO.Path]::GetFullPath((Join-Path (Join-Path (Join-Path $PSScriptRoot '..') '.dotnet') 'dotnet'))
-    if (-not (Test-Path $env:DOTNET_HOST_PATH)) {
-      $env:DOTNET_HOST_PATH = "$($env:DOTNET_HOST_PATH).exe"
-    }
-}
-
 if ($vs -or $vscode) {
     . $PSScriptRoot\common\tools.ps1
 

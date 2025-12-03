@@ -136,27 +136,39 @@ module MicrosoftTestingPlatformEntryPoint =
         await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
-        SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
-        SL.Task testingPlatformEntryPoint = generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
-        SL.Message generatedSource = testingPlatformEntryPoint.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("Entrypoint source:"));
-        Assert.AreEqual(expectedEntryPoint.ReplaceLineEndings(), generatedSource.Text.ReplaceLineEndings());
+        SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();
+        Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target");
+        SL.Task[] testingPlatformEntryPointTasks = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask").ToArray();
+        Assert.HasCount(1, testingPlatformEntryPointTasks, "Expected exactly one TestingPlatformEntryPointTask task");
+        SL.Message[] generatedSourceMessages = testingPlatformEntryPointTasks[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Entrypoint source:")).ToArray();
+        Assert.HasCount(1, generatedSourceMessages, "Expected exactly one message containing 'Entrypoint source:'");
+        Assert.AreEqual(expectedEntryPoint.ReplaceLineEndings(), generatedSourceMessages[0].Text.ReplaceLineEndings());
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         Assert.Contains("Passed!", testHostResult.StandardOutput);
 
-        SL.Target coreCompile = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "CoreCompile" && t.Children.Count > 0);
-        SL.Task csc = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).Single();
-        SL.Parameter sources = csc.FindChildrenRecursive<SL.Parameter>(t => t.Name == "Sources").Single();
+        SL.Target[] coreCompileTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "CoreCompile" && t.Children.Count > 0).ToArray();
+        Assert.HasCount(1, coreCompileTargets, "Expected exactly one CoreCompile target with children");
+        SL.Target coreCompile = coreCompileTargets[0];
+        SL.Task[] cscTasks = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).ToArray();
+        Assert.HasCount(1, cscTasks, $"Expected exactly one {cscProcessName} task");
+        SL.Task csc = cscTasks[0];
+        SL.Parameter[] sourcesParameters = csc.FindChildrenRecursive<SL.Parameter>(t => t.Name == "Sources").ToArray();
+        Assert.HasCount(1, sourcesParameters, "Expected exactly one Sources parameter");
+        SL.Parameter sources = sourcesParameters[0];
         string? sourceFilePathInObj = sources.FindChildrenRecursive<SL.Item>(i => i.Text.EndsWith($"MicrosoftTestingPlatformEntryPoint.{languageFileExtension}", StringComparison.OrdinalIgnoreCase)).SingleOrDefault()?.Text;
         Assert.IsNotNull(sourceFilePathInObj);
 
         File.Delete(buildResult.BinlogPath!);
         buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         binLog = SL.Serialization.Read(buildResult.BinlogPath!);
-        generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).Single();
-        Assert.IsNotNull(generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Message>(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).Single());
+        generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).ToArray();
+        Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target with children on rebuild");
+        SL.Message[] skipMessages = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).ToArray();
+        Assert.HasCount(1, skipMessages, "Expected exactly one skip message for up-to-date check");
+        Assert.IsNotNull(skipMessages[0]);
 
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);

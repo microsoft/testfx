@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="EnvironmentVariableNotSet">
         <source>Environment variable '{0}' is not set.</source>
-        <target state="new">Environment variable '{0}' is not set.</target>
+        <target state="translated">Zmienna środowiskowa „{0}” nie jest ustawiona.</target>
         <note />
       </trans-unit>
     </body>

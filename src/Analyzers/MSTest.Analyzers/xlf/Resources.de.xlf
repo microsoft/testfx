@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
@@ -990,7 +990,22 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Assert.Throws darf nur eine einzelne Anweisung/einen einzelnen Ausdruck enthalten</target>
         <note />
       </trans-unit>
-      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="translated">Keine Asserts in Catch-Blöcken verwenden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="translated">Keine Asserts in Catch-Blöcken verwenden, da der Test möglicherweise nicht fehlschlägt, wenn keine Ausnahme ausgelöst wird</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="translated">Die Verwendung von Asserts in Catch-Blöcken ist problematisch, da der Test auch dann erfolgreich ist, wenn keine Ausnahme ausgelöst wird und der Catch-Block nie ausgeführt wird. Verwenden Sie „Assert.Throws“, „Assert.ThrowsExactly“, „Assert.ThrowsAsync“ oder „Assert.ThrowsExactlyAsync“, um zu überprüfen, ob eine Ausnahme ausgelöst wird, und erstellen Sie dann zusätzliche Assertionen für die abgefangene Ausnahme, ohne den „try-catch“-Block zu verwenden.</target>
+        <note />
+      </trans-unit>
+            <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</source>
         <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</target>
         <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
@@ -1005,6 +1020,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
         <note>{Locked="Parallelize","DoNotParallelize"}</note>
       </trans-unit>
+
     </body>
   </file>
 </xliff>

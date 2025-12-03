@@ -253,8 +253,13 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">値 '{0}' は予期される範囲 [{1}, {2}] にありません。 {3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="translated">値 '{0}' は予期される範囲 [{1}..{2}] 内にありません。{3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">最大値は、最小値以上である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

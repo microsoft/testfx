@@ -140,7 +140,9 @@ internal class TypeEnumerator
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
+#if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
+#endif
             Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
         };
 
