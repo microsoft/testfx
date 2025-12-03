@@ -488,7 +488,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool IsExcludedOperator(IMethodSymbol? operatorSymbol, INamedTypeSymbol objectTypeSymbol)
-        // We exclude user-defined operator from analysis. But only if they are "really" user-defined (not from BCL)
+        // We exclude user-defined operators from analysis. But only if they are "really" user-defined (not from BCL)
         => operatorSymbol?.MethodKind == MethodKind.UserDefinedOperator && !IsBCLSymbol(operatorSymbol, objectTypeSymbol);
 
     private static bool IsBCLSymbol(ISymbol symbol, INamedTypeSymbol objectTypeSymbol)
