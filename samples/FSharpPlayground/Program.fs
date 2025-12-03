@@ -6,6 +6,7 @@ namespace FSharpPlayground
 open System
 open System.Reflection
 open Microsoft.Testing.Platform.Builder
+open Microsoft.VisualStudio.TestTools.UnitTesting
 
 module Program =
     [<EntryPoint>]
@@ -13,19 +14,21 @@ module Program =
         // Opt-out telemetry
         Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1")
 
-        async {
-            let! testApplicationBuilder = TestApplication.CreateBuilderAsync(args) |> Async.AwaitTask
+        task {
+            let! testApplicationBuilder = TestApplication.CreateBuilderAsync(args)
 
             // Test MSTest
-            let entryAssembly = Assembly.GetEntryAssembly()
-            if entryAssembly = null then
-                failwith "Entry assembly is null"
+            let entryAssembly =
+                match Assembly.GetEntryAssembly() with
+                | null -> failwith "Entry assembly is null"
+                | assembly -> assembly
             testApplicationBuilder.AddMSTest(fun () -> [| entryAssembly |]) |> ignore
 
             // Build and run the test application
-            let! testApplication = testApplicationBuilder.BuildAsync() |> Async.AwaitTask
+            let! testApplication = testApplicationBuilder.BuildAsync()
             use testApp = testApplication
-            let! result = testApp.RunAsync() |> Async.AwaitTask
+            let! result = testApp.RunAsync()
             return result
         }
+        |> Async.AwaitTask
         |> Async.RunSynchronously
