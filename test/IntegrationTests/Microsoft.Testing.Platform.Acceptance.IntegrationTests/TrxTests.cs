@@ -56,40 +56,25 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task Trx_WhenCrashDumpEnabled_RunningExecutableDirectly_TrxIsGenerated(string tfm)
-    {
-        string fileName = Guid.NewGuid().ToString("N");
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
-            cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-
-        string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
-        string trxContent = File.ReadAllText(trxFile);
-        Assert.Contains("""<ResultSummary outcome="Completed">""", trxContent, trxContent);
-    }
-
-    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
-    [TestMethod]
-    public async Task Trx_WhenCrashDumpEnabled_RunningUnderDotnetTest_TrxIsGenerated(string tfm)
+    public async Task Trx_WhenTestHostCrash_RunningUnderDotnetTest_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
         string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} -- --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            $"test \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: AssetFixture.TargetAssetPath,
+            environmentVariables: new() { { "CRASHPROCESS", "1" } },
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        result.AssertExitCodeIs(ExitCodes.Success);
+        // This should be TestHostProcessExitedNonGracefully instead of GenericFailure. This will likely be fixed by https://github.com/dotnet/sdk/pull/51857
+        result.AssertExitCodeIs(ExitCodes.GenericFailure);
 
         string trxFile = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
-        Assert.Contains("""<ResultSummary outcome="Completed">""", trxContent, trxContent);
+        Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
