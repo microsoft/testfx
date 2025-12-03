@@ -302,10 +302,10 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     // TODO: Recognize 'null == something' (i.e, when null is the left operand)
-    private static bool IsEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
+    private static bool IsEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
-            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -319,10 +319,10 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     // TODO: Recognize 'null != something' (i.e, when null is the left operand)
-    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
+    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
-            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -337,18 +337,19 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static NullCheckStatus RecognizeNullCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         // Note that expressionUnderTest is guaranteed to be non-null when the method returns a value other than NullCheckStatus.Unknown.
         // Given the current nullability attributes, there is no way to express this.
         out SyntaxNode? expressionUnderTest,
         out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (IsIsNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
-            IsEqualsNullBinaryOperator(operation, out expressionUnderTest, out typeOfExpressionUnderTest))
+            IsEqualsNullBinaryOperator(operation, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNull;
         }
         else if (IsIsNotNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
-            IsNotEqualsNullBinaryOperator(operation, out expressionUnderTest, out typeOfExpressionUnderTest))
+            IsNotEqualsNullBinaryOperator(operation, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNotNull;
         }
@@ -358,6 +359,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static EqualityCheckStatus RecognizeEqualityCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? toBecomeExpected,
         out SyntaxNode? toBecomeActual,
         out ITypeSymbol? leftType,
@@ -372,7 +374,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return EqualityCheckStatus.Equals;
         }
         else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1 &&
-            binaryOperation1.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+            !IsExcludedOperator(binaryOperation1.OperatorMethod, objectTypeSymbol))
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation1.RightOperand.Syntax;
@@ -390,7 +392,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return EqualityCheckStatus.NotEquals;
         }
         else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2 &&
-            binaryOperation2.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+            !IsExcludedOperator(binaryOperation2.OperatorMethod, objectTypeSymbol))
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation2.RightOperand.Syntax;
@@ -485,21 +487,29 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return CollectionCheckStatus.Unknown;
     }
 
+    private static bool IsExcludedOperator(IMethodSymbol? operatorSymbol, INamedTypeSymbol objectTypeSymbol)
+        // We exclude user-defined operator from analysis. But only if they are "really" user-defined (not from BCL)
+        => operatorSymbol?.MethodKind == MethodKind.UserDefinedOperator && !IsBCLSymbol(operatorSymbol, objectTypeSymbol);
+
+    private static bool IsBCLSymbol(ISymbol symbol, INamedTypeSymbol objectTypeSymbol)
+        // object is coming from BCL and it's expected to always have a public key.
+        => symbol.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
+            symbol.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
+
     private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
         // Check if the type implements IEnumerable (but is not string)
         => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
             i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable) &&
-            // object is coming from BCL and it's expected to always have a public key.
-            type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
-            type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
+            IsBCLSymbol(type, objectTypeSymbol);
 
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? leftExpression,
         out SyntaxNode? rightExpression)
     {
         if (operation is IBinaryOperation binaryOperation &&
-            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
             leftExpression = binaryOperation.LeftOperand.Syntax;
             rightExpression = binaryOperation.RightOperand.Syntax;
@@ -523,7 +533,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
-        NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
+        NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
 
         // In this code path, we will be suggesting the use of IsNull/IsNotNull.
         // These assert methods only have an "object" overload.
@@ -625,7 +635,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
 
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
-        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
         {
             string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
@@ -686,7 +696,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual, out ITypeSymbol? leftType, out ITypeSymbol? rightType);
+        EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual, out ITypeSymbol? leftType, out ITypeSymbol? rightType);
         if (equalityCheckStatus != EqualityCheckStatus.Unknown &&
             CanUseTypeAsObject(context.Compilation, leftType) &&
             CanUseTypeAsObject(context.Compilation, rightType))
