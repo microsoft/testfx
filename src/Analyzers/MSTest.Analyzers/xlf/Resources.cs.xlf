@@ -1004,7 +1004,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch.</target>
         <note />
       </trans-unit>
-            <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</source>
         <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</target>
         <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>

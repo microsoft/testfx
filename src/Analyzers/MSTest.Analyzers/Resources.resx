@@ -702,7 +702,7 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="[Parallelize]","[DoNotParallelize]"}</comment>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription" xml:space="preserve">
-    <value>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</value>
-    <comment>{Locked="[Parallelize]","[DoNotParallelize]"}</comment>
+    <value>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
   </data>
 </root>

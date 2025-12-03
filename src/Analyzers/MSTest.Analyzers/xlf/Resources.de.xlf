@@ -1005,7 +1005,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Die Verwendung von Asserts in Catch-Blöcken ist problematisch, da der Test auch dann erfolgreich ist, wenn keine Ausnahme ausgelöst wird und der Catch-Block nie ausgeführt wird. Verwenden Sie „Assert.Throws“, „Assert.ThrowsExactly“, „Assert.ThrowsAsync“ oder „Assert.ThrowsExactlyAsync“, um zu überprüfen, ob eine Ausnahme ausgelöst wird, und erstellen Sie dann zusätzliche Assertionen für die abgefangene Ausnahme, ohne den „try-catch“-Block zu verwenden.</target>
         <note />
       </trans-unit>
-            <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</source>
         <target state="new">An assembly should have either [Parallelize] or [DoNotParallelize] attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, [DoNotParallelize] takes precedence and parallelization will be disabled.</target>
         <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
