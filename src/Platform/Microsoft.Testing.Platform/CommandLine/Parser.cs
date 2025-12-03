@@ -12,7 +12,7 @@ internal static class CommandLineParser
     /// Options parser support:
     ///     * Only - and -- prefix for options https://learn.microsoft.com/dotnet/standard/commandline/syntax#options
     ///     * Multiple option arguments https://learn.microsoft.com/dotnet/standard/commandline/syntax#multiple-arguments
-    ///     * Use a space, '=', or ':' as the delimiter between an option name and its argument
+    ///     * Use '=' or ':' as the delimiter between an option name and its argument. See https://learn.microsoft.com/dotnet/standard/commandline/syntax#option-argument-delimiters
     ///     * escape with \
     ///     * surrounding with ""
     ///     * surrounding with ''
@@ -129,7 +129,7 @@ internal static class CommandLineParser
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {
-            (currentOption, currentArg) = arg.IndexOfAny([':', '=', ' ']) switch
+            (currentOption, currentArg) = arg.IndexOfAny([':', '=']) switch
             {
                 -1 => (arg, null),
                 var delimiterIndex => (arg[..delimiterIndex], arg[(delimiterIndex + 1)..]),
