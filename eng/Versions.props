@@ -10,7 +10,7 @@
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>11.0.0-beta.25601.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion>18.3.0-preview.25601.2</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- empty line to avoid merge conflicts for darc PRs to update CC and MSTest+MTP -->
-    <MSTestVersion>4.1.0-preview.25601.5</MSTestVersion>
-    <MicrosoftTestingPlatformVersion>2.1.0-preview.25601.5</MicrosoftTestingPlatformVersion>
+    <MSTestVersion>4.1.0-preview.25602.3</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>2.1.0-preview.25602.3</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
 </Project>
