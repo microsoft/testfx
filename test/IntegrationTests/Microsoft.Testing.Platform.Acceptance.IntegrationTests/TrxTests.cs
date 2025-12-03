@@ -56,6 +56,44 @@ Out of process file artifacts produced:
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Trx_WhenCrashDumpEnabled_RunningExecutableDirectly_TrxIsGenerated(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+
+        string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
+        string trxContent = File.ReadAllText(trxFile);
+        Assert.Contains("""<ResultSummary outcome="Completed">""", trxContent, trxContent);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenCrashDumpEnabled_RunningUnderDotnetTest_TrxIsGenerated(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} -- --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCodes.Success);
+
+        string trxFile = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories).Single();
+        string trxContent = File.ReadAllText(trxFile);
+        Assert.Contains("""<ResultSummary outcome="Completed">""", trxContent, trxContent);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Trx_WhenSkipTest_ItAppearsAsExpectedInsideTheTrx(string tfm)
     {
         string fileName = Guid.NewGuid().ToString("N");
