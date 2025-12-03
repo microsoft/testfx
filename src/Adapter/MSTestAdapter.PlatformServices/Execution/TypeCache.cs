@@ -155,15 +155,6 @@ internal sealed class TypeCache : MarshalByRefObject
             // Load the class type
             Type? type = LoadType(typeName, testMethod.AssemblyName);
 
-            // VSTest managed feature is not working properly and ends up providing names that are not fully
-            // unescaped causing reflection to fail loading. For the cases we know this is happening, we will
-            // try to manually unescape the type name and load the type again.
-            if (type == null
-                && TryGetUnescapedManagedTypeName(testMethod, out string? unescapedTypeName))
-            {
-                type = LoadType(unescapedTypeName, testMethod.AssemblyName);
-            }
-
             if (type == null)
             {
                 // This means the class containing the test method could not be found.
@@ -174,43 +165,6 @@ internal sealed class TypeCache : MarshalByRefObject
             // Get the classInfo
             return @this.CreateClassInfo(type);
         }, (this, testMethod));
-    }
-
-    private static bool TryGetUnescapedManagedTypeName(TestMethod testMethod, [NotNullWhen(true)] out string? unescapedTypeName)
-    {
-        if (testMethod.Hierarchy.Count != 4)
-        {
-            unescapedTypeName = null;
-            return false;
-        }
-
-        StringBuilder unescapedTypeNameBuilder = new();
-        int i = -1;
-        foreach (string? hierarchyPart in testMethod.Hierarchy)
-        {
-            i++;
-            if (i is not 1 and not 2 || hierarchyPart is null)
-            {
-                continue;
-            }
-
-            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart, 1, hierarchyPart.Length - 2);
-            }
-            else
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart);
-            }
-
-            if (i == 1)
-            {
-                unescapedTypeNameBuilder.Append('.');
-            }
-        }
-
-        unescapedTypeName = unescapedTypeNameBuilder.ToString();
-        return unescapedTypeName != testMethod.FullClassName;
     }
 
     /// <summary>
