@@ -13,16 +13,12 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
     private const string AssetName = "Abort";
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_CancellingTests(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
         // Windows API because this gesture is not easy xplat.
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");

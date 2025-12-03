@@ -207,12 +207,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
   <data name="MissingHangDumpMainOption" xml:space="preserve">
     <value>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</value>
   </data>
-  <data name="MutexDoesNotExistErrorMessage" xml:space="preserve">
-    <value>Cannot find mutex '{0}'</value>
-  </data>
-  <data name="MutexNameReceptionTimeoutErrorMessage" xml:space="preserve">
-    <value>Mutex name wasn't received after '{0}' seconds</value>
-  </data>
   <data name="RunningTestsWhileDumping" xml:space="preserve">
     <value>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</value>
   </data>

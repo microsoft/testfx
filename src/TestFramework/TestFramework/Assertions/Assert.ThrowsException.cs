@@ -160,14 +160,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// The message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -177,7 +177,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -193,14 +193,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="messageBuilder">
-    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -210,7 +210,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -240,14 +240,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// The message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -257,7 +257,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -273,14 +273,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="messageBuilder">
-    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -290,7 +290,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -360,14 +360,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// The message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -377,7 +377,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -390,14 +390,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="message">
-    /// The message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// The message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -407,7 +407,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -420,14 +420,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (or derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="messageBuilder">
-    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -437,7 +437,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.
@@ -448,14 +448,14 @@ public sealed partial class Assert
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
-    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throws exception or throws
+    /// (and not of derived type) and throws <c>AssertFailedException</c> if code does not throw exception or throws
     /// exception of type other than <typeparamref name="TException"/>.
     /// </summary>
     /// <param name="action">
     /// Delegate to code to be tested and which is expected to throw exception.
     /// </param>
     /// <param name="messageBuilder">
-    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// A func that takes the thrown Exception (or null if the action didn't throw any exception) to construct the message to include in the exception when <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </param>
     /// <param name="actionExpression">
     /// The syntactic expression of action as given by the compiler via caller argument expression.
@@ -465,7 +465,7 @@ public sealed partial class Assert
     /// The type of exception expected to be thrown.
     /// </typeparam>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="TException"/>.
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="TException"/>.
     /// </exception>
     /// <returns>
     /// The exception that was thrown.

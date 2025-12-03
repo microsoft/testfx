@@ -2,18 +2,21 @@
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="b5658c5f-445d-4074-abca-01ab7ed06549"
-    Publisher="CN=naver"
+    Name="27a818e1-af01-4177-9e34-ad49120c15ed"
+    Publisher="CN=amauryleve"
     Version="1.0.0.0" />
 
+  <mp:PhoneIdentity PhoneProductId="27a818e1-af01-4177-9e34-ad49120c15ed" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
   <Properties>
-    <DisplayName>UnitTest</DisplayName>
-    <PublisherDisplayName>naver</PublisherDisplayName>
+    <DisplayName>MSTestRunnerWinUI</DisplayName>
+    <PublisherDisplayName>amauryleve</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -31,8 +34,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="UnitTest"
-        Description="UnitTest"
+        DisplayName="MSTestRunnerWinUI"
+        Description="MSTestRunnerWinUI"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
