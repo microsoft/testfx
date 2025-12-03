@@ -142,11 +142,6 @@
         <target state="translated">Arguments inattendue {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Argument null inattendu à l’index de recherche{0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">Guillemet simple inattendu dans l’argument : {0}</target>
