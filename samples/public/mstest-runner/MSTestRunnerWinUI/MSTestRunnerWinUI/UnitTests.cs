@@ -1,15 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
-using Windows.UI.Xaml.Controls;
-
-namespace App1;
+namespace MSTestRunnerWinUI;
 
 [TestClass]
-public class UnitTest1
+public partial class UnitTest1
 {
     [TestMethod]
     public void TestMethod1()
@@ -21,8 +20,7 @@ public class UnitTest1
     [UITestMethod]
     public void TestMethod2()
     {
-        Grid grid = new();
-
+        var grid = new Grid();
         Assert.AreEqual(0, grid.MinWidth);
     }
 }
