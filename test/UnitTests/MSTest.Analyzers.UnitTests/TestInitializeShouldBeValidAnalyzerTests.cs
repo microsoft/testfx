@@ -479,6 +479,51 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestInitializeHasComments_CommentsArePreserved()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void {|#0:TestSetup|}(TestContext tc)
+                {
+                    SomeCode();
+
+                    // Some comments;
+                }
+
+                private void SomeCode() { }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void TestSetup()
+                {
+                    SomeCode();
+
+                    // Some comments;
+                }
+
+                private void SomeCode() { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestSetup"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenTestInitializeIsNotOnClass_Diagnostic()
     {
         string code = """

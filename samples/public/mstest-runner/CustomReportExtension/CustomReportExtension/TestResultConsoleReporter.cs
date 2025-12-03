@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 internal sealed class TestResultConsoleReporter :
     // This is the extension point to subscribe to data messages published to the platform.
@@ -51,15 +52,15 @@ internal sealed class TestResultConsoleReporter :
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        PrintMessage($"Closing test session '{sessionUid.Value}'");
+        PrintMessage($"Closing test session '{testSessionContext.SessionUid.Value}'");
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        PrintMessage($"Starting test session '{sessionUid.Value}'");
+        PrintMessage($"Starting test session '{testSessionContext.SessionUid.Value}'");
         return Task.CompletedTask;
     }
 

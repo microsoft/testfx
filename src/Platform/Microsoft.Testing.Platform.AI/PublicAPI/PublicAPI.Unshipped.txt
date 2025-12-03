@@ -1,0 +1,9 @@
+#nullable enable
+[TPEXP]Microsoft.Testing.Platform.AI.ChatClientProviderExtensions
+[TPEXP]static Microsoft.Testing.Platform.AI.ChatClientProviderExtensions.AddChatClientProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.AI.IChatClientProvider!>! chatClientProvider) -> void
+[TPEXP]static Microsoft.Testing.Platform.AI.ChatClientProviderExtensions.GetChatClientAsync(this System.IServiceProvider! serviceProvider, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Extensions.AI.IChatClient?>!
+[TPEXP]Microsoft.Testing.Platform.AI.IChatClientProvider
+[TPEXP]Microsoft.Testing.Platform.AI.IChatClientProvider.CreateChatClientAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Extensions.AI.IChatClient!>!
+[TPEXP]Microsoft.Testing.Platform.AI.IChatClientProvider.HasToolsCapability.get -> bool
+[TPEXP]Microsoft.Testing.Platform.AI.IChatClientProvider.IsAvailable.get -> bool
+[TPEXP]Microsoft.Testing.Platform.AI.IChatClientProvider.ModelName.get -> string!

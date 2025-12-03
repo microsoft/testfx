@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 /// The unit test element.
 /// </summary>
 [Serializable]
-[DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
+[DebuggerDisplay("{TestMethod.DisplayName} ({TestMethod.ManagedTypeName})")]
 internal sealed class UnitTestElement
 {
     private static readonly byte[] OpenParen = [40, 0]; // Encoding.Unicode.GetBytes("(");
@@ -60,25 +60,16 @@ internal sealed class UnitTestElement
     /// </summary>
     public bool DoNotParallelize { get; set; }
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets the deployment items for the test method.
     /// </summary>
     public KeyValuePair<string, string>[]? DeploymentItems { get; set; }
-
-    /// <summary>
-    /// Gets or sets the DisplayName.
-    /// </summary>
-    // TODO: Remove this property and simply use TestMethod.DisplayName
-    public string? DisplayName { get; set; }
+#endif
 
     internal string? DeclaringFilePath { get; set; }
 
     internal int? DeclaringLineNumber { get; set; }
-
-    /// <summary>
-    /// Gets or sets the compiler generated type name for async test method.
-    /// </summary>
-    internal string? AsyncTypeName { get; set; }
 
     /// <summary>
     /// Gets or sets the Work Item Ids for the test method.
@@ -89,6 +80,13 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.Clone();
+        return clone;
+    }
+
+    internal UnitTestElement CloneWithUpdatedSource(string source)
+    {
+        var clone = (UnitTestElement)MemberwiseClone();
+        clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
         return clone;
     }
 
@@ -106,7 +104,7 @@ internal sealed class UnitTestElement
 
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, TestMethod.AssemblyName)
         {
-            DisplayName = GetDisplayName(),
+            DisplayName = TestMethod.DisplayName,
             LocalExtensionData = this,
         };
 
@@ -114,12 +112,9 @@ internal sealed class UnitTestElement
         {
             testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, TestMethod.ManagedTypeName);
             testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, TestMethod.ManagedMethodName);
-            testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.ManagedTypeName);
         }
-        else
-        {
-            testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
-        }
+
+        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
 
         if (TestMethod.ParameterTypes is not null)
         {
@@ -160,11 +155,13 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.WorkItemIdsProperty, WorkItemIds);
         }
 
+#if !WINDOWS_UWP && !WIN_UI
         // The list of items to deploy before running this test.
         if (DeploymentItems is { Length: > 0 })
         {
             testCase.SetPropertyValue(EngineConstants.DeploymentItemsProperty, DeploymentItems);
         }
+#endif
 
         // Set the Do not parallelize state if present
         if (DoNotParallelize)
@@ -287,6 +284,4 @@ internal sealed class UnitTestElement
 #endif
         return guid;
     }
-
-    private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
 }

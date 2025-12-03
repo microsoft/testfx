@@ -16,8 +16,6 @@ using Microsoft.CodeAnalysis.Text;
 
 using MSTest.Analyzers.Helpers;
 
-using Polyfills;
-
 namespace MSTest.Analyzers;
 
 /// <summary>

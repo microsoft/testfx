@@ -29,10 +29,12 @@ internal interface IPlatformServiceProvider
     /// </summary>
     IAdapterTraceLogger AdapterTraceLogger { get; set; }
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
     ITestDeployment TestDeployment { get; }
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service for a Settings Provider.
@@ -47,7 +49,7 @@ internal interface IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    IReflectionOperations2 ReflectionOperations { get; }
+    IReflectionOperations ReflectionOperations { get; }
 
     /// <summary>
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.

@@ -205,13 +205,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação assíncrona): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">Arquivo de diagnóstico (nível "{0}" com liberação de sincronização): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -990,6 +990,16 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">total</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">Um provedor de cliente de chat já foi registrado.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">As extensões de IA só funcionam com construtores do tipo ''Microsoft.Testing.Platform.Builder.TestApplicationBuilder''</target>
         <note />
       </trans-unit>
     </body>

@@ -205,13 +205,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">診斷檔案 (具有非同步排清的層級 '{0}'): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">診斷檔案 (具有同步排清的層級 '{0}'): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -990,6 +990,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">總計</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">聊天用戶端提供者已經註冊。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">AI 延伸模組僅適用於類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器</target>
         <note />
       </trans-unit>
     </body>

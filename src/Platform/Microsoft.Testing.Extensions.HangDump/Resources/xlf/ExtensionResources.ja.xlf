@@ -147,16 +147,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
         <target state="translated">1 つ以上のハング ダンプ パラメーターを指定しましたが、有効にしませんでした。コマンド ラインに --hangdump を追加してください</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">ミューテックス '{0}' が見つかりません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">'{0}' 秒後にミューテックス名が受信されませんでした</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">ダンプの取得時に次のテストがまだ実行されていました (形式: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
