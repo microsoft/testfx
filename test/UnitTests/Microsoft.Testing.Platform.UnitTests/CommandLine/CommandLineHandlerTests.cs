@@ -98,7 +98,7 @@ public sealed class CommandLineHandlerTests
     public async Task ParseAndValidateAsync_InvalidArgumentArity_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--help arg"];
+        string[] args = ["--help", "arg"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
