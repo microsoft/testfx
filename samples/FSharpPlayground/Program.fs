@@ -17,7 +17,10 @@ module Program =
             let! testApplicationBuilder = TestApplication.CreateBuilderAsync(args) |> Async.AwaitTask
 
             // Test MSTest
-            testApplicationBuilder.AddMSTest(fun () -> [| Assembly.GetEntryAssembly() |]) |> ignore
+            let entryAssembly = Assembly.GetEntryAssembly()
+            if entryAssembly = null then
+                failwith "Entry assembly is null"
+            testApplicationBuilder.AddMSTest(fun () -> [| entryAssembly |]) |> ignore
 
             // Build and run the test application
             let! testApplication = testApplicationBuilder.BuildAsync() |> Async.AwaitTask
