@@ -3000,7 +3000,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenUsingIsFalseWhereAnyWithPredicate_SuggestsDoesNotContain()
     {
         string code = """
-            
             using System.Collections.Generic;
             using System.Linq;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -3218,7 +3217,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     {|#0:Assert.IsNotNull(enumerable.SingleOrDefault(x => x == 1))|};
                 }
             }
-        
             """;
 
         string fixedCode = """
@@ -3262,7 +3260,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     {|#0:Assert.IsNotNull(enumerable.Single(x => x == 1))|};
                 }
             }
-        
             """;
 
         string fixedCode = """
@@ -3280,7 +3277,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     Assert.ContainsSingle(x => x == 1, enumerable);
                 }
             }
-        
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
@@ -3352,7 +3348,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     {|#0:Assert.IsNotNull(enumerable.Where(x => x == 1).Single())|};
                 }
             }
-        
             """;
 
         string fixedCode = """
@@ -3370,7 +3365,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     Assert.ContainsSingle(x => x == 1, enumerable);
                 }
             }
-        
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
@@ -3397,7 +3391,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     {|#0:Assert.IsNull(enumerable.SingleOrDefault(x => x == 1))|};
                 }
             }
-        
             """;
 
         string fixedCode = """
@@ -3415,7 +3408,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     Assert.DoesNotContain(x => x == 1, enumerable);
                 }
             }
-        
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
@@ -3442,7 +3434,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     {|#0:Assert.IsNull(enumerable.Where(x => x == 1).SingleOrDefault())|};
                 }
             }
-        
             """;
 
         string fixedCode = """
@@ -3460,7 +3451,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     Assert.DoesNotContain(x => x == 1, enumerable);
                 }
             }
-        
             """;
 
         await VerifyCS.VerifyCodeFixAsync(
