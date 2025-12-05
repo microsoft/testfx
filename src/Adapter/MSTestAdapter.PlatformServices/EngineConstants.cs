@@ -140,7 +140,6 @@ internal static class EngineConstants
     /// These Property names should not be localized.
     /// </summary>
     private const string TestClassNameLabel = "ClassName";
-    private const string DeclaringClassNameLabel = "DeclaringClassName";
     private const string TestCategoryLabel = "TestCategory";
     private const string PriorityLabel = "Priority";
 #if !WINDOWS_UWP && !WIN_UI
