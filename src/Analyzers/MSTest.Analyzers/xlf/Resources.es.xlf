@@ -1012,7 +1012,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
         <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
         <target state="new">Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</target>
-        <note>{Locked="[Parallelize]","[DoNotParallelize]"}</note>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
         <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
