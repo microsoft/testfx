@@ -80,7 +80,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             nameof(ExecutableNode_ThatThrows_ShouldReportError), lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
         TimingProperty timingProperty = lastNode.Properties.Single<TimingProperty>();
         Assert.AreEqual(fakeClock.UsedTimes[0], timingProperty.GlobalTiming.StartTime);
-        Assert.IsTrue(timingProperty.GlobalTiming.StartTime <= timingProperty.GlobalTiming.EndTime, "start time is before (or the same as) stop time");
+        Assert.IsLessThanOrEqualTo(timingProperty.GlobalTiming.EndTime, timingProperty.GlobalTiming.StartTime, "start time is before (or the same as) stop time");
         Assert.AreEqual(fakeClock.UsedTimes[1], timingProperty.GlobalTiming.EndTime);
         Assert.IsGreaterThan(0, timingProperty.GlobalTiming.Duration.TotalMilliseconds, $"duration should be greater than 0");
     }
