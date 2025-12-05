@@ -207,4 +207,7 @@
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
   </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute</value>
+  </data>
 </root>

@@ -693,4 +693,13 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
     <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
   </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
+    <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
+  </data>
 </root>
