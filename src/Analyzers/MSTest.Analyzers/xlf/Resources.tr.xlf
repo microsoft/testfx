@@ -1019,7 +1019,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
         <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
         <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
-        <note>{Locked="Parallelize","DoNotParallelize"}</note>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
     </body>
   </file>
