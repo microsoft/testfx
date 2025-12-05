@@ -45,10 +45,13 @@ public class TestPropertyAttributeTests : TestContainer
     private static TestContextImplementation CreateTestContextImplementationForMethod(TestMethod testMethod)
         => new(testMethod, null, new Dictionary<string, object?>(), null, null);
 
+    private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
+        => new(className, methodName, null, methodName, className, assemblyName, displayName, null);
+
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
         string className = typeof(DummyTestClassBase).FullName!;
-        var testMethod = new TestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
+        TestMethod testMethod = CreateTestMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
 
         TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
@@ -78,7 +81,7 @@ public class TestPropertyAttributeTests : TestContainer
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsTestMethod()
     {
         string className = typeof(DummyTestClassDerived).FullName!;
-        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
+        TestMethod testMethod = CreateTestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
 
         TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 
@@ -123,7 +126,7 @@ public class TestPropertyAttributeTests : TestContainer
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsNotTestMethod()
     {
         string className = typeof(DummyTestClassDerived).FullName!;
-        var testMethod = new TestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
+        TestMethod testMethod = CreateTestMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase), className, typeof(DummyTestClassBase).Assembly.GetName().Name!, displayName: null);
 
         TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
 

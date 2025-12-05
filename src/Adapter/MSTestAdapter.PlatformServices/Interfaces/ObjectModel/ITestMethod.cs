@@ -21,13 +21,6 @@ internal interface ITestMethod
     string FullClassName { get; }
 
     /// <summary>
-    /// Gets the declaring class full name. This will be used while getting navigation data.
-    /// This will be null if AssemblyName is same as DeclaringAssemblyName.
-    /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
-    /// </summary>
-    string? DeclaringClassFullName { get; }
-
-    /// <summary>
     /// Gets the name of the test assembly.
     /// </summary>
     string AssemblyName { get; }

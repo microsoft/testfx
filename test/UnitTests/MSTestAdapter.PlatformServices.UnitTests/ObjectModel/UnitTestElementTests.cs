@@ -77,19 +77,6 @@ public class UnitTestElementTests : TestContainer
         (testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string).Should().Be("C");
     }
 
-    public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
-    {
-        _testMethod.DeclaringClassFullName = null;
-        var testCase = _unitTestElement.ToTestCase();
-
-        testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty).Should().BeNull();
-
-        _testMethod.DeclaringClassFullName = "DC";
-        testCase = _unitTestElement.ToTestCase();
-
-        (testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) as string).Should().Be("DC");
-    }
-
     public void ToTestCaseShouldSetTestCategoryIfPresent()
     {
         _unitTestElement.TestCategory = null;

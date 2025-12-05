@@ -669,7 +669,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
             ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
-            : GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo, discoverInternals);
+            : throw new UnreachableException();
 
         // if correct method is not found, throw appropriate
         // exception about what is wrong.
@@ -715,37 +715,6 @@ internal sealed class TypeCache : MarshalByRefObject
             || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
             ? null
             : testMethodInfo;
-    }
-
-    private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
-    {
-        // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
-        // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
-        // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
-        // Note: This whole GetMethodInfoUsingRuntimeMethods is likely never reachable.
-        // It's called if HasManagedMethodAndTypeProperties is false, but it should always be true per the current implementation.
-        if (testMethod.MethodInfo is { } methodInfo)
-        {
-            return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
-        }
-
-        IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
-            .Where(method => method.Name == testMethod.Name &&
-                             method.HasCorrectTestMethodSignature(true, discoverInternals));
-
-        if (testMethod.DeclaringClassFullName == null)
-        {
-            // Either the declaring class is the same as the test class, or
-            // the declaring class information wasn't passed in the test case.
-            // Prioritize the former while maintaining previous behavior for the latter.
-            string? className = testClassInfo.ClassType.FullName;
-            return methods
-                .OrderByDescending(method => method.DeclaringType!.FullName == className)
-                .FirstOrDefault();
-        }
-
-        // Only find methods that match the given declaring name.
-        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
     }
 
     /// <summary>

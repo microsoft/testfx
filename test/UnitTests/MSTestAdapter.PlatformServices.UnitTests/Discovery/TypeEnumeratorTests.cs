@@ -207,9 +207,6 @@ public partial class TypeEnumeratorTests : TestContainer
 
         // DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.
         tests.Where(t => t.TestMethod.Name == "DerivedTestMethod").Should().HaveCount(1);
-
-        // DummyHidingTestClass hides BaseTestMethod so declaring class should not be the base class
-        tests.Should().NotContain(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName);
     }
 
     public void GetTestsShouldReturnOverriddenTestMethods()
@@ -226,12 +223,6 @@ public partial class TypeEnumeratorTests : TestContainer
 
         // DummyOverridingTestClass overrides DerivedTestMethod directly so it should always be discovered.
         tests.Where(t => t.TestMethod.Name == "DerivedTestMethod").Should().HaveCount(1);
-
-        // DummyOverridingTestClass inherits BaseTestMethod from DummyHidingTestClass specifically.
-        tests.Single(t => t.TestMethod.Name == "BaseTestMethod").TestMethod.DeclaringClassFullName.Should().Be(typeof(DummyHidingTestClass).FullName);
-
-        // DummyOverridingTestClass overrides DerivedTestMethod so is the declaring class.
-        tests.Single(t => t.TestMethod.Name == "DerivedTestMethod").TestMethod.DeclaringClassFullName.Should().BeNull();
     }
 
     public void GetTestsShouldNotReturnHiddenTestMethodsFromAnyLevel()
@@ -248,15 +239,6 @@ public partial class TypeEnumeratorTests : TestContainer
 
         // DummySecondHidingTestClass hides DerivedTestMethod so it should be discovered.
         tests.Where(t => t.TestMethod.Name == "DerivedTestMethod").Should().HaveCount(1);
-
-        // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
-        tests.Should().NotContain(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName);
-
-        // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
-        tests.Should().NotContain(t => t.TestMethod.DeclaringClassFullName == typeof(DummyHidingTestClass).FullName);
-
-        // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
-        tests.Should().NotContain(t => t.TestMethod.DeclaringClassFullName == typeof(DummyOverridingTestClass).FullName);
     }
 
     #endregion
