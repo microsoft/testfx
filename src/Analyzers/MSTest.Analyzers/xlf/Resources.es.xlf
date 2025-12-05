@@ -1017,7 +1017,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
         <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
         <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
-        <note>{Locked="Parallelize","DoNotParallelize"}</note>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
     </body>
   </file>
