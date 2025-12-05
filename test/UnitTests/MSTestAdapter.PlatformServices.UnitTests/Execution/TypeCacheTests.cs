@@ -1496,6 +1496,7 @@ public class TypeCacheTests : TestContainer
         }
     }
 
+    [DummyTestClass]
     internal class BaseTestClass
     {
         [TestMethod]
