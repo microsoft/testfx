@@ -824,7 +824,7 @@ public class TestExecutionManagerTests : TestContainer
     private static TestCase GetTestCase(Type typeOfClass, string testName)
     {
         MethodInfo methodInfo = typeOfClass.GetMethod(testName)!;
-        var testMethod = new TestMethod(typeOfClass.FullName!, methodInfo.Name, hierarchyValues: null, methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().Location, displayName: null, null);
+        var testMethod = new TestMethod(typeOfClass.FullName!, methodInfo.Name, hierarchyValues: null, methodInfo.Name, typeOfClass.FullName!, Assembly.GetExecutingAssembly().Location, displayName: null, null);
         UnitTestElement element = new(testMethod);
         return element.ToTestCase();
     }
