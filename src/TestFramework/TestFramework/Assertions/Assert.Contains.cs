@@ -121,19 +121,20 @@ public sealed partial class Assert
     /// </param>
     /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        int actualCount = collection.Count();
-        if (actualCount == 1)
-        {
-            return collection.First();
-        }
+        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertContainsSingleFailed(actualCount, userMessage);
-
-        // Unreachable code but compiler cannot work it out
-        return default;
-    }
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item.</returns>
+    public static object ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
@@ -161,11 +162,77 @@ public sealed partial class Assert
             return matchingElements[0];
         }
 
-        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-        ThrowAssertSingleMatchFailed(actualCount, userMessage);
+        if (string.IsNullOrEmpty(predicateExpression))
+        {
+            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+            ThrowAssertContainsSingleFailed(actualCount, userMessage);
+        }
+        else
+        {
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(actualCount, userMessage);
+        }
 
         // Unreachable code but compiler cannot work it out
         return default;
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static object ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        object? firstMatch = null;
+        int matchCount = 0;
+
+        foreach (object? item in collection)
+        {
+            if (predicate(item))
+            {
+                if (matchCount == 0)
+                {
+                    firstMatch = item;
+                }
+
+                matchCount++;
+
+                // Early exit optimization - no need to continue if we already have more than one match
+                if (matchCount > 1)
+                {
+                    break;
+                }
+            }
+        }
+
+        if (matchCount == 1)
+        {
+            return firstMatch!;
+        }
+
+        if (string.IsNullOrEmpty(predicateExpression))
+        {
+            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+            ThrowAssertContainsSingleFailed(matchCount, userMessage);
+        }
+        else
+        {
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(matchCount, userMessage);
+        }
+
+        return default!;
     }
 
     #endregion // ContainsSingle
