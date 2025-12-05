@@ -1218,7 +1218,7 @@ public class TypeCacheTests : TestContainer
         Type baseType = typeof(BaseTestClass);
         Type type = typeof(DerivedTestClass);
         MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", [])!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, baseType.FullName!, "A", displayName: null);
         testMethod.DeclaringClassFullName = baseType.FullName!;
 
         _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
