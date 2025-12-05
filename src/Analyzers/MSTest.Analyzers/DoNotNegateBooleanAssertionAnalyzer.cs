@@ -23,6 +23,8 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Title = new(nameof(Resources.DoNotNegateBooleanAssertionTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DoNotNegateBooleanAssertionMessageFormat), Resources.ResourceManager, typeof(Resources));
 
+    internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
+
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.DoNotNegateBooleanAssertionRuleId,
         Title,
@@ -64,7 +66,22 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
         if (conditionArgument != null
             && conditionArgument.Value.WalkDownConversion() is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not })
         {
-            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+            // Determine the proper assert method name (swap IsTrue <-> IsFalse)
+            string currentMethodName = invocationOperation.TargetMethod.Name;
+            string properAssertMethodName = currentMethodName == "IsTrue" ? "IsFalse" : "IsTrue";
+
+            // Add the proper method name to diagnostic properties for the code fix
+            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+            properties.Add(ProperAssertMethodNameKey, properAssertMethodName);
+
+            Location? conditionArgumentLocation = conditionArgument.Syntax.GetLocation();
+            var additionalLocations = ImmutableArray.Create(conditionArgumentLocation);
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                 Rule,
+                 invocationOperation.Syntax.GetLocation(),
+                 additionalLocations: additionalLocations,
+                 properties: properties.ToImmutable()));
         }
     }
 }

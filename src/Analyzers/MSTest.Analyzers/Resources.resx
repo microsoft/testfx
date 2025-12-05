@@ -684,6 +684,12 @@ The type declaring these methods should also respect the following rules:
   <data name="IgnoreStringMethodReturnValueDescription" xml:space="preserve">
     <value>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</value>
   </data>
+  <data name="DoNotNegateBooleanAssertionFix" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead</value>
+  </data>
+  <data name="DoNotNegateBooleanAssertionFixAllTitle" xml:space="preserve">
+    <value>Use proper Assert methods for all negated assertions</value>
+  </data>
   <data name="AvoidAssertsInCatchBlocksTitle" xml:space="preserve">
     <value>Do not use asserts in catch blocks</value>
   </data>
