@@ -99,11 +99,6 @@ internal static class TestCaseExtensions
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
         }
 
-        if (testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)
-        {
-            testMethod.DeclaringClassFullName = declaringClassName;
-        }
-
         UnitTestElement testElement = new(testMethod)
         {
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],

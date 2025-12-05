@@ -109,7 +109,7 @@ internal class TypeEnumerator
         return [.. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())];
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.MethodInfo!.DeclaringType!.FullName!]).First())];
     }
 
     /// <summary>
@@ -129,11 +129,6 @@ internal class TypeEnumerator
         {
             MethodInfo = method,
         };
-
-        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
-        {
-            testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
-        }
 
         var testElement = new UnitTestElement(testMethod)
         {
