@@ -817,49 +817,40 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
         // Special-case: enumerable.Count(predicate) > 0 → Assert.Contains(predicate, enumerable)
         if (conditionArgument is IBinaryOperation binaryOp &&
-            binaryOp.OperatorKind == BinaryOperatorKind.GreaterThan)
+            binaryOp.OperatorKind == BinaryOperatorKind.GreaterThan &&
+            binaryOp.RightOperand.ConstantValue.HasValue &&
+            binaryOp.RightOperand.ConstantValue.Value is int intValue &&
+            intValue == 0)
         {
-            if (binaryOp.LeftOperand is IInvocationOperation countInvocation &&
-                binaryOp.RightOperand.ConstantValue.HasValue &&
-                binaryOp.RightOperand.ConstantValue.Value is int intValue &&
-                intValue == 0 &&
-                countInvocation.TargetMethod.Name == "Count")
+            // Use RecognizeLinqPredicateCheck to properly validate LINQ Count method
+            LinqPredicateCheckStatus countLinqStatus = RecognizeLinqPredicateCheck(
+                binaryOp.LeftOperand,
+                out SyntaxNode? countCollectionExpr,
+                out SyntaxNode? countPredicateExpr,
+                out _);
+
+            if ((countLinqStatus is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount) &&
+                countCollectionExpr != null &&
+                countPredicateExpr != null)
             {
-                SyntaxNode? countCollectionExpr = null;
-                SyntaxNode? countPredicateExpr = null;
+                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 
-                if (countInvocation.Instance != null && countInvocation.Arguments.Length == 1)
-                {
-                    countCollectionExpr = countInvocation.Instance.Syntax;
-                    countPredicateExpr = countInvocation.Arguments[0].Value.Syntax;
-                }
-                else if (countInvocation.Instance == null && countInvocation.Arguments.Length == 2)
-                {
-                    countCollectionExpr = countInvocation.Arguments[0].Value.Syntax;
-                    countPredicateExpr = countInvocation.Arguments[1].Value.Syntax;
-                }
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
 
-                if (countCollectionExpr != null && countPredicateExpr != null)
-                {
-                    string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+                context.ReportDiagnostic(
+                    context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(
+                            conditionArgument.Syntax.GetLocation(),
+                            countPredicateExpr.GetLocation(),
+                            countCollectionExpr.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        isTrueInvocation ? "IsTrue" : "IsFalse"));
 
-                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
-
-                    context.ReportDiagnostic(
-                        context.Operation.CreateDiagnostic(
-                            Rule,
-                            additionalLocations: ImmutableArray.Create(
-                                conditionArgument.Syntax.GetLocation(),
-                                countPredicateExpr.GetLocation(),
-                                countCollectionExpr.GetLocation()),
-                            properties: properties.ToImmutable(),
-                            properAssertMethod,
-                            isTrueInvocation ? "IsTrue" : "IsFalse"));
-
-                    return;
-                }
+                return;
             }
         }
 
