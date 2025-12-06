@@ -394,11 +394,7 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) < 0)
-#else
         if (!value.Contains(substring, comparisonType))
-#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
@@ -626,11 +622,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) >= 0)
-#else
         if (value.Contains(substring, comparisonType))
-#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
