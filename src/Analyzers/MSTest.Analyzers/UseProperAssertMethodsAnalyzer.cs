@@ -132,10 +132,6 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         Count,
         WhereAny,
         WhereCount,
-        Single,
-        SingleOrDefault,
-        WhereSingle,
-        WhereSingleOrDefault,
     }
 
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
@@ -281,56 +277,6 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             case "AreNotEqual":
                 AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol);
                 break;
-            case "IsNull":
-                AnalyzeIsNullOrIsNotNullInvocation(context, firstArgument, isNullCheck: true);
-                break;
-
-            case "IsNotNull":
-                AnalyzeIsNullOrIsNotNullInvocation(context, firstArgument, isNullCheck: false);
-                break;
-        }
-    }
-
-    private static void AnalyzeIsNullOrIsNotNullInvocation(OperationAnalysisContext context, IOperation argument, bool isNullCheck)
-    {
-        RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
-
-        // Check for Single/SingleOrDefault patterns
-        LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
-            argument,
-            out SyntaxNode? linqCollectionExpr,
-            out SyntaxNode? predicateExpr,
-            out _);
-
-        if ((linqStatus is LinqPredicateCheckStatus.Single or
-                         LinqPredicateCheckStatus.SingleOrDefault or
-                         LinqPredicateCheckStatus.WhereSingle or
-                         LinqPredicateCheckStatus.WhereSingleOrDefault) &&
-            linqCollectionExpr != null)
-        {
-            // For Assert.IsNotNull(enumerable.Single[OrDefault](...)) -> Assert.ContainsSingle
-            // For Assert.IsNull(enumerable.Single[OrDefault](...)) -> Assert.DoesNotContain
-            string properAssertMethod = isNullCheck ? "DoesNotContain" : "ContainsSingle";
-
-            ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
-            properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-            properties.Add(CodeFixModeKey, predicateExpr != null ? CodeFixModeAddArgument : CodeFixModeSimple);
-
-            ImmutableArray<Location> additionalLocations = predicateExpr != null
-                ? ImmutableArray.Create(
-                    argument.Syntax.GetLocation(),
-                    predicateExpr.GetLocation(),
-                    linqCollectionExpr.GetLocation())
-                : ImmutableArray.Create(
-                    argument.Syntax.GetLocation(),
-                    linqCollectionExpr.GetLocation());
-
-            context.ReportDiagnostic(context.Operation.CreateDiagnostic(
-                Rule,
-                additionalLocations: additionalLocations,
-                properties: properties.ToImmutable(),
-                properAssertMethod,
-                isNullCheck ? "IsNull" : "IsNotNull"));
         }
     }
 
@@ -628,16 +574,6 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 countOperation = operation;
                 return LinqPredicateCheckStatus.WhereCount;
             }
-
-            if (TryMatchWherePattern(invocation, "Single", out collectionExpression, out predicateExpression))
-            {
-                return LinqPredicateCheckStatus.WhereSingle;
-            }
-
-            if (TryMatchWherePattern(invocation, "SingleOrDefault", out collectionExpression, out predicateExpression))
-            {
-                return LinqPredicateCheckStatus.WhereSingleOrDefault;
-            }
         }
 
         // Check for direct Method(predicate) patterns
@@ -656,22 +592,6 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 {
                     countOperation = operation;
                     return LinqPredicateCheckStatus.Count;
-                }
-
-                break;
-
-            case "Single":
-                if (TryMatchLinqMethod(invocation, "Single", out collectionExpression, out predicateExpression))
-                {
-                    return LinqPredicateCheckStatus.Single;
-                }
-
-                break;
-
-            case "SingleOrDefault":
-                if (TryMatchLinqMethod(invocation, "SingleOrDefault", out collectionExpression, out predicateExpression))
-                {
-                    return LinqPredicateCheckStatus.SingleOrDefault;
                 }
 
                 break;
