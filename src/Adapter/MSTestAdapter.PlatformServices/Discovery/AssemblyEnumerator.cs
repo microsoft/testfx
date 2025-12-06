@@ -42,7 +42,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="settings">The settings for the session.</param>
     /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
-    public AssemblyEnumerator(MSTestSettings settings) =>
+    public AssemblyEnumerator(MSTestSettings? settings) =>
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
