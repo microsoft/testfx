@@ -327,7 +327,7 @@ internal
 #endif
     Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
-        if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
+        if (searchDirectorypaths.Count == 0)
         {
             return null;
         }
