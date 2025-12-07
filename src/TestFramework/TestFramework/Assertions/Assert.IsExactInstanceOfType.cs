@@ -395,7 +395,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="IsNotExactInstanceOfType{T}(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNotExactInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotExactInstanceOfType<T>(object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion(valueExpression);
 
