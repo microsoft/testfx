@@ -371,4 +371,22 @@ public class TestContextImplementationTests : TestContainer
         _ = testContextImplementation.GetErr();
         t.Join();
     }
+
+    public void AccessingNonExistentPropertyShouldReturnNull()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        // Accessing a non-existent property through GetProperty should return null, not throw
+        // This tests the behavior that was broken in 4.x and needs to be preserved for backwards compatibility
+#if !WINDOWS_UWP && !WIN_UI
+        string? testRunDirectory = _testContextImplementation.TestRunDirectory;
+        testRunDirectory.Should().BeNull();
+
+        string? deploymentDirectory = _testContextImplementation.DeploymentDirectory;
+        deploymentDirectory.Should().BeNull();
+
+        string? resultsDirectory = _testContextImplementation.ResultsDirectory;
+        resultsDirectory.Should().BeNull();
+#endif
+    }
 }
