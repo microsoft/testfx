@@ -2909,6 +2909,298 @@ public sealed class UseProperAssertMethodsAnalyzerTests
 
     #endregion
 
+    #region Predicate Pattern Tests
+    [TestMethod]
+    public async Task WhenUsingIsTrueAnyWithPredicate_SuggestsContains()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsTrue(enumerable.Any(x => x == 1))|};
+                }
+            }
+            
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.Contains(x => x == 1, enumerable);
+                }
+            }
+            
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueWhereAnyWithPredicate_SuggestsContains()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsTrue(enumerable.Where(x => x == 1).Any())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.Contains(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseWhereAnyWithPredicate_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Where(x => x == 1).Any())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseWithAny_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Any(x => x == 1))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+           fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseWithWhereAny_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Where(x => x == 1).Any())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueCountGreaterThanZero_SuggestsContains()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsTrue(enumerable.Count(x => x == 1) > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.Contains(x => x == 1, enumerable);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseCountGreaterThanZero_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Count(x => x == 1) > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    #endregion
+
     #region BCL Types with IComparable Tests
 
     [TestMethod]
