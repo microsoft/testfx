@@ -30,13 +30,21 @@ internal sealed class TestMethod : ITestMethod
     /// <param name="fullClassName">The full name of the class declaring the method.</param>
     /// <param name="assemblyName">The full assembly name.</param>
     /// <param name="displayName">The display name of the test method.</param>
+    // This constructor is used in testing only, and we should remove it in the future and update the tests.
     internal TestMethod(string name, string fullClassName, string assemblyName, string? displayName)
-        : this(null, null, null, name, fullClassName, assemblyName, displayName, null)
+        : this(fullClassName, null, null, name, fullClassName, assemblyName, displayName, null)
     {
     }
 
-    internal TestMethod(string? managedTypeName, string? managedMethodName, string?[]? hierarchyValues, string name,
-        string fullClassName, string assemblyName, string? displayName, string? parameterTypes)
+    internal TestMethod(
+        string? managedTypeName,
+        string? managedMethodName,
+        string?[]? hierarchyValues,
+        string name,
+        string fullClassName,
+        string assemblyName,
+        string? displayName,
+        string? parameterTypes)
     {
         Guard.NotNullOrWhiteSpace(assemblyName);
 

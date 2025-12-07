@@ -667,7 +667,7 @@ public partial class AssertTests : TestContainer
 
     public void That_NonGenericCollectionInComparison_FormatsCorrectly()
     {
-        // Arrange - Using ArrayList in a comparison to trigger FormatValue on line 421
+        // Arrange - Using ArrayList in a comparison to trigger FormatValue that formats enumerables
         var arrayList = new ArrayList { 1, 2, 3 };
         int[] expectedItems = [1, 2, 3, 4];
 

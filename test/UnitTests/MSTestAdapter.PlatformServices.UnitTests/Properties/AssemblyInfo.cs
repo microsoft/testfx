@@ -10,8 +10,8 @@ using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 #endif
 
 #if NETCOREAPP
-using MSTestAdapter.PlatformServices.Tests.Services;
-using MSTestAdapter.PlatformServices.Tests.Utilities;
+using MSTestAdapter.PlatformServices.UnitTests.Services;
+using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 [assembly: ReflectionUtilityTests.DummyA("a1")]
 [assembly: ReflectionUtilityTests.DummyA("a2")]

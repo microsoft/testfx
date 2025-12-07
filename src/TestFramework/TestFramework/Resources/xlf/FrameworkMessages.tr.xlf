@@ -257,8 +257,13 @@ Full Actual: {4}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">'{0}' değeri beklenen aralıkta [{1}, {2}] değil. {3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="translated">Değer '{0}' beklenen aralık [{1}..{2}] içinde değil. {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">En büyük değer en küçük değerden büyük veya buna eşit olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

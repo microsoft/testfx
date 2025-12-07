@@ -257,8 +257,13 @@ Full Actual: {4}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">值“{0}”不在预期范围 [{1}, {2}] 内。{3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="translated">值 "{0}" 不在预期范围 [{1}..{2}] 内。{3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">最大值必须大于或等于最小值。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">

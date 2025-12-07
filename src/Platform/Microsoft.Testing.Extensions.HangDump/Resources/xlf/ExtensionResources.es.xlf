@@ -147,16 +147,6 @@ Las opciones válidas son 'Mini', 'Heap', 'Triage' (solo disponible en .NET 6+)
         <target state="translated">Ha especificado uno o varios parámetros de volcado de memoria, pero no los ha habilitado. Agregue --hangdump a la línea de comandos.</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">No se encuentra la exclusión mutua '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">No se recibió el nombre de exclusión mutua después de '{0}' segundos</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">Las siguientes pruebas aún se estaban ejecutando cuando se realizó el volcado (formato: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>

@@ -142,11 +142,6 @@
         <target state="translated">Arguments inattendue {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Argument null inattendu à l’index de recherche{0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">Guillemet simple inattendu dans l’argument : {0}</target>
@@ -205,13 +200,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Fichier de diagnostic (niveau « {0} » avec vidage asynchrone) : {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">Fichier de diagnostic (niveau « {0} » avec vidage synchrone) : {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -990,6 +985,16 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">total</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">Un fournisseur de client de messagerie instantanée a déjà été enregistré.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">Les extensions IA fonctionnent uniquement avec des générateurs de type « Microsoft.Testing.Platform.Builder.TestApplicationBuilder »</target>
         <note />
       </trans-unit>
     </body>

@@ -142,11 +142,6 @@
         <target state="translated">Neočekávaný argument {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Neočekávaný argument null v indexu {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0}</target>
@@ -205,13 +200,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">Diagnostický soubor (úroveň {0} s asynchronním vyprázdněním): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">Diagnostický soubor (úroveň {0} se synchronním vyprázdněním): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -990,6 +985,16 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">celkem</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">Zprostředkovatel klienta chatu již byl zaregistrován.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">Rozšíření AI fungují jenom s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
         <note />
       </trans-unit>
     </body>

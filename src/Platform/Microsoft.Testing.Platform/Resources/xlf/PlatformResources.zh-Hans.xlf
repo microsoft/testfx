@@ -142,11 +142,6 @@
         <target state="translated">意外的参数 {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">索引 {0} 处出现意外 null 参数</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">参数中出现意外的单引号: {0}</target>
@@ -205,13 +200,13 @@
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
         <target state="translated">诊断文件(具有异步刷新的级别“{0}”): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
         <target state="translated">诊断文件(具有同步刷新的级别“{0}”): {1}</target>
-        <note>0 level such as verbose, 
+        <note>0 level such as verbose,
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
@@ -990,6 +985,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="TotalLowercase">
         <source>total</source>
         <target state="translated">总计</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">聊天客户端提供程序已被注册。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">AI 扩展仅适用于 "Microsoft.Testing.Platform.Builder.TestApplicationBuilder" 类型的生成器</target>
         <note />
       </trans-unit>
     </body>

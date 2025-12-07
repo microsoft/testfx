@@ -21,14 +21,10 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -44,14 +40,10 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnNonWindows_ThreadIsNotSTAAndWarningIsEmitted(string tfm)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -81,15 +73,11 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_ThreadIsSTA(string tfm)
     {
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
@@ -103,15 +91,11 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestMethodThreading_MainIsSTAThread_OnWindows_RunsettingsAsksForSTA_ThreadIsSTA(string tfm)
     {
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -124,15 +108,11 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestMethodThreading_MainIsSTAThread_OnWindows_RunsettingsAsksForMTA_ThreadIsMTA(string tfm)
     {
         // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -145,14 +125,10 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesVoidThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.LifecycleAttributesVoidProjectPath, TestAssetFixture.LifecycleAttributesVoidProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -165,14 +141,10 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.LifecycleAttributesTaskProjectPath, TestAssetFixture.LifecycleAttributesTaskProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -185,14 +157,10 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA_With_ParallelAttribute(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.LifecycleWithParallelAttributesTaskProjectNamePath, TestAssetFixture.LifecycleAttributesTaskProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -205,14 +173,10 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesValueTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.LifecycleAttributesValueTaskProjectPath, TestAssetFixture.LifecycleAttributesValueTaskProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()

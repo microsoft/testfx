@@ -206,7 +206,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            if (!_bannerDisplayed)
+            if (!_bannerDisplayed && !_isServerMode)
             {
                 // skip the banner for the children processes
                 _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
@@ -394,7 +394,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
                 string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
                 string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
@@ -460,7 +460,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              standardError);
                         break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
+#pragma warning restore CS0618 // Type or member is obsolete
                         _terminalTestReporter.TestCompleted(
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,

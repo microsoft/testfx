@@ -8,8 +8,7 @@ trigger:
 pr:
   branches:
     include:
-    - main
-    - rel/*
+    - "*"
   paths:
     exclude:
       - .github/*
@@ -21,7 +20,6 @@ pr:
       - CONTRIBUTING.md
       - README.md
       - SECURITY.md
-      - src/**/*.xlf
       - azure-pipelines-official.yml
 
 parameters:
@@ -60,7 +58,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals windows.vs2022preview.amd64.open
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
         strategy:
           matrix:
             Release:
@@ -121,7 +119,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress -p:UsingDotNetTest=true
+          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
@@ -167,11 +165,39 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
+      - job: WindowsSamples
+        timeoutInMinutes: 30
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - task: PowerShell@2
+          displayName: 'Install Windows SDK'
+          inputs:
+            targetType: filePath
+            filePath: './eng/install-windows-sdk.ps1'
+            failOnStderr: true
+            showWarnings: true
+
+        - task: PowerShell@2
+          displayName: 'Build Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors'
+            failOnStderr: false
+
       - job: Linux
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
+          demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         strategy:
           matrix:
             Release:
@@ -199,7 +225,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress -p:UsingDotNetTest=true
+          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
@@ -263,7 +289,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress -p:UsingDotNetTest=true
+          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:

@@ -319,9 +319,6 @@
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
   </data>
-  <data name="CommandLineParserUnexpectedNullArgument" xml:space="preserve">
-    <value>Unexpected null argument at index {0}</value>
-  </data>
   <data name="CommandLineParserUnexpectedSingleQuoteInArgument" xml:space="preserve">
     <value>Unexpected single quote in argument: {0}</value>
   </data>
@@ -501,12 +498,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}</value>
-    <comment>0 level such as verbose, 
+    <comment>0 level such as verbose,
 1 path to file</comment>
   </data>
   <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with sync flush): {1}</value>
-    <comment>0 level such as verbose, 
+    <comment>0 level such as verbose,
 1 path to file</comment>
   </data>
   <data name="Expected" xml:space="preserve">
@@ -724,5 +721,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="SucceededLowercase" xml:space="preserve">
     <value>succeeded</value>
+  </data>
+  <data name="ChatClientProviderAlreadyRegistered" xml:space="preserve">
+    <value>A chat client provider has already been registered.</value>
+  </data>
+  <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
+    <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
   </data>
 </root>

@@ -394,11 +394,7 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) < 0)
-#else
         if (!value.Contains(substring, comparisonType))
-#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
@@ -626,11 +622,7 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) >= 0)
-#else
         if (value.Contains(substring, comparisonType))
-#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
@@ -666,9 +658,9 @@ public sealed partial class Assert
     public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        if (maxValue.CompareTo(minValue) <= 0)
+        if (maxValue.CompareTo(minValue) < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than the minimum value.");
+            throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue);
         }
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)

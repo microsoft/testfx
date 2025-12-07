@@ -125,6 +125,15 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         HasCount,
     }
 
+    private enum LinqPredicateCheckStatus
+    {
+        Unknown,
+        Any,
+        Count,
+        WhereAny,
+        WhereCount,
+    }
+
     internal const string ProperAssertMethodNameKey = nameof(ProperAssertMethodNameKey);
 
     /// <summary>
@@ -302,10 +311,10 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     // TODO: Recognize 'null == something' (i.e, when null is the left operand)
-    private static bool IsEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
+    private static bool IsEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
-            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -319,10 +328,10 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     // TODO: Recognize 'null != something' (i.e, when null is the left operand)
-    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
+    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
-            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator } &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
             rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
         {
             expressionUnderTest = binaryOperation.LeftOperand.Syntax;
@@ -337,18 +346,19 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static NullCheckStatus RecognizeNullCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         // Note that expressionUnderTest is guaranteed to be non-null when the method returns a value other than NullCheckStatus.Unknown.
         // Given the current nullability attributes, there is no way to express this.
         out SyntaxNode? expressionUnderTest,
         out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (IsIsNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
-            IsEqualsNullBinaryOperator(operation, out expressionUnderTest, out typeOfExpressionUnderTest))
+            IsEqualsNullBinaryOperator(operation, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNull;
         }
         else if (IsIsNotNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
-            IsNotEqualsNullBinaryOperator(operation, out expressionUnderTest, out typeOfExpressionUnderTest))
+            IsNotEqualsNullBinaryOperator(operation, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNotNull;
         }
@@ -358,6 +368,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static EqualityCheckStatus RecognizeEqualityCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? toBecomeExpected,
         out SyntaxNode? toBecomeActual,
         out ITypeSymbol? leftType,
@@ -372,7 +383,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return EqualityCheckStatus.Equals;
         }
         else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation1 &&
-            binaryOperation1.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+            !IsExcludedOperator(binaryOperation1.OperatorMethod, objectTypeSymbol))
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation1.RightOperand.Syntax;
@@ -390,7 +401,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return EqualityCheckStatus.NotEquals;
         }
         else if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation2 &&
-            binaryOperation2.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+            !IsExcludedOperator(binaryOperation2.OperatorMethod, objectTypeSymbol))
         {
             // This is quite arbitrary. We can do extra checks to see which one (if any) looks like a "constant" and make it the expected.
             toBecomeExpected = binaryOperation2.RightOperand.Syntax;
@@ -485,21 +496,29 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return CollectionCheckStatus.Unknown;
     }
 
+    private static bool IsExcludedOperator(IMethodSymbol? operatorSymbol, INamedTypeSymbol objectTypeSymbol)
+        // We exclude user-defined operators from analysis. But only if they are "really" user-defined (not from BCL)
+        => operatorSymbol?.MethodKind == MethodKind.UserDefinedOperator && !IsBCLSymbol(operatorSymbol, objectTypeSymbol);
+
+    private static bool IsBCLSymbol(ISymbol symbol, INamedTypeSymbol objectTypeSymbol)
+        // object is coming from BCL and it's expected to always have a public key.
+        => symbol.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
+            symbol.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
+
     private static bool IsBCLCollectionType(ITypeSymbol type, INamedTypeSymbol objectTypeSymbol)
         // Check if the type implements IEnumerable (but is not string)
         => type.SpecialType != SpecialType.System_String && type.AllInterfaces.Any(i =>
             i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable) &&
-            // object is coming from BCL and it's expected to always have a public key.
-            type.ContainingAssembly.Identity.HasPublicKey == objectTypeSymbol.ContainingAssembly.Identity.HasPublicKey &&
-            type.ContainingAssembly.Identity.PublicKey.SequenceEqual(objectTypeSymbol.ContainingAssembly.Identity.PublicKey);
+            IsBCLSymbol(type, objectTypeSymbol);
 
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
+        INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? leftExpression,
         out SyntaxNode? rightExpression)
     {
         if (operation is IBinaryOperation binaryOperation &&
-            binaryOperation.OperatorMethod is not { MethodKind: MethodKind.UserDefinedOperator })
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
             leftExpression = binaryOperation.LeftOperand.Syntax;
             rightExpression = binaryOperation.RightOperand.Syntax;
@@ -519,11 +538,73 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return ComparisonCheckStatus.Unknown;
     }
 
+    private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
+     IOperation operation,
+     out SyntaxNode? collectionExpression,
+     out SyntaxNode? predicateExpression,
+     out IOperation? countOperation)
+    {
+        collectionExpression = null;
+        predicateExpression = null;
+        countOperation = null;
+
+        if (operation is not IInvocationOperation invocation)
+        {
+            return LinqPredicateCheckStatus.Unknown;
+        }
+
+        string methodName = invocation.TargetMethod.Name;
+        string? containingType = invocation.TargetMethod.ContainingType?.ToDisplayString();
+
+        if (containingType != "System.Linq.Enumerable")
+        {
+            return LinqPredicateCheckStatus.Unknown;
+        }
+
+        // Check for Where().Method() patterns
+        if (invocation.Arguments.Length == 1)
+        {
+            if (TryMatchWherePattern(invocation, "Any", out collectionExpression, out predicateExpression))
+            {
+                return LinqPredicateCheckStatus.WhereAny;
+            }
+
+            if (TryMatchWherePattern(invocation, "Count", out collectionExpression, out predicateExpression))
+            {
+                countOperation = operation;
+                return LinqPredicateCheckStatus.WhereCount;
+            }
+        }
+
+        // Check for direct Method(predicate) patterns
+        switch (methodName)
+        {
+            case "Any":
+                if (TryMatchLinqMethod(invocation, "Any", out collectionExpression, out predicateExpression))
+                {
+                    return LinqPredicateCheckStatus.Any;
+                }
+
+                break;
+
+            case "Count":
+                if (TryMatchLinqMethod(invocation, "Count", out collectionExpression, out predicateExpression))
+                {
+                    countOperation = operation;
+                    return LinqPredicateCheckStatus.Count;
+                }
+
+                break;
+        }
+
+        return LinqPredicateCheckStatus.Unknown;
+    }
+
     private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
-        NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
+        NullCheckStatus nullCheckStatus = RecognizeNullCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest);
 
         // In this code path, we will be suggesting the use of IsNull/IsNotNull.
         // These assert methods only have an "object" overload.
@@ -553,6 +634,36 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properAssertMethod,
                 isTrueInvocation ? "IsTrue" : "IsFalse"));
             return;
+        }
+
+        // Check for LINQ predicate patterns that suggest Contains/DoesNotContain
+        LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
+            conditionArgument,
+            out SyntaxNode? linqCollectionExpr,
+            out SyntaxNode? predicateExpr,
+            out _);
+
+        if (linqStatus != LinqPredicateCheckStatus.Unknown && linqCollectionExpr != null && predicateExpr != null)
+        {
+            // For Any() and Where().Any() patterns
+            if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny)
+            {
+                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                    Rule,
+                    additionalLocations: ImmutableArray.Create(
+                        conditionArgument.Syntax.GetLocation(),
+                        predicateExpr.GetLocation(),
+                        linqCollectionExpr.GetLocation()),
+                    properties: properties.ToImmutable(),
+                    properAssertMethod,
+                    isTrueInvocation ? "IsTrue" : "IsFalse"));
+                return;
+            }
         }
 
         // Check for string method patterns: myString.StartsWith/EndsWith/Contains(...)
@@ -624,8 +735,47 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // Special-case: enumerable.Count(predicate) > 0 → Assert.Contains(predicate, enumerable)
+        if (conditionArgument is IBinaryOperation binaryOp &&
+            binaryOp.OperatorKind == BinaryOperatorKind.GreaterThan &&
+            binaryOp.RightOperand.ConstantValue.HasValue &&
+            binaryOp.RightOperand.ConstantValue.Value is int intValue &&
+            intValue == 0)
+        {
+            // Use RecognizeLinqPredicateCheck to properly validate LINQ Count method
+            LinqPredicateCheckStatus countLinqStatus = RecognizeLinqPredicateCheck(
+                binaryOp.LeftOperand,
+                out SyntaxNode? countCollectionExpr,
+                out SyntaxNode? countPredicateExpr,
+                out _);
+
+            if ((countLinqStatus is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount) &&
+                countCollectionExpr != null &&
+                countPredicateExpr != null)
+            {
+                string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
+
+                ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+
+                context.ReportDiagnostic(
+                    context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(
+                            conditionArgument.Syntax.GetLocation(),
+                            countPredicateExpr.GetLocation(),
+                            countCollectionExpr.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        isTrueInvocation ? "IsTrue" : "IsFalse"));
+
+                return;
+            }
+        }
+
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
-        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
         {
             string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
@@ -686,7 +836,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual, out ITypeSymbol? leftType, out ITypeSymbol? rightType);
+        EqualityCheckStatus equalityCheckStatus = RecognizeEqualityCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? toBecomeExpected, out SyntaxNode? toBecomeActual, out ITypeSymbol? leftType, out ITypeSymbol? rightType);
         if (equalityCheckStatus != EqualityCheckStatus.Unknown &&
             CanUseTypeAsObject(context.Compilation, leftType) &&
             CanUseTypeAsObject(context.Compilation, rightType))
@@ -722,6 +872,40 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         {
             if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue))
             {
+                // Check for LINQ predicate patterns that suggest ContainsSingle
+                LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
+                    actualArgumentValue!,
+                    out SyntaxNode? linqCollectionExpr2,
+                    out SyntaxNode? predicateExpr2,
+                    out _);
+
+                if (isAreEqualInvocation &&
+                    linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
+                    linqCollectionExpr2 != null &&
+                    predicateExpr2 != null &&
+                    expectedArgument.ConstantValue.HasValue &&
+                    expectedArgument.ConstantValue.Value is int expectedCountValue &&
+                    expectedCountValue == 1)
+                {
+                    // We have Assert.AreEqual(1, enumerable.Count(predicate))
+                    // We want Assert.ContainsSingle(predicate, enumerable)
+                    string properAssertMethod = "ContainsSingle";
+
+                    ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
+                    properties.Add(ProperAssertMethodNameKey, properAssertMethod);
+                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                    context.ReportDiagnostic(context.Operation.CreateDiagnostic(
+                        Rule,
+                        additionalLocations: ImmutableArray.Create(
+                            actualArgumentValue.Syntax.GetLocation(),
+                            predicateExpr2.GetLocation(),
+                            linqCollectionExpr2.GetLocation()),
+                        properties: properties.ToImmutable(),
+                        properAssertMethod,
+                        "AreEqual"));
+                    return;
+                }
+
                 // Check if we're comparing a count/length property
                 CountCheckStatus countStatus = RecognizeCountCheck(
                     expectedArgument,
@@ -829,6 +1013,61 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 properAssertMethod,
                 isAreEqualInvocation ? "AreEqual" : "AreNotEqual"));
         }
+    }
+
+    private static bool TryMatchWherePattern(
+    IInvocationOperation invocation,
+    string methodName,
+    out SyntaxNode? collectionExpression,
+    out SyntaxNode? predicateExpression)
+    {
+        if (invocation.TargetMethod.Name == methodName &&
+            invocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            invocation.Arguments.Length == 1 &&
+            invocation.Arguments[0].Value is IInvocationOperation whereInvocation &&
+            whereInvocation.TargetMethod.Name == "Where" &&
+            whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            whereInvocation.Arguments.Length == 2)
+        {
+            collectionExpression = whereInvocation.Arguments[0].Value.Syntax;
+            predicateExpression = whereInvocation.Arguments[1].Value.Syntax;
+            return true;
+        }
+
+        collectionExpression = null;
+        predicateExpression = null;
+        return false;
+    }
+
+    private static bool TryMatchLinqMethod(
+    IInvocationOperation invocation,
+    string methodName,
+    out SyntaxNode? collectionExpression,
+    out SyntaxNode? predicateExpression)
+    {
+        if (invocation.TargetMethod.Name == methodName &&
+            invocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+        {
+            // Extension method with predicate: Method(collection, predicate)
+            if (invocation.Arguments.Length == 2)
+            {
+                collectionExpression = invocation.Arguments[0].Value.Syntax;
+                predicateExpression = invocation.Arguments[1].Value.Syntax;
+                return true;
+            }
+
+            // Instance method or extension without predicate: Method(collection)
+            else if (invocation.Arguments.Length == 1)
+            {
+                collectionExpression = invocation.Instance?.Syntax ?? invocation.Arguments[0].Value.Syntax;
+                predicateExpression = null;
+                return true;
+            }
+        }
+
+        collectionExpression = null;
+        predicateExpression = null;
+        return false;
     }
 
     private static CountCheckStatus RecognizeCountCheck(
