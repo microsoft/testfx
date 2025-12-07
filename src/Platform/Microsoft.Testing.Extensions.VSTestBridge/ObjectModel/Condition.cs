@@ -272,7 +272,7 @@ internal sealed class Condition
 
     internal static IEnumerable<string> TokenizeFilterConditionString(string str)
     {
-        return TokenizeFilterConditionStringWorker(Guard.NotNull(str));
+        return TokenizeFilterConditionStringWorker(Ensure.NotNull(str));
 
         static IEnumerable<string> TokenizeFilterConditionStringWorker(string s)
         {
