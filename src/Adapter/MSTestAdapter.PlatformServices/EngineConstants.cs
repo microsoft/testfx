@@ -60,11 +60,6 @@ internal static class EngineConstants
     /// </summary>
     internal const string ClassCleanupFixtureTrait = "ClassCleanup";
 
-    /// <summary>
-    /// The name of test run parameters node in the runsettings.
-    /// </summary>
-    internal const string TestRunParametersName = "TestRunParameters";
-
     #region Test Property registration
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 

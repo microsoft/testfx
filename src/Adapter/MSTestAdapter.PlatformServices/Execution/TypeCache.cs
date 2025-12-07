@@ -669,7 +669,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
             ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
-            : throw new UnreachableException();
+            : throw ApplicationStateGuard.Unreachable();
 
         // if correct method is not found, throw appropriate
         // exception about what is wrong.
