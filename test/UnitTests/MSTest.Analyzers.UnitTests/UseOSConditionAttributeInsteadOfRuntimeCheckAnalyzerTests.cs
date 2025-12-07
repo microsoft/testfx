@@ -680,8 +680,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                [OSCondition(OperatingSystems.Linux)]
-                [OSCondition(OperatingSystems.Windows)]
+                [OSCondition(OperatingSystems.Linux | OperatingSystems.Windows)]
                 public void TestMethod()
                 {
                 }

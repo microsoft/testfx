@@ -80,21 +80,154 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Map OSPlatform to OperatingSystems enum
         string? operatingSystem = MapOSPlatformToOperatingSystem(osPlatform);
         if (operatingSystem is null)
         {
             return document;
         }
 
-        // Determine the condition mode:
-        // - If isNegated is false (checking if IS on platform, then early return), we want to EXCLUDE this platform
-        // - If isNegated is true (checking if NOT on platform, then early return), we want to INCLUDE this platform only
-        // Actually:
-        // if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return; => Include Windows only (default, omit ConditionMode)
-        // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return; => Exclude Windows
+        MethodDeclarationSyntax? modifiedMethod = RemoveIfStatementFromMethod(methodDeclaration, ifStatement);
+        if (modifiedMethod is null)
+        {
+            return document;
+        }
 
-        // Create the attribute
+        AttributeSyntax? existingAttribute = FindExistingOSConditionAttribute(methodDeclaration);
+        MethodDeclarationSyntax newMethod = existingAttribute is not null
+            ? UpdateMethodWithCombinedAttribute(modifiedMethod, existingAttribute, operatingSystem, isNegated)
+            : AddNewAttributeToMethod(modifiedMethod, operatingSystem, isNegated);
+
+        editor.ReplaceNode(methodDeclaration, newMethod);
+        return editor.GetChangedDocument();
+    }
+
+    private static MethodDeclarationSyntax? RemoveIfStatementFromMethod(
+        MethodDeclarationSyntax methodDeclaration,
+        IfStatementSyntax ifStatement)
+    {
+        MethodDeclarationSyntax trackedMethod = methodDeclaration.TrackNodes(ifStatement);
+        IfStatementSyntax? trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);
+
+        return trackedIfStatement is not null
+            ? trackedMethod.RemoveNode(trackedIfStatement, SyntaxRemoveOptions.KeepNoTrivia)
+            : null;
+    }
+
+    private static AttributeSyntax? FindExistingOSConditionAttribute(MethodDeclarationSyntax methodDeclaration)
+        => methodDeclaration.AttributeLists
+            .SelectMany(al => al.Attributes)
+            .FirstOrDefault(a => a.Name.ToString() is "OSCondition" or "OSConditionAttribute");
+
+    private static MethodDeclarationSyntax UpdateMethodWithCombinedAttribute(
+        MethodDeclarationSyntax method,
+        AttributeSyntax existingAttribute,
+        string operatingSystem,
+        bool isNegated)
+    {
+        ExistingAttributeInfo attributeInfo = ParseExistingAttribute(existingAttribute);
+
+        // Only combine if the condition modes match
+        if (CanCombineAttributes(attributeInfo.IsIncludeMode, isNegated))
+        {
+            string combinedOSValue = CombineOSValues(attributeInfo.OSValue, operatingSystem);
+            AttributeSyntax newAttribute = CreateCombinedAttribute(combinedOSValue, isNegated);
+            return ReplaceExistingAttribute(method, newAttribute);
+        }
+
+        // Different condition modes - add as separate attribute
+        // (This shouldn't happen in practice since OSCondition doesn't allow multiple attributes)
+        return AddNewAttributeToMethod(method, operatingSystem, isNegated);
+    }
+
+    private static ExistingAttributeInfo ParseExistingAttribute(AttributeSyntax attribute)
+    {
+        if (attribute.ArgumentList is null)
+        {
+            return new ExistingAttributeInfo(IsIncludeMode: true, OSValue: null);
+        }
+
+        SeparatedSyntaxList<AttributeArgumentSyntax> args = attribute.ArgumentList.Arguments;
+
+        return args.Count switch
+        {
+            // [OSCondition(OperatingSystems.Linux)] - Include mode
+            1 => new ExistingAttributeInfo(
+                IsIncludeMode: true,
+                OSValue: args[0].Expression.ToString()),
+
+            // [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
+            2 => new ExistingAttributeInfo(
+                IsIncludeMode: !args[0].Expression.ToString().Contains("Exclude"),
+                OSValue: args[1].Expression.ToString()),
+
+            _ => new ExistingAttributeInfo(IsIncludeMode: true, OSValue: null),
+        };
+    }
+
+    private static bool CanCombineAttributes(bool existingIsIncludeMode, bool isNegated)
+        => (isNegated && existingIsIncludeMode) || (!isNegated && !existingIsIncludeMode);
+
+    private static string CombineOSValues(string? existingOSValue, string newOperatingSystem)
+        => existingOSValue is not null
+            ? $"{existingOSValue} | OperatingSystems.{newOperatingSystem}"
+            : $"OperatingSystems.{newOperatingSystem}";
+
+    private static AttributeSyntax CreateCombinedAttribute(string osValue, bool isNegated)
+    {
+        if (isNegated)
+        {
+            // Include mode (default)
+            return SyntaxFactory.Attribute(
+                SyntaxFactory.IdentifierName("OSCondition"),
+                SyntaxFactory.AttributeArgumentList(
+                    SyntaxFactory.SingletonSeparatedList(
+                        SyntaxFactory.AttributeArgument(
+                            SyntaxFactory.ParseExpression(osValue)))));
+        }
+
+        // Exclude mode
+        return SyntaxFactory.Attribute(
+            SyntaxFactory.IdentifierName("OSCondition"),
+            SyntaxFactory.AttributeArgumentList(
+                SyntaxFactory.SeparatedList(new[]
+                {
+                    SyntaxFactory.AttributeArgument(
+                        SyntaxFactory.ParseExpression("ConditionMode.Exclude")),
+                    SyntaxFactory.AttributeArgument(
+                        SyntaxFactory.ParseExpression(osValue)),
+                })));
+    }
+
+    private static MethodDeclarationSyntax ReplaceExistingAttribute(
+        MethodDeclarationSyntax method,
+        AttributeSyntax newAttribute)
+    {
+        AttributeListSyntax? oldAttributeList = method.AttributeLists
+            .FirstOrDefault(al => al.Attributes.Any(a => a.Name.ToString() is "OSCondition" or "OSConditionAttribute"));
+
+        if (oldAttributeList is null)
+        {
+            return method;
+        }
+
+        AttributeListSyntax newAttributeList = SyntaxFactory.AttributeList(
+            SyntaxFactory.SingletonSeparatedList(newAttribute))
+            .WithTrailingTrivia(oldAttributeList.GetTrailingTrivia());
+
+        return method.ReplaceNode(oldAttributeList, newAttributeList);
+    }
+
+    private static MethodDeclarationSyntax AddNewAttributeToMethod(
+        MethodDeclarationSyntax method,
+        string operatingSystem,
+        bool isNegated)
+    {
+        AttributeListSyntax newAttributeList = CreateAttributeList(operatingSystem, isNegated);
+        return method.AddAttributeLists(newAttributeList);
+    }
+
+    private static AttributeListSyntax CreateAttributeList(string operatingSystem, bool isNegated)
+    {
         AttributeSyntax osConditionAttribute;
         if (isNegated)
         {
@@ -121,38 +254,9 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
                     })));
         }
 
-        // Check if the method already has an OSCondition attribute
-        bool hasOSConditionAttribute = methodDeclaration.AttributeLists
-            .SelectMany(al => al.Attributes)
-            .Any(a => a.Name.ToString() is "OSCondition" or "OSConditionAttribute");
-
-        // Track the if statement on the original method before making any modifications
-        MethodDeclarationSyntax trackedMethod = methodDeclaration.TrackNodes(ifStatement);
-        IfStatementSyntax? trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);
-
-        if (trackedIfStatement is null)
-        {
-            return document;
-        }
-
-        // Remove the if statement from the method body
-        MethodDeclarationSyntax newMethod = trackedMethod.RemoveNode(trackedIfStatement, SyntaxRemoveOptions.KeepNoTrivia)!;
-
-        if (!hasOSConditionAttribute)
-        {
-            // Add the attribute to the method
-            // Use CarriageReturnLineFeed to match the formatting of attributes added by the editor
-            AttributeListSyntax newAttributeList = SyntaxFactory.AttributeList(
-                SyntaxFactory.SingletonSeparatedList(osConditionAttribute))
-                .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
-
-            newMethod = newMethod.AddAttributeLists(newAttributeList);
-        }
-
-        // Replace the entire method declaration with the modified version
-        editor.ReplaceNode(methodDeclaration, newMethod);
-
-        return editor.GetChangedDocument();
+        return SyntaxFactory.AttributeList(
+            SyntaxFactory.SingletonSeparatedList(osConditionAttribute))
+            .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
     }
 
     private static string? MapOSPlatformToOperatingSystem(string osPlatform)
@@ -164,4 +268,6 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
             "FREEBSD" => "FreeBSD",
             _ => null,
         };
+
+    private readonly record struct ExistingAttributeInfo(bool IsIncludeMode, string? OSValue);
 }
