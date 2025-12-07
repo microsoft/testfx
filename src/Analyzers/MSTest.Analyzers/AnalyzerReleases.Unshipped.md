@@ -6,3 +6,4 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0058 | Usage | Info | AvoidAssertsInCatchBlocksAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0058)
+MSTEST0059 | Usage | Warning | DuplicateTestMethodAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0059)

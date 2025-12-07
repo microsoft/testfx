@@ -1014,6 +1014,21 @@ Le type doit être une classe
         <target state="translated">L’utilisation d’assertions dans les blocs catch pose problème, car le test réussit même si aucune exception n’est levée et que le bloc catch n’est jamais exécuté. Utilisez « Assert.Throws », « Assert.ThrowsExactly », « Assert.ThrowsAsync » ou « Assert.ThrowsExactlyAsync » pour vérifier qu’une exception est levée, puis effectuez des assertions supplémentaires sur l’exception capturée sans utiliser le bloc try-catch.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeTitle">
+        <source>Avoid duplicate test method attributes</source>
+        <target state="new">Avoid duplicate test method attributes</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
+        <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute is allowed.</source>
+        <target state="new">Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute is allowed.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeDescription">
+        <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. Having multiple such attributes can lead to unexpected behavior.</source>
+        <target state="new">A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. Having multiple such attributes can lead to unexpected behavior.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
