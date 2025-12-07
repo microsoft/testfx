@@ -74,7 +74,7 @@ internal sealed class Condition
     /// </summary>
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(propertyValueProvider);
+        Ensure.NotNull(propertyValueProvider);
         bool result = false;
         string[]? multiValue = GetPropertyValue(propertyValueProvider);
         switch (Operation)

@@ -25,7 +25,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     public void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
     {
-        Guard.NotNull(environmentVariableProviderFactory);
+        Ensure.NotNull(environmentVariableProviderFactory);
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }
@@ -33,7 +33,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddEnvironmentVariableProvider<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostEnvironmentVariableProvider
     {
-        Guard.NotNull(compositeServiceFactory);
+        Ensure.NotNull(compositeServiceFactory);
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -45,7 +45,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     public void AddProcessLifetimeHandler(Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandler)
     {
-        Guard.NotNull(lifetimeHandler);
+        Ensure.NotNull(lifetimeHandler);
         _lifetimeHandlerFactories.Add(lifetimeHandler);
         _factoryOrdering.Add(lifetimeHandler);
     }
@@ -53,7 +53,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostProcessLifetimeHandler
     {
-        Guard.NotNull(compositeServiceFactory);
+        Ensure.NotNull(compositeServiceFactory);
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -66,7 +66,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
-        Guard.NotNull(compositeServiceFactory);
+        Ensure.NotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);

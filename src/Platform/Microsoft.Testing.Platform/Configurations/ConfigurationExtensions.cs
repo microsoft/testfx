@@ -16,7 +16,7 @@ public static class ConfigurationExtensions
     public static string GetTestResultDirectory(this IConfiguration configuration)
     {
         string? resultDirectory = configuration[PlatformConfigurationConstants.PlatformResultDirectory];
-        return Guard.NotNull(resultDirectory);
+        return Ensure.NotNull(resultDirectory);
     }
 
     /// <summary>
@@ -27,6 +27,6 @@ public static class ConfigurationExtensions
     public static string GetCurrentWorkingDirectory(this IConfiguration configuration)
     {
         string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        return Guard.NotNull(workingDirectory);
+        return Ensure.NotNull(workingDirectory);
     }
 }

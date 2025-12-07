@@ -21,7 +21,7 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
 
     public void SetBuiltMessageBus(BaseMessageBus messageBus)
     {
-        Guard.NotNull(messageBus);
+        Ensure.NotNull(messageBus);
         _messageBus = messageBus;
     }
 

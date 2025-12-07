@@ -142,7 +142,7 @@ public sealed partial class PropertyBag
 
         public PropertyDebugView(Property property)
         {
-            Guard.NotNull(property);
+            Ensure.NotNull(property);
             _property = property;
         }
 
