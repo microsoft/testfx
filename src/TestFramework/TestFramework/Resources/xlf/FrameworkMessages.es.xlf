@@ -314,8 +314,8 @@ Real: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">El parámetro '{0}' no es válido. El valor no puede ser null. {1}.</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="translated">El parámetro "{0}" no es válido. El valor no puede ser null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
