@@ -1,30 +1,30 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
-using System;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace UnitTest;
-
+namespace MSTestRunnerWinUI;
 /// <summary>
 /// Provides application-specific behavior to supplement the default Application class.
 /// </summary>
-public partial class App : Application
+public partial class UnitTestApp : Application
 {
+    private Window? _window;
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
     /// </summary>
-    public App()
+    public UnitTestApp()
     {
         InitializeComponent();
     }
@@ -33,6 +33,7 @@ public partial class App : Application
     /// Invoked when the application is launched.
     /// </summary>
     /// <param name="args">Details about the launch request and process.</param>
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>")]
     protected override
 #if MSTEST_RUNNER
         async
@@ -43,29 +44,24 @@ public partial class App : Application
         Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.CreateDefaultUI();
 #endif
 
-        _window = new MainWindow();
+        _window = new UnitTestAppWindow();
         _window.Activate();
-        UITestMethodAttribute.DispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
-        // Replace back with e.Arguments when https://github.com/microsoft/microsoft-ui-xaml/issues/3368 is fixed
+        UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
+
 #if MSTEST_RUNNER
         try
         {
             // Ideally we would want to reuse the generated main so we don't have to manually handle all dependencies
             // but this type is generated too late in the build process so we fail before.
             // You can build, inspect the generated type to copy its content if you want.
-            // await TestingPlatformEntryPoint.Main(Environment.GetCommandLineArgs().Skip(1).ToArray());
+            //await MSTestRunnerWinUI.MicrosoftTestingPlatformEntryPoint.Main(Environment.GetCommandLineArgs().Skip(1).ToArray());
             string[] cliArgs = Environment.GetCommandLineArgs()
                 .Skip(1)
                 .Where(arg => !arg.Contains("EnableMSTestRunner"))
                 .ToArray();
             ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
-
-            // Or alternatively, we would want to use AddSelfRegisteredExtensions but we have the same issue.
-            //builder.AddSelfRegisteredExtensions(cliArgs);
-            Microsoft.Testing.Platform.MSBuild.TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
-            Microsoft.Testing.Extensions.Telemetry.TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
-            Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, cliArgs);
+            builder.AddSelfRegisteredExtensions(cliArgs);
             using ITestApplication app = await builder.BuildAsync();
             await app.RunAsync();
         }
@@ -77,6 +73,4 @@ public partial class App : Application
         Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(Environment.CommandLine);
 #endif
     }
-
-    private Window _window;
 }

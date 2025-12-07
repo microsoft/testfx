@@ -155,15 +155,6 @@ internal sealed class TypeCache : MarshalByRefObject
             // Load the class type
             Type? type = LoadType(typeName, testMethod.AssemblyName);
 
-            // VSTest managed feature is not working properly and ends up providing names that are not fully
-            // unescaped causing reflection to fail loading. For the cases we know this is happening, we will
-            // try to manually unescape the type name and load the type again.
-            if (type == null
-                && TryGetUnescapedManagedTypeName(testMethod, out string? unescapedTypeName))
-            {
-                type = LoadType(unescapedTypeName, testMethod.AssemblyName);
-            }
-
             if (type == null)
             {
                 // This means the class containing the test method could not be found.
@@ -174,43 +165,6 @@ internal sealed class TypeCache : MarshalByRefObject
             // Get the classInfo
             return @this.CreateClassInfo(type);
         }, (this, testMethod));
-    }
-
-    private static bool TryGetUnescapedManagedTypeName(TestMethod testMethod, [NotNullWhen(true)] out string? unescapedTypeName)
-    {
-        if (testMethod.Hierarchy.Count != 4)
-        {
-            unescapedTypeName = null;
-            return false;
-        }
-
-        StringBuilder unescapedTypeNameBuilder = new();
-        int i = -1;
-        foreach (string? hierarchyPart in testMethod.Hierarchy)
-        {
-            i++;
-            if (i is not 1 and not 2 || hierarchyPart is null)
-            {
-                continue;
-            }
-
-            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart, 1, hierarchyPart.Length - 2);
-            }
-            else
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart);
-            }
-
-            if (i == 1)
-            {
-                unescapedTypeNameBuilder.Append('.');
-            }
-        }
-
-        unescapedTypeName = unescapedTypeNameBuilder.ToString();
-        return unescapedTypeName != testMethod.FullClassName;
     }
 
     /// <summary>
@@ -715,7 +669,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
             ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
-            : GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo, discoverInternals);
+            : throw ApplicationStateGuard.Unreachable();
 
         // if correct method is not found, throw appropriate
         // exception about what is wrong.
@@ -761,37 +715,6 @@ internal sealed class TypeCache : MarshalByRefObject
             || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
             ? null
             : testMethodInfo;
-    }
-
-    private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
-    {
-        // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
-        // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
-        // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
-        // Note: This whole GetMethodInfoUsingRuntimeMethods is likely never reachable.
-        // It's called if HasManagedMethodAndTypeProperties is false, but it should always be true per the current implementation.
-        if (testMethod.MethodInfo is { } methodInfo)
-        {
-            return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
-        }
-
-        IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
-            .Where(method => method.Name == testMethod.Name &&
-                             method.HasCorrectTestMethodSignature(true, discoverInternals));
-
-        if (testMethod.DeclaringClassFullName == null)
-        {
-            // Either the declaring class is the same as the test class, or
-            // the declaring class information wasn't passed in the test case.
-            // Prioritize the former while maintaining previous behavior for the latter.
-            string? className = testClassInfo.ClassType.FullName;
-            return methods
-                .OrderByDescending(method => method.DeclaringType!.FullName == className)
-                .FirstOrDefault();
-        }
-
-        // Only find methods that match the given declaring name.
-        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
     }
 
     /// <summary>

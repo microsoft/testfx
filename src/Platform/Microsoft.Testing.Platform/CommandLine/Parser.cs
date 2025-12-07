@@ -12,7 +12,7 @@ internal static class CommandLineParser
     /// Options parser support:
     ///     * Only - and -- prefix for options https://learn.microsoft.com/dotnet/standard/commandline/syntax#options
     ///     * Multiple option arguments https://learn.microsoft.com/dotnet/standard/commandline/syntax#multiple-arguments
-    ///     * Use a space, '=', or ':' as the delimiter between an option name and its argument
+    ///     * Use '=' or ':' as the delimiter between an option name and its argument. See https://learn.microsoft.com/dotnet/standard/commandline/syntax#option-argument-delimiters
     ///     * escape with \
     ///     * surrounding with ""
     ///     * surrounding with ''
@@ -39,89 +39,65 @@ internal static class CommandLineParser
         List<string> errors = [];
 
         string? currentOption = null;
-        string? currentArg = null;
         string? toolName = null;
         List<string> currentOptionArguments = [];
+        bool isFirstRealArgument = true;
         for (int i = 0; i < args.Count; i++)
         {
-            if (args[i].StartsWith('@') && ResponseFileHelper.TryReadResponseFile(args[i].Substring(1), errors, out string[]? newArguments))
+            string? currentArg = args[i];
+
+            if (currentArg.StartsWith('@') && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
             {
                 args.InsertRange(i + 1, newArguments);
                 continue;
             }
 
-            bool argumentHandled = false;
-            currentArg = args[i];
-
-            while (!argumentHandled)
+            // If it's the first argument and it doesn't start with - then it's the tool name
+            // TODO: This won't work correctly if the first argument provided is a response file that contains the tool name.
+            if (isFirstRealArgument && currentArg[0] != '-')
             {
-                if (currentArg is null)
+                toolName = currentArg;
+                isFirstRealArgument = false;
+                continue;
+            }
+
+            isFirstRealArgument = false;
+
+            // we accept as start for options -- and - all the rest are arguments to the previous option
+            if ((currentArg.Length > 1 && currentArg[0].Equals('-') && !currentArg[1].Equals('-')) ||
+                (currentArg.Length > 2 && currentArg[0].Equals('-') && currentArg[1].Equals('-') && !currentArg[2].Equals('-')))
+            {
+                if (currentOption is not null)
                 {
-                    errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedNullArgument, i));
-                    break;
+                    options.Add(new(currentOption, [.. currentOptionArguments]));
+                    currentOptionArguments.Clear();
                 }
 
-                // we accept as start for options -- and - all the rest are arguments to the previous option
-                if ((args[i].Length > 1 && currentArg[0].Equals('-') && !currentArg[1].Equals('-')) ||
-                    (args[i].Length > 2 && currentArg[0].Equals('-') && currentArg[1].Equals('-') && !currentArg[2].Equals('-')))
+                ParseOptionAndSeparators(currentArg, out currentOption, out currentArg);
+            }
+
+            if (currentArg is not null)
+            {
+                if (currentOption is null)
                 {
-                    if (currentOption is null)
-                    {
-                        ParseOptionAndSeparators(args[i], out currentOption, out currentArg);
-                        argumentHandled = currentArg is null;
-                    }
-                    else
-                    {
-                        options.Add(new(currentOption, [.. currentOptionArguments]));
-                        currentOptionArguments.Clear();
-                        ParseOptionAndSeparators(args[i], out currentOption, out currentArg);
-                        argumentHandled = true;
-                    }
+                    errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedArgument, args[i]));
                 }
                 else
                 {
-                    // If it's the first argument and it doesn't start with - then it's the tool name
-                    if (i == 0 && !args[0][0].Equals('-'))
+                    if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
                     {
-                        toolName = currentArg;
-                    }
-                    else if (currentOption is null)
-                    {
-                        errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedArgument, args[i]));
+                        currentOptionArguments.Add(unescapedArg);
                     }
                     else
                     {
-                        if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
-                        {
-                            currentOptionArguments.Add(unescapedArg);
-                        }
-                        else
-                        {
-                            errors.Add(error);
-                        }
-
-                        currentArg = null;
+                        errors.Add(error);
                     }
-
-                    argumentHandled = true;
                 }
             }
         }
 
         if (currentOption is not null)
         {
-            if (currentArg is not null)
-            {
-                if (TryUnescape(currentArg.Trim(), currentOption, environment, out string? unescapedArg, out string? error))
-                {
-                    currentOptionArguments.Add(unescapedArg);
-                }
-                else
-                {
-                    errors.Add(error);
-                }
-            }
-
             options.Add(new(currentOption, [.. currentOptionArguments]));
         }
 
@@ -129,7 +105,7 @@ internal static class CommandLineParser
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {
-            (currentOption, currentArg) = arg.IndexOfAny([':', '=', ' ']) switch
+            (currentOption, currentArg) = arg.IndexOfAny([':', '=']) switch
             {
                 -1 => (arg, null),
                 var delimiterIndex => (arg[..delimiterIndex], arg[(delimiterIndex + 1)..]),

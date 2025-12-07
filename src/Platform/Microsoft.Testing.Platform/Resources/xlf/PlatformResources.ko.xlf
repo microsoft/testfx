@@ -142,11 +142,6 @@
         <target state="translated">예기치 않은 인수 {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">인덱스 {0}에 예기치 않은 null 인수가 있습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">인수 {0}에 예기치 않은 작은따옴표가 있습니다.</target>

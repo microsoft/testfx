@@ -15,6 +15,7 @@ vsspell_ignored_words_842f80e2d4aa4288afdcd0e42833eeaf = runsettings|nullable|ar
 
 [*.{xlf,resx}]
 insert_final_newline = unset
+trim_trailing_whitespace = unset
 
 # Xml localization files
 [*.xlf]

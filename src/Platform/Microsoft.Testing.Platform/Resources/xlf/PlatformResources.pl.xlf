@@ -142,11 +142,6 @@
         <target state="translated">Nieoczekiwany argument {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Nieoczekiwany argument o wartości null przy indeksie {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">Nieoczekiwany pojedynczy cudzysłów w argumencie: {0}</target>

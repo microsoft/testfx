@@ -280,6 +280,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithSingleElement_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { 100 };
+
+        // Act
+        object? result = Assert.ContainsSingle(collection);
+
+        // Assert
+        result.Should().Be(100);
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with a message where the collection has a single element.
     /// </summary>
     public void ContainsSingle_WithMessage_WithSingleElement_ReturnsElement()
@@ -289,6 +304,21 @@ public partial class AssertTests : TestContainer
 
         // Act
         string result = Assert.ContainsSingle(collection, "Custom message");
+
+        // Assert
+        result.Should().Be("OnlyOne");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with a message where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_WithMessage_WithSingleElement_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { "OnlyOne" };
+
+        // Act
+        object? result = Assert.ContainsSingle(collection, "Custom message");
 
         // Assert
         result.Should().Be("OnlyOne");
@@ -311,6 +341,50 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'collection'. ");
     }
 
+    /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithNull_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { null };
+
+        // Act
+        object? result = Assert.ContainsSingle(collection);
+
+        // Assert
+        result.Should().Be(null);
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method without message parameters where the collection has a single element.
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_NoMessage_WithEmptyCollection_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList();
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'collection'.");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with message parameter where the collection has a no element (empty collection).
+    /// </summary>
+    public void ContainsSingle_InNonGenericCollection_AssertCustomMessage_WithEmptyCollection_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList();
+
+        // Act
+        Action action = () => Assert.ContainsSingle(collection, "my custom message");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 0 element(s). 'collection' expression: 'collection'. my custom message");
+    }
     #endregion
 
     #region Contains Tests
@@ -914,6 +988,21 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method with predicate when exactly one element matches in non-generic collection.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_NoMessage_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 2, 3, 4, 5, "a" };
+
+        // Act
+        object result = Assert.ContainsSingle(x => x.Equals(3), collection);
+
+        // Assert
+        result.Should().Be(3);
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with predicate and message when exactly one element matches.
     /// </summary>
     public void ContainsSinglePredicate_WithMessage_OneItemMatches_ReturnsElement()
@@ -924,6 +1013,23 @@ public partial class AssertTests : TestContainer
         // Act
 #pragma warning disable CA1865 // Use char overload - not netfx
         string result = Assert.ContainsSingle(x => x.StartsWith("b", StringComparison.Ordinal), collection, "Expected one item starting with 'b'");
+#pragma warning restore CA1865 // Use char overload
+
+        // Assert
+        result.Should().Be("banana");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and message when exactly one element matches in non-generic collection.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_WithMessage_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { "apple", "banana", "cherry" };
+
+        // Act
+#pragma warning disable CA1865 // Use char overload - not netfx
+        object result = Assert.ContainsSingle(x => x is string s && s.StartsWith("b", StringComparison.Ordinal), collection, "Expected one item starting with 'b'");
 #pragma warning restore CA1865 // Use char overload
 
         // Assert
@@ -947,6 +1053,22 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method with predicate when no elements match in non-generic collection.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5, "a" };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found 0 item(s)*");
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with predicate when multiple elements match.
     /// Expects an exception.
     /// </summary>
@@ -960,6 +1082,22 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found 4 item(s)*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate when multiple elements match in non-generic collection.
+    /// Expects an exception.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_MultipleItemsMatch_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 2, 4, 6, 8, "a" };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection);
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Expected exactly one item to match the predicate but found * item(s)*");
     }
 
     /// <summary>
@@ -979,6 +1117,22 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method with predicate and formatted message when no elements match in non-generic collection.
+    /// Expects an exception with the custom message.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_WithMessage_NoItemMatches_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 1, 3, 5 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection, $"No even numbers found in collection with {collection.Count} items");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*No even numbers found in collection with 3 items*");
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match.
     /// Expects an exception with the custom message.
     /// </summary>
@@ -989,6 +1143,22 @@ public partial class AssertTests : TestContainer
 
         // Act
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, $"Too many even numbers found: {collection.Count}");
+
+        // Assert
+        action.Should().Throw<AssertFailedException>().WithMessage("*Too many even numbers found: 3*");
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate and formatted message when multiple elements match in non-generic collection.
+    /// Expects an exception with the custom message.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_WithMessage_MultipleItemsMatch_ThrowsException()
+    {
+        // Arrange
+        var collection = new ArrayList { 2, 4, 6 };
+
+        // Act
+        Action action = () => Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection, $"Too many even numbers found: {collection.Count}");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("*Too many even numbers found: 3*");
@@ -1016,6 +1186,28 @@ public partial class AssertTests : TestContainer
     }
 
     /// <summary>
+    /// Tests the ContainsSingle method with predicate using complex objects in non-generic collection.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_ComplexObjects_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var items = new ArrayList
+        {
+            new Person("Alice", 25),
+            new Person("Bob", 30),
+            new Person("Charlie", 35),
+        };
+
+        // Act
+        object result = Assert.ContainsSingle(p => p is Person person && person.Age == 30, items);
+
+        // Assert
+        var resultPerson = (Person)result;
+        resultPerson.Name.Should().Be("Bob");
+        resultPerson.Age.Should().Be(30);
+    }
+
+    /// <summary>
     /// Tests the ContainsSingle method with predicate using null values.
     /// </summary>
     public void ContainsSinglePredicate_WithNullValues_OneItemMatches_ReturnsElement()
@@ -1025,6 +1217,21 @@ public partial class AssertTests : TestContainer
 
         // Act
         string? result = Assert.ContainsSingle(x => x == null, collection);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Tests the ContainsSingle method with predicate using null values in non-generic collection.
+    /// </summary>
+    public void ContainsSinglePredicate_InNonGenericCollection_WithNullValues_OneItemMatches_ReturnsElement()
+    {
+        // Arrange
+        var collection = new ArrayList { "apple", null, "banana" };
+
+        // Act
+        object result = Assert.ContainsSingle(x => x == null, collection);
 
         // Assert
         result.Should().BeNull();

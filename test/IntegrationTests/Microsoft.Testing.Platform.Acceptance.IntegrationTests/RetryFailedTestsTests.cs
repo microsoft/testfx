@@ -145,9 +145,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     [TestMethod]
     // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-        // TODO: Crash dump is not working properly on macos, so we skip the test for now
         => await RetryHelper.RetryAsync(
             async () =>
             {
@@ -229,7 +227,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
