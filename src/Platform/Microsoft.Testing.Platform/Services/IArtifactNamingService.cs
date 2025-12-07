@@ -5,14 +5,14 @@ namespace Microsoft.Testing.Platform.Services;
 
 /// <summary>
 /// Service for generating consistent artifact names and paths using template patterns.
-/// Supports placeholders like &lt;process-name&gt;, &lt;pid&gt;, &lt;id&gt;, &lt;os&gt;, &lt;assembly&gt;, &lt;tfm&gt;, &lt;time&gt;, &lt;root&gt;.
+/// Supports placeholders like &lt;pname&gt;, &lt;pid&gt;, &lt;id&gt;, &lt;os&gt;, &lt;assembly&gt;, &lt;tfm&gt;, &lt;time&gt;, &lt;root&gt;.
 /// </summary>
 internal interface IArtifactNamingService
 {
     /// <summary>
     /// Resolves a template pattern with available field replacements.
     /// </summary>
-    /// <param name="template">Template pattern with placeholders like '&lt;process-name&gt;_&lt;pid&gt;_hang.dmp'.</param>
+    /// <param name="template">Template pattern with placeholders like '&lt;pname&gt;_&lt;pid&gt;_hang.dmp'.</param>
     /// <param name="customReplacements">Optional custom field replacements to override default values.</param>
     /// <returns>Resolved string with placeholders replaced by actual values.</returns>
     string ResolveTemplate(string template, IDictionary<string, string>? customReplacements = null);

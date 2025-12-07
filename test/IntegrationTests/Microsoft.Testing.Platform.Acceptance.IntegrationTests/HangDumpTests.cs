@@ -92,7 +92,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-filename <process-name>_<pid>_<id>_hang.dmp --results-directory {resultDirectory}",
+            $"--hangdump --hangdump-timeout 8s --hangdump-filename <pname>_<pid>_<id>_hang.dmp --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "4000" },
@@ -108,7 +108,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         string dumpFile = dumpFiles[0];
         string fileName = Path.GetFileNameWithoutExtension(dumpFile);
         
-        // File should match pattern: <process-name>_<pid>_<id>_hang
+        // File should match pattern: <pname>_<pid>_<id>_hang
         // The process name should be the test executable name, pid should be numeric, id should be 8 chars
         Assert.IsTrue(fileName.EndsWith("_hang"), $"File name should end with '_hang'. Actual: {fileName}");
         

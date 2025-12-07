@@ -369,7 +369,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         var customReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["process-name"] = processName,
+            ["pname"] = processName,
             ["pid"] = _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)
         };
 

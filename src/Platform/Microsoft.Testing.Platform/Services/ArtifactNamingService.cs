@@ -76,7 +76,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         // Process info
         using var currentProcess = _processHandler.GetCurrentProcess();
         replacements["pid"] = currentProcess.Id.ToString(CultureInfo.InvariantCulture);
-        replacements["process-name"] = currentProcess.ProcessName;
+        replacements["pname"] = currentProcess.ProcessName;
 
         // OS info
         replacements["os"] = GetOperatingSystemName();

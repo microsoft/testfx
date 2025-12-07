@@ -37,7 +37,7 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<process-name>_<pid>_<assembly>.dmp";
+        string template = "<pname>_<pid>_<assembly>.dmp";
 
         // Act
         string result = service.ResolveTemplate(template);
@@ -82,10 +82,10 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<process-name>_<pid>_custom.dmp";
+        string template = "<pname>_<pid>_custom.dmp";
         var customReplacements = new Dictionary<string, string>
         {
-            ["process-name"] = "custom-process",
+            ["pname"] = "custom-process",
             ["pid"] = "99999"
         };
 
@@ -101,7 +101,7 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<unknown-field>_<process-name>";
+        string template = "<unknown-field>_<pname>";
 
         // Act
         string result = service.ResolveTemplate(template);
@@ -134,10 +134,10 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "%p_<process-name>_hang.dmp";
+        string template = "%p_<pname>_hang.dmp";
         var customReplacements = new Dictionary<string, string>
         {
-            ["process-name"] = "notepad"
+            ["pname"] = "notepad"
         };
         var legacyReplacements = new Dictionary<string, string>
         {
@@ -187,7 +187,7 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<root>/artifacts/<os>/<assembly>/dumps/<process-name>_<pid>_<tfm>_<time>.dmp";
+        string template = "<root>/artifacts/<os>/<assembly>/dumps/<pname>_<pid>_<tfm>_<time>.dmp";
 
         // Act
         string result = service.ResolveTemplate(template);
@@ -206,10 +206,10 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<Process-Name>_<PID>";
+        string template = "<PName>_<PID>";
         var customReplacements = new Dictionary<string, string>
         {
-            ["PROCESS-NAME"] = "CUSTOM",
+            ["PNAME"] = "CUSTOM",
             ["pid"] = "777"
         };
 

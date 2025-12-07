@@ -8,7 +8,7 @@ The artifact naming service provides a standardized way to generate consistent n
 Use placeholders in angle brackets to create dynamic file names:
 
 ```
-<process-name>_<pid>_<id>_hang.dmp
+<pname>_<pid>_<id>_hang.dmp
 ```
 Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
 
@@ -16,7 +16,7 @@ Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
 Create structured directory layouts:
 
 ```
-<root>/artifacts/<os>/<assembly>/dumps/<process-name>_<pid>_<tfm>_<time>.dmp
+<root>/artifacts/<os>/<assembly>/dumps/<pname>_<pid>_<tfm>_<time>.dmp
 ```
 Resolves to: `c:/myproject/artifacts/linux/MyTests/dumps/my-child-process_10001_net9.0_2025-09-22T13:49:34.dmp`
 
@@ -24,7 +24,7 @@ Resolves to: `c:/myproject/artifacts/linux/MyTests/dumps/my-child-process_10001_
 
 | Placeholder | Description | Example |
 |-------------|-------------|---------|
-| `<process-name>` | Name of the process | `MyTests` |
+| `<pname>` | Name of the process | `MyTests` |
 | `<pid>` | Process ID | `12345` |
 | `<id>` | Short random identifier (8 chars) | `a1b2c3d4` |
 | `<os>` | Operating system | `windows`, `linux`, `macos` |
@@ -52,11 +52,11 @@ Override default values for specific scenarios:
 // When dumping a different process than the test host
 var customReplacements = new Dictionary<string, string>
 {
-    ["process-name"] = "Notepad",
+    ["pname"] = "Notepad",
     ["pid"] = "1111"
 };
 
-string result = service.ResolveTemplate("<process-name>_<pid>.dmp", customReplacements);
+string result = service.ResolveTemplate("<pname>_<pid>.dmp", customReplacements);
 // Result: "Notepad_1111.dmp"
 ```
 
@@ -91,10 +91,10 @@ The hang dump extension now uses the artifact naming service and supports both l
 --hangdump-filename "mydump_%p.dmp"
 
 # New template pattern  
---hangdump-filename "<process-name>_<pid>_<id>_hang.dmp"
+--hangdump-filename "<pname>_<pid>_<id>_hang.dmp"
 
 # Complex path template
---hangdump-filename "<root>/dumps/<os>/<process-name>_<pid>_<time>.dmp"
+--hangdump-filename "<root>/dumps/<os>/<pname>_<pid>_<time>.dmp"
 ```
 
 This provides consistent artifact naming across all extensions while maintaining backward compatibility.
