@@ -84,7 +84,11 @@ public class OutputTests : CLITestBase
         Assert.Contains(methodName, message.Text);
         Assert.Contains("TestInitialize", message.Text);
         Assert.Contains("TestCleanup", message.Text);
-        Assert.IsFalse(shouldNotContain.Any(message.Text.Contains));
+        // Assert.IsFalse(shouldNotContain.Any(message.Text.Contains));
+        foreach (string item in shouldNotContain)
+        {
+            Assert.DoesNotContain(item, message.Text);
+        }
     }
 
     private static void ValidateInitializeAndCleanup(IEnumerable<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
