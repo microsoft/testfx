@@ -74,7 +74,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
         public int Count => _dictionary.Count;
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly => ((IDictionary<string, object?>)_dictionary).IsReadOnly;
 
         public void Add(string key, object? value) => _dictionary.Add(key, value);
 
