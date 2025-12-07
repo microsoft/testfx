@@ -25,8 +25,10 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public MSBuildConsumer(IServiceProvider serviceProvider, ICommandLineOptions commandLineOptions)
     {
-        _serviceProvider = serviceProvider;
         _commandLineOptions = commandLineOptions;
+        // IServiceProvider is kept for lazy retrieval of MSBuildTestApplicationLifecycleCallbacks in OnTestSessionStartingAsync.
+        // MSBuildTestApplicationLifecycleCallbacks is not available yet during construction and must be retrieved later.
+        _serviceProvider = serviceProvider;
     }
 
     public Type[] DataTypesConsumed { get; } =

@@ -24,10 +24,14 @@ public static class RetryExtensions
         builder.CommandLine.AddProvider(() => new RetryCommandLineOptionsProvider());
 
         builder.TestHost.AddTestHostApplicationLifetime(serviceProvider
-            => new RetryLifecycleCallbacks(serviceProvider));
+            => new RetryLifecycleCallbacks(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider));
 
         CompositeExtensionFactory<RetryDataConsumer> compositeExtensionFactory
-            = new(serviceProvider => new RetryDataConsumer(serviceProvider));
+            = new(serviceProvider => new RetryDataConsumer(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider));
         builder.TestHost.AddDataConsumer(compositeExtensionFactory);
         builder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
 
@@ -38,8 +42,13 @@ public static class RetryExtensions
 
         // Net yet exposed extension points
         ((TestHostOrchestratorManager)testApplicationBuilder.TestHostOrchestrator)
-            .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
+            .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider));
         ((TestHostManager)builder.TestHost)
-            .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(serviceProvider));
+            .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider));
     }
 }

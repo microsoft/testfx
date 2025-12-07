@@ -16,10 +16,12 @@ internal sealed class RetryExecutionFilterFactory : ITestExecutionFilterFactory
     private readonly ICommandLineOptions _commandLineOptions;
     private RetryLifecycleCallbacks? _retryFailedTestsLifecycleCallbacks;
 
-    public RetryExecutionFilterFactory(IServiceProvider serviceProvider)
+    public RetryExecutionFilterFactory(ICommandLineOptions commandLineOptions, IServiceProvider serviceProvider)
     {
+        _commandLineOptions = commandLineOptions;
+        // IServiceProvider is kept for lazy retrieval of RetryLifecycleCallbacks in TryCreateAsync.
+        // RetryLifecycleCallbacks is not available yet during construction and must be retrieved later.
         _serviceProvider = serviceProvider;
-        _commandLineOptions = serviceProvider.GetCommandLineOptions();
     }
 
     public string Uid => nameof(RetryExecutionFilterFactory);

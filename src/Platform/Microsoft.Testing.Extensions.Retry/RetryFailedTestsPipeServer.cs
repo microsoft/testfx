@@ -17,15 +17,21 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly string[] _failedTests;
 
-    public RetryFailedTestsPipeServer(IServiceProvider serviceProvider, string[] failedTests, ILogger logger)
+    public RetryFailedTestsPipeServer(
+        IEnvironment environment,
+        ILoggerFactory loggerFactory,
+        ITask task,
+        ITestApplicationCancellationTokenSource cancellationTokenSource,
+        string[] failedTests,
+        ILogger logger)
     {
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), serviceProvider.GetEnvironment());
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), environment);
         logger.LogTrace($"Retry server pipe name: '{_pipeNameDescription.Name}'");
         _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, CallbackAsync,
-            serviceProvider.GetEnvironment(),
-            serviceProvider.GetLoggerFactory().CreateLogger<RetryFailedTestsPipeServer>(),
-            serviceProvider.GetTask(),
-            serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
+            environment,
+            loggerFactory.CreateLogger<RetryFailedTestsPipeServer>(),
+            task,
+            cancellationTokenSource.CancellationToken);
 
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));

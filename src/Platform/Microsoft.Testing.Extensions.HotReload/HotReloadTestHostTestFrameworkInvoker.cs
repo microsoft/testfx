@@ -14,14 +14,17 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
 {
     private readonly bool _isHotReloadEnabled;
 
-    public HotReloadTestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
+    public HotReloadTestHostTestFrameworkInvoker(IEnvironment environment, IRuntimeFeature runtimeFeature, IServiceProvider serviceProvider)
         : base(serviceProvider)
     {
-        _isHotReloadEnabled = IsHotReloadEnabled(serviceProvider.GetEnvironment());
+        _isHotReloadEnabled = IsHotReloadEnabled(environment);
         if (_isHotReloadEnabled)
         {
-            ((SystemRuntimeFeature)serviceProvider.GetRuntimeFeature()).EnableHotReload();
+            ((SystemRuntimeFeature)runtimeFeature).EnableHotReload();
         }
+        // IServiceProvider is kept for the base class and for lazy retrieval of services in ExecuteRequestAsync.
+        // Services like IOutputDevice, IConsole, IPlatformOutputDevice, and IMessageBus are not available yet during
+        // construction and must be retrieved later during test execution.
     }
 
     private static bool IsHotReloadEnabled(IEnvironment environment)

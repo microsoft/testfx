@@ -19,10 +19,12 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
 
-    public RetryLifecycleCallbacks(IServiceProvider serviceProvider)
+    public RetryLifecycleCallbacks(ICommandLineOptions commandLineOptions, IServiceProvider serviceProvider)
     {
+        _commandLineOptions = commandLineOptions;
+        // IServiceProvider is kept for lazy retrieval of ILoggerFactory in BeforeRunAsync.
+        // ILoggerFactory is not available yet during construction and must be retrieved later.
         _serviceProvider = serviceProvider;
-        _commandLineOptions = _serviceProvider.GetCommandLineOptions();
     }
 
     public NamedPipeClient? Client { get; private set; }

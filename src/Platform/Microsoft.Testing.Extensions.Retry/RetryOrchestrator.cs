@@ -19,11 +19,14 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileSystem _fileSystem;
 
-    public RetryOrchestrator(IServiceProvider serviceProvider)
+    public RetryOrchestrator(ICommandLineOptions commandLineOptions, IFileSystem fileSystem, IServiceProvider serviceProvider)
     {
+        _commandLineOptions = commandLineOptions;
+        _fileSystem = fileSystem;
+        // IServiceProvider is kept for lazy retrieval of services in OrchestrateTestHostExecutionAsync.
+        // Services like IEnvironment, ILoggerFactory, IConfiguration, ITestApplicationModuleInfo, IOutputDevice, and IProcessHandler
+        // are not available yet during construction and must be retrieved later.
         _serviceProvider = serviceProvider;
-        _commandLineOptions = _serviceProvider.GetCommandLineOptions();
-        _fileSystem = _serviceProvider.GetFileSystem();
     }
 
     public string Uid => nameof(RetryOrchestrator);
@@ -165,7 +168,13 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             finalArguments.Add(currentTryResultFolder);
 
             // Prepare the pipeserver
-            using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
+            using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(
+                _serviceProvider.GetEnvironment(),
+                _serviceProvider.GetLoggerFactory(),
+                _serviceProvider.GetTask(),
+                _serviceProvider.GetTestApplicationCancellationTokenSource(),
+                lastListOfFailedId ?? [],
+                logger);
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 

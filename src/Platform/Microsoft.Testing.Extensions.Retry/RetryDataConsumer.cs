@@ -21,10 +21,12 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     private RetryLifecycleCallbacks? _retryFailedTestsLifecycleCallbacks;
     private int _totalTests;
 
-    public RetryDataConsumer(IServiceProvider serviceProvider)
+    public RetryDataConsumer(ICommandLineOptions commandLineOptions, IServiceProvider serviceProvider)
     {
+        _commandLineOptions = commandLineOptions;
+        // IServiceProvider is kept for lazy retrieval of RetryLifecycleCallbacks in InitializeAsync.
+        // RetryLifecycleCallbacks is not available yet during construction and must be retrieved later.
         _serviceProvider = serviceProvider;
-        _commandLineOptions = _serviceProvider.GetCommandLineOptions();
     }
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
