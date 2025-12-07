@@ -255,8 +255,7 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
         }
 
         return SyntaxFactory.AttributeList(
-            SyntaxFactory.SingletonSeparatedList(osConditionAttribute))
-            .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+            SyntaxFactory.SingletonSeparatedList(osConditionAttribute));
     }
 
     private static string? MapOSPlatformToOperatingSystem(string osPlatform)
