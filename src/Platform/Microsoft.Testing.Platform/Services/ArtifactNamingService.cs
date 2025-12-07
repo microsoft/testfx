@@ -70,7 +70,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         string? assemblyName = _testApplicationModuleInfo.TryGetAssemblyName();
         if (!RoslynString.IsNullOrEmpty(assemblyName))
         {
-            replacements["assembly"] = assemblyName;
+            replacements["asm"] = assemblyName;
         }
 
         // Process info

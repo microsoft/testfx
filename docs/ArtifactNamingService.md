@@ -16,7 +16,7 @@ Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
 Create structured directory layouts:
 
 ```
-<root>/artifacts/<os>/<assembly>/dumps/<pname>_<pid>_<tfm>_<time>.dmp
+<root>/artifacts/<os>/<asm>/dumps/<pname>_<pid>_<tfm>_<time>.dmp
 ```
 Resolves to: `c:/myproject/artifacts/linux/MyTests/dumps/my-child-process_10001_net9.0_2025-09-22T13:49:34.dmp`
 
@@ -28,7 +28,7 @@ Resolves to: `c:/myproject/artifacts/linux/MyTests/dumps/my-child-process_10001_
 | `<pid>` | Process ID | `12345` |
 | `<id>` | Short random identifier (8 chars) | `a1b2c3d4` |
 | `<os>` | Operating system | `windows`, `linux`, `macos` |
-| `<assembly>` | Assembly name | `MyTests` |
+| `<asm>` | Assembly name | `MyTests` |
 | `<tfm>` | Target framework moniker | `net9.0`, `net8.0` |
 | `<time>` | Timestamp (1-second precision) | `2025-09-22T13:49:34` |
 | `<root>` | Project root directory | Found via solution/git/working dir |

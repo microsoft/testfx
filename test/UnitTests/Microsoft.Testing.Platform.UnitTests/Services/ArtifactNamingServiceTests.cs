@@ -37,7 +37,7 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<pname>_<pid>_<assembly>.dmp";
+        string template = "<pname>_<pid>_<asm>.dmp";
 
         // Act
         string result = service.ResolveTemplate(template);
@@ -187,7 +187,7 @@ public sealed class ArtifactNamingServiceTests
     {
         // Arrange
         var service = new ArtifactNamingService(_testApplicationModuleInfo.Object, _environment.Object, _clock.Object, _processHandler.Object);
-        string template = "<root>/artifacts/<os>/<assembly>/dumps/<pname>_<pid>_<tfm>_<time>.dmp";
+        string template = "<root>/artifacts/<os>/<asm>/dumps/<pname>_<pid>_<tfm>_<time>.dmp";
 
         // Act
         string result = service.ResolveTemplate(template);

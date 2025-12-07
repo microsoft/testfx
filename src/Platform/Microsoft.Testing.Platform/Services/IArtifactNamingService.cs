@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.Services;
 
 /// <summary>
 /// Service for generating consistent artifact names and paths using template patterns.
-/// Supports placeholders like &lt;pname&gt;, &lt;pid&gt;, &lt;id&gt;, &lt;os&gt;, &lt;assembly&gt;, &lt;tfm&gt;, &lt;time&gt;, &lt;root&gt;.
+/// Supports placeholders like &lt;pname&gt;, &lt;pid&gt;, &lt;id&gt;, &lt;os&gt;, &lt;asm&gt;, &lt;tfm&gt;, &lt;time&gt;, &lt;root&gt;.
 /// </summary>
 internal interface IArtifactNamingService
 {
