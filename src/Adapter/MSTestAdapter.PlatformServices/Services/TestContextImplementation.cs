@@ -51,12 +51,61 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             => _builder.ToString();
     }
 
+    /// <summary>
+    /// A dictionary wrapper that returns null for non-existent keys instead of throwing KeyNotFoundException.
+    /// This maintains backwards compatibility with MSTest 3.x behavior.
+    /// </summary>
+    private sealed class NullReturningDictionary : IDictionary<string, object?>
+    {
+        private readonly Dictionary<string, object?> _dictionary;
+
+        public NullReturningDictionary(Dictionary<string, object?> dictionary)
+            => _dictionary = dictionary;
+
+        public object? this[string key]
+        {
+            get => _dictionary.TryGetValue(key, out object? value) ? value : null;
+            set => _dictionary[key] = value;
+        }
+
+        public ICollection<string> Keys => _dictionary.Keys;
+
+        public ICollection<object?> Values => _dictionary.Values;
+
+        public int Count => _dictionary.Count;
+
+        public bool IsReadOnly => false;
+
+        public void Add(string key, object? value) => _dictionary.Add(key, value);
+
+        public void Add(KeyValuePair<string, object?> item) => ((IDictionary<string, object?>)_dictionary).Add(item);
+
+        public void Clear() => _dictionary.Clear();
+
+        public bool Contains(KeyValuePair<string, object?> item) => ((IDictionary<string, object?>)_dictionary).Contains(item);
+
+        public bool ContainsKey(string key) => _dictionary.ContainsKey(key);
+
+        public void CopyTo(KeyValuePair<string, object?>[] array, int arrayIndex) => ((IDictionary<string, object?>)_dictionary).CopyTo(array, arrayIndex);
+
+        public IEnumerator<KeyValuePair<string, object?>> GetEnumerator() => _dictionary.GetEnumerator();
+
+        public bool Remove(string key) => _dictionary.Remove(key);
+
+        public bool Remove(KeyValuePair<string, object?> item) => ((IDictionary<string, object?>)_dictionary).Remove(item);
+
+        public bool TryGetValue(string key, out object? value) => _dictionary.TryGetValue(key, out value);
+
+        IEnumerator IEnumerable.GetEnumerator() => _dictionary.GetEnumerator();
+    }
+
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     /// <summary>
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
+    private readonly NullReturningDictionary _propertiesWrapper;
     private readonly IMessageLogger? _messageLogger;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
@@ -127,6 +176,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             }
         }
 
+        _propertiesWrapper = new NullReturningDictionary(_properties);
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
@@ -147,7 +197,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary<string, object?> Properties => _properties;
+    public override IDictionary<string, object?> Properties => _propertiesWrapper;
 
     /// <summary>
     /// Gets the inner test context object.
