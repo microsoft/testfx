@@ -282,6 +282,17 @@ Real: {2}</target>
         <target state="translated">Tipo errado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">A cadeia de caracteres “{0}” corresponde ao padrão “{1}”. {2}</target>

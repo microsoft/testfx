@@ -282,6 +282,17 @@ Actual: {2}</source>
         <target state="translated">错误类型为: &lt;{1}&gt;，实际类型为: &lt;{2}&gt;。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">字符串 '{0}' 与模式 '{1}' 匹配。{2}</target>
