@@ -127,12 +127,6 @@ internal sealed class UnitTestElement
             testCase.SetHierarchy([.. hierarchy]);
         }
 
-        // Set declaring type if present so the correct method info can be retrieved
-        if (TestMethod.DeclaringClassFullName != null)
-        {
-            testCase.SetPropertyValue(EngineConstants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
-        }
-
         // Set only if some test category is present
         if (TestCategory is { Length: > 0 })
         {

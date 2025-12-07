@@ -32,7 +32,6 @@ public class TestCaseExtensionsTests : TestContainer
         resultUnitTestElement.TestCategory.Should().Equal(testCategories);
         resultUnitTestElement.TestMethod.Name.Should().Be("DummyMethod");
         resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
-        resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().BeNull();
     }
 
     public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
@@ -51,11 +50,9 @@ public class TestCaseExtensionsTests : TestContainer
     {
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
         testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
-        testCase.SetPropertyValue(EngineConstants.DeclaringClassNameProperty, "DummyDeclaringClassName");
 
         UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
         resultUnitTestElement.TestMethod.FullClassName.Should().Be("DummyClassName");
-        resultUnitTestElement.TestMethod.DeclaringClassFullName.Should().Be("DummyDeclaringClassName");
     }
 }
