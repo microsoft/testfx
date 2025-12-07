@@ -105,6 +105,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// Properties.
     /// </summary>
     private readonly Dictionary<string, object?> _properties;
+
+    /// <summary>
+    /// Wrapper around _properties that returns null for missing keys instead of throwing.
+    /// Maintains backwards compatibility with MSTest 3.x behavior.
+    /// </summary>
     private readonly NullReturningDictionary _propertiesWrapper;
     private readonly IMessageLogger? _messageLogger;
 
@@ -176,6 +181,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             }
         }
 
+        // Wrap the properties dictionary to maintain backwards compatibility with MSTest 3.x
+        // where accessing non-existent keys returns null instead of throwing KeyNotFoundException
         _propertiesWrapper = new NullReturningDictionary(_properties);
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
