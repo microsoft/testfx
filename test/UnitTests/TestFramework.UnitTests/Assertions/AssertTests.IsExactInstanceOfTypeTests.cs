@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -40,16 +40,16 @@ public partial class AssertTests
 
     public void ExactInstanceOfTypeShouldFailOnDerivedType()
     {
-        object x = new System.IO.MemoryStream();
-        Action action = () => Assert.IsExactInstanceOfType(x, typeof(System.IO.Stream));
+        object x = new MemoryStream();
+        Action action = () => Assert.IsExactInstanceOfType(x, typeof(Stream));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'x'. Expected exact type:<System.IO.Stream>. Actual type:<System.IO.MemoryStream>.");
     }
 
     public void ExactInstanceOfTypeShouldPassOnExactType()
     {
-        object x = new System.IO.MemoryStream();
-        Assert.IsExactInstanceOfType(x, typeof(System.IO.MemoryStream));
+        object x = new MemoryStream();
+        Assert.IsExactInstanceOfType(x, typeof(MemoryStream));
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenValueIsNull()
@@ -125,16 +125,16 @@ public partial class AssertTests
 
     public void ExactInstanceNotOfTypeShouldPassOnDerivedType()
     {
-        object x = new System.IO.MemoryStream();
-        Assert.IsNotExactInstanceOfType(x, typeof(System.IO.Stream));
+        object x = new MemoryStream();
+        Assert.IsNotExactInstanceOfType(x, typeof(Stream));
     }
 
     public void ExactInstanceNotOfTypeShouldFailOnExactType()
     {
-        object x = new System.IO.MemoryStream();
-        Action action = () => Assert.IsNotExactInstanceOfType(x, typeof(System.IO.MemoryStream));
+        object x = new MemoryStream();
+        Action action = () => Assert.IsNotExactInstanceOfType(x, typeof(MemoryStream));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotExactInstanceOfType failed. 'value' expression: 'x'. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>.");
+            .WithMessage("Assert.IsNotExactInstanceOfType failed. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>. 'value' expression: 'x'.");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
@@ -153,8 +153,8 @@ public partial class AssertTests
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenDerivedType_Fails()
     {
-        object x = new System.IO.MemoryStream();
-        Action action = () => Assert.IsExactInstanceOfType<System.IO.Stream>(x);
+        object x = new MemoryStream();
+        Action action = () => Assert.IsExactInstanceOfType<Stream>(x);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'x'. Expected exact type:<System.IO.Stream>. Actual type:<System.IO.MemoryStream>.");
     }
@@ -196,16 +196,16 @@ public partial class AssertTests
 
     public void IsNotExactInstanceOfTypeUsingGenericType_OnDerivedType_DoesNotThrow()
     {
-        object x = new System.IO.MemoryStream();
-        Assert.IsNotExactInstanceOfType<System.IO.Stream>(x);
+        object x = new MemoryStream();
+        Assert.IsNotExactInstanceOfType<Stream>(x);
     }
 
     public void IsNotExactInstanceOfTypeUsingGenericType_OnExactType_Fails()
     {
-        object x = new System.IO.MemoryStream();
-        Action action = () => Assert.IsNotExactInstanceOfType<System.IO.MemoryStream>(x);
+        object x = new MemoryStream();
+        Action action = () => Assert.IsNotExactInstanceOfType<MemoryStream>(x);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotExactInstanceOfType failed. 'value' expression: 'x'. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>.");
+            .WithMessage("Assert.IsNotExactInstanceOfType failed. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>. 'value' expression: 'x'.");
     }
 
     public void IsExactInstanceOfType_WhenNonNullNullableValue_LearnNonNull()
