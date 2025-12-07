@@ -78,6 +78,30 @@ public sealed class TestApplicationBuilderTests
         Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
     }
 
+    [TestMethod]
+    public void DataConsumer_AddingDuplicateToExistingList_ShouldFail()
+    {
+        // Simulate the scenario in BuildTestFrameworkAsync where consumers are added to a list
+        List<IDataConsumer> existingConsumers = [new Consumer("duplicatedId")];
+        IDataConsumer newConsumer = new Consumer("duplicatedId");
+        
+        // This should throw when trying to add a duplicate
+        InvalidOperationException invalidOperationException = Assert.ThrowsExactly<InvalidOperationException>(() => existingConsumers.ValidateUniqueExtension(newConsumer));
+        Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(Consumer).ToString()));
+    }
+
+    [TestMethod]
+    public void TestSessionLifetimeHandler_AddingDuplicateToExistingList_ShouldFail()
+    {
+        // Simulate the scenario in BuildTestFrameworkAsync where handlers are added to a list
+        List<ITestSessionLifetimeHandler> existingHandlers = [new TestSessionLifetimeHandler("duplicatedId")];
+        ITestSessionLifetimeHandler newHandler = new TestSessionLifetimeHandler("duplicatedId");
+        
+        // This should throw when trying to add a duplicate
+        InvalidOperationException invalidOperationException = Assert.ThrowsExactly<InvalidOperationException>(() => existingHandlers.ValidateUniqueExtension(newHandler));
+        Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestSessionLifetimeHandler).ToString()));
+    }
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]
