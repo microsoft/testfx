@@ -874,7 +874,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             {
                 // Check for LINQ predicate patterns that suggest ContainsSingle
                 LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
-                    actualArgumentValue!,
+                    actualArgumentValue,
                     out SyntaxNode? linqCollectionExpr2,
                     out SyntaxNode? predicateExpr2,
                     out _);
