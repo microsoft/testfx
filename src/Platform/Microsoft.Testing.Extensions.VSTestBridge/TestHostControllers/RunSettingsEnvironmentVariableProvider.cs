@@ -1,9 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Xml.Linq;
-
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -75,9 +74,9 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
             _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync().ConfigureAwait(false));
 #endif
         }
-        // If we have content, parse it directly
         else if (!RoslynString.IsNullOrEmpty(runSettingsContent))
         {
+            // If we have content, parse it directly
             _runSettings = XDocument.Parse(runSettingsContent);
         }
         else
