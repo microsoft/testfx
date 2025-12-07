@@ -376,9 +376,13 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = CreateTestContextImplementation();
 
-        // Accessing a non-existent property through GetProperty should return null, not throw
+        // Direct access to Properties dictionary should return null for non-existent keys
         // This tests the behavior that was broken in 4.x and needs to be preserved for backwards compatibility
+        object? nonExistent = _testContextImplementation.Properties["NonExistentProperty"];
+        nonExistent.Should().BeNull();
+        
 #if !WINDOWS_UWP && !WIN_UI
+        // Also verify property accessors work correctly
         string? testRunDirectory = _testContextImplementation.TestRunDirectory;
         testRunDirectory.Should().BeNull();
 
