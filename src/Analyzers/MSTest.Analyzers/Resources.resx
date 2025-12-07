@@ -703,9 +703,9 @@ The type declaring these methods should also respect the following rules:
     <value>Avoid duplicate test method attributes</value>
   </data>
   <data name="DuplicateTestMethodAttributeMessageFormat" xml:space="preserve">
-    <value>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute is allowed.</value>
+    <value>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</value>
   </data>
   <data name="DuplicateTestMethodAttributeDescription" xml:space="preserve">
-    <value>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. Having multiple such attributes can lead to unexpected behavior.</value>
+    <value>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</value>
   </data>
 </root>
