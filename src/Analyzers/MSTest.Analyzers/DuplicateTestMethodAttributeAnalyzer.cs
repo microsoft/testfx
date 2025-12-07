@@ -51,20 +51,19 @@ public sealed class DuplicateTestMethodAttributeAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        List<AttributeData> testMethodAttributes = [];
+        int testMethodAttributeCount = 0;
         foreach (AttributeData attribute in methodSymbol.GetAttributes())
         {
             if (attribute.AttributeClass is not null && attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
             {
-                testMethodAttributes.Add(attribute);
+                testMethodAttributeCount++;
+                if (testMethodAttributeCount > 1)
+                {
+                    // Report diagnostic on the method itself
+                    context.ReportDiagnostic(methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name));
+                    return;
+                }
             }
-        }
-
-        // If there are multiple TestMethod-derived attributes, report a diagnostic
-        if (testMethodAttributes.Count > 1)
-        {
-            // Report diagnostic on the method itself
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name));
         }
     }
 }
