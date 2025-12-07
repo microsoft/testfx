@@ -238,8 +238,8 @@ public sealed class RunSettingsEnvironmentVariableProviderTests
         }
 
         // Assert
-        capturedVariables.Should().HaveCount(2);
-        capturedVariables.Should().ContainSingle(v => v.Variable == "TEST_ENV" && v.Value == "TestValue");
-        capturedVariables.Should().ContainSingle(v => v.Variable == "ANOTHER_VAR" && v.Value == "AnotherValue");
+        Assert.AreEqual(2, capturedVariables.Count);
+        Assert.IsTrue(capturedVariables.Any(v => v.Variable == "TEST_ENV" && v.Value == "TestValue"));
+        Assert.IsTrue(capturedVariables.Any(v => v.Variable == "ANOTHER_VAR" && v.Value == "AnotherValue"));
     }
 }
