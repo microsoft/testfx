@@ -102,12 +102,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     /// <summary>
-    /// Properties.
-    /// </summary>
-    private readonly Dictionary<string, object?> _properties;
-
-    /// <summary>
-    /// Wrapper around _properties that returns null for missing keys instead of throwing.
+    /// Properties dictionary that returns null for missing keys instead of throwing.
     /// Maintains backwards compatibility with MSTest 3.x behavior.
     /// </summary>
     private readonly NullReturningDictionary _propertiesWrapper;
@@ -157,33 +152,34 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
+        Dictionary<string, object?> propertiesDictionary;
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is null && testMethod is null)
         {
-            _properties = new Dictionary<string, object?>(properties);
+            propertiesDictionary = new Dictionary<string, object?>(properties);
         }
         else
         {
-            _properties = new Dictionary<string, object?>(properties.Count + 2);
+            propertiesDictionary = new Dictionary<string, object?>(properties.Count + 2);
             foreach (KeyValuePair<string, object?> kvp in properties)
             {
-                _properties[kvp.Key] = kvp.Value;
+                propertiesDictionary[kvp.Key] = kvp.Value;
             }
 
             if (testClassFullName is not null)
             {
-                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+                propertiesDictionary.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
             }
 
             if (testMethod is not null)
             {
-                _properties.Add(TestNameLabel, testMethod.Name);
+                propertiesDictionary.Add(TestNameLabel, testMethod.Name);
             }
         }
 
         // Wrap the properties dictionary to maintain backwards compatibility with MSTest 3.x
         // where accessing non-existent keys returns null instead of throwing KeyNotFoundException
-        _propertiesWrapper = new NullReturningDictionary(_properties);
+        _propertiesWrapper = new NullReturningDictionary(propertiesDictionary);
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
@@ -316,13 +312,13 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>True if found.</returns>
     public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
     {
-        if (_properties == null)
+        if (_propertiesWrapper == null)
         {
             propertyValue = null;
             return false;
         }
 
-        return _properties.TryGetValue(propertyName, out propertyValue);
+        return _propertiesWrapper.TryGetValue(propertyName, out propertyValue);
     }
 
     /// <summary>
@@ -331,7 +327,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
-        => _properties.Add(propertyName, propertyValue);
+        => _propertiesWrapper.Add(propertyName, propertyValue);
 
     /// <summary>
     /// Result files attached.
