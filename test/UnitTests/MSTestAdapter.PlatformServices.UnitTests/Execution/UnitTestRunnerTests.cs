@@ -65,7 +65,7 @@ public sealed class UnitTestRunnerTests : TestContainer
                 actualReader.ReadInnerXml();
             });
 
-        MSTestSettings? adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
