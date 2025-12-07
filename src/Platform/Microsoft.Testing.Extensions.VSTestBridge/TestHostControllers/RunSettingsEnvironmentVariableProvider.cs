@@ -33,23 +33,55 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
 
     public async Task<bool> IsEnabledAsync()
     {
-        if (!_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings))
+        string? runSettingsFilePath = null;
+        string? runSettingsContent = null;
+
+        // Try to get runsettings from command line
+        if (_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings))
         {
-            return false;
+            if (_fileSystem.ExistFile(runsettings[0]))
+            {
+                runSettingsFilePath = runsettings[0];
+            }
         }
 
-        if (!_fileSystem.ExistFile(runsettings[0]))
+        // If not from command line, try environment variable with content
+        if (runSettingsFilePath is null)
         {
-            return false;
+            runSettingsContent = Environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS");
         }
 
-        using IFileStream fileStream = _fileSystem.NewFileStream(runsettings[0], FileMode.Open, FileAccess.Read);
+        // If not from content env var, try environment variable with file path
+        if (runSettingsFilePath is null && RoslynString.IsNullOrEmpty(runSettingsContent))
+        {
+            string? envVarFilePath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
+            if (!RoslynString.IsNullOrEmpty(envVarFilePath) && _fileSystem.ExistFile(envVarFilePath))
+            {
+                runSettingsFilePath = envVarFilePath;
+            }
+        }
+
+        // If we have a file path, read from file
+        if (runSettingsFilePath is not null)
+        {
+            using IFileStream fileStream = _fileSystem.NewFileStream(runSettingsFilePath, FileMode.Open, FileAccess.Read);
 #if NETCOREAPP
-        _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
+            _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
 #else
-        using StreamReader streamReader = new(fileStream.Stream);
-        _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync().ConfigureAwait(false));
+            using StreamReader streamReader = new(fileStream.Stream);
+            _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync().ConfigureAwait(false));
 #endif
+        }
+        // If we have content, parse it directly
+        else if (!RoslynString.IsNullOrEmpty(runSettingsContent))
+        {
+            _runSettings = XDocument.Parse(runSettingsContent);
+        }
+        else
+        {
+            return false;
+        }
+
         return _runSettings.Element("RunSettings")?.Element("RunConfiguration")?.Element("EnvironmentVariables") is not null;
     }
 
