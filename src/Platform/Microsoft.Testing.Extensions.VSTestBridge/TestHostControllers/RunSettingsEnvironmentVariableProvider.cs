@@ -37,7 +37,8 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
         string? runSettingsContent = null;
 
         // Try to get runsettings from command line
-        if (_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings))
+        if (_commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings)
+            && runsettings.Length > 0)
         {
             if (_fileSystem.ExistFile(runsettings[0]))
             {

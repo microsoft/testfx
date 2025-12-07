@@ -14,21 +14,25 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.TestHostController
 [TestClass]
 public sealed class RunSettingsEnvironmentVariableProviderTests
 {
-    private const string RunSettingsWithEnvironmentVariables = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<RunSettings>
-    <RunConfiguration>
-        <EnvironmentVariables>
-            <TEST_ENV>TestValue</TEST_ENV>
-            <ANOTHER_VAR>AnotherValue</ANOTHER_VAR>
-        </EnvironmentVariables>
-    </RunConfiguration>
-</RunSettings>";
+    private const string RunSettingsWithEnvironmentVariables = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <RunSettings>
+            <RunConfiguration>
+                <EnvironmentVariables>
+                    <TEST_ENV>TestValue</TEST_ENV>
+                    <ANOTHER_VAR>AnotherValue</ANOTHER_VAR>
+                </EnvironmentVariables>
+            </RunConfiguration>
+        </RunSettings>
+        """;
 
-    private const string RunSettingsWithoutEnvironmentVariables = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<RunSettings>
-    <RunConfiguration>
-    </RunConfiguration>
-</RunSettings>";
+    private const string RunSettingsWithoutEnvironmentVariables = """
+        <?xml version="1.0" encoding="utf-8"?>
+        <RunSettings>
+            <RunConfiguration>
+            </RunConfiguration>
+        </RunSettings>
+        """;
 
     [TestMethod]
     public async Task IsEnabledAsync_WhenCommandLineOptionProvided_ReturnsTrue()
