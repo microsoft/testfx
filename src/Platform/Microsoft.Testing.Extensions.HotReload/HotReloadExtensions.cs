@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.Hosting;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions;
