@@ -95,7 +95,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         {
             { HandshakeMessagePropertyNames.PID, _environment.ProcessId.ToString(CultureInfo.InvariantCulture) },
             { HandshakeMessagePropertyNames.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
-            { HandshakeMessagePropertyNames.Framework, RuntimeInformation.FrameworkDescription },
+            // Reports the information from the assembly attribute if available. This shows what the application targets rather than what it is running on. So user sees net472 if they run net472 app, but the system has net48 installed.
+            // Similarly for .NET it reports the version they target, rather than the version of the runtime they will end up using, e.g. when they roll forward from net9 to net10, they will see net9.
+            // Runtime information has some usability but is probably better suited for diagnostic information.
+            { HandshakeMessagePropertyNames.Framework, Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName ?? RuntimeInformation.FrameworkDescription },
             { HandshakeMessagePropertyNames.OS, RuntimeInformation.OSDescription },
             { HandshakeMessagePropertyNames.SupportedProtocolVersions, supportedProtocolVersions },
             { HandshakeMessagePropertyNames.HostType, hostType },
