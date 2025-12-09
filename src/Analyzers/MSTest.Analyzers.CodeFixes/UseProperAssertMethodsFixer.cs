@@ -298,6 +298,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
+        // For ContainsSingle, we expect argumentIndexToRemove=0 (the constant 1) and argumentIndexToReplace=1 (the Count expression)
+        // The general logic below handles any ordering, matching the pattern in FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync
+        
         // Replace the second argument with the predicate
         ArgumentSyntax newArgument = argumentToBeReplaced.WithExpression(replacement);
         ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, newArgument);
