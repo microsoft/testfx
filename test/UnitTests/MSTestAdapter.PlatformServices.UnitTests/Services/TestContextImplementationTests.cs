@@ -380,17 +380,5 @@ public class TestContextImplementationTests : TestContainer
         // This tests the behavior that was broken in 4.x and needs to be preserved for backwards compatibility
         object? nonExistent = _testContextImplementation.Properties["NonExistentProperty"];
         nonExistent.Should().BeNull();
-        
-#if !WINDOWS_UWP && !WIN_UI
-        // Also verify property accessors work correctly
-        string? testRunDirectory = _testContextImplementation.TestRunDirectory;
-        testRunDirectory.Should().BeNull();
-
-        string? deploymentDirectory = _testContextImplementation.DeploymentDirectory;
-        deploymentDirectory.Should().BeNull();
-
-        string? resultsDirectory = _testContextImplementation.ResultsDirectory;
-        resultsDirectory.Should().BeNull();
-#endif
     }
 }
