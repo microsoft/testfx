@@ -124,7 +124,7 @@ namespace Jsonite
         /// <exception cref="JsonException">if the json text is not valid</exception>
         public static void Validate(TextReader reader, JsonSettings settings = null)
         {
-            settings = settings ?? DefaultSettingsForValidate;
+            settings ??= DefaultSettingsForValidate;
             settings.Reflector = JsonReflectorForValidate.Default;
             Deserialize(reader, settings);
         }
