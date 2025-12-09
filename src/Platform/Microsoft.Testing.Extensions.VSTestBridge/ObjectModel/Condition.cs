@@ -256,12 +256,12 @@ internal sealed class Condition
     private string[]? GetPropertyValue(Func<string, object?> propertyValueProvider)
     {
         object? propertyValue = propertyValueProvider(Name);
-        if (propertyValue != null)
+        if (propertyValue is not null)
         {
             if (propertyValue is not string[] multiValue)
             {
                 multiValue = new string[1];
-                multiValue[0] = propertyValue.ToString();
+                multiValue[0] = propertyValue.ToString()!;
             }
 
             return multiValue;
