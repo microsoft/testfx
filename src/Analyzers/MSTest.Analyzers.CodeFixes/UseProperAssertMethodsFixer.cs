@@ -292,6 +292,12 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
         int argumentIndexToReplace = argumentList.Arguments.IndexOf(argumentToBeReplaced);
         
+        // Validate that both arguments were found
+        if (argumentIndexToRemove == -1 || argumentIndexToReplace == -1)
+        {
+            return document;
+        }
+
         // Replace the second argument with the predicate
         ArgumentSyntax newArgument = argumentToBeReplaced.WithExpression(replacement);
         ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, newArgument);
@@ -299,8 +305,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         // Remove the first argument - the index is still valid because ReplaceNode preserves structure
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
         
-        // Add the collection as a new argument after the predicate
+        // Calculate where to insert the collection argument
         // After removing the first argument, if the replaced argument was after it, its index decreases by 1
+        // We want to insert after the predicate (which is now at the adjusted index)
         int adjustedInsertionIndex = argumentIndexToReplace > argumentIndexToRemove ? argumentIndexToReplace - 1 : argumentIndexToReplace;
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(adjustedInsertionIndex + 1, SyntaxFactory.Argument(additionalArgument).WithAdditionalAnnotations(Formatter.Annotation)));
         
