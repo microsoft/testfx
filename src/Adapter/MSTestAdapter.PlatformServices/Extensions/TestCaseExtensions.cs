@@ -78,9 +78,9 @@ internal static class TestCaseExtensions
             // If we don't return UnitTestElement with the correct path to deployment directory, we will
             // end up trying to load the test assembly twice in the same appdomain, once with the default context and once in a LoadFrom context.
             // See https://github.com/microsoft/testfx/issues/6713
-            return unitTestElement.TestMethod.AssemblyName != source
-                ? unitTestElement.CloneWithUpdatedSource(source)
-                : unitTestElement;
+            return unitTestElement.TestMethod.AssemblyName == source
+                ? unitTestElement
+                : unitTestElement.CloneWithUpdatedSource(source);
         }
 
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
@@ -95,13 +95,8 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
-            testMethod.TestCaseIndex = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIndexProperty, 0);
+            testMethod.TestCaseIndex = testCase.GetPropertyValue(EngineConstants.TestCaseIndexProperty, 0);
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
-        }
-
-        if (testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)
-        {
-            testMethod.DeclaringClassFullName = declaringClassName;
         }
 
         UnitTestElement testElement = new(testMethod)
