@@ -256,7 +256,7 @@ internal sealed class Condition
     private string[]? GetPropertyValue(Func<string, object?> propertyValueProvider)
     {
         object? propertyValue = propertyValueProvider(Name);
-        if (propertyValue != null)
+        if (propertyValue is not null)
         {
             if (propertyValue is not string[] multiValue)
             {
