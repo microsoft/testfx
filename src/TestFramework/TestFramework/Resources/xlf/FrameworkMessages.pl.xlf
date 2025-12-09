@@ -315,7 +315,7 @@ Rzeczywiste: {2}</target>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="translated">Parametr „{0}" jest nieprawidłowy. Wartość nie może mieć wartości null.</target>
+        <target state="translated">Parametr „{0}” jest nieprawidłowy. Wartość nie może być równa null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

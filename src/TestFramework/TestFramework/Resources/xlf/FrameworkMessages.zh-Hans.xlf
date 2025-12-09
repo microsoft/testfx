@@ -315,7 +315,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="translated">参数"{0}"无效。值不能为 null。</target>
+        <target state="translated">>参数“{0}”无效。值不能为 NULL。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
