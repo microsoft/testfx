@@ -14,6 +14,5 @@ public class TestClass
 {
     [TestMethod]
     public void Test1()
-    {
-    }
+        => Assert.AreEqual("a", "b", ignoreCase: true);
 }

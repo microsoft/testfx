@@ -700,7 +700,21 @@ public sealed partial class Assert
             finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        AssertFailedException exception = new(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.AreEqual", finalMessage));
+
+        // Store expected and actual values in exception Data for better tooling support
+        if (expected is not null)
+        {
+            exception.Data["assert.expected"] = expected;
+        }
+
+        if (actual is not null)
+        {
+            exception.Data["assert.actual"] = actual;
+        }
+
+        throw exception;
     }
 
     /// <summary>

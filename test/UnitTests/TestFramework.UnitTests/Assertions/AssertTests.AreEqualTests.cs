@@ -1722,4 +1722,104 @@ public partial class AssertTests : TestContainer
                 """);
         }
     }
+
+    public void AreEqualString_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        string expected = "expected value";
+        string actual = "actual value";
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualString_WithIgnoreCase_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        string expected = "Expected Value";
+        string actual = "actual value";
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual, ignoreCase: false);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception!.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualString_WithCulture_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        string expected = "expected value";
+        string actual = "actual value";
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual, ignoreCase: false, CultureInfo.InvariantCulture);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception!.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualString_WithNullExpected_ShouldNotStoreNullInExceptionData()
+    {
+        string? expected = null;
+        string actual = "actual value";
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data.Contains("assert.expected").Should().BeFalse();
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualString_WithNullActual_ShouldNotStoreNullInExceptionData()
+    {
+        string expected = "expected value";
+        string? actual = null;
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data.Contains("assert.actual").Should().BeFalse();
+    }
 }
