@@ -211,6 +211,24 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     /// </summary>
     internal const string CodeFixModeRemoveArgumentAndReplaceArgument = nameof(CodeFixModeRemoveArgumentAndReplaceArgument);
 
+    /// <summary>
+    /// This mode means the codefix operation is as follows:
+    /// <list type="number">
+    /// <item>Find the right assert method name from the properties bag using <see cref="ProperAssertMethodNameKey"/>.</item>
+    /// <item>Replace the identifier syntax for the invocation with the right assert method name. The identifier syntax is calculated by the codefix.</item>
+    /// <item>Remove the argument which the first additional location points to.</item>
+    /// <item>Replace the argument which the second additional location points to with the expression pointed to by the third additional location</item>
+    /// <item>Add new argument which is identical to the node from fourth additional locations.</item>
+    /// </list>
+    /// <para>Example: For <c>Assert.AreEqual(1, collection.Count(x => x == 1))</c>, it will become <c>Assert.ContainsSingle(x => x == 1, collection)</c>.</para>
+    /// <para>The value for ProperAssertMethodNameKey is "ContainsSingle".</para>
+    /// <para>The first additional location will point to the "1" node.</para>
+    /// <para>The second additional location will point to the "collection.Count(x => x == 1)" node.</para>
+    /// <para>The third additional location will point to the "x => x == 1" node.</para>
+    /// <para>The fourth additional location will point to the "collection" node.</para>
+    /// </summary>
+    internal const string CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument = nameof(CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument);
+
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseProperAssertMethodsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseProperAssertMethodsMessageFormat), Resources.ResourceManager, typeof(Resources));
 
@@ -893,10 +911,11 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
                     ImmutableDictionary<string, string?>.Builder properties = ImmutableDictionary.CreateBuilder<string, string?>();
                     properties.Add(ProperAssertMethodNameKey, properAssertMethod);
-                    properties.Add(CodeFixModeKey, CodeFixModeAddArgument);
+                    properties.Add(CodeFixModeKey, CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument);
                     context.ReportDiagnostic(context.Operation.CreateDiagnostic(
                         Rule,
                         additionalLocations: ImmutableArray.Create(
+                            expectedArgument.Syntax.GetLocation(),
                             actualArgumentValue.Syntax.GetLocation(),
                             predicateExpr2.GetLocation(),
                             linqCollectionExpr2.GetLocation()),
