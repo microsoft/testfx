@@ -261,7 +261,7 @@ internal sealed class Condition
             if (propertyValue is not string[] multiValue)
             {
                 multiValue = new string[1];
-                multiValue[0] = propertyValue.ToString()!;
+                multiValue[0] = propertyValue.ToString();
             }
 
             return multiValue;

@@ -140,7 +140,7 @@ internal sealed record class TestMethodInfo
 
             ImmutableArray<(string Key, string? Value)> testProperties = testPropertyAttributes
                 .Where(attr => attr.ConstructorArguments[0].Value is not null)
-                .Select(attr => (attr.ConstructorArguments[0].Value!.ToString()!, attr.ConstructorArguments[1].Value?.ToString()))
+                .Select(attr => (attr.ConstructorArguments[0].Value!.ToString(), attr.ConstructorArguments[1].Value?.ToString()))
                 .ToImmutableArray();
 
             // Method is valid test method
