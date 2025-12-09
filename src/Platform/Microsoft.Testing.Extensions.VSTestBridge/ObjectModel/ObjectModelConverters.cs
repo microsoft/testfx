@@ -71,7 +71,9 @@ internal static class ObjectModelConverters
 
         if (testCase.CodeFilePath is not null)
         {
-            testNode.Properties.Add(new TestFileLocationProperty(testCase.CodeFilePath, new(new(testCase.LineNumber, -1), new(testCase.LineNumber, -1))));
+            var position = new LinePosition(testCase.LineNumber, -1);
+            testNode.Properties.Add(
+                new TestFileLocationProperty(testCase.CodeFilePath, lineSpan: new(position, position)));
         }
 
         return testNode;
