@@ -288,18 +288,20 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
 
+        // Calculate indices before any modifications
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
-        int insertionIndex = argumentList.Arguments.IndexOf(argumentToBeReplaced);
+        int argumentIndexToReplace = argumentList.Arguments.IndexOf(argumentToBeReplaced);
         
         // Replace the second argument with the predicate
-        ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, argumentToBeReplaced.WithExpression(replacement));
+        ArgumentSyntax newArgument = argumentToBeReplaced.WithExpression(replacement);
+        ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, newArgument);
         
-        // Remove the first argument
+        // Remove the first argument - the index is still valid because ReplaceNode preserves structure
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
         
         // Add the collection as a new argument after the predicate
-        // Note: After removing the first argument, the insertion index shifts
-        int adjustedInsertionIndex = insertionIndex > argumentIndexToRemove ? insertionIndex - 1 : insertionIndex;
+        // After removing the first argument, if the replaced argument was after it, its index decreases by 1
+        int adjustedInsertionIndex = argumentIndexToReplace > argumentIndexToRemove ? argumentIndexToReplace - 1 : argumentIndexToReplace;
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(adjustedInsertionIndex + 1, SyntaxFactory.Argument(additionalArgument).WithAdditionalAnnotations(Formatter.Annotation)));
         
         editor.ReplaceNode(argumentList, newArgumentList);
