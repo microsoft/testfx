@@ -69,7 +69,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void Contains([NotNull] ICollection? collection, object? element, string? message)
     {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection", string.Empty);
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection");
 
         foreach (object? current in collection)
         {
@@ -120,7 +120,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message)
     {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection", string.Empty);
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection");
 
         foreach (object? current in collection)
         {
@@ -160,7 +160,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message)
     {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection");
         foreach (object? current in collection)
         {
             if (current == null)
@@ -202,7 +202,7 @@ public sealed class CollectionAssert
     /// </exception>
     public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message)
     {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection", string.Empty);
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection");
 
         message = Assert.ReplaceNulls(message);
 
@@ -292,8 +292,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
     {
-        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
-        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
+        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset");
+        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset");
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (!isSubsetValue.Item1)
         {
@@ -352,8 +352,8 @@ public sealed class CollectionAssert
     /// </exception>
     public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
     {
-        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
-        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
+        Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset");
+        Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset");
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (isSubsetValue.Item1)
         {
@@ -471,7 +471,7 @@ public sealed class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? expected, [NotNullIfNotNull(nameof(expected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
-        Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
+        Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
         if (expected == null != (actual == null))
@@ -637,7 +637,7 @@ public sealed class CollectionAssert
         [NotNullIfNotNull(nameof(actual))] IEnumerable<T?>? notExpected, [NotNullIfNotNull(nameof(notExpected))] IEnumerable<T?>? actual, [NotNull] IEqualityComparer<T>? comparer,
         string? message)
     {
-        Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
+        Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
         if (notExpected == null != (actual == null))
@@ -738,8 +738,8 @@ public sealed class CollectionAssert
     public static void AllItemsAreInstancesOfType(
         [NotNull] ICollection? collection, [NotNull] Type? expectedType, string? message)
     {
-        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
-        Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
+        Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection");
+        Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType");
         int i = 0;
         foreach (object? element in collection)
         {
@@ -1177,7 +1177,7 @@ public sealed class CollectionAssert
     private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
         ref string reason)
     {
-        Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
+        Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
         if (object.ReferenceEquals(expected, actual))
         {
             reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.BothCollectionsSameReference, string.Empty);

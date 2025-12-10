@@ -699,6 +699,18 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
     <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
   </data>
+  <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle" xml:space="preserve">
+    <value>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat" xml:space="preserve">
+    <value>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription" xml:space="preserve">
+    <value>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>
   </data>

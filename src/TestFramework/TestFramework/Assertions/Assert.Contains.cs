@@ -133,7 +133,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <returns>The item.</returns>
-    public static object ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static object? ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
     /// <summary>
@@ -192,33 +192,35 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     /// <returns>The item that matches the predicate.</returns>
-    public static object ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    public static object? ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         object? firstMatch = null;
         int matchCount = 0;
 
         foreach (object? item in collection)
         {
-            if (predicate(item))
+            if (!predicate(item))
             {
-                if (matchCount == 0)
-                {
-                    firstMatch = item;
-                }
+                continue;
+            }
 
-                matchCount++;
+            if (matchCount == 0)
+            {
+                firstMatch = item;
+            }
 
-                // Early exit optimization - no need to continue if we already have more than one match
-                if (matchCount > 1)
-                {
-                    break;
-                }
+            matchCount++;
+
+            // Early exit optimization - no need to continue if we already have more than one match
+            if (matchCount > 1)
+            {
+                break;
             }
         }
 
         if (matchCount == 1)
         {
-            return firstMatch!;
+            return firstMatch;
         }
 
         if (string.IsNullOrEmpty(predicateExpression))
@@ -232,7 +234,7 @@ public sealed partial class Assert
             ThrowAssertSingleMatchFailed(matchCount, userMessage);
         }
 
-        return default!;
+        return default;
     }
 
     #endregion // ContainsSingle
@@ -279,6 +281,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+
         foreach (object? item in collection)
         {
             if (object.Equals(item, expected))
@@ -333,6 +337,9 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+        CheckParameterNotNull(comparer, "Assert.Contains", "comparer");
+
         foreach (object? item in collection)
         {
             if (comparer.Equals(item, expected))
@@ -385,6 +392,9 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+        CheckParameterNotNull(predicate, "Assert.Contains", "predicate");
+
         foreach (object? item in collection)
         {
             if (predicate(item))
@@ -461,6 +471,9 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        CheckParameterNotNull(value, "Assert.Contains", "value");
+        CheckParameterNotNull(substring, "Assert.Contains", "substring");
+
         if (!value.Contains(substring, comparisonType))
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
@@ -513,6 +526,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+
         foreach (object? item in collection)
         {
             if (object.Equals(notExpected, item))
@@ -565,6 +580,9 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+        CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
+
         foreach (object? item in collection)
         {
             if (comparer.Equals(item, notExpected))
@@ -615,6 +633,9 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+        CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
+
         foreach (object? item in collection)
         {
             if (predicate(item))
@@ -689,6 +710,9 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
+        CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
+
         if (value.Contains(substring, comparisonType))
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
