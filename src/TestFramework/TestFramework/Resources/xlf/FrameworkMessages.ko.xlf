@@ -314,8 +314,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">'{0}' 매개 변수가 잘못되었습니다. 이 값은 null일 수 없습니다. {1}.</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="translated">'{0}' 매개 변수가 잘못되었습니다. 이 값은 null일 수 없습니다.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

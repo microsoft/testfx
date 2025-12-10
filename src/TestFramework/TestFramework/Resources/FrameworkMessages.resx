@@ -230,7 +230,7 @@ Actual: {2}</value>
     </value>
   </data>
   <data name="NullParameterToAssert" xml:space="preserve">
-    <value>The parameter '{0}' is invalid. The value cannot be null. {1}.</value>
+    <value>The parameter '{0}' is invalid. The value cannot be null.</value>
   </data>
   <data name="NumberOfElementsDiff" xml:space="preserve">
     <value>Different number of elements.</value>
