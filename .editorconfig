@@ -342,6 +342,9 @@ dotnet_diagnostic.IDE0270.severity = warning
 # IDE0280: Use 'nameof'
 dotnet_diagnostic.IDE0280.severity = warning
 
+# IDE0370: Remove unnecessary suppression
+dotnet_diagnostic.IDE0370.severity = warning
+
 # IDE1005: Use conditional delegate call
 dotnet_diagnostic.IDE1005.severity = warning
 

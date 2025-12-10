@@ -36,7 +36,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         ResponseListener runListener = await jsonClient.RunTests(Guid.NewGuid(), runCollector.CollectNodeUpdates);
 
         await Task.WhenAll(discoveryListener.WaitCompletion(), runListener.WaitCompletion());
-        Assert.AreEqual(1, discoveryCollector.TestNodeUpdates.Count(x => x.Node.NodeType == "action"), "Wrong number of discovery");
+        Assert.ContainsSingle(x => x.Node.NodeType == "action", discoveryCollector.TestNodeUpdates, "Wrong number of discovery");
         Assert.HasCount(2, runCollector.TestNodeUpdates);
         Assert.AreNotEqual(0, logs.Count, "Logs are empty");
         Assert.IsFalse(telemetry.IsEmpty, "telemetry is empty");
