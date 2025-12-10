@@ -291,7 +291,6 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         // Calculate indices before any modifications
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
         int argumentIndexToReplace = argumentList.Arguments.IndexOf(argumentToBeReplaced);
-     
         // Validate that both arguments were found
         if (argumentIndexToRemove == -1 || argumentIndexToReplace == -1)
         {
