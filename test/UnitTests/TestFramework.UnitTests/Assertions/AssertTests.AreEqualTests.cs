@@ -1822,4 +1822,133 @@ public partial class AssertTests : TestContainer
         exception!.Data["assert.expected"].Should().Be(expected);
         exception.Data.Contains("assert.actual").Should().BeFalse();
     }
+
+    public void AreEqualInt_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        int expected = 42;
+        int actual = 99;
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualDecimal_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        decimal expected = 123.45m;
+        decimal actual = 678.90m;
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualDateTime_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        DateTime expected = new(2023, 1, 1, 10, 30, 0);
+        DateTime actual = new(2024, 12, 31, 15, 45, 0);
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualGuid_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        var expected = Guid.NewGuid();
+        var actual = Guid.NewGuid();
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualEnum_ShouldStoreExpectedAndActualInExceptionData()
+    {
+        DayOfWeek expected = DayOfWeek.Monday;
+        DayOfWeek actual = DayOfWeek.Friday;
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data["assert.expected"].Should().Be(expected);
+        exception.Data["assert.actual"].Should().Be(actual);
+    }
+
+    public void AreEqualCustomObject_ShouldNotStoreInExceptionData()
+    {
+        var expected = new CustomObject { Value = 1 };
+        var actual = new CustomObject { Value = 2 };
+
+        AssertFailedException? exception = null;
+        try
+        {
+            Assert.AreEqual(expected, actual);
+        }
+        catch (AssertFailedException ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Data.Contains("assert.expected").Should().BeFalse();
+        exception.Data.Contains("assert.actual").Should().BeFalse();
+    }
+
+    private class CustomObject
+    {
+        public int Value { get; set; }
+
+        public override bool Equals(object? obj) => obj is CustomObject other && Value == other.Value;
+
+        public override int GetHashCode() => Value.GetHashCode();
+    }
 }
