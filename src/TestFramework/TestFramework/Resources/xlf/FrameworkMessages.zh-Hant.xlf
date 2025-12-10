@@ -292,7 +292,6 @@ Actual: {2}</source>
         <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">字串 '{0}' 與模式 '{1}' 相符。{2}</target>
