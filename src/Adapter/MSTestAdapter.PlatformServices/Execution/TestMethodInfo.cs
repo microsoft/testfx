@@ -175,7 +175,7 @@ internal class TestMethodInfo : ITestMethod
 #endif
         }
 
-        return result!;
+        return result;
     }
 
     internal void SetArguments(object?[]? arguments) => Arguments = arguments == null ? null : ResolveArguments(arguments);
@@ -621,7 +621,7 @@ internal class TestMethodInfo : ITestMethod
             try
             {
                 // Reset the cancellation token source to avoid cancellation of cleanup methods because of the init or test method cancellation.
-                TestContext!.Context.CancellationTokenSource = new CancellationTokenSource();
+                TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
 
                 // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
                 if (timeoutTokenSource is { IsCancellationRequested: false })
@@ -812,7 +812,7 @@ internal class TestMethodInfo : ITestMethod
                 _hostContext = CallContext.HostContext;
 #endif
             },
-            TestContext!.Context.CancellationTokenSource,
+            TestContext.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             _executionContext,
@@ -845,7 +845,7 @@ internal class TestMethodInfo : ITestMethod
                 _hostContext = CallContext.HostContext;
 #endif
             },
-            TestContext!.Context.CancellationTokenSource,
+            TestContext.Context.CancellationTokenSource,
             timeoutInfo: timeoutInfo,
             methodInfo,
             _executionContext,
@@ -884,7 +884,7 @@ internal class TestMethodInfo : ITestMethod
                 _hostContext = CallContext.HostContext;
 #endif
             },
-            TestContext!.Context.CancellationTokenSource,
+            TestContext.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             _executionContext,
@@ -917,7 +917,7 @@ internal class TestMethodInfo : ITestMethod
                 _hostContext = CallContext.HostContext;
 #endif
             },
-            TestContext!.Context.CancellationTokenSource,
+            TestContext.Context.CancellationTokenSource,
             timeoutInfo: timeoutInfo,
             methodInfo,
             _executionContext,
@@ -1013,7 +1013,7 @@ internal class TestMethodInfo : ITestMethod
             // It also seems that in rare cases the ex can be null.
             Exception realException = ex.GetRealException();
 
-            if (realException.IsOperationCanceledExceptionFromToken(TestContext!.Context.CancellationTokenSource.Token))
+            if (realException.IsOperationCanceledExceptionFromToken(TestContext.Context.CancellationTokenSource.Token))
             {
                 result.Outcome = UTF.UnitTestOutcome.Timeout;
                 result.TestFailureException = new TestFailedException(UTFUnitTestOutcome.Timeout, string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout));
@@ -1053,7 +1053,7 @@ internal class TestMethodInfo : ITestMethod
             try
             {
                 timeoutTokenSource = new(TimeoutInfo.Timeout);
-                timeoutTokenSource.Token.Register(TestContext!.Context.CancellationTokenSource.Cancel);
+                timeoutTokenSource.Token.Register(TestContext.Context.CancellationTokenSource.Cancel);
                 if (timeoutTokenSource.Token.IsCancellationRequested)
                 {
                     return new()
@@ -1094,7 +1094,7 @@ internal class TestMethodInfo : ITestMethod
         TestResult? result = null;
         Exception? failure = null;
 
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TimeoutInfo.Timeout, TestContext!.Context.CancellationTokenSource.Token))
+        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TimeoutInfo.Timeout, TestContext.Context.CancellationTokenSource.Token))
         {
             if (failure != null)
             {
