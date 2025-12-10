@@ -126,8 +126,7 @@ return await app.RunAsync();
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         Build binLog = Serialization.Read(result.BinlogPath);
-        Assert.IsFalse(binLog.FindChildrenRecursive<AddItem>()
-            .Any(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
+        Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());
     }
 
     public TestContext TestContext { get; set; }
