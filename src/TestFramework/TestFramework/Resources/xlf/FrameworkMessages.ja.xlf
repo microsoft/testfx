@@ -315,7 +315,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="translated">パラメーター '{0}' は無効です。値を null にすることはできません。</target>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
