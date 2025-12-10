@@ -13,7 +13,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0059: <inheritdoc cref="Resources.DuplicateTestMethodAttributeTitle"/>.
+/// MSTEST0060: <inheritdoc cref="Resources.DuplicateTestMethodAttributeTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class DuplicateTestMethodAttributeAnalyzer : DiagnosticAnalyzer
