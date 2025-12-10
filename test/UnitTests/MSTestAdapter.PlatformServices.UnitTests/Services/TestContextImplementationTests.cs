@@ -140,7 +140,7 @@ public class TestContextImplementationTests : TestContainer
         var property = new KeyValuePair<string, string>("SomeNewProperty", "SomeValue");
         _testContextImplementation.AddProperty(property.Key, property.Value);
 
-        _testContextImplementation.Properties[property.Key]!.Should().Be(property.Value);
+        _testContextImplementation.Properties[property.Key].Should().Be(property.Value);
     }
 
     public void AddResultFileShouldThrowIfFileNameIsNull()
@@ -167,7 +167,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        resultsFiles!.Should().Contain("C:\\temp.txt");
+        resultsFiles.Should().Contain("C:\\temp.txt");
     }
 
     public void AddResultFileShouldAddMultipleFilesToResultsFiles()
@@ -179,7 +179,7 @@ public class TestContextImplementationTests : TestContainer
 
         IList<string>? resultsFiles = _testContextImplementation.GetResultFiles();
 
-        resultsFiles!.Should().Contain("C:\\files\\file1.txt");
+        resultsFiles.Should().Contain("C:\\files\\file1.txt");
         resultsFiles.Should().Contain("C:\\files\\files2.html");
     }
 
@@ -187,28 +187,28 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("{0} Testing write", 1);
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteShouldWriteToStringWriterForNullCharacters()
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("{0} Testing \0 write \0", 1);
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldWriteToStringWriter()
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("1 Testing write");
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
     {
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Write("1 Testing \0 write \0");
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteWithMessageShouldWriteToStringWriterForReturnCharacters()
@@ -225,7 +225,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing write", 1);
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteLineShouldWriteToStringWriterForNullCharacters()
@@ -234,7 +234,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriter()
@@ -243,7 +243,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing write");
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing write");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing write");
     }
 
     public void WriteLineWithMessageShouldWriteToStringWriterForNullCharacters()
@@ -252,7 +252,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.WriteLine("1 Testing \0 write \0");
 
-        _testContextImplementation.GetDiagnosticMessages()!.Should().Contain("1 Testing \\0 write \\0");
+        _testContextImplementation.GetDiagnosticMessages().Should().Contain("1 Testing \\0 write \\0");
     }
 
     public void GetDiagnosticMessagesShouldReturnMessagesFromWriteLine()

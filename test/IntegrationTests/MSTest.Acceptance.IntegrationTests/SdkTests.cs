@@ -435,7 +435,7 @@ namespace MSTestSdkTest
 
         compilationResult.AssertExitCodeIs(0);
 
-        SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
+        SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath);
         SL.Task cscTask = binLog.FindChildrenRecursive<SL.Task>(task => task.Name == "Csc").Single();
         SL.Item[] references = [.. cscTask.FindChildrenRecursive<SL.Parameter>(p => p.Name == "References").Single().Children.OfType<SL.Item>()];
 
