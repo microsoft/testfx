@@ -1014,7 +1014,22 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">L'uso di asserzioni nei blocchi catch è problematico perché il test risulta superato anche se non viene generata alcuna eccezione e il blocco catch non viene mai eseguito. Utilizzare 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' o 'Assert.ThrowsExactlyAsync' per verificare che venga generata un'eccezione, quindi effettuare ulteriori asserzioni sull'eccezione rilevata senza usare il blocco try-catch.</target>
         <note />
       </trans-unit>
-          <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+        <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
+        <target state="new">An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
+        <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
+        <target state="new">Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
+        <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
+        <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
         <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
         <note />
