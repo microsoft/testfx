@@ -39,7 +39,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTy
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendLiteral(string! value) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? wrongType, out bool shouldAppend) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Collections.IEnumerable! collection, string? message = "", string! collectionExpression = "") -> object!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Func<object!, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> object!
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>
