@@ -39,8 +39,8 @@ public sealed partial class Assert
     /// </exception>
     public static void MatchesRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.MatchesRegex", "value", string.Empty);
-        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern", string.Empty);
+        CheckParameterNotNull(value, "Assert.MatchesRegex", "value");
+        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
 
         if (!pattern.IsMatch(value))
         {
@@ -115,8 +115,8 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotMatchRegex([NotNull] Regex? pattern, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(pattern))] string patternExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value", string.Empty);
-        CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern", string.Empty);
+        CheckParameterNotNull(value, "Assert.DoesNotMatchRegex", "value");
+        CheckParameterNotNull(pattern, "Assert.DoesNotMatchRegex", "pattern");
 
         if (pattern.IsMatch(value))
         {
@@ -161,7 +161,7 @@ public sealed partial class Assert
 
     private static Regex? ToRegex([NotNull] string? pattern)
     {
-        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern", string.Empty);
+        CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
         return new Regex(pattern);
     }
 }
