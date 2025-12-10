@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../Resources.resx">
     <body>
@@ -19,7 +19,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
 – Nesmí být deklarované pro obecnou třídu.
 – Musí být public.
 – Musí být static.
@@ -29,7 +29,7 @@ The type declaring these methods should also respect the following rules:
 – Nesmí přijímat žádný parametr, nebo musí přijímat jediný parametr typu TestContext.
 – Návratový typ musí být void, Task nebo ValueTask.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
 – Třída by neměla být static.
@@ -64,7 +64,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
 – Nesmí být deklarované pro obecnou třídu.
 – Musí být public.
 – Musí být static.
@@ -74,7 +74,7 @@ The type declaring these methods should also respect the following rules:
 – Musí mít jeden parametr typu TestContext.
 – Návratový typ musí být void, Task nebo ValueTask.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
 – Třída by neměla být static.
@@ -176,7 +176,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
 – Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
 – Musí být public.
 – Musí být static.
@@ -188,7 +188,7 @@ The type declaring these methods should also respect the following rules:
 – V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
 – V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
 – Třída by neměla být static.
@@ -225,7 +225,7 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
 – Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
 – Musí být public.
 – Musí být static.
@@ -237,7 +237,7 @@ The type declaring these methods should also respect the following rules:
 – V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
 – V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
 – Třída by neměla být static.
@@ -489,7 +489,7 @@ The type declaring these methods should also respect the following rules:
 – Musí mít jeden parametr typu TestContext.
 – Návratový typ musí být „void“, „Task“ nebo „ValueTask“.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být „public“.
 – Třída by neměla být „static“.
@@ -734,7 +734,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
 – Musí být public.
 – Nesmí být abstract.
 – Nesmí být async void.
@@ -744,7 +744,7 @@ The type declaring these methods should also respect the following rules:
 – Nesmí přijímat žádný parametr.
 – Návratový typ musí být void, Task nebo ValueTask.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
 – Třída by neměla být static.
@@ -793,7 +793,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="translated">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
 – Musí být public.
 – Nesmí být abstract.
 – Nesmí být async void.
@@ -803,7 +803,7 @@ The type declaring these methods should also respect the following rules:
 – Nesmí přijímat žádný parametr.
 – Návratový typ musí být void, Task nebo ValueTask.
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla:
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
 – Typ by měl být třída.
 – Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
 – Třída by neměla být static.
