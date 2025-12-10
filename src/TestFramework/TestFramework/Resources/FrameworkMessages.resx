@@ -212,6 +212,12 @@ Actual: {2}</value>
   <data name="IsNotInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
   </data>
+  <data name="IsExactInstanceOfFailMsg" xml:space="preserve">
+    <value>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
+  </data>
+  <data name="IsNotExactInstanceOfFailMsg" xml:space="preserve">
+    <value>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
+  </data>
   <data name="IsNotMatchFail" xml:space="preserve">
     <value>String '{0}' matches pattern '{1}'. {2}</value>
   </data>
