@@ -303,12 +303,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFix">
         <source>Use 'Assert.{0}' instead</source>
-        <target state="new">Use 'Assert.{0}' instead</target>
+        <target state="translated">Usa ''Assert.{0}'' en su lugar</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
         <source>Use proper Assert methods for all negated assertions</source>
-        <target state="new">Use proper Assert methods for all negated assertions</target>
+        <target state="translated">Usar métodos Assert adecuados para todas las aserciones negadas</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
