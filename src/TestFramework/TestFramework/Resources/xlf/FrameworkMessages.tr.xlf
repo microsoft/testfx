@@ -292,7 +292,6 @@ Gerçekte olan: {2}</target>
         <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">'{0}' dizesi, '{1}' deseni ile eşleşiyor. {2}</target>
