@@ -65,4 +65,5 @@ internal static class DiagnosticIds
     public const string AvoidAssertsInCatchBlocksRuleId = "MSTEST0058";
     public const string DoNotUseParallelizeAndDoNotParallelizeTogetherRuleId = "MSTEST0059";
     public const string DuplicateTestMethodAttributeRuleId = "MSTEST0060";
+    public const string UseOSConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0061";
 }
