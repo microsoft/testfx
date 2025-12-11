@@ -828,8 +828,9 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Testovací metody (metody označené atributem [TestMethod]) by měly respektovat následující rozložení, které MSTest považuje za platné:
+        <target state="needs-review-translation">Testovací metody (metody označené atributem [TestMethod]) by měly respektovat následující rozložení, které MSTest považuje za platné:
 – musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
 – musí být static,
 – můžou být obecné, pokud lze odvodit parametry typu a typy argumentů jsou kompatibilní
@@ -841,7 +842,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">Testovací metody by měly mít platné rozložení.</target>
+        <target state="needs-review-translation">Testovací metody by měly mít platné rozložení.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">

@@ -111,6 +111,13 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
         }
 
+        // Check for out/ref parameters
+        if (methodSymbol.Parameters.Any(p => p.RefKind is RefKind.Out or RefKind.Ref))
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ValidTestMethodSignatureRule, methodSymbol.Name));
+            return;
+        }
+
         if (methodSymbol.IsStatic || methodSymbol.IsAbstract || methodSymbol is { ReturnsVoid: true, IsAsync: true }
             || (!methodSymbol.ReturnsVoid
             && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))

@@ -397,6 +397,7 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat" xml:space="preserve">

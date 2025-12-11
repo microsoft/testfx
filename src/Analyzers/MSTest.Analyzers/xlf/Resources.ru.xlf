@@ -840,8 +840,9 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Методы теста (методы, помеченные атрибутом "[TestMethod]") должны соблюдать следующую структуру, чтобы считаться допустимыми в MSTest:
+        <target state="needs-review-translation">Методы теста (методы, помеченные атрибутом "[TestMethod]") должны соблюдать следующую структуру, чтобы считаться допустимыми в MSTest:
 – должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]")
 – не следует присваивать значение "static"
 – могут быть универсальными, если можно вывести параметры типа, а типы аргументов являются совместимыми
@@ -853,7 +854,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">Методы теста должны использовать допустимую структуру</target>
+        <target state="needs-review-translation">Методы теста должны использовать допустимую структуру</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
