@@ -121,7 +121,25 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
-        bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
+
+        // Determine ANSI output setting
+        bool useAnsi;
+        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
+        {
+            // New --ansi option takes precedence
+            string ansiValue = ansiArguments[0];
+            useAnsi = IsAnsiEnabled(ansiValue);
+        }
+        else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption))
+        {
+            // Backward compatibility with --no-ansi
+            useAnsi = false;
+        }
+        else
+        {
+            // Default is auto, which means use ANSI unless redirected
+            useAnsi = true;
+        }
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
@@ -158,12 +176,19 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
-            UseAnsi = !noAnsi,
+            UseAnsi = useAnsi,
             UseCIAnsi = inCI,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
     }
+
+    private static bool IsAnsiEnabled(string ansiValue)
+        => TerminalTestReporterCommandLineOptionsProvider.AnsiOptionOnArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionTrueArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionEnableArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOption1Argument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionAutoArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase);
 
     private static string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains(Dash)

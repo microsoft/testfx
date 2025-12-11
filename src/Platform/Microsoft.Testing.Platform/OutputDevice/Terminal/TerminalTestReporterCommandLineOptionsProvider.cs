@@ -13,6 +13,16 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
 {
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";
+    public const string AnsiOption = "ansi";
+    public const string AnsiOptionAutoArgument = "auto";
+    public const string AnsiOptionOnArgument = "on";
+    public const string AnsiOptionTrueArgument = "true";
+    public const string AnsiOptionEnableArgument = "enable";
+    public const string AnsiOption1Argument = "1";
+    public const string AnsiOptionOffArgument = "off";
+    public const string AnsiOptionFalseArgument = "false";
+    public const string AnsiOptionDisableArgument = "disable";
+    public const string AnsiOption0Argument = "0";
     public const string OutputOption = "output";
     public const string OutputOptionNormalArgument = "normal";
     public const string OutputOptionDetailedArgument = "detailed";
@@ -37,6 +47,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         [
             new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false),
             new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false),
+            new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
             new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
         ];
 
@@ -45,11 +56,25 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         {
             NoProgressOption => ValidationResult.ValidTask,
             NoAnsiOption => ValidationResult.ValidTask,
+            AnsiOption => IsValidAnsiArgument(arguments[0])
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(PlatformResources.TerminalAnsiOptionInvalidArgument),
             OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(PlatformResources.TerminalOutputOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+    private static bool IsValidAnsiArgument(string argument)
+        => AnsiOptionAutoArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOptionOnArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOptionTrueArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOptionEnableArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOption1Argument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOptionOffArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOptionFalseArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOptionDisableArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || AnsiOption0Argument.Equals(argument, StringComparison.OrdinalIgnoreCase);
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => // No problem found

@@ -793,6 +793,16 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <target state="translated">停用將 ANSI 逸出字元輸出至螢幕。</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalAnsiOptionDescription">
+        <source>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</source>
+        <target state="new">Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalAnsiOptionInvalidArgument">
+        <source>--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</source>
+        <target state="new">--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>Disable reporting progress to screen.</source>
         <target state="translated">停用向螢幕報告進度。</target>

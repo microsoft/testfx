@@ -590,6 +590,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
     <value>Disable outputting ANSI escape characters to screen.</value>
   </data>
+  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
+    <value>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</value>
+  </data>
+  <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
+    <value>--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</value>
+  </data>
   <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
     <value>Disable reporting progress to screen.</value>
   </data>

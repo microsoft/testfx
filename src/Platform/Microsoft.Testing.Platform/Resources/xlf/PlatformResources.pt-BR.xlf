@@ -793,6 +793,16 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
         <target state="translated">Desabilite a saída de caracteres de escape ANSI para a tela.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalAnsiOptionDescription">
+        <source>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</source>
+        <target state="new">Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalAnsiOptionInvalidArgument">
+        <source>--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</source>
+        <target state="new">--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>Disable reporting progress to screen.</source>
         <target state="translated">Desabilite o progresso do relatório na tela.</target>
