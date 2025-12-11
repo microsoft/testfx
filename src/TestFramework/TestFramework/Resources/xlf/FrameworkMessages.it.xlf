@@ -284,12 +284,12 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="IsExactInstanceOfFailMsg">
         <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <target state="translated">{0} Tipo esatto previsto:&lt;{1}&gt;. Tipo effettivo:&lt;{2}&gt;.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotExactInstanceOfFailMsg">
         <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Tipo esatto errato:&lt;{1}&gt;. Tipo effettivo:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -325,7 +325,7 @@ Effettivo: {2}</target>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
+        <target state="translated">Il parametro "{0}" non è valido. Il valore non può essere null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
