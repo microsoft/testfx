@@ -273,9 +273,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
-        if (root.FindNode(additionalLocations[1].SourceSpan) is not ArgumentSyntax argumentToBeReplaced ||
-            root.FindNode(additionalLocations[2].SourceSpan) is not ExpressionSyntax replacement ||
-            root.FindNode(additionalLocations[3].SourceSpan) is not ExpressionSyntax additionalArgument)
+        if (root.FindNode(additionalLocations[1].SourceSpan, getInnermostNodeForTie: false) is not ArgumentSyntax argumentToBeReplaced ||
+            root.FindNode(additionalLocations[2].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax replacement ||
+            root.FindNode(additionalLocations[3].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax additionalArgument)
         {
             return document;
         }

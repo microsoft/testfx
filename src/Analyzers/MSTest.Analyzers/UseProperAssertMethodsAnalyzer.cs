@@ -888,7 +888,8 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
         if (isAreEqualInvocation)
         {
-            if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue))
+            if (TryGetSecondArgumentValue((IInvocationOperation)context.Operation, out IOperation? actualArgumentValue) &&
+                TryGetArgumentForParameterOrdinal((IInvocationOperation)context.Operation, 1, out IArgumentOperation? actualArgument))
             {
                 // Check for LINQ predicate patterns that suggest ContainsSingle
                 LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
@@ -916,7 +917,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                         Rule,
                         additionalLocations: ImmutableArray.Create(
                             expectedArgument.Syntax.GetLocation(),
-                            actualArgumentValue.Syntax.GetLocation(),
+                            actualArgument.Syntax.GetLocation(),
                             predicateExpr2.GetLocation(),
                             linqCollectionExpr2.GetLocation()),
                         properties: properties.ToImmutable(),
@@ -1207,6 +1208,12 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static bool TryGetSecondArgumentValue(IInvocationOperation operation, [NotNullWhen(true)] out IOperation? argumentValue)
         => TryGetArgumentValueForParameterOrdinal(operation, 1, out argumentValue);
+
+    private static bool TryGetArgumentForParameterOrdinal(IInvocationOperation operation, int ordinal, [NotNullWhen(true)] out IArgumentOperation? argument)
+    {
+        argument = operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Ordinal == ordinal);
+        return argument is not null;
+    }
 
     private static bool TryGetArgumentValueForParameterOrdinal(IInvocationOperation operation, int ordinal, [NotNullWhen(true)] out IOperation? argumentValue)
     {
