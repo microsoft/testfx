@@ -124,21 +124,41 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         // Determine ANSI output setting
         bool useAnsi;
+        bool? forceAnsi = null;
         if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
         {
             // New --ansi option takes precedence
             string ansiValue = ansiArguments[0];
-            useAnsi = IsAnsiEnabled(ansiValue);
+            if (IsAnsiEnabledValue(ansiValue))
+            {
+                // Force enable ANSI
+                useAnsi = true;
+                forceAnsi = true;
+            }
+            else if (IsAnsiDisabledValue(ansiValue))
+            {
+                // Force disable ANSI
+                useAnsi = false;
+                forceAnsi = false;
+            }
+            else
+            {
+                // Auto mode - detect capabilities
+                useAnsi = true;
+                forceAnsi = null;
+            }
         }
         else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption))
         {
             // Backward compatibility with --no-ansi
             useAnsi = false;
+            forceAnsi = false;
         }
         else
         {
-            // Default is auto, which means use ANSI unless redirected
+            // Default is auto mode - detect capabilities
             useAnsi = true;
+            forceAnsi = null;
         }
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
@@ -177,18 +197,24 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             UseAnsi = useAnsi,
+            ForceAnsi = forceAnsi,
             UseCIAnsi = inCI,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
     }
 
-    private static bool IsAnsiEnabled(string ansiValue)
+    private static bool IsAnsiEnabledValue(string ansiValue)
         => TerminalTestReporterCommandLineOptionsProvider.AnsiOptionOnArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
             || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionTrueArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
             || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionEnableArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOption1Argument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionAutoArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase);
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOption1Argument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsAnsiDisabledValue(string ansiValue)
+        => TerminalTestReporterCommandLineOptionsProvider.AnsiOptionOffArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionFalseArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionDisableArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
+            || TerminalTestReporterCommandLineOptionsProvider.AnsiOption0Argument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase);
 
     private static string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains(Dash)
