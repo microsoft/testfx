@@ -711,4 +711,13 @@ The type declaring these methods should also respect the following rules:
     <value>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</value>
     <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
   </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
+    <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
+  </data>
 </root>
