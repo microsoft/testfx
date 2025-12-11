@@ -46,7 +46,7 @@ internal sealed class TestMethod : ITestMethod
         string? displayName,
         string? parameterTypes)
     {
-        Guard.NotNullOrWhiteSpace(assemblyName);
+        Ensure.NotNullOrWhiteSpace(assemblyName);
 
         Name = name;
         DisplayName = displayName ?? name;

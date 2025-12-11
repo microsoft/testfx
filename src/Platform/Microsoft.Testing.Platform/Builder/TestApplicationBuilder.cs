@@ -71,8 +71,8 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
         Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> frameworkFactory)
     {
-        Guard.NotNull(frameworkFactory);
-        Guard.NotNull(capabilitiesFactory);
+        Ensure.NotNull(frameworkFactory);
+        Ensure.NotNull(capabilitiesFactory);
 
         if (_testFrameworkFactory is not null)
         {

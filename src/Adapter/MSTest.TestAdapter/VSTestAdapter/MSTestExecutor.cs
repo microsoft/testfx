@@ -86,8 +86,8 @@ internal sealed class MSTestExecutor : ITestExecutor
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
-        Guard.NotNull(frameworkHandle);
-        Guard.NotNullOrEmpty(tests);
+        Ensure.NotNull(frameworkHandle);
+        Ensure.NotNullOrEmpty(tests);
 
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
@@ -100,8 +100,8 @@ internal sealed class MSTestExecutor : ITestExecutor
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
-        Guard.NotNull(frameworkHandle);
-        Guard.NotNullOrEmpty(sources);
+        Ensure.NotNull(frameworkHandle);
+        Ensure.NotNullOrEmpty(sources);
 
         TestSourceHandler testSourceHandler = new();
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))

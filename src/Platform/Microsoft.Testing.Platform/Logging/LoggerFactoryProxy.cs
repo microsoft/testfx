@@ -13,7 +13,7 @@ internal sealed class LoggerFactoryProxy : ILoggerFactory
 
     public void SetLoggerFactory(ILoggerFactory loggerFactory)
     {
-        Guard.NotNull(loggerFactory);
+        Ensure.NotNull(loggerFactory);
         _loggerFactory = loggerFactory;
     }
 }
