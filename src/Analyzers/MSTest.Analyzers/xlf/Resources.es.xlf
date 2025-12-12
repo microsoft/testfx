@@ -1016,17 +1016,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
-        <target state="new">An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</target>
+        <target state="translated">Un ensamblado debe tener el atributo '[Parallelize]' o '[DoNotParallelize]', pero no ambos. Tener ambos atributos crea una configuración ambigua. Cuando ambos están presentes, '[DoNotParallelize]' tiene prioridad y se deshabilitará la paralelización.</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
         <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
-        <target state="new">Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</target>
+        <target state="translated">El ensamblado tiene los atributos '[Parallelize]' y '[DoNotParallelize]', lo que crea ambigüedad</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
         <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
-        <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
+        <target state="translated">No use los atributos '[Parallelize]' y '[DoNotParallelize]'</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">

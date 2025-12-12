@@ -1016,17 +1016,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
-        <target state="new">An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</target>
+        <target state="translated">一個組件應該要有 '[Parallelize]' 或 '[DoNotParallelize]' 屬性，但不能同時擁有兩者。若同時存在這兩個屬性，會造成設定上的歧義。當兩者並存時，系統會優先採用 '[DoNotParallelize]'，並停用平行化功能。</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
         <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
-        <target state="new">Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</target>
+        <target state="translated">組件同時具有 '[Parallelize]' 與 '[DoNotParallelize]' 屬性，造成歧義</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
         <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
-        <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
+        <target state="translated">請勿同時使用 '[Parallelize]' 與 '[DoNotParallelize]' 屬性</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">

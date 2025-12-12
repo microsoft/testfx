@@ -284,12 +284,12 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="IsExactInstanceOfFailMsg">
         <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <target state="translated">{0} Beklenen tam tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotExactInstanceOfFailMsg">
         <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
+        <target state="translated">Yanlış tam tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -325,7 +325,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
+        <target state="translated">'{0}' parametresi geçersiz. Değer null olamaz.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

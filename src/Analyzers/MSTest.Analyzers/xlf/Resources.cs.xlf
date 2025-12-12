@@ -1016,32 +1016,32 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
-        <target state="new">An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</target>
+        <target state="translated">Sestavení by mělo mít buď atribut [Parallelize], nebo atribut [DoNotParallelize], ale ne oba. Přítomnost obou atributů způsobuje nejednoznačnou konfiguraci. Když jsou přítomny oba atributy, má přednost atribut [DoNotParallelize] a bude zakázána paralelizace.</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
         <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
-        <target state="new">Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</target>
+        <target state="translated">Sestavení má atributy [Parallelize] i [DoNotParallelize], což způsobuje nejednoznačnost.</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
         <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
-        <target state="new">Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</target>
+        <target state="translated">Nepoužívejte současně atributy [Parallelize] a [DoNotParallelize].</target>
         <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Místo volání „RuntimeInformation.IsOSPlatform“ použijte atribut „[OSCondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
         <note />
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Místo volání „RuntimeInformation.IsOSPlatform“ použijte atribut „[OSCondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
         <note />
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
-        <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
+        <target state="translated">Testovací metody, které používají „RuntimeInformation.IsOSPlatform“ s časným vrácením nebo „Assert.Inconclusive“, by místo toho měly používat atribut „[OSCondition]“. Tento atribut poskytuje deklarativní a zjistitelný způsob určení požadavků na testy specifické pro operační systém.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">

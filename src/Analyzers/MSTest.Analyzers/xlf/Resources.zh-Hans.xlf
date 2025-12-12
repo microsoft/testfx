@@ -1031,17 +1031,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">使用 '[OSCondition]' 属性，而不是具有早期返回或 'Assert.Inconclusive' 的 'RuntimeInformation.IsOSPlatform' 调用</target>
         <note />
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">使用 '[OSCondition]' 属性，而不是具有早期返回或 'Assert.Inconclusive' 的 'RuntimeInformation.IsOSPlatform' 调用</target>
         <note />
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
-        <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
+        <target state="translated">将 'RuntimeInformation.IsOSPlatform' 用于早期返回或 'Assert.Inconclusive' 的测试方法应改用 '[OSCondition]' 属性。此属性提供了一种更具声明性且可发现的方式来指定特定于操作系统的测试要求。</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">

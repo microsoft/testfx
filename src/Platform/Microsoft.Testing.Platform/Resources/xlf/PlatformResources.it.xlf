@@ -117,6 +117,11 @@
         <target state="translated">L'opzione '--{0}' è riservata e non può essere usata dai provider: '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">L'opzione '--{0}' del provider '{1}' (UID: {2}) usa il prefisso riservato '--internal'</target>
