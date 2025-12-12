@@ -148,7 +148,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // relies on unhandled exception.
 
         // Check the config file, by default is not specified the policy is false.
-        _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException]!, out bool isFileConfiguredToFailFast);
+        _ = bool.TryParse(configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);
 
         // Check the environment variable, it wins on all the other configuration.
         string? environmentSetting = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
@@ -260,6 +260,15 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             builderActivity?.Dispose();
             return new InformativeCommandLineHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
+
+        // Check for obsolete options and display warnings
+        await CommandLineOptionsValidator.CheckForObsoleteOptionsAsync(
+            loggingState.CommandLineParseResult,
+            commandLineHandler.SystemCommandLineOptionsProviders,
+            commandLineHandler.ExtensionsCommandLineOptionsProviders,
+            proxyOutputDevice,
+            commandLineHandler,
+            testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         // Register as ICommandLineOptions.
         serviceProvider.TryAddService(commandLineHandler);
