@@ -537,7 +537,8 @@ public sealed partial class Assert
                             FrameworkMessages.WrongExceptionThrown,
                             userMessage,
                             typeof(TException),
-                            ex.GetType());
+                            ex.GetType(),
+                            ex.ToString());
                         ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
@@ -577,7 +578,8 @@ public sealed partial class Assert
                             FrameworkMessages.WrongExceptionThrown,
                             userMessage,
                             typeof(TException),
-                            ex.GetType());
+                            ex.GetType(),
+                            ex.ToString());
                         ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
