@@ -597,7 +597,10 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Use '--ansi off' instead of '--no-ansi'.</value>
   </data>
   <data name="TerminalAnsiOptionDescription" xml:space="preserve">
-    <value>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.</value>
+    <value>Control ANSI escape characters output.
+  --ansi auto - Auto-detect terminal capabilities (default)
+  --ansi on|true|enable|1 - Force enable ANSI escape sequences
+  --ansi off|false|disable|0 - Force disable ANSI escape sequences</value>
   </data>
   <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
     <value>--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</value>

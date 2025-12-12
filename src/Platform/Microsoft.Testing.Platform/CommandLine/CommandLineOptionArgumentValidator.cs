@@ -12,26 +12,19 @@ internal static class CommandLineOptionArgumentValidator
     private static readonly string[] DefaultOffValues = ["off", "false", "disable", "0"];
 
     /// <summary>
-    /// Validates that an argument is one of the accepted on/off/auto values.
+    /// Validates that an argument is one of the accepted on/off boolean values.
     /// </summary>
     /// <param name="argument">The argument to validate.</param>
-    /// <param name="autoValue">The value representing auto mode (default: "auto").</param>
     /// <param name="onValues">The values representing on/enabled state (default: ["on", "true", "enable", "1"]).</param>
     /// <param name="offValues">The values representing off/disabled state (default: ["off", "false", "disable", "0"]).</param>
     /// <returns>True if the argument is valid; otherwise, false.</returns>
-    public static bool IsValidOnOffAutoArgument(
+    public static bool IsValidBooleanArgument(
         string argument,
-        string? autoValue = "auto",
         string[]? onValues = null,
         string[]? offValues = null)
     {
         onValues ??= DefaultOnValues;
         offValues ??= DefaultOffValues;
-
-        if (autoValue is not null && autoValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
 
         foreach (string onValue in onValues)
         {
@@ -50,6 +43,31 @@ internal static class CommandLineOptionArgumentValidator
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Validates that an argument is one of the accepted on/off/auto values.
+    /// </summary>
+    /// <param name="argument">The argument to validate.</param>
+    /// <param name="autoValue">The value representing auto mode (default: "auto").</param>
+    /// <param name="onValues">The values representing on/enabled state (default: ["on", "true", "enable", "1"]).</param>
+    /// <param name="offValues">The values representing off/disabled state (default: ["off", "false", "disable", "0"]).</param>
+    /// <returns>True if the argument is valid; otherwise, false.</returns>
+    public static bool IsValidBooleanAutoArgument(
+        string argument,
+        string? autoValue = "auto",
+        string[]? onValues = null,
+        string[]? offValues = null)
+    {
+        onValues ??= DefaultOnValues;
+        offValues ??= DefaultOffValues;
+
+        if (autoValue is not null && autoValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return IsValidBooleanArgument(argument, onValues, offValues);
     }
 
     /// <summary>
