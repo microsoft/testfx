@@ -104,7 +104,9 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
             case TimeoutTestNodeStateProperty:
+#pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
                 _totalFailedTests?.Add(1);
                 _totalCompletedTests?.Add(1);
                 HandleTestResult(message.TestNode, executionState);
@@ -238,7 +240,9 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             FailedTestNodeStateProperty failed => ("failed", failed.Exception, null),
             ErrorTestNodeStateProperty error => ("error", error.Exception, null),
             TimeoutTestNodeStateProperty timeout => ("timeout", timeout.Exception, timeout.Timeout),
+#pragma warning disable CS0618 // Type or member is obsolete
             CancelledTestNodeStateProperty cancelled => ("cancelled", cancelled.Exception, null),
+#pragma warning restore CS0618 // Type or member is obsolete
             SkippedTestNodeStateProperty => ("skipped", null, null),
             _ => ("unknown", null, null),
         };
