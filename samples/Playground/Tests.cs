@@ -15,5 +15,7 @@ public class TestClass
     [TestMethod]
     public void Test1()
     {
+        Thread.Sleep(5000);
+        Assert.IsPositive(1);
     }
 }

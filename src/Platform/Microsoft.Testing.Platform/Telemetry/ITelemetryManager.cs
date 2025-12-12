@@ -6,4 +6,6 @@ namespace Microsoft.Testing.Platform.Telemetry;
 internal interface ITelemetryManager
 {
     void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryCollectorFactory);
+
+    void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory);
 }

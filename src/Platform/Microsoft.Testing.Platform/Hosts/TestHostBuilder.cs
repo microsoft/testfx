@@ -31,6 +31,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
+    private const string BuilderHostTypeOTelKey = "HostType";
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly PlatformOutputDeviceManager _outputDisplay = new();
@@ -133,6 +134,14 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Build the IConfiguration - we need special treatment because the configuration is needed by extensions.
         var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider, loggingState.CommandLineParseResult).ConfigureAwait(false);
         serviceProvider.TryAddService(configuration);
+
+        // When building the otel service, it will register a platform OTel service that we use to compensate the lack of access to System.DiagnosticsSource
+        IPlatformActivity? builderActivity = null;
+        if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
+        {
+            serviceProvider.AddService(otelService);
+            builderActivity = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>()?.StartActivity("TestHostBuilder", startTime: buildBuilderStart);
+        }
 
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
         // This mode can be too aggressive especially compared to the old framework, so we allow the user to disable it if their suite
@@ -246,6 +255,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await proxyOutputDevice.DisplayAsync(commandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await commandLineHandler.PrintHelpAsync(proxyOutputDevice, null, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(InformativeCommandLineHost));
+            builderActivity?.Dispose();
             return new InformativeCommandLineHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
@@ -292,8 +304,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
-        ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildAsync(serviceProvider, loggerFactory, testApplicationOptions).ConfigureAwait(false);
+        ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildTelemetryAsync(serviceProvider, loggerFactory, testApplicationOptions).ConfigureAwait(false);
         serviceProvider.TryAddService(telemetryService);
+
         AddApplicationMetadata(serviceProvider, builderMetrics);
 
         // Subscribe to the process if the option is set.
@@ -310,7 +323,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             proxyOutputDevice,
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
-            policiesService);
+            policiesService,
+            serviceProvider.GetPlatformOTelService());
         serviceProvider.AddService(testApplicationResult);
 
         // Add Chat Client if AI capabilities are enabled
@@ -339,6 +353,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 stop: systemClock.UtcNow,
                 testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(ToolsHost));
+            builderActivity?.Dispose();
             return toolsTestHost;
         }
 
@@ -361,6 +377,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 await commandLineHandler.PrintHelpAsync(proxyOutputDevice, toolsInformation, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             }
 
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(InformativeCommandLineHost));
+            builderActivity?.Dispose();
             return new InformativeCommandLineHost(0, serviceProvider);
         }
 
@@ -368,6 +386,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         if (isInfoCommand)
         {
             await commandLineHandler.PrintInfoAsync(proxyOutputDevice, toolsInformation, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(InformativeCommandLineHost));
+            builderActivity?.Dispose();
             return new InformativeCommandLineHost(0, serviceProvider);
         }
 
@@ -383,6 +403,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 await ((TestHostOrchestratorManager)TestHostOrchestratorManager).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
             serviceProvider.AddServices(orchestratorLifetimes);
 
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(TestHostOrchestratorHost));
+            builderActivity?.Dispose();
             return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
 
@@ -429,6 +451,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                     stop: systemClock.UtcNow,
                     testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
+                builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(TestHostControllersTestHost));
+                builderActivity?.Dispose();
                 return testHostControllersTestHost;
             }
         }
@@ -485,6 +509,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 stop: systemClock.UtcNow,
                 testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, testControllerConnection is not null ? nameof(TestHostControlledHost) : nameof(ServerTestHost));
+            builderActivity?.Dispose();
             return actualTestHost;
         }
         else
@@ -532,6 +558,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
                 testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 #pragma warning restore SA1118 // Parameter should not span multiple lines
 
+            builderActivity?.SetTag(BuilderHostTypeOTelKey, testControllerConnection is not null ? nameof(TestHostControlledHost) : nameof(ConsoleTestHost));
+            builderActivity?.Dispose();
             return actualTestHost;
         }
     }
