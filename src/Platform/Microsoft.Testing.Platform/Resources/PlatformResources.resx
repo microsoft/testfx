@@ -484,6 +484,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Invalid PID '{0}'
 {1}</value>
   </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser" xml:space="preserve">
+    <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
+  </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
   </data>
@@ -727,5 +730,14 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
     <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+  </data>
+  <data name="TestHostControllerProcessRestartNotSupportedOnWebAssembly" xml:space="preserve">
+    <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
+  </data>
+  <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Synchronous flush is not supported in browser environments.</value>
+  </data>
+  <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
   </data>
 </root>

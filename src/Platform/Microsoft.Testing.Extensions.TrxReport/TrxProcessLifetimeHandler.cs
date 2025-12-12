@@ -22,6 +22,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class TrxProcessLifetimeHandler :
     ITestHostProcessLifetimeHandler,
     IDataConsumer,
