@@ -828,8 +828,9 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Os métodos de teste, métodos marcados com o atributo '[TestMethod]', devem respeitar o seguinte layout para que sejam considerados válidos pelo MSTest:
+        <target state="needs-review-translation">Os métodos de teste, métodos marcados com o atributo '[TestMethod]', devem respeitar o seguinte layout para que sejam considerados válidos pelo MSTest:
 - deve ser "público" (ou "interno" se o atributo "[assembly: DiscoverInternals]" estiver definido)
 - não pode ser ''estático''
 - ele deve ser genérico, desde que os parâmetros de tipo possam ser inferidos e os tipos de argumentos sejam compatíveis
@@ -841,7 +842,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">Os métodos de teste devem ter um layout válido</target>
+        <target state="needs-review-translation">Os métodos de teste devem ter um layout válido</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">

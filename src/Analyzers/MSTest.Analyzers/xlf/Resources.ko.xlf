@@ -828,8 +828,9 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">'[TestMethod]' 특성으로 표시된 메서드인 테스트 메서드는 MSTest에서 유효한 것으로 간주되도록 다음 레이아웃을 준수해야 합니다.
+        <target state="needs-review-translation">'[TestMethod]' 특성으로 표시된 메서드인 테스트 메서드는 MSTest에서 유효한 것으로 간주되도록 다음 레이아웃을 준수해야 합니다.
 - 'public'(혹은 '[assembly: DiscoverInternals]' 특성이 설정된 경우 'internal')이어야 합니다.
 - 'static'이 아니어야 합니다.
 - 형식 매개 변수를 유추할 수 있고 인수 형식이 호환되는 경우 제네릭이 될 수 있습니다.
@@ -841,7 +842,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">테스트 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
+        <target state="needs-review-translation">테스트 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">

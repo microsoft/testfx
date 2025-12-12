@@ -829,8 +829,9 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">'[TestMethod]' özniteliğiyle işaretlenen test yöntemleri, MSTest:
+        <target state="needs-review-translation">'[TestMethod]' özniteliğiyle işaretlenen test yöntemleri, MSTest:
  tarafından geçerli kabul edilebilmesi için aşağıdaki düzene uygun olacak şekilde düzenlenmelidir
 - 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
 - 'static' olmamalıdır
@@ -843,7 +844,7 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">Test yöntemleri geçerli bir düzene sahip olmalıdır</target>
+        <target state="needs-review-translation">Test yöntemleri geçerli bir düzene sahip olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">

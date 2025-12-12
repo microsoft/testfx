@@ -828,8 +828,9 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">测试方法(标记有 "[TestMethod]" 属性的方法)应遵循以下布局，以便 MSTest 将其视为有效:
+        <target state="needs-review-translation">测试方法(标记有 "[TestMethod]" 属性的方法)应遵循以下布局，以便 MSTest 将其视为有效:
 - 它应该是 "public" (如果设置了 "[assembly: DiscoverInternals]" 属性，则应该是 "internal")
 - 它不应为 "static"
 - 只要可以推断类型参数并且参数类型兼容，它就应该是泛型
@@ -841,7 +842,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">测试方法应具有有效的布局</target>
+        <target state="needs-review-translation">测试方法应具有有效的布局</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">

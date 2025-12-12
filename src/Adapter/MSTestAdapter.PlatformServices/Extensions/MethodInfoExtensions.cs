@@ -80,6 +80,7 @@ internal static class MethodInfoExtensions
             method is { IsAbstract: false, IsStatic: false } &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
+            !method.GetParameters().Any(p => p.IsOut || p.ParameterType.IsByRef) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
     }
 

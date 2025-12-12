@@ -828,8 +828,9 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Metody testowe, czyli metody oznaczone atrybutem „[TestMethod]”, powinny uwzględniać następujący układ, aby platforma MSTest uznała je za prawidłowe:
+        <target state="needs-review-translation">Metody testowe, czyli metody oznaczone atrybutem „[TestMethod]”, powinny uwzględniać następujący układ, aby platforma MSTest uznała je za prawidłowe:
 — powinny mieć wartość „public” (lub „internal”, jeśli ustawiono atrybut „[assembly: DiscoverInternals]”)
 — nie powinny mieć wartości „static”
 — mogą być ogólne, o ile można wywnioskować parametry typu i typy argumentów są zgodne
@@ -841,7 +842,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">Metody testowe powinny mieć prawidłowy układ</target>
+        <target state="needs-review-translation">Metody testowe powinny mieć prawidłowy układ</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">

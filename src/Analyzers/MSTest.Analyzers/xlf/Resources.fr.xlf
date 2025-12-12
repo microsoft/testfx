@@ -828,8 +828,9 @@ Le type doit être une classe
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
+- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">Les méthodes de test, c’est-à-dire les méthodes marquées de l’attribut « [TestMethod] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest : 
+        <target state="needs-review-translation">Les méthodes de test, c’est-à-dire les méthodes marquées de l’attribut « [TestMethod] », doivent respecter la disposition suivante pour être considérées comme valides par MSTest : 
 – elle doit être « publique » (ou « interne » si l’attribut « [assembly : DiscoverInternals] » est défini)
 – elle ne doit pas être « statique »
 – elle peut être générique tant que les paramètres de type peuvent être déduits et que les types d’arguments sont compatibles
@@ -841,7 +842,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="translated">Les méthodes de test doivent avoir une disposition valide</target>
+        <target state="needs-review-translation">Les méthodes de test doivent avoir une disposition valide</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
