@@ -63,4 +63,7 @@ internal static class DiagnosticIds
     public const string TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId = "MSTEST0056";
     public const string TestMethodAttributeShouldPropagateSourceInformationRuleId = "MSTEST0057";
     public const string AvoidAssertsInCatchBlocksRuleId = "MSTEST0058";
+    public const string DoNotUseParallelizeAndDoNotParallelizeTogetherRuleId = "MSTEST0059";
+    public const string DuplicateTestMethodAttributeRuleId = "MSTEST0060";
+    public const string UseOSConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0061";
 }

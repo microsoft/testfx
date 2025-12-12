@@ -112,7 +112,8 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             string optionInfoIndent = new(' ', (indentLevel + 1) * 2);
             foreach (CommandLineOption option in options.OrderBy(x => x.Name))
             {
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionNameIndent}--{option.Name}"), cancellationToken).ConfigureAwait(false);
+                string optionName = option.ObsolescenceMessage is not null ? $"{optionNameIndent}--{option.Name} [obsolete]" : $"{optionNameIndent}--{option.Name}";
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(optionName), cancellationToken).ConfigureAwait(false);
                 if (option.Arity.Min == option.Arity.Max)
                 {
                     await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}"), cancellationToken).ConfigureAwait(false);
@@ -125,6 +126,10 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Hidden: {option.IsHidden}"), cancellationToken).ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Description: {option.Description}") { Padding = optionInfoIndent.Length }, cancellationToken).ConfigureAwait(false);
+                if (option.ObsolescenceMessage is not null)
+                {
+                    await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Obsolete: {option.ObsolescenceMessage}") { Padding = optionInfoIndent.Length }, cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
@@ -257,8 +262,14 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
             foreach (CommandLineOption? option in options)
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"--{option.Name}") { Padding = 4 }, cancellationToken).ConfigureAwait(false);
+                string optionName = option.ObsolescenceMessage is not null ? $"--{option.Name} [obsolete]" : $"--{option.Name}";
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(optionName) { Padding = 4 }, cancellationToken).ConfigureAwait(false);
                 await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(option.Description) { Padding = 8 }, cancellationToken).ConfigureAwait(false);
+                if (option.ObsolescenceMessage is not null)
+                {
+                    await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"Obsolete: {option.ObsolescenceMessage}") { Padding = 8 }, cancellationToken).ConfigureAwait(false);
+                }
+
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Empty), cancellationToken).ConfigureAwait(false);
             }
 

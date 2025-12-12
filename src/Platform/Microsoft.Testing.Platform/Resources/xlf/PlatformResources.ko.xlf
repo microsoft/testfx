@@ -117,6 +117,11 @@
         <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{0}'이(가) 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '-- {0}'이 예약된 접두사 '--internal'을 사용하고 있습니다.</target>

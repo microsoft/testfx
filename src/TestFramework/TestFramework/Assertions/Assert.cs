@@ -224,15 +224,11 @@ public sealed partial class Assert
     /// <param name="parameterName">
     /// parameter name.
     /// </param>
-    /// <param name="message">
-    /// message for the invalid parameter exception.
-    /// </param>
-    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName, string? message)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
         if (param == null)
         {
-            string userMessage = BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, userMessage);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
             ThrowAssertFailed(assertionName, finalMessage);
         }
     }
