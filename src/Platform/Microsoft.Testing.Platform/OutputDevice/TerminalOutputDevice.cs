@@ -121,7 +121,45 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         _isListTests = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
-        bool noAnsi = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption);
+
+        // Determine ANSI output setting
+        bool useAnsi;
+        bool? forceAnsi = null;
+        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
+        {
+            // New --ansi option takes precedence
+            string ansiValue = ansiArguments[0];
+            if (CommandLineOptionArgumentValidator.IsOnValue(ansiValue))
+            {
+                // Force enable ANSI
+                useAnsi = true;
+                forceAnsi = true;
+            }
+            else if (CommandLineOptionArgumentValidator.IsOffValue(ansiValue))
+            {
+                // Force disable ANSI
+                useAnsi = false;
+                forceAnsi = false;
+            }
+            else
+            {
+                // Auto mode - detect capabilities
+                useAnsi = true;
+                forceAnsi = null;
+            }
+        }
+        else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption))
+        {
+            // Backward compatibility with --no-ansi
+            useAnsi = false;
+            forceAnsi = false;
+        }
+        else
+        {
+            // Default is auto mode - detect capabilities
+            useAnsi = true;
+            forceAnsi = null;
+        }
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
@@ -158,7 +196,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
-            UseAnsi = !noAnsi,
+            UseAnsi = useAnsi,
+            ForceAnsi = forceAnsi,
             UseCIAnsi = inCI,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,

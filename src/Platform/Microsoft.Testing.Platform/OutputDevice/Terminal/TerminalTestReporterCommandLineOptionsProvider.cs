@@ -13,6 +13,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
 {
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";
+    public const string AnsiOption = "ansi";
     public const string OutputOption = "output";
     public const string OutputOptionNormalArgument = "normal";
     public const string OutputOptionDetailedArgument = "detailed";
@@ -36,7 +37,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         =>
         [
             new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false),
-            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false),
+            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, PlatformResources.TerminalNoAnsiOptionObsoleteMessage),
+            new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
             new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
         ];
 
@@ -45,6 +47,9 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         {
             NoProgressOption => ValidationResult.ValidTask,
             NoAnsiOption => ValidationResult.ValidTask,
+            AnsiOption => CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(PlatformResources.TerminalAnsiOptionInvalidArgument),
             OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(PlatformResources.TerminalOutputOptionInvalidArgument),
