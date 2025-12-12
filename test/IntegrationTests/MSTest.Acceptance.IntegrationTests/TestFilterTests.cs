@@ -117,6 +117,91 @@ failed OwnerTest (0ms)
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunWithFilter_EmptyTestCategory_MatchesUncategorizedTests(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        // Filter for uncategorized tests using empty string
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory=", cancellationToken: TestContext.CancellationToken);
+
+        // Should match tests without any TestCategory
+        testHostResult.AssertOutputContains("Running test: NoCategoryTest");
+        testHostResult.AssertOutputContains("Running test: EmptyCategoryTest");
+        
+        // Should NOT match tests with categories
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryAAndB");
+        
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunWithFilter_EmptyTestCategoryNotEqual_MatchesCategorizedTests(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        // Filter for tests that ARE categorized (not equal to empty)
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory!=", cancellationToken: TestContext.CancellationToken);
+
+        // Should match tests with categories
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryBOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        
+        // Should NOT match tests without categories
+        testHostResult.AssertOutputDoesNotContain("Running test: NoCategoryTest");
+        testHostResult.AssertOutputDoesNotContain("Running test: EmptyCategoryTest");
+        
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunWithFilter_EmptyTestCategoryOrSpecificCategory_MatchesBoth(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        // Filter for uncategorized OR CategoryA
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory=|TestCategory=CategoryA", cancellationToken: TestContext.CancellationToken);
+
+        // Should match uncategorized tests
+        testHostResult.AssertOutputContains("Running test: NoCategoryTest");
+        testHostResult.AssertOutputContains("Running test: EmptyCategoryTest");
+        
+        // Should match CategoryA tests
+        testHostResult.AssertOutputContains("Running test: CategoryAOnly");
+        testHostResult.AssertOutputContains("Running test: CategoryAAndB");
+        
+        // Should NOT match CategoryB only
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunWithFilter_EmptyTestCategoryContains_MatchesUncategorizedTests(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        // Filter using contains operator with empty string
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory~", cancellationToken: TestContext.CancellationToken);
+
+        // Should match tests without any TestCategory
+        testHostResult.AssertOutputContains("Running test: NoCategoryTest");
+        testHostResult.AssertOutputContains("Running test: EmptyCategoryTest");
+        
+        // Should NOT match tests with categories
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryAOnly");
+        testHostResult.AssertOutputDoesNotContain("Running test: CategoryBOnly");
+        
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
@@ -218,6 +303,19 @@ public class TestClass
     public void CategoryAAndB()
     {
         Console.WriteLine($"Running test: {nameof(CategoryAAndB)}");
+    }
+
+    [TestMethod]
+    public void NoCategoryTest()
+    {
+        Console.WriteLine($"Running test: {nameof(NoCategoryTest)}");
+    }
+
+    [TestMethod]
+    [TestCategory("")]
+    public void EmptyCategoryTest()
+    {
+        Console.WriteLine($"Running test: {nameof(EmptyCategoryTest)}");
     }
 }
 """;
