@@ -31,11 +31,17 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         CancellationToken testApplicationCancellationToken = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
 
         int exitCode = ExitCodes.GenericFailure;
+        IPlatformOpenTelemetryService? platformOTelService = null;
+        IPlatformActivity? activity = null;
         try
         {
+            platformOTelService = ServiceProvider.GetPlatformOTelService();
+            string hostType = GetHostType();
+            activity = platformOTelService?.StartActivity(hostType);
+
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
-                exitCode = await RunTestAppAsync(testApplicationCancellationToken).ConfigureAwait(false);
+                exitCode = await RunTestAppAsync(platformOTelService, testApplicationCancellationToken).ConfigureAwait(false);
 
                 if (testApplicationCancellationToken.IsCancellationRequested)
                 {
@@ -49,10 +55,10 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             {
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
-                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(GetHostType()).ConfigureAwait(false);
+                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType).ConfigureAwait(false);
 
                 exitCode = isValidProtocol
-                    ? await RunTestAppAsync(testApplicationCancellationToken).ConfigureAwait(false)
+                    ? await RunTestAppAsync(platformOTelService, testApplicationCancellationToken).ConfigureAwait(false)
                     : ExitCodes.IncompatibleProtocolVersion;
             }
             finally
@@ -69,6 +75,9 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
         finally
         {
+            // Dispose the activity
+            activity?.Dispose();
+
             await DisposeServiceProviderAsync(ServiceProvider, isProcessShutdown: true).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(ServiceProvider.GetService<FileLoggerProvider>()).ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(PushOnlyProtocol).ConfigureAwait(false);
@@ -94,35 +103,44 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         {
             ConsoleTestHost => "TestHost",
             TestHostControllersTestHost => "TestHostController",
-            _ => throw new InvalidOperationException("Unknown host type"),
+            ServerTestHost => "ServerTestHost",
+            _ => throw new InvalidOperationException($"Unknown host type '{GetType().FullName}'"),
         };
         return hostType;
     }
 
-    private async Task<int> RunTestAppAsync(CancellationToken testApplicationCancellationToken)
+    private async Task<int> RunTestAppAsync(IPlatformOpenTelemetryService? platformOTelService, CancellationToken testApplicationCancellationToken)
     {
         if (RunTestApplicationLifeCycleCallbacks)
         {
-            // Get the test application lifecycle callbacks to be able to call the before run
-#pragma warning disable CS0618 // Type or member is obsolete
-            foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
+            using (platformOTelService?.StartActivity("BeforeRunCallbacks"))
             {
-                await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+                // Get the test application lifecycle callbacks to be able to call the before run
+                foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
+                {
+                    using IPlatformActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
+                    await testApplicationLifecycleCallbacks.BeforeRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+                }
             }
-#pragma warning restore CS0618 // Type or member is obsolete
         }
 
-        int exitCode = await InternalRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+        int exitCode;
+        using (platformOTelService?.StartActivity("Run"))
+        {
+            exitCode = await InternalRunAsync(testApplicationCancellationToken).ConfigureAwait(false);
+        }
 
         if (RunTestApplicationLifeCycleCallbacks)
         {
-#pragma warning disable CS0618 // Type or member is obsolete
-            foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
+            using (platformOTelService?.StartActivity("AfterRunCallbacks"))
             {
-                await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
-                await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
+                foreach (ITestHostApplicationLifetime testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestHostApplicationLifetime>())
+                {
+                    using IPlatformActivity? activity = platformOTelService?.StartActivity(testApplicationLifecycleCallbacks.Uid, testApplicationLifecycleCallbacks.ToOTelTags());
+                    await testApplicationLifecycleCallbacks.AfterRunAsync(exitCode, testApplicationCancellationToken).ConfigureAwait(false);
+                    await DisposeHelper.DisposeAsync(testApplicationLifecycleCallbacks).ConfigureAwait(false);
+                }
             }
-#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         return exitCode;
@@ -137,9 +155,21 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
         try
         {
-            await NotifyTestSessionStartAsync(testSessionInfo, baseMessageBus, serviceProvider).ConfigureAwait(false);
-            await serviceProvider.GetTestAdapterInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
-            await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider).ConfigureAwait(false);
+            IPlatformOpenTelemetryService? otelService = serviceProvider.GetPlatformOTelService();
+            using (otelService?.StartActivity("OnTestSessionStarting"))
+            {
+                await NotifyTestSessionStartAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
+            }
+
+            using (otelService?.StartActivity("TestFrameworkInvoker"))
+            {
+                await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+            }
+
+            using (otelService?.StartActivity("OnTestSessionEnding"))
+            {
+                await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -174,7 +204,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
     }
 
-    private static async Task NotifyTestSessionStartAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider)
+    private static async Task NotifyTestSessionStartAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, IPlatformOpenTelemetryService? otelService)
     {
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
@@ -184,6 +214,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
         {
+            using IPlatformActivity? activity = otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags());
             await testSessionLifetimeHandler.OnTestSessionStartingAsync(testSessionContext).ConfigureAwait(false);
         }
 
@@ -191,7 +222,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
     }
 
-    private static async Task NotifyTestSessionEndAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider)
+    private static async Task NotifyTestSessionEndAsync(ITestSessionContext testSessionContext, BaseMessageBus baseMessageBus, ServiceProvider serviceProvider, IPlatformOpenTelemetryService? otelService)
     {
         // Drain messages generated by the test session execution before to process the session end notification.
         await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
@@ -204,7 +235,10 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in serviceProvider.GetRequiredService<TestSessionLifetimeHandlersContainer>().TestSessionLifetimeHandlers)
         {
-            await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
+            using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
+            {
+                await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
+            }
 
             // OnTestSessionFinishingAsync could produce information that needs to be handled by others.
             await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
@@ -245,7 +279,9 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                 service is ITelemetryCollector or
                  ITestHostApplicationLifetime or
                  ITestHostApplicationLifetime or
-                 IPushOnlyProtocol)
+                 IPushOnlyProtocol or
+                 IPlatformOpenTelemetryService or
+                 IOpenTelemetryProvider)
             {
                 continue;
             }

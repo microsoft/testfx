@@ -316,6 +316,9 @@
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
   </data>
+  <data name="CommandLineOptionObsoleteWarning" xml:space="preserve">
+    <value>Warning: Option '--{0}' is obsolete. {1}</value>
+  </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
   </data>

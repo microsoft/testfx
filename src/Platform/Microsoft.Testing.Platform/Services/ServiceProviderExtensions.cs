@@ -186,7 +186,7 @@ public static class ServiceProviderExtensions
     internal static ITestFramework GetTestFramework(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestFramework>();
 
-    internal static ITestFrameworkInvoker GetTestAdapterInvoker(this IServiceProvider serviceProvider)
+    internal static ITestFrameworkInvoker GetTestFrameworkInvoker(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestFrameworkInvoker>();
 
     internal static IUnhandledExceptionsPolicy GetUnhandledExceptionsPolicy(this IServiceProvider serviceProvider)
@@ -206,4 +206,7 @@ public static class ServiceProviderExtensions
 
     internal static IFileLoggerInformation? GetFileLoggerInformation(this IServiceProvider serviceProvider)
         => serviceProvider.GetServiceInternal<IFileLoggerInformation>();
+
+    internal static IPlatformOpenTelemetryService? GetPlatformOTelService(this IServiceProvider serviceProvider)
+        => serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>();
 }

@@ -7,4 +7,5 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0058 | Usage | Info | AvoidAssertsInCatchBlocksAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0058)
 MSTEST0059 | Usage | Warning | DoNotUseParallelizeAndDoNotParallelizeTogetherAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0059)
+MSTEST0060 | Usage | Warning | DuplicateTestMethodAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0060)
 MSTEST0061 | Usage | Info | UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0061)

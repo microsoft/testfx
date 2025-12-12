@@ -84,14 +84,9 @@ num1,num2,expectedSum
 """;
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task TestDataSourceFromAppConfig()
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            // Test is specific to .NET Framework.
-            return;
-        }
-
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             "DataSourceTests",
             SourceCode

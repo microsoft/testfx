@@ -152,9 +152,9 @@
         <target state="translated">"{0}" verwenden</target>
         <note />
       </trans-unit>
-          <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
         <source>Use '[OSCondition]' attribute</source>
-        <target state="new">Use '[OSCondition]' attribute</target>
+        <target state="translated">Verwenden des Attributs „[OSCondition]“</target>
         <note />
       </trans-unit>
     </body>

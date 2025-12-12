@@ -20,9 +20,8 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     /// <param name="arity">The arity of the command line option.</param>
     /// <param name="isHidden">Indicates whether the command line option is hidden.</param>
     /// <param name="isBuiltIn">Indicates whether the command line option is built-in.</param>
-    /// <param name="isObsolete">Indicates whether the command line option is obsolete.</param>
-    /// <param name="obsolescenceMessage">The obsolescence message to display when the option is used.</param>
-    internal CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, bool isBuiltIn, bool isObsolete = false, string? obsolescenceMessage = null)
+    /// <param name="obsolescenceMessage">The obsolescence message for the command line option.</param>
+    internal CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, bool isBuiltIn, string? obsolescenceMessage = null)
     {
         Guard.NotNullOrWhiteSpace(name);
         Guard.NotNullOrWhiteSpace(description);
@@ -39,8 +38,24 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
         Arity = arity;
         IsHidden = isHidden;
         IsBuiltIn = isBuiltIn;
-        IsObsolete = isObsolete;
         ObsolescenceMessage = obsolescenceMessage;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLineOption"/> class.
+    /// </summary>
+    /// <param name="name">The name of the command line option.</param>
+    /// <param name="description">The description of the command line option.</param>
+    /// <param name="arity">The arity of the command line option.</param>
+    /// <param name="isHidden">Indicates whether the command line option is hidden.</param>
+    /// <param name="obsolescenceMessage">The obsolescence message for the command line option.</param>
+    /// <remarks>
+    /// This ctor is public and used by non built-in extension, we need to know if the extension is built-in or not
+    /// to correctly handle the --internal- prefix.
+    /// </remarks>
+    public CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, string? obsolescenceMessage = null)
+        : this(name, description, arity, isHidden, isBuiltIn: false, obsolescenceMessage)
+    {
     }
 
     /// <summary>
@@ -55,25 +70,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     /// to correctly handle the --internal- prefix.
     /// </remarks>
     public CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden)
-        : this(name, description, arity, isHidden, isBuiltIn: false, isObsolete: false, obsolescenceMessage: null)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CommandLineOption"/> class.
-    /// </summary>
-    /// <param name="name">The name of the command line option.</param>
-    /// <param name="description">The description of the command line option.</param>
-    /// <param name="arity">The arity of the command line option.</param>
-    /// <param name="isHidden">Indicates whether the command line option is hidden.</param>
-    /// <param name="isObsolete">Indicates whether the command line option is obsolete.</param>
-    /// <param name="obsolescenceMessage">The obsolescence message to display when the option is used.</param>
-    /// <remarks>
-    /// This ctor is public and used by non built-in extension, we need to know if the extension is built-in or not
-    /// to correctly handle the --internal- prefix.
-    /// </remarks>
-    public CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, bool isObsolete, string? obsolescenceMessage)
-        : this(name, description, arity, isHidden, isBuiltIn: false, isObsolete: isObsolete, obsolescenceMessage: obsolescenceMessage)
+        : this(name, description, arity, isHidden, isBuiltIn: false, null)
     {
     }
 
@@ -109,6 +106,11 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
 
     internal bool IsBuiltIn { get; }
 
+    /// <summary>
+    /// Gets the obsolescence message for the command line option.
+    /// </summary>
+    public string? ObsolescenceMessage { get; }
+
     /// <inheritdoc />
     public override bool Equals(object? obj) => Equals(obj as CommandLineOption);
 
@@ -119,7 +121,6 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
             Description == other.Description &&
             Arity == other.Arity &&
             IsHidden == other.IsHidden &&
-            IsObsolete == other.IsObsolete &&
             ObsolescenceMessage == other.ObsolescenceMessage;
 
     /// <inheritdoc />
@@ -130,7 +131,6 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
         hc.Add(Description);
         hc.Add(Arity.GetHashCode());
         hc.Add(IsHidden);
-        hc.Add(IsObsolete);
         hc.Add(ObsolescenceMessage);
         return hc.ToHashCode();
     }
