@@ -205,16 +205,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     }
 
     private static bool IsAnsiEnabledValue(string ansiValue)
-        => TerminalTestReporterCommandLineOptionsProvider.AnsiOptionOnArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionTrueArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionEnableArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOption1Argument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase);
+        => CommandLineOptionArgumentValidator.IsOnValue(ansiValue);
 
     private static bool IsAnsiDisabledValue(string ansiValue)
-        => TerminalTestReporterCommandLineOptionsProvider.AnsiOptionOffArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionFalseArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOptionDisableArgument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase)
-            || TerminalTestReporterCommandLineOptionsProvider.AnsiOption0Argument.Equals(ansiValue, StringComparison.OrdinalIgnoreCase);
+        => CommandLineOptionArgumentValidator.IsOffValue(ansiValue);
 
     private static string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains(Dash)

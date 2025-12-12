@@ -793,14 +793,19 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">ANSI 이스케이프 문자를 화면에 출력하지 않도록 설정합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionObsoleteMessage">
+        <source>Use '--ansi off' instead of '--no-ansi'.</source>
+        <target state="new">Use '--ansi off' instead of '--no-ansi'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TerminalAnsiOptionDescription">
-        <source>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</source>
-        <target state="new">Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.</target>
+        <source>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.</source>
+        <target state="new">Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
-        <source>--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on', 'true', 'enable', '1', 'off', 'false', 'disable', or '0'.</target>
+        <source>--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</source>
+        <target state="new">--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">

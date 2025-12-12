@@ -63,7 +63,7 @@ Options:
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
     --ansi
-        Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.
+        Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
@@ -254,7 +254,7 @@ Registered command line providers:
       --ansi
         Arity: 1
         Hidden: False
-        Description: Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.
+        Description: Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.
       --no-ansi
         Arity: 0
         Hidden: False
@@ -361,7 +361,7 @@ Extension options:
         Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
     --ansi
-        Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.
+        Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
@@ -611,7 +611,7 @@ Registered command line providers:
       --ansi
         Arity: 1
         Hidden: False
-        Description: Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'true', 'enable', '1' to enable, or 'off', 'false', 'disable', '0' to disable.
+        Description: Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.
       --no-ansi
         Arity: 0
         Hidden: False

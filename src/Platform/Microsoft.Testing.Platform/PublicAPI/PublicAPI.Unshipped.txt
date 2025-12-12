@@ -1,1 +1,4 @@
 #nullable enable
+Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.CommandLineOption(string! name, string! description, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity arity, bool isHidden, bool isObsolete, string? obsolescenceMessage) -> void
+Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.IsObsolete.get -> bool
+Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.ObsolescenceMessage.get -> string?
