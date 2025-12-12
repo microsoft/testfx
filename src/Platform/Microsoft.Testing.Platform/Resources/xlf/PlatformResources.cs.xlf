@@ -1,1022 +1,1028 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
-  <file datatype="xml" source-language="en" target-language="cs" original="../PlatformResources.resx">
-    <body>
-      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
-        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="translated">Aktuální testovací architektura neimplementuje rozhraní IGracefulStopTestExecutionCapability, které je vyžadováno pro funkci --maximum-failed-tests.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AbortForMaxFailedTestsDescription">
-        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="translated">Rozšíření, které podporuje --maximum-failed-tests Když se dosáhne prahové hodnoty pro dané chyby, testovací běh se přeruší.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Aborted">
-        <source>Aborted</source>
-        <target state="translated">Přerušeno</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Actual">
-        <source>Actual</source>
-        <target state="translated">Skutečnost</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CancelledLowercase">
-        <source>canceled</source>
-        <target state="translated">zrušeno</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CancellingTestSession">
-        <source>Canceling the test session...</source>
-        <target state="translated">Ruší se testovací relace...</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="translated">Nepovedlo se vytvořit filtr provádění testů.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="translated">Nepodařilo se vytvořit jedinečný soubor protokolu po 3 sekundách. Naposledy vyzkoušený název souboru je {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
-        <source>Cannot remove environment variables at this stage</source>
-        <target state="translated">V této fázi nelze odebrat proměnné prostředí.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
-        <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="translated">Rozšíření {0} se pokusilo odebrat proměnnou prostředí {1}, která však byla uzamčena rozšířením {2}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
-        <source>Cannot set environment variables at this stage</source>
-        <target state="translated">V této fázi nelze nastavit proměnné prostředí.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
-        <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="translated">Rozšíření {0} se pokusilo nastavit proměnnou prostředí {1}, která však byla uzamčena rozšířením {2}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotStartProcessErrorMessage">
-        <source>Cannot start process '{0}'</source>
-        <target state="translated">Nelze spustit proces {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineInvalidArgumentsForOption">
-        <source>Option '--{0}' has invalid arguments: {1}</source>
-        <target state="translated">Možnost --{0} má neplatné argumenty: {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineInvalidArityErrorMessage">
-        <source>Invalid arity, maximum must be greater than minimum</source>
-        <target state="translated">Neplatná arita, maximum musí být větší než minimum.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineInvalidConfiguration">
-        <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
-        <target state="translated">Neplatná konfigurace pro zprostředkovatele {0} (UID: {1}) Chyba: {2}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineInvalidOptionName">
-        <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="translated">Neplatný název možnosti {0}. Musí obsahovat jenom písmena a spojovníky (-), například moje-volba.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
-        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) očekává minimálně tento počet argumentů: {3}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionExpectsAtMostArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
-        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) očekává maximálně tento počet argumentů: {3}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionExpectsNoArguments">
-        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
-        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) neočekává žádné argumenty.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
-        <target state="translated">Možnost --{0} je deklarována více rozšířeními: {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
-        <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
-        <target state="translated">Konflikt předchozí možnosti můžete opravit přepsáním názvu možnosti pomocí konfiguračního souboru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionIsReserved">
-        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="translated">Možnost --{0} je vyhrazená a nelze ji použít zprostředkovateli: {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionObsoleteWarning">
-        <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
-        <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
-        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineOptionsNotReady">
-        <source>The ICommandLineOptions has not been built yet.</source>
-        <target state="translated">Rozhraní ICommandLineOptions ještě není sestavené.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserFailedToReadResponseFile">
-        <source>Failed to read response file '{0}'. {1}.</source>
-        <target state="translated">Čtení souboru odpovědí {0} selhalo. {1}.</target>
-        <note>{1} is the exception</note>
-      </trans-unit>
-      <trans-unit id="CommandLineParserResponseFileNotFound">
-        <source>The response file '{0}' was not found</source>
-        <target state="translated">Soubor odpovědí {0} nebyl nalezen.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedArgument">
-        <source>Unexpected argument {0}</source>
-        <target state="translated">Neočekávaný argument {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
-        <source>Unexpected single quote in argument: {0}</source>
-        <target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
-        <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
-        <target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0} pro možnost --{1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineUnknownOption">
-        <source>Unknown option '--{0}'</source>
-        <target state="translated">Neznámá možnost --{0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="translated">Už je zaregistrovaná stejná instance CompositeExtensonFactory.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConfigurationFileNotFound">
-        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
-        <target state="translated">Nebyl nalezen konfigurační soubor {0} zadaný pomocí parametru --config-file.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
-        <source>Could not find the default json configuration</source>
-        <target state="translated">Nepovedlo se najít výchozí konfiguraci json.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConnectingToClientHost">
-        <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="translated">Připojování k hostiteli klienta {0}, port{1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
-        <source>Console is already in batching mode.</source>
-        <target state="translated">Konzole je již v režimu dávkování.</target>
-        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="translated">Vytvoří správný filtr provádění testů pro režim konzoly.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="translated">Objekt pro vytváření filtru provádění testů konzoly</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CouldNotFindDirectoryErrorMessage">
-        <source>Could not find directory '{0}'</source>
-        <target state="translated">Nepodařilo se najít adresář {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
-        <target state="translated">Diagnostický soubor (úroveň {0} s asynchronním vyprázdněním): {1}</target>
-        <note>0 level such as verbose,
-1 path to file</note>
-      </trans-unit>
-      <trans-unit id="DiagnosticFileLevelWithFlush">
-        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
-        <target state="translated">Diagnostický soubor (úroveň {0} se synchronním vyprázdněním): {1}</target>
-        <note>0 level such as verbose,
-1 path to file</note>
-      </trans-unit>
-      <trans-unit id="DiscoveredTestsInAssembly">
-        <source>Discovered {0} test(s) in assembly</source>
-        <target state="translated">Počet zjištěných testů v sestavení: {0}</target>
-        <note>0 is count, the sentence is followed by the path of the assebly</note>
-      </trans-unit>
-      <trans-unit id="DiscoveringTestsFrom">
-        <source>Discovering tests from</source>
-        <target state="translated">Zjišťování testů z</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DurationLowercase">
-        <source>duration</source>
-        <target state="translated">doba trvání</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="EnvironmentVariableProviderFailedWithError">
-        <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
-        <target state="translated">Zprostředkovatel {0} (UID: {1}) selhal s chybou: {2}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ExceptionDuringCancellationWarningMessage">
-        <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="translated">Výjimka při rušení ID žádosti '{0}'</target>
-        <note>{0} is the request id</note>
-      </trans-unit>
-      <trans-unit id="ExitCode">
-        <source>Exit code</source>
-        <target state="translated">Ukončovací kód</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Expected">
-        <source>Expected</source>
-        <target state="translated">Očekáváno</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
-        <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
-        <target state="translated">Rozšíření typu {0} neimplementuje požadované rozhraní {1}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
-        <target state="translated">Rozšíření se stejným UID {0} již byla zaregistrována. Registrovaná rozšíření jsou těchto typů: {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Failed">
-        <source>Failed</source>
-        <target state="translated">Neúspěšné</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FailedLowercase">
-        <source>failed</source>
-        <target state="translated">selhalo</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FailedToWriteLogToChannelErrorMessage">
-        <source>Failed to write the log to the channel. Missed log content:
-{0}</source>
-        <target state="translated">Zápis protokolu do kanálu se nezdařil. Nezachycený obsah protokolu:
-{0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FailedWithErrors">
-        <source>failed with {0} error(s)</source>
-        <target state="translated">selhalo s {0} chybou/chybami.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FailedWithErrorsAndWarnings">
-        <source>failed with {0} error(s) and {1} warning(s)</source>
-        <target state="translated">selhalo s chybami (celkem {0}) a upozorněními (celkem {1})</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FailedWithWarnings">
-        <source>failed with {0} warning(s)</source>
-        <target state="translated">selhalo s {0} upozorněním(i).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="FinishedTestSession">
-        <source>Finished test session.</source>
-        <target state="translated">Testovací relace byla dokončena.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ForTest">
-        <source>For test</source>
-        <target state="translated">Pro testování</target>
-        <note>is followed by test name</note>
-      </trans-unit>
-      <trans-unit id="FromFile">
-        <source>from</source>
-        <target state="translated">od</target>
-        <note>from followed by a file name to point to the file from which test is originating</note>
-      </trans-unit>
-      <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
-        <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
-        <target state="translated">Následující zprostředkovatelé ITestHostEnvironmentVariableProvider odmítli konečné nastavení proměnných prostředí:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HelpApplicationUsage">
-        <source>Usage {0} [option providers] [extension option providers]</source>
-        <target state="translated">Použití {0} [zprostředkovatelé možností] [zprostředkovatelé možností rozšíření]</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HelpExecuteTestApplication">
-        <source>Execute a .NET Test Application.</source>
-        <target state="translated">Spusťte testovací aplikaci .NET.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HelpExtensionOptions">
-        <source>Extension options:</source>
-        <target state="translated">Možnosti rozšíření:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HelpNoExtensionRegistered">
-        <source>    No extension registered.</source>
-        <target state="translated">    Není zaregistrované žádné rozšíření.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HelpOptions">
-        <source>Options:</source>
-        <target state="translated">Parametry:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="HelpTestApplicationRunner">
-        <source>&lt;test application runner&gt;</source>
-        <target state="translated">&lt;spouštěč testovací aplikace&gt;</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InProcessArtifactsProduced">
-        <source>In process file artifacts produced:</source>
-        <target state="translated">Vytvořené artefakty souboru v procesu:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
-        <source>Method '{0}' did not exit successfully</source>
-        <target state="translated">Metoda {0} nebyla úspěšně ukončena.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidCommandLineArguments">
-        <source>Invalid command line arguments:</source>
-        <target state="translated">Neplatné argumenty příkazového řádku:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
-        <source>A duplicate key '{0}' was found</source>
-        <target state="translated">Našel se duplicitní klíč {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
-        <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="translated">Element JSON nejvyšší úrovně musí být objekt. Místo toho bylo nalezeno: {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
-        <source>Unsupported JSON token '{0}' was found</source>
-        <target state="translated">Našel se nepodporovaný token JSON {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonRpcTcpServerDescription">
-        <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="translated">Implementace serveru JsonRpc na základě specifikace protokolu testovací platformy</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
-        <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="translated">Handshake mezi klientem a serverem JsonRpc, implementace na základě specifikace protokolu testovací platformy</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="LoggerFactoryNotReady">
-        <source>The ILoggerFactory has not been built yet.</source>
-        <target state="translated">Rozhraní ILoggerFactory ještě nebylo sestaveno.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MaxFailedTestsMustBePositive">
-        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="translated">Možnost --maximum-failed-tests musí být kladné celé číslo. Hodnota '{0}' není platná.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MessageBusNotReady">
-        <source>The message bus has not been built yet or is no more usable at this stage.</source>
-        <target state="translated">Sběrnice zpráv ještě nebyla sestavena nebo už není v této fázi použitelná.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MinimumExpectedTestsPolicyViolation">
-        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="translated">Minimální očekávané porušení zásad testů, spuštěné testy: {0}, očekávané minimum: {1}</target>
-        <note>{0}, {1} number of tests</note>
-      </trans-unit>
-      <trans-unit id="MissingClientPortFoJsonRpc">
-        <source>Expected --client-port when jsonRpc protocol is used.</source>
-        <target state="translated">Při použití protokolu jsonRpc byl očekáván parametr --client-port.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
-        <source>and {0} more</source>
-        <target state="translated">a ještě {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ActiveTestsRunning_FullTestsCount">
-        <source>{0} tests running</source>
-        <target state="translated">{0} spuštěné testy</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Není zaregistrovaný žádný serializátor s ID {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Není zaregistrovaný žádný serializátor s typem {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NotAvailable">
-        <source>Not available</source>
-        <target state="translated">Není k dispozici</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NotFound">
-        <source>Not found</source>
-        <target state="translated">Nenalezeno</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="OnlyOneFilterSupported">
-        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
-        <target state="translated">Předávání možností --treenode-filter a --filter-uid není podporováno.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="OutOfProcessArtifactsProduced">
-        <source>Out of process file artifacts produced:</source>
-        <target state="translated">Vytvořené artefakty souboru mimo proces:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Passed">
-        <source>Passed</source>
-        <target state="translated">Úspěšné</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PassedLowercase">
-        <source>passed</source>
-        <target state="translated">úspěch</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionDescription">
-        <source>Specify the hostname of the client.</source>
-        <target state="translated">Zadejte název hostitele klienta.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineClientPortOptionDescription">
-        <source>Specify the port of the client.</source>
-        <target state="translated">Zadejte port klienta.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
-        <source>Specifies a testconfig.json file.</source>
-        <target state="translated">Určuje soubor testconfig.json.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
-        <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
-        <target state="translated">Umožňuje pozastavit provádění, aby se mohlo připojit k procesu pro účely ladění.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <source>Force the built-in file logger to write the log synchronously.
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:xliff xmlns:ns0="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <ns0:file datatype="xml" source-language="en" target-language="cs" original="../PlatformResources.resx">
+    <ns0:body>
+      <ns0:trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <ns0:source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</ns0:source>
+        <ns0:target state="translated">Aktuální testovací architektura neimplementuje rozhraní IGracefulStopTestExecutionCapability, které je vyžadováno pro funkci --maximum-failed-tests.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="AbortForMaxFailedTestsDescription">
+        <ns0:source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</ns0:source>
+        <ns0:target state="translated">Rozšíření, které podporuje --maximum-failed-tests Když se dosáhne prahové hodnoty pro dané chyby, testovací běh se přeruší.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Aborted">
+        <ns0:source>Aborted</ns0:source>
+        <ns0:target state="translated">Přerušeno</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Actual">
+        <ns0:source>Actual</ns0:source>
+        <ns0:target state="translated">Skutečnost</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CancelledLowercase">
+        <ns0:source>canceled</ns0:source>
+        <ns0:target state="translated">zrušeno</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CancellingTestSession">
+        <ns0:source>Canceling the test session...</ns0:source>
+        <ns0:target state="translated">Ruší se testovací relace...</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
+        <ns0:source>Failed to create a test execution filter</ns0:source>
+        <ns0:target state="translated">Nepovedlo se vytvořit filtr provádění testů.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotCreateUniqueLogFileErrorMessage">
+        <ns0:source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</ns0:source>
+        <ns0:target state="translated">Nepodařilo se vytvořit jedinečný soubor protokolu po 3 sekundách. Naposledy vyzkoušený název souboru je {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
+        <ns0:source>Cannot remove environment variables at this stage</ns0:source>
+        <ns0:target state="translated">V této fázi nelze odebrat proměnné prostředí.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
+        <ns0:source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</ns0:source>
+        <ns0:target state="translated">Rozšíření {0} se pokusilo odebrat proměnnou prostředí {1}, která však byla uzamčena rozšířením {2}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
+        <ns0:source>Cannot set environment variables at this stage</ns0:source>
+        <ns0:target state="translated">V této fázi nelze nastavit proměnné prostředí.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
+        <ns0:source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</ns0:source>
+        <ns0:target state="translated">Rozšíření {0} se pokusilo nastavit proměnnou prostředí {1}, která však byla uzamčena rozšířením {2}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CannotStartProcessErrorMessage">
+        <ns0:source>Cannot start process '{0}'</ns0:source>
+        <ns0:target state="translated">Nelze spustit proces {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineInvalidArgumentsForOption">
+        <ns0:source>Option '--{0}' has invalid arguments: {1}</ns0:source>
+        <ns0:target state="translated">Možnost --{0} má neplatné argumenty: {1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineInvalidArityErrorMessage">
+        <ns0:source>Invalid arity, maximum must be greater than minimum</ns0:source>
+        <ns0:target state="translated">Neplatná arita, maximum musí být větší než minimum.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineInvalidConfiguration">
+        <ns0:source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</ns0:source>
+        <ns0:target state="translated">Neplatná konfigurace pro zprostředkovatele {0} (UID: {1}) Chyba: {2}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineInvalidOptionName">
+        <ns0:source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</ns0:source>
+        <ns0:target state="translated">Neplatný název možnosti {0}. Musí obsahovat jenom písmena a spojovníky (-), například moje-volba.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionExpectsAtLeastArguments">
+        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</ns0:source>
+        <ns0:target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) očekává minimálně tento počet argumentů: {3}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionExpectsAtMostArguments">
+        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</ns0:source>
+        <ns0:target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) očekává maximálně tento počet argumentů: {3}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionExpectsNoArguments">
+        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</ns0:source>
+        <ns0:target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) neočekává žádné argumenty.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
+        <ns0:source>Option '--{0}' is declared by multiple extensions: '{1}'</ns0:source>
+        <ns0:target state="translated">Možnost --{0} je deklarována více rozšířeními: {1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
+        <ns0:source>You can fix the previous option clash by overriding the option name using the configuration file</ns0:source>
+        <ns0:target state="translated">Konflikt předchozí možnosti můžete opravit přepsáním názvu možnosti pomocí konfiguračního souboru.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionIsReserved">
+        <ns0:source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</ns0:source>
+        <ns0:target state="translated">Možnost --{0} je vyhrazená a nelze ji použít zprostředkovateli: {0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionObsoleteWarning">
+        <ns0:source>Warning: Option '--{0}' is obsolete. {1}</ns0:source>
+        <ns0:target state="new">Warning: Option '--{0}' is obsolete. {1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionIsUsingReservedPrefix">
+        <ns0:source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</ns0:source>
+        <ns0:target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineOptionsNotReady">
+        <ns0:source>The ICommandLineOptions has not been built yet.</ns0:source>
+        <ns0:target state="translated">Rozhraní ICommandLineOptions ještě není sestavené.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineParserFailedToReadResponseFile">
+        <ns0:source>Failed to read response file '{0}'. {1}.</ns0:source>
+        <ns0:target state="translated">Čtení souboru odpovědí {0} selhalo. {1}.</ns0:target>
+        <ns0:note>{1} is the exception</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineParserResponseFileNotFound">
+        <ns0:source>The response file '{0}' was not found</ns0:source>
+        <ns0:target state="translated">Soubor odpovědí {0} nebyl nalezen.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineParserUnexpectedArgument">
+        <ns0:source>Unexpected argument {0}</ns0:source>
+        <ns0:target state="translated">Neočekávaný argument {0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
+        <ns0:source>Unexpected single quote in argument: {0}</ns0:source>
+        <ns0:target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
+        <ns0:source>Unexpected single quote in argument: {0} for option '--{1}'</ns0:source>
+        <ns0:target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0} pro možnost --{1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CommandLineUnknownOption">
+        <ns0:source>Unknown option '--{0}'</ns0:source>
+        <ns0:target state="translated">Neznámá možnost --{0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
+        <ns0:source>The same instance of 'CompositeExtensonFactory' is already registered</ns0:source>
+        <ns0:target state="translated">Už je zaregistrovaná stejná instance CompositeExtensonFactory.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ConfigurationFileNotFound">
+        <ns0:source>The configuration file '{0}' specified with '--config-file' could not be found.</ns0:source>
+        <ns0:target state="translated">Nebyl nalezen konfigurační soubor {0} zadaný pomocí parametru --config-file.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
+        <ns0:source>Could not find the default json configuration</ns0:source>
+        <ns0:target state="translated">Nepovedlo se najít výchozí konfiguraci json.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ConnectingToClientHost">
+        <ns0:source>Connecting to client host '{0}' port '{1}'</ns0:source>
+        <ns0:target state="translated">Připojování k hostiteli klienta {0}, port{1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <ns0:source>Console is already in batching mode.</ns0:source>
+        <ns0:target state="translated">Konzole je již v režimu dávkování.</ns0:target>
+        <ns0:note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
+        <ns0:source>Creates the right test execution filter for console mode</ns0:source>
+        <ns0:target state="translated">Vytvoří správný filtr provádění testů pro režim konzoly.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
+        <ns0:source>Console test execution filter factory</ns0:source>
+        <ns0:target state="translated">Objekt pro vytváření filtru provádění testů konzoly</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="CouldNotFindDirectoryErrorMessage">
+        <ns0:source>Could not find directory '{0}'</ns0:source>
+        <ns0:target state="translated">Nepodařilo se najít adresář {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="DiagnosticFileLevelWithAsyncFlush">
+        <ns0:source>Diagnostic file (level '{0}' with async flush): {1}</ns0:source>
+        <ns0:target state="translated">Diagnostický soubor (úroveň {0} s asynchronním vyprázdněním): {1}</ns0:target>
+        <ns0:note>0 level such as verbose,
+1 path to file</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="DiagnosticFileLevelWithFlush">
+        <ns0:source>Diagnostic file (level '{0}' with sync flush): {1}</ns0:source>
+        <ns0:target state="translated">Diagnostický soubor (úroveň {0} se synchronním vyprázdněním): {1}</ns0:target>
+        <ns0:note>0 level such as verbose,
+1 path to file</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="DiscoveredTestsInAssembly">
+        <ns0:source>Discovered {0} test(s) in assembly</ns0:source>
+        <ns0:target state="translated">Počet zjištěných testů v sestavení: {0}</ns0:target>
+        <ns0:note>0 is count, the sentence is followed by the path of the assebly</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="DiscoveringTestsFrom">
+        <ns0:source>Discovering tests from</ns0:source>
+        <ns0:target state="translated">Zjišťování testů z</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="DurationLowercase">
+        <ns0:source>duration</ns0:source>
+        <ns0:target state="translated">doba trvání</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="EnvironmentVariableProviderFailedWithError">
+        <ns0:source>Provider '{0}' (UID: {1}) failed with error: {2}</ns0:source>
+        <ns0:target state="translated">Zprostředkovatel {0} (UID: {1}) selhal s chybou: {2}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <ns0:source>Exception during the cancellation of request id '{0}'</ns0:source>
+        <ns0:target state="translated">Výjimka při rušení ID žádosti '{0}'</ns0:target>
+        <ns0:note>{0} is the request id</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ExitCode">
+        <ns0:source>Exit code</ns0:source>
+        <ns0:target state="translated">Ukončovací kód</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Expected">
+        <ns0:source>Expected</ns0:source>
+        <ns0:target state="translated">Očekáváno</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
+        <ns0:source>Extension of type '{0}' is not implementing the required '{1}' interface</ns0:source>
+        <ns0:target state="translated">Rozšíření typu {0} neimplementuje požadované rozhraní {1}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
+        <ns0:source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</ns0:source>
+        <ns0:target state="translated">Rozšíření se stejným UID {0} již byla zaregistrována. Registrovaná rozšíření jsou těchto typů: {1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Failed">
+        <ns0:source>Failed</ns0:source>
+        <ns0:target state="translated">Neúspěšné</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FailedLowercase">
+        <ns0:source>failed</ns0:source>
+        <ns0:target state="translated">selhalo</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FailedToWriteLogToChannelErrorMessage">
+        <ns0:source>Failed to write the log to the channel. Missed log content:
+{0}</ns0:source>
+        <ns0:target state="translated">Zápis protokolu do kanálu se nezdařil. Nezachycený obsah protokolu:
+{0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FailedWithErrors">
+        <ns0:source>failed with {0} error(s)</ns0:source>
+        <ns0:target state="translated">selhalo s {0} chybou/chybami.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FailedWithErrorsAndWarnings">
+        <ns0:source>failed with {0} error(s) and {1} warning(s)</ns0:source>
+        <ns0:target state="translated">selhalo s chybami (celkem {0}) a upozorněními (celkem {1})</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FailedWithWarnings">
+        <ns0:source>failed with {0} warning(s)</ns0:source>
+        <ns0:target state="translated">selhalo s {0} upozorněním(i).</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FinishedTestSession">
+        <ns0:source>Finished test session.</ns0:source>
+        <ns0:target state="translated">Testovací relace byla dokončena.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ForTest">
+        <ns0:source>For test</ns0:source>
+        <ns0:target state="translated">Pro testování</ns0:target>
+        <ns0:note>is followed by test name</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="FromFile">
+        <ns0:source>from</ns0:source>
+        <ns0:target state="translated">od</ns0:target>
+        <ns0:note>from followed by a file name to point to the file from which test is originating</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
+        <ns0:source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</ns0:source>
+        <ns0:target state="translated">Následující zprostředkovatelé ITestHostEnvironmentVariableProvider odmítli konečné nastavení proměnných prostředí:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="HelpApplicationUsage">
+        <ns0:source>Usage {0} [option providers] [extension option providers]</ns0:source>
+        <ns0:target state="translated">Použití {0} [zprostředkovatelé možností] [zprostředkovatelé možností rozšíření]</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="HelpExecuteTestApplication">
+        <ns0:source>Execute a .NET Test Application.</ns0:source>
+        <ns0:target state="translated">Spusťte testovací aplikaci .NET.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="HelpExtensionOptions">
+        <ns0:source>Extension options:</ns0:source>
+        <ns0:target state="translated">Možnosti rozšíření:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="HelpNoExtensionRegistered">
+        <ns0:source>    No extension registered.</ns0:source>
+        <ns0:target state="translated">    Není zaregistrované žádné rozšíření.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="HelpOptions">
+        <ns0:source>Options:</ns0:source>
+        <ns0:target state="translated">Parametry:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="HelpTestApplicationRunner">
+        <ns0:source>&lt;test application runner&gt;</ns0:source>
+        <ns0:target state="translated">&lt;spouštěč testovací aplikace&gt;</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="InProcessArtifactsProduced">
+        <ns0:source>In process file artifacts produced:</ns0:source>
+        <ns0:target state="translated">Vytvořené artefakty souboru v procesu:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
+        <ns0:source>Method '{0}' did not exit successfully</ns0:source>
+        <ns0:target state="translated">Metoda {0} nebyla úspěšně ukončena.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="InvalidCommandLineArguments">
+        <ns0:source>Invalid command line arguments:</ns0:source>
+        <ns0:target state="translated">Neplatné argumenty příkazového řádku:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
+        <ns0:source>A duplicate key '{0}' was found</ns0:source>
+        <ns0:target state="translated">Našel se duplicitní klíč {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
+        <ns0:source>Top-level JSON element must be an object. Instead, '{0}' was found</ns0:source>
+        <ns0:target state="translated">Element JSON nejvyšší úrovně musí být objekt. Místo toho bylo nalezeno: {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
+        <ns0:source>Unsupported JSON token '{0}' was found</ns0:source>
+        <ns0:target state="translated">Našel se nepodporovaný token JSON {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="JsonRpcTcpServerDescription">
+        <ns0:source>JsonRpc server implementation based on the test platform protocol specification.</ns0:source>
+        <ns0:target state="translated">Implementace serveru JsonRpc na základě specifikace protokolu testovací platformy</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="JsonRpcTcpServerToSingleClientDescription">
+        <ns0:source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</ns0:source>
+        <ns0:target state="translated">Handshake mezi klientem a serverem JsonRpc, implementace na základě specifikace protokolu testovací platformy</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="LoggerFactoryNotReady">
+        <ns0:source>The ILoggerFactory has not been built yet.</ns0:source>
+        <ns0:target state="translated">Rozhraní ILoggerFactory ještě nebylo sestaveno.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="MaxFailedTestsMustBePositive">
+        <ns0:source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</ns0:source>
+        <ns0:target state="translated">Možnost --maximum-failed-tests musí být kladné celé číslo. Hodnota '{0}' není platná.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="MessageBusNotReady">
+        <ns0:source>The message bus has not been built yet or is no more usable at this stage.</ns0:source>
+        <ns0:target state="translated">Sběrnice zpráv ještě nebyla sestavena nebo už není v této fázi použitelná.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <ns0:source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</ns0:source>
+        <ns0:target state="translated">Minimální očekávané porušení zásad testů, spuštěné testy: {0}, očekávané minimum: {1}</ns0:target>
+        <ns0:note>{0}, {1} number of tests</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="MissingClientPortFoJsonRpc">
+        <ns0:source>Expected --client-port when jsonRpc protocol is used.</ns0:source>
+        <ns0:target state="translated">Při použití protokolu jsonRpc byl očekáván parametr --client-port.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <ns0:source>and {0} more</ns0:source>
+        <ns0:target state="translated">a ještě {0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <ns0:source>{0} tests running</ns0:source>
+        <ns0:target state="translated">{0} spuštěné testy</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
+        <ns0:source>No serializer registered with ID '{0}'</ns0:source>
+        <ns0:target state="translated">Není zaregistrovaný žádný serializátor s ID {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
+        <ns0:source>No serializer registered with type '{0}'</ns0:source>
+        <ns0:target state="translated">Není zaregistrovaný žádný serializátor s typem {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="NotAvailable">
+        <ns0:source>Not available</ns0:source>
+        <ns0:target state="translated">Není k dispozici</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="NotFound">
+        <ns0:source>Not found</ns0:source>
+        <ns0:target state="translated">Nenalezeno</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="OnlyOneFilterSupported">
+        <ns0:source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</ns0:source>
+        <ns0:target state="translated">Předávání možností --treenode-filter a --filter-uid není podporováno.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="OutOfProcessArtifactsProduced">
+        <ns0:source>Out of process file artifacts produced:</ns0:source>
+        <ns0:target state="translated">Vytvořené artefakty souboru mimo proces:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Passed">
+        <ns0:source>Passed</ns0:source>
+        <ns0:target state="translated">Úspěšné</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PassedLowercase">
+        <ns0:source>passed</ns0:source>
+        <ns0:target state="translated">úspěch</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineClientHostOptionDescription">
+        <ns0:source>Specify the hostname of the client.</ns0:source>
+        <ns0:target state="translated">Zadejte název hostitele klienta.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineClientPortOptionDescription">
+        <ns0:source>Specify the port of the client.</ns0:source>
+        <ns0:target state="translated">Zadejte port klienta.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <ns0:source>Specifies a testconfig.json file.</ns0:source>
+        <ns0:target state="translated">Určuje soubor testconfig.json.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
+        <ns0:source>Allows to pause execution in order to attach to the process for debug purposes.</ns0:source>
+        <ns0:target state="translated">Umožňuje pozastavit provádění, aby se mohlo připojit k procesu pro účely ladění.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
+        <ns0:source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-Note that this is slowing down the test execution.</source>
-        <target state="translated">Umožňuje vynutit synchronní zápis do protokolu integrovaným protokolovacím nástrojem souborů.
+Note that this is slowing down the test execution.</ns0:source>
+        <ns0:target state="translated">Umožňuje vynutit synchronní zápis do protokolu integrovaným protokolovacím nástrojem souborů.
 Užitečné pro scénář, kdy nechcete přijít o žádný protokol (například v případě chybového ukončení).
-Poznámka: Toto zpomaluje provádění testu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Trace.
-Soubor se zapíše do výstupního adresáře s názvem log_[yyMMddHHmmssfff].diag.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
-        <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
-        <target state="translated">--diagnostic-verbosity očekává jeden argument úrovně (Trace, Debug, Information, Warning, Error nebo Critical).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
-        <source>'--{0}' requires '--diagnostic' to be provided</source>
-        <target state="translated">--{0} vyžaduje zadání možnosti --diagnostic.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <source>Output directory of the diagnostic logging.
-If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="translated">Výstupní adresář diagnostického protokolování.
-Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Předpona pro název souboru protokolu, který nahradí [log]_</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <source>Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="translated">Umožňuje definovat úroveň podrobností pro možnost --diagnostic.
-Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <source>List available tests.</source>
-        <target state="translated">Umožňuje zobrazit seznam dostupných testů.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDotnetTestPipe">
-        <source>dotnet test pipe.</source>
-        <target state="translated">testovací kanál dotnet.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
-        <source>Invalid PID '{0}'
-{1}</source>
-        <target state="translated">Neplatný identifikátor PID „{0}“
-{1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
-        <source>Exit the test process if dependent process exits. PID must be provided.</source>
-        <target state="translated">Pokud se závislý proces ukončí, ukončete testovací proces. Je nutné zadat identifikátor PID.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
-        <source>'--{0}' expects a single int PID argument</source>
-        <target state="translated">„ --{0}“ očekává jeden argument int PID.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
-        <source>Provides a list of test node UIDs to filter by.</source>
-        <target state="translated">Poskytuje seznam identifikátorů UID testovacích uzlů, podle kterých lze filtrovat.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineHelpOptionDescription">
-        <source>Show the command line help.</source>
-        <target state="translated">Umožňuje zobrazit nápovědu příkazového řádku.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu pro konkrétní ukončovací kódy
-(např. „--ignore-exit-code 8; 9“ ignoruje ukončovací kód 8 a 9 a v takovém případě vrátí hodnotu 0.)</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineInfoOptionDescription">
-        <source>Display .NET test application information.</source>
-        <target state="translated">Umožňuje zobrazit informace o testovací aplikaci .NET.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
-        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
-        <target state="translated">Určuje maximální počet neúspěšných testů, které při překročení přeruší testovací běh.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
-        <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
-        <target state="translated">--list-tests a --minimum-expected-tests jsou nekompatibilní možnosti.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
-        <source>Specifies the minimum number of tests that are expected to run.</source>
-        <target state="translated">Určuje minimální počet testů, jejichž spuštění se očekává.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
-(e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">--minimum-expected-tests očekává jednu kladnou nenulovou celočíselnou hodnotu
-(např. --minimum-expected-tests 10).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
-        <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
-        <target state="translated">Nezobrazovat úvodní banner, zprávu o autorských právech ani banner telemetrie</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLinePortOptionDescription">
-        <source>Specify the port of the server.</source>
-        <target state="translated">Zadejte port serveru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
-        <source>'--{0}' expects a single valid port as argument</source>
-        <target state="translated">--{0} očekává jako argument jeden platný port.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Zprostředkovatel příkazového řádku Microsoft Testing Platform</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineProviderDisplayName">
-        <source>Platform command line provider</source>
-        <target state="translated">Zprostředkovatel příkazového řádku platformy</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <source>The directory where the test results are going to be placed.
+Poznámka: Toto zpomaluje provádění testu.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
+        <ns0:source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</ns0:source>
+        <ns0:target state="translated">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Trace.
+Soubor se zapíše do výstupního adresáře s názvem log_[yyMMddHHmmssfff].diag.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
+        <ns0:source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</ns0:source>
+        <ns0:target state="translated">--diagnostic-verbosity očekává jeden argument úrovně (Trace, Debug, Information, Warning, Error nebo Critical).</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
+        <ns0:source>'--{0}' requires '--diagnostic' to be provided</ns0:source>
+        <ns0:target state="translated">--{0} vyžaduje zadání možnosti --diagnostic.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
+        <ns0:source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</ns0:source>
+        <ns0:target state="translated">Výstupní adresář diagnostického protokolování.
+Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
+        <ns0:source>Prefix for the log file name that will replace '[log]_.'</ns0:source>
+        <ns0:target state="translated">Předpona pro název souboru protokolu, který nahradí [log]_</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
+        <ns0:source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</ns0:source>
+        <ns0:target state="translated">Umožňuje definovat úroveň podrobností pro možnost --diagnostic.
+Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
+        <ns0:source>List available tests.</ns0:source>
+        <ns0:target state="translated">Umožňuje zobrazit seznam dostupných testů.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineDotnetTestPipe">
+        <ns0:source>dotnet test pipe.</ns0:source>
+        <ns0:target state="translated">testovací kanál dotnet.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
+        <ns0:source>Invalid PID '{0}'
+{1}</ns0:source>
+        <ns0:target state="translated">Neplatný identifikátor PID „{0}“
+{1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
+        <ns0:source>Exit the test process if dependent process exits. PID must be provided.</ns0:source>
+        <ns0:target state="translated">Pokud se závislý proces ukončí, ukončete testovací proces. Je nutné zadat identifikátor PID.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
+        <ns0:source>'--{0}' expects a single int PID argument</ns0:source>
+        <ns0:target state="translated">„ --{0}“ očekává jeden argument int PID.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <ns0:source>Provides a list of test node UIDs to filter by.</ns0:source>
+        <ns0:target state="translated">Poskytuje seznam identifikátorů UID testovacích uzlů, podle kterých lze filtrovat.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineHelpOptionDescription">
+        <ns0:source>Show the command line help.</ns0:source>
+        <ns0:target state="translated">Umožňuje zobrazit nápovědu příkazového řádku.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <ns0:source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</ns0:source>
+        <ns0:target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu pro konkrétní ukončovací kódy
+(např. „--ignore-exit-code 8; 9“ ignoruje ukončovací kód 8 a 9 a v takovém případě vrátí hodnotu 0.)</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineInfoOptionDescription">
+        <ns0:source>Display .NET test application information.</ns0:source>
+        <ns0:target state="translated">Umožňuje zobrazit informace o testovací aplikaci .NET.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <ns0:source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</ns0:source>
+        <ns0:target state="translated">Určuje maximální počet neúspěšných testů, které při překročení přeruší testovací běh.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
+        <ns0:source>'--list-tests' and '--minimum-expected-tests' are incompatible options</ns0:source>
+        <ns0:target state="translated">--list-tests a --minimum-expected-tests jsou nekompatibilní možnosti.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <ns0:source>Specifies the minimum number of tests that are expected to run.</ns0:source>
+        <ns0:target state="translated">Určuje minimální počet testů, jejichž spuštění se očekává.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
+        <ns0:source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</ns0:source>
+        <ns0:target state="translated">--minimum-expected-tests očekává jednu kladnou nenulovou celočíselnou hodnotu
+(např. --minimum-expected-tests 10).</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineNoBannerOptionDescription">
+        <ns0:source>Do not display the startup banner, the copyright message or the telemetry banner.</ns0:source>
+        <ns0:target state="translated">Nezobrazovat úvodní banner, zprávu o autorských právech ani banner telemetrie</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLinePortOptionDescription">
+        <ns0:source>Specify the port of the server.</ns0:source>
+        <ns0:target state="translated">Zadejte port serveru.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLinePortOptionSingleArgument">
+        <ns0:source>'--{0}' expects a single valid port as argument</ns0:source>
+        <ns0:target state="translated">--{0} očekává jako argument jeden platný port.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineProviderDescription">
+        <ns0:source>Microsoft Testing Platform command line provider</ns0:source>
+        <ns0:target state="translated">Zprostředkovatel příkazového řádku Microsoft Testing Platform</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineProviderDisplayName">
+        <ns0:source>Platform command line provider</ns0:source>
+        <ns0:target state="translated">Zprostředkovatel příkazového řádku platformy</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
+        <ns0:source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
-The default is TestResults in the directory that contains the test application.</source>
-        <target state="translated">Adresář, do kterého budou umístěny výsledky testu.
+The default is TestResults in the directory that contains the test application.</ns0:source>
+        <ns0:target state="translated">Adresář, do kterého budou umístěny výsledky testu.
 Pokud zadaný adresář neexistuje, vytvoří se.
-Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplikaci.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineServerOptionDescription">
-        <source>Enable the server mode.</source>
-        <target state="translated">Umožňuje povolit režim serveru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Pro účely testování</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
-        <source>Eventual parent test host controller PID.</source>
-        <target state="translated">Případné PID nadřazeného hostitelského řadiče testů</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
-        <target state="translated">Možnost timeout by měla mít jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
-        <target state="translated">Vypršel globální časový limit provádění testu.
-Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ProcessHasNotYetExitedErrorMessage">
-        <source>Process should have exited before we can determine this value</source>
-        <target state="translated">Proces měl být ukončen před tím, než jsme mohli určit tuto hodnotu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ReachedMaxFailedTestsMessage">
-        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="translated">Testovací relace se přerušuje, protože se dosáhlo chyb ('{0}') zadaných možností --maximum-failed-tests.</target>
-        <note>{0} is the number of max failed tests.</note>
-      </trans-unit>
-      <trans-unit id="RetryFailedAfterTriesErrorMessage">
-        <source>Retry failed after {0} times</source>
-        <target state="translated">Opakování se po {0} pokusech nezdařilo.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="RunningTestsFrom">
-        <source>Running tests from</source>
-        <target state="translated">Spouštění testů z</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerLogMessageDescription">
-        <source>This data represents a server log message</source>
-        <target state="translated">Tato data představují zprávu protokolu serveru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerLogMessageDisplayName">
-        <source>Server log message</source>
-        <target state="translated">Zpráva protokolu serveru</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="translated">Vytvoří správný filtr provádění testů pro režim serveru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="translated">Objekt pro vytváření filtru provádění testů serveru</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestHostDescription">
-        <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="translated">Implementace ITestHost použitá při spuštění režimu serveru</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestHostDisplayName">
-        <source>Server mode test host</source>
-        <target state="translated">Testovací hostitel režimu serveru</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
-        <source>Cannot find service of type '{0}'</source>
-        <target state="translated">Nelze najít službu typu {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServiceProviderServiceAlreadyRegistered">
-        <source>Instance of type '{0}' is already registered</source>
-        <target state="translated">Instance typu {0} je už zaregistrována.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
-        <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="translated">Instance typu ITestFramework by neměly být registrovány prostřednictvím poskytovatele služeb, ale prostřednictvím metody ITestApplicationBuilder.RegisterTestFramework.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Skipped">
-        <source>Skipped</source>
-        <target state="translated">Přeskočeno</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SkippedLowercase">
-        <source>skipped</source>
-        <target state="translated">vynecháno</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StackFrameAt">
-        <source>at</source>
-        <target state="translated">v</target>
-        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
-      </trans-unit>
-      <trans-unit id="StackFrameIn">
-        <source>in</source>
-        <target state="translated">v</target>
-        <note>in that is used in stack frame it is followed by file name</note>
-      </trans-unit>
-      <trans-unit id="StackTrace">
-        <source>Stack Trace</source>
-        <target state="translated">Trasování zásobníku</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">Chybový výstup</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">Standardní výstup</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StartingTestSession">
-        <source>Starting test session.</source>
-        <target state="translated">Spouští se testovací relace.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StartingTestSessionWithLogFilePath">
-        <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="translated">Spouští se testovací relace. Cesta k souboru protokolu je '{0}'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SucceededLowercase">
-        <source>succeeded</source>
-        <target state="translated">úspěšné</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
-        <source>An 'ITestExecutionFilterFactory' factory is already set</source>
-        <target state="translated">Objekt pro vytváření ITestExecutionFilterFactory je už nastavený.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TelemetryNotice">
-        <source>Telemetry
+Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplikaci.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineServerOptionDescription">
+        <ns0:source>Enable the server mode.</ns0:source>
+        <ns0:target state="translated">Umožňuje povolit režim serveru.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
+        <ns0:source>For testing purposes</ns0:source>
+        <ns0:target state="translated">Pro účely testování</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
+        <ns0:source>Eventual parent test host controller PID.</ns0:source>
+        <ns0:target state="translated">Případné PID nadřazeného hostitelského řadiče testů</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
+        <ns0:source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</ns0:source>
+        <ns0:target state="translated">Možnost timeout by měla mít jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="PlatformCommandLineTimeoutOptionDescription">
+        <ns0:source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</ns0:source>
+        <ns0:target state="translated">Vypršel globální časový limit provádění testu.
+Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s], kde value je hodnota datového typu float.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ProcessHasNotYetExitedErrorMessage">
+        <ns0:source>Process should have exited before we can determine this value</ns0:source>
+        <ns0:target state="translated">Proces měl být ukončen před tím, než jsme mohli určit tuto hodnotu.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ReachedMaxFailedTestsMessage">
+        <ns0:source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</ns0:source>
+        <ns0:target state="translated">Testovací relace se přerušuje, protože se dosáhlo chyb ('{0}') zadaných možností --maximum-failed-tests.</ns0:target>
+        <ns0:note>{0} is the number of max failed tests.</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="RetryFailedAfterTriesErrorMessage">
+        <ns0:source>Retry failed after {0} times</ns0:source>
+        <ns0:target state="translated">Opakování se po {0} pokusech nezdařilo.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="RunningTestsFrom">
+        <ns0:source>Running tests from</ns0:source>
+        <ns0:target state="translated">Spouštění testů z</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServerLogMessageDescription">
+        <ns0:source>This data represents a server log message</ns0:source>
+        <ns0:target state="translated">Tato data představují zprávu protokolu serveru.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServerLogMessageDisplayName">
+        <ns0:source>Server log message</ns0:source>
+        <ns0:target state="translated">Zpráva protokolu serveru</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServerTestExecutionFilterFactoryDescription">
+        <ns0:source>Creates the right test execution filter for server mode</ns0:source>
+        <ns0:target state="translated">Vytvoří správný filtr provádění testů pro režim serveru.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
+        <ns0:source>Server test execution filter factory</ns0:source>
+        <ns0:target state="translated">Objekt pro vytváření filtru provádění testů serveru</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServerTestHostDescription">
+        <ns0:source>The 'ITestHost' implementation used when running server mode.</ns0:source>
+        <ns0:target state="translated">Implementace ITestHost použitá při spuštění režimu serveru</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServerTestHostDisplayName">
+        <ns0:source>Server mode test host</ns0:source>
+        <ns0:target state="translated">Testovací hostitel režimu serveru</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
+        <ns0:source>Cannot find service of type '{0}'</ns0:source>
+        <ns0:target state="translated">Nelze najít službu typu {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServiceProviderServiceAlreadyRegistered">
+        <ns0:source>Instance of type '{0}' is already registered</ns0:source>
+        <ns0:target state="translated">Instance typu {0} je už zaregistrována.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
+        <ns0:source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</ns0:source>
+        <ns0:target state="translated">Instance typu ITestFramework by neměly být registrovány prostřednictvím poskytovatele služeb, ale prostřednictvím metody ITestApplicationBuilder.RegisterTestFramework.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Skipped">
+        <ns0:source>Skipped</ns0:source>
+        <ns0:target state="translated">Přeskočeno</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="SkippedLowercase">
+        <ns0:source>skipped</ns0:source>
+        <ns0:target state="translated">vynecháno</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StackFrameAt">
+        <ns0:source>at</ns0:source>
+        <ns0:target state="translated">v</ns0:target>
+        <ns0:note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StackFrameIn">
+        <ns0:source>in</ns0:source>
+        <ns0:target state="translated">v</ns0:target>
+        <ns0:note>in that is used in stack frame it is followed by file name</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StackTrace">
+        <ns0:source>Stack Trace</ns0:source>
+        <ns0:target state="translated">Trasování zásobníku</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StandardError">
+        <ns0:source>Error output</ns0:source>
+        <ns0:target state="translated">Chybový výstup</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StandardOutput">
+        <ns0:source>Standard output</ns0:source>
+        <ns0:target state="translated">Standardní výstup</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StartingTestSession">
+        <ns0:source>Starting test session.</ns0:source>
+        <ns0:target state="translated">Spouští se testovací relace.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="StartingTestSessionWithLogFilePath">
+        <ns0:source>Starting test session. The log file path is '{0}'.</ns0:source>
+        <ns0:target state="translated">Spouští se testovací relace. Cesta k souboru protokolu je '{0}'.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="SucceededLowercase">
+        <ns0:source>succeeded</ns0:source>
+        <ns0:target state="translated">úspěšné</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
+        <ns0:source>An 'ITestExecutionFilterFactory' factory is already set</ns0:source>
+        <ns0:target state="translated">Objekt pro vytváření ITestExecutionFilterFactory je už nastavený.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TelemetryNotice">
+        <ns0:source>Telemetry
 ---------
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="translated">Telemetrie
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</ns0:source>
+        <ns0:target state="translated">Telemetrie
 ---------
 Microsoft Testing Platform shromažďuje data o využití, která nám pomáhají dále vylepšovat prostředí a práci s produktem. Data shromažďuje společnost Microsoft a s nikým je nesdílí.
 Výslovný nesouhlas s telemetrií můžete vyjádřit tak, že pomocí svého oblíbeného prostředí nastavíte proměnnou prostředí TESTINGPLATFORM_TELEMETRY_OPTOUT nebo DOTNET_CLI_TELEMETRY_OPTOUT na hodnotu 1 nebo true.
 
-Přečtěte si další informace o telemetrii Microsoft Testing Platform: https://aka.ms/testingplatform/telemetry</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
-        <source>Telemetry provider is already set</source>
-        <target state="translated">Zprostředkovatel telemetrie je už nastavený.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalNoAnsiOptionDescription">
-        <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="translated">Zakažte výstup řídicích znaků ANSI na obrazovku.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalNoAnsiOptionObsoleteMessage">
-        <source>Use '--ansi off' instead of '--no-ansi'.</source>
-        <target state="new">Use '--ansi off' instead of '--no-ansi'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalAnsiOptionDescription">
-        <source>Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.</source>
-        <target state="new">Control ANSI escape characters output. Valid values are 'auto' (default), 'on', 'off'. Also accepts aliases: 'true'/'enable'/'1' for 'on', 'false'/'disable'/'0' for 'off'.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalAnsiOptionInvalidArgument">
-        <source>--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalNoProgressOptionDescription">
-        <source>Disable reporting progress to screen.</source>
-        <target state="translated">Zakažte zobrazování průběhu vytváření sestav na obrazovce.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Podrobnosti výstupu při vytváření sestav testů.
-Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">--output očekává jeden parametr s hodnotou Normal nebo Detailed.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalTestReporterDescription">
-        <source>Writes test results to terminal.</source>
-        <target state="translated">Zapíše výsledky testu do terminálu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TerminalTestReporterDisplayName">
-        <source>Terminal test reporter</source>
-        <target state="translated">Oznamovatel testu terminálu</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
-        <source>An 'ITestFrameworkInvoker' factory is already set</source>
-        <target state="translated">Objekt pro vytváření ITestFrameworkInvoker je už nastavený.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
-        <source>The application has already been built</source>
-        <target state="translated">Aplikace už je sestavená.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
-        <source>The test framework adapter factory has already been registered</source>
-        <target state="translated">Objekt pro vytváření adaptérů testovací architektury už je zaregistrovaný.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
-        <source>The test framework capabilities factory has already been registered</source>
-        <target state="translated">Objekt pro vytváření možností testovací architektury už je zaregistrovaný.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="translated">Adaptér testovací architektury nebyl zaregistrován. Zaregistrujte ho pomocí ITestApplicationBuilder.RegisterTestFramework.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationResultDescription">
-        <source>Determine the result of the test application execution</source>
-        <target state="translated">Určení výsledku spuštění testovací aplikace</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationResultDisplayName">
-        <source>Test application result</source>
-        <target state="translated">Výsledek testovací aplikace</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
-        <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="translated">Režim VSTest podporuje jen jeden TestApplicationBuilder na proces.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestDiscoverySummary">
-        <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="translated">Souhrn zjišťování testů: nalezené testy: {0} v(e) {1} sestaveních.</target>
-        <note>0 is number of tests, 1 is count of assemblies</note>
-      </trans-unit>
-      <trans-unit id="TestDiscoverySummarySingular">
-        <source>Test discovery summary: found {0} test(s)</source>
-        <target state="translated">Souhrn zjišťování testů: nalezené testy: {0}</target>
-        <note>0 is number of tests</note>
-      </trans-unit>
-      <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
-        <source>Method '{0}' should not have been called on this proxy object</source>
-        <target state="translated">Pro tento objekt proxy neměla být volána metoda {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
-        <source>Test adapter test session failure</source>
-        <target state="translated">Selhání testovací relace testovacího adaptéru</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
-        <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
-        <target state="translated">Proces testovací aplikace nebyl řádně ukončen, ukončovací kód je {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestRunSummary">
-        <source>Test run summary:</source>
-        <target state="translated">Souhrn testovacího běhu:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
-        <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
-        <target state="translated">Nepovedlo se získat semafor před vypršením časového limitu {0} s.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="translated">Nepovedlo se vyprázdnit protokoly před vypršením časového limitu {0} s.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Total">
-        <source>Total</source>
-        <target state="translated">Celkem</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
-        <source>A filter '{0}' should not contain a '/' character</source>
-        <target state="translated">Filtr {0} nesmí obsahovat znak /.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterDescription">
-        <source>Use a tree filter to filter down the tests to execute</source>
-        <target state="translated">K vyfiltrování testů, které se mají provést, použijte stromový filtr.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
-        <source>An escape character should not terminate the filter string '{0}'</source>
-        <target state="translated">Řetězec filtru by neměl být ukončen řídicím znakem {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
-        <source>Only the final filter path can contain '**' wildcard</source>
-        <target state="translated">Zástupný znak ** může obsahovat pouze konečná cesta filtru.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
-        <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
-        <target state="translated">Neočekávaný operátor &amp; nebo | ve výrazu filtru {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
-        <source>Invalid node path, expected root as first character '{0}'</source>
-        <target state="translated">Neplatná cesta k uzlu, jako první znak se očekával kořen {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
-        <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
-        <target state="translated">Výraz filtru {0} obsahuje nevyvážený počet operátorů {1} {2}.</target>
-        <note>{1} and {2} are () or []</note>
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
-        <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
-        <target state="translated">Filtr uvnitř výrazu v závorkách obsahuje neočekávaný operátor /.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
-        <source>Unexpected telemetry call, the telemetry is disabled.</source>
-        <target state="translated">Neočekávané volání telemetrie, telemetrie je zakázaná.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Při převodu bajtů došlo k neočekávané výjimce.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
-{0}</source>
-        <target state="translated">Ve FileLogger.WriteLogToFileAsync došlo k neočekávané výjimce.
-{0}</target>
-        <note>{0} exception ToString</note>
-      </trans-unit>
-      <trans-unit id="UnexpectedStateErrorMessage">
-        <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="translated">Neočekávaný stav v souboru {0} na řádku {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnobservedTaskExceptionWarningMessage">
-        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Neošetřená výjimka: {0}</target>
-        <note>{0} is the exception that was unhandled/unobserved</note>
-      </trans-unit>
-      <trans-unit id="UnreachableLocationErrorMessage">
-        <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="translated">Toto umístění programu se považuje za nedostupné. File={0}, Line={1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ZeroTestsRan">
-        <source>Zero tests ran</source>
-        <target state="translated">Spustila se nula testů</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TotalLowercase">
-        <source>total</source>
-        <target state="translated">celkem</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ChatClientProviderAlreadyRegistered">
-        <source>A chat client provider has already been registered.</source>
-        <target state="translated">Zprostředkovatel klienta chatu již byl zaregistrován.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Rozšíření AI fungují jenom s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
-        <note />
-      </trans-unit>
-    </body>
-  </file>
-</xliff>
+Přečtěte si další informace o telemetrii Microsoft Testing Platform: https://aka.ms/testingplatform/telemetry</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TelemetryProviderAlreadySetErrorMessage">
+        <ns0:source>Telemetry provider is already set</ns0:source>
+        <ns0:target state="translated">Zprostředkovatel telemetrie je už nastavený.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalNoAnsiOptionDescription">
+        <ns0:source>Disable outputting ANSI escape characters to screen.</ns0:source>
+        <ns0:target state="translated">Zakažte výstup řídicích znaků ANSI na obrazovku.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalNoAnsiOptionObsoleteMessage">
+        <ns0:source>Use '--ansi off' instead of '--no-ansi'.</ns0:source>
+        <ns0:target state="new">Use '--ansi off' instead of '--no-ansi'.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalAnsiOptionDescription">
+        <ns0:source>Control ANSI escape characters output.
+  --ansi auto - Auto-detect terminal capabilities (default)
+  --ansi on|true|enable|1 - Force enable ANSI escape sequences
+  --ansi off|false|disable|0 - Force disable ANSI escape sequences</ns0:source>
+        <ns0:target state="new">Control ANSI escape characters output.
+  --ansi auto - Auto-detect terminal capabilities (default)
+  --ansi on|true|enable|1 - Force enable ANSI escape sequences
+  --ansi off|false|disable|0 - Force disable ANSI escape sequences</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalAnsiOptionInvalidArgument">
+        <ns0:source>--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</ns0:source>
+        <ns0:target state="new">--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalNoProgressOptionDescription">
+        <ns0:source>Disable reporting progress to screen.</ns0:source>
+        <ns0:target state="translated">Zakažte zobrazování průběhu vytváření sestav na obrazovce.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalOutputOptionDescription">
+        <ns0:source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</ns0:source>
+        <ns0:target state="translated">Podrobnosti výstupu při vytváření sestav testů.
+Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalOutputOptionInvalidArgument">
+        <ns0:source>--output expects a single parameter with value 'Normal' or 'Detailed'.</ns0:source>
+        <ns0:target state="translated">--output očekává jeden parametr s hodnotou Normal nebo Detailed.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalTestReporterDescription">
+        <ns0:source>Writes test results to terminal.</ns0:source>
+        <ns0:target state="translated">Zapíše výsledky testu do terminálu.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TerminalTestReporterDisplayName">
+        <ns0:source>Terminal test reporter</ns0:source>
+        <ns0:target state="translated">Oznamovatel testu terminálu</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
+        <ns0:source>An 'ITestFrameworkInvoker' factory is already set</ns0:source>
+        <ns0:target state="translated">Objekt pro vytváření ITestFrameworkInvoker je už nastavený.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
+        <ns0:source>The application has already been built</ns0:source>
+        <ns0:target state="translated">Aplikace už je sestavená.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
+        <ns0:source>The test framework adapter factory has already been registered</ns0:source>
+        <ns0:target state="translated">Objekt pro vytváření adaptérů testovací architektury už je zaregistrovaný.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
+        <ns0:source>The test framework capabilities factory has already been registered</ns0:source>
+        <ns0:target state="translated">Objekt pro vytváření možností testovací architektury už je zaregistrovaný.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
+        <ns0:source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</ns0:source>
+        <ns0:target state="translated">Adaptér testovací architektury nebyl zaregistrován. Zaregistrujte ho pomocí ITestApplicationBuilder.RegisterTestFramework.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationResultDescription">
+        <ns0:source>Determine the result of the test application execution</ns0:source>
+        <ns0:target state="translated">Určení výsledku spuštění testovací aplikace</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationResultDisplayName">
+        <ns0:source>Test application result</ns0:source>
+        <ns0:target state="translated">Výsledek testovací aplikace</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestApplicationVSTestModeTooManyBuilders">
+        <ns0:source>VSTest mode only supports a single TestApplicationBuilder per process</ns0:source>
+        <ns0:target state="translated">Režim VSTest podporuje jen jeden TestApplicationBuilder na proces.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestDiscoverySummary">
+        <ns0:source>Test discovery summary: found {0} test(s) in {1} assemblies.</ns0:source>
+        <ns0:target state="translated">Souhrn zjišťování testů: nalezené testy: {0} v(e) {1} sestaveních.</ns0:target>
+        <ns0:note>0 is number of tests, 1 is count of assemblies</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestDiscoverySummarySingular">
+        <ns0:source>Test discovery summary: found {0} test(s)</ns0:source>
+        <ns0:target state="translated">Souhrn zjišťování testů: nalezené testy: {0}</ns0:target>
+        <ns0:note>0 is number of tests</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
+        <ns0:source>Method '{0}' should not have been called on this proxy object</ns0:source>
+        <ns0:target state="translated">Pro tento objekt proxy neměla být volána metoda {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
+        <ns0:source>Test adapter test session failure</ns0:source>
+        <ns0:target state="translated">Selhání testovací relace testovacího adaptéru</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
+        <ns0:source>Test application process didn't exit gracefully, exit code is '{0}'</ns0:source>
+        <ns0:target state="translated">Proces testovací aplikace nebyl řádně ukončen, ukončovací kód je {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TestRunSummary">
+        <ns0:source>Test run summary:</ns0:source>
+        <ns0:target state="translated">Souhrn testovacího běhu:</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
+        <ns0:source>Failed to acquire semaphore before timeout of '{0}' seconds</ns0:source>
+        <ns0:target state="translated">Nepovedlo se získat semafor před vypršením časového limitu {0} s.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TimeoutFlushingLogsErrorMessage">
+        <ns0:source>Failed to flush logs before the timeout of '{0}' seconds</ns0:source>
+        <ns0:target state="translated">Nepovedlo se vyprázdnit protokoly před vypršením časového limitu {0} s.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="Total">
+        <ns0:source>Total</ns0:source>
+        <ns0:target state="translated">Celkem</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
+        <ns0:source>A filter '{0}' should not contain a '/' character</ns0:source>
+        <ns0:target state="translated">Filtr {0} nesmí obsahovat znak /.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterDescription">
+        <ns0:source>Use a tree filter to filter down the tests to execute</ns0:source>
+        <ns0:target state="translated">K vyfiltrování testů, které se mají provést, použijte stromový filtr.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
+        <ns0:source>An escape character should not terminate the filter string '{0}'</ns0:source>
+        <ns0:target state="translated">Řetězec filtru by neměl být ukončen řídicím znakem {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
+        <ns0:source>Only the final filter path can contain '**' wildcard</ns0:source>
+        <ns0:target state="translated">Zástupný znak ** může obsahovat pouze konečná cesta filtru.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
+        <ns0:source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</ns0:source>
+        <ns0:target state="translated">Neočekávaný operátor &amp; nebo | ve výrazu filtru {0}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
+        <ns0:source>Invalid node path, expected root as first character '{0}'</ns0:source>
+        <ns0:target state="translated">Neplatná cesta k uzlu, jako první znak se očekával kořen {0}.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
+        <ns0:source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</ns0:source>
+        <ns0:target state="translated">Výraz filtru {0} obsahuje nevyvážený počet operátorů {1} {2}.</ns0:target>
+        <ns0:note>{1} and {2} are () or []</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
+        <ns0:source>Filter contains an unexpected '/' operator inside a parenthesized expression</ns0:source>
+        <ns0:target state="translated">Filtr uvnitř výrazu v závorkách obsahuje neočekávaný operátor /.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
+        <ns0:source>Unexpected telemetry call, the telemetry is disabled.</ns0:source>
+        <ns0:target state="translated">Neočekávané volání telemetrie, telemetrie je zakázaná.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
+        <ns0:source>An unexpected exception occurred during byte conversion</ns0:source>
+        <ns0:target state="translated">Při převodu bajtů došlo k neočekávané výjimce.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+        <ns0:source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+{0}</ns0:source>
+        <ns0:target state="translated">Ve FileLogger.WriteLogToFileAsync došlo k neočekávané výjimce.
+{0}</ns0:target>
+        <ns0:note>{0} exception ToString</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="UnexpectedStateErrorMessage">
+        <ns0:source>Unexpected state in file '{0}' at line '{1}'</ns0:source>
+        <ns0:target state="translated">Neočekávaný stav v souboru {0} na řádku {1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <ns0:source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</ns0:source>
+        <ns0:target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Neošetřená výjimka: {0}</ns0:target>
+        <ns0:note>{0} is the exception that was unhandled/unobserved</ns0:note>
+      </ns0:trans-unit>
+      <ns0:trans-unit id="UnreachableLocationErrorMessage">
+        <ns0:source>This program location is thought to be unreachable. File='{0}' Line={1}</ns0:source>
+        <ns0:target state="translated">Toto umístění programu se považuje za nedostupné. File={0}, Line={1}</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ZeroTestsRan">
+        <ns0:source>Zero tests ran</ns0:source>
+        <ns0:target state="translated">Spustila se nula testů</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="TotalLowercase">
+        <ns0:source>total</ns0:source>
+        <ns0:target state="translated">celkem</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="ChatClientProviderAlreadyRegistered">
+        <ns0:source>A chat client provider has already been registered.</ns0:source>
+        <ns0:target state="translated">Zprostředkovatel klienta chatu již byl zaregistrován.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+      <ns0:trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <ns0:source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</ns0:source>
+        <ns0:target state="translated">Rozšíření AI fungují jenom s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</ns0:target>
+        <ns0:note />
+      </ns0:trans-unit>
+    </ns0:body>
+  </ns0:file>
+</ns0:xliff>
