@@ -59,6 +59,22 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLineOption"/> class.
+    /// </summary>
+    /// <param name="name">The name of the command line option.</param>
+    /// <param name="description">The description of the command line option.</param>
+    /// <param name="arity">The arity of the command line option.</param>
+    /// <param name="isHidden">Indicates whether the command line option is hidden.</param>
+    /// <remarks>
+    /// This ctor is public and used by non built-in extension, we need to know if the extension is built-in or not
+    /// to correctly handle the --internal- prefix.
+    /// </remarks>
+    public CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden)
+        : this(name, description, arity, isHidden, isBuiltIn: false, null)
+    {
+    }
+
+    /// <summary>
     /// Gets the name of the command line option.
     /// </summary>
     public string Name { get; }
