@@ -46,7 +46,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
         =>
         [
             new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false),
-            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isObsolete: true, PlatformResources.TerminalNoAnsiOptionObsoleteMessage),
+            new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, PlatformResources.TerminalNoAnsiOptionObsoleteMessage),
             new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
             new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false),
         ];
