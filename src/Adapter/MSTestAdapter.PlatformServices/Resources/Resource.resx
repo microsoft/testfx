@@ -455,4 +455,7 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Discovery failed for source '{0}' with {1} errors:
 {2}</value>
   </data>
+  <data name="UTA_OutRefParametersNotSupported" xml:space="preserve">
+    <value>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</value>
+  </data>
 </root>

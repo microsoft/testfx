@@ -27,7 +27,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzer : DiagnosticAnalyzer
         Title,
         MessageFormat,
         Description,
-        Category.Design,
+        Category.Usage,
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 

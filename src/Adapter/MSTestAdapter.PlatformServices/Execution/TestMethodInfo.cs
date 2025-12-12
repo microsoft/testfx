@@ -148,7 +148,7 @@ internal class TestMethodInfo : ITestMethod
         ParameterInfo[] parameters = MethodInfo.GetParameters();
         if (parameters.Any(p => p.IsOut || p.ParameterType.IsByRef))
         {
-            TestContext?.WriteLine($"Warning: Test method '{MethodInfo.DeclaringType?.FullName}.{MethodInfo.Name}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.");
+            TestContext?.WriteLine(string.Format(CultureInfo.CurrentCulture, Resource.UTA_OutRefParametersNotSupported, MethodInfo.DeclaringType?.FullName, MethodInfo.Name));
         }
 
         watch.Start();

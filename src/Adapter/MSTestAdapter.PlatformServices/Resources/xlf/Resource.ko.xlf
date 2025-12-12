@@ -549,6 +549,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">순열의 개체 수가 잘못되었습니다. 개체 수는 0보다 커야 합니다.</target>
         <note></note>
       </trans-unit>
-    </body>
+          <trans-unit id="UTA_OutRefParametersNotSupported">
+        <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
+        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <note />
+      </trans-unit>
+</body>
   </file>
 </xliff>
