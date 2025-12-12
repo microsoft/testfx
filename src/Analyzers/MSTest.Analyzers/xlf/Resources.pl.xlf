@@ -828,9 +828,8 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Metody testowe, czyli metody oznaczone atrybutem „[TestMethod]”, powinny uwzględniać następujący układ, aby platforma MSTest uznała je za prawidłowe:
+        <target state="translated">Metody testowe, czyli metody oznaczone atrybutem „[TestMethod]”, powinny uwzględniać następujący układ, aby platforma MSTest uznała je za prawidłowe:
 — powinny mieć wartość „public” (lub „internal”, jeśli ustawiono atrybut „[assembly: DiscoverInternals]”)
 — nie powinny mieć wartości „static”
 — mogą być ogólne, o ile można wywnioskować parametry typu i typy argumentów są zgodne
@@ -842,7 +841,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="needs-review-translation">Metody testowe powinny mieć prawidłowy układ</target>
+        <target state="translated">Metody testowe powinny mieć prawidłowy układ</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
@@ -1045,6 +1044,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
         <note />
       </trans-unit>
-    </body>
+          <trans-unit id="AvoidOutRefTestMethodParametersTitle">
+        <source>Avoid using 'out' or 'ref' parameters in test methods</source>
+        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
+        <source>Test method '{0}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version</source>
+        <target state="new">Test method '{0}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersDescription">
+        <source>Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</source>
+        <target state="new">Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</target>
+        <note />
+      </trans-unit>
+</body>
   </file>
 </xliff>

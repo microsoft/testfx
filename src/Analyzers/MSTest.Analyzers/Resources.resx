@@ -397,7 +397,6 @@ The type declaring these methods should also respect the following rules:
 - it should not be 'abstract'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should not have 'out' or 'ref' parameters
 - it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat" xml:space="preserve">
@@ -720,5 +719,14 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
     <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersTitle" xml:space="preserve">
+    <value>Avoid using 'out' or 'ref' parameters in test methods</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersDescription" xml:space="preserve">
+    <value>Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</value>
   </data>
 </root>

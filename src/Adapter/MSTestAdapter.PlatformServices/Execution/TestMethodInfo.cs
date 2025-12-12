@@ -144,6 +144,13 @@ internal class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
+        // Check for out/ref parameters and log a warning
+        ParameterInfo[] parameters = MethodInfo.GetParameters();
+        if (parameters.Any(p => p.IsOut || p.ParameterType.IsByRef))
+        {
+            TestContext?.WriteLine($"Warning: Test method '{MethodInfo.DeclaringType?.FullName}.{MethodInfo.Name}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.");
+        }
+
         watch.Start();
 
         try

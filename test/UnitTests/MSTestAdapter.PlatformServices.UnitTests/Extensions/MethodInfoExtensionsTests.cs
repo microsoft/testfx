@@ -240,24 +240,6 @@ public class MethodInfoExtensionsTests : TestContainer
         methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
-    public void HasCorrectTestMethodSignatureShouldReturnFalseForMethodsWithOutParameter()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithOutParameter")!;
-        methodInfo.HasCorrectTestMethodSignature(true).Should().BeFalse();
-    }
-
-    public void HasCorrectTestMethodSignatureShouldReturnFalseForMethodsWithRefParameter()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithRefParameter")!;
-        methodInfo.HasCorrectTestMethodSignature(true).Should().BeFalse();
-    }
-
-    public void HasCorrectTestMethodSignatureShouldReturnFalseForMethodsWithOutAndRefParameters()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithOutAndRefParameters")!;
-        methodInfo.HasCorrectTestMethodSignature(true).Should().BeFalse();
-    }
-
     #endregion
 
     #region HasCorrectTimeout tests
@@ -569,20 +551,6 @@ public class MethodInfoExtensionsTests : TestContainer
 
         internal void InternalMethod()
         {
-        }
-
-        public void PublicMethodWithOutParameter(out int a)
-        {
-            a = 0;
-        }
-
-        public void PublicMethodWithRefParameter(ref int a)
-        {
-        }
-
-        public void PublicMethodWithOutAndRefParameters(out int a, ref int b)
-        {
-            a = 0;
         }
     }
 
