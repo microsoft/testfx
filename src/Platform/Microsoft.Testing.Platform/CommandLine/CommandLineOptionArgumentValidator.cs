@@ -8,6 +8,9 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// </summary>
 internal static class CommandLineOptionArgumentValidator
 {
+    private static readonly string[] DefaultOnValues = ["on", "true", "enable", "1"];
+    private static readonly string[] DefaultOffValues = ["off", "false", "disable", "0"];
+
     /// <summary>
     /// Validates that an argument is one of the accepted on/off/auto values.
     /// </summary>
@@ -22,8 +25,8 @@ internal static class CommandLineOptionArgumentValidator
         string[]? onValues = null,
         string[]? offValues = null)
     {
-        onValues ??= ["on", "true", "enable", "1"];
-        offValues ??= ["off", "false", "disable", "0"];
+        onValues ??= DefaultOnValues;
+        offValues ??= DefaultOffValues;
 
         if (autoValue is not null && autoValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
         {
@@ -57,7 +60,7 @@ internal static class CommandLineOptionArgumentValidator
     /// <returns>True if the argument represents an enabled state; otherwise, false.</returns>
     public static bool IsOnValue(string argument, string[]? onValues = null)
     {
-        onValues ??= ["on", "true", "enable", "1"];
+        onValues ??= DefaultOnValues;
 
         foreach (string onValue in onValues)
         {
@@ -78,7 +81,7 @@ internal static class CommandLineOptionArgumentValidator
     /// <returns>True if the argument represents a disabled state; otherwise, false.</returns>
     public static bool IsOffValue(string argument, string[]? offValues = null)
     {
-        offValues ??= ["off", "false", "disable", "0"];
+        offValues ??= DefaultOffValues;
 
         foreach (string offValue in offValues)
         {
