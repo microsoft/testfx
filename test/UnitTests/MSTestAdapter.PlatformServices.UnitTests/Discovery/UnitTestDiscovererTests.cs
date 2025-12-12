@@ -48,10 +48,13 @@ public class UnitTestDiscovererTests : TestContainer
         _mockDiscoveryContext = new Mock<IDiscoveryContext>();
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
 
-        _test = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null));
+        _test = new UnitTestElement(CreateTestMethod("M", "C", "A", displayName: null));
         _testElements = [_test];
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
+
+    private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
+        => new(typeFullName, methodName, null, methodName, typeFullName, assemblyName, displayName, null);
 
     protected override void Dispose(bool disposing)
     {
@@ -77,8 +80,9 @@ public class UnitTestDiscovererTests : TestContainer
                 .Returns(false);
         }
 
-        Exception ex = VerifyThrows<FileNotFoundException>(() => _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object));
-        Verify(ex.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, sources[0]));
+        Action act = () => _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        act.Should().Throw<FileNotFoundException>()
+            .WithMessage(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, sources[0]));
     }
 
     public void DiscoverTestsInSourceShouldThrowOnFileNotFound()
@@ -89,8 +93,9 @@ public class UnitTestDiscovererTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(false);
 
-        Exception ex = VerifyThrows<FileNotFoundException>(() => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object));
-        Verify(ex.Message == string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, Source));
+        Action act = () => _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+        act.Should().Throw<FileNotFoundException>()
+            .WithMessage(string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, Source));
     }
 
     public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()
@@ -212,8 +217,8 @@ public class UnitTestDiscovererTests : TestContainer
 
     public void SendTestCasesShouldSendAllTestCaseData()
     {
-        var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
-        var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
+        var test1 = new UnitTestElement(CreateTestMethod("M1", "C", "A", displayName: null));
+        var test2 = new UnitTestElement(CreateTestMethod("M2", "C", "A", displayName: null));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         _unitTestDiscoverer.SendTestCases(testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
@@ -230,8 +235,8 @@ public class UnitTestDiscovererTests : TestContainer
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => new TestableTestCaseFilterExpression(p => p.DisplayName == "M1"));
 
-        var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
-        var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
+        var test1 = new UnitTestElement(CreateTestMethod("M1", "C", "A", displayName: null));
+        var test2 = new UnitTestElement(CreateTestMethod("M2", "C", "A", displayName: null));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
@@ -249,8 +254,8 @@ public class UnitTestDiscovererTests : TestContainer
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => null!);
 
-        var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
-        var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
+        var test1 = new UnitTestElement(CreateTestMethod("M1", "C", "A", displayName: null));
+        var test2 = new UnitTestElement(CreateTestMethod("M2", "C", "A", displayName: null));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
@@ -268,8 +273,8 @@ public class UnitTestDiscovererTests : TestContainer
     {
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
 
-        var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
-        var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
+        var test1 = new UnitTestElement(CreateTestMethod("M1", "C", "A", displayName: null));
+        var test2 = new UnitTestElement(CreateTestMethod("M2", "C", "A", displayName: null));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
@@ -287,8 +292,8 @@ public class UnitTestDiscovererTests : TestContainer
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
 
-        var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
-        var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
+        var test1 = new UnitTestElement(CreateTestMethod("M1", "C", "A", displayName: null));
+        var test2 = new UnitTestElement(CreateTestMethod("M2", "C", "A", displayName: null));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action

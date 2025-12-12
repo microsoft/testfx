@@ -11,6 +11,7 @@ namespace Microsoft.Testing.Platform.AI;
 /// <summary>
 /// Extension methods for chat client provider.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class ChatClientProviderExtensions
 {
     /// <summary>

@@ -253,8 +253,13 @@ Skutečnost: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">Hodnota {0} není v očekávaném rozsahu [{1}, {2}]. {3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="translated">Hodnota {0} není v očekávaném rozsahu [{1}..{2}]. {3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">Maximální hodnota musí být větší nebo rovna minimální hodnotě.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -275,6 +280,16 @@ Skutečnost: {2}</target>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
         <target state="translated">Špatný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -309,8 +324,8 @@ Skutečnost: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">Parametr '{0}' je neplatný. Hodnota nemůže být null. {1}.</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

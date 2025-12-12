@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
@@ -30,7 +31,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     {
         Guard.NotNull(serviceProvider);
         ServiceProvider = serviceProvider;
-        IsTrxEnabled = capabilities.GetCapability<ITrxReportCapability>()?.IsSupported == true;
+        ITrxReportCapability? capability = capabilities.GetCapability<ITrxReportCapability>();
+        IsTrxEnabled = capability is IInternalVSTestBridgeTrxReportCapability internalCapability
+            ? internalCapability.IsTrxEnabled
+            : capability is ITrxReportCapability { IsSupported: true };
     }
 
     /// <inheritdoc />

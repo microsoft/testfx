@@ -81,6 +81,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgumentAndReplaceArgument:
                 createChangedDocument = ct => FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgumentReplaceArgumentAndAddArgument:
+                createChangedDocument = ct => FixAssertMethodForRemoveArgumentReplaceArgumentAndAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
             default:
                 break;
         }
@@ -250,6 +253,66 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
         ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, argumentToBeReplaced.WithExpression(replacement));
         newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForRemoveArgumentReplaceArgumentAndAddArgumentModeAsync(
+        Document document,
+        IReadOnlyList<Location> additionalLocations,
+        SyntaxNode root,
+        SimpleNameSyntax simpleNameSyntax,
+        string properAssertMethodName,
+        CancellationToken cancellationToken)
+    {
+        // Handle LINQ Count predicate transformations:
+        // Assert.AreEqual(1, collection.Count(x => x == 1)) -> Assert.ContainsSingle(x => x == 1, collection)
+        if (root.FindNode(additionalLocations[0].SourceSpan) is not ArgumentSyntax expectedArgumentToRemove)
+        {
+            return document;
+        }
+
+        if (root.FindNode(additionalLocations[1].SourceSpan, getInnermostNodeForTie: false) is not ArgumentSyntax argumentToBeReplaced ||
+            root.FindNode(additionalLocations[2].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax replacement ||
+            root.FindNode(additionalLocations[3].SourceSpan, getInnermostNodeForTie: true) is not ExpressionSyntax additionalArgument)
+        {
+            return document;
+        }
+
+        if (expectedArgumentToRemove.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        // Calculate indices before any modifications
+        int argumentIndexToRemove = argumentList.Arguments.IndexOf(expectedArgumentToRemove);
+        int argumentIndexToReplace = argumentList.Arguments.IndexOf(argumentToBeReplaced);
+        // Validate that both arguments were found
+        if (argumentIndexToRemove == -1 || argumentIndexToReplace == -1)
+        {
+            return document;
+        }
+
+        // For ContainsSingle, we expect argumentIndexToRemove=0 (the constant 1) and argumentIndexToReplace=1 (the Count expression)
+        // The general logic below handles any ordering, matching the pattern in FixAssertMethodForRemoveArgumentAndReplaceArgumentModeAsync
+
+        // Replace the second argument with the predicate
+        ArgumentSyntax newArgument = argumentToBeReplaced.WithExpression(replacement);
+        ArgumentListSyntax newArgumentList = argumentList.ReplaceNode(argumentToBeReplaced, newArgument);
+
+        // Remove the first argument - the index is still valid because ReplaceNode preserves structure
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.RemoveAt(argumentIndexToRemove));
+
+        // Calculate where to insert the collection argument
+        // After removing the first argument, if the replaced argument was after it, its index decreases by 1
+        // We want to insert after the predicate (which is now at the adjusted index)
+        int adjustedInsertionIndex = argumentIndexToReplace > argumentIndexToRemove ? argumentIndexToReplace - 1 : argumentIndexToReplace;
+        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(adjustedInsertionIndex + 1, SyntaxFactory.Argument(additionalArgument).WithAdditionalAnnotations(Formatter.Annotation)));
+
         editor.ReplaceNode(argumentList, newArgumentList);
 
         return editor.GetChangedDocument();

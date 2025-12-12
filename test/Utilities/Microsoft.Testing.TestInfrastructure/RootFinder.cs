@@ -9,12 +9,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 /// <remarks>The <see cref="RootFinder"/> class is used to find the root directory of a Git repository by
 /// searching for a ".git" directory or file starting from the application's base directory and moving up the directory
 /// hierarchy. This is useful for applications that need to determine the root of a project or repository.</remarks>
-#if ROOT_FINDER_PUBLIC
-public
-#else
-internal
-#endif
-    static class RootFinder
+internal static class RootFinder
 {
     private static string? s_root;
 

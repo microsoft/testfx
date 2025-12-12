@@ -72,8 +72,8 @@ public sealed partial class Assert
     /// </exception>
     public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.EndsWith", "value", string.Empty);
-        CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix", string.Empty);
+        CheckParameterNotNull(value, "Assert.EndsWith", "value");
+        CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
             string userMessage = BuildUserMessageForExpectedSuffixExpressionAndValueExpression(message, expectedSuffixExpression, valueExpression);
@@ -146,8 +146,8 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotEndWith([NotNull] string? notExpectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedSuffix))] string notExpectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value", string.Empty);
-        CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix", string.Empty);
+        CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value");
+        CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
             string userMessage = BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(message, notExpectedSuffixExpression, valueExpression);

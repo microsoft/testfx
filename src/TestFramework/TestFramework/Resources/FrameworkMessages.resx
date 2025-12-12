@@ -184,7 +184,7 @@
     <value>String '{0}' does not contain string '{1}'. {2}.</value>
   </data>
   <data name="IsInRangeFail" xml:space="preserve">
-    <value>Value '{0}' is not within the expected range [{1}, {2}]. {3}</value>
+    <value>Value '{0}' is not within the expected range [{1}..{2}]. {3}</value>
   </data>
   <data name="ElementNumbersDontMatch" xml:space="preserve">
     <value>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</value>
@@ -212,6 +212,12 @@ Actual: {2}</value>
   <data name="IsNotInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
   </data>
+  <data name="IsExactInstanceOfFailMsg" xml:space="preserve">
+    <value>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
+  </data>
+  <data name="IsNotExactInstanceOfFailMsg" xml:space="preserve">
+    <value>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
+  </data>
   <data name="IsNotMatchFail" xml:space="preserve">
     <value>String '{0}' matches pattern '{1}'. {2}</value>
   </data>
@@ -230,7 +236,7 @@ Actual: {2}</value>
     </value>
   </data>
   <data name="NullParameterToAssert" xml:space="preserve">
-    <value>The parameter '{0}' is invalid. The value cannot be null. {1}.</value>
+    <value>The parameter '{0}' is invalid. The value cannot be null.</value>
   </data>
   <data name="NumberOfElementsDiff" xml:space="preserve">
     <value>Different number of elements.</value>
@@ -383,5 +389,8 @@ Actual: {2}</value>
   </data>
   <data name="ReturnedSubsetValueMessage" xml:space="preserve">
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
+  </data>
+  <data name="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue" xml:space="preserve">
+    <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
 </root>

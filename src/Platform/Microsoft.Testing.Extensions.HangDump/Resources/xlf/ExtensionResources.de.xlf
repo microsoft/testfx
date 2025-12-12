@@ -147,16 +147,6 @@ Gültige Optionen sind "Mini", "Heap", "Triage" (nur in .NET 6 und höher verfü
         <target state="translated">Sie haben mindestens einen Parameter für das Absturzabbild angegeben, aber nicht aktiviert. Fügen Sie der Befehlszeile „--hangdump“ hinzu.</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Mutex "{0}" wurde nicht gefunden</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Der Mutexname wurde nach "{0}" Sekunden nicht empfangen.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">Die folgenden Tests wurden noch ausgeführt, als das Speicherabbild erstellt wurde (Format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>

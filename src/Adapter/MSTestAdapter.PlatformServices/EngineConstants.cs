@@ -60,17 +60,10 @@ internal static class EngineConstants
     /// </summary>
     internal const string ClassCleanupFixtureTrait = "ClassCleanup";
 
-    /// <summary>
-    /// The name of test run parameters node in the runsettings.
-    /// </summary>
-    internal const string TestRunParametersName = "TestRunParameters";
-
     #region Test Property registration
     internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
-
-    internal static readonly TestProperty DeclaringClassNameProperty = TestProperty.Register("MSTestDiscoverer.DeclaringClassName", DeclaringClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
 #pragma warning disable CS0618 // Type or member is obsolete
     internal static readonly TestProperty TestCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", TestCategoryLabel, typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
@@ -78,7 +71,9 @@ internal static class EngineConstants
 
     internal static readonly TestProperty PriorityProperty = TestProperty.Register("MSTestDiscoverer.Priority", PriorityLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+#if !WINDOWS_UWP && !WIN_UI
     internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
+#endif
 
     internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscoverer.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -140,10 +135,11 @@ internal static class EngineConstants
     /// These Property names should not be localized.
     /// </summary>
     private const string TestClassNameLabel = "ClassName";
-    private const string DeclaringClassNameLabel = "DeclaringClassName";
     private const string TestCategoryLabel = "TestCategory";
     private const string PriorityLabel = "Priority";
+#if !WINDOWS_UWP && !WIN_UI
     private const string DeploymentItemsLabel = "DeploymentItems";
+#endif
     private const string DoNotParallelizeLabel = "DoNotParallelize";
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";

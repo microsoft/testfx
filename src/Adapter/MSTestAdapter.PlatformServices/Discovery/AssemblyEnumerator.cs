@@ -42,7 +42,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="settings">The settings for the session.</param>
     /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
-    public AssemblyEnumerator(MSTestSettings settings) =>
+    public AssemblyEnumerator(MSTestSettings? settings) =>
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
@@ -389,7 +389,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(d, parameters))
             {
                 // SPECIAL CASE:
-                // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+                // This condition is a duplicate of the condition in GetInvokeResultAsync.
                 //
                 // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
                 //
@@ -400,7 +400,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 //
                 // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
                 // Note that normally, the array in this code path represents the arguments of the test method.
-                // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+                // However, GetInvokeResultAsync uses the above check to mean "the whole array is the single argument to the test method"
             }
             else if (d?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(d[0], parameters, out object?[] tupleExpandedToArray))
             {

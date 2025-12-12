@@ -152,6 +152,11 @@
         <target state="translated">Usar '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[OSCondition]' attribute</source>
+        <target state="new">Use '[OSCondition]' attribute</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

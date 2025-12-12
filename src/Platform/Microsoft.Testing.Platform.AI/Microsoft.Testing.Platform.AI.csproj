@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <IsShipping>false</IsShipping>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,4 +17,8 @@
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
 </Project>

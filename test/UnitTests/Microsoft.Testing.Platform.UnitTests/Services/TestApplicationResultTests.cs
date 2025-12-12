@@ -219,7 +219,9 @@ public sealed class TestApplicationResultTests
     {
         yield return [new FailedTestNodeStateProperty()];
         yield return [new ErrorTestNodeStateProperty()];
+#pragma warning disable CS0618 // Type or member is obsolete
         yield return [new CancelledTestNodeStateProperty()];
+#pragma warning restore CS0618 // Type or member is obsolete
         yield return [new TimeoutTestNodeStateProperty()];
     }
 

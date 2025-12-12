@@ -142,11 +142,6 @@
         <target state="translated">Argumento inesperado {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Argumento nulo inesperado en el índice {0}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
         <target state="translated">Comilla simple inesperada en el argumento: {0}</target>
@@ -994,12 +989,12 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
       </trans-unit>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
-        <target state="new">A chat client provider has already been registered.</target>
+        <target state="translated">Ya se registró un proveedor de cliente de chat.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
         <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Las extensiones de IA solo funcionan con generadores de tipo "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
         <note />
       </trans-unit>
     </body>

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -19,55 +21,55 @@ public class MethodInfoExtensionsTests : TestContainer
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForNonStaticMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForNonPublicMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("InternalStaticMethod", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForMethodsNotHavingOneParameter()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethod")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForMethodsNotTestContextParameter()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethodWithInt")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForMethodsNotHavingVoidOrAsyncReturnType()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethodWithTCReturningInt")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnTrueForTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethodWithTC")!;
-        Verify(methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeTrue();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnTrueForAsyncTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticAsyncTaskMethodWithTC")!;
-        Verify(methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeTrue();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnTrueForTestMethodsWithoutAsync()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticNonAsyncTaskMethodWithTC")!;
-        Verify(methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeTrue();
     }
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticAsyncVoidMethodWithTC")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        methodInfo.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
     }
 
     #endregion
@@ -77,49 +79,49 @@ public class MethodInfoExtensionsTests : TestContainer
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnFalseForNonStaticMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnFalseForNonPublicMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("InternalStaticMethod", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnFalseForMethodsHavingParameters()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethodWithInt")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnFalseForMethodsNotHavingVoidOrAsyncReturnType()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethodReturningInt")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnTrueForTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethod")!;
-        Verify(methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeTrue();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnTrueForAsyncTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticAsyncTaskMethod")!;
-        Verify(methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeTrue();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnTrueForTestMethodsWithoutAsync()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticNonAsyncTaskMethod")!;
-        Verify(methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeTrue();
     }
 
     public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticAsyncVoidMethod")!;
-        Verify(!methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        methodInfo.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
     }
 
     #endregion
@@ -129,49 +131,49 @@ public class MethodInfoExtensionsTests : TestContainer
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForStaticMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethod")!;
-        Verify(!methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForNonPublicMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("InternalMethod", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)!;
-        Verify(!methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForMethodsHavingParameters()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInt")!;
-        Verify(!methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForMethodsNotHavingVoidOrAsyncReturnType()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodReturningInt")!;
-        Verify(!methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod")!;
-        Verify(methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeTrue();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForAsyncTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncTaskMethod")!;
-        Verify(methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeTrue();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForTestMethodsWithoutAsync()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod")!;
-        Verify(methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeTrue();
     }
 
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod")!;
-        Verify(!methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
     #endregion
@@ -181,61 +183,61 @@ public class MethodInfoExtensionsTests : TestContainer
     public void HasCorrectTestMethodSignatureShouldReturnFalseForAbstractMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAbstractMethod")!;
-        Verify(!methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnFalseForStaticMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethod")!;
-        Verify(!methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnFalseForGenericMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicGenericMethod")!;
-        Verify(!methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnFalseForNonPublicMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("InternalMethod", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)!;
-        Verify(!methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnFalseForMethodsHavingParameters()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInt")!;
-        Verify(!methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnTrueForMethodsWithParametersWhenParameterCountIsIgnored()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInt")!;
-        Verify(methodInfo.HasCorrectTestMethodSignature(true));
+        methodInfo.HasCorrectTestMethodSignature(true).Should().BeTrue();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnTrueForTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod")!;
-        Verify(methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeTrue();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnTrueForAsyncTestMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncTaskMethod")!;
-        Verify(methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeTrue();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnTrueForTaskTestMethodsWithoutAsync()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod")!;
-        Verify(methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeTrue();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod")!;
-        Verify(!methodInfo.HasCorrectTestMethodSignature(false));
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
     #endregion
@@ -245,13 +247,13 @@ public class MethodInfoExtensionsTests : TestContainer
     public void HasCorrectTimeoutShouldReturnFalseForMethodsWithInvalidTimeoutAttribute()
     {
         var timeoutAttribute = new TimeoutAttribute(-11);
-        Verify(!timeoutAttribute.HasCorrectTimeout);
+        timeoutAttribute.HasCorrectTimeout.Should().BeFalse();
     }
 
     public void HasCorrectTimeoutShouldReturnTrueForMethodsWithTimeoutAttribute()
     {
         var timeoutAttribute = new TimeoutAttribute(11);
-        Verify(timeoutAttribute.HasCorrectTimeout);
+        timeoutAttribute.HasCorrectTimeout.Should().BeTrue();
     }
 
     #endregion
@@ -261,31 +263,31 @@ public class MethodInfoExtensionsTests : TestContainer
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForVoidMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod")!;
-        Verify(methodInfo.IsValidReturnType());
+        methodInfo.IsValidReturnType().Should().BeTrue();
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForAsyncTaskMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncTaskMethod")!;
-        Verify(methodInfo.IsValidReturnType());
+        methodInfo.IsValidReturnType().Should().BeTrue();
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForTaskMethodsWithoutAsync()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod")!;
-        Verify(methodInfo.IsValidReturnType());
+        methodInfo.IsValidReturnType().Should().BeTrue();
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnFalseForNonVoidMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodReturningInt")!;
-        Verify(!methodInfo.IsValidReturnType());
+        methodInfo.IsValidReturnType().Should().BeFalse();
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForAsyncNonTaskMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod")!;
-        Verify(!methodInfo.IsValidReturnType());
+        methodInfo.IsValidReturnType().Should().BeFalse();
     }
 
     #endregion
@@ -295,45 +297,49 @@ public class MethodInfoExtensionsTests : TestContainer
     public void GetAsyncTypeNameShouldReturnNullForVoidMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod")!;
-        Verify(methodInfo.GetAsyncTypeName() is null);
+        methodInfo.GetAsyncTypeName().Should().BeNull();
     }
 
     public void GetAsyncTypeNameShouldReturnStateMachineTypeNameForAsyncMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod")!;
-        Verify(methodInfo.GetAsyncTypeName()!.StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>", StringComparison.Ordinal));
+        methodInfo.GetAsyncTypeName()!.Should().StartWith("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>");
     }
 
     #endregion
 
-    #region InvokeAsSynchronousTask tests
+    #region GetInvokeResultAsync tests
 
-    public void MethodInfoInvokeAsSynchronousTaskWaitsForCompletionOfAMethodWhichReturnsTask()
+    public async Task MethodInfoGetInvokeResultAsyncTaskWaitsForCompletionOfAMethodWhichReturnsTask()
     {
         bool testMethodCalled = false;
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
             () =>
             {
-                Verify(x == 10);
-                Verify(y == 20);
+                x.Should().Be(10);
+                y.Should().Be(20);
                 testMethodCalled = true;
             });
 
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyAsyncMethod = typeof(DummyTestClass2).GetMethod("DummyAsyncMethod")!;
 
-        dummyAsyncMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        Task? task = dummyAsyncMethod.GetInvokeResultAsync(dummyTestClass, 10, 20);
+        if (task is not null)
+        {
+            await task;
+        }
 
-        Verify(testMethodCalled);
+        testMethodCalled.Should().BeTrue();
     }
 
-    public void MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
+    public async Task MethodInfoGetInvokeResultAsyncTaskExecutesAMethodWhichDoesNotReturnATask()
     {
         bool testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
         {
-            Verify(x == 10);
-            Verify(y == 20);
+            x.Should().Be(10);
+            y.Should().Be(20);
             testMethodCalled = true;
             return true;
         };
@@ -341,83 +347,102 @@ public class MethodInfoExtensionsTests : TestContainer
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("DummyMethod")!;
 
-        dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, 10, 20);
+        if (task is not null)
+        {
+            await task;
+        }
 
-        Verify(testMethodCalled);
+        testMethodCalled.Should().BeTrue();
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
+    public async Task GetInvokeResultAsyncShouldThrowIfParametersWereExpectedButWereNotProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
+            Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, null);
+            if (task is not null)
+            {
+                await task;
+            }
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
-            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
+            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
+            ex.TryGetMessage().Should().Be(string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
         }
     }
 
-    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
+    public async Task GetInvokeResultAsyncShouldNotThrowIfParametersWereExpectedAndWereProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
 
-        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
-        Action();
+        Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, 10, 20);
+        if (task is not null)
+        {
+            await task;
+        }
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButIncorrectCountOfParametersWasProvided()
+    public async Task GetInvokeResultAsyncShouldThrowIfParametersWereExpectedButIncorrectCountOfParametersWasProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 1);
+            Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, 1);
+            if (task is not null)
+            {
+                await task;
+            }
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
             //    Test expected 2 parameter(s), with types 'Int32, Int32',
             //    but received 1 argument(s), with types 'Int32'.
-            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
+            ex.TryGetMessage().Should().Be(string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
                 2, "Int32, Int32",
                 1, "Int32"));
         }
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButIncorrectTypesOfParametersWereProvided()
+    public async Task GetInvokeResultAsyncShouldThrowIfParametersWereExpectedButIncorrectTypesOfParametersWereProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, "10", "20");
+            Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, "10", "20");
+            if (task is not null)
+            {
+                await task;
+            }
         }
         catch (TestFailedException ex)
         {
-            Verify(ex.Outcome == UTF.UnitTestOutcome.Error);
+            ex.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
 
             // Error in English is:
             //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
             //    Test expected 2 parameter(s), with types 'Int32, Int32',
             //    but received 2 argument(s), with types 'String, String'.
-            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
+            ex.TryGetMessage().Should().Be(string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
                 2, "Int32, Int32",
                 2, "String, String"));
         }
     }
 
-    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndTheProvidedParametersCanImplicitlyConvertToTheExpectedParameters()
+    public async Task GetInvokeResultAsyncShouldNotThrowIfParametersWereExpectedAndTheProvidedParametersCanImplicitlyConvertToTheExpectedParameters()
     {
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters")!;
@@ -427,8 +452,11 @@ public class MethodInfoExtensionsTests : TestContainer
         // do its work.
         byte ten = 10;
         byte twenty = 20;
-        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, ten, twenty);
-        Action();
+        Task? task = dummyMethod.GetInvokeResultAsync(dummyTestClass, ten, twenty);
+        if (task is not null)
+        {
+            await task;
+        }
     }
 
     #endregion
@@ -447,8 +475,8 @@ public class MethodInfoExtensionsTests : TestContainer
 
         public void PublicMethodWithParameters(int x, int y)
         {
-            Verify((object)x is not null);
-            Verify((object)y is not null);
+            ((object)x).Should().NotBeNull();
+            ((object)y).Should().NotBeNull();
         }
     }
 

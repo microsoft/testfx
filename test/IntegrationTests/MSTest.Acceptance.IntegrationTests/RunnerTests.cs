@@ -91,21 +91,21 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
         await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-        try
+
+        if (TargetFrameworks.NetFramework.Any(x => x == tfm))
         {
-            await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-            Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
+            // Running under .NET Framework, which doesn't generate an empty entry point.
+            Exception ex = await Assert.ThrowsAsync<Exception>(async () => await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken));
+            Assert.Contains("Program does not contain a static 'Main' method suitable for an entry point", ex.Message);
+            return;
         }
-        catch (Exception ex)
-        {
-            if (TargetFrameworks.NetFramework.Any(x => x == tfm))
-            {
-                Assert.Contains("Program does not contain a static 'Main' method suitable for an entry point", ex.Message, ex.Message);
-                // .NET Framework does not insert the entry point for empty program.
-            }
-        }
+
+        // Running on .NET (Core), building should succeed and we should run empty entry point.
+        await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
+        testHostResult.AssertExitCodeIs(0);
     }
 
     [TestMethod]
@@ -126,8 +126,7 @@ return await app.RunAsync();
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         Build binLog = Serialization.Read(result.BinlogPath);
-        Assert.IsFalse(binLog.FindChildrenRecursive<AddItem>()
-            .Any(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
+        Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());
     }
 
     public TestContext TestContext { get; set; }

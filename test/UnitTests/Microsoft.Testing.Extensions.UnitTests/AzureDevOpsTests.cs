@@ -31,10 +31,36 @@ public sealed class AzureDevOpsTests
             error = ex;
         }
 
-        // Trim ## so when the test fails we don't report it to AzDO, the severity is invalid, and the result is confusing.
+        // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
         var logger = new TextLogger();
-        string? text = AzureDevOpsReporter.GetErrorText(null, error, "severity", new SystemFileSystem(), logger)?.Trim('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=27;columnnumber=1]this is an error%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+        string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger)?.TrimStart('#');
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=27;columnnumber=1][MyTestDisplayName] this is an error%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+#endif
+    }
+
+    [TestMethod]
+    public void ReportsWithoutDisplayNameWhenNull()
+    {
+#if NETFRAMEWORK && !NET472_OR_GREATER
+        // We rely on code file paths that are present in pdb for this project. We use portable PDBs, which don't report the code location for
+        // .NET Framework <4.7.2, so we won't get the path and the test will fail.
+        // https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
+        return;
+#else
+        Exception error;
+        try
+        {
+            throw new Exception("this is an error");
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+        }
+
+        // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
+        var logger = new TextLogger();
+        string? text = AzureDevOpsReporter.GetErrorText(null, null, error, "severity", new SystemFileSystem(), logger)?.TrimStart('#');
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=53;columnnumber=1]this is an error", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
 #endif
     }
 

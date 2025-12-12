@@ -116,8 +116,8 @@ public sealed class StringAssert
     /// </exception>
     public static void Contains([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value", string.Empty);
-        Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring", string.Empty);
+        Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value");
+        Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring");
         if (value.IndexOf(substring, comparisonType) < 0)
         {
             string userMessage = Assert.BuildUserMessage(message);
@@ -213,8 +213,8 @@ public sealed class StringAssert
     /// </exception>
     public static void StartsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value", string.Empty);
-        Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring", string.Empty);
+        Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value");
+        Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring");
         if (!value.StartsWith(substring, comparisonType))
         {
             string userMessage = Assert.BuildUserMessage(message);
@@ -310,8 +310,8 @@ public sealed class StringAssert
     /// </exception>
     public static void EndsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType, string? message)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value", string.Empty);
-        Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring", string.Empty);
+        Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value");
+        Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring");
         if (!value.EndsWith(substring, comparisonType))
         {
             string userMessage = Assert.BuildUserMessage(message);
@@ -364,8 +364,8 @@ public sealed class StringAssert
     /// </exception>
     public static void Matches([NotNull] string? value, [NotNull] Regex? pattern, string? message)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.Matches", "value", string.Empty);
-        Assert.CheckParameterNotNull(pattern, "StringAssert.Matches", "pattern", string.Empty);
+        Assert.CheckParameterNotNull(value, "StringAssert.Matches", "value");
+        Assert.CheckParameterNotNull(pattern, "StringAssert.Matches", "pattern");
 
         if (!pattern.IsMatch(value))
         {
@@ -415,8 +415,8 @@ public sealed class StringAssert
     /// </exception>
     public static void DoesNotMatch([NotNull] string? value, [NotNull] Regex? pattern, string? message)
     {
-        Assert.CheckParameterNotNull(value, "StringAssert.DoesNotMatch", "value", string.Empty);
-        Assert.CheckParameterNotNull(pattern, "StringAssert.DoesNotMatch", "pattern", string.Empty);
+        Assert.CheckParameterNotNull(value, "StringAssert.DoesNotMatch", "value");
+        Assert.CheckParameterNotNull(pattern, "StringAssert.DoesNotMatch", "pattern");
 
         if (pattern.IsMatch(value))
         {

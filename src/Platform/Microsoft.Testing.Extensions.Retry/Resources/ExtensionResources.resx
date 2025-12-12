@@ -165,7 +165,7 @@ Moving last attempt asset files to the default result directory
     <value>Retry failed tests feature is not supported in server mode</value>
   </data>
   <data name="RetryFailedTestsOptionDescription" xml:space="preserve">
-    <value>Enable retry failed tests</value>
+    <value>Retry failed tests the given number of times</value>
   </data>
   <data name="RetryFailedTestsOptionIsMissingErrorMessage" xml:space="preserve">
     <value>Option '{0}' requires option '{1}' to be specified</value>

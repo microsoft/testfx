@@ -253,8 +253,13 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}, {2}]. {3}</source>
-        <target state="translated">値 '{0}' は予期される範囲 [{1}, {2}] にありません。 {3}</target>
+        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
+        <target state="translated">値 '{0}' は予期される範囲 [{1}..{2}] 内にありません。{3}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">最大値は、最小値以上である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -275,6 +280,16 @@ Actual: {2}</source>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
         <target state="translated">正しくない型は &lt;{1}&gt; であり、実際の型は &lt;{2}&gt; です。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="new">{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="new">Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -309,8 +324,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">パラメーター '{0}' は無効です。値を null にすることはできません。{1}。</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

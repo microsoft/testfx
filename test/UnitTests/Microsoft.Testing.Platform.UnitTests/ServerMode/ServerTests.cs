@@ -31,26 +31,24 @@ public sealed class ServerTests
 
     [TestMethod]
     public async Task ServerCanBeStartedAndAborted_TcpIp()
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                using var server = TcpServer.Create();
+    {
+        using var server = TcpServer.Create();
 
-                TestApplicationHooks testApplicationHooks = new();
-                string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
-                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-                builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
-                builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
-                var testApplication = (TestApplication)await builder.BuildAsync();
-                testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-                Task<int> serverTask = testApplication.RunAsync();
+        TestApplicationHooks testApplicationHooks = new();
+        string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = testApplication.RunAsync();
 
-                await testApplicationHooks.WaitForBeforeRunAsync();
-                ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
+        await testApplicationHooks.WaitForBeforeRunAsync();
+        ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
 
-                stopService.Cancel();
-                Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
-            }, 3, TimeSpan.FromSeconds(10));
+        stopService.Cancel();
+        Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
+    }
 
     [TestMethod]
     public async Task ServerCanInitialize()

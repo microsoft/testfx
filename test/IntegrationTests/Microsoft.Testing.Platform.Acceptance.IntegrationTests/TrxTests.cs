@@ -40,12 +40,6 @@ Out of process file artifacts produced:
     [TestMethod]
     public async Task Trx_WhenTestHostCrash_ErrorIsDisplayedInsideTheTrx(string tfm)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // TODO: Investigate failures on macos
-            return;
-        }
-
         string fileName = Guid.NewGuid().ToString("N");
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -57,6 +51,29 @@ Out of process file artifacts produced:
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
         Assert.IsTrue(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
+        Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenTestHostCrash_RunningUnderDotnetTest_ErrorIsDisplayedInsideTheTrx(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {tfm} --crashdump --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.TargetAssetPath,
+            environmentVariables: new() { { "CRASHPROCESS", "1" } },
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        // This should be TestHostProcessExitedNonGracefully instead of GenericFailure. This will likely be fixed by https://github.com/dotnet/sdk/pull/51857
+        result.AssertExitCodeIs(ExitCodes.GenericFailure);
+
+        string trxFile = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories).Single();
+        string trxContent = File.ReadAllText(trxFile);
         Assert.Contains("""<ResultSummary outcome="Failed">""", trxContent, trxContent);
     }
 
@@ -225,7 +242,6 @@ Out of process file artifacts produced:
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>

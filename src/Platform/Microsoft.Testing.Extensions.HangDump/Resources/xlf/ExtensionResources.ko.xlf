@@ -147,16 +147,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
         <target state="translated">하나 이상의 중단 덤프 매개 변수를 지정했지만 사용하도록 설정하지 않았습니다. 명령줄에 --hangdump를 추가하세요.</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">뮤텍스 '{0}'을(를) 찾을 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">'{0}' 초 후에 뮤텍스 이름을 받지 못했습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">덤프를 수행할 때 다음 테스트가 계속 실행되고 있었습니다(형식: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;).</target>

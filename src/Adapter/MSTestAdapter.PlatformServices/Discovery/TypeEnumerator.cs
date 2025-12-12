@@ -109,7 +109,13 @@ internal class TypeEnumerator
         return [.. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())];
+                // Note: null suppression for MethodInfo here is safe.
+                // The property is marked as null because it's not serializable and will be null when crossing appdomain.
+                // But in this context, we are accessing MethodInfo in the same appdomain that created it, so we are not crossing appdomain boundaries.
+                // The GetTestFromMethod call above guarantees that it's non-null.
+                // The null suppression for DeclaringType is also safe, there is no reason for a test method to have null declaring type.
+                // FullName is also guaranteed to be non-null.
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.MethodInfo!.DeclaringType!.FullName!]).First())];
     }
 
     /// <summary>
@@ -130,17 +136,14 @@ internal class TypeEnumerator
             MethodInfo = method,
         };
 
-        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
-        {
-            testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
-        }
-
         var testElement = new UnitTestElement(testMethod)
         {
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
+#if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
+#endif
             Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
         };
 
