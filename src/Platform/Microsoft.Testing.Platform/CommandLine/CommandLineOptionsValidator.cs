@@ -3,7 +3,9 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
@@ -66,6 +68,30 @@ internal static class CommandLineOptionsValidator
 
         // Last validation step
         return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
+    }
+
+    public static async Task CheckForObsoleteOptionsAsync(
+        CommandLineParseResult commandLineParseResult,
+        IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
+        IEnumerable<ICommandLineOptionsProvider> extensionCommandLineOptionsProviders,
+        IOutputDevice outputDevice,
+        IOutputDeviceDataProducer outputDeviceDataProducer,
+        CancellationToken cancellationToken)
+    {
+        var allOptions = systemCommandLineOptionsProviders
+            .Union(extensionCommandLineOptionsProviders)
+            .SelectMany(provider => provider.GetCommandLineOptions())
+            .Where(option => option.ObsolescenceMessage is not null)
+            .ToDictionary(option => option.Name);
+
+        foreach (CommandLineParseOption optionRecord in commandLineParseResult.Options)
+        {
+            if (allOptions.TryGetValue(optionRecord.Name, out CommandLineOption? option))
+            {
+                string warningMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionObsoleteWarning, optionRecord.Name, option.ObsolescenceMessage);
+                await outputDevice.DisplayAsync(outputDeviceDataProducer, new WarningMessageOutputDeviceData(warningMessage), cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(

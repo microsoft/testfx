@@ -36,6 +36,7 @@ internal static class CommandLineOptionMessageFieldsId
     public const ushort Description = 2;
     public const ushort IsHidden = 3;
     public const ushort IsBuiltIn = 4;
+    public const ushort ObsolescenceMessage = 5;
 }
 
 internal static class DiscoveredTestMessagesFieldsId
