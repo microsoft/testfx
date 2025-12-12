@@ -129,13 +129,13 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             // New --ansi option takes precedence
             string ansiValue = ansiArguments[0];
-            if (IsAnsiEnabledValue(ansiValue))
+            if (CommandLineOptionArgumentValidator.IsOnValue(ansiValue))
             {
                 // Force enable ANSI
                 useAnsi = true;
                 forceAnsi = true;
             }
-            else if (IsAnsiDisabledValue(ansiValue))
+            else if (CommandLineOptionArgumentValidator.IsOffValue(ansiValue))
             {
                 // Force disable ANSI
                 useAnsi = false;
@@ -203,12 +203,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowProgress = shouldShowProgress,
         });
     }
-
-    private static bool IsAnsiEnabledValue(string ansiValue)
-        => CommandLineOptionArgumentValidator.IsOnValue(ansiValue);
-
-    private static bool IsAnsiDisabledValue(string ansiValue)
-        => CommandLineOptionArgumentValidator.IsOffValue(ansiValue);
 
     private static string GetShortArchitecture(string runtimeIdentifier)
         => runtimeIdentifier.Contains(Dash)

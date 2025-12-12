@@ -14,15 +14,6 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public const string NoProgressOption = "no-progress";
     public const string NoAnsiOption = "no-ansi";
     public const string AnsiOption = "ansi";
-    public const string AnsiOptionAutoArgument = "auto";
-    public const string AnsiOptionOnArgument = "on";
-    public const string AnsiOptionTrueArgument = "true";
-    public const string AnsiOptionEnableArgument = "enable";
-    public const string AnsiOption1Argument = "1";
-    public const string AnsiOptionOffArgument = "off";
-    public const string AnsiOptionFalseArgument = "false";
-    public const string AnsiOptionDisableArgument = "disable";
-    public const string AnsiOption0Argument = "0";
     public const string OutputOption = "output";
     public const string OutputOptionNormalArgument = "normal";
     public const string OutputOptionDetailedArgument = "detailed";

@@ -94,16 +94,6 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     /// </summary>
     public bool IsHidden { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether the command line option is obsolete.
-    /// </summary>
-    public bool IsObsolete { get; }
-
-    /// <summary>
-    /// Gets the obsolescence message to display when the option is used.
-    /// </summary>
-    public string? ObsolescenceMessage { get; }
-
     internal bool IsBuiltIn { get; }
 
     /// <summary>
