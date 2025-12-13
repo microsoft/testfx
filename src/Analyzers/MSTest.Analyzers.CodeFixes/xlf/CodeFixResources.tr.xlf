@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
         <source>Use '[OSCondition]' attribute</source>
-        <target state="new">Use '[OSCondition]' attribute</target>
+        <target state="translated">'[OSCondition]' özniteliğini kullanın</target>
         <note />
       </trans-unit>
     </body>
