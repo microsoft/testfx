@@ -70,12 +70,26 @@ public class TestResult
 
             ExceptionMessage = field.Message;
             ExceptionStackTrace = field.StackTrace;
+
+            if (field.Data.Contains("assert.actual"))
+            {
+                ExceptionAssertActual = field.Data["assert.actual"]?.ToString();
+            }
+
+            if (field.Data.Contains("assert.expected"))
+            {
+                ExceptionAssertExpected = field.Data["assert.expected"]?.ToString();
+            }
         }
     }
 
     internal string? ExceptionMessage { get; set; }
 
     internal string? ExceptionStackTrace { get; set; }
+
+    internal string? ExceptionAssertActual { get; set; }
+
+    internal string? ExceptionAssertExpected { get; set; }
 
     /// <summary>
     /// Gets or sets the output of the message logged by test code.
