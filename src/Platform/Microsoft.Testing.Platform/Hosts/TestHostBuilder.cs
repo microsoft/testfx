@@ -765,6 +765,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         {
             if (consumerService is ITestSessionLifetimeHandler handler)
             {
+                // Validate that a handler with the same UID is not already registered
+                testSessionLifetimeHandlers.ValidateUniqueExtension(handler);
                 testSessionLifetimeHandlers.Add(handler);
             }
 
@@ -776,6 +778,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // We register the lifetime handler if we're connected to the dotnet test pipe
         if (pushOnlyProtocolDataConsumer is not null)
         {
+            // Validate that a handler with the same UID is not already registered
+            testSessionLifetimeHandlers.ValidateUniqueExtension(pushOnlyProtocolDataConsumer);
             testSessionLifetimeHandlers.Add(pushOnlyProtocolDataConsumer);
         }
 
@@ -789,6 +793,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // We register the data consumer handler if we're connected to the dotnet test pipe
         if (pushOnlyProtocolDataConsumer is not null)
         {
+            // Validate that a consumer with the same UID is not already registered
+            dataConsumersBuilder.ValidateUniqueExtension(pushOnlyProtocolDataConsumer);
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);
         }
 
@@ -800,6 +806,8 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         if (await abortForMaxFailedTestsExtension.IsEnabledAsync().ConfigureAwait(false))
         {
+            // Validate that a consumer with the same UID is not already registered
+            dataConsumersBuilder.ValidateUniqueExtension(abortForMaxFailedTestsExtension);
             dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
@@ -848,6 +856,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             {
                 return;
             }
+
+            // Validate that a consumer with the same UID is not already registered
+            dataConsumersBuilder.ValidateUniqueExtension(dataConsumer);
 
             dataConsumersBuilder.Add(dataConsumer);
         }
