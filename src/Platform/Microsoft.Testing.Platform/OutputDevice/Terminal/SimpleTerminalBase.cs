@@ -14,10 +14,15 @@ internal abstract class SimpleTerminal : ITerminal
     public SimpleTerminal(IConsole console)
         => Console = console;
 
-#pragma warning disable CA1416 // Validate platform compatibility
-    public int Width => Console.IsOutputRedirected ? int.MaxValue : Console.BufferWidth;
+    public int Width
+        => Console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+            ? int.MaxValue
+            : Console.BufferWidth;
 
-    public int Height => Console.IsOutputRedirected ? int.MaxValue : Console.BufferHeight;
+    public int Height
+        => Console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+            ? int.MaxValue
+            : Console.BufferHeight;
 
     protected IConsole Console { get; }
 

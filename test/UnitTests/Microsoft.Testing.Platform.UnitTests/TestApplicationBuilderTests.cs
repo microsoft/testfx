@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.TestHostControllers;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class TestApplicationBuilderTests
 {
     private readonly ServiceProvider _serviceProvider = new();

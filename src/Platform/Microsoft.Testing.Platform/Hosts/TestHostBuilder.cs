@@ -20,6 +20,7 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -321,6 +322,11 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // Subscribe to the process if the option is set.
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ExitOnProcessExitOptionKey))
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(Resources.PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
+            }
+
             NonCooperativeParentProcessListener nonCooperativeParentProcessListener = new(commandLineOptions, environment);
 
             // Add to the service provider for cleanup.
@@ -448,6 +454,11 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             TestHostControllerConfiguration testHostControllers = await ((TestHostControllersManager)TestHostControllers).BuildAsync(testHostControllersServiceProvider).ConfigureAwait(false);
             if (testHostControllers.RequireProcessRestart)
             {
+                if (OperatingSystem.IsBrowser())
+                {
+                    throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+                }
+
                 testHostControllerInfo.IsCurrentProcessTestHostController = true;
                 policiesService.ProcessRole = TestProcessRole.TestHostController;
                 await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostController, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
@@ -582,6 +593,12 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
     {
         if (!testHostControllerInfo.HasTestHostController)
         {
+            return null;
+        }
+
+        if (OperatingSystem.IsBrowser())
+        {
+            logger.LogWarning($"Test Host Controller connection is not supported on WebAssembly targets.");
             return null;
         }
 

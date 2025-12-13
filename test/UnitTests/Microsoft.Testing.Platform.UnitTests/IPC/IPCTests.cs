@@ -12,6 +12,7 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class IPCTests
 {
     private readonly TestContext _testContext;

@@ -143,8 +143,9 @@ internal sealed class TcpMessageHandler(
             // The stream writer is currently in use by a previous write operation.
         }
 
-#pragma warning disable CA1416 // Validate platform compatibility
-        _client.Dispose();
-#pragma warning restore CA1416
+        if (!OperatingSystem.IsBrowser())
+        {
+            _client.Dispose();
+        }
     }
 }
