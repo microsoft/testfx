@@ -365,4 +365,14 @@ public class TestContextImplementationTests : TestContainer
         _ = testContextImplementation.GetErr();
         t.Join();
     }
+
+    public void AccessingNonExistentPropertyShouldReturnNull()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        // Direct access to Properties dictionary should return null for non-existent keys
+        // This tests the behavior that was broken in 4.x and needs to be preserved for backwards compatibility
+        object? nonExistent = _testContextImplementation.Properties["NonExistentProperty"];
+        nonExistent.Should().BeNull();
+    }
 }

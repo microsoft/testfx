@@ -67,6 +67,17 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
+    [TestMethod]
+    public async Task TestContext_Properties_AccessingNonExistentKey_ReturnsNull()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextNonExistentProperty", cancellationToken: TestContext.CancellationToken);
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestTestContext";
@@ -448,6 +459,21 @@ public class TestContextTestPropertyImpl : TestContextTestPropertyBase
 {
     public TestContextTestPropertyImpl(TestContext testContext) : base(testContext)
     {
+    }
+}
+
+[TestClass]
+public class TestContextNonExistentProperty
+{
+    public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    public void TestAccessingNonExistentProperty()
+    {
+        // Direct access to Properties dictionary should return null for non-existent keys
+        // This is the behavior from MSTest 3.x that must be preserved for backwards compatibility
+        var nonExistent = TestContext.Properties["NonExistentProperty"];
+        Assert.IsNull(nonExistent, "Accessing a non-existent property should return null");
     }
 }
 """;

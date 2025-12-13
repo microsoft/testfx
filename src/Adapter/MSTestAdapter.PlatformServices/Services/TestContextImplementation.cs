@@ -51,12 +51,61 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             => _builder.ToString();
     }
 
+    /// <summary>
+    /// A dictionary wrapper that returns null for non-existent keys instead of throwing KeyNotFoundException.
+    /// This maintains backwards compatibility with MSTest 3.x behavior.
+    /// </summary>
+    private sealed class NullReturningDictionary : IDictionary<string, object?>
+    {
+        private readonly Dictionary<string, object?> _dictionary;
+
+        public NullReturningDictionary(Dictionary<string, object?> dictionary)
+            => _dictionary = dictionary;
+
+        public object? this[string key]
+        {
+            get => _dictionary.TryGetValue(key, out object? value) ? value : null;
+            set => _dictionary[key] = value;
+        }
+
+        public ICollection<string> Keys => _dictionary.Keys;
+
+        public ICollection<object?> Values => _dictionary.Values;
+
+        public int Count => _dictionary.Count;
+
+        public bool IsReadOnly => ((IDictionary<string, object?>)_dictionary).IsReadOnly;
+
+        public void Add(string key, object? value) => _dictionary.Add(key, value);
+
+        public void Add(KeyValuePair<string, object?> item) => ((IDictionary<string, object?>)_dictionary).Add(item);
+
+        public void Clear() => _dictionary.Clear();
+
+        public bool Contains(KeyValuePair<string, object?> item) => ((IDictionary<string, object?>)_dictionary).Contains(item);
+
+        public bool ContainsKey(string key) => _dictionary.ContainsKey(key);
+
+        public void CopyTo(KeyValuePair<string, object?>[] array, int arrayIndex) => ((IDictionary<string, object?>)_dictionary).CopyTo(array, arrayIndex);
+
+        public IEnumerator<KeyValuePair<string, object?>> GetEnumerator() => _dictionary.GetEnumerator();
+
+        public bool Remove(string key) => _dictionary.Remove(key);
+
+        public bool Remove(KeyValuePair<string, object?> item) => ((IDictionary<string, object?>)_dictionary).Remove(item);
+
+        public bool TryGetValue(string key, out object? value) => _dictionary.TryGetValue(key, out value);
+
+        IEnumerator IEnumerable.GetEnumerator() => _dictionary.GetEnumerator();
+    }
+
     private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
 
     /// <summary>
-    /// Properties.
+    /// Properties dictionary that returns null for missing keys instead of throwing.
+    /// Maintains backwards compatibility with MSTest 3.x behavior.
     /// </summary>
-    private readonly Dictionary<string, object?> _properties;
+    private readonly NullReturningDictionary _propertiesWrapper;
     private readonly IMessageLogger? _messageLogger;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
@@ -103,30 +152,34 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
+        Dictionary<string, object?> propertiesDictionary;
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is null && testMethod is null)
         {
-            _properties = new Dictionary<string, object?>(properties);
+            propertiesDictionary = new Dictionary<string, object?>(properties);
         }
         else
         {
-            _properties = new Dictionary<string, object?>(properties.Count + 2);
+            propertiesDictionary = new Dictionary<string, object?>(properties.Count + 2);
             foreach (KeyValuePair<string, object?> kvp in properties)
             {
-                _properties[kvp.Key] = kvp.Value;
+                propertiesDictionary[kvp.Key] = kvp.Value;
             }
 
             if (testClassFullName is not null)
             {
-                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+                propertiesDictionary.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
             }
 
             if (testMethod is not null)
             {
-                _properties.Add(TestNameLabel, testMethod.Name);
+                propertiesDictionary.Add(TestNameLabel, testMethod.Name);
             }
         }
 
+        // Wrap the properties dictionary to maintain backwards compatibility with MSTest 3.x
+        // where accessing non-existent keys returns null instead of throwing KeyNotFoundException
+        _propertiesWrapper = new NullReturningDictionary(propertiesDictionary);
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
@@ -147,7 +200,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary<string, object?> Properties => _properties;
+    public override IDictionary<string, object?> Properties => _propertiesWrapper;
 
     /// <summary>
     /// Gets the inner test context object.
@@ -259,13 +312,13 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>True if found.</returns>
     public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
     {
-        if (_properties == null)
+        if (_propertiesWrapper == null)
         {
             propertyValue = null;
             return false;
         }
 
-        return _properties.TryGetValue(propertyName, out propertyValue);
+        return _propertiesWrapper.TryGetValue(propertyName, out propertyValue);
     }
 
     /// <summary>
@@ -274,7 +327,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
-        => _properties.Add(propertyName, propertyValue);
+        => _propertiesWrapper.Add(propertyName, propertyValue);
 
     /// <summary>
     /// Result files attached.
