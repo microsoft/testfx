@@ -34,15 +34,21 @@ TestHost: IDataConsumer, ITestApplicationLifetime
     /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
     /// </summary>
     /// <param name="factory">The factory function that creates the extension with a service provider.</param>
-    public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory) =>
-        _factoryWithServiceProvider = Ensure.NotNull(factory);
+    public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
+    {
+        Guard.NotNull(factory);
+        _factoryWithServiceProvider = factory;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
     /// </summary>
     /// <param name="factory">The factory function that creates the extension.</param>
-    public CompositeExtensionFactory(Func<TExtension> factory) =>
-        _factory = Ensure.NotNull(factory);
+    public CompositeExtensionFactory(Func<TExtension> factory)
+    {
+        Guard.NotNull(factory);
+        _factory = factory;
+    }
 
     /// <inheritdoc/>
     object ICloneable.Clone()

@@ -121,19 +121,20 @@ public sealed partial class Assert
     /// </param>
     /// <returns>The item.</returns>
     public static T ContainsSingle<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        int actualCount = collection.Count();
-        if (actualCount == 1)
-        {
-            return collection.First();
-        }
+        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertContainsSingleFailed(actualCount, userMessage);
-
-        // Unreachable code but compiler cannot work it out
-        return default;
-    }
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item.</returns>
+    public static object? ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
@@ -161,10 +162,78 @@ public sealed partial class Assert
             return matchingElements[0];
         }
 
-        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-        ThrowAssertSingleMatchFailed(actualCount, userMessage);
+        if (string.IsNullOrEmpty(predicateExpression))
+        {
+            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+            ThrowAssertContainsSingleFailed(actualCount, userMessage);
+        }
+        else
+        {
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(actualCount, userMessage);
+        }
 
         // Unreachable code but compiler cannot work it out
+        return default;
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static object? ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        object? firstMatch = null;
+        int matchCount = 0;
+
+        foreach (object? item in collection)
+        {
+            if (!predicate(item))
+            {
+                continue;
+            }
+
+            if (matchCount == 0)
+            {
+                firstMatch = item;
+            }
+
+            matchCount++;
+
+            // Early exit optimization - no need to continue if we already have more than one match
+            if (matchCount > 1)
+            {
+                break;
+            }
+        }
+
+        if (matchCount == 1)
+        {
+            return firstMatch;
+        }
+
+        if (string.IsNullOrEmpty(predicateExpression))
+        {
+            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+            ThrowAssertContainsSingleFailed(matchCount, userMessage);
+        }
+        else
+        {
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(matchCount, userMessage);
+        }
+
         return default;
     }
 
@@ -212,6 +281,8 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+
         foreach (object? item in collection)
         {
             if (object.Equals(item, expected))
@@ -266,6 +337,9 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+        CheckParameterNotNull(comparer, "Assert.Contains", "comparer");
+
         foreach (object? item in collection)
         {
             if (comparer.Equals(item, expected))
@@ -318,6 +392,9 @@ public sealed partial class Assert
     /// </param>
     public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+        CheckParameterNotNull(predicate, "Assert.Contains", "predicate");
+
         foreach (object? item in collection)
         {
             if (predicate(item))
@@ -394,11 +471,10 @@ public sealed partial class Assert
     /// </exception>
     public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) < 0)
-#else
+        CheckParameterNotNull(value, "Assert.Contains", "value");
+        CheckParameterNotNull(substring, "Assert.Contains", "substring");
+
         if (!value.Contains(substring, comparisonType))
-#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
@@ -450,6 +526,8 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+
         foreach (object? item in collection)
         {
             if (object.Equals(notExpected, item))
@@ -502,6 +580,9 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+        CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
+
         foreach (object? item in collection)
         {
             if (comparer.Equals(item, notExpected))
@@ -552,6 +633,9 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+        CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
+
         foreach (object? item in collection)
         {
             if (predicate(item))
@@ -626,11 +710,10 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) >= 0)
-#else
+        CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
+        CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
+
         if (value.Contains(substring, comparisonType))
-#endif
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
@@ -666,9 +749,9 @@ public sealed partial class Assert
     public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        if (maxValue.CompareTo(minValue) <= 0)
+        if (maxValue.CompareTo(minValue) < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanMinValue);
+            throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue);
         }
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)

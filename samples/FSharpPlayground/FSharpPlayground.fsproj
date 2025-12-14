@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
+
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Tests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.AI\Microsoft.Testing.Platform.AI.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureFoundry\Microsoft.Testing.Extensions.AzureFoundry.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <PackageReference Include="StreamJsonRpc" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="FSharp.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.runsettings">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="DiagnoseCapabilities" />
+    <ProjectCapability Include="TestingPlatformServer" />
+    <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+
+  <!-- Import the capabilities for the Microsoft.Testing.Platform -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
+</Project>

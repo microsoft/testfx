@@ -43,7 +43,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
     public async Task<TFixture> GetFixtureAsync<TFixture>(string fixtureId)
         where TFixture : notnull
     {
-        Ensure.NotNullOrWhiteSpace(fixtureId);
+        Guard.NotNullOrWhiteSpace(fixtureId);
         if (!_fixtureInstancesByFixtureId.TryGetValue(fixtureId, out Dictionary<Type, AsyncLazy<object>>? fixtureInstancesPerType))
         {
             throw new InvalidOperationException($"Fixture with ID '{fixtureId}' is not registered");
@@ -148,7 +148,7 @@ internal sealed class TestFixtureManager : ITestFixtureManager
     private void TryRegisterFixture<TFixture>(string fixtureId, Func<Task<TFixture>> asyncFactory, Action onTypeExist)
         where TFixture : notnull
     {
-        Ensure.NotNullOrWhiteSpace(fixtureId);
+        Guard.NotNullOrWhiteSpace(fixtureId);
 
         if (_isRegistrationFrozen)
         {

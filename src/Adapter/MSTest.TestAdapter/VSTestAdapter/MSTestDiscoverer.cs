@@ -43,9 +43,9 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
 
     internal void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
     {
-        Ensure.NotNull(sources);
-        Ensure.NotNull(logger);
-        Ensure.NotNull(discoverySink);
+        Guard.NotNull(sources);
+        Guard.NotNull(logger);
+        Guard.NotNull(discoverySink);
 
         if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, _testSourceHandler))
         {

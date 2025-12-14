@@ -196,7 +196,7 @@ internal sealed class MSTestSettings
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
-    public static void PopulateSettings(MSTestSettings settings)
+    public static void PopulateSettings(MSTestSettings? settings)
     {
         if (settings == null)
         {
@@ -382,7 +382,7 @@ internal sealed class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
-        Ensure.NotNull(reader);
+        Guard.NotNull(reader);
 
         // Expected format of the xml is: -
         //

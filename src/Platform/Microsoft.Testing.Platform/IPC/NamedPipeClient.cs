@@ -16,8 +16,8 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-#pragma warning disable CA1416 // Validate platform compatibility
 [Embedded]
+[UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
     private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
@@ -43,7 +43,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name, IEnvironment environment)
     {
-        Ensure.NotNull(name);
+        Guard.NotNull(name);
         _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;

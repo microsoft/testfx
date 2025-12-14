@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../PlatformResources.resx">
     <body>
@@ -117,6 +117,11 @@
         <target state="translated">L’option « --{0} » est réservée et ne peut pas être utilisée par les fournisseurs : « {0} »</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">L’option « --{0} » du fournisseur « {1} » (UID : {2}) utilise le préfixe réservé « --internal »</target>
@@ -140,11 +145,6 @@
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Arguments inattendue {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Argument null inattendu à l’index de recherche{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
@@ -538,6 +538,11 @@ Les valeurs disponibles sont « Trace », « Debug », « Information », 
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="new">The '--exit-on-process-exit' option is not supported in browser environments.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Quitter le processus de test si le processus dépendant quitte. Vous devez indiquer le PID.</target>
@@ -768,6 +773,11 @@ Prend un argument sous forme de chaîne au format &lt;value&gt;[h|m|s] où « v
         <target state="translated">opération réussie</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="new">Synchronous flush is not supported in browser environments.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Désolé, une fabrique « ITestExecutionFilterFactory » est déjà définie</target>
@@ -885,6 +895,11 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
         <target state="translated">Désolé, échec de la session de test de l’adaptateur de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="new">Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">Le processus d’application de test ne s’est pas fermé normalement, le code de sortie est « {0} »</target>
@@ -980,6 +995,11 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Cet emplacement du programme est considéré comme inaccessible. File=« {0} », Ligne={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

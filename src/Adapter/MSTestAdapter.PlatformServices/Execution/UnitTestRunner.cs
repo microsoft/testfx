@@ -33,7 +33,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
     /// <param name="testsToRun"> The tests to run. </param>
-    public UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun)
+    public UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun)
         : this(settings, testsToRun, ReflectHelper.Instance)
     {
     }
@@ -44,7 +44,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <param name="settings"> Specifies adapter settings. </param>
     /// <param name="testsToRun"> The tests to run. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
-    internal UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
+    internal UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
     {
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
@@ -131,8 +131,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Ensure.NotNull(testMethod);
-        Ensure.NotNull(testContextProperties);
+        Guard.NotNull(testMethod);
+        Guard.NotNull(testContextProperties);
 
         ITestContext? testContextForTestExecution = null;
         ITestContext? testContextForAssemblyInit = null;

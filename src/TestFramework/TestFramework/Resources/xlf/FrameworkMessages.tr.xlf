@@ -257,9 +257,9 @@ Gerçekte olan: {2}</target>
         <target state="translated">Değer '{0}' beklenen aralık [{1}..{2}] içinde değil. {3}</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
-        <source>The maximum value must be greater than the minimum value.</source>
-        <target state="translated">En yüksek değer, en düşük değerden büyük olmalıdır.</target>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">En büyük değer en küçük değerden büyük veya buna eşit olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -280,6 +280,16 @@ Gerçekte olan: {2}</target>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
         <target state="translated">Yanlış Tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="translated">{0} Beklenen tam tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Yanlış tam tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -314,8 +324,8 @@ Gerçekte olan: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">'{0}' parametresi geçersiz. Değer null olamaz. {1}.</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="translated">'{0}' parametresi geçersiz. Değer null olamaz.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

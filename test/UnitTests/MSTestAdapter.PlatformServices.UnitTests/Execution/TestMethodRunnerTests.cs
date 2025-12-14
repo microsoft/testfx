@@ -405,7 +405,7 @@ public class TestMethodRunnerTests : TestContainer
                 """;
 
             var settings = MSTestSettings.GetSettings(xml, MSTestSettings.SettingsNameAlias, null);
-            MSTestSettings.PopulateSettings(settings!);
+            MSTestSettings.PopulateSettings(settings);
 
             var testMethodInfo = new TestableTestMethodInfo(
                 typeof(DummyTestClassEmptyDataSource).GetMethod(nameof(DummyTestClassEmptyDataSource.TestMethod))!,

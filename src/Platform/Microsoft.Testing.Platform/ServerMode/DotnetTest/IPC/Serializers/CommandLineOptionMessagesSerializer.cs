@@ -34,6 +34,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
        |---CommandLineOptionMessageList[0].IsBuiltIn Id---| (2 bytes)
        |---CommandLineOptionMessageList[0].IsBuiltIn Size---| (4 bytes)
        |---CommandLineOptionMessageList[0].IsBuiltIn Value---| (1 byte)
+
+       |---CommandLineOptionMessageList[0].ObsolescenceMessage Id---| (2 bytes)
+       |---CommandLineOptionMessageList[0].ObsolescenceMessage Size---| (4 bytes)
+       |---CommandLineOptionMessageList[0].ObsolescenceMessage Value---| (n bytes)
    */
 
 internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INamedPipeSerializer
@@ -79,7 +83,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         int length = ReadInt(stream);
         for (int i = 0; i < length; i++)
         {
-            string? name = null, description = null;
+            string? name = null, description = null, obsolescenceMessage = null;
             bool? isHidden = null, isBuiltIn = null;
 
             int fieldCount = ReadUShort(stream);
@@ -107,13 +111,17 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
                         isBuiltIn = ReadBool(stream);
                         break;
 
+                    case CommandLineOptionMessageFieldsId.ObsolescenceMessage:
+                        obsolescenceMessage = ReadStringValue(stream, fieldSize);
+                        break;
+
                     default:
                         SetPosition(stream, stream.Position + fieldSize);
                         break;
                 }
             }
 
-            commandLineOptionMessages.Add(new CommandLineOptionMessage(name, description, isHidden, isBuiltIn));
+            commandLineOptionMessages.Add(new CommandLineOptionMessage(name, description, isHidden, isBuiltIn, obsolescenceMessage));
         }
 
         return commandLineOptionMessages;
@@ -154,6 +162,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
             WriteField(stream, CommandLineOptionMessageFieldsId.Description, commandLineOptionMessage.Description);
             WriteField(stream, CommandLineOptionMessageFieldsId.IsHidden, commandLineOptionMessage.IsHidden);
             WriteField(stream, CommandLineOptionMessageFieldsId.IsBuiltIn, commandLineOptionMessage.IsBuiltIn);
+            WriteField(stream, CommandLineOptionMessageFieldsId.ObsolescenceMessage, commandLineOptionMessage.ObsolescenceMessage);
         }
 
         // NOTE: We are able to seek only if we are using a MemoryStream
@@ -169,5 +178,6 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         (ushort)((commandLineOptionMessage.Name is null ? 0 : 1) +
         (commandLineOptionMessage.Description is null ? 0 : 1) +
         (commandLineOptionMessage.IsHidden is null ? 0 : 1) +
-        (commandLineOptionMessage.IsBuiltIn is null ? 0 : 1));
+        (commandLineOptionMessage.IsBuiltIn is null ? 0 : 1) +
+        (commandLineOptionMessage.ObsolescenceMessage is null ? 0 : 1));
 }

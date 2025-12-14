@@ -33,8 +33,11 @@ public sealed class UnitTestRunnerTests : TestContainer
         _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false)!, []);
+        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false), []);
     }
+
+    private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
+        => new(typeFullName, methodName, null, methodName, typeFullName, assemblyName, displayName, null);
 
     protected override void Dispose(bool disposing)
     {
@@ -65,7 +68,7 @@ public sealed class UnitTestRunnerTests : TestContainer
                 actualReader.ReadInnerXml();
             });
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
@@ -83,14 +86,14 @@ public sealed class UnitTestRunnerTests : TestContainer
 
     public async Task RunSingleTestShouldThrowIfTestRunParametersIsNull()
     {
-        var testMethod = new TestMethod("M", "C", "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
         Func<Task> func = () => _unitTestRunner.RunSingleTestAsync(testMethod, null!, null!);
         await func.Should().ThrowAsync<ArgumentNullException>();
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
     {
-        var testMethod = new TestMethod("M", "C", "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -107,7 +110,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -130,7 +133,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithMessage);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -147,7 +150,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClass);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -164,7 +167,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTestWithMessage);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -181,7 +184,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTest);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -198,7 +201,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -215,7 +218,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -231,7 +234,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     public async Task RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
-        var testMethod = new TestMethod("ImaginaryTestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod("ImaginaryTestMethod", type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -254,7 +257,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -271,7 +274,7 @@ public sealed class UnitTestRunnerTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
         MethodInfo methodInfo = type.GetMethod("TestMethodToTestInProgress")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
@@ -291,7 +294,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         Type type = typeof(DummyTestClassWithInitializeMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());

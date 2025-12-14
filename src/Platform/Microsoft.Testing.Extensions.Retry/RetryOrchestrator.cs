@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDataProducer
 {
     private readonly IServiceProvider _serviceProvider;

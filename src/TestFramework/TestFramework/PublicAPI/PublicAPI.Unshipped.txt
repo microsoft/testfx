@@ -1,1 +1,55 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AssertIsExactInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.AssertIsExactInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? expectedType, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted(object? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted(string? value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, int alignment, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendFormatted<T>(T value, string? format) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AppendLiteral(string! value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler(int literalLength, int formattedCount, object? value, System.Type? wrongType, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(object? value, System.Type? expectedType, string? message = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(object? value, System.Type? expectedType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler message, string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType<T>(object? value, string? message = "", string! valueExpression = "") -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType<T>(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<T> message, string! valueExpression = "") -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType(object? value, System.Type? wrongType, string? message = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType(object? value, System.Type? wrongType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler message, string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType<T>(object? value, string? message = "", string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType<T>(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<T> message, string! valueExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Collections.IEnumerable! collection, string? message = "", string! collectionExpression = "") -> object?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Func<object!, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> object?

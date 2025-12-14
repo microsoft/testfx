@@ -257,9 +257,9 @@ Tatsächlich: {2}</target>
         <target state="translated">Der Wert „{0}“ liegt nicht im erwarteten Bereich [{1}..{2}]. {3}</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanMinValue">
-        <source>The maximum value must be greater than the minimum value.</source>
-        <target state="translated">Der Höchstwert muss größer als der Mindestwert sein.</target>
+      <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
+        <source>The maximum value must be greater than or equal to the minimum value.</source>
+        <target state="translated">Der Höchstwert muss größer oder gleich dem Mindestwert sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -280,6 +280,16 @@ Tatsächlich: {2}</target>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
         <target state="translated">Falscher Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="translated">{0} Erwarteter genauer Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Falscher genauer Typ:&lt;{1}&gt;. Tatsächlicher Typ:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -314,8 +324,8 @@ Tatsächlich: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
-        <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">Der {0}-Parameter ist ungültig. Der Wert kann nicht NULL sein. {1}.</target>
+        <source>The parameter '{0}' is invalid. The value cannot be null.</source>
+        <target state="translated">Der {0}-Parameter ist ungültig. Der Wert kann nicht NULL sein.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

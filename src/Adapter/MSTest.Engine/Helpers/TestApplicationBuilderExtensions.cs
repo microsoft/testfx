@@ -19,8 +19,8 @@ public static class TestApplicationBuilderExtensions
         TestFrameworkConfiguration? testFrameworkConfiguration = null,
         params ITestNodesBuilder[] testNodesBuilder)
     {
-        Ensure.NotNull(testApplicationBuilder);
-        Ensure.NotNull(testNodesBuilder);
+        Guard.NotNull(testApplicationBuilder);
+        Guard.NotNull(testNodesBuilder);
         ArgumentGuard.Ensure(testNodesBuilder.Length != 0, nameof(testNodesBuilder),
             "At least one test node builder must be provided.");
 

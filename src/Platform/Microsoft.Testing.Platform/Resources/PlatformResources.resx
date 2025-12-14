@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!--
-    Microsoft ResX Schema
-
+  <!-- 
+    Microsoft ResX Schema 
+    
     Version 2.0
-
-    The primary goals of this format is to allow a simple XML format
-    that is mostly human readable. The generation and parsing of the
-    various data types are done through the TypeConverter classes
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
     associated with the data types.
-
+    
     Example:
-
+    
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -26,36 +26,36 @@
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
         <comment>This is a comment</comment>
     </data>
-
-    There are any number of "resheader" rows that contain simple
+                
+    There are any number of "resheader" rows that contain simple 
     name/value pairs.
-
-    Each data row contains a name, and value. The row also contains a
-    type or mimetype. Type corresponds to a .NET class that support
-    text/value conversion through the TypeConverter architecture.
-    Classes that don't support this are serialized and stored with the
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
     mimetype set.
-
-    The mimetype is used for serialized objects, and tells the
-    ResXResourceReader how to depersist the object. This is currently not
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
     extensible. For a given mimetype the value must be set accordingly:
-
-    Note - application/x-microsoft.net.object.binary.base64 is the format
-    that the ResXResourceWriter will generate, however the reader can
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
     read any of the formats listed below.
-
+    
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-
+    
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array
+    value   : The object must be serialized into a byte array 
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
@@ -316,11 +316,11 @@
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
   </data>
+  <data name="CommandLineOptionObsoleteWarning" xml:space="preserve">
+    <value>Warning: Option '--{0}' is obsolete. {1}</value>
+  </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
-  </data>
-  <data name="CommandLineParserUnexpectedNullArgument" xml:space="preserve">
-    <value>Unexpected null argument at index {0}</value>
   </data>
   <data name="CommandLineParserUnexpectedSingleQuoteInArgument" xml:space="preserve">
     <value>Unexpected single quote in argument: {0}</value>
@@ -486,6 +486,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="PlatformCommandLineExitOnProcessExitInvalidDependentProcess" xml:space="preserve">
     <value>Invalid PID '{0}'
 {1}</value>
+  </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser" xml:space="preserve">
+    <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
   </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
@@ -730,5 +733,14 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
     <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+  </data>
+  <data name="TestHostControllerProcessRestartNotSupportedOnWebAssembly" xml:space="preserve">
+    <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
+  </data>
+  <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Synchronous flush is not supported in browser environments.</value>
+  </data>
+  <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
   </data>
 </root>

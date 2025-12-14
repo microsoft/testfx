@@ -5,7 +5,7 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
-    <UseAppHost>true</UseAppHost>
+    <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>

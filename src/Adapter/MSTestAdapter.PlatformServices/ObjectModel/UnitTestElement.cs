@@ -27,7 +27,7 @@ internal sealed class UnitTestElement
     /// <exception cref="ArgumentNullException"> Thrown when method is null. </exception>
     public UnitTestElement(TestMethod testMethod)
     {
-        Ensure.NotNull(testMethod);
+        Guard.NotNull(testMethod);
 
         DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
         TestMethod = testMethod;
@@ -112,12 +112,9 @@ internal sealed class UnitTestElement
         {
             testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, TestMethod.ManagedTypeName);
             testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, TestMethod.ManagedMethodName);
-            testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.ManagedTypeName);
         }
-        else
-        {
-            testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
-        }
+
+        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, TestMethod.FullClassName);
 
         if (TestMethod.ParameterTypes is not null)
         {
@@ -128,12 +125,6 @@ internal sealed class UnitTestElement
         if (hierarchy is { Count: > 0 })
         {
             testCase.SetHierarchy([.. hierarchy]);
-        }
-
-        // Set declaring type if present so the correct method info can be retrieved
-        if (TestMethod.DeclaringClassFullName != null)
-        {
-            testCase.SetPropertyValue(EngineConstants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
         }
 
         // Set only if some test category is present
