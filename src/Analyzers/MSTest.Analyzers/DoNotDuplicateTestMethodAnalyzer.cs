@@ -13,7 +13,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0033: <inheritdoc cref="Resources.DoNotDuplicateTestMethodTitle"/>.
+/// MSTEST0059: <inheritdoc cref="Resources.DoNotDuplicateTestMethodTitle"/>.
 /// Detects test methods with different names but identical or very similar implementations.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
