@@ -57,7 +57,7 @@ public sealed partial class Assert
     internal static void ThrowAssertFailed(string assertionName, string? message, Exception? innerException)
         => throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message),
-            innerException!);
+            innerException);
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
