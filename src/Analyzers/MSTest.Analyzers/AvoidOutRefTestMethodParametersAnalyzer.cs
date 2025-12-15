@@ -13,7 +13,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0060: <inheritdoc cref="Resources.AvoidOutRefTestMethodParametersTitle"/>.
+/// MSTEST0062: <inheritdoc cref="Resources.AvoidOutRefTestMethodParametersTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AvoidOutRefTestMethodParametersAnalyzer : DiagnosticAnalyzer

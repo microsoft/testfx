@@ -32,6 +32,11 @@
         <target state="translated">使用赋值替代参数‘out’</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersFix">
+        <source>Remove 'out' and 'ref' modifiers</source>
+        <target state="new">Remove 'out' and 'ref' modifiers</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">将方法可访问性更改为“private”</target>

@@ -1065,13 +1065,13 @@ The type declaring these methods should also respect the following rules:
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
-        <source>Test method '{0}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version</source>
-        <target state="new">Test method '{0}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version</target>
+        <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
+        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
-        <source>Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</source>
-        <target state="new">Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</target>
+        <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
+        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
         <note />
       </trans-unit>
     </body>
