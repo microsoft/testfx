@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionObsoleteWarning">
         <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
+        <target state="translated">Upozornění: Možnost --{0} je zastaralá. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -540,7 +540,7 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
         <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
-        <target state="new">The '--exit-on-process-exit' option is not supported in browser environments.</target>
+        <target state="translated">Možnost --exit-on-process-exit není v prostředích prohlížeče podporována.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
@@ -775,7 +775,7 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
       </trans-unit>
       <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
         <source>Synchronous flush is not supported in browser environments.</source>
-        <target state="new">Synchronous flush is not supported in browser environments.</target>
+        <target state="translated">Synchronní vyprázdnění se v prostředích prohlížeče nepodporuje.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -897,7 +897,7 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
-        <target state="new">Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</target>
+        <target state="translated">Rozšíření testovacího hostitelského řadiče, která vyžadují restartování procesu, nejsou na platformách browser/WebAssembly podporována.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
@@ -999,7 +999,7 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</target>
+        <target state="translated">Čekání na připojení ladicího programu (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) se v prostředích prohlížeče nepodporuje.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
