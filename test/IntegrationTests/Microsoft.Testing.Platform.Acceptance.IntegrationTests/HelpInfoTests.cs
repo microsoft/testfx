@@ -419,7 +419,6 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-
 Microsoft.Testing.Platform v* [*]
 Microsoft Testing Platform:
   Version: *
