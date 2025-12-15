@@ -724,7 +724,7 @@ The type declaring these methods should also respect the following rules:
     <value>Avoid using 'out' or 'ref' parameters in test methods</value>
   </data>
   <data name="AvoidOutRefTestMethodParametersMessageFormat" xml:space="preserve">
-    <value>Test method '{0}' has 'out' or 'ref' parameters which support will be dropped in a future major version</value>
+    <value>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</value>
   </data>
   <data name="AvoidOutRefTestMethodParametersDescription" xml:space="preserve">
     <value>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</value>

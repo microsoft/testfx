@@ -73,21 +73,12 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
         for (int i = 0; i < newParameters.Count; i++)
         {
             ParameterSyntax parameter = newParameters[i];
-            SyntaxToken outModifier = parameter.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.OutKeyword));
-            SyntaxToken refModifier = parameter.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.RefKeyword));
+            SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
+                parameter.Modifiers.Where(m => !m.IsKind(SyntaxKind.OutKeyword) && !m.IsKind(SyntaxKind.RefKeyword)));
 
-            if (outModifier != default || refModifier != default)
+            if (filteredModifiers.Count != parameter.Modifiers.Count)
             {
-                ParameterSyntax newParameter = parameter;
-                if (outModifier != default)
-                {
-                    newParameter = newParameter.WithModifiers(newParameter.Modifiers.Remove(outModifier));
-                }
-                if (refModifier != default)
-                {
-                    newParameter = newParameter.WithModifiers(newParameter.Modifiers.Remove(refModifier));
-                }
-
+                ParameterSyntax newParameter = parameter.WithModifiers(filteredModifiers);
                 newParameters = newParameters.Replace(parameter, newParameter);
                 hasChanges = true;
             }
