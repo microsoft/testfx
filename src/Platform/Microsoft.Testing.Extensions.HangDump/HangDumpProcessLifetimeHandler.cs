@@ -16,6 +16,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 #if NETCOREAPP
 using Microsoft.Diagnostics.NETCore.Client;
@@ -45,6 +46,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
     private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
     private readonly List<string> _dumpFiles = [];
+    private readonly IArtifactNamingService _artifactNamingService;
 
     private TimeSpan? _activityTimerValue;
     private Timer? _activityTimer;
@@ -66,7 +68,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ILoggerFactory loggerFactory,
         IConfiguration configuration,
         IProcessHandler processHandler,
-        IClock clock)
+        IClock clock,
+        IArtifactNamingService artifactNamingService)
     {
         _logger = loggerFactory.CreateLogger<HangDumpProcessLifetimeHandler>();
         _traceEnabled = _logger.IsEnabled(LogLevel.Trace);
@@ -79,7 +82,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         _configuration = configuration;
         _processHandler = processHandler;
         _clock = clock;
-        _artifactNamingService = serviceProvider.GetArtifactNamingService();
+        _artifactNamingService = artifactNamingService;
     }
 
     public string Uid => nameof(HangDumpProcessLifetimeHandler);
@@ -120,10 +123,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _waitConnectionTask = _task.Run(
             async () =>
-        {
-            await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}").ConfigureAwait(false);
-            await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-        }, cancellationToken);
+            {
+                await _logger.LogDebugAsync($"Waiting for connection to {_singleConnectionNamedPipeServer.PipeName.Name}").ConfigureAwait(false);
+                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken);
     }
 
     private async Task<IResponse> CallbackAsync(IRequest request)
@@ -326,32 +329,14 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
 
-        // Create custom replacements for the dumped process
-        string processName;
-        try
-        {
-            using var process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-            processName = process.ProcessName;
-        }
-        catch
-        {
-            // If we can't get the process name, use a default
-            processName = "testhost";
-        }
-
         var customReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["pname"] = processName,
-            ["pid"] = _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)
+            ["pname"] = process.Name,
+            ["pid"] = process.Id.ToString(CultureInfo.InvariantCulture),
+            ["%p"] = process.Id.ToString(CultureInfo.InvariantCulture),
         };
 
-        // Create legacy replacements for backward compatibility
-        var legacyReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["%p"] = _testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture)
-        };
-
-        string finalDumpFileName = _artifactNamingService.ResolveTemplateWithLegacySupport(_dumpFileNamePattern, customReplacements, legacyReplacements);
+        string finalDumpFileName = _artifactNamingService.ResolveTemplate(_dumpFileNamePattern ?? $"{process.Name}_%p_hang.dmp", customReplacements);
         finalDumpFileName = Path.Combine(_configuration.GetTestResultDirectory(), finalDumpFileName);
 
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
@@ -375,7 +360,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 
         await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}").ConfigureAwait(false);
-
         await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)), cancellationToken).ConfigureAwait(false);
 
 #if NETCOREAPP

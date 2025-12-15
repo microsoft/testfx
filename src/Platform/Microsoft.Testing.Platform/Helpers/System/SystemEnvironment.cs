@@ -20,6 +20,8 @@ internal sealed class SystemEnvironment : IEnvironment
     public string? ProcessPath => Environment.ProcessPath;
 #endif
 
+    public Version Version => Environment.Version;
+
     public string[] GetCommandLineArgs() => Environment.GetCommandLineArgs();
 
     public string? GetEnvironmentVariable(string name) => Environment.GetEnvironmentVariable(name);

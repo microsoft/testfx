@@ -1,9 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Helpers;
 
@@ -32,34 +28,16 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
 
     public string ResolveTemplate(string template, IDictionary<string, string>? customReplacements = null)
     {
-        ArgumentGuard.IsNotNullOrEmpty(template);
+        Guard.NotNullOrEmpty(template);
 
-        var defaultReplacements = GetDefaultReplacements();
-        var allReplacements = MergeReplacements(defaultReplacements, customReplacements);
+        Dictionary<string, string> defaultReplacements = GetDefaultReplacements();
+        Dictionary<string, string> allReplacements = MergeReplacements(defaultReplacements, customReplacements);
 
         return TemplateFieldRegex.Replace(template, match =>
         {
             string fieldName = match.Groups[1].Value;
             return allReplacements.TryGetValue(fieldName, out string? value) ? value : match.Value;
         });
-    }
-
-    public string ResolveTemplateWithLegacySupport(string template, IDictionary<string, string>? customReplacements = null, IDictionary<string, string>? legacyReplacements = null)
-    {
-        ArgumentGuard.IsNotNullOrEmpty(template);
-
-        // First apply legacy replacements
-        string processedTemplate = template;
-        if (legacyReplacements is not null)
-        {
-            foreach (var (legacyPattern, replacement) in legacyReplacements)
-            {
-                processedTemplate = processedTemplate.Replace(legacyPattern, replacement);
-            }
-        }
-
-        // Then apply modern template resolution
-        return ResolveTemplate(processedTemplate, customReplacements);
     }
 
     private Dictionary<string, string> GetDefaultReplacements()
@@ -74,9 +52,9 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         }
 
         // Process info
-        using var currentProcess = _processHandler.GetCurrentProcess();
+        using IProcess currentProcess = _processHandler.GetCurrentProcess();
         replacements["pid"] = currentProcess.Id.ToString(CultureInfo.InvariantCulture);
-        replacements["pname"] = currentProcess.ProcessName;
+        replacements["pname"] = currentProcess.Name;
 
         // OS info
         replacements["os"] = GetOperatingSystemName();
@@ -108,7 +86,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         }
 
         var merged = new Dictionary<string, string>(defaultReplacements, StringComparer.OrdinalIgnoreCase);
-        foreach (var (key, value) in customReplacements)
+        foreach ((string? key, string? value) in customReplacements)
         {
             merged[key] = value;
         }
@@ -118,33 +96,34 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
 
     private static string GetOperatingSystemName()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (OperatingSystem.IsWindows())
         {
             return "windows";
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (OperatingSystem.IsLinux())
         {
             return "linux";
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        if (OperatingSystem.IsMacOS())
         {
             return "macos";
         }
 
+        // Fallback for unknown OS
         return "unknown";
     }
 
-    private static string GetTargetFrameworkMoniker()
+    private string GetTargetFrameworkMoniker()
     {
         // Extract TFM from current runtime
         string frameworkDescription = RuntimeInformation.FrameworkDescription;
-        
+
         if (frameworkDescription.Contains(".NET Core"))
         {
             // Try to extract version from .NET Core description
-            var match = Regex.Match(frameworkDescription, @"\.NET Core (\d+\.\d+)");
+            Match match = Regex.Match(frameworkDescription, @"\.NET Core (\d+\.\d+)");
             if (match.Success)
             {
                 return $"netcoreapp{match.Groups[1].Value}";
@@ -153,7 +132,7 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
         else if (frameworkDescription.Contains(".NET "))
         {
             // Try to extract version from .NET 5+ description
-            var match = Regex.Match(frameworkDescription, @"\.NET (\d+\.\d+)");
+            Match match = Regex.Match(frameworkDescription, @"\.NET (\d+\.\d+)");
             if (match.Success)
             {
                 string version = match.Groups[1].Value;
@@ -165,35 +144,33 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
                     "8.0" => "net8.0",
                     "9.0" => "net9.0",
                     "10.0" => "net10.0",
-                    _ => $"net{version}"
+                    _ => $"net{version}",
                 };
             }
         }
         else if (frameworkDescription.Contains(".NET Framework"))
         {
             // Try to extract version from .NET Framework description
-            var match = Regex.Match(frameworkDescription, @"\.NET Framework (\d+\.\d+)");
+            Match match = Regex.Match(frameworkDescription, @"\.NET Framework (\d+\.\d+)");
             if (match.Success)
             {
-                return $"net{match.Groups[1].Value.Replace(".", "")}";
+                return $"net{match.Groups[1].Value.Replace(".", string.Empty)}";
             }
         }
 
-        return Environment.Version.ToString();
+        return _environment.Version.ToString();
     }
 
     private static string GenerateShortId()
-    {
-        return Guid.NewGuid().ToString("N")[..8];
-    }
+        => Guid.NewGuid().ToString("N")[..8];
 
     private string GetRootDirectory()
     {
         string currentDirectory = _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
-        
+
         // Try to find solution root, git root, or working directory
-        string? rootDirectory = FindSolutionRoot(currentDirectory) 
-            ?? FindGitRoot(currentDirectory) 
+        string? rootDirectory = FindSolutionRoot(currentDirectory)
+            ?? FindGitRoot(currentDirectory)
             ?? currentDirectory;
 
         return rootDirectory;
