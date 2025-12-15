@@ -23,16 +23,28 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     private readonly List<ICompositeExtensionFactory> _alreadyBuiltServices = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
 
+    [UnsupportedOSPlatform("browser")]
     public void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
         Guard.NotNull(environmentVariableProviderFactory);
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddEnvironmentVariableProvider<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostEnvironmentVariableProvider
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
         Guard.NotNull(compositeServiceFactory);
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
@@ -43,16 +55,28 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddProcessLifetimeHandler(Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandler)
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
         Guard.NotNull(lifetimeHandler);
         _lifetimeHandlerFactories.Add(lifetimeHandler);
         _factoryOrdering.Add(lifetimeHandler);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostProcessLifetimeHandler
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
         Guard.NotNull(compositeServiceFactory);
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
@@ -63,9 +87,15 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
+    [UnsupportedOSPlatform("browser")]
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
         Guard.NotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {

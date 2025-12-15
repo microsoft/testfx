@@ -40,6 +40,11 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
         <target state="translated">Déplacement du fichier '{0}' vers '{1}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">L’extension de nouvelle tentative n’est pas prise en charge sur la plateforme navigateur. Les tests basés sur navigateur ne peuvent pas être relancés en raison des limitations de la plateforme.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Échec de démarrage du processus « {0} »</target>

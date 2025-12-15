@@ -1,1028 +1,1027 @@
-<?xml version='1.0' encoding='utf-8'?>
-<ns0:xliff xmlns:ns0="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
-  <ns0:file datatype="xml" source-language="en" target-language="tr" original="../PlatformResources.resx">
-    <ns0:body>
-      <ns0:trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
-        <ns0:source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</ns0:source>
-        <ns0:target state="translated">Geçerli test çerçevesi, '--maximum-failed-tests' özelliği için gerekli olan 'IGracefulStopTestExecutionCapability' gerçekleştiremiyor.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="AbortForMaxFailedTestsDescription">
-        <ns0:source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</ns0:source>
-        <ns0:target state="translated">'--maximum-failed-tests' desteği için kullanılan uzantı. Belirtilen hatalar eşiğine ulaşıldığında test çalıştırması durdurulacak.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Aborted">
-        <ns0:source>Aborted</ns0:source>
-        <ns0:target state="translated">Durduruldu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Actual">
-        <ns0:source>Actual</ns0:source>
-        <ns0:target state="translated">Fiili</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CancelledLowercase">
-        <ns0:source>canceled</ns0:source>
-        <ns0:target state="translated">iptal edildi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CancellingTestSession">
-        <ns0:source>Canceling the test session...</ns0:source>
-        <ns0:target state="translated">Test oturumu iptal ediliyor...</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <ns0:source>Failed to create a test execution filter</ns0:source>
-        <ns0:target state="translated">Test yürütme filtresi oluşturulamadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <ns0:source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</ns0:source>
-        <ns0:target state="translated">Benzersiz bir günlük dosyası 3 saniye sonra oluşturulamadı. Son denenen dosya adı '{0}'.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
-        <ns0:source>Cannot remove environment variables at this stage</ns0:source>
-        <ns0:target state="translated">Bu aşamada ortam değişkenleri kaldırılamıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
-        <ns0:source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</ns0:source>
-        <ns0:target state="translated">'{0}' uzantısı '{1}' ortam değişkenini kaldırmaya çalıştı ancak '{2}' uzantısı tarafından kilitlendi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
-        <ns0:source>Cannot set environment variables at this stage</ns0:source>
-        <ns0:target state="translated">Bu aşamada ortam değişkenleri ayarlanamıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
-        <ns0:source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</ns0:source>
-        <ns0:target state="translated">'{0}' uzantısı '{1}' ortam değişkenini ayarlamaya çalıştı ancak '{2}' uzantısı tarafından kilitlendi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotStartProcessErrorMessage">
-        <ns0:source>Cannot start process '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' işlemi başlatılamıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidArgumentsForOption">
-        <ns0:source>Option '--{0}' has invalid arguments: {1}</ns0:source>
-        <ns0:target state="translated">'--{0}' seçeneğinde geçersiz bağımsız değişkenler var: {1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidArityErrorMessage">
-        <ns0:source>Invalid arity, maximum must be greater than minimum</ns0:source>
-        <ns0:target state="translated">Geçersiz parametre sayısı, en büyük değer en küçük değerden büyük olmalıdır</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidConfiguration">
-        <ns0:source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</ns0:source>
-        <ns0:target state="translated">'{0}' sağlayıcısının (UID: {1}) yapılandırması geçersiz. Hata: {2}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidOptionName">
-        <ns0:source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</ns0:source>
-        <ns0:target state="translated">'{0}' seçenek adı geçersiz, yalnızca harf ve '-' içermelidir (ör. my-option)</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionExpectsAtLeastArguments">
-        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</ns0:source>
-        <ns0:target state="translated">'{1}' sağlayıcısındaki (UID: {2}) '--{0}' seçeneği en az {3} bağımsız değişken bekler</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionExpectsAtMostArguments">
-        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</ns0:source>
-        <ns0:target state="translated">'{1}' sağlayıcısındaki (UID: {2}) '--{0}' seçeneği en fazla {3} bağımsız değişken bekler</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionExpectsNoArguments">
-        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</ns0:source>
-        <ns0:target state="translated">'{1}' sağlayıcısındaki (UID: {2}) '--{0}' seçeneği hiçbir bağımsız değişken beklemiyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <ns0:source>Option '--{0}' is declared by multiple extensions: '{1}'</ns0:source>
-        <ns0:target state="translated">'--{0}' seçeneği birden çok uzantı tarafından bildirildi: '{1}'</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
-        <ns0:source>You can fix the previous option clash by overriding the option name using the configuration file</ns0:source>
-        <ns0:target state="translated">Yapılandırma dosyasını kullanarak seçenek adını geçersiz kılarak önceki seçenek çakışmasını düzeltebilirsiniz</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsReserved">
-        <ns0:source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</ns0:source>
-        <ns0:target state="translated">'--{0}' seçeneği ayrılmıştır ve şu sağlayıcılar tarafından kullanılamaz: '{0}'</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionObsoleteWarning">
-        <ns0:source>Warning: Option '--{0}' is obsolete. {1}</ns0:source>
-        <ns0:target state="new">Warning: Option '--{0}' is obsolete. {1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsUsingReservedPrefix">
-        <ns0:source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</ns0:source>
-        <ns0:target state="translated">'{1}' sağlayıcısındaki (UID: {2}) `--{0}` seçeneği ayrılmış '--internal' önekini kullanıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionsNotReady">
-        <ns0:source>The ICommandLineOptions has not been built yet.</ns0:source>
-        <ns0:target state="translated">ICommandLineOptions henüz derlenmedi.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserFailedToReadResponseFile">
-        <ns0:source>Failed to read response file '{0}'. {1}.</ns0:source>
-        <ns0:target state="translated">'{0}' yanıt dosyası okunamadı. {1}.</ns0:target>
-        <ns0:note>{1} is the exception</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserResponseFileNotFound">
-        <ns0:source>The response file '{0}' was not found</ns0:source>
-        <ns0:target state="translated">'{0}' yanıt dosyası bulunamadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserUnexpectedArgument">
-        <ns0:source>Unexpected argument {0}</ns0:source>
-        <ns0:target state="translated">{0} bağımsız değişkeni beklenmiyordu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
-        <ns0:source>Unexpected single quote in argument: {0}</ns0:source>
-        <ns0:target state="translated">{0} bağımsız değişkeninde tek alıntı beklenmiyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
-        <ns0:source>Unexpected single quote in argument: {0} for option '--{1}'</ns0:source>
-        <ns0:target state="translated">{0} bağımsız değişkeninde '--{1}' seçeneği için tek alıntı beklenmiyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineUnknownOption">
-        <ns0:source>Unknown option '--{0}'</ns0:source>
-        <ns0:target state="translated">'--{0}' seçeneği bilinmiyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <ns0:source>The same instance of 'CompositeExtensonFactory' is already registered</ns0:source>
-        <ns0:target state="translated">Aynı 'CompositeExtensonFactory' örneği zaten kayıtlı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConfigurationFileNotFound">
-        <ns0:source>The configuration file '{0}' specified with '--config-file' could not be found.</ns0:source>
-        <ns0:target state="translated">'--config-file' ile belirtilen '{0}' yapılandırma dosyası bulunamadı.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
-        <ns0:source>Could not find the default json configuration</ns0:source>
-        <ns0:target state="translated">Varsayılan JSON yapılandırması bulunamadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConnectingToClientHost">
-        <ns0:source>Connecting to client host '{0}' port '{1}'</ns0:source>
-        <ns0:target state="translated">'{0}' istemci konak, '{1}' bağlantı noktasına bağlanıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConsoleIsAlreadyInBatchingMode">
-        <ns0:source>Console is already in batching mode.</ns0:source>
-        <ns0:target state="translated">Konsol zaten işlem grubu oluşturma modunda bulunuyor.</ns0:target>
-        <ns0:note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <ns0:source>Creates the right test execution filter for console mode</ns0:source>
-        <ns0:target state="translated">Konsol modu için doğru test yürütme filtresini oluşturur</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <ns0:source>Console test execution filter factory</ns0:source>
-        <ns0:target state="translated">Konsol test yürütme filtresi fabrikası</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CouldNotFindDirectoryErrorMessage">
-        <ns0:source>Could not find directory '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' dizini bulunamadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <ns0:source>Diagnostic file (level '{0}' with async flush): {1}</ns0:source>
-        <ns0:target state="translated">Tanılama dosyası (zaman uyumsuz boşaltma ile düzey '{0}'): {1}</ns0:target>
-        <ns0:note>0 level such as verbose,
-1 path to file</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiagnosticFileLevelWithFlush">
-        <ns0:source>Diagnostic file (level '{0}' with sync flush): {1}</ns0:source>
-        <ns0:target state="translated">Tanılama dosyası (zaman uyumlu boşaltma ile düzey '{0}' ): {1}</ns0:target>
-        <ns0:note>0 level such as verbose,
-1 path to file</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiscoveredTestsInAssembly">
-        <ns0:source>Discovered {0} test(s) in assembly</ns0:source>
-        <ns0:target state="translated">Derlemede {0} test bulundu</ns0:target>
-        <ns0:note>0 is count, the sentence is followed by the path of the assebly</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiscoveringTestsFrom">
-        <ns0:source>Discovering tests from</ns0:source>
-        <ns0:target state="translated">Testler şuradan bulunuyor:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DurationLowercase">
-        <ns0:source>duration</ns0:source>
-        <ns0:target state="translated">süre</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="EnvironmentVariableProviderFailedWithError">
-        <ns0:source>Provider '{0}' (UID: {1}) failed with error: {2}</ns0:source>
-        <ns0:target state="translated">'{0}' sağlayıcısı '' (UID: {1}) şu hatayla başarısız oldu: {2}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExceptionDuringCancellationWarningMessage">
-        <ns0:source>Exception during the cancellation of request id '{0}'</ns0:source>
-        <ns0:target state="translated">İstek kimliği iptali sırasında özel durum '{0}'</ns0:target>
-        <ns0:note>{0} is the request id</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExitCode">
-        <ns0:source>Exit code</ns0:source>
-        <ns0:target state="translated">Çıkış kodu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Expected">
-        <ns0:source>Expected</ns0:source>
-        <ns0:target state="translated">Beklenen</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
-        <ns0:source>Extension of type '{0}' is not implementing the required '{1}' interface</ns0:source>
-        <ns0:target state="translated">'{0}' uzantı türü, gerekli '{1}' arabirimini uygulamıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <ns0:source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</ns0:source>
-        <ns0:target state="translated">Aynı UID ‘{0}’ ile uzantılar zaten kayıtlıdır. Kayıtlı uzantılar şu türlerde olabilir: {1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Failed">
-        <ns0:source>Failed</ns0:source>
-        <ns0:target state="translated">Başarısız</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedLowercase">
-        <ns0:source>failed</ns0:source>
-        <ns0:target state="translated">başarısız</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedToWriteLogToChannelErrorMessage">
-        <ns0:source>Failed to write the log to the channel. Missed log content:
-{0}</ns0:source>
-        <ns0:target state="translated">Günlük kanala yazılamadı. Eksik günlük içeriği:
-{0}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedWithErrors">
-        <ns0:source>failed with {0} error(s)</ns0:source>
-        <ns0:target state="translated">{0} hatayla başarısız oldu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedWithErrorsAndWarnings">
-        <ns0:source>failed with {0} error(s) and {1} warning(s)</ns0:source>
-        <ns0:target state="translated">{0} hata ve {1} uyarıyla başarısız oldu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedWithWarnings">
-        <ns0:source>failed with {0} warning(s)</ns0:source>
-        <ns0:target state="translated">{0} uyarıyla başarısız oldu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FinishedTestSession">
-        <ns0:source>Finished test session.</ns0:source>
-        <ns0:target state="translated">Test oturumu bitti.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ForTest">
-        <ns0:source>For test</ns0:source>
-        <ns0:target state="translated">Test için</ns0:target>
-        <ns0:note>is followed by test name</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FromFile">
-        <ns0:source>from</ns0:source>
-        <ns0:target state="translated">şu dosyadan:</ns0:target>
-        <ns0:note>from followed by a file name to point to the file from which test is originating</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
-        <ns0:source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</ns0:source>
-        <ns0:target state="translated">Aşağıdaki 'ITestHostEnvironmentVariableProvider' sağlayıcıları son ortam değişkenleri kurulumunu reddetti:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpApplicationUsage">
-        <ns0:source>Usage {0} [option providers] [extension option providers]</ns0:source>
-        <ns0:target state="translated">{0} Kullanımı [seçenek sağlayıcıları] [uzantı seçeneği sağlayıcıları]</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpExecuteTestApplication">
-        <ns0:source>Execute a .NET Test Application.</ns0:source>
-        <ns0:target state="translated">.NET Test Uygulamasını yürütür.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpExtensionOptions">
-        <ns0:source>Extension options:</ns0:source>
-        <ns0:target state="translated">Uzantı seçenekleri:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpNoExtensionRegistered">
-        <ns0:source>    No extension registered.</ns0:source>
-        <ns0:target state="translated">    Kayıtlı uzantı yok.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpOptions">
-        <ns0:source>Options:</ns0:source>
-        <ns0:target state="translated">Seçenekler:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpTestApplicationRunner">
-        <ns0:source>&lt;test application runner&gt;</ns0:source>
-        <ns0:target state="translated">&lt;test uygulama çalıştırıcısı&gt;</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InProcessArtifactsProduced">
-        <ns0:source>In process file artifacts produced:</ns0:source>
-        <ns0:target state="translated">Üretilen işlem içi dosya yapıtları:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
-        <ns0:source>Method '{0}' did not exit successfully</ns0:source>
-        <ns0:target state="translated">'{0}' yöntemi başarıyla çıkmadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InvalidCommandLineArguments">
-        <ns0:source>Invalid command line arguments:</ns0:source>
-        <ns0:target state="translated">Geçersiz komut satırı bağımsız değişkenleri:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
-        <ns0:source>A duplicate key '{0}' was found</ns0:source>
-        <ns0:target state="translated">'{0}' adlı bir yinelenen anahtar bulundu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
-        <ns0:source>Top-level JSON element must be an object. Instead, '{0}' was found</ns0:source>
-        <ns0:target state="translated">Üst düzey JSON öğesi bir nesne olmalıdır. Bunun yerine '{0}' bulundu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
-        <ns0:source>Unsupported JSON token '{0}' was found</ns0:source>
-        <ns0:target state="translated">Desteklenmeyen JSON belirteci '{0}' bulundu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonRpcTcpServerDescription">
-        <ns0:source>JsonRpc server implementation based on the test platform protocol specification.</ns0:source>
-        <ns0:target state="translated">Test platformu protokol belirtimine dayalı JsonRpc sunucu uygulaması.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonRpcTcpServerToSingleClientDescription">
-        <ns0:source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</ns0:source>
-        <ns0:target state="translated">JsonRpc sunucusundan istemciye el sıkışması, test platformu protokol belirtimine dayalı uygulama.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="LoggerFactoryNotReady">
-        <ns0:source>The ILoggerFactory has not been built yet.</ns0:source>
-        <ns0:target state="translated">ILoggerFactory henüz derlenmedi.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MaxFailedTestsMustBePositive">
-        <ns0:source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</ns0:source>
-        <ns0:target state="translated">'--maximum-failed-tests' seçeneği pozitif bir tamsayı olmalıdır. Belirtilen '{0}' geçerli değil.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MessageBusNotReady">
-        <ns0:source>The message bus has not been built yet or is no more usable at this stage.</ns0:source>
-        <ns0:target state="translated">İleti veri yolu henüz derlenmedi veya bu aşamada artık kullanılamıyor.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MinimumExpectedTestsPolicyViolation">
-        <ns0:source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</ns0:source>
-        <ns0:target state="translated">Beklenen minimum test ilke ihlali, yürütülen test: {0}, beklenen minimum test: {1}</ns0:target>
-        <ns0:note>{0}, {1} number of tests</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MissingClientPortFoJsonRpc">
-        <ns0:source>Expected --client-port when jsonRpc protocol is used.</ns0:source>
-        <ns0:target state="translated">JsonRpc protokolü kullanıldığında --client-port bekleniyordu.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ActiveTestsRunning_MoreTestsCount">
-        <ns0:source>and {0} more</ns0:source>
-        <ns0:target state="translated">ve {0} tane daha</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ActiveTestsRunning_FullTestsCount">
-        <ns0:source>{0} tests running</ns0:source>
-        <ns0:target state="translated">{0} test çalıştırılıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <ns0:source>No serializer registered with ID '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' kimliğiyle kayıtlı seri hale getirici yok</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <ns0:source>No serializer registered with type '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' türüyle kayıtlı seri hale getirici yok</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NotAvailable">
-        <ns0:source>Not available</ns0:source>
-        <ns0:target state="translated">Kullanılamıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NotFound">
-        <ns0:source>Not found</ns0:source>
-        <ns0:target state="translated">Bulunamadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="OnlyOneFilterSupported">
-        <ns0:source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</ns0:source>
-        <ns0:target state="translated">Hem ‘--treenode-filter’ hem de ‘--filter-uid’ parametrelerinin birlikte kullanılması desteklenmemektedir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="OutOfProcessArtifactsProduced">
-        <ns0:source>Out of process file artifacts produced:</ns0:source>
-        <ns0:target state="translated">Üretilen işlem dışı dosya yapıtları:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Passed">
-        <ns0:source>Passed</ns0:source>
-        <ns0:target state="translated">Başarılı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PassedLowercase">
-        <ns0:source>passed</ns0:source>
-        <ns0:target state="translated">başarılı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineClientHostOptionDescription">
-        <ns0:source>Specify the hostname of the client.</ns0:source>
-        <ns0:target state="translated">İstemcinin ana bilgisayar adını belirtir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineClientPortOptionDescription">
-        <ns0:source>Specify the port of the client.</ns0:source>
-        <ns0:target state="translated">İstemcinin bağlantı noktasını belirtir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineConfigFileOptionDescription">
-        <ns0:source>Specifies a testconfig.json file.</ns0:source>
-        <ns0:target state="translated">testconfig.json dosyası belirtir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
-        <ns0:source>Allows to pause execution in order to attach to the process for debug purposes.</ns0:source>
-        <ns0:target state="translated">Hata ayıklama amacıyla işleme eklemek için yürütmeyi duraklatmayı sağlar.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <ns0:source>Force the built-in file logger to write the log synchronously.
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../PlatformResources.resx">
+    <body>
+      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
+        <target state="translated">Geçerli test çerçevesi, '--maximum-failed-tests' özelliği için gerekli olan 'IGracefulStopTestExecutionCapability' gerçekleştiremiyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="translated">'--maximum-failed-tests' desteği için kullanılan uzantı. Belirtilen hatalar eşiğine ulaşıldığında test çalıştırması durdurulacak.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Aborted">
+        <source>Aborted</source>
+        <target state="translated">Durduruldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Actual">
+        <source>Actual</source>
+        <target state="translated">Fiili</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancelledLowercase">
+        <source>canceled</source>
+        <target state="translated">iptal edildi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancellingTestSession">
+        <source>Canceling the test session...</source>
+        <target state="translated">Test oturumu iptal ediliyor...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
+        <source>Failed to create a test execution filter</source>
+        <target state="translated">Test yürütme filtresi oluşturulamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
+        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
+        <target state="translated">Benzersiz bir günlük dosyası 3 saniye sonra oluşturulamadı. Son denenen dosya adı '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
+        <source>Cannot remove environment variables at this stage</source>
+        <target state="translated">Bu aşamada ortam değişkenleri kaldırılamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
+        <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
+        <target state="translated">'{0}' uzantısı '{1}' ortam değişkenini kaldırmaya çalıştı ancak '{2}' uzantısı tarafından kilitlendi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
+        <source>Cannot set environment variables at this stage</source>
+        <target state="translated">Bu aşamada ortam değişkenleri ayarlanamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
+        <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
+        <target state="translated">'{0}' uzantısı '{1}' ortam değişkenini ayarlamaya çalıştı ancak '{2}' uzantısı tarafından kilitlendi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotStartProcessErrorMessage">
+        <source>Cannot start process '{0}'</source>
+        <target state="translated">'{0}' işlemi başlatılamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidArgumentsForOption">
+        <source>Option '--{0}' has invalid arguments: {1}</source>
+        <target state="translated">'--{0}' seçeneğinde geçersiz bağımsız değişkenler var: {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidArityErrorMessage">
+        <source>Invalid arity, maximum must be greater than minimum</source>
+        <target state="translated">Geçersiz parametre sayısı, en büyük değer en küçük değerden büyük olmalıdır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidConfiguration">
+        <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
+        <target state="translated">'{0}' sağlayıcısının (UID: {1}) yapılandırması geçersiz. Hata: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidOptionName">
+        <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
+        <target state="translated">'{0}' seçenek adı geçersiz, yalnızca harf ve '-' içermelidir (ör. my-option)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
+        <target state="translated">'{1}' sağlayıcısındaki (UID: {2}) '--{0}' seçeneği en az {3} bağımsız değişken bekler</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsAtMostArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
+        <target state="translated">'{1}' sağlayıcısındaki (UID: {2}) '--{0}' seçeneği en fazla {3} bağımsız değişken bekler</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsNoArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
+        <target state="translated">'{1}' sağlayıcısındaki (UID: {2}) '--{0}' seçeneği hiçbir bağımsız değişken beklemiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
+        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
+        <target state="translated">'--{0}' seçeneği birden çok uzantı tarafından bildirildi: '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
+        <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
+        <target state="translated">Yapılandırma dosyasını kullanarak seçenek adını geçersiz kılarak önceki seçenek çakışmasını düzeltebilirsiniz</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsReserved">
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
+        <target state="translated">'--{0}' seçeneği ayrılmıştır ve şu sağlayıcılar tarafından kullanılamaz: '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">Uyarı: '--{0}' seçeneği artık kullanılmamaktadır. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
+        <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
+        <target state="translated">'{1}' sağlayıcısındaki (UID: {2}) `--{0}` seçeneği ayrılmış '--internal' önekini kullanıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="translated">ICommandLineOptions henüz derlenmedi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserFailedToReadResponseFile">
+        <source>Failed to read response file '{0}'. {1}.</source>
+        <target state="translated">'{0}' yanıt dosyası okunamadı. {1}.</target>
+        <note>{1} is the exception</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserResponseFileNotFound">
+        <source>The response file '{0}' was not found</source>
+        <target state="translated">'{0}' yanıt dosyası bulunamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedArgument">
+        <source>Unexpected argument {0}</source>
+        <target state="translated">{0} bağımsız değişkeni beklenmiyordu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
+        <source>Unexpected single quote in argument: {0}</source>
+        <target state="translated">{0} bağımsız değişkeninde tek alıntı beklenmiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
+        <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
+        <target state="translated">{0} bağımsız değişkeninde '--{1}' seçeneği için tek alıntı beklenmiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineUnknownOption">
+        <source>Unknown option '--{0}'</source>
+        <target state="translated">'--{0}' seçeneği bilinmiyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
+        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
+        <target state="translated">Aynı 'CompositeExtensonFactory' örneği zaten kayıtlı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="translated">'--config-file' ile belirtilen '{0}' yapılandırma dosyası bulunamadı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
+        <source>Could not find the default json configuration</source>
+        <target state="translated">Varsayılan JSON yapılandırması bulunamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConnectingToClientHost">
+        <source>Connecting to client host '{0}' port '{1}'</source>
+        <target state="translated">'{0}' istemci konak, '{1}' bağlantı noktasına bağlanıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <source>Console is already in batching mode.</source>
+        <target state="translated">Konsol zaten işlem grubu oluşturma modunda bulunuyor.</target>
+        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
+        <source>Creates the right test execution filter for console mode</source>
+        <target state="translated">Konsol modu için doğru test yürütme filtresini oluşturur</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
+        <source>Console test execution filter factory</source>
+        <target state="translated">Konsol test yürütme filtresi fabrikası</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CouldNotFindDirectoryErrorMessage">
+        <source>Could not find directory '{0}'</source>
+        <target state="translated">'{0}' dizini bulunamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
+        <target state="translated">Tanılama dosyası (zaman uyumsuz boşaltma ile düzey '{0}'): {1}</target>
+        <note>0 level such as verbose,
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithFlush">
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
+        <target state="translated">Tanılama dosyası (zaman uyumlu boşaltma ile düzey '{0}' ): {1}</target>
+        <note>0 level such as verbose,
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} test(s) in assembly</source>
+        <target state="translated">Derlemede {0} test bulundu</target>
+        <note>0 is count, the sentence is followed by the path of the assebly</note>
+      </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="translated">Testler şuradan bulunuyor:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="translated">süre</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EnvironmentVariableProviderFailedWithError">
+        <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
+        <target state="translated">'{0}' sağlayıcısı '' (UID: {1}) şu hatayla başarısız oldu: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">İstek kimliği iptali sırasında özel durum '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="translated">Çıkış kodu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Expected">
+        <source>Expected</source>
+        <target state="translated">Beklenen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
+        <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
+        <target state="translated">'{0}' uzantı türü, gerekli '{1}' arabirimini uygulamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
+        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
+        <target state="translated">Aynı UID ‘{0}’ ile uzantılar zaten kayıtlıdır. Kayıtlı uzantılar şu türlerde olabilir: {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Başarısız</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedLowercase">
+        <source>failed</source>
+        <target state="translated">başarısız</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedToWriteLogToChannelErrorMessage">
+        <source>Failed to write the log to the channel. Missed log content:
+{0}</source>
+        <target state="translated">Günlük kanala yazılamadı. Eksik günlük içeriği:
+{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} error(s)</source>
+        <target state="translated">{0} hatayla başarısız oldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrorsAndWarnings">
+        <source>failed with {0} error(s) and {1} warning(s)</source>
+        <target state="translated">{0} hata ve {1} uyarıyla başarısız oldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithWarnings">
+        <source>failed with {0} warning(s)</source>
+        <target state="translated">{0} uyarıyla başarısız oldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">Test oturumu bitti.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ForTest">
+        <source>For test</source>
+        <target state="translated">Test için</target>
+        <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="FromFile">
+        <source>from</source>
+        <target state="translated">şu dosyadan:</target>
+        <note>from followed by a file name to point to the file from which test is originating</note>
+      </trans-unit>
+      <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
+        <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
+        <target state="translated">Aşağıdaki 'ITestHostEnvironmentVariableProvider' sağlayıcıları son ortam değişkenleri kurulumunu reddetti:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpApplicationUsage">
+        <source>Usage {0} [option providers] [extension option providers]</source>
+        <target state="translated">{0} Kullanımı [seçenek sağlayıcıları] [uzantı seçeneği sağlayıcıları]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpExecuteTestApplication">
+        <source>Execute a .NET Test Application.</source>
+        <target state="translated">.NET Test Uygulamasını yürütür.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpExtensionOptions">
+        <source>Extension options:</source>
+        <target state="translated">Uzantı seçenekleri:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpNoExtensionRegistered">
+        <source>    No extension registered.</source>
+        <target state="translated">    Kayıtlı uzantı yok.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpOptions">
+        <source>Options:</source>
+        <target state="translated">Seçenekler:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpTestApplicationRunner">
+        <source>&lt;test application runner&gt;</source>
+        <target state="translated">&lt;test uygulama çalıştırıcısı&gt;</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InProcessArtifactsProduced">
+        <source>In process file artifacts produced:</source>
+        <target state="translated">Üretilen işlem içi dosya yapıtları:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
+        <source>Method '{0}' did not exit successfully</source>
+        <target state="translated">'{0}' yöntemi başarıyla çıkmadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidCommandLineArguments">
+        <source>Invalid command line arguments:</source>
+        <target state="translated">Geçersiz komut satırı bağımsız değişkenleri:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
+        <source>A duplicate key '{0}' was found</source>
+        <target state="translated">'{0}' adlı bir yinelenen anahtar bulundu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
+        <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
+        <target state="translated">Üst düzey JSON öğesi bir nesne olmalıdır. Bunun yerine '{0}' bulundu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
+        <source>Unsupported JSON token '{0}' was found</source>
+        <target state="translated">Desteklenmeyen JSON belirteci '{0}' bulundu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonRpcTcpServerDescription">
+        <source>JsonRpc server implementation based on the test platform protocol specification.</source>
+        <target state="translated">Test platformu protokol belirtimine dayalı JsonRpc sunucu uygulaması.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
+        <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
+        <target state="translated">JsonRpc sunucusundan istemciye el sıkışması, test platformu protokol belirtimine dayalı uygulama.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="translated">ILoggerFactory henüz derlenmedi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="translated">'--maximum-failed-tests' seçeneği pozitif bir tamsayı olmalıdır. Belirtilen '{0}' geçerli değil.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="translated">İleti veri yolu henüz derlenmedi veya bu aşamada artık kullanılamıyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">Beklenen minimum test ilke ihlali, yürütülen test: {0}, beklenen minimum test: {1}</target>
+        <note>{0}, {1} number of tests</note>
+      </trans-unit>
+      <trans-unit id="MissingClientPortFoJsonRpc">
+        <source>Expected --client-port when jsonRpc protocol is used.</source>
+        <target state="translated">JsonRpc protokolü kullanıldığında --client-port bekleniyordu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">ve {0} tane daha</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">{0} test çalıştırılıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
+        <source>No serializer registered with ID '{0}'</source>
+        <target state="translated">'{0}' kimliğiyle kayıtlı seri hale getirici yok</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
+        <source>No serializer registered with type '{0}'</source>
+        <target state="translated">'{0}' türüyle kayıtlı seri hale getirici yok</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotAvailable">
+        <source>Not available</source>
+        <target state="translated">Kullanılamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotFound">
+        <source>Not found</source>
+        <target state="translated">Bulunamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OnlyOneFilterSupported">
+        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
+        <target state="translated">Hem ‘--treenode-filter’ hem de ‘--filter-uid’ parametrelerinin birlikte kullanılması desteklenmemektedir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OutOfProcessArtifactsProduced">
+        <source>Out of process file artifacts produced:</source>
+        <target state="translated">Üretilen işlem dışı dosya yapıtları:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Başarılı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassedLowercase">
+        <source>passed</source>
+        <target state="translated">başarılı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientHostOptionDescription">
+        <source>Specify the hostname of the client.</source>
+        <target state="translated">İstemcinin ana bilgisayar adını belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientPortOptionDescription">
+        <source>Specify the port of the client.</source>
+        <target state="translated">İstemcinin bağlantı noktasını belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="translated">testconfig.json dosyası belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
+        <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
+        <target state="translated">Hata ayıklama amacıyla işleme eklemek için yürütmeyi duraklatmayı sağlar.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
+        <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-Note that this is slowing down the test execution.</ns0:source>
-        <ns0:target state="translated">Yerleşik dosya kaydediciyi günlüğü eşzamanlı olarak yazmaya zorlar.
+Note that this is slowing down the test execution.</source>
+        <target state="translated">Yerleşik dosya kaydediciyi günlüğü eşzamanlı olarak yazmaya zorlar.
 Herhangi bir günlüğü (kilitlenme durumunda) kaybetmek istemediğiniz senaryolar için faydalıdır.
-Bunun test yürütmesini yavaşlatacağını unutmayın.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <ns0:source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</ns0:source>
-        <ns0:target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'.
-Dosya, çıkış dizinine log_[yyMMddHHmmssfff].diag adıyla yazılır</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
-        <ns0:source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</ns0:source>
-        <ns0:target state="translated">'--diagnostic-verbosity' tek düzeyli bir bağımsız değişken bekler ('Trace', 'Debug', 'Information', 'Warning', 'Error' veya 'Critical')</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
-        <ns0:source>'--{0}' requires '--diagnostic' to be provided</ns0:source>
-        <ns0:target state="translated">'--{0}' için '--diagnostic' belirtilmelidir</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <ns0:source>Output directory of the diagnostic logging.
-If not specified the file will be generated inside the default 'TestResults' directory.</ns0:source>
-        <ns0:target state="translated">Tanılama günlüğünün çıkış dizini.
-Belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <ns0:source>Prefix for the log file name that will replace '[log]_.'</ns0:source>
-        <ns0:target state="translated">'[log]_' öğesinin yerini alan günlük dosyası adına önek uygular.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <ns0:source>Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</ns0:source>
-        <ns0:target state="translated">--diagnostic için ayrıntı düzeyini tanımlayın.
-Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' ve 'Critical'.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <ns0:source>List available tests.</ns0:source>
-        <ns0:target state="translated">Kullanılabilir testleri listeler.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDotnetTestPipe">
-        <ns0:source>dotnet test pipe.</ns0:source>
-        <ns0:target state="translated">dotnet test kanalı.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
-        <ns0:source>Invalid PID '{0}'
-{1}</ns0:source>
-        <ns0:target state="translated">Geçersiz PID '{0}'
-{1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
-        <ns0:source>Exit the test process if dependent process exits. PID must be provided.</ns0:source>
-        <ns0:target state="translated">Bağımlı işlemden çıkılıyorsa test işleminden çıkın. PID sağlanmalıdır.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
-        <ns0:source>'--{0}' expects a single int PID argument</ns0:source>
-        <ns0:target state="translated">'--{0}', tek bir int PID bağımsız değişkeni bekliyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineFilterUidOptionDescription">
-        <ns0:source>Provides a list of test node UIDs to filter by.</ns0:source>
-        <ns0:target state="translated">Filtrelemek için test düğümü UID'lerinin bir listesini sağlar.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineHelpOptionDescription">
-        <ns0:source>Show the command line help.</ns0:source>
-        <ns0:target state="translated">Komut satırı yardımını gösterir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <ns0:source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</ns0:source>
-        <ns0:target state="translated">Belirli çıkış kodları için başarılı olmayan çıkış değerini raporlamayın
-(ör. '--ignore-exit-code 8; 9' çıkış kodu 8 ve 9'u yoksayar ve bu durumda 0 döndürür)</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineInfoOptionDescription">
-        <ns0:source>Display .NET test application information.</ns0:source>
-        <ns0:target state="translated">.NET test uygulaması bilgilerini görüntüler.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
-        <ns0:source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</ns0:source>
-        <ns0:target state="translated">Aşıldığında test çalıştırmasını durduracak en fazla test hatası sayısını belirtir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
-        <ns0:source>'--list-tests' and '--minimum-expected-tests' are incompatible options</ns0:source>
-        <ns0:target state="translated">'--list-tests' ve '--minimum-expected-tests' uyumsuz seçenekler</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
-        <ns0:source>Specifies the minimum number of tests that are expected to run.</ns0:source>
-        <ns0:target state="translated">Çalıştırılması beklenen en düşük test sayısını belirtir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <ns0:source>'--minimum-expected-tests' expects a single non-zero positive integer value
-(e.g. '--minimum-expected-tests 10')</ns0:source>
-        <ns0:target state="translated">'--minimum-expected-tests', sıfır olmayan tek bir pozitif tamsayı değeri bekler
-(ör. '--minimum-expected-tests 10')</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineNoBannerOptionDescription">
-        <ns0:source>Do not display the startup banner, the copyright message or the telemetry banner.</ns0:source>
-        <ns0:target state="translated">Başlangıç başlığını, telif hakkı iletisini veya telemetri başlığını görüntülemez.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLinePortOptionDescription">
-        <ns0:source>Specify the port of the server.</ns0:source>
-        <ns0:target state="translated">Sunucunun bağlantı noktasını belirtir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLinePortOptionSingleArgument">
-        <ns0:source>'--{0}' expects a single valid port as argument</ns0:source>
-        <ns0:target state="translated">'--{0}' bağımsız değişken olarak tek bir geçerli bağlantı noktası bekler</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineProviderDescription">
-        <ns0:source>Microsoft Testing Platform command line provider</ns0:source>
-        <ns0:target state="translated">Microsoft Testing Platform komut satırı sağlayıcısı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineProviderDisplayName">
-        <ns0:source>Platform command line provider</ns0:source>
-        <ns0:target state="translated">Platform komut satırı sağlayıcısı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <ns0:source>The directory where the test results are going to be placed.
+Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'İzleme'.
+Dosya, çıkış dizinine log_[yyMMddHHmmssfff].diag adıyla yazılır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
+        <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
+        <target state="translated">'--diagnostic-verbosity' tek düzeyli bir bağımsız değişken bekler ('Trace', 'Debug', 'Information', 'Warning', 'Error' veya 'Critical')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
+        <source>'--{0}' requires '--diagnostic' to be provided</source>
+        <target state="translated">'--{0}' için '--diagnostic' belirtilmelidir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="translated">Tanılama günlüğünün çıkış dizini.
+Belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
+        <source>Prefix for the log file name that will replace '[log]_.'</source>
+        <target state="translated">'[log]_' öğesinin yerini alan günlük dosyası adına önek uygular.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="translated">--diagnostic için ayrıntı düzeyini tanımlayın.
+Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' ve 'Critical'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
+        <source>List available tests.</source>
+        <target state="translated">Kullanılabilir testleri listeler.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestPipe">
+        <source>dotnet test pipe.</source>
+        <target state="translated">dotnet test kanalı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
+        <source>Invalid PID '{0}'
+{1}</source>
+        <target state="translated">Geçersiz PID '{0}'
+{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">'--exit-on-process-exit' seçeneği tarayıcı ortamlarında desteklenmemektedir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
+        <source>Exit the test process if dependent process exits. PID must be provided.</source>
+        <target state="translated">Bağımlı işlemden çıkılıyorsa test işleminden çıkın. PID sağlanmalıdır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
+        <source>'--{0}' expects a single int PID argument</source>
+        <target state="translated">'--{0}', tek bir int PID bağımsız değişkeni bekliyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="translated">Filtrelemek için test düğümü UID'lerinin bir listesini sağlar.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineHelpOptionDescription">
+        <source>Show the command line help.</source>
+        <target state="translated">Komut satırı yardımını gösterir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">Belirli çıkış kodları için başarılı olmayan çıkış değerini raporlamayın
+(ör. '--ignore-exit-code 8; 9' çıkış kodu 8 ve 9'u yoksayar ve bu durumda 0 döndürür)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineInfoOptionDescription">
+        <source>Display .NET test application information.</source>
+        <target state="translated">.NET test uygulaması bilgilerini görüntüler.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="translated">Aşıldığında test çalıştırmasını durduracak en fazla test hatası sayısını belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
+        <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
+        <target state="translated">'--list-tests' ve '--minimum-expected-tests' uyumsuz seçenekler</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <source>Specifies the minimum number of tests that are expected to run.</source>
+        <target state="translated">Çalıştırılması beklenen en düşük test sayısını belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="translated">'--minimum-expected-tests', sıfır olmayan tek bir pozitif tamsayı değeri bekler
+(ör. '--minimum-expected-tests 10')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
+        <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
+        <target state="translated">Başlangıç başlığını, telif hakkı iletisini veya telemetri başlığını görüntülemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePortOptionDescription">
+        <source>Specify the port of the server.</source>
+        <target state="translated">Sunucunun bağlantı noktasını belirtir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
+        <source>'--{0}' expects a single valid port as argument</source>
+        <target state="translated">'--{0}' bağımsız değişken olarak tek bir geçerli bağlantı noktası bekler</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineProviderDescription">
+        <source>Microsoft Testing Platform command line provider</source>
+        <target state="translated">Microsoft Testing Platform komut satırı sağlayıcısı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineProviderDisplayName">
+        <source>Platform command line provider</source>
+        <target state="translated">Platform komut satırı sağlayıcısı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
+        <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
-The default is TestResults in the directory that contains the test application.</ns0:source>
-        <ns0:target state="translated">Test sonuçlarının yerleştirileceği dizin.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="translated">Test sonuçlarının yerleştirileceği dizin.
 Belirtilen dizin yoksa oluşturulur.
-Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineServerOptionDescription">
-        <ns0:source>Enable the server mode.</ns0:source>
-        <ns0:target state="translated">Sunucu modunu etkinleştirir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <ns0:source>For testing purposes</ns0:source>
-        <ns0:target state="translated">Test amacıyla</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
-        <ns0:source>Eventual parent test host controller PID.</ns0:source>
-        <ns0:target state="translated">Son üst test ana bilgisayar denetleyicisi PID'si.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <ns0:source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</ns0:source>
-        <ns0:target state="translated">'timeout' seçeneği, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkene sahip olmalıdır</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <ns0:source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</ns0:source>
-        <ns0:target state="translated">Genel bir test yürütme zaman aşımı.
-Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak alır.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ProcessHasNotYetExitedErrorMessage">
-        <ns0:source>Process should have exited before we can determine this value</ns0:source>
-        <ns0:target state="translated">Bu değeri belirleyebilmemiz için süreçten çıkılmış olması gerekir</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ReachedMaxFailedTestsMessage">
-        <ns0:source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</ns0:source>
-        <ns0:target state="translated">'--maximum-failed-tests' seçeneği tarafından belirtilen hatalara ('{0}') ulaşılamama nedeniyle test oturumu iptal edildi.</ns0:target>
-        <ns0:note>{0} is the number of max failed tests.</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="RetryFailedAfterTriesErrorMessage">
-        <ns0:source>Retry failed after {0} times</ns0:source>
-        <ns0:target state="translated">Yeniden deneme {0} deneme sonrasında başarısız oldu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="RunningTestsFrom">
-        <ns0:source>Running tests from</ns0:source>
-        <ns0:target state="translated">Testler çalıştırılıyor:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerLogMessageDescription">
-        <ns0:source>This data represents a server log message</ns0:source>
-        <ns0:target state="translated">Bu veriler bir sunucu günlük iletisini temsil ediyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerLogMessageDisplayName">
-        <ns0:source>Server log message</ns0:source>
-        <ns0:target state="translated">Sunucu günlük iletisi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <ns0:source>Creates the right test execution filter for server mode</ns0:source>
-        <ns0:target state="translated">Sunucu modu için doğru test yürütme filtresini oluşturur</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <ns0:source>Server test execution filter factory</ns0:source>
-        <ns0:target state="translated">Sunucu test yürütme filtresi fabrikası</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestHostDescription">
-        <ns0:source>The 'ITestHost' implementation used when running server mode.</ns0:source>
-        <ns0:target state="translated">Sunucu modu çalıştırılırken kullanılan 'ITestHost' uygulaması.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestHostDisplayName">
-        <ns0:source>Server mode test host</ns0:source>
-        <ns0:target state="translated">Sunucu modu test ana bilgisayarı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
-        <ns0:source>Cannot find service of type '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' türündeki hizmet bulunamıyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServiceProviderServiceAlreadyRegistered">
-        <ns0:source>Instance of type '{0}' is already registered</ns0:source>
-        <ns0:target state="translated">'{0}' türündeki örnek zaten kayıtlı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
-        <ns0:source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</ns0:source>
-        <ns0:target state="translated">'ITestFramework' türündeki örnekler hizmet sağlayıcısı aracılığıyla değil, 'ITestApplicationBuilder.RegisterTestFramework' aracılığıyla kaydedilmelidir</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Skipped">
-        <ns0:source>Skipped</ns0:source>
-        <ns0:target state="translated">Atlandı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="SkippedLowercase">
-        <ns0:source>skipped</ns0:source>
-        <ns0:target state="translated">atlandı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StackFrameAt">
-        <ns0:source>at</ns0:source>
-        <ns0:target state="translated">şu yöntemle:</ns0:target>
-        <ns0:note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StackFrameIn">
-        <ns0:source>in</ns0:source>
-        <ns0:target state="translated">şu dosyada:</ns0:target>
-        <ns0:note>in that is used in stack frame it is followed by file name</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StackTrace">
-        <ns0:source>Stack Trace</ns0:source>
-        <ns0:target state="translated">Yığın İzlemesi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StandardError">
-        <ns0:source>Error output</ns0:source>
-        <ns0:target state="translated">Hata çıkışı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StandardOutput">
-        <ns0:source>Standard output</ns0:source>
-        <ns0:target state="translated">Standart çıkış</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StartingTestSession">
-        <ns0:source>Starting test session.</ns0:source>
-        <ns0:target state="translated">Test oturumu başlatılıyor.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StartingTestSessionWithLogFilePath">
-        <ns0:source>Starting test session. The log file path is '{0}'.</ns0:source>
-        <ns0:target state="translated">Test oturumu başlatılıyor. Günlük dosyası yolu '{0}'.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="SucceededLowercase">
-        <ns0:source>succeeded</ns0:source>
-        <ns0:target state="translated">başarılı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
-        <ns0:source>An 'ITestExecutionFilterFactory' factory is already set</ns0:source>
-        <ns0:target state="translated">Bir 'ITestExecutionFilterFactory' fabrikası zaten ayarlanmış</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TelemetryNotice">
-        <ns0:source>Telemetry
+Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineServerOptionDescription">
+        <source>Enable the server mode.</source>
+        <target state="translated">Sunucu modunu etkinleştirir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
+        <source>For testing purposes</source>
+        <target state="translated">Test amacıyla</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
+        <source>Eventual parent test host controller PID.</source>
+        <target state="translated">Son üst test ana bilgisayar denetleyicisi PID'si.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
+        <target state="translated">'timeout' seçeneği, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak bir bağımsız değişkene sahip olmalıdır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
+        <source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+        <target state="translated">Genel bir test yürütme zaman aşımı.
+Bir bağımsız değişkeni, 'value' değerinin kayan olduğu &lt;value&gt;[h|m|s] biçiminde dize olarak alır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProcessHasNotYetExitedErrorMessage">
+        <source>Process should have exited before we can determine this value</source>
+        <target state="translated">Bu değeri belirleyebilmemiz için süreçten çıkılmış olması gerekir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="translated">'--maximum-failed-tests' seçeneği tarafından belirtilen hatalara ('{0}') ulaşılamama nedeniyle test oturumu iptal edildi.</target>
+        <note>{0} is the number of max failed tests.</note>
+      </trans-unit>
+      <trans-unit id="RetryFailedAfterTriesErrorMessage">
+        <source>Retry failed after {0} times</source>
+        <target state="translated">Yeniden deneme {0} deneme sonrasında başarısız oldu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunningTestsFrom">
+        <source>Running tests from</source>
+        <target state="translated">Testler çalıştırılıyor:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerLogMessageDescription">
+        <source>This data represents a server log message</source>
+        <target state="translated">Bu veriler bir sunucu günlük iletisini temsil ediyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerLogMessageDisplayName">
+        <source>Server log message</source>
+        <target state="translated">Sunucu günlük iletisi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
+        <source>Creates the right test execution filter for server mode</source>
+        <target state="translated">Sunucu modu için doğru test yürütme filtresini oluşturur</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
+        <source>Server test execution filter factory</source>
+        <target state="translated">Sunucu test yürütme filtresi fabrikası</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">Sunucu modu çalıştırılırken kullanılan 'ITestHost' uygulaması.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">Sunucu modu test ana bilgisayarı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
+        <source>Cannot find service of type '{0}'</source>
+        <target state="translated">'{0}' türündeki hizmet bulunamıyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderServiceAlreadyRegistered">
+        <source>Instance of type '{0}' is already registered</source>
+        <target state="translated">'{0}' türündeki örnek zaten kayıtlı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
+        <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
+        <target state="translated">'ITestFramework' türündeki örnekler hizmet sağlayıcısı aracılığıyla değil, 'ITestApplicationBuilder.RegisterTestFramework' aracılığıyla kaydedilmelidir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Skipped">
+        <source>Skipped</source>
+        <target state="translated">Atlandı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedLowercase">
+        <source>skipped</source>
+        <target state="translated">atlandı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="translated">şu yöntemle:</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="translated">şu dosyada:</target>
+        <note>in that is used in stack frame it is followed by file name</note>
+      </trans-unit>
+      <trans-unit id="StackTrace">
+        <source>Stack Trace</source>
+        <target state="translated">Yığın İzlemesi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">Hata çıkışı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">Standart çıkış</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">Test oturumu başlatılıyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">Test oturumu başlatılıyor. Günlük dosyası yolu '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="translated">başarılı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">Senkron temizleme, tarayıcı ortamlarında desteklenmez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
+        <source>An 'ITestExecutionFilterFactory' factory is already set</source>
+        <target state="translated">Bir 'ITestExecutionFilterFactory' fabrikası zaten ayarlanmış</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TelemetryNotice">
+        <source>Telemetry
 ---------
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</ns0:source>
-        <ns0:target state="translated">Telemetri
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
+        <target state="translated">Telemetri
 ---------
 Microsoft Test Platformu, deneyiminizi geliştirmemize yardımcı olmak için kullanım verilerini toplar. Veriler Microsoft tarafından toplanır ve hiç kimseyle paylaşılmaz.
 Sık kullandığınız kabukla TESTINGPLATFORM_TELEMETRY_OPTOUT veya DOTNET_CLI_TELEMETRY_OPTOUT ortam değişkenini '1' veya 'true' olarak ayarlayarak telemetriyi geri çevirebilirsiniz.
 
-Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://aka.ms/testingplatform/telemetry</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TelemetryProviderAlreadySetErrorMessage">
-        <ns0:source>Telemetry provider is already set</ns0:source>
-        <ns0:target state="translated">Telemetri sağlayıcısı zaten ayarlanmış</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalNoAnsiOptionDescription">
-        <ns0:source>Disable outputting ANSI escape characters to screen.</ns0:source>
-        <ns0:target state="translated">ANSI kaçış karakterlerinin ekrana çıkışını devre dışı bırakın.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalNoAnsiOptionObsoleteMessage">
-        <ns0:source>Use '--ansi off' instead of '--no-ansi'.</ns0:source>
-        <ns0:target state="new">Use '--ansi off' instead of '--no-ansi'.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalAnsiOptionDescription">
-        <ns0:source>Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences</ns0:source>
-        <ns0:target state="new">Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalAnsiOptionInvalidArgument">
-        <ns0:source>--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</ns0:source>
-        <ns0:target state="new">--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalNoProgressOptionDescription">
-        <ns0:source>Disable reporting progress to screen.</ns0:source>
-        <ns0:target state="translated">Ekrana yansıtılan ilerleme durumu raporlamasını devre dışı bırakın.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalOutputOptionDescription">
-        <ns0:source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</ns0:source>
-        <ns0:target state="translated">Testleri bildirirken çıkış ayrıntı düzeyi.
-Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Normal’.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalOutputOptionInvalidArgument">
-        <ns0:source>--output expects a single parameter with value 'Normal' or 'Detailed'.</ns0:source>
-        <ns0:target state="translated">--çıkışta ‘Normal’ veya ‘Ayrıntılı’ değerine sahip tek bir parametre beklenir.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalTestReporterDescription">
-        <ns0:source>Writes test results to terminal.</ns0:source>
-        <ns0:target state="translated">Test sonuçlarını terminale yazar.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalTestReporterDisplayName">
-        <ns0:source>Terminal test reporter</ns0:source>
-        <ns0:target state="translated">Terminal test raporlayıcısı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
-        <ns0:source>An 'ITestFrameworkInvoker' factory is already set</ns0:source>
-        <ns0:target state="translated">Bir 'ITestFrameworkInvoker' fabrikası zaten ayarlanmış</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
-        <ns0:source>The application has already been built</ns0:source>
-        <ns0:target state="translated">Uygulama zaten derlendi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
-        <ns0:source>The test framework adapter factory has already been registered</ns0:source>
-        <ns0:target state="translated">Test çerçevesi bağdaştırıcı fabrikası zaten kaydedildi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
-        <ns0:source>The test framework capabilities factory has already been registered</ns0:source>
-        <ns0:target state="translated">Test çerçevesi özellikleri fabrikası zaten kaydedildi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <ns0:source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</ns0:source>
-        <ns0:target state="translated">Test çerçevesi bağdaştırıcısı kaydedilmedi. Kaydetmek için 'ITestApplicationBuilder.RegisterTestFramework' kullanın</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationResultDescription">
-        <ns0:source>Determine the result of the test application execution</ns0:source>
-        <ns0:target state="translated">Test uygulaması yürütmenin sonucunu belirleyin</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationResultDisplayName">
-        <ns0:source>Test application result</ns0:source>
-        <ns0:target state="translated">Test uygulaması sonucu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationVSTestModeTooManyBuilders">
-        <ns0:source>VSTest mode only supports a single TestApplicationBuilder per process</ns0:source>
-        <ns0:target state="translated">VSTest modu, işlem başına yalnızca tek bir TestApplicationBuilder destekler</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestDiscoverySummary">
-        <ns0:source>Test discovery summary: found {0} test(s) in {1} assemblies.</ns0:source>
-        <ns0:target state="translated">Test bulma özeti: {1} derlemede {0} test bulundu.</ns0:target>
-        <ns0:note>0 is number of tests, 1 is count of assemblies</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestDiscoverySummarySingular">
-        <ns0:source>Test discovery summary: found {0} test(s)</ns0:source>
-        <ns0:target state="translated">Test bulma özeti: {0} test bulundu</ns0:target>
-        <ns0:note>0 is number of tests</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
-        <ns0:source>Method '{0}' should not have been called on this proxy object</ns0:source>
-        <ns0:target state="translated">'{0}' yöntemi bu ara sunucu nesnesinde çağrılmamalıdır</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
-        <ns0:source>Test adapter test session failure</ns0:source>
-        <ns0:target state="translated">Test bağdaştırıcısı test oturumu hatası</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
-        <ns0:source>Test application process didn't exit gracefully, exit code is '{0}'</ns0:source>
-        <ns0:target state="translated">Test başvuru sürecinden düzgün bir şekilde çıkılmadı, çıkış kodu '{0}'</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestRunSummary">
-        <ns0:source>Test run summary:</ns0:source>
-        <ns0:target state="translated">Test çalıştırması özeti:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
-        <ns0:source>Failed to acquire semaphore before timeout of '{0}' seconds</ns0:source>
-        <ns0:target state="translated">'{0}' saniyelik zaman aşımından önce semafor edinilemedi</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <ns0:source>Failed to flush logs before the timeout of '{0}' seconds</ns0:source>
-        <ns0:target state="translated">'{0}' saniyelik zaman aşımından önce günlükler boşaltılamadı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Total">
-        <ns0:source>Total</ns0:source>
-        <ns0:target state="translated">Toplam</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
-        <ns0:source>A filter '{0}' should not contain a '/' character</ns0:source>
-        <ns0:target state="translated">'{0}' filtresi, '/' karakteri içermemelidir</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterDescription">
-        <ns0:source>Use a tree filter to filter down the tests to execute</ns0:source>
-        <ns0:target state="translated">Yürütülecek testleri filtrelemek için bir ağaç filtresi kullanın</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
-        <ns0:source>An escape character should not terminate the filter string '{0}'</ns0:source>
-        <ns0:target state="translated">Kaçış karakteri, '{0}' filtre dizesini sonlandırmamalıdır</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
-        <ns0:source>Only the final filter path can contain '**' wildcard</ns0:source>
-        <ns0:target state="translated">Yalnızca son filtre yolu, '**' joker karakterlerini içerebilir</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
-        <ns0:source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' filtre ifadesinde beklenmeyen '&amp;' veya '|' işleci</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
-        <ns0:source>Invalid node path, expected root as first character '{0}'</ns0:source>
-        <ns0:target state="translated">Geçersiz düğüm yolu, ilk karakter '{0}' olarak kök bekleniyordu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
-        <ns0:source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</ns0:source>
-        <ns0:target state="translated">'{0}' filtre ifadesi, dengesiz sayıda '{1}' '{2}' işleci içeriyor</ns0:target>
-        <ns0:note>{1} and {2} are () or []</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
-        <ns0:source>Filter contains an unexpected '/' operator inside a parenthesized expression</ns0:source>
-        <ns0:target state="translated">Filtre, parantez içine alınmış bir ifadenin içinde beklenmeyen bir '/' işleci içeriyor</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
-        <ns0:source>Unexpected telemetry call, the telemetry is disabled.</ns0:source>
-        <ns0:target state="translated">Beklenmeyen telemetri çağrısı, telemetri devre dışı bırakıldı.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <ns0:source>An unexpected exception occurred during byte conversion</ns0:source>
-        <ns0:target state="translated">Bayt dönüştürme sırasında beklenmeyen bir özel durum oluştu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <ns0:source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
-{0}</ns0:source>
-        <ns0:target state="translated">'FileLogger.WriteLogToFileAsync' içinde beklenmeyen bir özel durum oluştu.
-{0}</ns0:target>
-        <ns0:note>{0} exception ToString</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedStateErrorMessage">
-        <ns0:source>Unexpected state in file '{0}' at line '{1}'</ns0:source>
-        <ns0:target state="translated">'{0}' dosyasında '{1}' satırındaki durum beklenmiyordu</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnobservedTaskExceptionWarningMessage">
-        <ns0:source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</ns0:source>
-        <ns0:target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] özel durum: {0}</ns0:target>
-        <ns0:note>{0} is the exception that was unhandled/unobserved</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnreachableLocationErrorMessage">
-        <ns0:source>This program location is thought to be unreachable. File='{0}' Line={1}</ns0:source>
-        <ns0:target state="translated">Bu program konumu erişilemez olarak görülüyor. Dosya='{0}', Satır={1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ZeroTestsRan">
-        <ns0:source>Zero tests ran</ns0:source>
-        <ns0:target state="translated">Sıfır test çalıştırıldı</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TotalLowercase">
-        <ns0:source>total</ns0:source>
-        <ns0:target state="translated">toplam</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ChatClientProviderAlreadyRegistered">
-        <ns0:source>A chat client provider has already been registered.</ns0:source>
-        <ns0:target state="translated">Bir sohbet istemcisi sağlayıcısı zaten kaydedilmiş.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <ns0:source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</ns0:source>
-        <ns0:target state="translated">Yapay zeka uzantıları yalnızca 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' türündeki oluşturucularla çalışır</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-    </ns0:body>
-  </ns0:file>
-</ns0:xliff>
+Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://aka.ms/testingplatform/telemetry</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
+        <source>Telemetry provider is already set</source>
+        <target state="translated">Telemetri sağlayıcısı zaten ayarlanmış</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="translated">ANSI kaçış karakterlerinin ekrana çıkışını devre dışı bırakın.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>Disable reporting progress to screen.</source>
+        <target state="translated">Ekrana yansıtılan ilerleme durumu raporlamasını devre dışı bırakın.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionDescription">
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="translated">Testleri bildirirken çıkış ayrıntı düzeyi.
+Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Normal’.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionInvalidArgument">
+        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
+        <target state="translated">--çıkışta ‘Normal’ veya ‘Ayrıntılı’ değerine sahip tek bir parametre beklenir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="translated">Test sonuçlarını terminale yazar.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="translated">Terminal test raporlayıcısı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
+        <source>An 'ITestFrameworkInvoker' factory is already set</source>
+        <target state="translated">Bir 'ITestFrameworkInvoker' fabrikası zaten ayarlanmış</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
+        <source>The application has already been built</source>
+        <target state="translated">Uygulama zaten derlendi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
+        <source>The test framework adapter factory has already been registered</source>
+        <target state="translated">Test çerçevesi bağdaştırıcı fabrikası zaten kaydedildi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
+        <source>The test framework capabilities factory has already been registered</source>
+        <target state="translated">Test çerçevesi özellikleri fabrikası zaten kaydedildi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
+        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
+        <target state="translated">Test çerçevesi bağdaştırıcısı kaydedilmedi. Kaydetmek için 'ITestApplicationBuilder.RegisterTestFramework' kullanın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultDescription">
+        <source>Determine the result of the test application execution</source>
+        <target state="translated">Test uygulaması yürütmenin sonucunu belirleyin</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultDisplayName">
+        <source>Test application result</source>
+        <target state="translated">Test uygulaması sonucu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
+        <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
+        <target state="translated">VSTest modu, işlem başına yalnızca tek bir TestApplicationBuilder destekler</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummary">
+        <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
+        <target state="translated">Test bulma özeti: {1} derlemede {0} test bulundu.</target>
+        <note>0 is number of tests, 1 is count of assemblies</note>
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Test discovery summary: found {0} test(s)</source>
+        <target state="translated">Test bulma özeti: {0} test bulundu</target>
+        <note>0 is number of tests</note>
+      </trans-unit>
+      <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
+        <source>Method '{0}' should not have been called on this proxy object</source>
+        <target state="translated">'{0}' yöntemi bu ara sunucu nesnesinde çağrılmamalıdır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
+        <source>Test adapter test session failure</source>
+        <target state="translated">Test bağdaştırıcısı test oturumu hatası</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">İşlem yeniden başlatmayı gerektiren test ana bilgisayar denetleyici uzantıları, tarayıcı/WebAssembly platformlarında desteklenmez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
+        <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
+        <target state="translated">Test başvuru sürecinden düzgün bir şekilde çıkılmadı, çıkış kodu '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestRunSummary">
+        <source>Test run summary:</source>
+        <target state="translated">Test çalıştırması özeti:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
+        <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
+        <target state="translated">'{0}' saniyelik zaman aşımından önce semafor edinilemedi</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TimeoutFlushingLogsErrorMessage">
+        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
+        <target state="translated">'{0}' saniyelik zaman aşımından önce günlükler boşaltılamadı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Total">
+        <source>Total</source>
+        <target state="translated">Toplam</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
+        <source>A filter '{0}' should not contain a '/' character</source>
+        <target state="translated">'{0}' filtresi, '/' karakteri içermemelidir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterDescription">
+        <source>Use a tree filter to filter down the tests to execute</source>
+        <target state="translated">Yürütülecek testleri filtrelemek için bir ağaç filtresi kullanın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
+        <source>An escape character should not terminate the filter string '{0}'</source>
+        <target state="translated">Kaçış karakteri, '{0}' filtre dizesini sonlandırmamalıdır</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
+        <source>Only the final filter path can contain '**' wildcard</source>
+        <target state="translated">Yalnızca son filtre yolu, '**' joker karakterlerini içerebilir</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
+        <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
+        <target state="translated">'{0}' filtre ifadesinde beklenmeyen '&amp;' veya '|' işleci</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
+        <source>Invalid node path, expected root as first character '{0}'</source>
+        <target state="translated">Geçersiz düğüm yolu, ilk karakter '{0}' olarak kök bekleniyordu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
+        <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
+        <target state="translated">'{0}' filtre ifadesi, dengesiz sayıda '{1}' '{2}' işleci içeriyor</target>
+        <note>{1} and {2} are () or []</note>
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
+        <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
+        <target state="translated">Filtre, parantez içine alınmış bir ifadenin içinde beklenmeyen bir '/' işleci içeriyor</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
+        <source>Unexpected telemetry call, the telemetry is disabled.</source>
+        <target state="translated">Beklenmeyen telemetri çağrısı, telemetri devre dışı bırakıldı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="translated">Bayt dönüştürme sırasında beklenmeyen bir özel durum oluştu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+{0}</source>
+        <target state="translated">'FileLogger.WriteLogToFileAsync' içinde beklenmeyen bir özel durum oluştu.
+{0}</target>
+        <note>{0} exception ToString</note>
+      </trans-unit>
+      <trans-unit id="UnexpectedStateErrorMessage">
+        <source>Unexpected state in file '{0}' at line '{1}'</source>
+        <target state="translated">'{0}' dosyasında '{1}' satırındaki durum beklenmiyordu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] özel durum: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
+      </trans-unit>
+      <trans-unit id="UnreachableLocationErrorMessage">
+        <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
+        <target state="translated">Bu program konumu erişilemez olarak görülüyor. Dosya='{0}', Satır={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">Hata ayıklayıcısının eklenmesini bekleme (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) tarayıcı ortamlarında desteklenmez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">Sıfır test çalıştırıldı</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="translated">toplam</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">Bir sohbet istemcisi sağlayıcısı zaten kaydedilmiş.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">Yapay zeka uzantıları yalnızca 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' türündeki oluşturucularla çalışır</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

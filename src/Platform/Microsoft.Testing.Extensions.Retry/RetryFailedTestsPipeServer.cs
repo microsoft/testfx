@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryFailedTestsPipeServer : IDisposable
 {
     private readonly NamedPipeServer _singleConnectionNamedPipeServer;

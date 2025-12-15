@@ -3,11 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class SystemProcess : IProcess, IDisposable
 {
     private readonly Process _process;
 
-#pragma warning disable CA1416 // Validate platform compatibility
     public SystemProcess(Process process)
     {
         _process = process;
@@ -24,6 +24,8 @@ internal sealed class SystemProcess : IProcess, IDisposable
 
     public int ExitCode => _process.ExitCode;
 
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public DateTime StartTime => _process.StartTime;
 
     public IMainModule? MainModule
@@ -40,9 +42,10 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public Task WaitForExitAsync()
         => _process.WaitForExitAsync();
 
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public void Kill()
         => _process.Kill(entireProcessTree: true);
 
     public void Dispose() => _process.Dispose();
-#pragma warning restore CA1416
 }

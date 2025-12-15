@@ -1,1028 +1,1027 @@
-<?xml version='1.0' encoding='utf-8'?>
-<ns0:xliff xmlns:ns0="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
-  <ns0:file datatype="xml" source-language="en" target-language="ko" original="../PlatformResources.resx">
-    <ns0:body>
-      <ns0:trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
-        <ns0:source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</ns0:source>
-        <ns0:target state="translated">현재 테스트 프레임워크는 '--maximum-failed-tests' 기능에 필요한 'IGracefulStopTestExecutionCapability'를 구현하지 않습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="AbortForMaxFailedTestsDescription">
-        <ns0:source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</ns0:source>
-        <ns0:target state="translated">'--maximum-failed-tests'를 지원하는 데 사용되는 확장입니다. 지정된 실패 임계값에 도달하면 테스트 실행이 중단됩니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Aborted">
-        <ns0:source>Aborted</ns0:source>
-        <ns0:target state="translated">중단됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Actual">
-        <ns0:source>Actual</ns0:source>
-        <ns0:target state="translated">실제</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CancelledLowercase">
-        <ns0:source>canceled</ns0:source>
-        <ns0:target state="translated">취소됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CancellingTestSession">
-        <ns0:source>Canceling the test session...</ns0:source>
-        <ns0:target state="translated">테스트 세션을 취소하는 중...</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <ns0:source>Failed to create a test execution filter</ns0:source>
-        <ns0:target state="translated">테스트 실행 필터를 만들지 못함</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <ns0:source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</ns0:source>
-        <ns0:target state="translated">3초 후에 고유한 로그 파일을 만들지 못했습니다. 마지막으로 시도한 파일 이름은 '{0}'입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
-        <ns0:source>Cannot remove environment variables at this stage</ns0:source>
-        <ns0:target state="translated">이 단계에서 환경 변수를 제거할 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
-        <ns0:source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</ns0:source>
-        <ns0:target state="translated">확장 '{0}'(이)가 환경 변수 '{1}'을(를) 제거하려고 했지만 확장 '{2}'에 의해 잠겼습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
-        <ns0:source>Cannot set environment variables at this stage</ns0:source>
-        <ns0:target state="translated">이 단계에서 환경 변수를 설정할 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
-        <ns0:source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</ns0:source>
-        <ns0:target state="translated">확장 '{0}'(이)가 환경 변수 '{1}'을(를) 설정하려고 했지만 확장 '{2}'에 의해 잠겼습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CannotStartProcessErrorMessage">
-        <ns0:source>Cannot start process '{0}'</ns0:source>
-        <ns0:target state="translated">프로세스 '{0}'을(를) 시작할 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidArgumentsForOption">
-        <ns0:source>Option '--{0}' has invalid arguments: {1}</ns0:source>
-        <ns0:target state="translated">'--{0}' 옵션에 잘못된 인수 {1}이(가) 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidArityErrorMessage">
-        <ns0:source>Invalid arity, maximum must be greater than minimum</ns0:source>
-        <ns0:target state="translated">잘못된 인자입니다. 최대값은 최소값보다 커야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidConfiguration">
-        <ns0:source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</ns0:source>
-        <ns0:target state="translated">공급자 '{0}'(UID: {1})에 대한 구성이 잘못되었습니다. 오류: {2}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineInvalidOptionName">
-        <ns0:source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</ns0:source>
-        <ns0:target state="translated">옵션 이름 '{0}'이(가) 잘못되었습니다. 문자와 '-'만 포함해야 합니다(예: my-option).</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionExpectsAtLeastArguments">
-        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</ns0:source>
-        <ns0:target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에는 최소 {3}개의 인수가 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionExpectsAtMostArguments">
-        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</ns0:source>
-        <ns0:target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에는 최대 {3}개의 인수가 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionExpectsNoArguments">
-        <ns0:source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</ns0:source>
-        <ns0:target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에 인수가 필요하지 않습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
-        <ns0:source>Option '--{0}' is declared by multiple extensions: '{1}'</ns0:source>
-        <ns0:target state="translated">옵션 '--{0}'이(가) 여러 확장에 의해 선언되었습니다. '{1}'</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
-        <ns0:source>You can fix the previous option clash by overriding the option name using the configuration file</ns0:source>
-        <ns0:target state="translated">구성 파일을 사용하여 옵션 이름을 재정의하여 이전 옵션 충돌을 해결할 수 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsReserved">
-        <ns0:source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</ns0:source>
-        <ns0:target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{0}'이(가) 사용할 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionObsoleteWarning">
-        <ns0:source>Warning: Option '--{0}' is obsolete. {1}</ns0:source>
-        <ns0:target state="new">Warning: Option '--{0}' is obsolete. {1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionIsUsingReservedPrefix">
-        <ns0:source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</ns0:source>
-        <ns0:target state="translated">공급자 '{1}'(UID: {2})의 옵션 '-- {0}'이 예약된 접두사 '--internal'을 사용하고 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineOptionsNotReady">
-        <ns0:source>The ICommandLineOptions has not been built yet.</ns0:source>
-        <ns0:target state="translated">ICommandLineOptions가 아직 빌드되지 않았습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserFailedToReadResponseFile">
-        <ns0:source>Failed to read response file '{0}'. {1}.</ns0:source>
-        <ns0:target state="translated">응답 파일 '{0}'을(를) 읽지 못했습니다. {1}.</ns0:target>
-        <ns0:note>{1} is the exception</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserResponseFileNotFound">
-        <ns0:source>The response file '{0}' was not found</ns0:source>
-        <ns0:target state="translated">응답 파일 '{0}'을(를) 찾을 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserUnexpectedArgument">
-        <ns0:source>Unexpected argument {0}</ns0:source>
-        <ns0:target state="translated">예기치 않은 인수 {0}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
-        <ns0:source>Unexpected single quote in argument: {0}</ns0:source>
-        <ns0:target state="translated">인수 {0}에 예기치 않은 작은따옴표가 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
-        <ns0:source>Unexpected single quote in argument: {0} for option '--{1}'</ns0:source>
-        <ns0:target state="translated">'-- {1} ' 옵션의 인수 {0}에 예기치 않은 작은따옴표가 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CommandLineUnknownOption">
-        <ns0:source>Unknown option '--{0}'</ns0:source>
-        <ns0:target state="translated">알 수 없는 옵션 '--{0}'</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <ns0:source>The same instance of 'CompositeExtensonFactory' is already registered</ns0:source>
-        <ns0:target state="translated">동일한 'CompositeExtensonFactory' 인스턴스가 이미 등록됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConfigurationFileNotFound">
-        <ns0:source>The configuration file '{0}' specified with '--config-file' could not be found.</ns0:source>
-        <ns0:target state="translated">'--config-file'으로 지정된 구성 파일 '{0}' 찾을 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
-        <ns0:source>Could not find the default json configuration</ns0:source>
-        <ns0:target state="translated">기본 json 구성을 찾을 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConnectingToClientHost">
-        <ns0:source>Connecting to client host '{0}' port '{1}'</ns0:source>
-        <ns0:target state="translated">클라이언트 호스트 '{0}' 포트 '{1}'에 연결하는 중</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConsoleIsAlreadyInBatchingMode">
-        <ns0:source>Console is already in batching mode.</ns0:source>
-        <ns0:target state="translated">콘솔이 이미 일괄 처리 모드에 있습니다.</ns0:target>
-        <ns0:note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <ns0:source>Creates the right test execution filter for console mode</ns0:source>
-        <ns0:target state="translated">콘솔 모드에 적합한 테스트 실행 필터를 만듬</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <ns0:source>Console test execution filter factory</ns0:source>
-        <ns0:target state="translated">콘솔 테스트 실행 필터 팩터리</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="CouldNotFindDirectoryErrorMessage">
-        <ns0:source>Could not find directory '{0}'</ns0:source>
-        <ns0:target state="translated">{0} 디렉터리를 찾을 수 없음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiagnosticFileLevelWithAsyncFlush">
-        <ns0:source>Diagnostic file (level '{0}' with async flush): {1}</ns0:source>
-        <ns0:target state="translated">진단 파일(비동기 플러시를 사용한 수준 '{0}'): {1}</ns0:target>
-        <ns0:note>0 level such as verbose,
-1 path to file</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiagnosticFileLevelWithFlush">
-        <ns0:source>Diagnostic file (level '{0}' with sync flush): {1}</ns0:source>
-        <ns0:target state="translated">진단 파일(동기 플러시를 사용한 수준 '{0}'): {1}</ns0:target>
-        <ns0:note>0 level such as verbose,
-1 path to file</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiscoveredTestsInAssembly">
-        <ns0:source>Discovered {0} test(s) in assembly</ns0:source>
-        <ns0:target state="translated">어셈블리에서 {0}개의 테스트를 찾음</ns0:target>
-        <ns0:note>0 is count, the sentence is followed by the path of the assebly</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DiscoveringTestsFrom">
-        <ns0:source>Discovering tests from</ns0:source>
-        <ns0:target state="translated">다음에서 테스트 검색하는 중</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="DurationLowercase">
-        <ns0:source>duration</ns0:source>
-        <ns0:target state="translated">기간</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="EnvironmentVariableProviderFailedWithError">
-        <ns0:source>Provider '{0}' (UID: {1}) failed with error: {2}</ns0:source>
-        <ns0:target state="translated">공급자 '{0}'(UID: {1})이 오류 {2}(으)로 실패했습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExceptionDuringCancellationWarningMessage">
-        <ns0:source>Exception during the cancellation of request id '{0}'</ns0:source>
-        <ns0:target state="translated">요청 ID를 취소하는 동안 예외가 '{0}'</ns0:target>
-        <ns0:note>{0} is the request id</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExitCode">
-        <ns0:source>Exit code</ns0:source>
-        <ns0:target state="translated">종료 코드</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Expected">
-        <ns0:source>Expected</ns0:source>
-        <ns0:target state="translated">필요</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
-        <ns0:source>Extension of type '{0}' is not implementing the required '{1}' interface</ns0:source>
-        <ns0:target state="translated">‘{0}’ 형식의 확장이 필요한 '{1}' 인터페이스를 구현하지 않음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <ns0:source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</ns0:source>
-        <ns0:target state="translated">UID가 '{0}’인 확장이 이미 등록되었습니다. 등록된 확장은 다음과 같은 형식입니다. {1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Failed">
-        <ns0:source>Failed</ns0:source>
-        <ns0:target state="translated">실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedLowercase">
-        <ns0:source>failed</ns0:source>
-        <ns0:target state="translated">실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedToWriteLogToChannelErrorMessage">
-        <ns0:source>Failed to write the log to the channel. Missed log content:
-{0}</ns0:source>
-        <ns0:target state="translated">채널에 로그를 쓰지 못했습니다. 누락된 로그 콘텐츠:
-{0}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedWithErrors">
-        <ns0:source>failed with {0} error(s)</ns0:source>
-        <ns0:target state="translated">{0} 오류로 실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedWithErrorsAndWarnings">
-        <ns0:source>failed with {0} error(s) and {1} warning(s)</ns0:source>
-        <ns0:target state="translated">{0} 오류와 {1} 경고와 함께 실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FailedWithWarnings">
-        <ns0:source>failed with {0} warning(s)</ns0:source>
-        <ns0:target state="translated">{0} 경고와 함께 실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FinishedTestSession">
-        <ns0:source>Finished test session.</ns0:source>
-        <ns0:target state="translated">테스트 세션을 마쳤습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ForTest">
-        <ns0:source>For test</ns0:source>
-        <ns0:target state="translated">테스트용</ns0:target>
-        <ns0:note>is followed by test name</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="FromFile">
-        <ns0:source>from</ns0:source>
-        <ns0:target state="translated">출처</ns0:target>
-        <ns0:note>from followed by a file name to point to the file from which test is originating</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
-        <ns0:source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</ns0:source>
-        <ns0:target state="translated">다음 'ITestHostEnvironmentVariableProvider' 공급자가 최종 환경 변수 설정을 거부했습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpApplicationUsage">
-        <ns0:source>Usage {0} [option providers] [extension option providers]</ns0:source>
-        <ns0:target state="translated">사용법 {0} [옵션 공급자] [확장 옵션 공급자]</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpExecuteTestApplication">
-        <ns0:source>Execute a .NET Test Application.</ns0:source>
-        <ns0:target state="translated">.NET 테스트 애플리케이션을 실행합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpExtensionOptions">
-        <ns0:source>Extension options:</ns0:source>
-        <ns0:target state="translated">확장 옵션:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpNoExtensionRegistered">
-        <ns0:source>    No extension registered.</ns0:source>
-        <ns0:target state="translated">    등록된 확장이 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpOptions">
-        <ns0:source>Options:</ns0:source>
-        <ns0:target state="translated">옵션:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="HelpTestApplicationRunner">
-        <ns0:source>&lt;test application runner&gt;</ns0:source>
-        <ns0:target state="translated">&lt;테스트 애플리케이션 실행기&gt;</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InProcessArtifactsProduced">
-        <ns0:source>In process file artifacts produced:</ns0:source>
-        <ns0:target state="translated">생성된 In process 파일 아티팩트:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
-        <ns0:source>Method '{0}' did not exit successfully</ns0:source>
-        <ns0:target state="translated">'{0}' 메서드가 성공적으로 종료되지 않았습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InvalidCommandLineArguments">
-        <ns0:source>Invalid command line arguments:</ns0:source>
-        <ns0:target state="translated">잘못된 명령줄 인수:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
-        <ns0:source>A duplicate key '{0}' was found</ns0:source>
-        <ns0:target state="translated">중복 키('{0}')를 찾았습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
-        <ns0:source>Top-level JSON element must be an object. Instead, '{0}' was found</ns0:source>
-        <ns0:target state="translated">최상위 JSON 요소는 개체여야 합니다. 대신 '{0}'을(를) 찾았습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
-        <ns0:source>Unsupported JSON token '{0}' was found</ns0:source>
-        <ns0:target state="translated">지원되지 않는 JSON 토큰('{0}')을 발견했습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonRpcTcpServerDescription">
-        <ns0:source>JsonRpc server implementation based on the test platform protocol specification.</ns0:source>
-        <ns0:target state="translated">테스트 플랫폼 프로토콜 사양을 기반으로 하는 JsonRpc 서버 구현입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="JsonRpcTcpServerToSingleClientDescription">
-        <ns0:source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</ns0:source>
-        <ns0:target state="translated">테스트 플랫폼 프로토콜 사양을 기반으로 구현되는 JsonRpc 서버와 클라이언트의 핸드셰이크입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="LoggerFactoryNotReady">
-        <ns0:source>The ILoggerFactory has not been built yet.</ns0:source>
-        <ns0:target state="translated">ILoggerFactory가 아직 빌드되지 않았습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MaxFailedTestsMustBePositive">
-        <ns0:source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</ns0:source>
-        <ns0:target state="translated">'--maximum-failed-tests' 옵션은 양의 정수여야 합니다. '{0}' 값이 잘못되었습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MessageBusNotReady">
-        <ns0:source>The message bus has not been built yet or is no more usable at this stage.</ns0:source>
-        <ns0:target state="translated">메시지 버스가 아직 빌드되지 않았거나 이 단계에서 더 이상 사용할 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MinimumExpectedTestsPolicyViolation">
-        <ns0:source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</ns0:source>
-        <ns0:target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</ns0:target>
-        <ns0:note>{0}, {1} number of tests</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="MissingClientPortFoJsonRpc">
-        <ns0:source>Expected --client-port when jsonRpc protocol is used.</ns0:source>
-        <ns0:target state="translated">jsonRpc 프로토콜을 사용하는 경우 --client-port가 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ActiveTestsRunning_MoreTestsCount">
-        <ns0:source>and {0} more</ns0:source>
-        <ns0:target state="translated">외 {0}개</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ActiveTestsRunning_FullTestsCount">
-        <ns0:source>{0} tests running</ns0:source>
-        <ns0:target state="translated">실행 중인 테스트 {0}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <ns0:source>No serializer registered with ID '{0}'</ns0:source>
-        <ns0:target state="translated">ID '{0}'(으)로 등록된 직렬 변환기가 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <ns0:source>No serializer registered with type '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' 형식으로 등록된 직렬 변환기가 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NotAvailable">
-        <ns0:source>Not available</ns0:source>
-        <ns0:target state="translated">사용할 수 없음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="NotFound">
-        <ns0:source>Not found</ns0:source>
-        <ns0:target state="translated">찾을 수 없음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="OnlyOneFilterSupported">
-        <ns0:source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</ns0:source>
-        <ns0:target state="translated">'--treenode-filter'와 '--filter-uid'를 동시에 전달하는 것은 지원되지 않습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="OutOfProcessArtifactsProduced">
-        <ns0:source>Out of process file artifacts produced:</ns0:source>
-        <ns0:target state="translated">생성된 Out of process 파일 아티팩트:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Passed">
-        <ns0:source>Passed</ns0:source>
-        <ns0:target state="translated">통과</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PassedLowercase">
-        <ns0:source>passed</ns0:source>
-        <ns0:target state="translated">통과</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineClientHostOptionDescription">
-        <ns0:source>Specify the hostname of the client.</ns0:source>
-        <ns0:target state="translated">클라이언트의 호스트 이름을 지정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineClientPortOptionDescription">
-        <ns0:source>Specify the port of the client.</ns0:source>
-        <ns0:target state="translated">클라이언트의 포트를 지정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineConfigFileOptionDescription">
-        <ns0:source>Specifies a testconfig.json file.</ns0:source>
-        <ns0:target state="translated">testconfig.json 파일을 지정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
-        <ns0:source>Allows to pause execution in order to attach to the process for debug purposes.</ns0:source>
-        <ns0:target state="translated">디버그 목적으로 프로세스에 연결하기 위해 실행을 일시 중지할 수 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
-        <ns0:source>Force the built-in file logger to write the log synchronously.
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../PlatformResources.resx">
+    <body>
+      <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
+        <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
+        <target state="translated">현재 테스트 프레임워크는 '--maximum-failed-tests' 기능에 필요한 'IGracefulStopTestExecutionCapability'를 구현하지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortForMaxFailedTestsDescription">
+        <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
+        <target state="translated">'--maximum-failed-tests'를 지원하는 데 사용되는 확장입니다. 지정된 실패 임계값에 도달하면 테스트 실행이 중단됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Aborted">
+        <source>Aborted</source>
+        <target state="translated">중단됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Actual">
+        <source>Actual</source>
+        <target state="translated">실제</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancelledLowercase">
+        <source>canceled</source>
+        <target state="translated">취소됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancellingTestSession">
+        <source>Canceling the test session...</source>
+        <target state="translated">테스트 세션을 취소하는 중...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
+        <source>Failed to create a test execution filter</source>
+        <target state="translated">테스트 실행 필터를 만들지 못함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
+        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
+        <target state="translated">3초 후에 고유한 로그 파일을 만들지 못했습니다. 마지막으로 시도한 파일 이름은 '{0}'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
+        <source>Cannot remove environment variables at this stage</source>
+        <target state="translated">이 단계에서 환경 변수를 제거할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
+        <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
+        <target state="translated">확장 '{0}'(이)가 환경 변수 '{1}'을(를) 제거하려고 했지만 확장 '{2}'에 의해 잠겼습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
+        <source>Cannot set environment variables at this stage</source>
+        <target state="translated">이 단계에서 환경 변수를 설정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
+        <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
+        <target state="translated">확장 '{0}'(이)가 환경 변수 '{1}'을(를) 설정하려고 했지만 확장 '{2}'에 의해 잠겼습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotStartProcessErrorMessage">
+        <source>Cannot start process '{0}'</source>
+        <target state="translated">프로세스 '{0}'을(를) 시작할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidArgumentsForOption">
+        <source>Option '--{0}' has invalid arguments: {1}</source>
+        <target state="translated">'--{0}' 옵션에 잘못된 인수 {1}이(가) 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidArityErrorMessage">
+        <source>Invalid arity, maximum must be greater than minimum</source>
+        <target state="translated">잘못된 인자입니다. 최대값은 최소값보다 커야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidConfiguration">
+        <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
+        <target state="translated">공급자 '{0}'(UID: {1})에 대한 구성이 잘못되었습니다. 오류: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidOptionName">
+        <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
+        <target state="translated">옵션 이름 '{0}'이(가) 잘못되었습니다. 문자와 '-'만 포함해야 합니다(예: my-option).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
+        <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에는 최소 {3}개의 인수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsAtMostArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
+        <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에는 최대 {3}개의 인수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsNoArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
+        <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '--{0}'에 인수가 필요하지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
+        <source>Option '--{0}' is declared by multiple extensions: '{1}'</source>
+        <target state="translated">옵션 '--{0}'이(가) 여러 확장에 의해 선언되었습니다. '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
+        <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
+        <target state="translated">구성 파일을 사용하여 옵션 이름을 재정의하여 이전 옵션 충돌을 해결할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsReserved">
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
+        <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{0}'이(가) 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">경고: 옵션 '--{0}'이(가) 사용되지 않습니다. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
+        <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
+        <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '-- {0}'이 예약된 접두사 '--internal'을 사용하고 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionsNotReady">
+        <source>The ICommandLineOptions has not been built yet.</source>
+        <target state="translated">ICommandLineOptions가 아직 빌드되지 않았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserFailedToReadResponseFile">
+        <source>Failed to read response file '{0}'. {1}.</source>
+        <target state="translated">응답 파일 '{0}'을(를) 읽지 못했습니다. {1}.</target>
+        <note>{1} is the exception</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserResponseFileNotFound">
+        <source>The response file '{0}' was not found</source>
+        <target state="translated">응답 파일 '{0}'을(를) 찾을 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedArgument">
+        <source>Unexpected argument {0}</source>
+        <target state="translated">예기치 않은 인수 {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
+        <source>Unexpected single quote in argument: {0}</source>
+        <target state="translated">인수 {0}에 예기치 않은 작은따옴표가 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
+        <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
+        <target state="translated">'-- {1} ' 옵션의 인수 {0}에 예기치 않은 작은따옴표가 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineUnknownOption">
+        <source>Unknown option '--{0}'</source>
+        <target state="translated">알 수 없는 옵션 '--{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
+        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
+        <target state="translated">동일한 'CompositeExtensonFactory' 인스턴스가 이미 등록됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConfigurationFileNotFound">
+        <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
+        <target state="translated">'--config-file'으로 지정된 구성 파일 '{0}' 찾을 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
+        <source>Could not find the default json configuration</source>
+        <target state="translated">기본 json 구성을 찾을 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConnectingToClientHost">
+        <source>Connecting to client host '{0}' port '{1}'</source>
+        <target state="translated">클라이언트 호스트 '{0}' 포트 '{1}'에 연결하는 중</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <source>Console is already in batching mode.</source>
+        <target state="translated">콘솔이 이미 일괄 처리 모드에 있습니다.</target>
+        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
+        <source>Creates the right test execution filter for console mode</source>
+        <target state="translated">콘솔 모드에 적합한 테스트 실행 필터를 만듬</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
+        <source>Console test execution filter factory</source>
+        <target state="translated">콘솔 테스트 실행 필터 팩터리</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CouldNotFindDirectoryErrorMessage">
+        <source>Could not find directory '{0}'</source>
+        <target state="translated">{0} 디렉터리를 찾을 수 없음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
+        <source>Diagnostic file (level '{0}' with async flush): {1}</source>
+        <target state="translated">진단 파일(비동기 플러시를 사용한 수준 '{0}'): {1}</target>
+        <note>0 level such as verbose,
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithFlush">
+        <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
+        <target state="translated">진단 파일(동기 플러시를 사용한 수준 '{0}'): {1}</target>
+        <note>0 level such as verbose,
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} test(s) in assembly</source>
+        <target state="translated">어셈블리에서 {0}개의 테스트를 찾음</target>
+        <note>0 is count, the sentence is followed by the path of the assebly</note>
+      </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="translated">다음에서 테스트 검색하는 중</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="translated">기간</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="EnvironmentVariableProviderFailedWithError">
+        <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
+        <target state="translated">공급자 '{0}'(UID: {1})이 오류 {2}(으)로 실패했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExceptionDuringCancellationWarningMessage">
+        <source>Exception during the cancellation of request id '{0}'</source>
+        <target state="translated">요청 ID를 취소하는 동안 예외가 '{0}'</target>
+        <note>{0} is the request id</note>
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="translated">종료 코드</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Expected">
+        <source>Expected</source>
+        <target state="translated">필요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
+        <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
+        <target state="translated">‘{0}’ 형식의 확장이 필요한 '{1}' 인터페이스를 구현하지 않음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
+        <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
+        <target state="translated">UID가 '{0}’인 확장이 이미 등록되었습니다. 등록된 확장은 다음과 같은 형식입니다. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedLowercase">
+        <source>failed</source>
+        <target state="translated">실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedToWriteLogToChannelErrorMessage">
+        <source>Failed to write the log to the channel. Missed log content:
+{0}</source>
+        <target state="translated">채널에 로그를 쓰지 못했습니다. 누락된 로그 콘텐츠:
+{0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} error(s)</source>
+        <target state="translated">{0} 오류로 실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrorsAndWarnings">
+        <source>failed with {0} error(s) and {1} warning(s)</source>
+        <target state="translated">{0} 오류와 {1} 경고와 함께 실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithWarnings">
+        <source>failed with {0} warning(s)</source>
+        <target state="translated">{0} 경고와 함께 실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FinishedTestSession">
+        <source>Finished test session.</source>
+        <target state="translated">테스트 세션을 마쳤습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ForTest">
+        <source>For test</source>
+        <target state="translated">테스트용</target>
+        <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="FromFile">
+        <source>from</source>
+        <target state="translated">출처</target>
+        <note>from followed by a file name to point to the file from which test is originating</note>
+      </trans-unit>
+      <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
+        <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
+        <target state="translated">다음 'ITestHostEnvironmentVariableProvider' 공급자가 최종 환경 변수 설정을 거부했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpApplicationUsage">
+        <source>Usage {0} [option providers] [extension option providers]</source>
+        <target state="translated">사용법 {0} [옵션 공급자] [확장 옵션 공급자]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpExecuteTestApplication">
+        <source>Execute a .NET Test Application.</source>
+        <target state="translated">.NET 테스트 애플리케이션을 실행합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpExtensionOptions">
+        <source>Extension options:</source>
+        <target state="translated">확장 옵션:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpNoExtensionRegistered">
+        <source>    No extension registered.</source>
+        <target state="translated">    등록된 확장이 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpOptions">
+        <source>Options:</source>
+        <target state="translated">옵션:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpTestApplicationRunner">
+        <source>&lt;test application runner&gt;</source>
+        <target state="translated">&lt;테스트 애플리케이션 실행기&gt;</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InProcessArtifactsProduced">
+        <source>In process file artifacts produced:</source>
+        <target state="translated">생성된 In process 파일 아티팩트:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
+        <source>Method '{0}' did not exit successfully</source>
+        <target state="translated">'{0}' 메서드가 성공적으로 종료되지 않았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidCommandLineArguments">
+        <source>Invalid command line arguments:</source>
+        <target state="translated">잘못된 명령줄 인수:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
+        <source>A duplicate key '{0}' was found</source>
+        <target state="translated">중복 키('{0}')를 찾았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
+        <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
+        <target state="translated">최상위 JSON 요소는 개체여야 합니다. 대신 '{0}'을(를) 찾았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
+        <source>Unsupported JSON token '{0}' was found</source>
+        <target state="translated">지원되지 않는 JSON 토큰('{0}')을 발견했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonRpcTcpServerDescription">
+        <source>JsonRpc server implementation based on the test platform protocol specification.</source>
+        <target state="translated">테스트 플랫폼 프로토콜 사양을 기반으로 하는 JsonRpc 서버 구현입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
+        <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
+        <target state="translated">테스트 플랫폼 프로토콜 사양을 기반으로 구현되는 JsonRpc 서버와 클라이언트의 핸드셰이크입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="LoggerFactoryNotReady">
+        <source>The ILoggerFactory has not been built yet.</source>
+        <target state="translated">ILoggerFactory가 아직 빌드되지 않았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MaxFailedTestsMustBePositive">
+        <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
+        <target state="translated">'--maximum-failed-tests' 옵션은 양의 정수여야 합니다. '{0}' 값이 잘못되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MessageBusNotReady">
+        <source>The message bus has not been built yet or is no more usable at this stage.</source>
+        <target state="translated">메시지 버스가 아직 빌드되지 않았거나 이 단계에서 더 이상 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</target>
+        <note>{0}, {1} number of tests</note>
+      </trans-unit>
+      <trans-unit id="MissingClientPortFoJsonRpc">
+        <source>Expected --client-port when jsonRpc protocol is used.</source>
+        <target state="translated">jsonRpc 프로토콜을 사용하는 경우 --client-port가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">외 {0}개</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">실행 중인 테스트 {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
+        <source>No serializer registered with ID '{0}'</source>
+        <target state="translated">ID '{0}'(으)로 등록된 직렬 변환기가 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
+        <source>No serializer registered with type '{0}'</source>
+        <target state="translated">'{0}' 형식으로 등록된 직렬 변환기가 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotAvailable">
+        <source>Not available</source>
+        <target state="translated">사용할 수 없음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotFound">
+        <source>Not found</source>
+        <target state="translated">찾을 수 없음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OnlyOneFilterSupported">
+        <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
+        <target state="translated">'--treenode-filter'와 '--filter-uid'를 동시에 전달하는 것은 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OutOfProcessArtifactsProduced">
+        <source>Out of process file artifacts produced:</source>
+        <target state="translated">생성된 Out of process 파일 아티팩트:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">통과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassedLowercase">
+        <source>passed</source>
+        <target state="translated">통과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientHostOptionDescription">
+        <source>Specify the hostname of the client.</source>
+        <target state="translated">클라이언트의 호스트 이름을 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientPortOptionDescription">
+        <source>Specify the port of the client.</source>
+        <target state="translated">클라이언트의 포트를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
+        <source>Specifies a testconfig.json file.</source>
+        <target state="translated">testconfig.json 파일을 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
+        <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
+        <target state="translated">디버그 목적으로 프로세스에 연결하기 위해 실행을 일시 중지할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
+        <source>Force the built-in file logger to write the log synchronously.
 Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-Note that this is slowing down the test execution.</ns0:source>
-        <ns0:target state="translated">기본 제공 파일 로거가 로그를 동기적으로 쓰도록 강제합니다.
+Note that this is slowing down the test execution.</source>
+        <target state="translated">기본 제공 파일 로거가 로그를 동기적으로 쓰도록 강제합니다.
 로그를 잃지 않으려는 시나리오(예: 충돌하는 경우)에 유용합니다.
-이로 인해 테스트 실행 속도가 느려집니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <ns0:source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</ns0:source>
-        <ns0:target state="translated">진단 로깅을 사용합니다. 기본 로그 수준은 'Trace'입니다.
-파일은 log_[yyMMddHHmmssfff].diag라는 이름으로 출력 디렉터리에 기록됩니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
-        <ns0:source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</ns0:source>
-        <ns0:target state="translated">'--diagnostic-verbosity'에는 단일 수준 인수('Trace', 'Debug', 'Information', 'Warning', 'Error' 또는 'Critical')가 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
-        <ns0:source>'--{0}' requires '--diagnostic' to be provided</ns0:source>
-        <ns0:target state="translated">'--{0}'에는 '--diagnostic'을 제공해야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
-        <ns0:source>Output directory of the diagnostic logging.
-If not specified the file will be generated inside the default 'TestResults' directory.</ns0:source>
-        <ns0:target state="translated">진단 로깅의 출력 디렉터리입니다.
-지정하지 않으면 파일이 기본 'TestResults' 디렉터리 내에 생성됩니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <ns0:source>Prefix for the log file name that will replace '[log]_.'</ns0:source>
-        <ns0:target state="translated">'[log]_'를 대체할 로그 파일 이름의 접두사입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
-        <ns0:source>Define the level of the verbosity for the --diagnostic.
-The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</ns0:source>
-        <ns0:target state="translated">--diagnostic에 대한 세부 정보 표시 수준을 정의합니다.
-사용 가능한 값은 'Trace', 'Debug', 'Information', 'Warning', 'Error' 및 'Critical'입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
-        <ns0:source>List available tests.</ns0:source>
-        <ns0:target state="translated">사용 가능한 테스트를 나열합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineDotnetTestPipe">
-        <ns0:source>dotnet test pipe.</ns0:source>
-        <ns0:target state="translated">.NET 테스트 파이프입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
-        <ns0:source>Invalid PID '{0}'
-{1}</ns0:source>
-        <ns0:target state="translated">잘못된 PID '{0}'
-{1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
-        <ns0:source>Exit the test process if dependent process exits. PID must be provided.</ns0:source>
-        <ns0:target state="translated">종속 프로세스가 종료되면 테스트 프로세스를 종료합니다. PID를 제공해야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
-        <ns0:source>'--{0}' expects a single int PID argument</ns0:source>
-        <ns0:target state="translated">'--{0}'에는 단일 int PID 인수가 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineFilterUidOptionDescription">
-        <ns0:source>Provides a list of test node UIDs to filter by.</ns0:source>
-        <ns0:target state="translated">필터링에 사용할 테스트 노드 UID 목록을 제공합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineHelpOptionDescription">
-        <ns0:source>Show the command line help.</ns0:source>
-        <ns0:target state="translated">명령줄 도움말을 표시합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <ns0:source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</ns0:source>
-        <ns0:target state="translated">특정 종료 코드에 대해 실패한 종료 값을 보고하지 마세요.
-(예: '--ignore-exit-code 8;9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환합니다.)</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineInfoOptionDescription">
-        <ns0:source>Display .NET test application information.</ns0:source>
-        <ns0:target state="translated">.NET 테스트 애플리케이션 정보를 표시합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
-        <ns0:source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</ns0:source>
-        <ns0:target state="translated">테스트 실행을 중단하는 최대 테스트 실패 수를 지정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
-        <ns0:source>'--list-tests' and '--minimum-expected-tests' are incompatible options</ns0:source>
-        <ns0:target state="translated">'--list-tests' 및 '--minimum-expected-tests'는 호환되지 않는 옵션입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
-        <ns0:source>Specifies the minimum number of tests that are expected to run.</ns0:source>
-        <ns0:target state="translated">실행될 것으로 예상되는 최소 테스트 수를 지정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <ns0:source>'--minimum-expected-tests' expects a single non-zero positive integer value
-(e.g. '--minimum-expected-tests 10')</ns0:source>
-        <ns0:target state="translated">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값이 필요합니다.
-(예: '--minimum-expected-tests 10')</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineNoBannerOptionDescription">
-        <ns0:source>Do not display the startup banner, the copyright message or the telemetry banner.</ns0:source>
-        <ns0:target state="translated">시작 배너, 저작권 메시지 또는 원격 분석 배너를 표시하지 마세요.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLinePortOptionDescription">
-        <ns0:source>Specify the port of the server.</ns0:source>
-        <ns0:target state="translated">서버의 포트를 지정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLinePortOptionSingleArgument">
-        <ns0:source>'--{0}' expects a single valid port as argument</ns0:source>
-        <ns0:target state="translated">'--{0}'에는 단일 유효한 포트가 인수로 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineProviderDescription">
-        <ns0:source>Microsoft Testing Platform command line provider</ns0:source>
-        <ns0:target state="translated">Microsoft 테스팅 플랫폼 명령줄 공급자</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineProviderDisplayName">
-        <ns0:source>Platform command line provider</ns0:source>
-        <ns0:target state="translated">플랫폼 명령줄 공급자</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
-        <ns0:source>The directory where the test results are going to be placed.
+이로 인해 테스트 실행 속도가 느려집니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
+        <source>Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
+        <target state="translated">진단 로깅을 사용합니다. 기본 로그 수준은 'Trace'입니다.
+파일은 log_[yyMMddHHmmssfff].diag라는 이름으로 출력 디렉터리에 기록됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
+        <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
+        <target state="translated">'--diagnostic-verbosity'에는 단일 수준 인수('Trace', 'Debug', 'Information', 'Warning', 'Error' 또는 'Critical')가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
+        <source>'--{0}' requires '--diagnostic' to be provided</source>
+        <target state="translated">'--{0}'에는 '--diagnostic'을 제공해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
+        <source>Output directory of the diagnostic logging.
+If not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="translated">진단 로깅의 출력 디렉터리입니다.
+지정하지 않으면 파일이 기본 'TestResults' 디렉터리 내에 생성됩니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
+        <source>Prefix for the log file name that will replace '[log]_.'</source>
+        <target state="translated">'[log]_'를 대체할 로그 파일 이름의 접두사입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
+        <source>Define the level of the verbosity for the --diagnostic.
+The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
+        <target state="translated">--diagnostic에 대한 세부 정보 표시 수준을 정의합니다.
+사용 가능한 값은 'Trace', 'Debug', 'Information', 'Warning', 'Error' 및 'Critical'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
+        <source>List available tests.</source>
+        <target state="translated">사용 가능한 테스트를 나열합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestPipe">
+        <source>dotnet test pipe.</source>
+        <target state="translated">.NET 테스트 파이프입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
+        <source>Invalid PID '{0}'
+{1}</source>
+        <target state="translated">잘못된 PID '{0}'
+{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">브라우저 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
+        <source>Exit the test process if dependent process exits. PID must be provided.</source>
+        <target state="translated">종속 프로세스가 종료되면 테스트 프로세스를 종료합니다. PID를 제공해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
+        <source>'--{0}' expects a single int PID argument</source>
+        <target state="translated">'--{0}'에는 단일 int PID 인수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
+        <source>Provides a list of test node UIDs to filter by.</source>
+        <target state="translated">필터링에 사용할 테스트 노드 UID 목록을 제공합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineHelpOptionDescription">
+        <source>Show the command line help.</source>
+        <target state="translated">명령줄 도움말을 표시합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">특정 종료 코드에 대해 실패한 종료 값을 보고하지 마세요.
+(예: '--ignore-exit-code 8;9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환합니다.)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineInfoOptionDescription">
+        <source>Display .NET test application information.</source>
+        <target state="translated">.NET 테스트 애플리케이션 정보를 표시합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
+        <source>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</source>
+        <target state="translated">테스트 실행을 중단하는 최대 테스트 실패 수를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
+        <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
+        <target state="translated">'--list-tests' 및 '--minimum-expected-tests'는 호환되지 않는 옵션입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
+        <source>Specifies the minimum number of tests that are expected to run.</source>
+        <target state="translated">실행될 것으로 예상되는 최소 테스트 수를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+(e.g. '--minimum-expected-tests 10')</source>
+        <target state="translated">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값이 필요합니다.
+(예: '--minimum-expected-tests 10')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
+        <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
+        <target state="translated">시작 배너, 저작권 메시지 또는 원격 분석 배너를 표시하지 마세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePortOptionDescription">
+        <source>Specify the port of the server.</source>
+        <target state="translated">서버의 포트를 지정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
+        <source>'--{0}' expects a single valid port as argument</source>
+        <target state="translated">'--{0}'에는 단일 유효한 포트가 인수로 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineProviderDescription">
+        <source>Microsoft Testing Platform command line provider</source>
+        <target state="translated">Microsoft 테스팅 플랫폼 명령줄 공급자</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineProviderDisplayName">
+        <source>Platform command line provider</source>
+        <target state="translated">플랫폼 명령줄 공급자</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
+        <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
-The default is TestResults in the directory that contains the test application.</ns0:source>
-        <ns0:target state="translated">테스트 결과를 배치할 디렉터리입니다.
+The default is TestResults in the directory that contains the test application.</source>
+        <target state="translated">테스트 결과를 배치할 디렉터리입니다.
 지정한 디렉터리가 없으면 만들어집니다.
-기본값은 테스트 애플리케이션을 포함하는 디렉터리의 TestResults입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineServerOptionDescription">
-        <ns0:source>Enable the server mode.</ns0:source>
-        <ns0:target state="translated">서버 모드를 사용하도록 설정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <ns0:source>For testing purposes</ns0:source>
-        <ns0:target state="translated">테스트용</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
-        <ns0:source>Eventual parent test host controller PID.</ns0:source>
-        <ns0:target state="translated">최종 부모 테스트 호스트 컨트롤러 PID입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
-        <ns0:source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</ns0:source>
-        <ns0:target state="translated">'timeout' 옵션에는 'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수가 하나 있어야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="PlatformCommandLineTimeoutOptionDescription">
-        <ns0:source>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</ns0:source>
-        <ns0:target state="translated">전역 테스트 실행 시간 제한입니다.
-'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수 하나를 사용합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ProcessHasNotYetExitedErrorMessage">
-        <ns0:source>Process should have exited before we can determine this value</ns0:source>
-        <ns0:target state="translated">이 값을 결정하려면 프로세스가 종료되어야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ReachedMaxFailedTestsMessage">
-        <ns0:source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</ns0:source>
-        <ns0:target state="translated">'--maximum-failed-tests' 옵션에 지정된 실패('{0}')에 도달하여 테스트 세션이 중단됩니다.</ns0:target>
-        <ns0:note>{0} is the number of max failed tests.</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="RetryFailedAfterTriesErrorMessage">
-        <ns0:source>Retry failed after {0} times</ns0:source>
-        <ns0:target state="translated">{0}회 후 다시 시도 실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="RunningTestsFrom">
-        <ns0:source>Running tests from</ns0:source>
-        <ns0:target state="translated">다음 위치에서 테스트를 실행하는 중</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerLogMessageDescription">
-        <ns0:source>This data represents a server log message</ns0:source>
-        <ns0:target state="translated">이 데이터는 서버 로그 메시지를 나타냅니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerLogMessageDisplayName">
-        <ns0:source>Server log message</ns0:source>
-        <ns0:target state="translated">서버 로그 메시지</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <ns0:source>Creates the right test execution filter for server mode</ns0:source>
-        <ns0:target state="translated">서버 모드에 적합한 테스트 실행 필터를 만듬</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <ns0:source>Server test execution filter factory</ns0:source>
-        <ns0:target state="translated">서버 테스트 실행 필터 팩터리</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestHostDescription">
-        <ns0:source>The 'ITestHost' implementation used when running server mode.</ns0:source>
-        <ns0:target state="translated">서버 모드를 실행할 때 사용되는 'ITestHost' 구현입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServerTestHostDisplayName">
-        <ns0:source>Server mode test host</ns0:source>
-        <ns0:target state="translated">서버 모드 테스트 호스트</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
-        <ns0:source>Cannot find service of type '{0}'</ns0:source>
-        <ns0:target state="translated">'{0}' 형식의 서비스를 찾을 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServiceProviderServiceAlreadyRegistered">
-        <ns0:source>Instance of type '{0}' is already registered</ns0:source>
-        <ns0:target state="translated">'{0}' 형식의 인스턴스가 이미 등록되어 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
-        <ns0:source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</ns0:source>
-        <ns0:target state="translated">'ITestFramework' 형식의 인스턴스는 서비스 공급자를 통해 등록하지 않아야 하지만 'ITestApplicationBuilder.RegisterTestFramework'를 통해 등록해야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Skipped">
-        <ns0:source>Skipped</ns0:source>
-        <ns0:target state="translated">건너뜀</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="SkippedLowercase">
-        <ns0:source>skipped</ns0:source>
-        <ns0:target state="translated">건너뜀</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StackFrameAt">
-        <ns0:source>at</ns0:source>
-        <ns0:target state="translated">위치</ns0:target>
-        <ns0:note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StackFrameIn">
-        <ns0:source>in</ns0:source>
-        <ns0:target state="translated">포함</ns0:target>
-        <ns0:note>in that is used in stack frame it is followed by file name</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StackTrace">
-        <ns0:source>Stack Trace</ns0:source>
-        <ns0:target state="translated">스택 추적</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StandardError">
-        <ns0:source>Error output</ns0:source>
-        <ns0:target state="translated">오류 출력</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StandardOutput">
-        <ns0:source>Standard output</ns0:source>
-        <ns0:target state="translated">표준 출력</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StartingTestSession">
-        <ns0:source>Starting test session.</ns0:source>
-        <ns0:target state="translated">테스트 세션을 시작하는 중입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="StartingTestSessionWithLogFilePath">
-        <ns0:source>Starting test session. The log file path is '{0}'.</ns0:source>
-        <ns0:target state="translated">테스트 세션을 시작하는 중입니다. 로그 파일 경로가 '{0}'.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="SucceededLowercase">
-        <ns0:source>succeeded</ns0:source>
-        <ns0:target state="translated">성공</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
-        <ns0:source>An 'ITestExecutionFilterFactory' factory is already set</ns0:source>
-        <ns0:target state="translated">'ITestExecutionFilterFactory' 팩터리가 이미 설정되어 있음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TelemetryNotice">
-        <ns0:source>Telemetry
+기본값은 테스트 애플리케이션을 포함하는 디렉터리의 TestResults입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineServerOptionDescription">
+        <source>Enable the server mode.</source>
+        <target state="translated">서버 모드를 사용하도록 설정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
+        <source>For testing purposes</source>
+        <target state="translated">테스트용</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
+        <source>Eventual parent test host controller PID.</source>
+        <target state="translated">최종 부모 테스트 호스트 컨트롤러 PID입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
+        <source>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float</source>
+        <target state="translated">'timeout' 옵션에는 'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수가 하나 있어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
+        <source>A global test execution timeout.
+Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</source>
+        <target state="translated">전역 테스트 실행 시간 제한입니다.
+'value'가 float인 &lt;value&gt;[h|m|s] 형식의 문자열로 인수 하나를 사용합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProcessHasNotYetExitedErrorMessage">
+        <source>Process should have exited before we can determine this value</source>
+        <target state="translated">이 값을 결정하려면 프로세스가 종료되어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReachedMaxFailedTestsMessage">
+        <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
+        <target state="translated">'--maximum-failed-tests' 옵션에 지정된 실패('{0}')에 도달하여 테스트 세션이 중단됩니다.</target>
+        <note>{0} is the number of max failed tests.</note>
+      </trans-unit>
+      <trans-unit id="RetryFailedAfterTriesErrorMessage">
+        <source>Retry failed after {0} times</source>
+        <target state="translated">{0}회 후 다시 시도 실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RunningTestsFrom">
+        <source>Running tests from</source>
+        <target state="translated">다음 위치에서 테스트를 실행하는 중</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerLogMessageDescription">
+        <source>This data represents a server log message</source>
+        <target state="translated">이 데이터는 서버 로그 메시지를 나타냅니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerLogMessageDisplayName">
+        <source>Server log message</source>
+        <target state="translated">서버 로그 메시지</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
+        <source>Creates the right test execution filter for server mode</source>
+        <target state="translated">서버 모드에 적합한 테스트 실행 필터를 만듬</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
+        <source>Server test execution filter factory</source>
+        <target state="translated">서버 테스트 실행 필터 팩터리</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDescription">
+        <source>The 'ITestHost' implementation used when running server mode.</source>
+        <target state="translated">서버 모드를 실행할 때 사용되는 'ITestHost' 구현입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerTestHostDisplayName">
+        <source>Server mode test host</source>
+        <target state="translated">서버 모드 테스트 호스트</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
+        <source>Cannot find service of type '{0}'</source>
+        <target state="translated">'{0}' 형식의 서비스를 찾을 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderServiceAlreadyRegistered">
+        <source>Instance of type '{0}' is already registered</source>
+        <target state="translated">'{0}' 형식의 인스턴스가 이미 등록되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
+        <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
+        <target state="translated">'ITestFramework' 형식의 인스턴스는 서비스 공급자를 통해 등록하지 않아야 하지만 'ITestApplicationBuilder.RegisterTestFramework'를 통해 등록해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Skipped">
+        <source>Skipped</source>
+        <target state="translated">건너뜀</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedLowercase">
+        <source>skipped</source>
+        <target state="translated">건너뜀</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="translated">위치</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="translated">포함</target>
+        <note>in that is used in stack frame it is followed by file name</note>
+      </trans-unit>
+      <trans-unit id="StackTrace">
+        <source>Stack Trace</source>
+        <target state="translated">스택 추적</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">오류 출력</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">표준 출력</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSession">
+        <source>Starting test session.</source>
+        <target state="translated">테스트 세션을 시작하는 중입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StartingTestSessionWithLogFilePath">
+        <source>Starting test session. The log file path is '{0}'.</source>
+        <target state="translated">테스트 세션을 시작하는 중입니다. 로그 파일 경로가 '{0}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="translated">성공</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">브라우저 환경에서는 동기 플러시를 지원하지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
+        <source>An 'ITestExecutionFilterFactory' factory is already set</source>
+        <target state="translated">'ITestExecutionFilterFactory' 팩터리가 이미 설정되어 있음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TelemetryNotice">
+        <source>Telemetry
 ---------
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</ns0:source>
-        <ns0:target state="translated">원격 분석
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
+        <target state="translated">원격 분석
 ---------
 Microsoft 테스트 플랫폼은 사용자 환경 개선을 위해 사용량 데이터를 수집합니다. 데이터는 Microsoft에서 수집하며 누구와도 공유되지 않습니다.
 즐겨 찾는 셸을 사용하여 TESTINGPLATFORM_TELEMETRY_OPTOUT 또는 DOTNET_CLI_TELEMETRY_OPTOUT 환경 변수를 '1' 또는 'true'로 설정하여 원격 분석을 옵트아웃할 수 있습니다.
 
-Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: https://aka.ms/testingplatform/telemetry</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TelemetryProviderAlreadySetErrorMessage">
-        <ns0:source>Telemetry provider is already set</ns0:source>
-        <ns0:target state="translated">원격 분석 공급자가 이미 설정되어 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalNoAnsiOptionDescription">
-        <ns0:source>Disable outputting ANSI escape characters to screen.</ns0:source>
-        <ns0:target state="translated">ANSI 이스케이프 문자를 화면에 출력하지 않도록 설정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalNoAnsiOptionObsoleteMessage">
-        <ns0:source>Use '--ansi off' instead of '--no-ansi'.</ns0:source>
-        <ns0:target state="new">Use '--ansi off' instead of '--no-ansi'.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalAnsiOptionDescription">
-        <ns0:source>Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences</ns0:source>
-        <ns0:target state="new">Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalAnsiOptionInvalidArgument">
-        <ns0:source>--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</ns0:source>
-        <ns0:target state="new">--ansi expects a single parameter with value 'auto', 'on', or 'off' (also accepts 'true', 'enable', '1', 'false', 'disable', '0').</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalNoProgressOptionDescription">
-        <ns0:source>Disable reporting progress to screen.</ns0:source>
-        <ns0:target state="translated">화면에 보고 진행률을 사용하지 않도록 설정합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalOutputOptionDescription">
-        <ns0:source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</ns0:source>
-        <ns0:target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다.
-유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalOutputOptionInvalidArgument">
-        <ns0:source>--output expects a single parameter with value 'Normal' or 'Detailed'.</ns0:source>
-        <ns0:target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalTestReporterDescription">
-        <ns0:source>Writes test results to terminal.</ns0:source>
-        <ns0:target state="translated">테스트 결과를 터미널에 씁니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TerminalTestReporterDisplayName">
-        <ns0:source>Terminal test reporter</ns0:source>
-        <ns0:target state="translated">터미널 테스트 보고자</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
-        <ns0:source>An 'ITestFrameworkInvoker' factory is already set</ns0:source>
-        <ns0:target state="translated">'ITestFrameworkInvoker' 팩터리가 이미 설정됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
-        <ns0:source>The application has already been built</ns0:source>
-        <ns0:target state="translated">애플리케이션이 이미 빌드되었습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
-        <ns0:source>The test framework adapter factory has already been registered</ns0:source>
-        <ns0:target state="translated">테스트 프레임워크 어댑터 팩터리가 이미 등록됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
-        <ns0:source>The test framework capabilities factory has already been registered</ns0:source>
-        <ns0:target state="translated">테스트 프레임워크 기능 팩터리가 이미 등록되었습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <ns0:source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</ns0:source>
-        <ns0:target state="translated">테스트 프레임워크 어댑터가 등록되지 않았습니다. 'ITestApplicationBuilder.RegisterTestFramework'를 사용하여 등록합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationResultDescription">
-        <ns0:source>Determine the result of the test application execution</ns0:source>
-        <ns0:target state="translated">테스트 애플리케이션 실행 결과 확인</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationResultDisplayName">
-        <ns0:source>Test application result</ns0:source>
-        <ns0:target state="translated">테스트 애플리케이션 결과</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestApplicationVSTestModeTooManyBuilders">
-        <ns0:source>VSTest mode only supports a single TestApplicationBuilder per process</ns0:source>
-        <ns0:target state="translated">VSTest 모드는 프로세스당 단일 TestApplicationBuilder만 지원합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestDiscoverySummary">
-        <ns0:source>Test discovery summary: found {0} test(s) in {1} assemblies.</ns0:source>
-        <ns0:target state="translated">테스트 검색 요약: {1}개의 어셈블리에서 {0}개의 테스트를 찾았습니다.</ns0:target>
-        <ns0:note>0 is number of tests, 1 is count of assemblies</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestDiscoverySummarySingular">
-        <ns0:source>Test discovery summary: found {0} test(s)</ns0:source>
-        <ns0:target state="translated">테스트 검색 요약: {0}개의 테스트를 찾음</ns0:target>
-        <ns0:note>0 is number of tests</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
-        <ns0:source>Method '{0}' should not have been called on this proxy object</ns0:source>
-        <ns0:target state="translated">이 프록시 개체에서 '{0}' 메서드를 호출하지 않아야 합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
-        <ns0:source>Test adapter test session failure</ns0:source>
-        <ns0:target state="translated">테스트 어댑터 테스트 세션 실패</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
-        <ns0:source>Test application process didn't exit gracefully, exit code is '{0}'</ns0:source>
-        <ns0:target state="translated">테스트 애플리케이션 프로세스가 정상적으로 종료되지 않았습니다. 종료 코드는 '{0}'입니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TestRunSummary">
-        <ns0:source>Test run summary:</ns0:source>
-        <ns0:target state="translated">테스트 실행 요약:</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
-        <ns0:source>Failed to acquire semaphore before timeout of '{0}' seconds</ns0:source>
-        <ns0:target state="translated">'{0}'초의 시간 제한 전에 세마포를 가져오지 못했습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <ns0:source>Failed to flush logs before the timeout of '{0}' seconds</ns0:source>
-        <ns0:target state="translated">'{0}'초의 시간 제한 전에 로그를 플러시하지 못했습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="Total">
-        <ns0:source>Total</ns0:source>
-        <ns0:target state="translated">합계</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
-        <ns0:source>A filter '{0}' should not contain a '/' character</ns0:source>
-        <ns0:target state="translated">'{0}' 필터는 '/' 문자를 포함하면 안 됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterDescription">
-        <ns0:source>Use a tree filter to filter down the tests to execute</ns0:source>
-        <ns0:target state="translated">트리 필터를 사용하여 실행할 테스트를 필터링합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
-        <ns0:source>An escape character should not terminate the filter string '{0}'</ns0:source>
-        <ns0:target state="translated">이스케이프 문자가 필터 문자열 '{0}'을(를) 종료하면 안 됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
-        <ns0:source>Only the final filter path can contain '**' wildcard</ns0:source>
-        <ns0:target state="translated">최종 필터 경로만 '**' 와일드카드를 포함할 수 있음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
-        <ns0:source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</ns0:source>
-        <ns0:target state="translated">필터 식 '{0}' 내에 예기치 않은 연산자 '&amp;' 또는 '|'이(가) 있음</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
-        <ns0:source>Invalid node path, expected root as first character '{0}'</ns0:source>
-        <ns0:target state="translated">노드 경로가 잘못되었습니다. 첫 번째 문자 '{0}'(으)로 루트 필요</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
-        <ns0:source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</ns0:source>
-        <ns0:target state="translated">필터 식 '{0}'이(가) '{1}' '{2}' 연산자의 균형이 맞지 않는 개수를 포함함</ns0:target>
-        <ns0:note>{1} and {2} are () or []</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
-        <ns0:source>Filter contains an unexpected '/' operator inside a parenthesized expression</ns0:source>
-        <ns0:target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함함</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
-        <ns0:source>Unexpected telemetry call, the telemetry is disabled.</ns0:source>
-        <ns0:target state="translated">예기치 않은 원격 분석 호출로 인해 원격 분석을 사용할 수 없습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <ns0:source>An unexpected exception occurred during byte conversion</ns0:source>
-        <ns0:target state="translated">바이트 변환 중 예기치 않은 예외 발생</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <ns0:source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
-{0}</ns0:source>
-        <ns0:target state="translated">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
-{0}</ns0:target>
-        <ns0:note>{0} exception ToString</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnexpectedStateErrorMessage">
-        <ns0:source>Unexpected state in file '{0}' at line '{1}'</ns0:source>
-        <ns0:target state="translated">'{1}' 줄의 '{0}' 파일에 예기치 않은 상태가 있습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnobservedTaskExceptionWarningMessage">
-        <ns0:source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</ns0:source>
-        <ns0:target state="translated">처리되지 않은 예외 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</ns0:target>
-        <ns0:note>{0} is the exception that was unhandled/unobserved</ns0:note>
-      </ns0:trans-unit>
-      <ns0:trans-unit id="UnreachableLocationErrorMessage">
-        <ns0:source>This program location is thought to be unreachable. File='{0}' Line={1}</ns0:source>
-        <ns0:target state="translated">이 프로그램 위치에 연결할 수 없는 것으로 생각됩니다. File='{0}' Line={1}</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ZeroTestsRan">
-        <ns0:source>Zero tests ran</ns0:source>
-        <ns0:target state="translated">테스트가 0개 실행됨</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="TotalLowercase">
-        <ns0:source>total</ns0:source>
-        <ns0:target state="translated">합계</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="ChatClientProviderAlreadyRegistered">
-        <ns0:source>A chat client provider has already been registered.</ns0:source>
-        <ns0:target state="translated">채팅 클라이언트 공급자가 이미 등록되었습니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-      <ns0:trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <ns0:source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</ns0:source>
-        <ns0:target state="translated">AI 확장은 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</ns0:target>
-        <ns0:note />
-      </ns0:trans-unit>
-    </ns0:body>
-  </ns0:file>
-</ns0:xliff>
+Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: https://aka.ms/testingplatform/telemetry</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
+        <source>Telemetry provider is already set</source>
+        <target state="translated">원격 분석 공급자가 이미 설정되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="translated">ANSI 이스케이프 문자를 화면에 출력하지 않도록 설정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>Disable reporting progress to screen.</source>
+        <target state="translated">화면에 보고 진행률을 사용하지 않도록 설정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionDescription">
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다.
+유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionInvalidArgument">
+        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
+        <target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="translated">테스트 결과를 터미널에 씁니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="translated">터미널 테스트 보고자</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
+        <source>An 'ITestFrameworkInvoker' factory is already set</source>
+        <target state="translated">'ITestFrameworkInvoker' 팩터리가 이미 설정됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
+        <source>The application has already been built</source>
+        <target state="translated">애플리케이션이 이미 빌드되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
+        <source>The test framework adapter factory has already been registered</source>
+        <target state="translated">테스트 프레임워크 어댑터 팩터리가 이미 등록됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
+        <source>The test framework capabilities factory has already been registered</source>
+        <target state="translated">테스트 프레임워크 기능 팩터리가 이미 등록되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
+        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
+        <target state="translated">테스트 프레임워크 어댑터가 등록되지 않았습니다. 'ITestApplicationBuilder.RegisterTestFramework'를 사용하여 등록합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultDescription">
+        <source>Determine the result of the test application execution</source>
+        <target state="translated">테스트 애플리케이션 실행 결과 확인</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultDisplayName">
+        <source>Test application result</source>
+        <target state="translated">테스트 애플리케이션 결과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
+        <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
+        <target state="translated">VSTest 모드는 프로세스당 단일 TestApplicationBuilder만 지원합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummary">
+        <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
+        <target state="translated">테스트 검색 요약: {1}개의 어셈블리에서 {0}개의 테스트를 찾았습니다.</target>
+        <note>0 is number of tests, 1 is count of assemblies</note>
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Test discovery summary: found {0} test(s)</source>
+        <target state="translated">테스트 검색 요약: {0}개의 테스트를 찾음</target>
+        <note>0 is number of tests</note>
+      </trans-unit>
+      <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
+        <source>Method '{0}' should not have been called on this proxy object</source>
+        <target state="translated">이 프록시 개체에서 '{0}' 메서드를 호출하지 않아야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
+        <source>Test adapter test session failure</source>
+        <target state="translated">테스트 어댑터 테스트 세션 실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">프로세스를 다시 시작해야 하는 테스트 호스트 컨트롤러 확장은 브라우저/WebAssembly 플랫폼에서 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
+        <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
+        <target state="translated">테스트 애플리케이션 프로세스가 정상적으로 종료되지 않았습니다. 종료 코드는 '{0}'입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestRunSummary">
+        <source>Test run summary:</source>
+        <target state="translated">테스트 실행 요약:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
+        <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
+        <target state="translated">'{0}'초의 시간 제한 전에 세마포를 가져오지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TimeoutFlushingLogsErrorMessage">
+        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
+        <target state="translated">'{0}'초의 시간 제한 전에 로그를 플러시하지 못했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Total">
+        <source>Total</source>
+        <target state="translated">합계</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
+        <source>A filter '{0}' should not contain a '/' character</source>
+        <target state="translated">'{0}' 필터는 '/' 문자를 포함하면 안 됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterDescription">
+        <source>Use a tree filter to filter down the tests to execute</source>
+        <target state="translated">트리 필터를 사용하여 실행할 테스트를 필터링합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
+        <source>An escape character should not terminate the filter string '{0}'</source>
+        <target state="translated">이스케이프 문자가 필터 문자열 '{0}'을(를) 종료하면 안 됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
+        <source>Only the final filter path can contain '**' wildcard</source>
+        <target state="translated">최종 필터 경로만 '**' 와일드카드를 포함할 수 있음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
+        <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
+        <target state="translated">필터 식 '{0}' 내에 예기치 않은 연산자 '&amp;' 또는 '|'이(가) 있음</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
+        <source>Invalid node path, expected root as first character '{0}'</source>
+        <target state="translated">노드 경로가 잘못되었습니다. 첫 번째 문자 '{0}'(으)로 루트 필요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
+        <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
+        <target state="translated">필터 식 '{0}'이(가) '{1}' '{2}' 연산자의 균형이 맞지 않는 개수를 포함함</target>
+        <note>{1} and {2} are () or []</note>
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
+        <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
+        <target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
+        <source>Unexpected telemetry call, the telemetry is disabled.</source>
+        <target state="translated">예기치 않은 원격 분석 호출로 인해 원격 분석을 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
+        <source>An unexpected exception occurred during byte conversion</source>
+        <target state="translated">바이트 변환 중 예기치 않은 예외 발생</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+{0}</source>
+        <target state="translated">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
+{0}</target>
+        <note>{0} exception ToString</note>
+      </trans-unit>
+      <trans-unit id="UnexpectedStateErrorMessage">
+        <source>Unexpected state in file '{0}' at line '{1}'</source>
+        <target state="translated">'{1}' 줄의 '{0}' 파일에 예기치 않은 상태가 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnobservedTaskExceptionWarningMessage">
+        <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+        <target state="translated">처리되지 않은 예외 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
+        <note>{0} is the exception that was unhandled/unobserved</note>
+      </trans-unit>
+      <trans-unit id="UnreachableLocationErrorMessage">
+        <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
+        <target state="translated">이 프로그램 위치에 연결할 수 없는 것으로 생각됩니다. File='{0}' Line={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">디버거 연결 대기(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)는 브라우저 환경에서 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">테스트가 0개 실행됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="translated">합계</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ChatClientProviderAlreadyRegistered">
+        <source>A chat client provider has already been registered.</source>
+        <target state="translated">채팅 클라이언트 공급자가 이미 등록되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
+        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
+        <target state="translated">AI 확장은 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

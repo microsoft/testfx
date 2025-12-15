@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal static class MiniDumpWriteDump
 {
+    [UnsupportedOSPlatform("browser")]
     public static void CollectDumpUsingMiniDumpWriteDump(int pid, string outputFile, MiniDumpTypeOption type)
     {
         using var process = Process.GetProcessById(pid);
