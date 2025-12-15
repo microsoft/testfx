@@ -3,7 +3,7 @@
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AvoidOutRefTestMethodParametersAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.AvoidOutRefTestMethodParametersFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -28,7 +28,22 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow("Hello", "World")]
+                public void TestMethod1(string s, string s2)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -48,7 +63,21 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow("Hello", "World")]
+                public void TestMethod1(string s, string s2)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -69,7 +98,22 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow("Hello", "World")]
+                public void TestMethod1(string s, string s2)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]
@@ -89,7 +133,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
@@ -108,6 +152,42 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodHasOutParameter_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow("Hello")]
+                public void [|TestMethod1|](out string s)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow("Hello")]
+                public void TestMethod1(string s)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

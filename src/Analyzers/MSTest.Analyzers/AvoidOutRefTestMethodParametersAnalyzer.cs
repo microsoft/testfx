@@ -55,7 +55,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testMethodAttributeSymbol)))
+        if (!methodSymbol.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)))
         {
             return;
         }

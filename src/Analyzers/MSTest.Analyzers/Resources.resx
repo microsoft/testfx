@@ -724,9 +724,9 @@ The type declaring these methods should also respect the following rules:
     <value>Avoid using 'out' or 'ref' parameters in test methods</value>
   </data>
   <data name="AvoidOutRefTestMethodParametersMessageFormat" xml:space="preserve">
-    <value>Test method '{0}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version</value>
+    <value>Test method '{0}' has 'out' or 'ref' parameters which support will be dropped in a future major version</value>
   </data>
   <data name="AvoidOutRefTestMethodParametersDescription" xml:space="preserve">
-    <value>Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</value>
+    <value>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</value>
   </data>
 </root>
