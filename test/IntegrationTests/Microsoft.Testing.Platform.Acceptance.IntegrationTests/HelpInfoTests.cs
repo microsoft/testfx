@@ -16,6 +16,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -64,11 +65,12 @@ Options:
 Extension options:
     --ansi
         Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences
-    --no-ansi
+          --ansi auto - Auto-detect terminal capabilities (default)
+          --ansi on|true|enable|1 - Force enable ANSI escape sequences
+          --ansi off|false|disable|0 - Force disable ANSI escape sequences
+    --no-ansi [obsolete]
         Disable outputting ANSI escape characters to screen.
+        Obsolete: Use '--ansi off' instead of '--no-ansi'.
     --no-progress
         Disable reporting progress to screen.
     --output
@@ -89,6 +91,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -130,6 +133,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
@@ -257,23 +261,24 @@ Registered command line providers:
       --ansi
         Arity: 1
         Hidden: False
-        Description: Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences
-      --no-ansi
+        Description: Control ANSI escape characters output\.
+          --ansi auto - Auto-detect terminal capabilities \(default\)
+          --ansi on\|true\|enable\|1 - Force enable ANSI escape sequences
+          --ansi off\|false\|disable\|0 - Force disable ANSI escape sequences
+      --no-ansi \[obsolete\]
         Arity: 0
         Hidden: False
-        Description: Disable outputting ANSI escape characters to screen.
+        Description: Disable outputting ANSI escape characters to screen\.
+        Obsolete: Use '--ansi off' instead of '--no-ansi'\.
       --no-progress
         Arity: 0
         Hidden: False
-        Description: Disable reporting progress to screen.
+        Description: Disable reporting progress to screen\.
       --output
         Arity: 1
         Hidden: False
-        Description: Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Description: Output verbosity when reporting tests\.
+        Valid values are 'Normal', 'Detailed'. Default is 'Normal'\.
 Registered tools:
   There are no registered tools\.
 """;
@@ -291,6 +296,7 @@ Registered tools:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -343,6 +349,11 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --ansi
+        Control ANSI escape characters output.
+          --ansi auto - Auto-detect terminal capabilities (default)
+          --ansi on|true|enable|1 - Force enable ANSI escape sequences
+          --ansi off|false|disable|0 - Force disable ANSI escape sequences
     --crashdump
         [net6.0+ only] Generate a dump file if the test process crashes
     --crashdump-filename
@@ -366,13 +377,9 @@ Extension options:
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
-    --ansi
-        Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences
-    --no-ansi
+    --no-ansi [obsolete]
         Disable outputting ANSI escape characters to screen.
+        Obsolete: Use '--ansi off' instead of '--no-ansi'.
     --no-progress
         Disable reporting progress to screen.
     --output
@@ -397,6 +404,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -416,6 +424,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v* [*]
 Microsoft Testing Platform:
   Version: *
@@ -621,13 +630,14 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Control ANSI escape characters output.
-  --ansi auto - Auto-detect terminal capabilities (default)
-  --ansi on|true|enable|1 - Force enable ANSI escape sequences
-  --ansi off|false|disable|0 - Force disable ANSI escape sequences
-      --no-ansi
+          --ansi auto - Auto-detect terminal capabilities (default)
+          --ansi on|true|enable|1 - Force enable ANSI escape sequences
+          --ansi off|false|disable|0 - Force disable ANSI escape sequences
+      --no-ansi [obsolete]
         Arity: 0
         Hidden: False
         Description: Disable outputting ANSI escape characters to screen.
+        Obsolete: Use '--ansi off' instead of '--no-ansi'.
       --no-progress
         Arity: 0
         Hidden: False
