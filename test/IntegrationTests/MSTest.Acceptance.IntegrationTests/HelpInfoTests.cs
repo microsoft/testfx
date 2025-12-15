@@ -22,7 +22,6 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardMatchPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 MSTest v{MSTestVersion} (UTC *) [* - *]
 Usage {AssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.

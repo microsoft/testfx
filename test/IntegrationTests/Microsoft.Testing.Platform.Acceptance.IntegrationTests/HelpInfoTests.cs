@@ -16,7 +16,6 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -91,7 +90,6 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string wildcardMatchPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -133,7 +131,6 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
@@ -296,7 +293,6 @@ Registered tools:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -404,7 +400,6 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 Microsoft.Testing.Platform v*
 Usage {TestAssetFixture.AllExtensionsAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -424,7 +419,7 @@ Options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardPattern = $"""
-Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
+
 Microsoft.Testing.Platform v* [*]
 Microsoft Testing Platform:
   Version: *
