@@ -1074,6 +1074,6 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
         <target state="new">Test methods should not use 'out' or 'ref' parameters as they cannot be properly initialized by the test framework. Using these parameters may lead to runtime errors and will be disallowed in a future version of MSTest.</target>
         <note />
       </trans-unit>
-</body>
+  </body>
   </file>
 </xliff>
