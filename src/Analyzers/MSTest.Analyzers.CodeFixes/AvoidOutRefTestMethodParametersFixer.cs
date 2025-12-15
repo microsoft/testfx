@@ -4,6 +4,8 @@
 using System.Collections.Immutable;
 using System.Composition;
 
+using Analyzer.Utilities;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
