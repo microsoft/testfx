@@ -254,7 +254,7 @@ Actual: {2}</value>
     <value>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</value>
   </data>
   <data name="WrongExceptionThrown" xml:space="preserve">
-    <value>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. Actual exception: {3} {0}</value>
+    <value>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</value>
   </data>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} ({1})</value>

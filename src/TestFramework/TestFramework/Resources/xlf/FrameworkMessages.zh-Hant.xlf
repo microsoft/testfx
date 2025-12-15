@@ -359,8 +359,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
-        <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. Actual exception: {3} {0}</source>
-        <target state="new">Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. Actual exception: {3} {0}</target>
+        <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
+        <target state="new">Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">

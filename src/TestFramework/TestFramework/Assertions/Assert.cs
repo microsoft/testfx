@@ -41,6 +41,25 @@ public sealed partial class Assert
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
 
     /// <summary>
+    /// Helper function that creates and throws an AssertionFailedException with an inner exception.
+    /// </summary>
+    /// <param name="assertionName">
+    /// name of the assertion throwing an exception.
+    /// </param>
+    /// <param name="message">
+    /// The assertion failure message.
+    /// </param>
+    /// <param name="innerException">
+    /// The actual exception that was thrown.
+    /// </param>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed(string assertionName, string? message, Exception? innerException)
+        => throw new AssertFailedException(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message),
+            innerException!);
+
+    /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
     /// </summary>
     /// <param name="format">
