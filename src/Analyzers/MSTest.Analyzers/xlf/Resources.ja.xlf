@@ -1046,17 +1046,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
         <source>Avoid duplicate test method attributes</source>
-        <target state="new">Avoid duplicate test method attributes</target>
+        <target state="translated">テスト メソッド属性の重複を避ける</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
-        <target state="new">Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</target>
+        <target state="translated">テスト メソッド '{0}' には、'TestMethodAttribute' を継承する複数の属性があります。テスト メソッド属性は 1 つだけ使用してください。</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
-        <target state="new">A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</target>
+        <target state="translated">テスト メソッドでは、'TestMethodAttribute' またはそれを継承する属性が必ず 1 つだけマークされている必要があります。このような属性が複数存在する場合、リフレクションによって返された最初の属性のみが使用されます。</target>
         <note />
       </trans-unit>
     </body>
