@@ -42,7 +42,7 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
-        <target state="new">The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</target>
+        <target state="translated">Não há suporte para a extensão de repetição na plataforma do navegador. Os testes baseados em navegador não podem ser repetidos devido a limitações da plataforma.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">

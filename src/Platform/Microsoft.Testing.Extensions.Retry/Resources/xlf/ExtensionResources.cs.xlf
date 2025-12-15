@@ -42,7 +42,7 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
-        <target state="new">The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</target>
+        <target state="translated">Rozšíření opakování se na platformě prohlížeče nepodporuje. Testy založené na prohlížeči se nedají opakovat kvůli omezením platformy.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
