@@ -10,26 +10,18 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
-    private const string DotnetTestVerb = "test";
 
-    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)> GetBuildMatrix()
+    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> GetBuildMatrix()
     {
         foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
         {
-            foreach (string command in new string[]
-            {
-                "build --no-restore /t:Test",
-                DotnetTestVerb,
-            })
-            {
-                yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm, command);
-            }
+            yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm);
         }
     }
 
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrix))]
-    public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm, string command)
+    public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm)
     {
         // Get the template project
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -40,12 +32,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
-           .PatchCodeWithReplace("$Extra$", command == DotnetTestVerb ?
-"""
-           <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-           <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
-""" :
-           string.Empty));
+           .PatchCodeWithReplace("$Extra$", string.Empty));
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
         string testSourceContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "UnitTest1.cs", SearchOption.AllDirectories).Single());
@@ -67,7 +54,7 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test -m:1 -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
         if (isMultiTfm)
         {

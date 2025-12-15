@@ -3,15 +3,16 @@
 
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly IServiceProvider _serviceProvider;
@@ -46,14 +47,14 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildConstants.MSBuildNodeOptionKey));
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         // We get the pipe from the MSBuildTestApplicationLifecycleCallbacks only if we're enabled.
         _msBuildTestApplicationLifecycleCallbacks = _serviceProvider.GetRequiredService<MSBuildTestApplicationLifecycleCallbacks>();
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         _sessionEnded = true;
         return Task.CompletedTask;
@@ -125,7 +126,9 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             cancellationToken).ConfigureAwait(false);
                         break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                     case CancelledTestNodeStateProperty canceledState:
+#pragma warning restore CS0618 // Type or member is obsolete
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
                             isCanceled: true,

@@ -39,10 +39,10 @@ internal sealed partial class ServerModeManager
 
         public string Description => nameof(MessageHandlerFactory);
 
-#pragma warning disable CA1416 // Validate platform compatibility
+        [UnsupportedOSPlatform("browser")]
         public async Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
         {
-            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port))).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
 
             TcpClient client = new();
 
@@ -54,7 +54,6 @@ internal sealed partial class ServerModeManager
             NetworkStream stream = client.GetStream();
             return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
         }
-#pragma warning restore CA1416
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(false);
     }

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Extensions;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -11,7 +11,7 @@ internal interface ITestApplicationProcessExitCode : IDataConsumer
 
     string? TestAdapterTestSessionFailureErrorMessage { get; }
 
-    Task SetTestAdapterTestSessionFailureAsync(string errorMessage);
+    Task SetTestAdapterTestSessionFailureAsync(string errorMessage, CancellationToken cancellationToken);
 
     // If we decide to open this extension we should make it Task<int> GetProcessExitCodeAsync();
     int GetProcessExitCode();

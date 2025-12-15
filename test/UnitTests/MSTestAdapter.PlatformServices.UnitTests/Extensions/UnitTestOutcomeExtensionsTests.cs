@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using TestFramework.ForTestingMSTest;
@@ -14,73 +16,73 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 {
     public void ToUnitTestOutComeForPassedTestResultsConvertsToPassedUnitTestOutCome()
     {
-        UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Passed;
+        UnitTestOutcome frameworkOutcome = UnitTestOutcome.Passed;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
-        Verify(convertedOutcome == AdapterTestOutcome.Passed);
+        convertedOutcome.Should().Be(AdapterTestOutcome.Passed);
     }
 
     public void ToUnitTestResultsForFailedTestResultsConvertsToFailedUnitTestResults()
     {
-        UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Failed;
+        UnitTestOutcome frameworkOutcome = UnitTestOutcome.Failed;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
-        Verify(convertedOutcome == AdapterTestOutcome.Failed);
+        convertedOutcome.Should().Be(AdapterTestOutcome.Failed);
     }
 
     public void ToUnitTestResultsForInProgressTestResultsConvertsToInProgressUnitTestResults()
     {
-        UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.InProgress;
+        UnitTestOutcome frameworkOutcome = UnitTestOutcome.InProgress;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
-        Verify(convertedOutcome == AdapterTestOutcome.InProgress);
+        convertedOutcome.Should().Be(AdapterTestOutcome.InProgress);
     }
 
     public void ToUnitTestResultsForInconclusiveTestResultsConvertsToInconclusiveUnitTestResults()
     {
-        UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Inconclusive;
+        UnitTestOutcome frameworkOutcome = UnitTestOutcome.Inconclusive;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
-        Verify(convertedOutcome == AdapterTestOutcome.Inconclusive);
+        convertedOutcome.Should().Be(AdapterTestOutcome.Inconclusive);
     }
 
     public void ToUnitTestResultsForTimeoutTestResultsConvertsToTimeoutUnitTestResults()
     {
-        UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Timeout;
+        UnitTestOutcome frameworkOutcome = UnitTestOutcome.Timeout;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
-        Verify(convertedOutcome == AdapterTestOutcome.Timeout);
+        convertedOutcome.Should().Be(AdapterTestOutcome.Timeout);
     }
 
     public void ToUnitTestResultsForUnknownTestResultsConvertsToErrorUnitTestResults()
     {
-        UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Unknown;
+        UnitTestOutcome frameworkOutcome = UnitTestOutcome.Unknown;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
-        Verify(convertedOutcome == AdapterTestOutcome.Error);
+        convertedOutcome.Should().Be(AdapterTestOutcome.Error);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailIfTwoOutcomesAreFailedAndInconclusive()
     {
-        UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Failed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Inconclusive);
-        Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
+        UnitTestOutcome resultOutcome = UnitTestOutcome.Failed.GetMoreImportantOutcome(UnitTestOutcome.Inconclusive);
+        resultOutcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public void GetMoreImportantOutcomeShouldReturnInconclusiveIfTwoOutcomesArePassedAndInconclusive()
     {
-        UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Passed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Inconclusive);
-        Verify(resultOutcome == UTF.UnitTestOutcome.Inconclusive);
+        UnitTestOutcome resultOutcome = UnitTestOutcome.Passed.GetMoreImportantOutcome(UnitTestOutcome.Inconclusive);
+        resultOutcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailedIfTwoOutcomesArePassedAndFailed()
     {
-        UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Passed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed);
-        Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
+        UnitTestOutcome resultOutcome = UnitTestOutcome.Passed.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+        resultOutcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailedIfBothOutcomesAreFailed()
     {
-        UnitTestOutcome resultOutcome = UTF.UnitTestOutcome.Failed.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed);
-        Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
+        UnitTestOutcome resultOutcome = UnitTestOutcome.Failed.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+        resultOutcome.Should().Be(UnitTestOutcome.Failed);
     }
 }

@@ -40,6 +40,11 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <target state="translated">Movendo o arquivo ''{0}'' para ''{1}''</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Não há suporte para a extensão de repetição na plataforma do navegador. Os testes baseados em navegador não podem ser repetidos devido a limitações da plataforma.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Falha ao iniciar o processo '{0}'</target>
@@ -81,8 +86,8 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Habilitar repetição de testes com falha</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">Repetir os testes que apresentaram falha no número especificado de vezes</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">

@@ -8,12 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(TestTools.UnitTesting.FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestSettingsProvider : ISettingsProvider
+internal sealed class MSTestSettingsProvider : ISettingsProvider
 {
 #if !WINDOWS_UWP
     /// <summary>
@@ -77,7 +72,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <param name="source">The source.</param>
     /// <returns>A collection of properties.</returns>
     public IDictionary<string, object> GetProperties(string? source)
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
         => TestDeployment.GetDeploymentInformation(source);
 #else
         => new Dictionary<string, object>();

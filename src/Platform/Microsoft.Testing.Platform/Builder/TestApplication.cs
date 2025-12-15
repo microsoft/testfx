@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -15,11 +16,6 @@ namespace Microsoft.Testing.Platform.Builder;
 /// Represents a test application.
 /// </summary>
 public sealed class TestApplication : ITestApplication
-#if NETCOREAPP
-#pragma warning disable SA1001 // Commas should be spaced correctly
-    , IAsyncDisposable
-#pragma warning restore SA1001 // Commas should be spaced correctly
-#endif
 {
     private readonly IHost _host;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
@@ -41,6 +37,7 @@ public sealed class TestApplication : ITestApplication
     /// <param name="args">The command line arguments.</param>
     /// <param name="testApplicationOptions">The test application options.</param>
     /// <returns>The task representing the asynchronous operation.</returns>
+    [Obsolete("This method is obsolete. Use CreateBuilderAsync instead.")]
     public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
@@ -80,7 +77,14 @@ public sealed class TestApplication : ITestApplication
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         if (parseResult.IsOptionSet(PlatformCommandLineProvider.DebugAttachOptionKey))
         {
-            WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+            else
+            {
+                WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
+            }
         }
 
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
@@ -214,14 +218,6 @@ public sealed class TestApplication : ITestApplication
     public void Dispose()
         => (_host as IDisposable)?.Dispose();
 
-#if NETCOREAPP
-    /// <inheritdoc />
-    public ValueTask DisposeAsync()
-        => _host is IAsyncDisposable asyncDisposable
-            ? asyncDisposable.DisposeAsync()
-            : ValueTask.CompletedTask;
-#endif
-
     /// <inheritdoc />
     public async Task<int> RunAsync()
         => await _host.RunAsync().ConfigureAwait(false);
@@ -235,10 +231,18 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            WaitForDebuggerToAttach(environment, console, systemProcess);
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+            else
+            {
+                WaitForDebuggerToAttach(environment, console, systemProcess);
+            }
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
     private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         using IProcess currentProcess = systemProcess.GetCurrentProcess();

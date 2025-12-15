@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -26,9 +24,4 @@ internal sealed class TestAssemblySettings
     /// Gets or sets a value indicating whether the assembly can be parallelized.
     /// </summary>
     internal bool CanParallelizeAssembly { get; set; }
-
-    /// <summary>
-    /// Gets or sets the class cleanup lifecycle timing.
-    /// </summary>
-    internal ClassCleanupBehavior ClassCleanupLifecycle { get; set; }
 }

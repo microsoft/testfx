@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -23,16 +22,16 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class TrxProcessLifetimeHandler :
     ITestHostProcessLifetimeHandler,
     IDataConsumer,
     IDataProducer,
     IOutputDeviceDataProducer,
 #if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
+    IAsyncDisposable,
 #endif
+    IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -94,8 +93,6 @@ internal sealed class TrxProcessLifetimeHandler :
         => Task.FromResult(
            // TrxReportGenerator is enabled only when trx report is enabled
            _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
-           // TestController is not used when we run in server mode
-           && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)
            // If crash dump is not enabled we run trx in-process only
            && _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName));
 #pragma warning restore SA1114 // Parameter list should follow declaration
@@ -175,7 +172,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning)).ConfigureAwait(false);
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellation).ConfigureAwait(false);
             }
 
             await _messageBus.PublishAsync(
@@ -232,21 +229,11 @@ internal sealed class TrxProcessLifetimeHandler :
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
-    {
-        await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
-
-        // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription.Dispose();
-    }
-#else
-    public void Dispose()
-    {
-        _singleConnectionNamedPipeServer?.Dispose();
-
-        // Dispose the pipe descriptor after the server to ensure the pipe is closed.
-        _pipeNameDescription.Dispose();
-    }
+        => await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
 #endif
+
+    public void Dispose()
+        => _singleConnectionNamedPipeServer?.Dispose();
 
     private sealed class ExtensionInfo : IExtension
     {

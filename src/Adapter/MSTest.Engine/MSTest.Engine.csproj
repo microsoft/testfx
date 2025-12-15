@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Framework</RootNamespace>
     <!-- Cancel default license (closed-source) and set license as packaged license file -->
     <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
@@ -57,6 +57,10 @@ This package provides a new experimental engine for MSTest test framework.]]>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- NuGet package layout -->

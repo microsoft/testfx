@@ -120,6 +120,25 @@
   <data name="CreatingDumpFile" xml:space="preserve">
     <value>Creating dump file '{0}'</value>
   </data>
+  <data name="DumpingProcess" xml:space="preserve">
+    <value>Dumping process {0} - {1}</value>
+    <comment>0 is pid, 1 is the name of the process</comment>
+  </data>
+  <data name="DumpingProcessTree" xml:space="preserve">
+    <value>Dumping this process tree (from bottom):</value>
+  </data>
+  <data name="ErrorGettingParentOfProcess" xml:space="preserve">
+    <value>Error getting parent of process {0} - {1}: {2}"</value>
+    <comment>0 is pid, 1 is name, 2 is the exception</comment>
+  </data>
+  <data name="ErrorKillingProcess" xml:space="preserve">
+    <value>Error while killing process {0} - {1}: {2}</value>
+    <comment>0 is pid, 1 is name, 2 is the exception</comment>
+  </data>
+  <data name="ErrorWhileDumpingProcess" xml:space="preserve">
+    <value>Error while taking dump of process {0} - {1}: {2}</value>
+    <comment>0 is pid, 1 is name, 2 is the exception from the system</comment>
+  </data>
   <data name="HangDumpArtifactDescription" xml:space="preserve">
     <value>The hang dump file</value>
   </data>
@@ -187,12 +206,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
   </data>
   <data name="MissingHangDumpMainOption" xml:space="preserve">
     <value>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</value>
-  </data>
-  <data name="MutexDoesNotExistErrorMessage" xml:space="preserve">
-    <value>Cannot find mutex '{0}'</value>
-  </data>
-  <data name="MutexNameReceptionTimeoutErrorMessage" xml:space="preserve">
-    <value>Mutex name wasn't received after '{0}' seconds</value>
   </data>
   <data name="RunningTestsWhileDumping" xml:space="preserve">
     <value>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</value>

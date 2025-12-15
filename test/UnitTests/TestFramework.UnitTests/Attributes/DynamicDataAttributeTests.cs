@@ -20,8 +20,6 @@ public class DynamicDataAttributeTests : TestContainer
         _dummyTestClass = new DummyTestClass();
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1")!;
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
-
-        DynamicDataAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
@@ -29,7 +27,7 @@ public class DynamicDataAttributeTests : TestContainer
         _dynamicDataAttribute = new DynamicDataAttribute("ABC");
         Action action = () => _dynamicDataAttribute.GetData(_testMethodInfo);
         action.Should().Throw<InvalidOperationException>()
-            .And.Message.Should().Be(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType!.FullName));
+            .WithMessage(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, "ABC", _testMethodInfo.DeclaringType!.FullName));
     }
 
     public void GetDataShouldReadDataFromProperty()

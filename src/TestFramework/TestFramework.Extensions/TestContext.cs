@@ -16,36 +16,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public abstract class TestContext
 {
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
-    internal static readonly string ManagedTypeLabel = nameof(ManagedType);
-    internal static readonly string ManagedMethodLabel = nameof(ManagedMethod);
     internal static readonly string TestNameLabel = nameof(TestName);
-#if WINDOWS_UWP || WIN_UI
-    internal static readonly string TestRunDirectoryLabel = "TestRunDirectory";
-    internal static readonly string DeploymentDirectoryLabel = "DeploymentDirectory";
-    internal static readonly string ResultsDirectoryLabel = "ResultsDirectory";
-    internal static readonly string TestRunResultsDirectoryLabel = "TestRunResultsDirectory";
-    internal static readonly string TestResultsDirectoryLabel = "TestResultsDirectory";
-    internal static readonly string TestDirLabel = "TestDir";
-    internal static readonly string TestDeploymentDirLabel = "TestDeploymentDir";
-    internal static readonly string TestLogsDirLabel = "TestLogsDir";
-#else
+#if !WINDOWS_UWP && !WIN_UI
     internal static readonly string TestRunDirectoryLabel = nameof(TestRunDirectory);
     internal static readonly string DeploymentDirectoryLabel = nameof(DeploymentDirectory);
     internal static readonly string ResultsDirectoryLabel = nameof(ResultsDirectory);
     internal static readonly string TestRunResultsDirectoryLabel = nameof(TestRunResultsDirectory);
     internal static readonly string TestResultsDirectoryLabel = nameof(TestResultsDirectory);
-    [Obsolete("Remove when related property is removed.")]
-    internal static readonly string TestDirLabel = nameof(TestDir);
-    [Obsolete("Remove when related property is removed.")]
-    internal static readonly string TestDeploymentDirLabel = nameof(TestDeploymentDir);
-    [Obsolete("Remove when related property is removed.")]
-    internal static readonly string TestLogsDirLabel = nameof(TestLogsDir);
 #endif
 
     /// <summary>
     /// Gets test properties for a test.
     /// </summary>
-    public abstract IDictionary Properties { get; }
+    public abstract IDictionary<string, object?> Properties { get; }
 
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
@@ -111,60 +94,20 @@ public abstract class TestContext
     // because MSTest does not create the GUID directory.
     public virtual string? TestResultsDirectory => GetProperty<string>(TestResultsDirectoryLabel);
 
-    #region Old names, for backwards compatibility
-
-    /// <summary>
-    /// Gets base directory for the test run, under which deployed files and result files are stored.
-    /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
-    /// </summary>
-    [Obsolete("This property is deprecated, use TestRunDirectory instead. It will be removed in next version.")]
-    public virtual string? TestDir => GetProperty<string>(TestDirLabel);
-
-    /// <summary>
-    /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
-    /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
-    /// </summary>
-    [Obsolete("This property is deprecated, use DeploymentDirectory instead. It will be removed in next version.")]
-    public virtual string? TestDeploymentDir => GetProperty<string>(TestDeploymentDirLabel);
-
-    /// <summary>
-    /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
-    /// Same as <see cref="TestRunResultsDirectory"/>. Use that property for test run result files, or
-    /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
-    /// </summary>
-    [Obsolete("This property is deprecated, use TestRunResultsDirectory for test run result files or TestResultsDirectory for test-specific result files instead. It will be removed in next version.")]
-    public virtual string? TestLogsDir => GetProperty<string>(TestLogsDirLabel);
-
-    #endregion
-
     #endregion
 #endif
 
     /// <summary>
     /// Gets the Fully-qualified name of the class containing the test method currently being executed.
     /// </summary>
-    /// <remarks>
-    /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
-    /// Those attributes have access to the test context, and provide messages that are included
-    /// in the test results. Users can benefit from messages that include the fully-qualified
-    /// class name in addition to the name of the test method currently being executed.
-    /// </remarks>
-    public virtual string? FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel);
-
-    /// <summary>
-    /// Gets the fully specified type name metadata format.
-    /// </summary>
-    public virtual string? ManagedType => GetProperty<string>(ManagedTypeLabel);
-
-    /// <summary>
-    /// Gets the fully specified method name metadata format.
-    /// </summary>
-    public virtual string? ManagedMethod => GetProperty<string>(ManagedMethodLabel);
+    public virtual string FullyQualifiedTestClassName => GetProperty<string>(FullyQualifiedTestClassNameLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(FullyQualifiedTestClassName)));
 
     /// <summary>
     /// Gets the name of the test method currently being executed.
     /// </summary>
-    public virtual string? TestName => GetProperty<string>(TestNameLabel);
+    public virtual string TestName => GetProperty<string>(TestNameLabel)
+        ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.InvalidAccessToTestContextProperty, nameof(TestName)));
 
     /// <summary>
     /// Gets the current test outcome.
@@ -233,7 +176,7 @@ public abstract class TestContext
     {
         DebugEx.Assert(Properties is not null, "Properties is null");
 #if WINDOWS_UWP || WIN_UI
-        if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
+        if (!Properties.TryGetValue(name, out object? propertyValue))
         {
             return null;
         }

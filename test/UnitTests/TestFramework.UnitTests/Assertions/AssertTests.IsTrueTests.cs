@@ -12,7 +12,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsFalse(nullBool);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. ");
+            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsFalseNullableBooleanShouldFailWithTrue()
@@ -20,7 +20,7 @@ public partial class AssertTests
         bool? nullBool = true;
         Action action = () => Assert.IsFalse(nullBool);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. ");
+            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsFalseNullableBooleanShouldNotFailWithFalse()
@@ -33,7 +33,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsFalse(true);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. ");
+            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'true'.");
     }
 
     public void IsFalseBooleanShouldNotFailWithFalse()
@@ -44,7 +44,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsFalse(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. User-provided message");
+            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldFailWithTrue()
@@ -52,7 +52,7 @@ public partial class AssertTests
         bool? nullBool = true;
         Action action = () => Assert.IsFalse(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. User-provided message");
+            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsFalseNullableBooleanStringMessageShouldNotFailWithFalse()
@@ -65,7 +65,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsFalse(true, "User-provided message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. User-provided message");
+            .WithMessage("Assert.IsFalse failed. 'condition' expression: 'true'. User-provided message");
     }
 
     public void IsFalseBooleanStringMessageShouldNotFailWithFalse()
@@ -78,7 +78,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be($"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public async Task IsFalseNullableBooleanInterpolatedStringMessageShouldFailWithTrue()
@@ -88,7 +88,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be($"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsFalse failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsFalseNullableBooleanInterpolatedStringMessageShouldNotFailWithFalse()
@@ -103,50 +103,18 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsFalse(true, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be($"Assert.IsFalse failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsFalse failed. 'condition' expression: 'true'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsFalseBooleanInterpolatedStringMessageShouldNotFailWithFalse()
         => Assert.IsFalse(false, $"User-provided message. Input: {false}");
-
-    public void IsFalseNullableBooleanMessageArgsShouldFailWithNull()
-    {
-        bool? nullBool = null;
-        Action action = () => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool);
-        action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. User-provided message. Input: ");
-    }
-
-    public void IsFalseNullableBooleanMessageArgsShouldFailWithTrue()
-    {
-        bool? nullBool = true;
-        Action action = () => Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool);
-        action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. User-provided message. Input: True");
-    }
-
-    public void IsFalseNullableBooleanMessageArgsShouldNotFailWithFalse()
-    {
-        bool? nullBool = false;
-        Assert.IsFalse(nullBool, "User-provided message. Input: {0}", nullBool);
-    }
-
-    public void IsFalseBooleanMessageArgsShouldFailWithTrue()
-    {
-        Action action = () => Assert.IsFalse(true, "User-provided message. Input: {0}", true);
-        action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsFalse failed. User-provided message. Input: True");
-    }
-
-    public void IsFalseBooleanMessageArgsShouldNotFailWithFalse()
-        => Assert.IsFalse(false, "User-provided message. Input: {0}", false);
 
     public void IsTrueNullableBooleanShouldFailWithNull()
     {
         bool? nullBool = null;
         Action action = () => Assert.IsTrue(nullBool);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. ");
+            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsTrueNullableBooleanShouldFailWithFalse()
@@ -154,7 +122,7 @@ public partial class AssertTests
         bool? nullBool = false;
         Action action = () => Assert.IsTrue(nullBool);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. ");
+            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'.");
     }
 
     public void IsTrueNullableBooleanShouldNotFailWithTrue()
@@ -167,7 +135,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsTrue(false);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. ");
+            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'false'.");
     }
 
     public void IsTrueBooleanShouldNotFailWithTrue()
@@ -178,7 +146,7 @@ public partial class AssertTests
         bool? nullBool = null;
         Action action = () => Assert.IsTrue(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. User-provided message");
+            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldFailWithFalse()
@@ -186,7 +154,7 @@ public partial class AssertTests
         bool? nullBool = false;
         Action action = () => Assert.IsTrue(nullBool, "User-provided message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. User-provided message");
+            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message");
     }
 
     public void IsTrueNullableBooleanStringMessageShouldNotFailWithTrue()
@@ -199,7 +167,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsTrue(false, "User-provided message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. User-provided message");
+            .WithMessage("Assert.IsTrue failed. 'condition' expression: 'false'. User-provided message");
     }
 
     public void IsTrueBooleanStringMessageShouldNotFailWithTrue()
@@ -212,7 +180,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be($"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public async Task IsTrueNullableBooleanInterpolatedStringMessageShouldFailWithFalse()
@@ -222,7 +190,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(nullBool, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be($"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsTrue failed. 'condition' expression: 'nullBool'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsTrueNullableBooleanInterpolatedStringMessageShouldNotFailWithTrue()
@@ -237,41 +205,9 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsTrue(false, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .And.Message.Should().Be($"Assert.IsTrue failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage($"Assert.IsTrue failed. 'condition' expression: 'false'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
     }
 
     public void IsTrueBooleanInterpolatedStringMessageShouldNotFailWithTrue()
         => Assert.IsTrue(true, $"User-provided message. Input: {true}");
-
-    public void IsTrueNullableBooleanMessageArgsShouldFailWithNull()
-    {
-        bool? nullBool = null;
-        Action action = () => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool);
-        action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. User-provided message. Input: ");
-    }
-
-    public void IsTrueNullableBooleanMessageArgsShouldFailWithFalse()
-    {
-        bool? nullBool = false;
-        Action action = () => Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool);
-        action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. User-provided message. Input: False");
-    }
-
-    public void IsTrueNullableBooleanMessageArgsShouldNotFailWithTrue()
-    {
-        bool? nullBool = true;
-        Assert.IsTrue(nullBool, "User-provided message. Input: {0}", nullBool);
-    }
-
-    public void IsTrueBooleanMessageArgsShouldFailWithFalse()
-    {
-        Action action = () => Assert.IsTrue(false, "User-provided message. Input: {0}", false);
-        action.Should().Throw<Exception>()
-            .And.Message.Should().Be("Assert.IsTrue failed. User-provided message. Input: False");
-    }
-
-    public void IsTrueBooleanMessageArgsShouldNotFailWithTrue()
-        => Assert.IsTrue(true, "User-provided message. Input: {0}", true);
 }

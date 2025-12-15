@@ -112,7 +112,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                         Assert.IsFalse(y == null);
                         Assert.IsFalse(null == x);
                         Assert.IsFalse(null == y);
-            
+
                         // Assert.IsFalse: not null comparisons
                         Assert.IsFalse(x is not null);
                         Assert.IsFalse(y is not null);
@@ -120,13 +120,13 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                         Assert.IsFalse(y != null);
                         Assert.IsFalse(null != x);
                         Assert.IsFalse(null != y);
-            
+
                         // Assert.IsFalse: two pointers equality comparisons
                         Assert.IsFalse(x == x);
                         Assert.IsFalse(x == y);
                         Assert.IsFalse(y == x);
                         Assert.IsFalse(y == y);
-            
+
                         // Assert.IsFalse: two pointers inequality comparisons
                         Assert.IsFalse(x != x);
                         Assert.IsFalse(x != y);
@@ -1310,6 +1310,41 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithWrongContainsMethod()
+    {
+        string code = """
+            using System.Collections.ObjectModel;
+            using System.IO;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTests
+            {
+                [TestMethod]
+                public void Contains()
+                {
+                    // This collection is KeyedCollection<TKey, TItem>
+                    // It implements IEnumerable<TItem>, but the available Contains method searches for TKey.
+                    // Whether or not the type of TKey and TItem match, we shouldn't raise a diagnostic as it changes semantics.
+                    var collection = new MyKeyedCollection();
+                    Assert.IsFalse(collection.Contains(5));
+                    Assert.IsTrue(collection.Contains(5));
+                }
+
+                internal class MyKeyedCollection : KeyedCollection<int, int>
+                {
+                    protected override int GetKeyForItem(int item)
+                    {
+                        return 667;
+                    }
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     #region New test cases for string methods
 
     [TestMethod]
@@ -1831,7 +1866,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 {
                     var list = new List<int>();
                     {|#0:Assert.AreEqual(0, list.Count)|};
-                    {|#1:Assert.AreEqual(list.Count, 0)|};
+                    Assert.AreEqual(list.Count, 0);
                 }
             }
             """;
@@ -1848,7 +1883,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 {
                     var list = new List<int>();
                     Assert.IsEmpty(list);
-                    Assert.IsEmpty(list);
+                    Assert.AreEqual(list.Count, 0);
                 }
             }
             """;
@@ -1858,8 +1893,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             [
                 // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
-                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsEmpty' instead of 'Assert.AreEqual'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsEmpty", "AreEqual"),
             ],
             fixedCode);
     }
@@ -1880,9 +1913,9 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     var list = new List<int> { 1, 2, 3 };
                     int x = 3;
                     {|#0:Assert.AreEqual(3, list.Count)|};
-                    {|#1:Assert.AreEqual(list.Count, 3)|};
-                    {|#2:Assert.AreEqual(x, list.Count)|};
-                    {|#3:Assert.AreEqual(list.Count, x)|};
+                    Assert.AreEqual(list.Count, 3);
+                    {|#1:Assert.AreEqual(x, list.Count)|};
+                    Assert.AreEqual(list.Count, x);
                 }
             }
             """;
@@ -1900,9 +1933,9 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                     var list = new List<int> { 1, 2, 3 };
                     int x = 3;
                     Assert.HasCount(3, list);
-                    Assert.HasCount(3, list);
+                    Assert.AreEqual(list.Count, 3);
                     Assert.HasCount(x, list);
-                    Assert.HasCount(x, list);
+                    Assert.AreEqual(list.Count, x);
                 }
             }
             """;
@@ -1912,12 +1945,8 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             [
                 // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
                 VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
-                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
                 // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("HasCount", "AreEqual"),
-                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("HasCount", "AreEqual"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("HasCount", "AreEqual"),
             ],
             fixedCode);
     }
@@ -2072,48 +2101,6 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertAreEqualWithCollectionCountAndMultipleParameters()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-            using System.Collections.Generic;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    var list = new List<int> { 1, 2, 3 };
-                    {|#0:Assert.AreEqual(3, list.Count, "Wrong count: expected {0} but was {1}", 3, list.Count)|};
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-            using System.Collections.Generic;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                public void MyTestMethod()
-                {
-                    var list = new List<int> { 1, 2, 3 };
-                    Assert.HasCount(3, list, "Wrong count: expected {0} but was {1}", 3, list.Count);
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
-            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
-            fixedCode);
-    }
-
-    [TestMethod]
     public async Task WhenAssertAreEqualWithCollectionCountUsingCustomCollection()
     {
         string code = """
@@ -2168,18 +2155,157 @@ public sealed class UseProperAssertMethodsAnalyzerTests
                 public void MyTestMethod()
                 {
                     var x = new Hashtable();
-                    Assert.AreEqual(4, x.Count);
-                    // error CS0411: The type arguments for method 'Assert.HasCount<T>(int, IEnumerable<T>)' cannot be inferred from the usage. Try specifying the type arguments explicitly.
-                    // When we add a non-generic IEnumerable overload, this test will fail because CS0411 is no longer reported.
-                    // In that case, the analyzer should start reporting a diagnostic for the AreEqual call above.
-                    // The codefix should suggest to switch to HasCount.
-                    // Tracking issue https://github.com/microsoft/testfx/issues/6184.
-                    Assert.{|CS0411:HasCount|}(4, x);
+                    {|#0:Assert.AreEqual(4, x.Count)|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var x = new Hashtable();
+                    Assert.HasCount(4, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.HasCount' instead of 'Assert.AreEqual'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithNonGenericCollectionCountZero()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.AreEqual(0, hashtable.Count)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNonGenericCollectionCountEqualZero()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    {|#0:Assert.IsTrue(hashtable.Count == 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable();
+                    Assert.IsEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsEmpty", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNonGenericCollectionCountGreaterThanZero()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable { { "key", "value" } };
+                    {|#0:Assert.IsTrue(hashtable.Count > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var hashtable = new Hashtable { { "key", "value" } };
+                    Assert.IsNotEmpty(hashtable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotEmpty", "IsTrue"),
+            fixedCode);
     }
     #endregion
 
@@ -2782,4 +2908,652 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     #endregion
+
+    #region Predicate Pattern Tests
+    [TestMethod]
+    public async Task WhenUsingIsTrueAnyWithPredicate_SuggestsContains()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsTrue(enumerable.Any(x => x == 1))|};
+                }
+            }
+            
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.Contains(x => x == 1, enumerable);
+                }
+            }
+            
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueWhereAnyWithPredicate_SuggestsContains()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsTrue(enumerable.Where(x => x == 1).Any())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.Contains(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseWhereAnyWithPredicate_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Where(x => x == 1).Any())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseWithAny_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Any(x => x == 1))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+           code,
+           VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+           fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseWithWhereAny_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Where(x => x == 1).Any())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsTrueCountGreaterThanZero_SuggestsContains()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsTrue(enumerable.Count(x => x == 1) > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.Contains(x => x == 1, enumerable);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingIsFalseCountGreaterThanZero_SuggestsDoesNotContain()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    {|#0:Assert.IsFalse(enumerable.Count(x => x == 1) > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var enumerable = new List<int>();
+                    Assert.DoesNotContain(x => x == 1, enumerable);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAreEqualWithCountPredicateEqualsOne_SuggestsContainsSingle()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    {|#0:Assert.AreEqual(1, collection.Count(x => x == 1))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    Assert.ContainsSingle(x => x == 1, collection);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsSingle", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAreEqualWithCountPredicateEqualsOne_StringPredicate_SuggestsContainsSingle()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var resultUsings = new List<string>();
+                    {|#0:Assert.AreEqual(1, resultUsings.Count(u => u == "System"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var resultUsings = new List<string>();
+                    Assert.ContainsSingle(u => u == "System", resultUsings);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsSingle", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAreEqualWithWhereCountEqualsOne_SuggestsContainsSingle()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    {|#0:Assert.AreEqual(1, collection.Where(x => x == 1).Count())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    Assert.ContainsSingle(x => x == 1, collection);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsSingle", "AreEqual"),
+            fixedCode);
+    }
+
+    #endregion
+
+    #region BCL Types with IComparable Tests
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithTimeSpanComparison()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    {|#0:Assert.IsTrue(ts2 > ts1)|};
+                    {|#1:Assert.IsTrue(ts2 >= ts1)|};
+                    {|#2:Assert.IsTrue(ts1 < ts2)|};
+                    {|#3:Assert.IsTrue(ts1 <= ts2)|};
+                    {|#4:Assert.IsTrue(ts1 == ts1)|};
+                    {|#5:Assert.IsTrue(ts1 != ts2)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    Assert.IsGreaterThan(ts1, ts2);
+                    Assert.IsGreaterThanOrEqualTo(ts1, ts2);
+                    Assert.IsLessThan(ts2, ts1);
+                    Assert.IsLessThanOrEqualTo(ts2, ts1);
+                    Assert.AreEqual(ts1, ts1);
+                    Assert.AreNotEqual(ts2, ts1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsGreaterThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsLessThan", "IsTrue"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsLessThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreEqual", "IsTrue"),
+                // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreNotEqual", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithDateTimeComparison()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var dt1 = DateTime.Today;
+                    var dt2 = DateTime.Today.AddDays(1);
+                    {|#0:Assert.IsTrue(dt2 > dt1)|};
+                    {|#1:Assert.IsTrue(dt2 >= dt1)|};
+                    {|#2:Assert.IsTrue(dt1 < dt2)|};
+                    {|#3:Assert.IsTrue(dt1 <= dt2)|};
+                    {|#4:Assert.IsTrue(dt1 == dt1)|};
+                    {|#5:Assert.IsTrue(dt1 != dt2)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var dt1 = DateTime.Today;
+                    var dt2 = DateTime.Today.AddDays(1);
+                    Assert.IsGreaterThan(dt1, dt2);
+                    Assert.IsGreaterThanOrEqualTo(dt1, dt2);
+                    Assert.IsLessThan(dt2, dt1);
+                    Assert.IsLessThanOrEqualTo(dt2, dt1);
+                    Assert.AreEqual(dt1, dt1);
+                    Assert.AreNotEqual(dt2, dt1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsGreaterThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsLessThan", "IsTrue"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsLessThanOrEqualTo", "IsTrue"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreEqual", "IsTrue"),
+                // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsTrue'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreNotEqual", "IsTrue"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithTimeSpanComparison()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    {|#0:Assert.IsFalse(ts2 > ts1)|};
+                    {|#1:Assert.IsFalse(ts2 >= ts1)|};
+                    {|#2:Assert.IsFalse(ts1 < ts2)|};
+                    {|#3:Assert.IsFalse(ts1 <= ts2)|};
+                    {|#4:Assert.IsFalse(ts1 == ts1)|};
+                    {|#5:Assert.IsFalse(ts1 != ts2)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var ts1 = TimeSpan.Zero;
+                    var ts2 = TimeSpan.FromSeconds(1);
+                    Assert.IsLessThanOrEqualTo(ts1, ts2);
+                    Assert.IsLessThan(ts1, ts2);
+                    Assert.IsGreaterThanOrEqualTo(ts2, ts1);
+                    Assert.IsGreaterThan(ts2, ts1);
+                    Assert.AreNotEqual(ts1, ts1);
+                    Assert.AreEqual(ts2, ts1);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsLessThanOrEqualTo' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsLessThanOrEqualTo", "IsFalse"),
+                // /0/Test0.cs(12,9): info MSTEST0037: Use 'Assert.IsLessThan' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsLessThan", "IsFalse"),
+                // /0/Test0.cs(13,9): info MSTEST0037: Use 'Assert.IsGreaterThanOrEqualTo' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsGreaterThanOrEqualTo", "IsFalse"),
+                // /0/Test0.cs(14,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsGreaterThan", "IsFalse"),
+                // /0/Test0.cs(15,9): info MSTEST0037: Use 'Assert.AreNotEqual' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("AreNotEqual", "IsFalse"),
+                // /0/Test0.cs(16,9): info MSTEST0037: Use 'Assert.AreEqual' instead of 'Assert.IsFalse'
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("AreEqual", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    #endregion
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithUserDefinedComparisonOperatorsThenNoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyCustomType
+            {
+                public static bool operator >(MyCustomType x, MyCustomType y) => true;
+                public static bool operator <(MyCustomType x, MyCustomType y) => false;
+                public static bool operator >=(MyCustomType x, MyCustomType y) => true;
+                public static bool operator <=(MyCustomType x, MyCustomType y) => false;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new MyCustomType();
+                    var b = new MyCustomType();
+                    // These should NOT trigger diagnostics because they're user-defined operators from non-BCL types
+                    Assert.IsTrue(a > b);
+                    Assert.IsTrue(a >= b);
+                    Assert.IsTrue(a < b);
+                    Assert.IsTrue(a <= b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

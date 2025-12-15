@@ -34,6 +34,18 @@ internal static class ObjectModelConverters
         valueType: typeof(string),
         owner: typeof(TestCase));
 
+    private static readonly TestProperty AssertActualProperty = TestProperty.Register(
+        id: "AssertActual",
+        label: "AssertActual",
+        valueType: typeof(string),
+        owner: typeof(TestResult));
+
+    private static readonly TestProperty AssertExpectedProperty = TestProperty.Register(
+        id: "AssertExpected",
+        label: "AssertExpected",
+        valueType: typeof(string),
+        owner: typeof(TestResult));
+
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
@@ -172,10 +184,10 @@ internal static class ObjectModelConverters
                 .Select(msg =>
                     msg.Category switch
                     {
-                        string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
                         string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
                         string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => new TrxMessage(msg.Text),
+                        _ => throw new UnreachableException(),
                     })]));
         }
 
@@ -189,22 +201,12 @@ internal static class ObjectModelConverters
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
-                if (addVSTestProviderProperties)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
-                }
-
                 (standardErrorMessages ??= []).Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
-                if (addVSTestProviderProperties)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
-                }
-
                 (standardOutputMessages ??= []).Add(message);
             }
         }
@@ -239,11 +241,21 @@ internal static class ObjectModelConverters
                 break;
 
             case TestOutcome.NotFound:
-                testNode.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
+                {
+                    VSTestException exception = new(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace);
+                    AddAssertDataToException(exception, testResult);
+                    testNode.Properties.Add(new ErrorTestNodeStateProperty(exception));
+                }
+
                 break;
 
             case TestOutcome.Failed:
-                testNode.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
+                {
+                    VSTestException exception = new(testResult.ErrorMessage, testResult.ErrorStackTrace);
+                    AddAssertDataToException(exception, testResult);
+                    testNode.Properties.Add(new FailedTestNodeStateProperty(exception));
+                }
+
                 break;
 
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
@@ -256,6 +268,21 @@ internal static class ObjectModelConverters
 
             default:
                 throw new NotSupportedException($"Unsupported test outcome value '{testResult.Outcome}'");
+        }
+    }
+
+    private static void AddAssertDataToException(VSTestException exception, TestResult testResult)
+    {
+        string? assertActual = testResult.GetPropertyValue<string>(AssertActualProperty, defaultValue: null);
+        if (assertActual is not null)
+        {
+            exception.Data["assert.actual"] = assertActual;
+        }
+
+        string? assertExpected = testResult.GetPropertyValue<string>(AssertExpectedProperty, defaultValue: null);
+        if (assertExpected is not null)
+        {
+            exception.Data["assert.expected"] = assertExpected;
         }
     }
 
@@ -310,7 +337,7 @@ internal static class ObjectModelConverters
         // But the eventual goal should be to stop using the VSTestBridge altogether.
         // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
         // Or alternatively, does VSTest object model expose the assembly full name somewhere?
-        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, ReturnTypeFullName: string.Empty);
+        return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)

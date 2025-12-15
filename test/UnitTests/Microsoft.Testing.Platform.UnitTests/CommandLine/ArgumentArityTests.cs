@@ -27,7 +27,7 @@ public sealed class ArgumentArityTests
     public async Task ParseAndValidate_WhenOptionWithArityZeroIsCalledWithOneArgument_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--zeroArgumentsOption arg"];
+        string[] args = ["--zeroArgumentsOption", "arg"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -43,7 +43,7 @@ public sealed class ArgumentArityTests
     public async Task ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithTwoArguments_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--exactlyOneArgumentsOption arg1", "arg2"];
+        string[] args = ["--exactlyOneArgumentsOption", "arg1", "arg2"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -75,7 +75,7 @@ public sealed class ArgumentArityTests
     public async Task ParseAndValidate_WhenOptionWithArityZeroOrOneIsCalledWithTwoArguments_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--zeroOrOneArgumentsOption arg1", "--zeroOrOneArgumentsOption arg2"];
+        string[] args = ["--zeroOrOneArgumentsOption", "arg1", "--zeroOrOneArgumentsOption", "arg2"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -107,7 +107,7 @@ public sealed class ArgumentArityTests
     public async Task ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
     {
         // Arrange
-        string[] args = ["--zeroArgumentsOption", "--zeroOrOneArgumentsOption", "--zeroOrMoreArgumentsOption arg2", "--exactlyOneArgumentsOption arg1", "oneOrMoreArgumentsOption arg1"];
+        string[] args = ["--zeroArgumentsOption", "--zeroOrOneArgumentsOption", "--zeroOrMoreArgumentsOption", "arg2", "--exactlyOneArgumentsOption", "arg1", "--oneOrMoreArgumentsOption", "arg1"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -115,8 +115,8 @@ public sealed class ArgumentArityTests
             _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
 
         // Assert
-        Assert.IsTrue(result.IsValid);
         Assert.IsNull(result.ErrorMessage);
+        Assert.IsTrue(result.IsValid);
     }
 
     private sealed class ExtensionCommandLineProviderMockOptionsWithDifferentArity : ICommandLineOptionsProvider

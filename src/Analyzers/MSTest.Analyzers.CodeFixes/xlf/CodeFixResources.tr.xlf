@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="tr" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddCallerInfoParametersFix">
+        <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
+        <target state="translated">'[CallerFilePath]' ve '[CallerLineNumber]' parametrelerini ekleyin</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">'[TestClass]' Ekle</target>
@@ -22,14 +27,9 @@
         <target state="translated">'{0}' kullan</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
-        <source>Use interpolated string instead of format parameters</source>
-        <target state="translated">Biçim parametreleri yerine düz metin arasına kod eklenmiş dize kullanın</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
-        <source>Use 'string.Format' instead of format parameters</source>
-        <target state="translated">Biçim parametreleri yerine 'string.Format' kullanın</target>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="translated">'out' parametresi yerine atama kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -52,14 +52,14 @@
         <target state="translated">İmzayı düzelt</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
-        <source>Fix signature</source>
-        <target state="translated">İmzayı düzelt</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">'TestContext.CancellationToken' bağımsız değişkenini metot çağrısına aktarın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="translated">'ClassCleanupBehavior' bağımsız değişkenini kaldırın</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -117,14 +117,19 @@
         <target state="translated">Test yöntemi imzasını düzeltin</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
-        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="translated">'[ExpectedException]' özniteliği yerine 'Assert.ThrowsException&lt;T&gt;' kullanın</target>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="translated">'Execute' geçersiz kılmasını 'ExecuteAsync' olarak dönüştür</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' ekle</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseContainsKeyInsteadOfContainsFix">
+        <source>Use 'ContainsKey' instead of 'Contains'</source>
+        <target state="translated">'Contains' yerine 'ContainsKey' kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
@@ -137,14 +142,19 @@
         <target state="translated">'CooperativeCancellation = true' kullanın</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseNewerAssertThrows">
-        <source>Use '{0}'</source>
-        <target state="translated">'{0}' kullan</target>
+      <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
+        <source>Use 'DisplayName' property instead of string argument</source>
+        <target state="translated">Dize bağımsız değişkeni yerine 'DisplayName' özelliğini kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">'{0}' kullan</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[OSCondition]' attribute</source>
+        <target state="translated">'[OSCondition]' özniteliğini kullanın</target>
         <note />
       </trans-unit>
     </body>

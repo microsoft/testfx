@@ -33,9 +33,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
     /// <param name="testsToRun"> The tests to run. </param>
-    /// <param name="classCleanupLifecycle"> The class cleanup lifecycle. </param>
-    public UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, int? classCleanupLifecycle)
-        : this(settings, testsToRun, classCleanupLifecycle, ReflectHelper.Instance)
+    public UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun)
+        : this(settings, testsToRun, ReflectHelper.Instance)
     {
     }
 
@@ -44,9 +43,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings. </param>
     /// <param name="testsToRun"> The tests to run. </param>
-    /// <param name="classCleanupLifecycle"> The class cleanup lifecycle. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
-    internal UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, int? classCleanupLifecycle, ReflectHelper reflectHelper)
+    internal UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
     {
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
@@ -63,18 +61,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
         _typeCache = new TypeCache(reflectHelper);
 
-        // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
-        // So we're converting here if we can, or falling back to the default.
-        ClassCleanupBehavior lifecycle = ClassCleanupBehavior.EndOfAssembly;
-        if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupBehavior), classCleanupLifecycle))
-        {
-            lifecycle = (ClassCleanupBehavior)classCleanupLifecycle;
-        }
-
-        _classCleanupManager = new ClassCleanupManager(
-            testsToRun,
-            MSTestSettings.CurrentSettings.ClassCleanupLifecycle ?? lifecycle,
-            reflectHelper);
+        _classCleanupManager = new ClassCleanupManager(testsToRun);
     }
 
 #pragma warning disable CA1822 // Mark members as static
@@ -155,7 +142,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, UTF.UnitTestOutcome.InProgress);
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -178,9 +165,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                     _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
                 }
 
-                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
-                TestResult assemblyInitializeResult = RunAssemblyInitializeIfNeeded(testMethodInfo, testContextForAssemblyInit);
+                TestResult assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
 
                 if (assemblyInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                 {
@@ -188,9 +175,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
                 else
                 {
-                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
+                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
-                    TestResult classInitializeResult = testMethodInfo.Parent.GetResultOrRunClassInitialize(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages);
+                    TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
                     {
@@ -216,13 +203,16 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
             }
 
-            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            testMethodInfo?.Parent.RunClassCleanup(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result);
+            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+            if (testMethodInfo is not null)
+            {
+                await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result).ConfigureAwait(false);
+            }
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
             {
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                RunAssemblyCleanupIfNeeded(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
+                await RunAssemblyCleanupIfNeededAsync(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result).ConfigureAwait(false);
             }
 
             return result;
@@ -249,13 +239,13 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         }
     }
 
-    private static TestResult RunAssemblyInitializeIfNeeded(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private static async Task<TestResult> RunAssemblyInitializeIfNeededAsync(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         var result = new TestResult { Outcome = UnitTestOutcome.Passed };
 
         try
         {
-            testMethodInfo.Parent.Parent.RunAssemblyInitialize(testContext.Context);
+            await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
         }
         catch (TestFailedException ex)
         {
@@ -278,7 +268,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static void RunAssemblyCleanupIfNeeded(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
+    private static async Task RunAssemblyCleanupIfNeededAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
     {
         if (!classCleanupManager.ShouldRunEndOfAssemblyCleanup)
         {
@@ -287,28 +277,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            // TODO: We are using the same TestContext here for ClassCleanup and AssemblyCleanup.
-            // They should be different.
-            IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
-            foreach (TestClassInfo classInfo in classInfoCache)
-            {
-                TestFailedException? ex = classInfo.ExecuteClassCleanup(testContext.Context);
-
-                if (results.Length > 0 && ex is not null)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                    return;
-                }
-            }
-
             IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
             foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
             {
-                TestFailedException? ex = assemblyInfo.ExecuteAssemblyCleanup(testContext.Context);
+                TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
                 if (results.Length > 0 && ex is not null)
                 {

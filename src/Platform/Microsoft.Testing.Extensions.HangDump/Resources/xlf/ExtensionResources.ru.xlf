@@ -7,6 +7,31 @@
         <target state="translated">Создание файла дампа "{0}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="DumpingProcess">
+        <source>Dumping process {0} - {1}</source>
+        <target state="translated">Создание дампа процесса {0} — {1}</target>
+        <note>0 is pid, 1 is the name of the process</note>
+      </trans-unit>
+      <trans-unit id="DumpingProcessTree">
+        <source>Dumping this process tree (from bottom):</source>
+        <target state="translated">Создание дампа для этого дерева процессов (с нижней части):</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorGettingParentOfProcess">
+        <source>Error getting parent of process {0} - {1}: {2}"</source>
+        <target state="translated">Ошибка при получении родительского процесса для процесса {0} — {1}: {2}"</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorKillingProcess">
+        <source>Error while killing process {0} - {1}: {2}</source>
+        <target state="translated">Ошибка при завершении работы процесса {0} — {1}: {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorWhileDumpingProcess">
+        <source>Error while taking dump of process {0} - {1}: {2}</source>
+        <target state="translated">Ошибка при создании дампа процесса {0} — {1}: {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception from the system</note>
+      </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
         <target state="translated">Файл дампа зависания</target>
@@ -120,16 +145,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">Вы указали один или несколько параметров дампа зависания, но не включили его. Добавьте --hangdump в командную строку</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Не удается найти мьютекс "{0}".</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Имя мьютекса не было получено через "{0}" секунд</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">

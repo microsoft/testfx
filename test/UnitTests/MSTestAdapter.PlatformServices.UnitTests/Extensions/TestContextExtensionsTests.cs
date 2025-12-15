@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -18,7 +20,7 @@ public class TestContextExtensionsTests : TestContainer
 
         mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns("foo");
 
-        Verify(mockTestContext.Object.GetAndClearDiagnosticMessages() == "foo");
+        mockTestContext.Object.GetAndClearDiagnosticMessages().Should().Be("foo");
     }
 
     public void GetAndClearDiagnosticMessagesShouldClearContextMessages()
@@ -32,6 +34,6 @@ public class TestContextExtensionsTests : TestContainer
         mockTestContext.Object.GetAndClearDiagnosticMessages();
         message = "bar";
 
-        Verify(mockTestContext.Object.GetAndClearDiagnosticMessages() == "bar");
+        mockTestContext.Object.GetAndClearDiagnosticMessages().Should().Be("bar");
     }
 }

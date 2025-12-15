@@ -15,11 +15,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal interface IPlatformServiceProvider
 {
     /// <summary>
-    /// Gets an instance to the platform service validator for test sources.
-    /// </summary>
-    ITestSource TestSource { get; }
-
-    /// <summary>
     /// Gets an instance to the platform service to data drive a test.
     /// </summary>
     ITestDataSource TestDataSource { get; }
@@ -34,10 +29,12 @@ internal interface IPlatformServiceProvider
     /// </summary>
     IAdapterTraceLogger AdapterTraceLogger { get; set; }
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
     ITestDeployment TestDeployment { get; }
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service for a Settings Provider.
@@ -52,7 +49,7 @@ internal interface IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    IReflectionOperations2 ReflectionOperations { get; }
+    IReflectionOperations ReflectionOperations { get; }
 
     /// <summary>
     /// Gets or sets an instance to the platform service for cancellation token supporting cancellation of a test run.
@@ -85,37 +82,13 @@ internal interface IPlatformServiceProvider
         TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle);
 
     /// <summary>
-    /// Gets an instance to the platform service listener who monitors trace and debug output
-    /// on provided text writer.
-    /// </summary>
-    /// <param name="textWriter">
-    /// The text Writer.
-    /// </param>
-    /// <returns>
-    /// The <see cref="ITraceListener"/>.
-    /// </returns>
-    ITraceListener GetTraceListener(TextWriter textWriter);
-
-    /// <summary>
-    /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
-    /// with redirected streams and performs operations on the listener provided as argument.
-    /// </summary>
-    /// <param name="outputWriter">
-    /// The redirected output stream writer.
-    /// </param>
-    /// <param name="errorWriter">
-    /// The redirected error stream writer.
-    /// </param>
-    /// <returns>
-    /// The manager for trace listeners.
-    /// </returns>
-    ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter);
-
-    /// <summary>
     /// Gets the TestContext object for a platform.
     /// </summary>
     /// <param name="testMethod">
     /// The test method.
+    /// </param>
+    /// <param name="testClassFullName">
+    /// The test class full name.
     /// </param>
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
@@ -128,5 +101,5 @@ internal interface IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    ITestContext GetTestContext(ITestMethod testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
+    ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
 }

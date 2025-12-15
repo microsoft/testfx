@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Framework.UnitTests;
 
@@ -34,7 +33,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Act
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
@@ -66,7 +65,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Act
         await adapter.ExecuteRequestAsync(new(
-            new RunTestExecutionRequest(new(new("id"), new ClientInfo(string.Empty, string.Empty))),
+            new RunTestExecutionRequest(new(new("id"))),
             services.ServiceProvider.GetRequiredService<IMessageBus>(),
             new SemaphoreSlimRequestCompleteNotifier(new SemaphoreSlim(1)),
             cancellationToken));
@@ -81,7 +80,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
             nameof(ExecutableNode_ThatThrows_ShouldReportError), lastNode.Properties.Single<ErrorTestNodeStateProperty>().Exception!.StackTrace!, "lastNode properties should contain the name of the test");
         TimingProperty timingProperty = lastNode.Properties.Single<TimingProperty>();
         Assert.AreEqual(fakeClock.UsedTimes[0], timingProperty.GlobalTiming.StartTime);
-        Assert.IsTrue(timingProperty.GlobalTiming.StartTime <= timingProperty.GlobalTiming.EndTime, "start time is before (or the same as) stop time");
+        Assert.IsLessThanOrEqualTo(timingProperty.GlobalTiming.EndTime, timingProperty.GlobalTiming.StartTime, "start time is before (or the same as) stop time");
         Assert.AreEqual(fakeClock.UsedTimes[1], timingProperty.GlobalTiming.EndTime);
         Assert.IsGreaterThan(0, timingProperty.GlobalTiming.Duration.TotalMilliseconds, $"duration should be greater than 0");
     }

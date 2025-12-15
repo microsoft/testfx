@@ -12,6 +12,7 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class IPCTests
 {
     private readonly TestContext _testContext;
@@ -60,28 +61,26 @@ public sealed class IPCTests
 
         Assert.HasCount(1, openedPipe);
         Assert.HasCount(1, exceptions);
-        Assert.AreEqual(exceptions[0].GetType(), typeof(IOException));
+        Assert.AreEqual(typeof(IOException), exceptions[0].GetType());
         Assert.Contains("All pipe instances are busy.", exceptions[0].Message);
 
         await waitTask;
 #if NETCOREAPP
-        await namedPipeClient1.DisposeAsync();
+        namedPipeClient1.Dispose();
         await openedPipe[0].DisposeAsync();
 #else
         namedPipeClient1.Dispose();
         openedPipe[0].Dispose();
 #endif
-        pipeNameDescription.Dispose();
 
         // Verify double dispose
 #if NETCOREAPP
-        await namedPipeClient1.DisposeAsync();
+        namedPipeClient1.Dispose();
         await openedPipe[0].DisposeAsync();
 #else
         namedPipeClient1.Dispose();
         openedPipe[0].Dispose();
 #endif
-        pipeNameDescription.Dispose();
     }
 
     [TestMethod]
@@ -159,14 +158,12 @@ public sealed class IPCTests
         }
 
 #if NETCOREAPP
-        await namedPipeClient.DisposeAsync();
+        namedPipeClient.Dispose();
         await singleConnectionNamedPipeServer.DisposeAsync();
 #else
         namedPipeClient.Dispose();
         singleConnectionNamedPipeServer.Dispose();
 #endif
-
-        pipeNameDescription.Dispose();
     }
 
     [TestMethod]

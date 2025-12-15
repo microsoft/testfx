@@ -8,9 +8,9 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal interface IServerTestHost
 {
-    Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args);
+    Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args, CancellationToken cancellationToken);
 
-    Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update);
+    Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update, CancellationToken cancellationToken);
 
-    Task PushDataAsync(IData data);
+    Task PushDataAsync(IData data, CancellationToken cancellationToken);
 }

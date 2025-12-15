@@ -7,6 +7,31 @@
         <target state="translated">Creazione del file di dump '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="DumpingProcess">
+        <source>Dumping process {0} - {1}</source>
+        <target state="translated">Dump del processo {0} - {1}</target>
+        <note>0 is pid, 1 is the name of the process</note>
+      </trans-unit>
+      <trans-unit id="DumpingProcessTree">
+        <source>Dumping this process tree (from bottom):</source>
+        <target state="translated">Dump di questo albero processi (dal basso):</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorGettingParentOfProcess">
+        <source>Error getting parent of process {0} - {1}: {2}"</source>
+        <target state="translated">Errore durante il recupero dell'elemento padre del processo {0} - {1}: {2}"</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorKillingProcess">
+        <source>Error while killing process {0} - {1}: {2}</source>
+        <target state="translated">Errore durante la terminazione del processo {0} - {1}: {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception</note>
+      </trans-unit>
+      <trans-unit id="ErrorWhileDumpingProcess">
+        <source>Error while taking dump of process {0} - {1}: {2}</source>
+        <target state="translated">Errore durante l'acquisizione del dump del processo {0} - {1}: {2}</target>
+        <note>0 is pid, 1 is name, 2 is the exception from the system</note>
+      </trans-unit>
       <trans-unit id="HangDumpArtifactDescription">
         <source>The hang dump file</source>
         <target state="translated">Il file di dump di blocco</target>
@@ -120,16 +145,6 @@ Le opzioni valide sono 'Mini', 'Heap', 'Triage' (disponibile solo in .NET 6+) e 
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">Sono stati specificati uno o più parametri del dump di blocco ma non sono stati abilitati. Aggiungere --hangdump alla riga di comando</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">Non è possibile trovare il mutex '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">Il nome del mutex non è stato ricevuto dopo '{0}' secondi</target>
         <note />
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">

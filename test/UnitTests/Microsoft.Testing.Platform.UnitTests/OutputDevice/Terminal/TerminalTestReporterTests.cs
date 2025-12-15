@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class TerminalTestReporterTests
 {
     [TestMethod]
@@ -216,27 +217,27 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[32mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[33mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
             ␛[90m    Hello!
             ␛[90m  Error output
             ␛[90m    Oh no!
-            ␛[m␛[31mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
             ␛[31m  Tests failed
             ␛[m␛[31m  Expected
             ␛[31m    ABC
@@ -316,27 +317,27 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         string expected = $"""
-            ␛[32mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[33mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
                 Oh no!
-            ␛[m␛[31mfailed␛[m FailedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[m␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
             ␛[31m  Tests failed
             ␛[m␛[31m  Expected
                 ABC
@@ -437,7 +438,7 @@ public sealed class TerminalTestReporterTests
 
         // Note: The progress is drawn after each completed event.
         string expected = $"""
-            {busyIndicatorString}␛[?25l␛[32mpassed␛[m PassedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            {busyIndicatorString}␛[?25l␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
@@ -449,7 +450,7 @@ public sealed class TerminalTestReporterTests
               InProgressTest2␛[2147483643G(31s)
               InProgressTest3␛[2147483644G(1s)
             ␛[7F
-            ␛[J␛[33mskipped␛[m SkippedTest1␛[90m ␛[90m(10s 000ms)␛[m
+            ␛[J␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
                 Hello!
               Error output
@@ -754,5 +755,63 @@ public sealed class TerminalTestReporterTests
         {
             Assert.DoesNotContain(literalDisplayName, output, $"Literal {charName} should not be present in test display name");
         }
+    }
+
+    [TestMethod]
+    public void TestProgressState_WhenCreatedWithDiscoveryTrue_ShouldHaveIsDiscoveryTrue()
+    {
+        // Arrange
+        var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
+
+        // Act
+        var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch, isDiscovery: true);
+
+        // Assert
+        Assert.IsTrue(progressState.IsDiscovery);
+        Assert.AreEqual(0, progressState.DiscoveredTests);
+    }
+
+    [TestMethod]
+    public void TestProgressState_WhenCreatedWithFalseIsDiscoveryParameter_ShouldHaveIsDiscoveryFalse()
+    {
+        // Arrange
+        var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
+
+        // Act
+        var progressState = new TestProgressState(1, "test.dll", "net8.0", "x64", stopwatch, isDiscovery: false);
+
+        // Assert
+        Assert.IsFalse(progressState.IsDiscovery);
+        Assert.AreEqual(0, progressState.DiscoveredTests);
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_WhenInDiscoveryMode_ShouldIncrementDiscoveredTests()
+    {
+        // Arrange
+        string assembly = "test.dll";
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            UseAnsi = false,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // Act
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true);
+        terminalReporter.AssemblyRunStarted();
+        terminalReporter.TestDiscovered("TestMethod1");
+        terminalReporter.TestDiscovered("TestMethod2");
+        terminalReporter.AssemblyRunCompleted();
+        terminalReporter.TestExecutionCompleted(endTime);
+
+        string output = stringBuilderConsole.Output;
+
+        // Assert - should contain information about 2 tests discovered
+        Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
     }
 }

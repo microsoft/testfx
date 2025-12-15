@@ -15,10 +15,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
-    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
+    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-file-prefix";
     public const string DiagnosticOutputDirectoryOptionKey = "diagnostic-output-directory";
     public const string DiagnosticVerbosityOptionKey = "diagnostic-verbosity";
-    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-filelogger-synchronouswrite";
+    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-synchronous-write";
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
@@ -183,8 +183,21 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
+        if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))
+        {
+            if (OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.SyncFlushNotSupportedInBrowserErrorMessage);
+            }
+        }
+
         if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
+            }
+
             _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
             ApplicationStateGuard.Ensure(pid is not null);
             RoslynDebug.Assert(pid.Length == 1);
@@ -193,9 +206,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             {
                 // We let the api to do the validity check before to go down the subscription path.
                 // If we don't fail here but we fail below means that the parent process is not there anymore and we can take it as exited.
-#pragma warning disable CA1416 // Validate platform compatibility
                 _ = Process.GetProcessById(parentProcessPid);
-#pragma warning restore CA1416
             }
             catch (ArgumentException ex)
             {

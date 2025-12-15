@@ -65,92 +65,47 @@ internal sealed class TestMethodRunner
     internal async Task<TestResult[]> ExecuteAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
     {
         _testContext.Context.TestRunCount++;
-        bool isSTATestClass = _testMethodInfo.Parent.ClassAttribute is STATestClassAttribute;
-        bool isSTATestMethod = _testMethodInfo.Executor is STATestMethodAttribute;
-        bool isSTARequested = isSTATestClass || isSTATestMethod;
-        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTARequested && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+
+        TestResult[]? result = null;
+
+        try
         {
-            TestResult[]? results = null;
-            Thread entryPointThread = new(() => results = SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).GetAwaiter().GetResult())
-            {
-                Name = (isSTATestClass, isSTATestMethod) switch
-                {
-                    (true, _) => "MSTest STATestClass",
-                    (_, true) => "MSTest STATestMethod",
-                    _ => throw ApplicationStateGuard.Unreachable(),
-                },
-            };
-
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-
-            try
-            {
-                entryPointThread.Join();
-            }
-            catch (Exception ex)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
-            }
-
-            return results ?? [];
+            result = await RunTestMethodAsync().ConfigureAwait(false);
         }
-        else
+        catch (TestFailedException ex)
         {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTARequested)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
-            }
-
-            return await SafeRunTestMethodAsync(initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages).ConfigureAwait(false);
+            result = [new TestResult { TestFailureException = ex }];
         }
-
-        // Local functions
-        async Task<TestResult[]> SafeRunTestMethodAsync(string? initializationLogs, string? initializationErrorLogs, string? initializationTrace, string? initializationTestContextMessages)
+        catch (Exception ex)
         {
-            TestResult[]? result = null;
-
-            try
+            if (result == null || result.Length == 0)
             {
-                result = await RunTestMethodAsync().ConfigureAwait(false);
+                result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
             }
-            catch (TestFailedException ex)
-            {
-                result = [new TestResult { TestFailureException = ex }];
-            }
-            catch (Exception ex)
-            {
-                if (result == null || result.Length == 0)
-                {
-                    result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
-                }
 
 #pragma warning disable IDE0056 // Use index operator
-                result[result.Length - 1] = new TestResult
-                {
-                    TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                    LogOutput = result[result.Length - 1].LogOutput,
-                    LogError = result[result.Length - 1].LogError,
-                    DebugTrace = result[result.Length - 1].DebugTrace,
-                    TestContextMessages = result[result.Length - 1].TestContextMessages,
-                    Duration = result[result.Length - 1].Duration,
-                };
-#pragma warning restore IDE0056 // Use index operator
-            }
-            finally
+            result[result.Length - 1] = new TestResult
             {
-                // Assembly initialize and class initialize logs are pre-pended to the first result.
-                TestResult firstResult = result![0];
-                firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
-                firstResult.LogError = initializationErrorLogs + firstResult.LogError;
-                firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
-                firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
-            }
-
-            return result;
+                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                LogOutput = result[result.Length - 1].LogOutput,
+                LogError = result[result.Length - 1].LogError,
+                DebugTrace = result[result.Length - 1].DebugTrace,
+                TestContextMessages = result[result.Length - 1].TestContextMessages,
+                Duration = result[result.Length - 1].Duration,
+            };
+#pragma warning restore IDE0056 // Use index operator
         }
+        finally
+        {
+            // Assembly initialize and class initialize logs are pre-pended to the first result.
+            TestResult firstResult = result![0];
+            firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
+            firstResult.LogError = initializationErrorLogs + firstResult.LogError;
+            firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+            firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -169,7 +124,6 @@ internal sealed class TestMethodRunner
         }
 
         bool isDataDriven = false;
-        var parentStopwatch = Stopwatch.StartNew();
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
             if (_test.TestDataSourceIgnoreMessage is not null)
@@ -213,25 +167,7 @@ internal sealed class TestMethodRunner
         // In case of data driven, set parent info in results.
         if (isDataDriven)
         {
-            // In legacy scenario
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (_test.TestIdGenerationStrategy == TestIdGenerationStrategy.Legacy)
-#pragma warning restore CS0618 // Type or member is obsolete
-            {
-                parentStopwatch.Stop();
-                var parentResult = new TestResult
-                {
-                    Outcome = aggregateOutcome,
-                    Duration = parentStopwatch.Elapsed,
-                    ExecutionId = Guid.NewGuid(),
-                };
-
-                results = UpdateResultsWithParentInfo(results, parentResult);
-            }
-            else
-            {
-                results = UpdateResultsWithParentInfo(results);
-            }
+            results = UpdateResultsWithParentInfo(results);
         }
 
         // Set a result in case no result is present.
@@ -251,7 +187,7 @@ internal sealed class TestMethodRunner
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
     {
-        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
+        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>();
         if (dataSourceAttribute is { Length: 1 })
         {
             await ExecuteTestFromDataSourceAttributeAsync(results).ConfigureAwait(false);
@@ -264,7 +200,7 @@ internal sealed class TestMethodRunner
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
     {
         bool hasTestDataSource = false;
-        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo, false))
+        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
             if (attribute is not UTF.ITestDataSource testDataSource)
             {
@@ -380,7 +316,7 @@ internal sealed class TestMethodRunner
         else if (!actualDataAlreadyHandledDuringDiscovery && TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(data, _testMethodInfo.ParameterTypes))
         {
             // SPECIAL CASE:
-            // This condition is a duplicate of the condition in InvokeAsSynchronousTask.
+            // This condition is a duplicate of the condition in GetInvokeResultAsync.
             //
             // The known scenario we know of that shows importance of that check is if we have DynamicData using this member
             //
@@ -391,7 +327,7 @@ internal sealed class TestMethodRunner
             //
             // If the test method has a single parameter which is 'object[]', then we should pass the tuple array as is.
             // Note that normally, the array in this code path represents the arguments of the test method.
-            // However, InvokeAsSynchronousTask uses the above check to mean "the whole array is the single argument to the test method"
+            // However, GetInvokeResultAsync uses the above check to mean "the whole array is the single argument to the test method"
         }
         else if (!actualDataAlreadyHandledDuringDiscovery && data?.Length == 1 && TestDataSourceHelpers.TryHandleTupleDataSource(data[0], _testMethodInfo.ParameterTypes, out object?[] tupleExpandedToArray))
         {
@@ -400,6 +336,7 @@ internal sealed class TestMethodRunner
 
         displayName = displayNameFromTestDataRow
             ?? testDataSource?.GetDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data)
+            ?? (testDataSource is null ? displayName : TestDataSourceUtilities.ComputeDefaultDisplayName(new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName), data))
             ?? displayName;
 
         var stopwatch = Stopwatch.StartNew();
@@ -542,38 +479,6 @@ internal sealed class TestMethodRunner
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = Guid.NewGuid();
-
-            updatedResults.Add(result);
-        }
-
-        return updatedResults;
-    }
-
-    /// <summary>
-    /// Updates given results with parent info if results are greater than 1.
-    /// Add parent results as first result in updated result.
-    /// </summary>
-    /// <param name="results">Results.</param>
-    /// <param name="parentResult">Parent results.</param>
-    /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<TestResult> UpdateResultsWithParentInfo(
-        List<TestResult> results,
-        TestResult parentResult)
-    {
-        // Return results in case there are no results.
-        if (results.Count == 0)
-        {
-            return results;
-        }
-
-        // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        List<TestResult> updatedResults = [parentResult];
-
-        foreach (TestResult result in results)
-        {
-            result.ExecutionId = Guid.NewGuid();
-            result.ParentExecId = parentResult.ExecutionId;
-            parentResult.InnerResultsCount++;
 
             updatedResults.Add(result);
         }

@@ -5,7 +5,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -22,6 +21,7 @@ using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposable, IOutputDeviceDataProducer
 {
     private readonly TestHostControllerConfiguration _testHostsInformation;
@@ -60,10 +60,9 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
-    protected override async Task<int> InternalRunAsync()
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
     {
         int exitCode;
-        CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
         IEnvironment environment = ServiceProvider.GetEnvironment();
@@ -98,7 +97,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 HandleRequestAsync,
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
-                ServiceProvider.GetTask(), abortRun);
+                ServiceProvider.GetTask(), cancellationToken);
             testHostControllerIpc.RegisterAllSerializers();
 
 #if NET8_0_OR_GREATER
@@ -118,7 +117,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             string arguments = builder.ToString();
 #endif
 
-#pragma warning disable CA1416 // Validate platform compatibility
             ProcessStartInfo processStartInfo = new(
                 executableInfo.FilePath,
                 arguments)
@@ -132,7 +130,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 },
                 UseShellExecute = false,
             };
-#pragma warning restore CA1416
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
 
@@ -213,16 +210,14 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                         displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
                     }
 
-                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString())).ConfigureAwait(false);
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(displayErrorMessageBuilder.ToString()), cancellationToken).ConfigureAwait(false);
                     await _logger.LogErrorAsync(logErrorMessageBuilder.ToString()).ConfigureAwait(false);
                     return ExitCodes.InvalidPlatformSetup;
                 }
 
                 foreach (EnvironmentVariable envVar in environmentVariables.GetAll())
                 {
-#pragma warning disable CA1416 // Validate platform compatibility
                     processStartInfo.EnvironmentVariables[envVar.Variable] = envVar.Value;
-#pragma warning restore CA1416
                 }
             }
 
@@ -231,19 +226,15 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             {
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
-                    await lifetimeHandler.BeforeTestHostProcessStartAsync(abortRun).ConfigureAwait(false);
+                    await lifetimeHandler.BeforeTestHostProcessStartAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
 
             // Launch the test host process
             string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
-#pragma warning disable CA1416 // Validate platform compatibility
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);
-#pragma warning restore CA1416
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid} '{testHostProcessStartupTime}'").ConfigureAwait(false);
-#pragma warning disable CA1416 // Validate platform compatibility
             await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'").ConfigureAwait(false);
-#pragma warning restore CA1416
             using IProcess testHostProcess = process.Start(processStartInfo);
 
             int? testHostProcessId = null;
@@ -274,7 +265,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
                 // Wait for the test host controller to connect
                 using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
-                using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
+                using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
                 {
                     await _logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
                     await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token).ConfigureAwait(false);
@@ -283,9 +274,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 // Wait for the test host controller to send the PID of the test host process
                 using (CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout))
                 {
-#pragma warning disable CA1416 // Validate platform compatibility
                     _waitForPid.Wait(timeout.Token);
-#pragma warning restore CA1416
                 }
 
                 await _logger.LogDebugAsync("Fire OnTestHostProcessStartedAsync").ConfigureAwait(false);
@@ -303,7 +292,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                     {
-                        await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, abortRun).ConfigureAwait(false);
+                        await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -321,7 +310,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                     {
-                        await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, abortRun).ConfigureAwait(false);
+                        await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
 
                         // OnTestHostProcess could produce information that needs to be handled by others.
                         await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
@@ -333,7 +322,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 await messageBusProxy.DisableAsync().ConfigureAwait(false);
             }
 
-            await outputDevice.DisplayAfterSessionEndRunAsync().ConfigureAwait(false);
+            await outputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)
@@ -343,13 +332,13 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
             exitCode = _testHostExitCode ??
-                (abortRun.IsCancellationRequested
+                (cancellationToken.IsCancellationRequested
                     ? ExitCodes.TestSessionAborted
                     : (!_testHostGracefullyClosed ? ExitCodes.TestHostProcessExitedNonGracefully : throw ApplicationStateGuard.Unreachable()));
 
-            if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
+            if (!_testHostGracefullyClosed && !cancellationToken.IsCancellationRequested)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode))).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)), cancellationToken).ConfigureAwait(false);
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
@@ -371,7 +360,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 [TelemetryProperties.HostProperties.ExitCodePropertyName] = exitCode.ToString(CultureInfo.InvariantCulture),
                 [TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName] = _testHostGracefullyClosed.AsTelemetryBool(),
                 [TelemetryProperties.HostProperties.ExtensionsPropertyName] = extensionInformation,
-            }).ConfigureAwait(false);
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         return exitCode;

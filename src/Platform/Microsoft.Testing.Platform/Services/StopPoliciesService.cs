@@ -9,8 +9,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 {
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
 
-    private BlockingCollection<Func<int, CancellationToken, Task>>? _maxFailedTestsCallbacks;
-    private BlockingCollection<Func<Task>>? _abortCallbacks;
+    private readonly ConcurrentQueue<Func<int, CancellationToken, Task>> _maxFailedTestsCallbacks = new();
+    private readonly ConcurrentQueue<Func<Task>> _abortCallbacks = new();
     private int _lastMaxFailedTests;
 
     public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
@@ -28,11 +28,6 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     public bool IsMaxFailedTestsTriggered { get; private set; }
 
     public bool IsAbortTriggered { get; private set; }
-
-    private static void RegisterCallback<T>(ref BlockingCollection<T>? callbacks, T callback)
-#pragma warning disable CA1416 // Validate platform compatibility
-        => (callbacks ??= []).Add(callback);
-#pragma warning restore CA1416
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {
@@ -80,7 +75,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
             await callback(_lastMaxFailedTests, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
 
-        RegisterCallback(ref _maxFailedTestsCallbacks, callback);
+        _maxFailedTestsCallbacks.Enqueue(callback);
     }
 
     public async Task RegisterOnAbortCallbackAsync(Func<Task> callback)
@@ -90,6 +85,6 @@ internal sealed class StopPoliciesService : IStopPoliciesService
             await callback().ConfigureAwait(false);
         }
 
-        RegisterCallback(ref _abortCallbacks, callback);
+        _abortCallbacks.Enqueue(callback);
     }
 }

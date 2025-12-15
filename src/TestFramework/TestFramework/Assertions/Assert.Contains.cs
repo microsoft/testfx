@@ -5,8 +5,6 @@ using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
 /// <summary>
 /// A collection of helper classes to test various conditions within
 /// unit tests. If the condition being tested is not met, an exception
@@ -37,10 +35,11 @@ public sealed partial class Assert
             }
         }
 
-        internal TItem ComputeAssertion()
+        internal TItem ComputeAssertion(string collectionExpression)
         {
             if (_builder is not null)
             {
+                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertContainsSingleFailed(_actualCount, _builder.ToString());
             }
 
@@ -88,14 +87,7 @@ public sealed partial class Assert
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-    /// <summary>
-    /// Tests whether the specified collection contains exactly one element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
-    /// <returns>The item.</returns>
-    public static T ContainsSingle<T>(IEnumerable<T> collection)
-        => ContainsSingle(collection, string.Empty, null);
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
@@ -103,44 +95,46 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    /// <returns>The item.</returns>
-    public static T ContainsSingle<T>(IEnumerable<T> collection, string? message)
-        => ContainsSingle(collection, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains exactly one element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <returns>The item.</returns>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message)
+    public static T ContainsSingle<T>(IEnumerable<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertSingleInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-        => message.ComputeAssertion();
+        => message.ComputeAssertion(collectionExpression);
+
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+    #region ContainsSingle
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <returns>The item.</returns>
-    public static T ContainsSingle<T>(IEnumerable<T> collection, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
-    {
-        int actualCount = collection.Count();
-        if (actualCount == 1)
-        {
-            return collection.First();
-        }
+    public static T ContainsSingle<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
-        string userMessage = BuildUserMessage(message, parameters);
-        ThrowAssertContainsSingleFailed(actualCount, userMessage);
-
-        // Unreachable code but compiler cannot work it out
-        return default;
-    }
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item.</returns>
+    public static object? ContainsSingle(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsSingle(static _ => true, collection, message, predicateExpression: string.Empty, collectionExpression);
 
     /// <summary>
     /// Tests whether the specified collection contains exactly one element that matches the given predicate.
@@ -148,9 +142,17 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
     /// <returns>The item that matches the predicate.</returns>
-    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string message = "")
+    public static T ContainsSingle<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         var matchingElements = collection.Where(predicate).ToList();
         int actualCount = matchingElements.Count;
@@ -160,12 +162,82 @@ public sealed partial class Assert
             return matchingElements[0];
         }
 
-        string userMessage = BuildUserMessage(message);
-        ThrowAssertSingleMatchFailed(actualCount, userMessage);
+        if (string.IsNullOrEmpty(predicateExpression))
+        {
+            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+            ThrowAssertContainsSingleFailed(actualCount, userMessage);
+        }
+        else
+        {
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(actualCount, userMessage);
+        }
 
         // Unreachable code but compiler cannot work it out
         return default;
     }
+
+    /// <summary>
+    /// Tests whether the specified collection contains exactly one element that matches the given predicate.
+    /// </summary>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <returns>The item that matches the predicate.</returns>
+    public static object? ContainsSingle(Func<object, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        object? firstMatch = null;
+        int matchCount = 0;
+
+        foreach (object? item in collection)
+        {
+            if (!predicate(item))
+            {
+                continue;
+            }
+
+            if (matchCount == 0)
+            {
+                firstMatch = item;
+            }
+
+            matchCount++;
+
+            // Early exit optimization - no need to continue if we already have more than one match
+            if (matchCount > 1)
+            {
+                break;
+            }
+        }
+
+        if (matchCount == 1)
+        {
+            return firstMatch;
+        }
+
+        if (string.IsNullOrEmpty(predicateExpression))
+        {
+            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
+            ThrowAssertContainsSingleFailed(matchCount, userMessage);
+        }
+        else
+        {
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(matchCount, userMessage);
+        }
+
+        return default;
+    }
+
+    #endregion // ContainsSingle
 
     #region Contains
 
@@ -175,34 +247,52 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection)
-        => Contains(expected, collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains the given element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, string? message)
-        => Contains(expected, collection, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains the given element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, string? message, params object?[]? parameters)
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (!collection.Contains(expected))
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
             ThrowAssertContainsItemFailed(userMessage);
         }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains(object? expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+
+        foreach (object? item in collection)
+        {
+            if (object.Equals(item, expected))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+        ThrowAssertContainsItemFailed(userMessage);
     }
 
     /// <summary>
@@ -212,36 +302,54 @@ public sealed partial class Assert
     /// <param name="expected">The expected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="comparer">An equality comparer to compare values.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
-        => Contains(expected, collection, comparer, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains the given element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message)
-        => Contains(expected, collection, comparer, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains the given element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="comparer">An equality comparer to compare values.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message, params object?[]? parameters)
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (!collection.Contains(expected, comparer))
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
             ThrowAssertContainsItemFailed(userMessage);
         }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection contains the given element.
+    /// </summary>
+    /// <param name="expected">The expected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains(object? expected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+        CheckParameterNotNull(comparer, "Assert.Contains", "comparer");
+
+        foreach (object? item in collection)
+        {
+            if (comparer.Equals(item, expected))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
+        ThrowAssertContainsItemFailed(userMessage);
     }
 
     /// <summary>
@@ -250,187 +358,125 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
-    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection)
-        => Contains(predicate, collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains the given element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="predicate">A function to test each element for a condition.</param>
-    /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
-        => Contains(predicate, collection, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection contains the given element.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="predicate">A function to test each element for a condition.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message format to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message, params object?[]? parameters)
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (!collection.Any(predicate))
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
             ThrowAssertContainsPredicateFailed(userMessage);
         }
     }
 
     /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
-    /// test string.
+    /// Tests whether the specified collection contains the given element.
     /// </summary>
-    /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
-    /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
-    /// </exception>
-    public static void Contains(string substring, string value)
-        => Contains(substring, value, StringComparison.Ordinal, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
-    /// </exception>
-    public static void Contains(string substring, string value, string? message)
-        => Contains(substring, value, StringComparison.Ordinal, message, null);
-
-    /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
-    /// </exception>
-    public static void Contains(string substring, string value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
-        => Contains(substring, value, StringComparison.Ordinal, message, parameters);
-
-    /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
-    /// </exception>
-    public static void Contains(string substring, string value, StringComparison comparisonType)
-        => Contains(substring, value, comparisonType, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
-    /// </exception>
-    public static void Contains(string substring, string value, StringComparison comparisonType, string? message)
-        => Contains(substring, value, comparisonType, message, null);
-
-    /// <summary>
-    /// Tests whether the specified string contains the specified substring
-    /// and throws an exception if the substring does not occur within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is not in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
-    /// </exception>
-    public static void Contains(string substring, string value, StringComparison comparisonType,
-        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void Contains(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) < 0)
-#else
-        if (!value.Contains(substring, comparisonType))
-#endif
+        CheckParameterNotNull(collection, "Assert.Contains", "collection");
+        CheckParameterNotNull(predicate, "Assert.Contains", "predicate");
+
+        foreach (object? item in collection)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            if (predicate(item))
+            {
+                return;
+            }
+        }
+
+        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+        ThrowAssertContainsPredicateFailed(userMessage);
+    }
+
+    /// <summary>
+    /// Tests whether the specified string contains the specified substring
+    /// and throws an exception if the substring does not occur within the
+    /// test string.
+    /// </summary>
+    /// <param name="substring">
+    /// The string expected to occur within <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to contain <paramref name="substring"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="substring"/>
+    /// is not in <paramref name="value"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
+    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// </exception>
+    public static void Contains(string substring, string value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => Contains(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
+
+    /// <summary>
+    /// Tests whether the specified string contains the specified substring
+    /// and throws an exception if the substring does not occur within the
+    /// test string.
+    /// </summary>
+    /// <param name="substring">
+    /// The string expected to occur within <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to contain <paramref name="substring"/>.
+    /// </param>
+    /// <param name="comparisonType">
+    /// The comparison method to compare strings <paramref name="comparisonType"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="substring"/>
+    /// is not in <paramref name="value"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
+    /// or <paramref name="value"/> does not contain <paramref name="substring"/>.
+    /// </exception>
+    public static void Contains(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    {
+        CheckParameterNotNull(value, "Assert.Contains", "value");
+        CheckParameterNotNull(substring, "Assert.Contains", "substring");
+
+        if (!value.Contains(substring, comparisonType))
+        {
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.Contains", finalMessage);
         }
@@ -444,34 +490,22 @@ public sealed partial class Assert
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
     /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection)
-        => DoesNotContain(expected, collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection does not contain the specified item.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
+    /// <param name="notExpected">The unexpected item.</param>
     /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, string? message)
-        => DoesNotContain(expected, collection, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection does not contain the specified item.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, string? message, params object?[]? parameters)
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (collection.Contains(expected))
+        if (collection.Contains(notExpected))
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
             ThrowAssertDoesNotContainItemFailed(userMessage);
         }
     }
@@ -479,39 +513,83 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
+    /// <param name="notExpected">The unexpected item.</param>
     /// <param name="collection">The collection.</param>
-    /// <param name="comparer">An equality comparer to compare values.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
-        => DoesNotContain(expected, collection, comparer, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection does not contain the specified item.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="comparer">An equality comparer to compare values.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message)
-        => DoesNotContain(expected, collection, comparer, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection does not contain the specified item.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="expected">The expected item.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="comparer">An equality comparer to compare values.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void DoesNotContain<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message, params object?[]? parameters)
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (collection.Contains(expected, comparer))
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+
+        foreach (object? item in collection)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            if (object.Equals(notExpected, item))
+            {
+                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
+                ThrowAssertDoesNotContainItemFailed(userMessage);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The unexpected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        if (collection.Contains(notExpected, comparer))
+        {
+            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
             ThrowAssertDoesNotContainItemFailed(userMessage);
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified collection does not contain the specified item.
+    /// </summary>
+    /// <param name="notExpected">The unexpected item.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="comparer">An equality comparer to compare values.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+        CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
+
+        foreach (object? item in collection)
+        {
+            if (comparer.Equals(item, notExpected))
+            {
+                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
+                ThrowAssertDoesNotContainItemFailed(userMessage);
+            }
         }
     }
 
@@ -521,187 +599,123 @@ public sealed partial class Assert
     /// <typeparam name="T">The type of the collection items.</typeparam>
     /// <param name="predicate">A function to test each element for a condition.</param>
     /// <param name="collection">The collection.</param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection)
-        => DoesNotContain(predicate, collection, string.Empty, null);
-
-    /// <summary>
-    /// Tests whether the specified collection does not contain the specified item.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="predicate">A function to test each element for a condition.</param>
-    /// <param name="collection">The collection.</param>
     /// <param name="message">The message to display when the assertion fails.</param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message)
-        => DoesNotContain(predicate, collection, message, null);
-
-    /// <summary>
-    /// Tests whether the specified collection does not contain the specified item.
-    /// </summary>
-    /// <typeparam name="T">The type of the collection items.</typeparam>
-    /// <param name="predicate">A function to test each element for a condition.</param>
-    /// <param name="collection">The collection.</param>
-    /// <param name="message">The message to display when the assertion fails.</param>
-    /// <param name="parameters">The parameters to format the message.</param>
-    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message, params object?[]? parameters)
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
         if (collection.Any(predicate))
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
             ThrowAssertDoesNotContainPredicateFailed(userMessage);
         }
     }
 
     /// <summary>
-    /// Tests whether the specified string does not contain the specified substring
-    /// and throws an exception if the substring occurs within the
-    /// test string.
+    /// Tests whether the specified collection does not contain the specified item.
     /// </summary>
-    /// <param name="substring">
-    /// The string expected to not occur within <paramref name="value"/>.
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="collection">The collection.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="predicateExpression">
+    /// The syntactic expression of predicate as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
-    /// <param name="value">
-    /// The string that is expected to not contain <paramref name="substring"/>.
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
     /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> contains <paramref name="substring"/>.
-    /// </exception>
-    public static void DoesNotContain(string substring, string value)
-        => DoesNotContain(substring, value, StringComparison.Ordinal, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified string does not contain the specified substring
-    /// and throws an exception if the substring occurs within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to not occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to not contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> contains <paramref name="substring"/>.
-    /// </exception>
-    public static void DoesNotContain(string substring, string value, string? message)
-        => DoesNotContain(substring, value, StringComparison.Ordinal, message);
-
-    /// <summary>
-    /// Tests whether the specified string does not contain the specified substring
-    /// and throws an exception if the substring occurs within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to not occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to not contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> contains <paramref name="substring"/>.
-    /// </exception>
-    public static void DoesNotContain(string substring, string value, [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message,
-        params object?[]? parameters)
-        => DoesNotContain(substring, value, StringComparison.Ordinal, message, parameters);
-
-    /// <summary>
-    /// Tests whether the specified string does not contain the specified substring
-    /// and throws an exception if the substring occurs within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to not occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to not contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> contains <paramref name="substring"/>.
-    /// </exception>
-    public static void DoesNotContain(string substring, string value, StringComparison comparisonType)
-        => DoesNotContain(substring, value, comparisonType, string.Empty);
-
-    /// <summary>
-    /// Tests whether the specified string does not contain the specified substring
-    /// and throws an exception if the substring occurs within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to not occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to not contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> contains <paramref name="substring"/>.
-    /// </exception>
-    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message)
-        => DoesNotContain(substring, value, comparisonType, message, null);
-
-    /// <summary>
-    /// Tests whether the specified string does not contain the specified substring
-    /// and throws an exception if the substring occurs within the
-    /// test string.
-    /// </summary>
-    /// <param name="substring">
-    /// The string expected to not occur within <paramref name="value"/>.
-    /// </param>
-    /// <param name="value">
-    /// The string that is expected to not contain <paramref name="substring"/>.
-    /// </param>
-    /// <param name="comparisonType">
-    /// The comparison method to compare strings <paramref name="comparisonType"/>.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="substring"/>
-    /// is in <paramref name="value"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
-    /// or <paramref name="value"/> contains <paramref name="substring"/>.
-    /// </exception>
-    public static void DoesNotContain(string substring, string value, StringComparison comparisonType,
-        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-#if NETFRAMEWORK || NETSTANDARD
-        if (value.IndexOf(substring, comparisonType) >= 0)
-#else
-        if (value.Contains(substring, comparisonType))
-#endif
+        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
+        CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
+
+        foreach (object? item in collection)
         {
-            string userMessage = BuildUserMessage(message, parameters);
+            if (predicate(item))
+            {
+                string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
+                ThrowAssertDoesNotContainPredicateFailed(userMessage);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
+    /// test string.
+    /// </summary>
+    /// <param name="substring">
+    /// The string expected to not occur within <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to not contain <paramref name="substring"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="substring"/>
+    /// is in <paramref name="value"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
+    /// </exception>
+    public static void DoesNotContain(string substring, string value, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+        => DoesNotContain(substring, value, StringComparison.Ordinal, message, substringExpression, valueExpression);
+
+    /// <summary>
+    /// Tests whether the specified string does not contain the specified substring
+    /// and throws an exception if the substring occurs within the
+    /// test string.
+    /// </summary>
+    /// <param name="substring">
+    /// The string expected to not occur within <paramref name="value"/>.
+    /// </param>
+    /// <param name="value">
+    /// The string that is expected to not contain <paramref name="substring"/>.
+    /// </param>
+    /// <param name="comparisonType">
+    /// The comparison method to compare strings <paramref name="comparisonType"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="substring"/>
+    /// is in <paramref name="value"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="substringExpression">
+    /// The syntactic expression of substring as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// <paramref name="value"/> is null, or <paramref name="substring"/> is null,
+    /// or <paramref name="value"/> contains <paramref name="substring"/>.
+    /// </exception>
+    public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    {
+        CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
+        CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
+
+        if (value.Contains(substring, comparisonType))
+        {
+            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
             ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
         }
@@ -720,17 +734,29 @@ public sealed partial class Assert
     /// <param name="maxValue">The maximum value of the expected range (inclusive).</param>
     /// <param name="value">The value to test.</param>
     /// <param name="message">The message format to display when the assertion fails.</param>
-    public static void IsInRange<T>(T minValue, T maxValue, T value, string message = "")
+    /// <param name="minValueExpression">
+    /// The syntactic expression of minValue as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="maxValueExpression">
+    /// The syntactic expression of maxValue as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="valueExpression">
+    /// The syntactic expression of value as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsInRange<T>(T minValue, T maxValue, T value, string? message = "", [CallerArgumentExpression(nameof(minValue))] string minValueExpression = "", [CallerArgumentExpression(nameof(maxValue))] string maxValueExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         where T : struct, IComparable<T>
     {
-        if (maxValue.CompareTo(minValue) <= 0)
+        if (maxValue.CompareTo(minValue) < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxValue), "The maximum value must be greater than the minimum value.");
+            throw new ArgumentOutOfRangeException(nameof(maxValue), FrameworkMessages.IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue);
         }
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
-            string userMessage = BuildUserMessage(message);
+            string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
             ThrowAssertFailed("IsInRange", finalMessage);
         }

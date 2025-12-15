@@ -29,7 +29,6 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             foreach (bool testSucceeded in new bool[] { true, false })
             {
                 yield return ("build -t:Test", TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
-                yield return ("test -p:TestingPlatformDotnetTestSupport=True", TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode, testSucceeded);
             }
         }
     }
@@ -126,13 +125,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task Invoke_DotnetTest_With_Arch_Switch_x86_Should_Work()
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task Invoke_TestTarget_With_Arch_Switch_x86_Should_Work()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         string root = RootFinder.Find();
         string x86Muxer = Path.Combine(root, ".dotnet", "x86");
         var dotnetRootX86 = new Dictionary<string, string?>
@@ -148,16 +143,16 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         await DotnetCli.RunAsync(
-            $"test --arch x86 -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
+            $"build -t:Test --arch x86 -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x86.log", SearchOption.AllDirectories).Single();
-        Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
-        string logFileContent = File.ReadAllText(outputFileLog);
+        string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x86.log", SearchOption.AllDirectories);
+        Assert.ContainsSingle(outputLogFiles, $"Was expecting to find a single log file but found {outputLogFiles.Length}");
+        string logFileContent = File.ReadAllText(outputLogFiles[0]);
         Assert.IsTrue(Regex.IsMatch(logFileContent, ".*win-x86.*"), logFileContent);
 
         // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
@@ -165,7 +160,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task Invoke_DotnetTest_With_Incompatible_Arch()
+    public async Task Invoke_TestTarget_With_Incompatible_Arch()
     {
         // TODO: Test with both old and new dotnet test experience.
         Architecture currentArchitecture = RuntimeInformation.ProcessArchitecture;
@@ -183,7 +178,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test --arch {incompatibleArchitecture} -p:TestingPlatformDotnetTestSupport=True \"{testAsset.TargetAssetPath}\"",
+            $"build -t:Test --arch {incompatibleArchitecture} \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
@@ -217,13 +212,9 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
-    public async Task Invoke_DotnetTest_With_DOTNET_HOST_PATH_Should_Work()
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task Invoke_TestTarget_With_DOTNET_HOST_PATH_Should_Work()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         string root = RootFinder.Find();
         string dotnetHostPath = Path.Combine(root, ".dotnet", "dotnet.exe");
         var dotnetHostPathEnvVar = new Dictionary<string, string?>
@@ -239,16 +230,16 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", bool.TrueString.ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         await DotnetCli.RunAsync(
-            $"test -p:TestingPlatformDotnetTestSupport=True -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
+            $"build -t:Test -p:Configuration=Release -p:nodeReuse=false \"{testAsset.TargetAssetPath}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string outputFileLog = Directory.GetFiles(testAsset.TargetAssetPath, "MSBuild Tests_net9.0_x64.log", SearchOption.AllDirectories).Single();
-        Assert.IsTrue(File.Exists(outputFileLog), $"Expected file '{outputFileLog}'");
-        string logFileContent = File.ReadAllText(outputFileLog);
+        string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x64.log", SearchOption.AllDirectories);
+        Assert.ContainsSingle(outputLogFiles, $"Was expecting to find a single log file but found {outputLogFiles.Length}");
+        string logFileContent = File.ReadAllText(outputLogFiles[0]);
         // This is the architecture part that's written by TerminalOutputDevice when there is no banner specified.
         Assert.Contains($"[win-x64 - {TargetFrameworks.NetCurrent}]", logFileContent);
     }

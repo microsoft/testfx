@@ -3,24 +3,22 @@
 
 using System.IO.Pipes;
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-
-#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
-#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[Embedded]
+[UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
-#pragma warning disable CA1416 // Validate platform compatibility
     private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
 #if NET
         | PipeOptions.CurrentUserOnly
 #endif
         ;
-#pragma warning restore CA1416 // Validate platform compatibility
 
     private static bool IsUnix => Path.DirectorySeparatorChar == '/';
 
@@ -71,9 +69,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         CancellationToken cancellationToken)
     {
         Guard.NotNull(pipeNameDescription);
-#pragma warning disable CA1416 // Validate platform compatibility
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
-#pragma warning restore CA1416
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -95,9 +91,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
         // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
-#pragma warning disable CA1416 // Validate platform compatibility
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
         WasConnected = true;
         await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
         _loopTask = _task.Run(
@@ -133,9 +127,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             int currentReadIndex = 0;
 #if NET
-#pragma warning disable CA1416 // Validate platform compatibility
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
 #else
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
 #endif
@@ -245,15 +237,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 try
                 {
 #if NET
-#pragma warning disable CA1416 // Validate platform compatibility
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
 #else
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
-#pragma warning disable CA1416 // Validate platform compatibility
                     await _namedPipeServerStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA1416
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         _namedPipeServerStream.WaitForPipeDrain();
@@ -310,22 +298,17 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // This is unexpected and we throw an exception.
             ApplicationStateGuard.Ensure(_loopTask is not null);
 
-            // To close gracefully we need to ensure that the client closed the stream line 103.
+            // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                    "'{0}' didn't exit as expected",
-#else
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-#endif
                     nameof(InternalLoopAsync)));
             }
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }
@@ -346,7 +329,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             try
             {
-                // To close gracefully we need to ensure that the client closed the stream line 103.
+                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
                 await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutException)
@@ -356,7 +339,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }

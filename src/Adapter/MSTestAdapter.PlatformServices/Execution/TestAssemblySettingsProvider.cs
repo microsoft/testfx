@@ -32,14 +32,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         var testAssemblySettings = new TestAssemblySettings();
 
         // Load the source.
-        Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
-
-        TestIdGenerationStrategy testIdGenerationStrategy = ReflectHelper.GetTestIdGenerationStrategy(testAssembly);
-
-        // Set the test ID generation strategy for DataRowAttribute and DynamicDataAttribute so we can improve display name without
-        // causing a breaking change.
-        DataRowAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
-        DynamicDataAttribute.TestIdGenerationStrategy = testIdGenerationStrategy;
+        Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source);
 
         ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 
@@ -55,12 +48,6 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         }
 
         testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
-
-        ClassCleanupExecutionAttribute? classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
-        if (classCleanupSequencingAttribute != null)
-        {
-            testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;
-        }
 
         return testAssemblySettings;
     }

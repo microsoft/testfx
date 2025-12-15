@@ -11,10 +11,10 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHandler, IAsyncInitializableExtension
 {
     private readonly IServiceProvider _serviceProvider;
@@ -60,14 +60,14 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-        await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TotalTestsRunRequest, VoidResponse>(new TotalTestsRunRequest(_totalTests), cancellationToken).ConfigureAwait(false);
+        await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TotalTestsRunRequest, VoidResponse>(new TotalTestsRunRequest(_totalTests), testSessionContext.CancellationToken).ConfigureAwait(false);
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
         => Task.CompletedTask;
 
     public Task<bool> IsEnabledAsync()

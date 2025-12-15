@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 using static Microsoft.Testing.Platform.Hosts.ServerTestHost;
 
@@ -185,7 +185,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             if (change is not null)
             {
-                await _serverTestHost.SendTestUpdateAsync(change).ConfigureAwait(false);
+                await _serverTestHost.SendTestUpdateAsync(change, cancellationToken).ConfigureAwait(false);
             }
         }
         finally
@@ -194,8 +194,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
         try
         {
             // We signal the test session end so we can complete the flush.
@@ -255,7 +256,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             case FailedTestNodeStateProperty:
             case ErrorTestNodeStateProperty:
+#pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
             case TimeoutTestNodeStateProperty:
                 AddOrUpdateTestNodeStateStatistics(testNodeUid, hasPassed: false);
                 break;
@@ -293,5 +296,5 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
         }
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 }

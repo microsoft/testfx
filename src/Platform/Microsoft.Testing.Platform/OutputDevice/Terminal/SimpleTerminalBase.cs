@@ -14,10 +14,15 @@ internal abstract class SimpleTerminal : ITerminal
     public SimpleTerminal(IConsole console)
         => Console = console;
 
-#pragma warning disable CA1416 // Validate platform compatibility
-    public int Width => Console.IsOutputRedirected ? int.MaxValue : Console.BufferWidth;
+    public int Width
+        => Console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+            ? int.MaxValue
+            : Console.BufferWidth;
 
-    public int Height => Console.IsOutputRedirected ? int.MaxValue : Console.BufferHeight;
+    public int Height
+        => Console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+            ? int.MaxValue
+            : Console.BufferHeight;
 
     protected IConsole Console { get; }
 
@@ -66,32 +71,48 @@ internal abstract class SimpleTerminal : ITerminal
 
             string durationString = HumanReadableDurationFormatter.Render(p.Stopwatch.Elapsed);
 
+            int discovered = p.DiscoveredTests;
             int passed = p.PassedTests;
             int failed = p.FailedTests;
             int skipped = p.SkippedTests;
 
-            // Use just ascii here, so we don't put too many restrictions on fonts needing to
-            // properly show unicode, or logs being saved in particular encoding.
-            Append('[');
-            SetColor(TerminalColor.DarkGreen);
-            Append('+');
-            Append(passed.ToString(CultureInfo.CurrentCulture));
-            ResetColor();
+            if (!p.IsDiscovery)
+            {
+                // Use just ascii here, so we don't put too many restrictions on fonts needing to
+                // properly show unicode, or logs being saved in particular encoding.
+                Append('[');
+                SetColor(TerminalColor.DarkGreen);
+                Append('+');
+                Append(passed.ToString(CultureInfo.CurrentCulture));
+                ResetColor();
 
-            Append('/');
+                Append('/');
 
-            SetColor(TerminalColor.DarkRed);
-            Append('x');
-            Append(failed.ToString(CultureInfo.CurrentCulture));
-            ResetColor();
+                SetColor(TerminalColor.DarkRed);
+                Append('x');
+                Append(failed.ToString(CultureInfo.CurrentCulture));
+                ResetColor();
 
-            Append('/');
+                Append('/');
 
-            SetColor(TerminalColor.DarkYellow);
-            Append('?');
-            Append(skipped.ToString(CultureInfo.CurrentCulture));
-            ResetColor();
-            Append(']');
+                SetColor(TerminalColor.DarkYellow);
+                Append('?');
+                Append(skipped.ToString(CultureInfo.CurrentCulture));
+                ResetColor();
+                Append(']');
+            }
+            else
+            {
+                // Use just ascii here, so we don't put too many restrictions on fonts needing to
+                // properly show unicode, or logs being saved in particular encoding.
+                Append('[');
+                SetColor(TerminalColor.DarkMagenta);
+                Append('+');
+                Append(discovered.ToString(CultureInfo.CurrentCulture));
+                ResetColor();
+
+                Append(']');
+            }
 
             Append(' ');
             Append(p.AssemblyName);

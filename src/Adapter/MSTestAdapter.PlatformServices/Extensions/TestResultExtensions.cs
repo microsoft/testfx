@@ -20,12 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 /// <summary>
 /// Extension methods for TestResult.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(FrameworkConstants.PublicTypeObsoleteMessage)]
-#endif
-public static class TestResultExtensions
+internal static class TestResultExtensions
 {
     /// <summary>
     /// Convert parameter unitTestResult to testResult.
@@ -55,6 +50,16 @@ public static class TestResultExtensions
         testResult.SetPropertyValue(EngineConstants.ExecutionIdProperty, frameworkTestResult.ExecutionId);
         testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
         testResult.SetPropertyValue(EngineConstants.InnerResultsCountProperty, frameworkTestResult.InnerResultsCount);
+
+        if (frameworkTestResult.ExceptionAssertActual is not null)
+        {
+            testResult.SetPropertyValue(EngineConstants.AssertActualProperty, frameworkTestResult.ExceptionAssertActual);
+        }
+
+        if (frameworkTestResult.ExceptionAssertExpected is not null)
+        {
+            testResult.SetPropertyValue(EngineConstants.AssertExpectedProperty, frameworkTestResult.ExceptionAssertExpected);
+        }
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {

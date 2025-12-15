@@ -1,1 +1,2 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Platform.Builder.TestApplication.DisposeAsync() -> System.Threading.Tasks.ValueTask

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
 
 #if NETFRAMEWORK
 using System.Security;
@@ -28,7 +28,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
     {
     }
 
-    public override void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings)
+    public override void AddDeploymentItemsBasedOnMsTestSetting(string testSourceHandler, IList<DeploymentItem> deploymentItems, List<string> warnings)
     {
 #if NETFRAMEWORK
         if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
@@ -36,10 +36,10 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             EqtTrace.Info("Adding the references and satellite assemblies to the deployment items list");
 
             // Get the referenced assemblies.
-            ProcessNewStorage(testSource, deploymentItems, warnings);
+            ProcessNewStorage(testSourceHandler, deploymentItems, warnings);
 
             // Get the satellite assemblies
-            IEnumerable<DeploymentItem> satelliteItems = GetSatellites(deploymentItems, testSource, warnings);
+            IEnumerable<DeploymentItem> satelliteItems = GetSatellites(deploymentItems, testSourceHandler, warnings);
             foreach (DeploymentItem satelliteItem in satelliteItems)
             {
                 DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
@@ -48,7 +48,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
         else
         {
             EqtTrace.Info("Adding the test source directory to the deployment items list");
-            DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+            DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSourceHandler)));
         }
 #else
         // It should add items from bin\debug but since deployment items in netcore are run from bin\debug only, so no need to implement it
@@ -96,39 +96,39 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
 
 #if NETFRAMEWORK
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
+    public void ProcessNewStorage(string testSourceHandler, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
         // Add deployment items and process .config files only for storages we have not processed before.
-        if (!DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out string? errorMessage))
+        if (!DeploymentItemUtility.IsValidDeploymentItem(testSourceHandler, string.Empty, out string? errorMessage))
         {
             warnings.Add(errorMessage);
             return;
         }
 
-        DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(testSource, string.Empty, DeploymentItemOriginType.TestStorage));
+        DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(testSourceHandler, string.Empty, DeploymentItemOriginType.TestStorage));
 
         // Deploy .config file if exists, only for assemblies, i.e. DLL and EXE.
         // First check <TestStorage>.config, then if not found check for App.Config
         // and deploy AppConfig to <TestStorage>.config.
-        if (AssemblyUtility.IsAssemblyExtension(Path.GetExtension(testSource)))
+        if (AssemblyUtility.IsAssemblyExtension(Path.GetExtension(testSourceHandler)))
         {
-            string? configFile = AddTestSourceConfigFileIfExists(testSource, deploymentItems);
+            string? configFile = AddTestSourceConfigFileIfExists(testSourceHandler, deploymentItems);
 
             // Deal with test dependencies: update dependencyDeploymentItems and missingDependentAssemblies.
             try
             {
                 // We look for dependent assemblies only for DLL and EXE's.
-                AddDependencies(testSource, configFile, deploymentItems, warnings);
+                AddDependencies(testSourceHandler, configFile, deploymentItems, warnings);
             }
             catch (Exception e)
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToDeployDependencies, testSource, e);
+                string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToDeployDependencies, testSourceHandler, e);
                 warnings.Add(warning);
             }
         }
     }
 
-    public IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
+    public IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSourceHandler, IList<string> warnings)
     {
         List<DeploymentItem> satellites = [];
         foreach (DeploymentItem item in deploymentItems)
@@ -137,7 +137,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             string? path = null;
             try
             {
-                path = GetFullPathToDeploymentItemSource(item.SourcePath, testSource);
+                path = GetFullPathToDeploymentItemSource(item.SourcePath, testSourceHandler);
                 path = Path.GetFullPath(path);
 
                 if (StringEx.IsNullOrEmpty(path) || !AssemblyUtility.IsAssemblyExtension(Path.GetExtension(path))
@@ -218,23 +218,23 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
     /// <summary>
     /// Process test storage and add dependent assemblies to dependencyDeploymentItems.
     /// </summary>
-    /// <param name="testSource">The test source.</param>
+    /// <param name="testSourceHandler">The test source.</param>
     /// <param name="configFile">The config file.</param>
     /// <param name="deploymentItems">Deployment items.</param>
     /// <param name="warnings">Warnings.</param>
-    private void AddDependencies(string testSource, string? configFile, IList<DeploymentItem> deploymentItems, IList<string> warnings)
+    private void AddDependencies(string testSourceHandler, string? configFile, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(testSourceHandler), "testSourceHandler should not be null or empty.");
 
         // config file can be null.
         DebugEx.Assert(deploymentItems != null, "deploymentItems should not be null.");
-        DebugEx.Assert(Path.IsPathRooted(testSource), "path should be rooted.");
+        DebugEx.Assert(Path.IsPathRooted(testSourceHandler), "path should be rooted.");
 
         var sw = Stopwatch.StartNew();
 
         // Note: if this is not an assembly we simply return empty array, also:
         //       we do recursive search and report missing.
-        IReadOnlyList<string> references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out IList<string>? warningList);
+        IReadOnlyList<string> references = AssemblyUtility.GetFullPathToDependentAssemblies(testSourceHandler, configFile, out IList<string>? warningList);
         foreach (string warning in warningList)
         {
             warnings.Add(warning);
@@ -242,7 +242,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
 
         if (EqtTrace.IsInfoEnabled)
         {
-            EqtTrace.Info("DeploymentManager: Source:{0} has following references", testSource);
+            EqtTrace.Info("DeploymentManager: Source:{0} has following references", testSourceHandler);
             EqtTrace.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
         }
 

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -20,7 +22,7 @@ public class ClassCleanupManagerTests : TestContainer
         MethodInfo classCleanupMethodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeClassCleanupMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
         // Full class name must agree between unitTestElement.TestMethod.FullClassName and testMethod.FullClassName;
         string fullClassName = methodInfo.DeclaringType!.FullName!;
-        TestMethod testMethod = new(nameof(FakeTestClass.FakeTestMethod), fullClassName, typeof(FakeTestClass).Assembly.FullName!, isAsync: false);
+        TestMethod testMethod = new(nameof(FakeTestClass.FakeTestMethod), fullClassName, typeof(FakeTestClass).Assembly.FullName!, displayName: null);
 
         // Setting 2 of the same test to run, we should run assembly cleanup after both these tests
         // finish, not after the first one finishes.
@@ -30,7 +32,7 @@ public class ClassCleanupManagerTests : TestContainer
             new(testMethod)
         ];
 
-        var classCleanupManager = new ClassCleanupManager(testsToRun, ClassCleanupBehavior.EndOfClass, reflectHelper);
+        var classCleanupManager = new ClassCleanupManager(testsToRun);
 
         TestClassInfo testClassInfo = new(typeof(FakeTestClass), null!, true, new TestClassAttribute(), null!)
         {
@@ -41,13 +43,13 @@ public class ClassCleanupManagerTests : TestContainer
         classCleanupManager.MarkTestComplete(testMethodInfo, out bool shouldRunEndOfClassCleanup);
 
         // The cleanup should not run here yet, we have 1 remaining test to run.
-        Assert.IsFalse(shouldRunEndOfClassCleanup);
-        Assert.IsFalse(classCleanupManager.ShouldRunEndOfAssemblyCleanup);
+        shouldRunEndOfClassCleanup.Should().BeFalse();
+        classCleanupManager.ShouldRunEndOfAssemblyCleanup.Should().BeFalse();
 
         classCleanupManager.MarkTestComplete(testMethodInfo, out shouldRunEndOfClassCleanup);
         // The cleanup should run here.
-        Assert.IsTrue(shouldRunEndOfClassCleanup);
-        Assert.IsTrue(classCleanupManager.ShouldRunEndOfAssemblyCleanup);
+        shouldRunEndOfClassCleanup.Should().BeTrue();
+        classCleanupManager.ShouldRunEndOfAssemblyCleanup.Should().BeTrue();
     }
 
     [TestClass]

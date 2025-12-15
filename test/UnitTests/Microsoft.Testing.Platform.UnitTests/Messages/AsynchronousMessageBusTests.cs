@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -52,14 +51,8 @@ public sealed class AsynchronousMessageBusTests
 
         await proxy.PublishAsync(consumerA, new LoopDataA());
 
-        try
-        {
-            await asynchronousMessageBus.DrainDataAsync();
-        }
-        catch (InvalidOperationException ex)
-        {
-            Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
-        }
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(asynchronousMessageBus.DrainDataAsync);
+        Assert.Contains("Publisher/Consumer loop detected during the drain after", ex.Message);
 
         // Prevent loop to continue
         consumerA.StopConsume();
@@ -270,7 +263,7 @@ public sealed class AsynchronousMessageBusTests
 
         public Type[] DataTypesConsumed => [typeof(LoopDataA)];
 
-        public string Uid => nameof(LoopConsumerA);
+        public string Uid => nameof(ConsumerB);
 
         public string Version => "1.0.0";
 

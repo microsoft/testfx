@@ -13,7 +13,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -117,7 +116,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task DisplayBannerAsync(string? bannerMessage)
+    public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -167,7 +166,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    public Task DisplayBeforeSessionStartAsync()
+    public Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
         AppendAssemblyLinkTargetFrameworkAndArchitecture(_console, _assemblyName, _targetFramework, _longArchitecture);
         return Task.CompletedTask;
@@ -200,7 +199,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         console.WriteLine(builder.ToString());
     }
 
-    public async Task DisplayAfterSessionEndRunAsync()
+    public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -230,11 +229,11 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (cancellationToken.IsCancellationRequested)
+        if (testSessionContext.CancellationToken.IsCancellationRequested)
         {
             return Task.CompletedTask;
         }
@@ -255,7 +254,8 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     /// </summary>
     /// <param name="producer">The producer that sent the data.</param>
     /// <param name="data">The data to be displayed.</param>
-    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data)
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
@@ -301,14 +301,19 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
     private void ConsoleLog(string? message) => _console.WriteLine(message);
 #endif
 
-    private void OnFailedTest(TestNodeUpdateMessage testNodeStateChanged, TestNodeStateProperty state, Exception? exception, TimeSpan duration)
+    private void OnFailedTest(TestNodeUpdateMessage testNodeStateChanged, TestNodeStateProperty state, Exception? exception, TimeSpan? duration)
     {
         _failedTests++;
         var builder = new StringBuilder();
         builder.Append("failed ");
         builder.Append(testNodeStateChanged.TestNode.DisplayName);
-        builder.Append(' ');
-        HumanReadableDurationFormatter.Append(builder, static (builder, s) => builder!.Append(s), duration);
+
+        if (duration.HasValue)
+        {
+            builder.Append(' ');
+            HumanReadableDurationFormatter.Append(builder, static (builder, s) => builder!.Append(s), duration.Value);
+        }
+
         if (state.Explanation is not null)
         {
             builder.AppendLine();
@@ -337,7 +342,7 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration ?? TimeSpan.Zero;
+                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
 
                 switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
                 {
@@ -356,7 +361,9 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
                         OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
                         break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
+#pragma warning restore CS0618 // Type or member is obsolete
                         OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
                         break;
 
@@ -392,13 +399,13 @@ internal sealed partial class BrowserOutputDevice : IPlatformOutputDevice,
         return Task.CompletedTask;
     }
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole)
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
                 async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests))).ConfigureAwait(false)).ConfigureAwait(false);
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 }

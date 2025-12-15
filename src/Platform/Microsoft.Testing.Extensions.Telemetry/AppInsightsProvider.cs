@@ -18,14 +18,11 @@ namespace Microsoft.Testing.Extensions.Telemetry;
 /// Allows to log telemetry events via AppInsights.
 /// </summary>
 internal sealed partial class AppInsightsProvider :
-    ITelemetryCollector
-#pragma warning disable SA1001 // Commas should be spaced correctly
+    ITelemetryCollector,
 #if NETCOREAPP
-    , IAsyncDisposable
-#else
-    , IDisposable
+    IAsyncDisposable,
 #endif
-#pragma warning restore SA1001 // Commas should be spaced correctly
+    IDisposable
 {
     // Note: We're currently using the same environment variable as dotnet CLI.
     public static readonly string SessionIdEnvVar = "TESTINGPLATFORM_APPINSIGHTS_SESSIONID";
@@ -272,21 +269,24 @@ internal sealed partial class AppInsightsProvider :
 #if NETCOREAPP
         async
 #endif
-        Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
+        Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap, CancellationToken cancellationToken)
     {
 #if NETCOREAPP
-        await _payloads.Writer.WriteAsync((eventName, paramsMap)).ConfigureAwait(false);
+        await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(false);
 #else
-        _payloads.Add((eventName, paramsMap));
+        _payloads.Add((eventName, paramsMap), cancellationToken);
         return Task.CompletedTask;
 #endif
     }
 
-#if !NETCOREAPP
     // Adding dispose on graceful shutdown per https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152#issuecomment-518742922
     public void Dispose()
     {
+#if NETCOREAPP
+        _payloads.Writer.Complete();
+#else
         _payloads.CompleteAdding();
+#endif
         if (!_isDisposed)
         {
             if (_telemetryTask is null)
@@ -304,7 +304,6 @@ internal sealed partial class AppInsightsProvider :
             _isDisposed = true;
         }
     }
-#endif
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()

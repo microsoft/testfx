@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -15,6 +16,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
 
     public async Task<int> RunAsync()
     {
+        using IPlatformActivity? activity = _serviceProvider.GetPlatformOTelService()?.StartActivity("TestHostOrchestratorHost");
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
         if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
         {
@@ -32,7 +34,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
             }
 
-            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync().ConfigureAwait(false);
+            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
 
             foreach (ITestHostOrchestratorApplicationLifetime orchestratorLifetime in _serviceProvider.GetServicesInternal<ITestHostOrchestratorApplicationLifetime>())
             {

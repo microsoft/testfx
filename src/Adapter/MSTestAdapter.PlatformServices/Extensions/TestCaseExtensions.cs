@@ -68,22 +68,26 @@ internal static class TestCaseExtensions
     /// <param name="testCase"> The test case. </param>
     /// <param name="source"> The source. If deployed this is the full path of the source in the deployment directory. </param>
     /// <returns> The converted <see cref="UnitTestElement"/>. </returns>
-    internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
+    internal static UnitTestElement ToUnitTestElementWithUpdatedSource(this TestCase testCase, string source)
     {
         if (testCase.LocalExtensionData is UnitTestElement unitTestElement)
         {
-            return unitTestElement;
+            // If the requested source is different, clone it with updated source.
+            // This can happen when there are deployment items in tests.
+            // In this case, the source would be the path of the deployment directory.
+            // If we don't return UnitTestElement with the correct path to deployment directory, we will
+            // end up trying to load the test assembly twice in the same appdomain, once with the default context and once in a LoadFrom context.
+            // See https://github.com/microsoft/testfx/issues/6713
+            return unitTestElement.TestMethod.AssemblyName == source
+                ? unitTestElement
+                : unitTestElement.CloneWithUpdatedSource(source);
         }
 
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
         string name = testCase.GetTestName(testClassName);
-        var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
-            EngineConstants.TestIdGenerationStrategyProperty,
-            (int)TestIdGenerationStrategy.FullyQualified);
 
-        TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy)
-            : new(name, testClassName!, source, testCase.DisplayName, testIdGenerationStrategy);
+        var testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
+
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -91,37 +95,20 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
-
+            testMethod.TestCaseIndex = testCase.GetPropertyValue(EngineConstants.TestCaseIndexProperty, 0);
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
-        }
-
-        if (testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)
-        {
-            testMethod.DeclaringClassFullName = declaringClassName;
         }
 
         UnitTestElement testElement = new(testMethod)
         {
             TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,
-            DisplayName = testCase.DisplayName,
+            UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
         };
 
         if (testCase.Traits.Any())
         {
             testElement.Traits = [.. testCase.Traits];
-        }
-
-        string? cssIteration = testCase.GetPropertyValue<string>(EngineConstants.CssIterationProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssIteration))
-        {
-            testElement.CssIteration = cssIteration;
-        }
-
-        string? cssProjectStructure = testCase.GetPropertyValue<string>(EngineConstants.CssProjectStructureProperty, null);
-        if (!StringEx.IsNullOrWhiteSpace(cssProjectStructure))
-        {
-            testElement.CssProjectStructure = cssProjectStructure;
         }
 
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);
@@ -130,11 +117,13 @@ internal static class TestCaseExtensions
             testElement.WorkItemIds = workItemIds;
         }
 
+#if !WINDOWS_UWP && !WIN_UI
         KeyValuePair<string, string>[]? deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(EngineConstants.DeploymentItemsProperty, null);
         if (deploymentItems is { Length: > 0 })
         {
             testElement.DeploymentItems = deploymentItems;
         }
+#endif
 
         testElement.DoNotParallelize = testCase.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false);
 
@@ -143,13 +132,9 @@ internal static class TestCaseExtensions
 
     internal static string? GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
 
-    internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedTypeProperty, value);
-
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
-
-    internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !StringEx.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !StringEx.IsNullOrWhiteSpace(testCase.GetManagedType());
 
     internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 
-    internal static void SetHierarchy(this TestCase testCase, params string?[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
+    internal static void SetHierarchy(this TestCase testCase, string?[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
 }

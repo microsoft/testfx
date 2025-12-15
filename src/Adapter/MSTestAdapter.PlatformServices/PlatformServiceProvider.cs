@@ -23,18 +23,6 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     }
 
     /// <summary>
-    /// Gets an instance to the platform service validator for test sources.
-    /// </summary>
-    [field: AllowNull]
-    [field: MaybeNull]
-    [AllowNull]
-    public ITestSource TestSource
-    {
-        get => field ??= new TestSource();
-        private set;
-    }
-
-    /// <summary>
     /// Gets an instance to the platform service validator for data sources for tests.
     /// </summary>
     [field: AllowNull]
@@ -66,6 +54,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [AllowNull]
     public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
@@ -77,6 +66,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
         get => field ??= new TestDeployment();
         private set;
     }
+#endif
 
     /// <summary>
     /// Gets an instance to the platform service for a Settings Provider.
@@ -108,9 +98,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [field: AllowNull]
     [field: MaybeNull]
     [AllowNull]
-    public IReflectionOperations2 ReflectionOperations
+    public IReflectionOperations ReflectionOperations
     {
-        get => field ??= new ReflectionOperations2();
+        get => field ??= new ReflectionOperations();
         private set;
     }
 
@@ -160,37 +150,13 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     }
 
     /// <summary>
-    /// Gets an instance to the platform service listener who monitors trace and debug output
-    /// on provided text writer.
-    /// </summary>
-    /// <param name="textWriter">
-    /// The text Writer.
-    /// </param>
-    /// <returns>
-    /// The <see cref="ITraceListener"/>.
-    /// </returns>
-    public ITraceListener GetTraceListener(TextWriter textWriter) => new TraceListenerWrapper(textWriter);
-
-    /// <summary>
-    /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
-    /// with redirected streams and performs operations on the listener provided as argument.
-    /// </summary>
-    /// <param name="outputWriter">
-    /// The redirected output stream writer.
-    /// </param>
-    /// <param name="errorWriter">
-    /// The redirected error stream writer.
-    /// </param>
-    /// <returns>
-    /// The manager for trace listeners.
-    /// </returns>
-    public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter) => new TraceListenerManager(outputWriter, errorWriter);
-
-    /// <summary>
     /// Gets the TestContext object for a platform.
     /// </summary>
     /// <param name="testMethod">
     /// The test method.
+    /// </param>
+    /// <param name="testClassFullName">
+    /// The test class full name.
     /// </param>
     /// <param name="properties">
     /// The default set of properties the test context needs to be filled with.
@@ -203,9 +169,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
+    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
-        var testContextImplementation = new TestContextImplementation(testMethod, properties, messageLogger, TestRunCancellationToken);
+        var testContextImplementation = new TestContextImplementation(testMethod, testClassFullName, properties, messageLogger, TestRunCancellationToken);
         testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }

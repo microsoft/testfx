@@ -85,7 +85,7 @@ internal sealed class HotReloadHandler
         if (waitExecutionCompletion is not null)
         {
             await waitExecutionCompletion.ConfigureAwait(false);
-            await _outputDevice!.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted)).ConfigureAwait(false);
+            await _outputDevice!.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
         }
 
         try
@@ -102,7 +102,7 @@ internal sealed class HotReloadHandler
             _console!.Clear();
         }
 
-        await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted)).ConfigureAwait(false);
+        await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted), cancellationToken).ConfigureAwait(false);
 
         return !s_shutdownProcess;
     }

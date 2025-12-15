@@ -40,6 +40,11 @@ Moviendo los archivos de recursos del último intento al directorio de resultado
         <target state="translated">Moviendo el archivo '{0}' a '{1}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">La extensión de reintento no se admite en la plataforma del explorador. Las pruebas basadas en explorador no se pueden reintentar debido a las limitaciones de la plataforma.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">No se pudo iniciar el proceso '{0}'</target>
@@ -81,8 +86,8 @@ Moviendo los archivos de recursos del último intento al directorio de resultado
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Habilitar pruebas con errores de reintento</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">Reintenta las pruebas fallidas el número de veces indicado</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">

@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryFailedTestsPipeServer : IDisposable
 {
     private readonly NamedPipeServer _singleConnectionNamedPipeServer;
@@ -45,10 +46,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken);
 
     public void Dispose()
-    {
-        _singleConnectionNamedPipeServer.Dispose();
-        _pipeNameDescription.Dispose();
-    }
+        => _singleConnectionNamedPipeServer.Dispose();
 
     private Task<IResponse> CallbackAsync(IRequest request)
     {

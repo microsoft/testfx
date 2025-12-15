@@ -40,6 +40,11 @@ Moving last attempt asset files to the default result directory
         <target state="translated">正在将文件“{0}”移动到“{1}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">浏览器平台不支持重试扩展。由于平台限制，无法重试基于浏览器的测试。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">无法启动进程“{0}”</target>
@@ -81,8 +86,8 @@ Moving last attempt asset files to the default result directory
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">启用重试失败的测试</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">将失败的测试重试指定次数</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">

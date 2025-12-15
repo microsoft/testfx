@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace MSTest.SelfRealExamples.UnitTests;
 
 [TestClass]
@@ -21,10 +19,15 @@ public sealed class TestExecutionContextPropagationFromTestMethodAttributeToTest
 
     private sealed class MyTestMethodAttribute : TestMethodAttribute
     {
-        public override TestResult[] Execute(ITestMethod testMethod)
+        public MyTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+            : base(callerFilePath, callerLineNumber)
+        {
+        }
+
+        public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         {
             State.Value = "In Execute";
-            return base.Execute(testMethod);
+            return await base.ExecuteAsync(testMethod);
         }
     }
 }

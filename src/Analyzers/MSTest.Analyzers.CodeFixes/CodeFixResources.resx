@@ -117,10 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="FixSignatureCodeFix" xml:space="preserve">
-    <value>Fix signature</value>
+  <data name="RemoveClassCleanupBehaviorArgumentFix" xml:space="preserve">
+    <value>Remove 'ClassCleanupBehavior' argument</value>
   </data>
-  <data name="AssemblyInitializeShouldBeValidCodeFix" xml:space="preserve">
+  <data name="FixSignatureCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
   <data name="FixAssertionArgsOrder" xml:space="preserve">
@@ -165,13 +165,7 @@
   <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
     <value>Replace constructor with TestInitialize method</value>
   </data>
-  <data name="UseAssertThrowsExceptionOnLastStatementFix" xml:space="preserve">
-    <value>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</value>
-  </data>
   <data name="UseProperAssertMethodsFix" xml:space="preserve">
-    <value>Use '{0}'</value>
-  </data>
-  <data name="UseNewerAssertThrows" xml:space="preserve">
     <value>Use '{0}'</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
@@ -195,13 +189,25 @@
   <data name="RemoveDynamicDataSourceTypeFix" xml:space="preserve">
     <value>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</value>
   </data>
+  <data name="UseDisplayNamePropertyInsteadOfStringArgumentFix" xml:space="preserve">
+    <value>Use 'DisplayName' property instead of string argument</value>
+  </data>
+  <data name="AddCallerInfoParametersFix" xml:space="preserve">
+    <value>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</value>
+  </data>
+  <data name="AvoidOutParameterOnAssertIsInstanceOfTypeFix" xml:space="preserve">
+    <value>Use assignment instead of 'out' parameter</value>
+  </data>
+  <data name="UseContainsKeyInsteadOfContainsFix" xml:space="preserve">
+    <value>Use 'ContainsKey' instead of 'Contains'</value>
+  </data>
+  <data name="TransformExecuteToExecuteAsyncFix" xml:space="preserve">
+    <value>Transform 'Execute' override to 'ExecuteAsync'</value>
+  </data>
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
   </data>
-  <data name="AvoidAssertFormatParametersUseStringFormat" xml:space="preserve">
-    <value>Use 'string.Format' instead of format parameters</value>
-  </data>
-  <data name="AvoidAssertFormatParametersUseInterpolatedString" xml:space="preserve">
-    <value>Use interpolated string instead of format parameters</value>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute</value>
   </data>
 </root>

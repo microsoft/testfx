@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../CodeFixResources.resx">
     <body>
+      <trans-unit id="AddCallerInfoParametersFix">
+        <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
+        <target state="translated">Agregar los parámetros "[CallerFilePath]" y "[CallerLineNumber]"</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">Agregar '[TestClass]'</target>
@@ -22,14 +27,9 @@
         <target state="translated">Usar "{0}"</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseInterpolatedString">
-        <source>Use interpolated string instead of format parameters</source>
-        <target state="translated">Usar cadena interpolada en lugar de parámetros de formato</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertFormatParametersUseStringFormat">
-        <source>Use 'string.Format' instead of format parameters</source>
-        <target state="translated">Usar 'string. Format' en lugar de parámetros de formato</target>
+      <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
+        <source>Use assignment instead of 'out' parameter</source>
+        <target state="translated">Usar la asignación en lugar del parámetro "out"</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
@@ -52,14 +52,14 @@
         <target state="translated">Corregir firma</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
-        <source>Fix signature</source>
-        <target state="translated">Corregir firma</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Pasar el argumento 'TestContext.CancellationToken' a la llamada al método</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
+        <source>Remove 'ClassCleanupBehavior' argument</source>
+        <target state="translated">Quitar el argumento "ClassCleanupBehavior"</target>
         <note />
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
@@ -117,14 +117,19 @@
         <target state="translated">Corregir firma del método de prueba</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseAssertThrowsExceptionOnLastStatementFix">
-        <source>Use 'Assert.ThrowsException&lt;T&gt;' instead of '[ExpectedException]' attribute</source>
-        <target state="translated">Use "Assert.ThrowsException&lt;T&gt;" en lugar del atributo "[ExpectedException]"</target>
+      <trans-unit id="TransformExecuteToExecuteAsyncFix">
+        <source>Transform 'Execute' override to 'ExecuteAsync'</source>
+        <target state="translated">Transformar la invalidación "Execute" en "ExecuteAsync"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Agregar '[TestMethod]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseContainsKeyInsteadOfContainsFix">
+        <source>Use 'ContainsKey' instead of 'Contains'</source>
+        <target state="translated">Usar "ContainsKey" en lugar de "Contains"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
@@ -137,14 +142,19 @@
         <target state="translated">Usa "CooperativeCancellation = true"</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseNewerAssertThrows">
-        <source>Use '{0}'</source>
-        <target state="translated">Usar "{0}"</target>
+      <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
+        <source>Use 'DisplayName' property instead of string argument</source>
+        <target state="translated">Usar la propiedad "DisplayName" en lugar del argumento de cadena</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Usar "{0}"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[OSCondition]' attribute</source>
+        <target state="translated">Usar el atributo '[OSCondition]'</target>
         <note />
       </trans-unit>
     </body>

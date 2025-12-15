@@ -19,12 +19,13 @@ public static partial class VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>
     {
         public Test()
         {
+            string nuGetConfigFilePath = Path.Combine(RootFinder.Find(), "NuGet.config");
 #if NET462
-            ReferenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default;
+            ReferenceAssemblies = ReferenceAssemblies.NetFramework.Net462.WithNuGetConfigFilePath(nuGetConfigFilePath);
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ValueTask<>).Assembly.Location));
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(IAsyncDisposable).Assembly.Location));
 #else
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net60;
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfigFilePath);
 #endif
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));

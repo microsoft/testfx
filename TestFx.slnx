@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/samples/">
+    <Project Path="samples/FSharpPlayground/FSharpPlayground.fsproj" />
     <Project Path="samples/FxExtensibility/FxExtensibility.csproj" />
     <Project Path="samples/Playground/Playground.csproj" />
   </Folder>
@@ -33,16 +34,19 @@
   </Folder>
   <Folder Name="/src/1 - Platform and Extensions/">
     <File Path="src/Platform/Directory.Build.props" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureFoundry/Microsoft.Testing.Extensions.AzureFoundry.csproj" Id="60c660b9-6d0c-4967-b21c-e1c34257cc75" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport/Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.CrashDump/Microsoft.Testing.Extensions.CrashDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HotReload/Microsoft.Testing.Extensions.HotReload.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
   </Folder>
@@ -62,7 +66,6 @@
     </Project>
     <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
-    <Project Path="src/Analyzers/MSTest.Internal.Analyzers/MSTest.Internal.Analyzers.csproj" />
     <Project Path="src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" />
   </Folder>
   <Folder Name="/src/5 - Package/">
@@ -108,9 +111,6 @@
     <Project Path="test/IntegrationTests/TestAssets/SuiteLifeCycleTestProject/SuiteLifeCycleTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestCategoriesFromTestDataRowProject/TestCategoriesFromTestDataRowProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DefaultStrategy/TestIdProject.DefaultStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DisplayNameStrategy/TestIdProject.DisplayNameStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.FullyQualifiedTestStrategy/TestIdProject.FullyQualifiedStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.LegacyStrategy/TestIdProject.LegacyStrategy.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestProject/TestProjectForDiscovery.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TimeoutTestProject/TimeoutTestProject.csproj" />
   </Folder>

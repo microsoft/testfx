@@ -15,6 +15,7 @@ namespace Microsoft.Testing.Platform.Telemetry;
 internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataProducer
 {
     private Func<IServiceProvider, ITelemetryCollector>? _telemetryFactory;
+    private Func<IServiceProvider, IOpenTelemetryProvider>? _openTelemetryProviderFactory;
 
     public string Uid => nameof(TelemetryManager);
 
@@ -30,7 +31,18 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         _telemetryFactory = telemetryFactory;
     }
 
-    public async Task<ITelemetryCollector> BuildAsync(ServiceProvider serviceProvider, ILoggerFactory loggerFactory, TestApplicationOptions testApplicationOptions)
+    public void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory)
+    {
+        Guard.NotNull(openTelemetryProviderFactory);
+        _openTelemetryProviderFactory = openTelemetryProviderFactory;
+    }
+
+    public IOpenTelemetryProvider? BuildOTelProvider(ServiceProvider serviceProvider)
+        => _openTelemetryProviderFactory is null
+            ? null
+            : _openTelemetryProviderFactory(serviceProvider);
+
+    public async Task<ITelemetryCollector> BuildTelemetryAsync(ServiceProvider serviceProvider, ILoggerFactory loggerFactory, TestApplicationOptions testApplicationOptions)
     {
         bool isTelemetryOptedOut = !testApplicationOptions.EnableTelemetry;
 
@@ -111,7 +123,8 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         }
 
         IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-        await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice)).ConfigureAwait(false);
+        CancellationToken cancellationToken = serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
+        await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice), cancellationToken).ConfigureAwait(false);
 
         string? path = null;
         try

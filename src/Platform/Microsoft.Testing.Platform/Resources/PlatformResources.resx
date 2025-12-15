@@ -316,11 +316,11 @@
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
   </data>
+  <data name="CommandLineOptionObsoleteWarning" xml:space="preserve">
+    <value>Warning: Option '--{0}' is obsolete. {1}</value>
+  </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
-  </data>
-  <data name="CommandLineParserUnexpectedNullArgument" xml:space="preserve">
-    <value>Unexpected null argument at index {0}</value>
   </data>
   <data name="CommandLineParserUnexpectedSingleQuoteInArgument" xml:space="preserve">
     <value>Unexpected single quote in argument: {0}</value>
@@ -487,6 +487,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Invalid PID '{0}'
 {1}</value>
   </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser" xml:space="preserve">
+    <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
+  </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
   </data>
@@ -501,12 +504,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}</value>
-    <comment>0 level such as verbose, 
+    <comment>0 level such as verbose,
 1 path to file</comment>
   </data>
   <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with sync flush): {1}</value>
-    <comment>0 level such as verbose, 
+    <comment>0 level such as verbose,
 1 path to file</comment>
   </data>
   <data name="Expected" xml:space="preserve">
@@ -550,12 +553,18 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="Total" xml:space="preserve">
     <value>Total</value>
   </data>
+  <data name="TotalLowercase" xml:space="preserve">
+    <value>total</value>
+  </data>
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
   </data>
   <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
     <value>Console is already in batching mode.</value>
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="DurationLowercase" xml:space="preserve">
+    <value>duration</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>
@@ -715,5 +724,23 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="PlatformCommandLineDebugAttachOptionDescription" xml:space="preserve">
     <value>Allows to pause execution in order to attach to the process for debug purposes.</value>
+  </data>
+  <data name="SucceededLowercase" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
+  <data name="ChatClientProviderAlreadyRegistered" xml:space="preserve">
+    <value>A chat client provider has already been registered.</value>
+  </data>
+  <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
+    <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+  </data>
+  <data name="TestHostControllerProcessRestartNotSupportedOnWebAssembly" xml:space="preserve">
+    <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
+  </data>
+  <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Synchronous flush is not supported in browser environments.</value>
+  </data>
+  <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
   </data>
 </root>

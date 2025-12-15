@@ -143,7 +143,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             }
 
             IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw);
+            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw, _isDiscovery);
             int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
             assemblyRun.SlotIndex = slotIndex;
             _testProgressState = assemblyRun;
@@ -252,11 +252,11 @@ internal sealed partial class TerminalTestReporter : IDisposable
         bool colorizePassed = passed > 0 && _buildErrorsCount == 0 && failed == 0;
         bool colorizeSkipped = skipped > 0 && skipped == total && _buildErrorsCount == 0 && failed == 0;
 
-        string totalText = $"{SingleIndentation}total: {total}";
-        string failedText = $"{SingleIndentation}failed: {failed}";
-        string passedText = $"{SingleIndentation}succeeded: {passed}";
-        string skippedText = $"{SingleIndentation}skipped: {skipped}";
-        string durationText = $"{SingleIndentation}duration: ";
+        string totalText = $"{SingleIndentation}{PlatformResources.TotalLowercase}: {total}";
+        string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
+        string passedText = $"{SingleIndentation}{PlatformResources.SucceededLowercase}: {passed}";
+        string skippedText = $"{SingleIndentation}{PlatformResources.SkippedLowercase}: {skipped}";
+        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
 
         terminal.ResetColor();
         terminal.AppendLine(totalText);
@@ -305,7 +305,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string testNodeUid,
        string displayName,
        TestOutcome outcome,
-       TimeSpan duration,
+       TimeSpan? duration,
        string? informativeMessage,
        string? errorMessage,
        Exception? exception,
@@ -332,7 +332,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
-        TimeSpan duration,
+        TimeSpan? duration,
         string? informativeMessage,
         FlatException[] exceptions,
         string? expected,
@@ -398,7 +398,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         ITerminal terminal,
         string displayName,
         TestOutcome outcome,
-        TimeSpan duration,
+        TimeSpan? duration,
         string? informativeMessage,
         FlatException[] flatExceptions,
         string? expected,
@@ -432,9 +432,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.ResetColor();
         terminal.Append(' ');
         terminal.Append(MakeControlCharactersVisible(displayName, true));
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(' ');
-        AppendLongDuration(terminal, duration);
+
+        if (duration.HasValue)
+        {
+            terminal.Append(' ');
+            AppendLongDuration(terminal, duration.Value);
+        }
 
         terminal.AppendLine();
 
@@ -840,11 +843,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
 
         TestProgressState asm = _testProgressState;
+        asm.DiscoveredTests++;
+
         if (_isDiscovery)
         {
-            // TODO: add mode for discovered tests to the progress bar, to get rid of the hack here that allows updating the
-            // progress, but also breaks the total counts if not done only in discovery.
-            asm.PassedTests++;
+            // In discovery mode we count discovered tests,
+            // but in execution mode the completion of test will increase the total tests count.
             asm.TotalTests++;
         }
 
@@ -859,7 +863,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         terminal.AppendLine();
 
         int totalTests = assembly?.TotalTests ?? 0;
-        bool runFailed = WasCancelled;
+        bool runFailed = WasCancelled || totalTests < 1;
 
         if (assembly is not null)
         {
@@ -889,7 +893,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             terminal.AppendLine();
         }
 
-        string durationText = $"{SingleIndentation}duration: ";
+        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);

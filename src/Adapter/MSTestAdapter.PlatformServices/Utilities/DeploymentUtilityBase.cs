@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -53,13 +53,25 @@ internal abstract class DeploymentUtilityBase
     /// Create deployment directories.
     /// </summary>
     /// <param name="runContext">The run context.</param>
+    /// <param name="firstTestSource">
+    /// The path to the test assembly of the first test case. In most cases, all
+    /// test cases belong to the same assembly, but not guaranteed. We are using the path from
+    /// the first test case as a "best effort" implementation. DeploymentItem isn't correctly designed and should be deprecated in future.
+    /// </param>
     /// <returns>TestRunDirectories instance.</returns>
-    public TestRunDirectories CreateDeploymentDirectories(IRunContext? runContext)
+    public TestRunDirectories CreateDeploymentDirectories(IRunContext? runContext, string? firstTestSource)
     {
         string resultsDirectory = GetTestResultsDirectory(runContext);
         string rootDeploymentDirectory = GetRootDeploymentDirectory(resultsDirectory);
 
-        var result = new TestRunDirectories(rootDeploymentDirectory);
+#if NETFRAMEWORK
+        bool isAppDomainCreationDisabled = runContext?.RunSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runContext.RunSettings.SettingsXml);
+#else
+        // AppDomains are only supported in .NET Framework.
+        const bool isAppDomainCreationDisabled = true;
+#endif
+
+        var result = new TestRunDirectories(rootDeploymentDirectory, firstTestSource, isAppDomainCreationDisabled);
 
         FileUtility.CreateDirectoryIfNotExists(rootDeploymentDirectory);
         FileUtility.CreateDirectoryIfNotExists(result.InDirectory);
@@ -72,10 +84,10 @@ internal abstract class DeploymentUtilityBase
     /// <summary>
     /// add deployment items based on MSTestSettingsProvider.Settings.DeployTestSourceDependencies. This property is ignored in net core.
     /// </summary>
-    /// <param name="testSource">The test source.</param>
+    /// <param name="testSourceHandler">The test source.</param>
     /// <param name="deploymentItems">Deployment Items.</param>
     /// <param name="warnings">Warnings.</param>
-    public abstract void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings);
+    public abstract void AddDeploymentItemsBasedOnMsTestSetting(string testSourceHandler, IList<DeploymentItem> deploymentItems, List<string> warnings);
 
     /// <summary>
     /// Get the parent test results directory where deployment will be done.
@@ -93,19 +105,19 @@ internal abstract class DeploymentUtilityBase
     /// <returns>Root deployment directory.</returns>
     public abstract string GetRootDeploymentDirectory(string baseDirectory);
 
-    internal string? GetConfigFile(string testSource)
+    internal string? GetConfigFile(string testSourceHandler)
     {
         string? configFile = null;
 
-        string assemblyConfigFile = testSource + TestAssemblyConfigFileExtension;
+        string assemblyConfigFile = testSourceHandler + TestAssemblyConfigFileExtension;
         if (FileUtility.DoesFileExist(assemblyConfigFile))
         {
             // Path to config file cannot be bad: storage is already checked, and extension is valid.
-            configFile = testSource + TestAssemblyConfigFileExtension;
+            configFile = testSourceHandler + TestAssemblyConfigFileExtension;
         }
         else
         {
-            string netAppConfigFile = Path.Combine(Path.GetDirectoryName(testSource)!, NetAppConfigFile);
+            string netAppConfigFile = Path.Combine(Path.GetDirectoryName(testSourceHandler)!, NetAppConfigFile);
             if (FileUtility.DoesFileExist(netAppConfigFile))
             {
                 configFile = netAppConfigFile;
@@ -116,24 +128,24 @@ internal abstract class DeploymentUtilityBase
     }
 
     /// <summary>
-    /// Does the deployment of parameter deployment items and the testSource to the parameter directory.
+    /// Does the deployment of parameter deployment items and the testSourceHandler to the parameter directory.
     /// </summary>
     /// <param name="deploymentItems">The deployment item.</param>
-    /// <param name="testSource">The test source.</param>
+    /// <param name="testSourceHandler">The test source.</param>
     /// <param name="deploymentDirectory">The deployment directory.</param>
     /// <param name="resultsDirectory">Root results directory.</param>
     /// <returns>Returns a list of deployment warnings.</returns>
-    protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
+    protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSourceHandler, string deploymentDirectory, string resultsDirectory)
     {
         Guard.NotNullOrWhiteSpace(deploymentDirectory);
-        Guard.NotNullOrWhiteSpace(testSource);
+        Guard.NotNullOrWhiteSpace(testSourceHandler);
         ApplicationStateGuard.Ensure(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
-        ApplicationStateGuard.Ensure(FileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
+        ApplicationStateGuard.Ensure(FileUtility.DoesFileExist(testSourceHandler), $"TestSource {testSourceHandler} does not exist.");
 
-        testSource = Path.GetFullPath(testSource);
+        testSourceHandler = Path.GetFullPath(testSourceHandler);
         var warnings = new List<string>();
 
-        AddDeploymentItemsBasedOnMsTestSetting(testSource, deploymentItems, warnings);
+        AddDeploymentItemsBasedOnMsTestSetting(testSourceHandler, deploymentItems, warnings);
 
         // Maps relative to Out dir destination -> source and used to determine if there are conflicted items.
         var destToSource = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -150,13 +162,13 @@ internal abstract class DeploymentUtilityBase
             }
 
             // Get the files corresponding to this deployment item
-            List<string>? deploymentItemFiles = GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, resultsDirectory, warnings, out bool itemIsDirectory);
+            List<string>? deploymentItemFiles = GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSourceHandler, resultsDirectory, warnings, out bool itemIsDirectory);
             if (deploymentItemFiles == null)
             {
                 continue;
             }
 
-            string fullPathToDeploymentItemSource = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
+            string fullPathToDeploymentItemSource = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSourceHandler);
 
             // Note: source is already rooted.
             foreach (string deploymentItemFile in deploymentItemFiles)
@@ -221,6 +233,10 @@ internal abstract class DeploymentUtilityBase
                     if (!destToSource.TryGetValue(relativeDestination, out string? value))
                     {
                         destToSource.Add(relativeDestination, fileToDeploy);
+                        if (fileToDeploy == destination)
+                        {
+                            continue;
+                        }
 
                         // Now, finally we can copy the file...
                         destination = FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string? warning);
@@ -262,20 +278,20 @@ internal abstract class DeploymentUtilityBase
     /// Get files corresponding to parameter deployment item.
     /// </summary>
     /// <param name="deploymentItem">Deployment Item.</param>
-    /// <param name="testSource">The test source.</param>
+    /// <param name="testSourceHandler">The test source.</param>
     /// <param name="resultsDirectory">Results directory which should be skipped for deployment.</param>
     /// <param name="warnings">Warnings.</param>
     /// <param name="isDirectory">Is this a directory.</param>
     /// <returns>Paths to items to deploy.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    protected List<string>? GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, string resultsDirectory, IList<string> warnings, out bool isDirectory)
+    protected List<string>? GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSourceHandler, string resultsDirectory, IList<string> warnings, out bool isDirectory)
     {
         DebugEx.Assert(deploymentItem != null, "deploymentItem should not be null.");
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(testSourceHandler), "testSourceHandler should not be null or empty.");
 
         try
         {
-            isDirectory = IsDeploymentItemSourceADirectory(deploymentItem, testSource, out string? directory);
+            isDirectory = IsDeploymentItemSourceADirectory(deploymentItem, testSourceHandler, out string? directory);
             if (isDirectory)
             {
                 return FileUtility.AddFilesFromDirectory(
@@ -283,14 +299,14 @@ internal abstract class DeploymentUtilityBase
                     deployDirectory => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false);
             }
 
-            if (IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))
+            if (IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSourceHandler, out string fileName))
             {
                 return [fileName];
             }
 
             // If file/directory is not found, then try removing the prefix and see if it is present.
             string fileOrDirNameOnly = Path.GetFileName(deploymentItem.SourcePath);
-            if (IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
+            if (IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSourceHandler, out fileName))
             {
                 return [fileName];
             }
@@ -308,9 +324,9 @@ internal abstract class DeploymentUtilityBase
         return null;
     }
 
-    protected static string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource) => Path.IsPathRooted(deploymentItemSourcePath)
+    protected static string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSourceHandler) => Path.IsPathRooted(deploymentItemSourcePath)
             ? deploymentItemSourcePath
-            : Path.Combine(Path.GetDirectoryName(testSource)!, deploymentItemSourcePath);
+            : Path.Combine(Path.GetDirectoryName(testSourceHandler)!, deploymentItemSourcePath);
 
     /// <summary>
     /// Validate the output directory for the parameter deployment item.
@@ -365,9 +381,9 @@ internal abstract class DeploymentUtilityBase
         return true;
     }
 
-    protected string? AddTestSourceConfigFileIfExists(string testSource, IList<DeploymentItem> deploymentItems)
+    protected string? AddTestSourceConfigFileIfExists(string testSourceHandler, IList<DeploymentItem> deploymentItems)
     {
-        string? configFile = GetConfigFile(testSource);
+        string? configFile = GetConfigFile(testSourceHandler);
 
         if (!StringEx.IsNullOrEmpty(configFile))
         {
@@ -414,18 +430,18 @@ internal abstract class DeploymentUtilityBase
         return deploymentItems is { Count: > 0 };
     }
 
-    private bool IsDeploymentItemSourceAFile(string deploymentItemSourcePath, string testSource, out string file)
+    private bool IsDeploymentItemSourceAFile(string deploymentItemSourcePath, string testSourceHandler, out string file)
     {
-        file = GetFullPathToDeploymentItemSource(deploymentItemSourcePath, testSource);
+        file = GetFullPathToDeploymentItemSource(deploymentItemSourcePath, testSourceHandler);
 
         return FileUtility.DoesFileExist(file);
     }
 
-    private bool IsDeploymentItemSourceADirectory(DeploymentItem deploymentItem, string testSource, [NotNullWhen(true)] out string? resultDirectory)
+    private bool IsDeploymentItemSourceADirectory(DeploymentItem deploymentItem, string testSourceHandler, [NotNullWhen(true)] out string? resultDirectory)
     {
         resultDirectory = null;
 
-        string directory = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
+        string directory = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSourceHandler);
         directory = directory.TrimEnd('/', '\\');
 
         if (FileUtility.DoesDirectoryExist(directory))

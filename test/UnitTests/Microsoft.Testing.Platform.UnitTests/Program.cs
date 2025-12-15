@@ -6,7 +6,6 @@ using Microsoft.Testing.Extensions;
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
-[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 // Opt-out telemetry
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
@@ -20,7 +19,11 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
-builder.AddHangDumpProvider();
+if (!OperatingSystem.IsBrowser())
+{
+    builder.AddHangDumpProvider();
+}
+
 builder.AddTrxReportProvider();
 builder.AddAzureDevOpsProvider();
 

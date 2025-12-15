@@ -13,11 +13,8 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform;
 
-internal sealed class DotnetTestConnection : IPushOnlyProtocol,
-#if NETCOREAPP
-    IAsyncDisposable,
-#endif
-    IDisposable
+[UnsupportedOSPlatform("browser")]
+internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 {
     private readonly CommandLineHandler _commandLineHandler;
     private readonly IEnvironment _environment;
@@ -81,7 +78,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
                     commandLineOption.Name,
                     commandLineOption.Description,
                     commandLineOption.IsHidden,
-                    commandLineOption.IsBuiltIn));
+                    commandLineOption.IsBuiltIn,
+                    commandLineOption.ObsolescenceMessage));
             }
         }
 
@@ -147,15 +145,4 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol,
     public Task OnExitAsync() => Task.CompletedTask;
 
     public void Dispose() => _dotnetTestPipeClient?.Dispose();
-
-#if NETCOREAPP
-    public async ValueTask DisposeAsync()
-    {
-        if (_dotnetTestPipeClient is not null)
-        {
-            await _dotnetTestPipeClient.DisposeAsync().ConfigureAwait(false);
-        }
-    }
-#endif
-
 }

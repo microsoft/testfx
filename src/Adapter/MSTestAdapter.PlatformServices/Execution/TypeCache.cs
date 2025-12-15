@@ -155,15 +155,6 @@ internal sealed class TypeCache : MarshalByRefObject
             // Load the class type
             Type? type = LoadType(typeName, testMethod.AssemblyName);
 
-            // VSTest managed feature is not working properly and ends up providing names that are not fully
-            // unescaped causing reflection to fail loading. For the cases we know this is happening, we will
-            // try to manually unescape the type name and load the type again.
-            if (type == null
-                && TryGetUnescapedManagedTypeName(testMethod, out string? unescapedTypeName))
-            {
-                type = LoadType(unescapedTypeName, testMethod.AssemblyName);
-            }
-
             if (type == null)
             {
                 // This means the class containing the test method could not be found.
@@ -174,43 +165,6 @@ internal sealed class TypeCache : MarshalByRefObject
             // Get the classInfo
             return @this.CreateClassInfo(type);
         }, (this, testMethod));
-    }
-
-    private static bool TryGetUnescapedManagedTypeName(TestMethod testMethod, [NotNullWhen(true)] out string? unescapedTypeName)
-    {
-        if (testMethod.Hierarchy.Count != 4)
-        {
-            unescapedTypeName = null;
-            return false;
-        }
-
-        StringBuilder unescapedTypeNameBuilder = new();
-        int i = -1;
-        foreach (string? hierarchyPart in testMethod.Hierarchy)
-        {
-            i++;
-            if (i is not 1 and not 2 || hierarchyPart is null)
-            {
-                continue;
-            }
-
-            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart, 1, hierarchyPart.Length - 2);
-            }
-            else
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart);
-            }
-
-            if (i == 1)
-            {
-                unescapedTypeNameBuilder.Append('.');
-            }
-        }
-
-        unescapedTypeName = unescapedTypeNameBuilder.ToString();
-        return unescapedTypeName != testMethod.FullClassName;
     }
 
     /// <summary>
@@ -233,7 +187,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (t == null)
             {
-                Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName, isReflectionOnly: false);
+                Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName);
 
                 // Attempt to load the type from the test assembly.
                 // Allow this call to throw if the type can't be loaded.
@@ -302,7 +256,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
+        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestClassAttribute>(classType);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -354,7 +308,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
     {
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo);
         if (timeoutAttribute != null)
         {
             if (!timeoutAttribute.HasCorrectTimeout)
@@ -384,14 +338,14 @@ internal sealed class TypeCache : MarshalByRefObject
             {
                 var assemblyInfo = new TestAssemblyInfo(assembly);
 
-                Type[] types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
+                Type[] types = AssemblyEnumerator.GetTypes(assembly);
 
                 foreach (Type t in types)
                 {
                     try
                     {
                         // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: false))
+                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
                         {
                             continue;
                         }
@@ -421,8 +375,8 @@ internal sealed class TypeCache : MarshalByRefObject
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                         }
 
-                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo, inherit: true);
-                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo, inherit: true);
+                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
+                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
 
                         if (isGlobalTestInitialize || isGlobalTestCleanup)
                         {
@@ -464,7 +418,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo))
         {
             return false;
         }
@@ -492,7 +446,7 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo, false))
+        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo))
         {
             return false;
         }
@@ -530,20 +484,6 @@ internal sealed class TypeCache : MarshalByRefObject
         if (cleanupMethod is not null)
         {
             classInfo.BaseClassCleanupMethods.Add(cleanupMethod);
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            classInfo.BaseClassCleanupMethodsStack.Push(cleanupMethod);
-#pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        if (initMethod is not null || cleanupMethod is not null)
-        {
-#pragma warning disable CS0618 // Type or member is obsolete - kept in case someone is using it
-            classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                new Tuple<MethodInfo?, MethodInfo?>(
-                    initMethod,
-                    initAndCleanupMethods.LastOrDefault()));
-#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         initAndCleanupMethods = new MethodInfo[2];
@@ -574,7 +514,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
+                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -596,7 +536,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
+                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -623,8 +563,8 @@ internal sealed class TypeCache : MarshalByRefObject
         bool isBase,
         HashSet<string>? instanceMethods)
     {
-        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
-        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
+        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo);
+        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
@@ -729,7 +669,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         MethodInfo? testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
             ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
-            : GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo, discoverInternals);
+            : throw ApplicationStateGuard.Unreachable();
 
         // if correct method is not found, throw appropriate
         // exception about what is wrong.
@@ -750,6 +690,9 @@ internal sealed class TypeCache : MarshalByRefObject
             // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
             // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
             // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
+            // In addition, it also happens when deployment items are used and app domain is disabled.
+            // We explicitly set it to null in this case because the original MethodInfo calculated during discovery cannot be used because
+            // it points to the type loaded from the assembly in bin instead of from deployment directory.
             methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
@@ -774,37 +717,6 @@ internal sealed class TypeCache : MarshalByRefObject
             : testMethodInfo;
     }
 
-    private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
-    {
-        // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
-        // This happens on .NET Framework when app domain is enabled, and the MethodInfo is calculated and set during discovery.
-        // Then, execution will cause TestMethod to cross to a different app domain, and MethodInfo will be null.
-        // Note: This whole GetMethodInfoUsingRuntimeMethods is likely never reachable.
-        // It's called if HasManagedMethodAndTypeProperties is false, but it should always be true per the current implementation.
-        if (testMethod.MethodInfo is { } methodInfo)
-        {
-            return methodInfo.HasCorrectTestMethodSignature(true, discoverInternals) ? methodInfo : null;
-        }
-
-        IEnumerable<MethodInfo> methods = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(testClassInfo.ClassType)
-            .Where(method => method.Name == testMethod.Name &&
-                             method.HasCorrectTestMethodSignature(true, discoverInternals));
-
-        if (testMethod.DeclaringClassFullName == null)
-        {
-            // Either the declaring class is the same as the test class, or
-            // the declaring class information wasn't passed in the test case.
-            // Prioritize the former while maintaining previous behavior for the latter.
-            string? className = testClassInfo.ClassType.FullName;
-            return methods
-                .OrderByDescending(method => method.DeclaringType!.FullName == className)
-                .FirstOrDefault();
-        }
-
-        // Only find methods that match the given declaring name.
-        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
-    }
-
     /// <summary>
     /// Set custom properties.
     /// </summary>
@@ -816,8 +728,8 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
 
         // Avoid calling GetAttributes<T> to prevent iterator state machine allocations.
-        _ = ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo, inherit: true), testMethodInfo, testContext) &&
-            ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.Parent.ClassType, inherit: true), testMethodInfo, testContext);
+        _ = ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo), testMethodInfo, testContext) &&
+            ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.Parent.ClassType), testMethodInfo, testContext);
 
         static bool ValidateAttributes(Attribute[] attributes, TestMethodInfo testMethodInfo, ITestContext testContext)
         {

@@ -3,7 +3,6 @@
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,7 +19,6 @@ internal class TypeEnumerator
     private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
-    private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
@@ -31,15 +29,13 @@ internal class TypeEnumerator
     /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
-        _testIdGenerationStrategy = testIdGenerationStrategy;
     }
 
     /// <summary>
@@ -86,7 +82,7 @@ internal class TypeEnumerator
             {
                 // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
-                UnitTestElement testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
+                UnitTestElement testMethod = GetTestFromMethod(method, warnings);
 
                 tests.Add(testMethod);
             }
@@ -113,52 +109,45 @@ internal class TypeEnumerator
         return [.. tests.GroupBy(
             t => t.TestMethod.Name,
             (_, elements) =>
-                elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())];
+                // Note: null suppression for MethodInfo here is safe.
+                // The property is marked as null because it's not serializable and will be null when crossing appdomain.
+                // But in this context, we are accessing MethodInfo in the same appdomain that created it, so we are not crossing appdomain boundaries.
+                // The GetTestFromMethod call above guarantees that it's non-null.
+                // The null suppression for DeclaringType is also safe, there is no reason for a test method to have null declaring type.
+                // FullName is also guaranteed to be non-null.
+                elements.OrderBy(t => inheritanceDepths[t.TestMethod.MethodInfo!.DeclaringType!.FullName!]).First())];
     }
 
     /// <summary>
     /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
     /// </summary>
     /// <param name="method">The reflected method.</param>
-    /// <param name="isDeclaredInTestTypeAssembly">True if the reflected method is declared in the same assembly as the current type.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
         ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
-        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, _testIdGenerationStrategy)
+        var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, string.Join(",", method.GetParameters().Select(p => p.ParameterType.ToString())))
         {
             MethodInfo = method,
         };
 
-        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
-        {
-            testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
-        }
-
-        if (!isDeclaredInTestTypeAssembly)
-        {
-            testMethod.DeclaringAssemblyName =
-                PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
-                    method.DeclaringType.Assembly);
-        }
-
         var testElement = new UnitTestElement(testMethod)
         {
-            // Get compiler generated type name for async test method (either void returning or task returning).
-            AsyncTypeName = method.GetAsyncTypeName(),
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
+#if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
+#endif
             Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method, inherit: true);
+        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
         TestMethodAttribute? testMethodAttribute = null;
 
         // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
@@ -168,14 +157,6 @@ internal class TypeEnumerator
             if (attributes[i] is TestMethodAttribute tma)
             {
                 testMethodAttribute = tma;
-            }
-            else if (attributes[i] is CssIterationAttribute cssIteration)
-            {
-                testElement.CssIteration = cssIteration.CssIteration;
-            }
-            else if (attributes[i] is CssProjectStructureAttribute cssProjectStructure)
-            {
-                testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
             }
         }
 
@@ -191,8 +172,10 @@ internal class TypeEnumerator
         // DebugEx.Assert(testMethodAttribute is not null, "Expected to find a 'TestMethod' attribute.");
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
-        testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
-        testMethod.DisplayName = testElement.DisplayName;
+        testMethod.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
+        testElement.DeclaringFilePath = testMethodAttribute?.DeclaringFilePath;
+        testElement.DeclaringLineNumber = testMethodAttribute?.DeclaringLineNumber;
+        testElement.UnfoldingStrategy = testMethodAttribute?.UnfoldingStrategy ?? TestDataSourceUnfoldingStrategy.Auto;
 
         return testElement;
     }

@@ -1,3 +1,5 @@
+# GitHub Copilot Instructions
+
 This is a .NET based repository that contains the MSTest testing framework and Microsoft.Testing.Platform (aka MTP) testing platform. Please follow these guidelines when contributing:
 
 ## Code Standards
@@ -25,9 +27,10 @@ You MUST minimize adding public API surface area but any newly added public API 
 ## Localization Guidelines
 
 Anytime you add a new localization resource, you MUST:
+
 - Add a corresponding entry in the localization resource file.
 - Add an entry in all `*.xlf` files related to the modified `.resx` file.
-- Do not modify existing entries in '*.xlf' files unless you are also modifying the corresponding `.resx` file.
+- Do not modify existing entries in `*.xlf` files unless you are also modifying the corresponding `.resx` file.
 
 ## Testing Guidelines
 
@@ -39,4 +42,4 @@ Anytime you add a new localization resource, you MUST:
 
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
 - Do the changes when you are specifically tagged or mentioned as copilot.
-- If you are unsure comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.
+- If you are unsure, comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.

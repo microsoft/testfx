@@ -18,6 +18,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
+
     <ReportAnalyzer>true</ReportAnalyzer>
   </PropertyGroup>
 
@@ -26,10 +27,9 @@
     <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
     <UwpMinimum>uap10.0.16299</UwpMinimum>
     <ModernUwpMinimum>net9.0-windows10.0.17763.0</ModernUwpMinimum>
-    <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
+    <WinUiMinimum>net8.0-windows10.0.18362.0</WinUiMinimum>
 
-    <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0;net9.0</MicrosoftTestingTargetFrameworks>
-    <SupportedNetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0;net9.0</SupportedNetFrameworks>
+    <SupportedNetFrameworks>net8.0;net9.0</SupportedNetFrameworks>
   </PropertyGroup>
 
   <!-- Build config -->
@@ -44,6 +44,8 @@
 
     <!-- Experimental test API usages are allowed inside this solution -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- netfx and netstandard don't have nullability info so the IDE0370 warning should be suppressed -->
+    <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0' OR $(TargetFramework.StartsWith('net4')) OR '$(TargetFramework)' == '$(UwpMinimum)'">$(NoWarn);IDE0370</NoWarn>
   </PropertyGroup>
 
   <!-- Versioning -->
@@ -51,9 +53,9 @@
     <MSTestEnginePreReleaseVersionLabel>alpha</MSTestEnginePreReleaseVersionLabel>
 
     <!--
-      This is a early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+      This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
     -->
-    <MSTestEngineVersionPrefix>1.0.0</MSTestEngineVersionPrefix>
+    <MSTestEngineVersionPrefix>2.0.0</MSTestEngineVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->
@@ -77,6 +79,7 @@
   <PropertyGroup>
     <PolyGuard>true</PolyGuard>
     <PolyStringInterpolation>true</PolyStringInterpolation>
+    <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
   </PropertyGroup>
 
   <ItemGroup>

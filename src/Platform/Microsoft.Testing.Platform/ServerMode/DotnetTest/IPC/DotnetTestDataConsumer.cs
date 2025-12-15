@@ -6,10 +6,11 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
@@ -241,7 +242,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
                 state = TestStates.Cancelled;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
@@ -278,25 +281,25 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         RoslynDebug.Assert(_dotnetTestConnection is not null);
 
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
-            sessionUid.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionStartEvent).ConfigureAwait(false);
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         RoslynDebug.Assert(_dotnetTestConnection is not null);
 
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
-            sessionUid.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
         await _dotnetTestConnection.SendMessageAsync(sessionEndEvent).ConfigureAwait(false);

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
+using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -46,6 +47,8 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         _unhandledExceptionsHandler = unhandledExceptionsHandler;
     }
 
+    public IChatClientManager ChatClientManager => _testHostBuilder.ChatClientManager;
+
     public ITestHostManager TestHost => _testHostBuilder.TestHost;
 
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
@@ -54,9 +57,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
-    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
-    internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
-
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
@@ -64,9 +64,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     public ILoggingManager Logging => _testHostBuilder.Logging;
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
-
-    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
-    internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
 

@@ -19,13 +19,26 @@ public static class HangDumpExtensions
     /// Adds hang dump support to the test application.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
     public static void AddHangDumpProvider(this ITestApplicationBuilder builder)
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException("Hang dump extension is not available on browser");
+        }
+
+        if (OperatingSystem.IsIOS() || OperatingSystem.IsTvOS())
+        {
+            throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
+        }
+
         var environment = new SystemEnvironment();
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(environment, new SystemProcessHandler());
-        string mutexSuffix = Guid.NewGuid().ToString("N");
+        string namedPipeSuffix = Guid.NewGuid().ToString("N");
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), environment);
-        HangDumpConfiguration hangDumpConfiguration = new(testApplicationModuleInfo, pipeNameDescription, mutexSuffix);
+        HangDumpConfiguration hangDumpConfiguration = new(testApplicationModuleInfo, pipeNameDescription, namedPipeSuffix);
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new HangDumpProcessLifetimeHandler(
@@ -36,10 +49,8 @@ public static class HangDumpExtensions
                 serviceProvider.GetTask(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetLoggerFactory(),
-                serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetProcessHandler(),
-                serviceProvider,
                 serviceProvider.GetClock()));
 
         builder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider

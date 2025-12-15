@@ -2,6 +2,7 @@
   "solution": {
     "path": "TestFx.slnx",
     "projects": [
+      "samples\\FSharpPlayground\\FSharpPlayground.fsproj",
       "samples\\FxExtensibility\\FxExtensibility.csproj",
       "samples\\Playground\\Playground.csproj",
       "src\\Adapter\\MSTest.Engine\\MSTest.Engine.csproj",
@@ -45,9 +46,6 @@
       "test\\IntegrationTests\\TestAssets\\SuiteLifeCycleTestProject\\SuiteLifeCycleTestProject.csproj",
       "test\\IntegrationTests\\TestAssets\\TestCategoriesFromTestDataRowProject\\TestCategoriesFromTestDataRowProject.csproj",
       "test\\IntegrationTests\\TestAssets\\TestIdProject.DefaultStrategy\\TestIdProject.DefaultStrategy.csproj",
-      "test\\IntegrationTests\\TestAssets\\TestIdProject.DisplayNameStrategy\\TestIdProject.DisplayNameStrategy.csproj",
-      "test\\IntegrationTests\\TestAssets\\TestIdProject.FullyQualifiedTestStrategy\\TestIdProject.FullyQualifiedStrategy.csproj",
-      "test\\IntegrationTests\\TestAssets\\TestIdProject.LegacyStrategy\\TestIdProject.LegacyStrategy.csproj",
       "test\\IntegrationTests\\TestAssets\\TestProject\\TestProjectForDiscovery.csproj",
       "test\\IntegrationTests\\TestAssets\\TimeoutTestProject\\TimeoutTestProject.csproj",
       "test\\Performance\\MSTest.Performance.Runner\\MSTest.Performance.Runner.csproj",

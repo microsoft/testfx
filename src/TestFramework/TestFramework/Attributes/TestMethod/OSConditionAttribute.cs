@@ -21,6 +21,11 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
 #endif
 #endif
 
+#if NET462
+    // Cache the detected OS to avoid repeated reflection calls
+    private static readonly OperatingSystems? DetectedOS = DetectCurrentOS();
+#endif
+
     private readonly OperatingSystems _operatingSystems;
 
     /// <summary>
@@ -49,10 +54,9 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     /// <summary>
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
-    public override bool ShouldRun
+    public override bool IsConditionMet
 #if NET462
-        // On .NET Framework, we are sure we are running on Windows.
-        => (_operatingSystems & OperatingSystems.Windows) != 0;
+        => DetectedOS is not null && (_operatingSystems & DetectedOS) != 0;
 #else
     {
         get
@@ -79,8 +83,73 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
     }
 #endif
 
-    /// <inheritdoc />
-    public override string? IgnoreMessage { get; set; }
+#if NET462
+    /// <summary>
+    /// Detects the current operating system using reflection to maintain compatibility with .NET Framework 4.6.2.
+    /// </summary>
+    /// <returns>
+    /// The detected operating system, or null if the OS could not be determined.
+    /// </returns>
+    private static OperatingSystems? DetectCurrentOS()
+    {
+        // RuntimeInformation.IsOSPlatform is available in .NET Framework 4.7.1+.
+        // For older .NET Framework versions or environments where the API is not available,
+        // we return null to fall back to assuming Windows.
+        // This also handles Mono which supports RuntimeInformation API and can run on non-Windows platforms.
+        Type? runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation, System.Runtime.InteropServices.RuntimeInformation")
+            ?? Type.GetType("System.Runtime.InteropServices.RuntimeInformation, mscorlib");
+        if (runtimeInformationType is null)
+        {
+            return OperatingSystems.Windows;
+        }
+
+        MethodInfo? isOSPlatformMethod = runtimeInformationType.GetMethod("IsOSPlatform", BindingFlags.Public | BindingFlags.Static);
+        if (isOSPlatformMethod is null)
+        {
+            // Fallback to Windows if the method is not found
+            return OperatingSystems.Windows;
+        }
+
+        Type? osPlatformType = Type.GetType("System.Runtime.InteropServices.OSPlatform, System.Runtime.InteropServices.RuntimeInformation")
+            ?? Type.GetType("System.Runtime.InteropServices.OSPlatform, mscorlib")
+            ?? throw ApplicationStateGuard.Unreachable();
+
+        // Use the predefined static properties instead of Create() method
+        // On Mono, the static properties use uppercase strings (e.g., "LINUX") while Create() uses the provided casing,
+        // and IsOSPlatform performs case-sensitive comparison against the predefined values.
+        PropertyInfo? windowsProp = osPlatformType.GetProperty("Windows", BindingFlags.Public | BindingFlags.Static);
+        PropertyInfo? linuxProp = osPlatformType.GetProperty("Linux", BindingFlags.Public | BindingFlags.Static);
+        PropertyInfo? osxProp = osPlatformType.GetProperty("OSX", BindingFlags.Public | BindingFlags.Static);
+        PropertyInfo? freebsdProp = osPlatformType.GetProperty("FreeBSD", BindingFlags.Public | BindingFlags.Static);
+
+        if (windowsProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, windowsProp))
+        {
+            return OperatingSystems.Windows;
+        }
+        else if (linuxProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, linuxProp))
+        {
+            return OperatingSystems.Linux;
+        }
+        else if (osxProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, osxProp))
+        {
+            return OperatingSystems.OSX;
+        }
+        else if (freebsdProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, freebsdProp))
+        {
+            return OperatingSystems.FreeBSD;
+        }
+
+        // Unknown OS
+        return null;
+    }
+
+    private static bool IsOSPlatformViaProperty(MethodInfo isOSPlatformMethod, PropertyInfo osPlatformProperty)
+    {
+        object? osPlatform = osPlatformProperty.GetValue(null);
+        object? result = isOSPlatformMethod.Invoke(null, [osPlatform]);
+        return result is true;
+    }
+#endif
 
     /// <summary>
     /// Gets the group name for this attribute.

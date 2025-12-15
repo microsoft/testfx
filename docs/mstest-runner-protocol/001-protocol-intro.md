@@ -1,7 +1,7 @@
-# 001 - MSTest Runner Protocol
+# 001 - Microsoft.Testing.Platform JSON-RPC Protocol (formerly MSTest Runner Protocol)
 
-MSTest Runner projects builds into a self-contained executable that can be invoked to run tests.
-The protocol describes the communication between the client (IDE/CLI/CI) any the MSTest Runner executable (also refered to as the server).
+Microsoft.Testing.Platform projects builds into a self-sufficient executable that can be invoked to run tests.
+The protocol describes the communication between the client (IDE/CLI/CI) and a test runner executable (also referred to as the server).
 
 The communication is based on JSON-RPC and describes the RPC messages sent in order to support running of tests.
 
@@ -33,7 +33,7 @@ Here's the current list of APIs that supported by the client.
 The protocol is extensible, where the client and the server handshake the capabilities they support.
 
 For instance not all servers need to support [IDE integration](./003-protocol-ide-integration-extensions.md) or new versions
-of the MSTest runner, might support additional RPC requests/responses or add additional properties to the payloads.
+of the Microsoft.Testing.Platform, might support additional RPC requests/responses or add additional properties to the payloads.
 
 [IDE integration](./003-protocol-ide-integration-extensions.md) describes the protocol extensions used to support features like run from editor and how to control the values shown in the test explorer.
 
@@ -180,7 +180,7 @@ what the client supports and limit functionality based on unsupported features.
 ### Determine capabilities during test runner initialization
 
 > [!NOTE]
-> Capabilities initialiation is based on the `initialize` request from LSP.
+> Capabilities initialization is based on the `initialize` request from LSP.
 > In theory this allows any LSP server to also act as a test runner server, as long as it handles the additional RPC requests.
 
 Request:
@@ -272,7 +272,7 @@ interface InitializeResponse {
 
 #### Versioning capabilities
 
-Any behaviour changes should be announced via capabilities, where the client/server
+Any behavior changes should be announced via capabilities, where the client/server
 should announce what kinds of additional RPC requests and responses they can handle.
 
 For instance, let's say the server would like to be make the file/line location lazy.
@@ -282,7 +282,7 @@ If the capability is missing/or false the server should assume that the client w
 lazy locations and send the full location.
 
 > [!NOTE]
-> Discovery/Run requests, as well as TestNode format specified in the intial release of the protocol
+> Discovery/Run requests, as well as TestNode format specified in the initial release of the protocol
 > should be supported by all clients/servers.
 > As such, they're not expressed via capabilities.
 
@@ -297,7 +297,7 @@ Another use case is the collection of hang dumps, crash dumps, in which case the
 
 ## Discovery and run requests
 
-The two most basic features that the MSTest runner should provide is the capability to discover and run tests.
+The two most basic features that the a test runner should provide is the capability to discover and run tests.
 
 Since, in most cases the runner loads and runs user code in the runner's process, the expected lifetime of
 the test runner is a single run.
@@ -667,7 +667,7 @@ There should be a generic way of cancelling requests,
 whether it's a discovery request or a run request.
 
 This would make it possible to cancel discovery/run requests,
-or request the client to cancel launching of a debugger process if necesary.
+or request the client to cancel launching of a debugger process if necessary.
 
 Notification:
 

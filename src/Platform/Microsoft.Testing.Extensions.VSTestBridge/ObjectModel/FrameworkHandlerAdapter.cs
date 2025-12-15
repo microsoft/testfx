@@ -81,7 +81,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _session = session;
         _cancellationToken = cancellationToken;
         _isTrxEnabled = isTrxEnabled;
-        _comboMessageLogger = new MessageLoggerAdapter(loggerFactory, outputDevice, adapterExtensionBase, frameworkHandle);
+        _comboMessageLogger = new MessageLoggerAdapter(loggerFactory, outputDevice, adapterExtensionBase, frameworkHandle, cancellationToken);
     }
 
     /// <inheritdoc/>

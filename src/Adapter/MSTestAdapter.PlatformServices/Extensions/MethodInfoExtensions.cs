@@ -112,7 +112,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method, ReflectHelper? reflectHelper = null)
     {
-        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method);
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
@@ -196,24 +196,6 @@ internal static class MethodInfoExtensions
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static Task? TryGetTaskFromValueTaskAsync(object invokeResult)
         => (invokeResult as ValueTask?)?.AsTask();
-
-    /// <summary>
-    /// Invoke a <see cref="MethodInfo"/> as a synchronous <see cref="Task"/>.
-    /// </summary>
-    /// <param name="methodInfo">
-    /// <see cref="MethodInfo"/> instance.
-    /// </param>
-    /// <param name="classInstance">
-    /// Instance of the on which methodInfo is invoked.
-    /// </param>
-    /// <param name="arguments">
-    /// Arguments for the methodInfo invoke.
-    /// </param>
-    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
-    {
-        Task? invokeResult = methodInfo.GetInvokeResultAsync(classInstance, arguments);
-        invokeResult?.GetAwaiter().GetResult();
-    }
 
     private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)
     {
