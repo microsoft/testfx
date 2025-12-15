@@ -42,7 +42,7 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
-        <target state="new">The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</target>
+        <target state="translated">Die Wiederholungserweiterung wird auf der Browserplattform nicht unterstützt. Browserbasierte Tests können aufgrund von Plattformbeschränkungen nicht erneut ausgeführt werden.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">

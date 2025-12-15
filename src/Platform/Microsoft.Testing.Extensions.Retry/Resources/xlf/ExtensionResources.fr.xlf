@@ -42,7 +42,7 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
-        <target state="new">The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</target>
+        <target state="translated">L’extension de nouvelle tentative n’est pas prise en charge sur la plateforme navigateur. Les tests basés sur navigateur ne peuvent pas être relancés en raison des limitations de la plateforme.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">

@@ -1046,17 +1046,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
         <source>Avoid duplicate test method attributes</source>
-        <target state="new">Avoid duplicate test method attributes</target>
+        <target state="translated">避免重复的测试方法属性</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
-        <target state="new">Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</target>
+        <target state="translated">测试方法 '{0}' 具有多个继承自 'TestMethodAttribute' 的属性。只能使用一个测试方法属性。</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
-        <target state="new">A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</target>
+        <target state="translated">测试方法应标记一个且仅一个继承自'TestMethodAttribute'的属性。如果存在多个此类属性，将使用反射返回的第一个属性。</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">

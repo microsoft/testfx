@@ -42,7 +42,7 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
-        <target state="new">The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</target>
+        <target state="translated">Расширение повторных попыток не поддерживается на браузерной платформе. Из-за ограничений платформы невозможно выполнить повторные попытки тестов в браузере.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">

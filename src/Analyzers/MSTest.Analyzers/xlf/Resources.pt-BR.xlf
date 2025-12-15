@@ -1031,32 +1031,32 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Use o atributo "[OSCondition]" em vez de chamadas "RuntimeInformation.IsOSPlatform" com retorno antecipado ou "Assert.Inconclusive"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Use o atributo "[OSCondition]" em vez de chamadas "RuntimeInformation.IsOSPlatform" com retorno antecipado ou "Assert.Inconclusive"</target>
         <note />
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
-        <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
+        <target state="translated">Os métodos de teste que usam "RuntimeInformation.IsOSPlatform" com retorno antecipado ou "Assert.Inconclusive" devem usar o atributo "[OSCondition]". Esse atributo fornece uma maneira mais declarativa e detectável de especificar requisitos de teste específicos do sistema operacional.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
         <source>Avoid duplicate test method attributes</source>
-        <target state="new">Avoid duplicate test method attributes</target>
+        <target state="translated">Evitar características de método de teste duplicadas</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
-        <target state="new">Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</target>
+        <target state="translated">O método de teste '{0}' tem várias características que herdam de 'TestMethodAttribute'. Somente uma característica de método de teste deve ser usada.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
-        <target state="new">A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</target>
+        <target state="translated">Um método de teste deve ser marcado com exatamente uma característica que seja ou herde de 'TestMethodAttribute'. Quando várias dessas características estiverem presentes, somente a primeira retornada pela reflexão será usada.</target>
         <note />
       </trans-unit>      
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">

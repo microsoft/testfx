@@ -1048,17 +1048,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
         <source>Avoid duplicate test method attributes</source>
-        <target state="new">Avoid duplicate test method attributes</target>
+        <target state="translated">Yinelenen test yöntemi özniteliklerini önleyin</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
-        <target state="new">Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</target>
+        <target state="translated">Test yöntemi '{0}' 'TestMethodAttribute'den devralan birden fazla özniteliğe sahiptir. Yalnızca bir test yöntemi özelliği kullanılmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
-        <target state="new">A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</target>
+        <target state="translated">Bir test yöntemi, ‘TestMethodAttribute’ olan veya bundan devralan tam olarak bir öznitelikle işaretlenmelidir. Bu türden birden fazla öznitelik mevcut olduğunda, yansıma tarafından döndürülen ilk öznitelik kullanılır.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">

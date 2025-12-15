@@ -42,7 +42,7 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
-        <target state="new">The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</target>
+        <target state="translated">Rozszerzenie ponawiania próby nie jest obsługiwane na platformie przeglądarki. Testów opartych na przeglądarce nie da się powtórzyć z powodu ograniczeń platformy.</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
