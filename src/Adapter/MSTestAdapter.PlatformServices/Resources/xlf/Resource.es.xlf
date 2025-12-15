@@ -549,11 +549,11 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Número incorrecto de objetos para permutación. Debe ser una cantidad mayor que cero.</target>
         <note></note>
       </trans-unit>
-          <trans-unit id="UTA_OutRefParametersNotSupported">
+      <trans-unit id="UTA_OutRefParametersNotSupported">
         <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
         <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
         <note />
       </trans-unit>
-</body>
+  </body>
   </file>
 </xliff>
