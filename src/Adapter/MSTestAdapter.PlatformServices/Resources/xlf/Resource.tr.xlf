@@ -554,6 +554,6 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
         <note />
       </trans-unit>
-  </body>
+    </body>
   </file>
 </xliff>
