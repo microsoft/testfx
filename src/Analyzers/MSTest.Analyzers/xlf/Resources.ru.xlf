@@ -1056,7 +1056,7 @@ The type declaring these methods should also respect the following rules:
         <target state="new">Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</target>
         <note />
       </trans-unit>
-          <trans-unit id="AvoidOutRefTestMethodParametersTitle">
+      <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
         <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
         <note />
