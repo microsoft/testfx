@@ -22,6 +22,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string wildcardMatchPattern = $"""
+Warning: Option '--no-ansi' is obsolete. Use '--ansi off' instead of '--no-ansi'.
 MSTest v{MSTestVersion} (UTC *) [* - *]
 Usage {AssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -68,12 +69,18 @@ Options:
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
 Extension options:
+    --ansi
+        Control ANSI escape characters output.
+          --ansi auto - Auto-detect terminal capabilities (default)
+          --ansi on|true|enable|1 - Force enable ANSI escape sequences
+          --ansi off|false|disable|0 - Force disable ANSI escape sequences
     --filter
         Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
     --maximum-failed-tests
         Specifies a maximum number of test failures that, when exceeded, will abort the test run.
-    --no-ansi
+    --no-ansi [obsolete]
         Disable outputting ANSI escape characters to screen.
+        Obsolete: Use '--ansi off' instead of '--no-ansi'.
     --no-progress
         Disable reporting progress to screen.
     --output
