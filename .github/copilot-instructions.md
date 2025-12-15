@@ -1,4 +1,4 @@
-# Github Copilot Instructions
+# GitHub Copilot Instructions
 
 This is a .NET based repository that contains the MSTest testing framework and Microsoft.Testing.Platform (aka MTP) testing platform. Please follow these guidelines when contributing:
 
