@@ -1046,17 +1046,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
         <source>Avoid duplicate test method attributes</source>
-        <target state="new">Avoid duplicate test method attributes</target>
+        <target state="translated">Unikaj powielania atrybutów metody testowej</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
-        <target state="new">Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</target>
+        <target state="translated">Metoda testowa „{0}” ma wiele atrybutów dziedziczących po elemencie „TestMethodAttribute”. Należy użyć tylko jednego atrybutu metody testowej.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
-        <target state="new">A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</target>
+        <target state="translated">Metoda testowa powinna mieć dokładnie jeden atrybut, który jest lub dziedziczy po elemencie „TestMethodAttribute”. Gdy jest ich kilka, używany jest tylko pierwszy zwrócony przez mechanizm refleksji.</target>
         <note />
       </trans-unit>
     </body>
