@@ -40,15 +40,8 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
         Diagnostic diagnostic = context.Diagnostics[0];
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
-        SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
-        if (syntaxToken.Parent is null)
-        {
-            return;
-        }
-
-        // Find the method declaration identified by the diagnostic.
-        MethodDeclarationSyntax? methodDeclaration = syntaxToken.Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (methodDeclaration is null)
+        // The diagnostic is reported on the method, so we can directly get the method declaration
+        if (root.FindNode(diagnosticSpan) is not MethodDeclarationSyntax methodDeclaration)
         {
             return;
         }
@@ -66,10 +59,8 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
         // Remove out/ref modifiers from parameters
-        ParameterListSyntax newParameterList = methodDeclaration.ParameterList;
-        SeparatedSyntaxList<ParameterSyntax> newParameters = newParameterList.Parameters;
+        SeparatedSyntaxList<ParameterSyntax> newParameters = methodDeclaration.ParameterList.Parameters;
 
-        bool hasChanges = false;
         for (int i = 0; i < newParameters.Count; i++)
         {
             ParameterSyntax parameter = newParameters[i];
@@ -80,17 +71,13 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
             {
                 ParameterSyntax newParameter = parameter.WithModifiers(filteredModifiers);
                 newParameters = newParameters.Replace(parameter, newParameter);
-                hasChanges = true;
             }
         }
 
-        if (hasChanges)
-        {
-            MethodDeclarationSyntax newMethodDeclaration = methodDeclaration.WithParameterList(
-                newParameterList.WithParameters(newParameters));
+        MethodDeclarationSyntax newMethodDeclaration = methodDeclaration.WithParameterList(
+            methodDeclaration.ParameterList.WithParameters(newParameters));
 
-            editor.ReplaceNode(methodDeclaration, newMethodDeclaration);
-        }
+        editor.ReplaceNode(methodDeclaration, newMethodDeclaration);
 
         Document newDocument = editor.GetChangedDocument();
         return newDocument.Project.Solution;
