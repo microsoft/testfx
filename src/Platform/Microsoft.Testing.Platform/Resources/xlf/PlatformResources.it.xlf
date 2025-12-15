@@ -117,6 +117,11 @@
         <target state="translated">L'opzione '--{0}' è riservata e non può essere usata dai provider: '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">L'opzione '--{0}' del provider '{1}' (UID: {2}) usa il prefisso riservato '--internal'</target>
@@ -533,6 +538,11 @@ I valori disponibili sono 'Trace', 'Debug', 'Information', 'Warning', 'Error' e 
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="new">The '--exit-on-process-exit' option is not supported in browser environments.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Esci dal processo di test se il processo dipendente viene chiuso. È necessario specificare il PID.</target>
@@ -763,6 +773,11 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
         <target state="translated">riusciti</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="new">Synchronous flush is not supported in browser environments.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">È già impostata una factory 'ITestExecutionFilterFactory'</target>
@@ -880,6 +895,11 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
         <target state="translated">Errore della sessione di test dell'adattatore di test</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="new">Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">Il processo dell'applicazione di test non è stato chiuso normalmente. Il codice di uscita è '{0}'</target>
@@ -975,6 +995,11 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">La posizione del programma è ritenuta non raggiungibile. File='{0}', Riga={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -76,7 +77,14 @@ public sealed class TestApplication : ITestApplication
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         if (parseResult.IsOptionSet(PlatformCommandLineProvider.DebugAttachOptionKey))
         {
-            WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+            else
+            {
+                WaitForDebuggerToAttach(systemEnvironment, systemConsole, systemProcess);
+            }
         }
 
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
@@ -223,10 +231,18 @@ public sealed class TestApplication : ITestApplication
 
         if (environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER) == "1")
         {
-            WaitForDebuggerToAttach(environment, console, systemProcess);
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.WaitDebuggerAttachNotSupportedInBrowserErrorMessage);
+            }
+            else
+            {
+                WaitForDebuggerToAttach(environment, console, systemProcess);
+            }
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
     private static void WaitForDebuggerToAttach(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {
         using IProcess currentProcess = systemProcess.GetCurrentProcess();

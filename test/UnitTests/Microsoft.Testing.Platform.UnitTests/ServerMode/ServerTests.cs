@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class ServerTests
 {
     public ServerTests()

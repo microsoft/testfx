@@ -720,6 +720,16 @@ The type declaring these methods should also respect the following rules:
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
     <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
   </data>
+  <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
+    <value>Avoid duplicate test method attributes</value>
+  </data>
+  <data name="DuplicateTestMethodAttributeMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</value>
+  </data>
+  <data name="DuplicateTestMethodAttributeDescription" xml:space="preserve">
+    <value>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</value>
+  </data>
+  
   <data name="AvoidOutRefTestMethodParametersTitle" xml:space="preserve">
     <value>Avoid using 'out' or 'ref' parameters in test methods</value>
   </data>

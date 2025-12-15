@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly bool _isEnabled;

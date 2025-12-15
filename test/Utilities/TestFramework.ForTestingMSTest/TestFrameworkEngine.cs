@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Web;
+
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
@@ -63,7 +65,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
         Assembly assembly = Assembly.GetEntryAssembly()!;
         IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
-        // TODO: Handle filtering
+        string encodedAssemblyName = EncodeString(assembly.GetName().Name!);
+
         foreach (TypeInfo testContainerType in assemblyTestContainerTypes)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -75,13 +78,27 @@ internal sealed class TestFrameworkEngine : IDataProducer
             ConstructorInfo setupMethod = testContainerType.GetConstructor([])!;
             MethodInfo teardownMethod = testContainerType.BaseType!.GetMethod("Dispose")!;
 
+            string testContainerBasePath = $"/{encodedAssemblyName}/{EncodeString(testContainerType.Namespace!)}/{EncodeString(testContainerType.Name)}";
+
             foreach (MethodInfo? publicMethod in testContainerPublicMethods)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 TestNodeUid testNodeUid = $"{testContainerType.FullName}.{publicMethod.Name}";
+
+                // Build the tree node path for filtering
+                string testNodePath = $"{testContainerBasePath}/{EncodeString(publicMethod.Name)}";
+                PropertyBag filterableProperties = new();
+
+                // Apply filters
                 if (request.Filter is TestNodeUidListFilter testNodeUidListFilter
                     && !testNodeUidListFilter.TestNodeUids.Contains(testNodeUid))
+                {
+                    continue;
+                }
+
+                if (request.Filter is TreeNodeFilter treeNodeFilter
+                    && !treeNodeFilter.MatchesFilter(testNodePath, filterableProperties))
                 {
                     continue;
                 }
@@ -170,7 +187,8 @@ internal sealed class TestFrameworkEngine : IDataProducer
 
         IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(IsTestContainer);
 
-        // TODO: Fail if no container?
+        string encodedAssemblyName = EncodeString(assembly.GetName().Name!);
+
         foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -181,10 +199,23 @@ internal sealed class TestFrameworkEngine : IDataProducer
                 && (memberInfo.ReturnType == typeof(void) || memberInfo.ReturnType == typeof(Task))
                 && memberInfo.GetParameters().Length == 0);
 
-            // TODO: Fail if no public method?
+            string testContainerBasePath = $"/{encodedAssemblyName}/{EncodeString(testContainerType.Namespace!)}/{EncodeString(testContainerType.Name)}";
+
             foreach (MethodInfo? publicMethod in testContainerPublicMethods)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // Build the tree node path for filtering
+                string testNodePath = $"{testContainerBasePath}/{EncodeString(publicMethod.Name)}";
+                PropertyBag filterableProperties = new();
+
+                // Apply TreeNodeFilter if present
+                if (request.Filter is TreeNodeFilter treeNodeFilter
+                    && !treeNodeFilter.MatchesFilter(testNodePath, filterableProperties))
+                {
+                    continue;
+                }
+
                 _logger.LogDebug($"Found test '{publicMethod.Name}'");
                 TestNode testNode = new()
                 {
@@ -326,4 +357,7 @@ internal sealed class TestFrameworkEngine : IDataProducer
             DisplayName = testNode.DisplayName,
             Properties = new(testNode.Properties.AsEnumerable()),
         };
+
+    private static string EncodeString(string value)
+        => HttpUtility.UrlEncode(value);
 }
