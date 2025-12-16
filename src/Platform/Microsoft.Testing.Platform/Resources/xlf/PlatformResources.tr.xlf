@@ -526,6 +526,11 @@ Kullanılabilir değerler: 'Trace', 'Debug', 'Information', 'Warning', 'Error' v
         <target state="translated">Kullanılabilir testleri listeler.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineTestFormatOptionDescription">
+        <source>Format string for displaying tests. Supported placeholders: &lt;display&gt; (display name), &lt;fqn&gt; (fully qualified name), &lt;ns&gt; (namespace), &lt;type&gt; (type name), &lt;method&gt; (method name), &lt;asm&gt; (assembly name). Default is '&lt;display&gt;'.</source>
+        <target state="new">Format string for displaying tests. Supported placeholders: &lt;display&gt; (display name), &lt;fqn&gt; (fully qualified name), &lt;ns&gt; (namespace), &lt;type&gt; (type name), &lt;method&gt; (method name), &lt;asm&gt; (assembly name). Default is '&lt;display&gt;'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet test kanalı.</target>

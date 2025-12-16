@@ -387,6 +387,9 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
   <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
     <value>List available tests.</value>
   </data>
+  <data name="PlatformCommandLineTestFormatOptionDescription" xml:space="preserve">
+    <value>Format string for displaying tests. Supported placeholders: &lt;display&gt; (display name), &lt;fqn&gt; (fully qualified name), &lt;ns&gt; (namespace), &lt;type&gt; (type name), &lt;method&gt; (method name), &lt;asm&gt; (assembly name). Default is '&lt;display&gt;'.</value>
+  </data>
   <data name="PlatformCommandLineHelpOptionDescription" xml:space="preserve">
     <value>Show the command line help.</value>
   </data>

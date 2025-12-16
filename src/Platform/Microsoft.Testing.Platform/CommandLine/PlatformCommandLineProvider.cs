@@ -30,6 +30,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string ConfigFileOptionKey = "config-file";
     public const string FilterUidOptionKey = "filter-uid";
     public const string DebugAttachOptionKey = "debug";
+    public const string TestFormatOptionKey = "test-format";
 
     public const string ServerOptionKey = "server";
     public const string ClientPortOptionKey = "client-port";
@@ -61,6 +62,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(ConfigFileOptionKey, PlatformResources.PlatformCommandLineConfigFileOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(FilterUidOptionKey, PlatformResources.PlatformCommandLineFilterUidOptionDescription, ArgumentArity.OneOrMore, false, isBuiltIn: true),
         new(DebugAttachOptionKey, PlatformResources.PlatformCommandLineDebugAttachOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(TestFormatOptionKey, PlatformResources.PlatformCommandLineTestFormatOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
         new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
