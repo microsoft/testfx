@@ -32,6 +32,11 @@
         <target state="translated">使用指派而非 'out' 參數</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersFix">
+        <source>Remove 'out' and 'ref' modifiers</source>
+        <target state="new">Remove 'out' and 'ref' modifiers</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">將方法協助工具變更為 'private'</target>
