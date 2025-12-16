@@ -27,14 +27,14 @@
         <target state="translated">Abgebrochen</target>
         <note />
       </trans-unit>
-      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
-        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
-        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
         <target state="translated">Die Testsitzung wird abgebrochen...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
