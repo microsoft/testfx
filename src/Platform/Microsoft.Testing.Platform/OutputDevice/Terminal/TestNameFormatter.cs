@@ -21,7 +21,7 @@ internal sealed class TestNameFormatter
     /// <param name="format">The format string containing placeholders like &lt;fqn&gt;, &lt;display&gt;, etc.</param>
     public TestNameFormatter(string format)
     {
-        ArgumentGuard.IsNotNull(format);
+        Guard.IsNotNull(format);
         _format = format;
     }
 
@@ -32,8 +32,8 @@ internal sealed class TestNameFormatter
     /// <returns>The formatted test name.</returns>
     public string Format(TestNode testNode)
     {
-        ArgumentGuard.IsNotNull(testNode);
-        ArgumentGuard.IsNotNull(testNode.DisplayName);
+        Guard.IsNotNull(testNode);
+        Guard.IsNotNull(testNode.DisplayName);
 
         string result = _format;
 
