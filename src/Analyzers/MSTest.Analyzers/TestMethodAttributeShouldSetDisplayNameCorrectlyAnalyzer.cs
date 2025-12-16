@@ -14,7 +14,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0053: <inheritdoc cref="Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyTitle"/>.
+/// MSTEST0056: <inheritdoc cref="Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : DiagnosticAnalyzer
