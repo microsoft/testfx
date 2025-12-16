@@ -58,6 +58,8 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --test-format
+        Format string for displaying tests. Supported placeholders: <display> (display name), <fqn> (fully qualified name), <ns> (namespace), <type> (type name), <method> (method name), <asm> (assembly name). Default is '<display>'.
     --timeout
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
@@ -327,6 +329,8 @@ Options:
         Disable retry mechanism if the percentage of failed tests is greater than the specified value
     --retry-failed-tests-max-tests
         Disable retry mechanism if the number of failed tests is greater than the specified value
+    --test-format
+        Format string for displaying tests. Supported placeholders: <display> (display name), <fqn> (fully qualified name), <ns> (namespace), <type> (type name), <method> (method name), <asm> (assembly name). Default is '<display>'.
     --timeout
         A global test execution timeout.
         Takes one argument as string in the format <value>[h|m|s] where 'value' is float.
@@ -512,6 +516,10 @@ Built-in command line providers:
         Arity: 0..1
         Hidden: True
         Description: Enable the server mode.
+      --test-format
+        Arity: 1
+        Hidden: False
+        Description: Format string for displaying tests. Supported placeholders: <display> (display name), <fqn> (fully qualified name), <ns> (namespace), <type> (type name), <method> (method name), <asm> (assembly name). Default is '<display>'.
       --timeout
         Arity: 1
         Hidden: False
