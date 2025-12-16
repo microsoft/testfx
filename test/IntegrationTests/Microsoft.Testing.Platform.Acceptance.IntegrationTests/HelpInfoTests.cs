@@ -240,6 +240,10 @@ Built-in command line providers:
         Arity: 0\.\.1
         Hidden: True
         Description: Enable the server mode\.
+      --test-format
+        Arity: 1
+        Hidden: False
+        Description: Format string for displaying tests\. Supported placeholders: \<display\> \(display name\), \<fqn\> \(fully qualified name\), \<ns\> \(namespace\), \<type\> \(type name\), \<method\> \(method name\), \<asm\> \(assembly name\)\. Default is '<display>'\.
       --timeout
         Arity: 1
         Hidden: False
