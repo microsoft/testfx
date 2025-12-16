@@ -5,6 +5,7 @@ The artifact naming service provides a standardized way to generate consistent n
 ## Features
 
 ### Template-Based Naming
+
 Use placeholders in angle brackets to create dynamic file names:
 
 ```
@@ -13,6 +14,7 @@ Use placeholders in angle brackets to create dynamic file names:
 Resolves to: `MyTests_12345_a1b2c3d4_hang.dmp`
 
 ### Complex Path Templates
+
 Create structured directory layouts:
 
 ```
@@ -34,6 +36,7 @@ Resolves to: `c:/myproject/artifacts/linux/MyTests/dumps/my-child-process_10001_
 | `<root>` | Project root directory | Found via solution/git/working dir |
 
 ### Backward Compatibility
+
 Legacy patterns are still supported:
 
 ```csharp
@@ -46,6 +49,7 @@ service.ResolveTemplateWithLegacySupport("myfile_%p.dmp",
 ```
 
 ### Custom Replacements
+
 Override default values for specific scenarios:
 
 ```csharp
