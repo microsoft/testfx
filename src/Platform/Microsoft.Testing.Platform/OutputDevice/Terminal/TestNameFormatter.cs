@@ -1,10 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -21,7 +18,7 @@ internal sealed class TestNameFormatter
     /// <param name="format">The format string containing placeholders like &lt;fqn&gt;, &lt;display&gt;, etc.</param>
     public TestNameFormatter(string format)
     {
-        Guard.IsNotNull(format);
+        Guard.NotNull(format);
         _format = format;
     }
 
@@ -32,8 +29,8 @@ internal sealed class TestNameFormatter
     /// <returns>The formatted test name.</returns>
     public string Format(TestNode testNode)
     {
-        Guard.IsNotNull(testNode);
-        Guard.IsNotNull(testNode.DisplayName);
+        Guard.NotNull(testNode);
+        Guard.NotNull(testNode.DisplayName);
 
         string result = _format;
 
@@ -80,7 +77,7 @@ internal sealed class TestNameFormatter
         StringBuilder fqnBuilder = new();
 
         // Add namespace
-        if (!string.IsNullOrEmpty(methodIdentifier.Namespace))
+        if (!RoslynString.IsNullOrEmpty(methodIdentifier.Namespace))
         {
             fqnBuilder.Append(methodIdentifier.Namespace);
             fqnBuilder.Append('.');
@@ -111,3 +108,13 @@ internal sealed class TestNameFormatter
         return commaIndex > 0 ? assemblyFullName[..commaIndex] : assemblyFullName;
     }
 }
+
+#if NETSTANDARD
+internal static class StringExtensions
+{
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static string Replace(this string str, string oldValue, string newValue, StringComparison comparisonType)
+#pragma warning restore IDE0060 // Remove unused parameter
+        => str.Replace(oldValue, newValue);
+}
+#endif

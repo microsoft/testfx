@@ -983,12 +983,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     private string FormatTestName(TestNode testNode)
-    {
-        if (_options.TestNameFormatter is not null)
-        {
-            return _options.TestNameFormatter.Format(testNode);
-        }
-
-        return testNode.DisplayName;
-    }
+        => _options.TestNameFormatter is not null
+            ? _options.TestNameFormatter.Format(testNode)
+            : testNode.DisplayName;
 }

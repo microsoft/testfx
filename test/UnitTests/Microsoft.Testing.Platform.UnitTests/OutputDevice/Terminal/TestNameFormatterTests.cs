@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -17,7 +17,7 @@ public sealed class TestNameFormatterTests
         var testNode = new TestNode
         {
             Uid = new TestNodeUid("test1"),
-            DisplayName = "MyTestMethod"
+            DisplayName = "MyTestMethod",
         };
 
         // Act
@@ -44,7 +44,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -71,7 +71,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: ["System.Int32", "System.String"],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -98,7 +98,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -125,7 +125,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -152,7 +152,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -179,7 +179,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -206,7 +206,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
@@ -224,7 +224,7 @@ public sealed class TestNameFormatterTests
         var testNode = new TestNode
         {
             Uid = new TestNodeUid("test1"),
-            DisplayName = "MyTestMethod"
+            DisplayName = "MyTestMethod",
         };
 
         // Act
@@ -242,7 +242,7 @@ public sealed class TestNameFormatterTests
         var testNode = new TestNode
         {
             Uid = new TestNodeUid("test1"),
-            DisplayName = "MyTestMethod"
+            DisplayName = "MyTestMethod",
         };
 
         // Act
@@ -269,7 +269,7 @@ public sealed class TestNameFormatterTests
                     methodName: "MyTestMethod",
                     methodArity: 0,
                     parameterTypeFullNames: [],
-                    returnTypeFullName: "System.Void"))
+                    returnTypeFullName: "System.Void")),
         };
 
         // Act
