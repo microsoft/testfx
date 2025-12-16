@@ -117,6 +117,11 @@
         <target state="translated">Die Option "--{0}" ist reserviert und kann nicht von Anbietern verwendet werden: "{0}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">Warnung: Die Option „--{0}“ ist veraltet. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) verwendet das reservierte Präfix "--internal".</target>
@@ -533,6 +538,11 @@ Die verfügbaren Werte sind "Trace", "Debug", "Information", "Warning", "Error" 
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">Die Option „--exit-on-process-exit“ wird in Browserumgebungen nicht unterstützt.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Beenden Sie den Testprozess, wenn der abhängige Prozess beendet ist. Die PID muss angegeben werden.</target>
@@ -763,6 +773,11 @@ Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value
         <target state="translated">erfolgreich</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">Synchrones Leeren wird in Browserumgebungen nicht unterstützt.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Eine "ITestExecutionFilterFactory"-Factory ist bereits festgelegt</target>
@@ -880,6 +895,11 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
         <target state="translated">Testadapter-Testsitzungsfehler</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">Testhostcontrollererweiterungen, die einen Prozessneustart erfordern, werden auf Browser- und WebAssembly-Plattformen nicht unterstützt.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">Der Testanwendungsprozess wurde nicht ordnungsgemäß beendet. Exitcode: "{0}"</target>
@@ -975,6 +995,11 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Dieser Programmspeicherort wird als nicht erreichbar betrachtet. File='{0}' Line={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in Browserumgebungen nicht unterstützt.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

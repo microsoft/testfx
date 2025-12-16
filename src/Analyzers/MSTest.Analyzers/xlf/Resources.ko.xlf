@@ -303,12 +303,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFix">
         <source>Use 'Assert.{0}' instead</source>
-        <target state="new">Use 'Assert.{0}' instead</target>
+        <target state="translated">대신 'Assert.{0}' 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
         <source>Use proper Assert methods for all negated assertions</source>
-        <target state="new">Use proper Assert methods for all negated assertions</target>
+        <target state="translated">부정된 모든 어설션에 적절한 Assert 메서드 사용</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
@@ -1012,6 +1012,51 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
         <target state="translated">예외가 발생하지 않고 catch 블록이 실행되지 않더라도 테스트가 통과하기 때문에 catch 블록에서 어설션을 사용하는 것은 문제가 됩니다. 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' 또는 'Assert.ThrowsExactlyAsync'를 사용하여 예외가 발생했는지 확인한 다음 try-catch 블록을 사용하지 않고 catch된 예외에 대해 추가 어설션을 만듭니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+        <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
+        <target state="translated">어셈블리에는 '[Parallelize]' 또는 '[DoNotParallelize]' 속성 중 하나만 있어야 하며, 둘 다 있어서는 안 됩니다. 두 특성을 모두 지정하면 모호한 구성이 만들어집니다. 둘 다 있는 경우 '[DoNotParallelize]'가 우선적으로 적용되고 병렬화가 사용하지 않도록 설정됩니다.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
+        <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
+        <target state="translated">어셈블리에 모호성을 만드는 '[Parallelize]' 및 '[DoNotParallelize]' 특성이 모두 있습니다.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
+        <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
+        <target state="translated">'[Parallelize]' 및 '[DoNotParallelize]' 특성을 모두 사용하지 마세요.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">초기 반환 또는 'Assert.Inconclusive'를 사용하여 'RuntimeInformation.IsOSPlatform' 호출 대신 '[OSCondition]' 특성을 사용합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">초기 반환 또는 'Assert.Inconclusive'를 사용하여 'RuntimeInformation.IsOSPlatform' 호출 대신 '[OSCondition]' 특성을 사용합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
+        <target state="translated">'RuntimeInformation.IsOSPlatform'을 조기 반환 또는 ‘Assert.Inconclusive'와 함께 사용하는 테스트 메서드는 대신 ’[OSCondition]' 속성을 사용해야 합니다. 이 특성은 OS별 테스트 요구 사항을 더 선언적이고 쉽게 찾을 수 있게 지정하는 방법입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeTitle">
+        <source>Avoid duplicate test method attributes</source>
+        <target state="translated">중복 테스트 메서드 특성 방지</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
+        <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
+        <target state="translated">테스트 메서드 '{0}'에 'TestMethodAttribute'에서 상속되는 여러 특성이 있습니다. 테스트 메서드 특성은 하나만 사용해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeDescription">
+        <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
+        <target state="translated">테스트 메서드는 'TestMethodAttribute'에서 상속되거나 정확히 하나의 특성으로 표시되어야 합니다. 이러한 특성이 여러 개 있는 경우 리플렉션에서 반환된 첫 번째 특성만 사용됩니다.</target>
         <note />
       </trans-unit>
     </body>

@@ -41,6 +41,70 @@ public sealed partial class Assert
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
 
     /// <summary>
+    /// Helper function that creates and throws an AssertionFailedException with expected and actual values.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the expected and actual values.
+    /// </typeparam>
+    /// <param name="assertionName">
+    /// name of the assertion throwing an exception.
+    /// </param>
+    /// <param name="message">
+    /// The assertion failure message.
+    /// </param>
+    /// <param name="expected">
+    /// Expected value to store in exception data.
+    /// </param>
+    /// <param name="actual">
+    /// Actual value to store in exception data.
+    /// </param>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed<T>(string assertionName, string? message, T? expected, T? actual)
+    {
+        AssertFailedException exception = new(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+
+        // Store expected and actual values in exception Data for types with known good ToString implementations
+        if (HasKnownGoodToString(expected))
+        {
+            exception.Data["assert.expected"] = expected;
+        }
+
+        if (HasKnownGoodToString(actual))
+        {
+            exception.Data["assert.actual"] = actual;
+        }
+
+        throw exception;
+    }
+
+    private static bool HasKnownGoodToString([NotNullWhen(true)] object? value)
+    {
+        if (value is null)
+        {
+            return false;
+        }
+
+        Type type = value.GetType();
+
+        // Primitive types and string
+        if (type.IsPrimitive || type == typeof(string))
+        {
+            return true;
+        }
+
+        // Common types with good ToString implementations
+        return type == typeof(decimal)
+            || type == typeof(DateTime)
+            || type == typeof(DateTimeOffset)
+            || type == typeof(TimeSpan)
+            || type == typeof(Guid)
+            || type == typeof(Uri)
+            || type.IsEnum;
+    }
+
+    /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
     /// </summary>
     /// <param name="format">
@@ -160,15 +224,11 @@ public sealed partial class Assert
     /// <param name="parameterName">
     /// parameter name.
     /// </param>
-    /// <param name="message">
-    /// message for the invalid parameter exception.
-    /// </param>
-    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName, string? message)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
         if (param == null)
         {
-            string userMessage = BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, userMessage);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
             ThrowAssertFailed(assertionName, finalMessage);
         }
     }

@@ -117,6 +117,11 @@
         <target state="translated">A opção '--{0}' está reservada e não pode ser usada pelos provedores: '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">Aviso: a opção '--{0}' está obsoleta. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">A opção '--{0}' do provedor '{1}' (UID: {2}) está usando o prefixo reservado '--internal'</target>
@@ -533,6 +538,11 @@ Os valores disponíveis são 'Rastreamento', 'Depuração', 'Informação', 'Avi
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">Não há suporte para a opção '--exit-on-process-exit' em ambientes de navegador.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Sair do processo de teste se o processo dependente for encerrado. O PID deve ser fornecido.</target>
@@ -763,6 +773,11 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">bem-sucedido</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">Não há suporte para liberação síncrona em ambientes de navegador.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Uma fábrica “ITestExecutionFilterFactory” já está definida</target>
@@ -880,6 +895,11 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
         <target state="translated">Falha na sessão de teste do adaptador de teste</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">Não há suporte para extensões de controlador de host de teste que exigem reinício do processo em plataformas de navegador/WebAssembly.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">O processo de teste do aplicativo não foi encerrado normalmente, o código de saída é ''{0}''</target>
@@ -975,6 +995,11 @@ Os valores válidos são “Normal”, “Detalhado”. O padrão é “Normal�
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Este local do programa é considerado inacessível. Arquivo='{0}' Linha={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">Não há suporte para aguardar a anexação do depurador (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) em ambientes de navegador.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

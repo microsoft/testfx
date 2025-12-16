@@ -19,7 +19,11 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
-builder.AddHangDumpProvider();
+if (!OperatingSystem.IsBrowser())
+{
+    builder.AddHangDumpProvider();
+}
+
 builder.AddTrxReportProvider();
 builder.AddAzureDevOpsProvider();
 
