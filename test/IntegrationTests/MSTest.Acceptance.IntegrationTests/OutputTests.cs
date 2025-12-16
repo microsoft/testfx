@@ -27,6 +27,17 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
             """);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DetailedOutput_WithTestFormat_FormatsTestNames(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--output detailed --test-format \"<fqn>\"", cancellationToken: TestContext.CancellationToken);
+
+        // Assert - verify FQN is shown instead of display name
+        testHostResult.AssertOutputContains("UnitTest1.TestMethod");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestOutput";
