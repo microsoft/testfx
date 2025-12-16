@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text;
+
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -18,6 +21,7 @@ internal sealed class TestNameFormatter
     /// <param name="format">The format string containing placeholders like &lt;fqn&gt;, &lt;display&gt;, etc.</param>
     public TestNameFormatter(string format)
     {
+        ArgumentGuard.IsNotNull(format);
         _format = format;
     }
 
@@ -28,6 +32,9 @@ internal sealed class TestNameFormatter
     /// <returns>The formatted test name.</returns>
     public string Format(TestNode testNode)
     {
+        ArgumentGuard.IsNotNull(testNode);
+        ArgumentGuard.IsNotNull(testNode.DisplayName);
+
         string result = _format;
 
         // Extract TestMethodIdentifierProperty if available
