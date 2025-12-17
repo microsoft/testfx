@@ -123,8 +123,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
 
         // Determine ANSI output setting
-        bool useAnsi;
-        bool? forceAnsi = null;
+        bool? forceAnsi;
         if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
         {
             // New --ansi option takes precedence
@@ -132,32 +131,27 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             if (CommandLineOptionArgumentValidator.IsOnValue(ansiValue))
             {
                 // Force enable ANSI
-                useAnsi = true;
                 forceAnsi = true;
             }
             else if (CommandLineOptionArgumentValidator.IsOffValue(ansiValue))
             {
                 // Force disable ANSI
-                useAnsi = false;
                 forceAnsi = false;
             }
             else
             {
                 // Auto mode - detect capabilities
-                useAnsi = true;
                 forceAnsi = null;
             }
         }
         else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption))
         {
             // Backward compatibility with --no-ansi
-            useAnsi = false;
             forceAnsi = false;
         }
         else
         {
             // Default is auto mode - detect capabilities
-            useAnsi = true;
             forceAnsi = null;
         }
 
@@ -196,7 +190,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
-            UseAnsi = useAnsi,
             ForceAnsi = forceAnsi,
             UseCIAnsi = inCI,
             ShowActiveTests = true,

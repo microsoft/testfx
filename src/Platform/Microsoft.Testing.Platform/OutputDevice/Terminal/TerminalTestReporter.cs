@@ -93,12 +93,21 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int nonAnsiUpdateCadenceInMs = 3_000;
         // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
         int ansiUpdateCadenceInMs = 500;
-        if (!_options.UseAnsi || _options.ForceAnsi is false)
+        if (_options.ForceAnsi is false)
         {
+            // ANSI forcefully disabled
             terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+        }
+        else if (_options.ForceAnsi is true)
+        {
+            // ANSI forcefully enabled
+            terminalWithProgress = _options.UseCIAnsi
+                ? new TestProgressStateAwareTerminal(new SimpleAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: nonAnsiUpdateCadenceInMs)
+                : new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs);
         }
         else
         {
+            // Auto-detect terminal capabilities
             if (_options.UseCIAnsi)
             {
                 // We are told externally that we are in CI, use simplified ANSI mode.
@@ -109,9 +118,9 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
                 (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
                 _originalConsoleMode = originalConsoleMode;
-                terminalWithProgress = consoleAcceptsAnsiCodes || _options.ForceAnsi is true
+                terminalWithProgress = consoleAcceptsAnsiCodes
                     ? new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
-                        : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+                    : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
             }
         }
 
