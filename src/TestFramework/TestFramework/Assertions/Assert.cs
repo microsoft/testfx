@@ -60,7 +60,7 @@ public sealed partial class Assert
     /// </param>
     [DoesNotReturn]
     [StackTraceHidden]
-    internal static void ThrowAssertFailed<T>(string assertionName, string? message, T? expected, T? actual)
+    internal static void ThrowAssertFailed<T>(string assertionName, string? message, T? expected = default, T? actual = default)
     {
         AssertFailedException exception = new(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
@@ -79,14 +79,17 @@ public sealed partial class Assert
         throw exception;
     }
 
-    private static bool HasKnownGoodToString([NotNullWhen(true)] object? value)
+    private static bool HasKnownGoodToString<T>([NotNullWhen(true)] T? value)
     {
         if (value is null)
         {
             return false;
         }
 
-        Type type = value.GetType();
+        Type type = typeof(T);
+
+        // Unwrap nullable value types
+        type = Nullable.GetUnderlyingType(type) ?? type;
 
         // Primitive types and string
         if (type.IsPrimitive || type == typeof(string))
@@ -101,7 +104,8 @@ public sealed partial class Assert
             || type == typeof(TimeSpan)
             || type == typeof(Guid)
             || type == typeof(Uri)
-            || type.IsEnum;
+            || type.IsEnum
+            || typeof(Exception).IsAssignableFrom(type);
     }
 
     /// <summary>

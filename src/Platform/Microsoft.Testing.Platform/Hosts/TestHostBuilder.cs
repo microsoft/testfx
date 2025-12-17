@@ -317,7 +317,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildTelemetryAsync(serviceProvider, loggerFactory, testApplicationOptions).ConfigureAwait(false);
         serviceProvider.TryAddService(telemetryService);
 
-        AddApplicationMetadata(serviceProvider, builderMetrics);
+        AddApplicationTelemetryMetadata(serviceProvider, builderMetrics);
 
         // Subscribe to the process if the option is set.
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ExitOnProcessExitOptionKey))
@@ -630,7 +630,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         return client;
     }
 
-    private void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
+    private void AddApplicationTelemetryMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
     {
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
         if (!telemetryInformation.IsEnabled)
@@ -661,7 +661,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 #if DEBUG
             TelemetryProperties.True;
 #else
-                TelemetryProperties.False;
+            TelemetryProperties.False;
 #endif
 
         builderMetadata[TelemetryProperties.HostProperties.IsDebuggerAttached] = Debugger.IsAttached.AsTelemetryBool();

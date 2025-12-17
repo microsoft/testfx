@@ -4,7 +4,7 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0056 | Usage | Warning | TestMethodAttributeShouldNotHaveStringArgumentAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0056)
+MSTEST0056 | Usage | Warning | TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0056)
 MSTEST0057 | Usage | Warning | TestMethodAttributeShouldPropagateSourceInformationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0057)
 
 ### Changed Rules

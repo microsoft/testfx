@@ -32,6 +32,11 @@
         <target state="translated">テスト セッションを取り消しています...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">テスト実行フィルターを作成できませんでした</target>
@@ -119,7 +124,7 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionObsoleteWarning">
         <source>Warning: Option '--{0}' is obsolete. {1}</source>
-        <target state="new">Warning: Option '--{0}' is obsolete. {1}</target>
+        <target state="translated">警告: オプション '--{0}' は廃止されています。{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -541,7 +546,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
         <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
-        <target state="new">The '--exit-on-process-exit' option is not supported in browser environments.</target>
+        <target state="translated">'--exit-on-process-exit' オプションは、ブラウザー環境ではサポートされていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
@@ -776,7 +781,7 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
       </trans-unit>
       <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
         <source>Synchronous flush is not supported in browser environments.</source>
-        <target state="new">Synchronous flush is not supported in browser environments.</target>
+        <target state="translated">同期フラッシュは、ブラウザー環境ではサポートされていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -919,7 +924,7 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
-        <target state="new">Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</target>
+        <target state="translated">プロセスの再起動を必要とするテスト ホスト コントローラー拡張機能は、ブラウザー/WebAssembly プラットフォームではサポートされていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
@@ -1021,7 +1026,7 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</target>
+        <target state="translated">デバッガーのアタッチの待機 (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) は、ブラウザー環境ではサポートされていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
