@@ -303,7 +303,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
         await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
-        // Check for obsolete options and display warnings after the banner
+        // Check for obsolete options and display warnings
         await CommandLineOptionsValidator.CheckForObsoleteOptionsAsync(
             loggingState.CommandLineParseResult,
             commandLineHandler.SystemCommandLineOptionsProviders,
