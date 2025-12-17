@@ -78,7 +78,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForExpectedPrefixExpressionAndValueExpression(message, expectedPrefixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, expectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.StartsWith", finalMessage);
+            ThrowAssertFailed("Assert.StartsWith", finalMessage, expectedPrefix, value);
         }
     }
 
@@ -150,7 +150,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(message, notExpectedPrefixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, notExpectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage, notExpectedPrefix, value);
         }
     }
 }

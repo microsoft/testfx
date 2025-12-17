@@ -32,6 +32,11 @@
         <target state="translated">正在取消测试会话...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">未能创建测试执行筛选</target>

@@ -549,6 +549,11 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <target state="translated">Número incorreto de objetos para permutação. Deve ser maior que zero.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_OutRefParametersNotSupported">
+        <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
+        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

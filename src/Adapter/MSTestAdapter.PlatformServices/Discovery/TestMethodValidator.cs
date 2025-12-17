@@ -64,6 +64,14 @@ internal class TestMethodValidator
             return false;
         }
 
+        // Check for out/ref parameters and add a warning (but still return true)
+        ParameterInfo[] parameters = testMethodInfo.GetParameters();
+        if (parameters.Length > 0 && parameters.Any(p => p.IsOut || p.ParameterType.IsByRef))
+        {
+            string warningMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_OutRefParametersNotSupported, type.FullName, testMethodInfo.Name);
+            warnings.Add(warningMessage);
+        }
+
         return true;
     }
 }

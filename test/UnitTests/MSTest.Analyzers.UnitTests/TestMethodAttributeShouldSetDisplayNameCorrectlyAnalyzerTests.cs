@@ -506,4 +506,35 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzerTest
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenPassingDeclaringFilePathFromAnotherTestMethodAttribute_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Runtime.CompilerServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class DerivedTestClassAttribute : TestClassAttribute
+            {
+                public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
+                    => testMethodAttribute is DerivedTestMethodAttribute
+                        ? testMethodAttribute
+                        : new DerivedTestMethodAttribute(
+                            base.GetTestMethodAttribute(testMethodAttribute)!,
+                            testMethodAttribute.DeclaringFilePath,
+                            testMethodAttribute.DeclaringLineNumber!.Value);
+            }
+
+            public class DerivedTestMethodAttribute : TestMethodAttribute
+            {
+                public DerivedTestMethodAttribute(TestMethodAttribute testMethodAttribute, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

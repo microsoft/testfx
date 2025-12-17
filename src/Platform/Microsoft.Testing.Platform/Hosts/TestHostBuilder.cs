@@ -266,15 +266,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             return new InformativeCommandLineHost(ExitCodes.InvalidCommandLine, serviceProvider);
         }
 
-        // Check for obsolete options and display warnings
-        await CommandLineOptionsValidator.CheckForObsoleteOptionsAsync(
-            loggingState.CommandLineParseResult,
-            commandLineHandler.SystemCommandLineOptionsProviders,
-            commandLineHandler.ExtensionsCommandLineOptionsProviders,
-            proxyOutputDevice,
-            commandLineHandler,
-            testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-
         // Register as ICommandLineOptions.
         serviceProvider.TryAddService(commandLineHandler);
 
@@ -316,12 +307,21 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
         await DisplayBannerIfEnabledAsync(loggingState, proxyOutputDevice, testFrameworkCapabilities, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
+        // Check for obsolete options and display warnings
+        await CommandLineOptionsValidator.CheckForObsoleteOptionsAsync(
+            loggingState.CommandLineParseResult,
+            commandLineHandler.SystemCommandLineOptionsProviders,
+            commandLineHandler.ExtensionsCommandLineOptionsProviders,
+            proxyOutputDevice,
+            commandLineHandler,
+            testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
         ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildTelemetryAsync(serviceProvider, loggerFactory, testApplicationOptions).ConfigureAwait(false);
         serviceProvider.TryAddService(telemetryService);
 
-        AddApplicationMetadata(serviceProvider, builderMetrics);
+        AddApplicationTelemetryMetadata(serviceProvider, builderMetrics);
 
         // Subscribe to the process if the option is set.
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ExitOnProcessExitOptionKey))
@@ -634,7 +634,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         return client;
     }
 
-    private void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
+    private void AddApplicationTelemetryMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
     {
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
         if (!telemetryInformation.IsEnabled)
@@ -665,7 +665,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 #if DEBUG
             TelemetryProperties.True;
 #else
-                TelemetryProperties.False;
+            TelemetryProperties.False;
 #endif
 
         builderMetadata[TelemetryProperties.HostProperties.IsDebuggerAttached] = Debugger.IsAttached.AsTelemetryBool();

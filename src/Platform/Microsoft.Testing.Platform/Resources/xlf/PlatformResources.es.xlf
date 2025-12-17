@@ -32,6 +32,11 @@
         <target state="translated">Cancelando la sesión de prueba...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">No se pudo crear un filtro de ejecución de pruebas</target>
