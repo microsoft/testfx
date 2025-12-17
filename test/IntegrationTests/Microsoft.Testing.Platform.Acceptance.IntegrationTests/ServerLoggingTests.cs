@@ -54,6 +54,30 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
             """, logsString);
     }
 
+    [TestMethod]
+    public async Task RunningInServerMode_BannerIsSkipped()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "ServerLoggingTests", tfm);
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(testHost);
+        LogsCollector logs = [];
+        jsonClient.RegisterLogListener(logs);
+
+        InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
+
+        TestNodeUpdateCollector discoveryCollector = new();
+        ResponseListener discoveryListener = await jsonClient.DiscoverTests(Guid.NewGuid(), discoveryCollector.CollectNodeUpdates);
+
+        await discoveryListener.WaitCompletion();
+
+        string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
+
+        // Verify that the banner message pattern does not appear in the logs
+        Assert.IsFalse(Regex.IsMatch(logsString, @"Microsoft\.Testing\.Platform v.+ \[.+\]"), "Banner should be skipped in server mode");
+
+        await jsonClient.Exit();
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "AssetFixture";
