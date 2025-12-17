@@ -1,7 +1,5 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
@@ -24,11 +22,11 @@ public sealed class ArtifactNamingServiceTests
     {
         _testApplicationModuleInfo.Setup(x => x.TryGetAssemblyName()).Returns("TestAssembly");
         _testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns("/test/directory");
-        
+
         _clock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(2025, 9, 22, 13, 49, 34, TimeSpan.Zero));
-        
+
         _process.Setup(x => x.Id).Returns(12345);
-        _process.Setup(x => x.ProcessName).Returns("test-process");
+        _process.Setup(x => x.Name).Returns("test-process");
         _processHandler.Setup(x => x.GetCurrentProcess()).Returns(_process.Object);
     }
 
@@ -43,10 +41,10 @@ public sealed class ArtifactNamingServiceTests
         string result = service.ResolveTemplate(template);
 
         // Assert
-        result.Should().Contain("test-process");
-        result.Should().Contain("12345");
-        result.Should().Contain("TestAssembly");
-        result.Should().MatchRegex(@"test-process_12345_TestAssembly\.dmp");
+        Assert.Contains("test-process", result);
+        Assert.Contains("12345", result);
+        Assert.Contains("TestAssembly", result);
+        Assert.Contains(@"test-process_12345_TestAssembly.dmp", result);
     }
 
     [TestMethod]
@@ -60,20 +58,20 @@ public sealed class ArtifactNamingServiceTests
         string result = service.ResolveTemplate(template);
 
         // Assert
-        result.Should().Contain("2025-09-22T13:49:34");
-        result.Should().MatchRegex(@"2025-09-22T13:49:34_[a-f0-9]{8}_\w+");
-        
+        Assert.Contains("2025-09-22T13:49:34", result);
+        Assert.MatchesRegex(@"2025-09-22T13:49:34_[a-f0-9]{8}_\w+", result);
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            result.Should().Contain("linux");
+            Assert.Contains("linux", result);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            result.Should().Contain("windows");
+            Assert.Contains("windows", result);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            result.Should().Contain("macos");
+            Assert.Contains("macos", result);
         }
     }
 
@@ -86,14 +84,14 @@ public sealed class ArtifactNamingServiceTests
         var customReplacements = new Dictionary<string, string>
         {
             ["pname"] = "custom-process",
-            ["pid"] = "99999"
+            ["pid"] = "99999",
         };
 
         // Act
         string result = service.ResolveTemplate(template, customReplacements);
 
         // Assert
-        result.Should().Be("custom-process_99999_custom.dmp");
+        Assert.AreEqual("custom-process_99999_custom.dmp", result);
     }
 
     [TestMethod]
@@ -107,8 +105,8 @@ public sealed class ArtifactNamingServiceTests
         string result = service.ResolveTemplate(template);
 
         // Assert
-        result.Should().StartWith("<unknown-field>_");
-        result.Should().Contain("test-process");
+        Assert.StartsWith("<unknown-field>_", result);
+        Assert.Contains("test-process", result);
     }
 
     [TestMethod]
@@ -119,14 +117,14 @@ public sealed class ArtifactNamingServiceTests
         string template = "dump_%p_hang.dmp";
         var legacyReplacements = new Dictionary<string, string>
         {
-            ["%p"] = "54321"
+            ["%p"] = "54321",
         };
 
         // Act
-        string result = service.ResolveTemplateWithLegacySupport(template, legacyReplacements: legacyReplacements);
+        string result = service.ResolveTemplate(template, legacyReplacements);
 
         // Assert
-        result.Should().Be("dump_54321_hang.dmp");
+        Assert.AreEqual("dump_54321_hang.dmp", result);
     }
 
     [TestMethod]
@@ -137,18 +135,15 @@ public sealed class ArtifactNamingServiceTests
         string template = "%p_<pname>_hang.dmp";
         var customReplacements = new Dictionary<string, string>
         {
-            ["pname"] = "notepad"
-        };
-        var legacyReplacements = new Dictionary<string, string>
-        {
-            ["%p"] = "1111"
+            ["pname"] = "notepad",
+            ["%p"] = "1111",
         };
 
         // Act
-        string result = service.ResolveTemplateWithLegacySupport(template, customReplacements, legacyReplacements);
+        string result = service.ResolveTemplate(template, customReplacements);
 
         // Assert
-        result.Should().Be("1111_notepad_hang.dmp");
+        Assert.AreEqual("1111_notepad_hang.dmp", result);
     }
 
     [TestMethod]
@@ -163,8 +158,8 @@ public sealed class ArtifactNamingServiceTests
 
         // Assert
         // The TFM should be a valid framework identifier
-        result.Should().NotBeEmpty();
-        result.Should().MatchRegex(@"^(net\d+\.\d+|netcoreapp\d+\.\d+|net\d+|\d+\.\d+\.\d+\.\d+)$");
+        Assert.IsNotEmpty(result);
+        Assert.MatchesRegex(@"^(net\d+\.\d+|netcoreapp\d+\.\d+|net\d+|\d+\.\d+\.\d+\.\d+)$", result);
     }
 
     [TestMethod]
@@ -178,8 +173,8 @@ public sealed class ArtifactNamingServiceTests
         string result = service.ResolveTemplate(template);
 
         // Assert
-        result.Should().EndWith("/artifacts");
-        result.Should().NotStartWith("<root>");
+        Assert.EndsWith("/artifacts", result);
+        Assert.DoesNotStartWith("<root>", result);
     }
 
     [TestMethod]
@@ -193,12 +188,12 @@ public sealed class ArtifactNamingServiceTests
         string result = service.ResolveTemplate(template);
 
         // Assert
-        result.Should().NotContain("<");
-        result.Should().NotContain(">");
-        result.Should().Contain("/artifacts/");
-        result.Should().Contain("/TestAssembly/dumps/");
-        result.Should().Contain("test-process_12345_");
-        result.Should().Contain("2025-09-22T13:49:34.dmp");
+        Assert.DoesNotContain("<", result);
+        Assert.DoesNotContain(">", result);
+        Assert.Contains("/artifacts/", result);
+        Assert.Contains("/TestAssembly/dumps/", result);
+        Assert.Contains("test-process_12345_", result);
+        Assert.Contains("2025-09-22T13:49:34.dmp", result);
     }
 
     [TestMethod]
@@ -210,13 +205,13 @@ public sealed class ArtifactNamingServiceTests
         var customReplacements = new Dictionary<string, string>
         {
             ["PNAME"] = "CUSTOM",
-            ["pid"] = "777"
+            ["pid"] = "777",
         };
 
         // Act
         string result = service.ResolveTemplate(template, customReplacements);
 
         // Assert
-        result.Should().Be("CUSTOM_777");
+        Assert.AreEqual("CUSTOM_777", result);
     }
 }
