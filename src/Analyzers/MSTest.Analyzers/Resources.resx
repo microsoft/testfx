@@ -729,4 +729,13 @@ The type declaring these methods should also respect the following rules:
   <data name="DuplicateTestMethodAttributeDescription" xml:space="preserve">
     <value>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</value>
   </data>
+  <data name="AvoidOutRefTestMethodParametersTitle" xml:space="preserve">
+    <value>Avoid using 'out' or 'ref' parameters in test methods</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersDescription" xml:space="preserve">
+    <value>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</value>
+  </data>
 </root>
