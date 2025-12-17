@@ -80,7 +80,7 @@ public sealed class TerminalTestReporterTests
             ShowPassedTests = () => true,
 
             // Like --no-ansi in commandline, should disable ANSI altogether.
-            UseAnsi = false,
+            ForceAnsi = false,
 
             ShowProgress = () => false,
         });
@@ -177,8 +177,6 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            // Like if we autodetect that we are in CI (e.g. by looking at TF_BUILD, and we don't disable ANSI.
-            UseAnsi = true,
             UseCIAnsi = true,
             ForceAnsi = true,
 
@@ -277,8 +275,6 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            // Like if we autodetect that we are in ANSI capable terminal.
-            UseAnsi = true,
             UseCIAnsi = false,
             ForceAnsi = true,
 
@@ -378,8 +374,6 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            // Like if we autodetect that we are in ANSI capable terminal.
-            UseAnsi = true,
             UseCIAnsi = false,
             ForceAnsi = true,
 
@@ -642,7 +636,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            UseAnsi = false,
+            ForceAnsi = false,
             ShowProgress = () => false,
         });
 
@@ -722,7 +716,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            UseAnsi = false,
+            ForceAnsi = false,
             ShowProgress = () => false,
         });
 
@@ -794,7 +788,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => false,
-            UseAnsi = false,
+            ForceAnsi = false,
             ShowProgress = () => false,
         });
 
