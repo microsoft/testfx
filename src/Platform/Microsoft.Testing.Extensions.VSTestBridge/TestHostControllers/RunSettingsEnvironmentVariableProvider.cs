@@ -15,13 +15,15 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
     private readonly IExtension _extension;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IFileSystem _fileSystem;
+    private readonly IEnvironment _environment;
     private XDocument? _runSettings;
 
-    public RunSettingsEnvironmentVariableProvider(IExtension extension, ICommandLineOptions commandLineOptions, IFileSystem fileSystem)
+    public RunSettingsEnvironmentVariableProvider(IExtension extension, ICommandLineOptions commandLineOptions, IFileSystem fileSystem, IEnvironment environment)
     {
         _extension = extension;
         _commandLineOptions = commandLineOptions;
         _fileSystem = fileSystem;
+        _environment = environment;
     }
 
     public string Uid => _extension.Uid;
@@ -50,13 +52,13 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
         // If not from command line, try environment variable with content
         if (runSettingsFilePath is null)
         {
-            runSettingsContent = Environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS");
+            runSettingsContent = _environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS");
         }
 
         // If not from content env var, try environment variable with file path
         if (runSettingsFilePath is null && RoslynString.IsNullOrEmpty(runSettingsContent))
         {
-            string? envVarFilePath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
+            string? envVarFilePath = _environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
             if (!RoslynString.IsNullOrEmpty(envVarFilePath) && _fileSystem.ExistFile(envVarFilePath))
             {
                 runSettingsFilePath = envVarFilePath;
