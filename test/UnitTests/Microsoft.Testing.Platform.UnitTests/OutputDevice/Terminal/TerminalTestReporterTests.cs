@@ -81,7 +81,7 @@ public sealed class TerminalTestReporterTests
             ShowPassedTests = () => true,
 
             // Like --no-ansi in commandline, should disable ANSI altogether.
-            OptionMode = TriStateMode.Off,
+            OptionMode = ActivationMode.Off,
 
             ShowProgress = () => false,
         });
@@ -179,7 +179,7 @@ public sealed class TerminalTestReporterTests
         {
             ShowPassedTests = () => true,
             UseCIAnsi = true,
-            OptionMode = TriStateMode.On,
+            OptionMode = ActivationMode.On,
 
             ShowProgress = () => false,
         });
@@ -277,7 +277,7 @@ public sealed class TerminalTestReporterTests
         {
             ShowPassedTests = () => true,
             UseCIAnsi = false,
-            OptionMode = TriStateMode.On,
+            OptionMode = ActivationMode.On,
 
             ShowProgress = () => false,
         });
@@ -376,7 +376,7 @@ public sealed class TerminalTestReporterTests
         {
             ShowPassedTests = () => true,
             UseCIAnsi = false,
-            OptionMode = TriStateMode.On,
+            OptionMode = ActivationMode.On,
 
             ShowActiveTests = true,
             ShowProgress = () => true,
@@ -637,7 +637,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            OptionMode = TriStateMode.Off,
+            OptionMode = ActivationMode.Off,
             ShowProgress = () => false,
         });
 
@@ -717,7 +717,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
-            OptionMode = TriStateMode.Off,
+            OptionMode = ActivationMode.Off,
             ShowProgress = () => false,
         });
 
@@ -789,7 +789,7 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
         {
             ShowPassedTests = () => false,
-            OptionMode = TriStateMode.Off,
+            OptionMode = ActivationMode.Off,
             ShowProgress = () => false,
         });
 

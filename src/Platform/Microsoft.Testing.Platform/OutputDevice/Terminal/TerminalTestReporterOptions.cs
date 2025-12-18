@@ -31,12 +31,12 @@ internal sealed class TerminalTestReporterOptions
 
     /// <summary>
     /// Gets a value indicating whether we are running in compatible CI, and should use simplified ANSI renderer, which colors output, but does not move cursor.
-    /// Setting <see cref="AnsiMode"/> to <see cref="TriStateMode.Off"/> will disable this option.
+    /// Setting <see cref="AnsiMode"/> to <see cref="ActivationMode.Off"/> will disable this option.
     /// </summary>
     public bool UseCIAnsi { get; init; }
 
     /// <summary>
     /// Gets the ANSI mode for the terminal output.
     /// </summary>
-    public TriStateMode AnsiMode { get; init; } = TriStateMode.Auto;
+    public ActivationMode AnsiMode { get; init; } = ActivationMode.Auto;
 }

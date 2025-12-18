@@ -4,9 +4,9 @@
 namespace Microsoft.Testing.Platform.CommandLine;
 
 /// <summary>
-/// Specifies the mode for command line options that support auto-detection or explicit on/off states.
+/// Specifies the activation mode for command line options that support auto-detection or explicit on/off states.
 /// </summary>
-internal enum TriStateMode
+internal enum ActivationMode
 {
     /// <summary>
     /// Auto-detect the appropriate setting.
