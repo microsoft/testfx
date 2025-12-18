@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 internal sealed class TerminalTestReporterOptions
@@ -29,12 +31,12 @@ internal sealed class TerminalTestReporterOptions
 
     /// <summary>
     /// Gets a value indicating whether we are running in compatible CI, and should use simplified ANSI renderer, which colors output, but does not move cursor.
-    /// Setting <see cref="AnsiMode"/> to <see cref="Terminal.AnsiMode.Disable"/> will disable this option.
+    /// Setting <see cref="AnsiMode"/> to <see cref="OptionMode.Off"/> will disable this option.
     /// </summary>
     public bool UseCIAnsi { get; init; }
 
     /// <summary>
     /// Gets the ANSI mode for the terminal output.
     /// </summary>
-    public AnsiMode AnsiMode { get; init; } = AnsiMode.Auto;
+    public OptionMode AnsiMode { get; init; } = OptionMode.Auto;
 }

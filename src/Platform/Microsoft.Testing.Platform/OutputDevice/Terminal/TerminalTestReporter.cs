@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
@@ -93,12 +94,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int nonAnsiUpdateCadenceInMs = 3_000;
         // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
         int ansiUpdateCadenceInMs = 500;
-        if (_options.AnsiMode == AnsiMode.Disable)
+        if (_options.AnsiMode == OptionMode.Off)
         {
             // ANSI forcefully disabled
             terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
-        else if (_options.AnsiMode == AnsiMode.Enable)
+        else if (_options.AnsiMode == OptionMode.On)
         {
             // ANSI forcefully enabled
             terminalWithProgress = _options.UseCIAnsi

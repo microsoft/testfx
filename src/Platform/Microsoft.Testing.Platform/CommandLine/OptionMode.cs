@@ -1,25 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
+namespace Microsoft.Testing.Platform.CommandLine;
 
 /// <summary>
-/// Specifies the ANSI escape sequence mode.
+/// Specifies the mode for command line options that support auto-detection or explicit on/off states.
 /// </summary>
-internal enum AnsiMode
+internal enum OptionMode
 {
     /// <summary>
-    /// Auto-detect terminal capabilities for ANSI support.
+    /// Auto-detect the appropriate setting.
     /// </summary>
     Auto,
 
     /// <summary>
-    /// Force enable ANSI escape sequences.
+    /// Force enable the option.
     /// </summary>
-    Enable,
+    On,
 
     /// <summary>
-    /// Force disable ANSI escape sequences.
+    /// Force disable the option.
     /// </summary>
-    Disable,
+    Off,
 }
