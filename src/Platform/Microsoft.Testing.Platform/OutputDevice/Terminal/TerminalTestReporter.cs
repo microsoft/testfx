@@ -87,45 +87,30 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _options = options;
 
-        Func<bool?> showProgress = _options.ShowProgress;
-        TestProgressStateAwareTerminal terminalWithProgress;
-
         // When not writing to ANSI we write the progress to screen and leave it there so we don't want to write it more often than every few seconds.
         int nonAnsiUpdateCadenceInMs = 3_000;
         // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
         int ansiUpdateCadenceInMs = 500;
-        if (_options.AnsiMode == ActivationMode.Off)
-        {
-            // ANSI forcefully disabled
-            terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
-        }
-        else if (_options.AnsiMode == ActivationMode.On)
-        {
-            // ANSI forcefully enabled
-            terminalWithProgress = _options.UseCIAnsi
-                ? new TestProgressStateAwareTerminal(new SimpleAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: nonAnsiUpdateCadenceInMs)
-                : new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs);
-        }
-        else
-        {
-            // Auto-detect terminal capabilities
-            if (_options.UseCIAnsi)
-            {
-                // We are told externally that we are in CI, use simplified ANSI mode.
-                terminalWithProgress = new TestProgressStateAwareTerminal(new SimpleAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: nonAnsiUpdateCadenceInMs);
-            }
-            else
-            {
-                // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
-                (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
-                _originalConsoleMode = originalConsoleMode;
-                terminalWithProgress = consoleAcceptsAnsiCodes
-                    ? new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
-                    : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
-            }
-        }
 
-        _terminalWithProgress = terminalWithProgress;
+        (_terminalWithProgress, _originalConsoleMode) = _options.AnsiMode switch
+        {
+            AutoOnOff.Off => (new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), _options.ShowProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs), null),
+            AutoOnOff.On => _options.UseCIAnsi
+                ? (new TestProgressStateAwareTerminal(new SimpleAnsiTerminal(console), _options.ShowProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: nonAnsiUpdateCadenceInMs), null)
+                : (new TestProgressStateAwareTerminal(new AnsiTerminal(console), _options.ShowProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs), null),
+            AutoOnOff.Auto => AutoDetectTerminal(console, _options.ShowProgress, nonAnsiUpdateCadenceInMs, ansiUpdateCadenceInMs),
+            _ => throw new NotSupportedException("Unsupported ANSI mode: " + _options.AnsiMode),
+        };
+    }
+
+    private static (TestProgressStateAwareTerminal Terminal, uint? OriginalConsoleMode) AutoDetectTerminal(IConsole console, Func<bool?> showProgress, int nonAnsiUpdateCadenceInMs, int ansiUpdateCadenceInMs)
+    {
+        // We are not in CI, or in CI non-compatible with simple ANSI, autodetect terminal capabilities
+        (bool consoleAcceptsAnsiCodes, bool _, uint? originalConsoleMode) = NativeMethods.QueryIsScreenAndTryEnableAnsiColorCodes();
+        TestProgressStateAwareTerminal terminalWithProgress = consoleAcceptsAnsiCodes
+            ? new TestProgressStateAwareTerminal(new AnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: true, updateEvery: ansiUpdateCadenceInMs)
+            : new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
+        return (terminalWithProgress, originalConsoleMode);
     }
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)

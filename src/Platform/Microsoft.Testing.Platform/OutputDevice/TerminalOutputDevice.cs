@@ -123,7 +123,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _isServerMode = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
 
         // Determine ANSI output setting
-        ActivationMode ansiMode;
+        AutoOnOff ansiMode;
         if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.AnsiOption, out string[]? ansiArguments) && ansiArguments?.Length > 0)
         {
             // New --ansi option takes precedence
@@ -131,28 +131,28 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             if (CommandLineOptionArgumentValidator.IsOnValue(ansiValue))
             {
                 // Force enable ANSI
-                ansiMode = ActivationMode.On;
+                ansiMode = AutoOnOff.On;
             }
             else if (CommandLineOptionArgumentValidator.IsOffValue(ansiValue))
             {
                 // Force disable ANSI
-                ansiMode = ActivationMode.Off;
+                ansiMode = AutoOnOff.Off;
             }
             else
             {
                 // Auto mode - detect capabilities
-                ansiMode = ActivationMode.Auto;
+                ansiMode = AutoOnOff.Auto;
             }
         }
         else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoAnsiOption))
         {
             // Backward compatibility with --no-ansi
-            ansiMode = ActivationMode.Off;
+            ansiMode = AutoOnOff.Off;
         }
         else
         {
             // Default is auto mode - detect capabilities
-            ansiMode = ActivationMode.Auto;
+            ansiMode = AutoOnOff.Auto;
         }
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
