@@ -93,12 +93,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
         int nonAnsiUpdateCadenceInMs = 3_000;
         // When writing to ANSI we update the progress in place and it should look responsive so we update every half second, because we only show seconds on the screen, so it is good enough.
         int ansiUpdateCadenceInMs = 500;
-        if (_options.ForceAnsi is false)
+        if (_options.AnsiMode == AnsiMode.Disable)
         {
             // ANSI forcefully disabled
             terminalWithProgress = new TestProgressStateAwareTerminal(new NonAnsiTerminal(console), showProgress, writeProgressImmediatelyAfterOutput: false, updateEvery: nonAnsiUpdateCadenceInMs);
         }
-        else if (_options.ForceAnsi is true)
+        else if (_options.AnsiMode == AnsiMode.Enable)
         {
             // ANSI forcefully enabled
             terminalWithProgress = _options.UseCIAnsi

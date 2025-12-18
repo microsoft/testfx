@@ -29,12 +29,12 @@ internal sealed class TerminalTestReporterOptions
 
     /// <summary>
     /// Gets a value indicating whether we are running in compatible CI, and should use simplified ANSI renderer, which colors output, but does not move cursor.
-    /// Setting <see cref="ForceAnsi"/> to false will disable this option.
+    /// Setting <see cref="AnsiMode"/> to <see cref="Terminal.AnsiMode.Disable"/> will disable this option.
     /// </summary>
     public bool UseCIAnsi { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should force ANSI escape codes. When true the ANSI is used without auto-detecting capabilities of the console. When false, ANSI is forcefully disabled. When null, capabilities are auto-detected.
+    /// Gets the ANSI mode for the terminal output.
     /// </summary>
-    public bool? ForceAnsi { get; init; }
+    public AnsiMode AnsiMode { get; init; } = AnsiMode.Auto;
 }
