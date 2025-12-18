@@ -136,6 +136,8 @@ public class ReflectionUtilityTests : TestContainer
         return attribValuePairs;
     }
 
+#nullable disable
+
     [DummyA("ba")]
     public class DummyBaseTestClass
     {

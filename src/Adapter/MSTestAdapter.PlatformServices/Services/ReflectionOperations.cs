@@ -121,75 +121,73 @@ internal sealed class ReflectionOperations : IReflectionOperations
         {
             return shouldGetAllAttributes ? memberInfo.GetCustomAttributes(inherit: true) : memberInfo.GetCustomAttributes(type, inherit: true);
         }
+
+        List<object> nonUniqueAttributes = [];
+        Dictionary<string, object> uniqueAttributes = [];
+
+        int inheritanceThreshold = 10;
+        int inheritanceLevel = 0;
+
+        if (memberInfo.MemberType == MemberTypes.TypeInfo)
+        {
+            // This code is based on the code for fetching CustomAttributes in System.Reflection.CustomAttribute(RuntimeType type, RuntimeType caType, bool inherit)
+            var tempTypeInfo = memberInfo as TypeInfo;
+
+            do
+            {
+                IList<CustomAttributeData> attributes = CustomAttributeData.GetCustomAttributes(tempTypeInfo);
+                AddNewAttributes(
+                    attributes,
+                    shouldGetAllAttributes,
+                    type!,
+                    uniqueAttributes,
+                    nonUniqueAttributes);
+                tempTypeInfo = tempTypeInfo!.BaseType?.GetTypeInfo();
+                inheritanceLevel++;
+            }
+            while (tempTypeInfo is not null && tempTypeInfo != typeof(object).GetTypeInfo()
+                   && inheritanceLevel < inheritanceThreshold);
+        }
+        else if (memberInfo.MemberType == MemberTypes.Method)
+        {
+            // This code is based on the code for fetching CustomAttributes in System.Reflection.CustomAttribute(RuntimeMethodInfo method, RuntimeType caType, bool inherit).
+            var tempMethodInfo = memberInfo as MethodInfo;
+
+            do
+            {
+                IList<CustomAttributeData> attributes = CustomAttributeData.GetCustomAttributes(tempMethodInfo);
+                AddNewAttributes(
+                    attributes,
+                    shouldGetAllAttributes,
+                    type!,
+                    uniqueAttributes,
+                    nonUniqueAttributes);
+                MethodInfo? baseDefinition = tempMethodInfo!.GetBaseDefinition();
+
+                if (baseDefinition is not null
+                    && string.Equals(
+                        string.Concat(tempMethodInfo.DeclaringType.FullName, tempMethodInfo.Name),
+                        string.Concat(baseDefinition.DeclaringType.FullName, baseDefinition.Name), StringComparison.Ordinal))
+                {
+                    break;
+                }
+
+                tempMethodInfo = baseDefinition;
+                inheritanceLevel++;
+            }
+            while (tempMethodInfo is not null && inheritanceLevel < inheritanceThreshold);
+        }
         else
         {
-            List<object> nonUniqueAttributes = [];
-            Dictionary<string, object> uniqueAttributes = [];
-
-            int inheritanceThreshold = 10;
-            int inheritanceLevel = 0;
-
-            if (memberInfo.MemberType == MemberTypes.TypeInfo)
-            {
-                // This code is based on the code for fetching CustomAttributes in System.Reflection.CustomAttribute(RuntimeType type, RuntimeType caType, bool inherit)
-                var tempTypeInfo = memberInfo as TypeInfo;
-
-                do
-                {
-                    IList<CustomAttributeData> attributes = CustomAttributeData.GetCustomAttributes(tempTypeInfo);
-                    AddNewAttributes(
-                        attributes,
-                        shouldGetAllAttributes,
-                        type!,
-                        uniqueAttributes,
-                        nonUniqueAttributes);
-                    tempTypeInfo = tempTypeInfo!.BaseType?.GetTypeInfo();
-                    inheritanceLevel++;
-                }
-                while (tempTypeInfo is not null && tempTypeInfo != typeof(object).GetTypeInfo()
-                       && inheritanceLevel < inheritanceThreshold);
-            }
-            else if (memberInfo.MemberType == MemberTypes.Method)
-            {
-                // This code is based on the code for fetching CustomAttributes in System.Reflection.CustomAttribute(RuntimeMethodInfo method, RuntimeType caType, bool inherit).
-                var tempMethodInfo = memberInfo as MethodInfo;
-
-                do
-                {
-                    IList<CustomAttributeData> attributes = CustomAttributeData.GetCustomAttributes(tempMethodInfo);
-                    AddNewAttributes(
-                        attributes,
-                        shouldGetAllAttributes,
-                        type!,
-                        uniqueAttributes,
-                        nonUniqueAttributes);
-                    MethodInfo? baseDefinition = tempMethodInfo!.GetBaseDefinition();
-
-                    if (baseDefinition is not null
-                        && string.Equals(
-                            string.Concat(tempMethodInfo.DeclaringType.FullName, tempMethodInfo.Name),
-                            string.Concat(baseDefinition.DeclaringType.FullName, baseDefinition.Name), StringComparison.Ordinal))
-                    {
-                        break;
-                    }
-
-                    tempMethodInfo = baseDefinition;
-                    inheritanceLevel++;
-                }
-                while (tempMethodInfo is not null && inheritanceLevel < inheritanceThreshold);
-            }
-            else
-            {
-                // Ideally we should not be reaching here. We only query for attributes on types/methods currently.
-                // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
-                IList<CustomAttributeData> firstLevelAttributes =
-                CustomAttributeData.GetCustomAttributes(memberInfo);
-                AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type!, uniqueAttributes, nonUniqueAttributes);
-            }
-
-            nonUniqueAttributes.AddRange(uniqueAttributes.Values);
-            return nonUniqueAttributes;
+            // Ideally we should not be reaching here. We only query for attributes on types/methods currently.
+            // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
+            IList<CustomAttributeData> firstLevelAttributes =
+            CustomAttributeData.GetCustomAttributes(memberInfo);
+            AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type!, uniqueAttributes, nonUniqueAttributes);
         }
+
+        nonUniqueAttributes.AddRange(uniqueAttributes.Values);
+        return nonUniqueAttributes;
     }
 
     private static List<Attribute> GetCustomAttributesForAssembly(Assembly assembly, Type type)
@@ -206,8 +204,7 @@ internal sealed class ReflectionOperations : IReflectionOperations
         foreach (CustomAttributeData attribute in customAttributes)
         {
             if (!IsTypeInheriting(attribute.Constructor.DeclaringType, type)
-                    && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
-                        type.AssemblyQualifiedName, StringComparison.Ordinal))
+                && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(type.AssemblyQualifiedName, StringComparison.Ordinal))
             {
                 continue;
             }
