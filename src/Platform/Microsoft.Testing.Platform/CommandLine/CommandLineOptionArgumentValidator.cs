@@ -15,18 +15,10 @@ internal static class CommandLineOptionArgumentValidator
     /// Validates that an argument is one of the accepted on/off boolean values.
     /// </summary>
     /// <param name="argument">The argument to validate.</param>
-    /// <param name="onValues">The values representing on/enabled state (default: ["on", "true", "enable", "1"]).</param>
-    /// <param name="offValues">The values representing off/disabled state (default: ["off", "false", "disable", "0"]).</param>
     /// <returns>True if the argument is valid; otherwise, false.</returns>
-    public static bool IsValidBooleanArgument(
-        string argument,
-        string[]? onValues = null,
-        string[]? offValues = null)
+    public static bool IsValidBooleanArgument(string argument)
     {
-        onValues ??= DefaultOnValues;
-        offValues ??= DefaultOffValues;
-
-        foreach (string onValue in onValues)
+        foreach (string onValue in DefaultOnValues)
         {
             if (onValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
             {
@@ -34,7 +26,7 @@ internal static class CommandLineOptionArgumentValidator
             }
         }
 
-        foreach (string offValue in offValues)
+        foreach (string offValue in DefaultOffValues)
         {
             if (offValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
             {
@@ -49,34 +41,19 @@ internal static class CommandLineOptionArgumentValidator
     /// Validates that an argument is one of the accepted on/off/auto values.
     /// </summary>
     /// <param name="argument">The argument to validate.</param>
-    /// <param name="autoValue">The value representing auto mode (default: "auto").</param>
-    /// <param name="onValues">The values representing on/enabled state (default: ["on", "true", "enable", "1"]).</param>
-    /// <param name="offValues">The values representing off/disabled state (default: ["off", "false", "disable", "0"]).</param>
     /// <returns>True if the argument is valid; otherwise, false.</returns>
-    public static bool IsValidBooleanAutoArgument(
-        string argument,
-        string? autoValue = "auto",
-        string[]? onValues = null,
-        string[]? offValues = null)
-    {
-        onValues ??= DefaultOnValues;
-        offValues ??= DefaultOffValues;
-
-        return (autoValue is not null && autoValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
-            || IsValidBooleanArgument(argument, onValues, offValues);
-    }
+    public static bool IsValidBooleanAutoArgument(string argument)
+        => "auto".Equals(argument, StringComparison.OrdinalIgnoreCase)
+            || IsValidBooleanArgument(argument);
 
     /// <summary>
     /// Determines if an argument represents an "on/enabled" state.
     /// </summary>
     /// <param name="argument">The argument to check.</param>
-    /// <param name="onValues">The values representing on/enabled state (default: ["on", "true", "enable", "1"]).</param>
     /// <returns>True if the argument represents an enabled state; otherwise, false.</returns>
-    public static bool IsOnValue(string argument, string[]? onValues = null)
+    public static bool IsOnValue(string argument)
     {
-        onValues ??= DefaultOnValues;
-
-        foreach (string onValue in onValues)
+        foreach (string onValue in DefaultOnValues)
         {
             if (onValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
             {
@@ -91,13 +68,10 @@ internal static class CommandLineOptionArgumentValidator
     /// Determines if an argument represents an "off/disabled" state.
     /// </summary>
     /// <param name="argument">The argument to check.</param>
-    /// <param name="offValues">The values representing off/disabled state (default: ["off", "false", "disable", "0"]).</param>
     /// <returns>True if the argument represents a disabled state; otherwise, false.</returns>
-    public static bool IsOffValue(string argument, string[]? offValues = null)
+    public static bool IsOffValue(string argument)
     {
-        offValues ??= DefaultOffValues;
-
-        foreach (string offValue in offValues)
+        foreach (string offValue in DefaultOffValues)
         {
             if (offValue.Equals(argument, StringComparison.OrdinalIgnoreCase))
             {
