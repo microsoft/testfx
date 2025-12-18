@@ -32,6 +32,11 @@
         <target state="translated">Použít přiřazení místo parametru out</target>
         <note />
       </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersFix">
+        <source>Remove 'out' and 'ref' modifiers</source>
+        <target state="new">Remove 'out' and 'ref' modifiers</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Změnit přístupnost metody na private</target>
@@ -150,6 +155,11 @@
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Použít {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[OSCondition]' attribute</source>
+        <target state="translated">Použít atribut [OSCondition]</target>
         <note />
       </trans-unit>
     </body>

@@ -32,6 +32,11 @@
         <target state="translated">正在取消測試工作階段...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">無法建立測試執行篩選條件</target>
@@ -117,6 +122,11 @@
         <target state="translated">選項 '--{0}' 已保留，無法供提供者 '{0}' 使用</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">警告: 選項 '--{0}' 已過時。{1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 使用保留的前置詞 '--internal'</target>
@@ -140,11 +150,6 @@
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">未預期的引數 {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">索引 {0} 中有未預期的 Null 引數</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
@@ -538,6 +543,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">瀏覽器環境不支援 '--exit-on-process-exit' 選項。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">如果相依流程結束，則結束測試流程。必須提供 PID。</target>
@@ -768,6 +778,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">成功</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">瀏覽器環境不支援同步排清。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">已設定 'ITestExecutionFilterFactory' 中心</target>
@@ -885,6 +900,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">測試配接器測試工作階段失敗</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">需要重新啟動程序的測試主機控制器擴充功能不支援瀏覽器/WebAssembly 平台。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">測試應用程式流程未正常結束，結束代碼為 '{0}'</target>
@@ -980,6 +1000,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">此程式位置被認為無法連線。File='{0}' Line={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">瀏覽器環境不支援等待除錯器附加 (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)。</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

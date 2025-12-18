@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/samples/">
+    <Project Path="samples/FSharpPlayground/FSharpPlayground.fsproj" />
     <Project Path="samples/FxExtensibility/FxExtensibility.csproj" />
     <Project Path="samples/Playground/Playground.csproj" />
   </Folder>
@@ -39,6 +40,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HotReload/Microsoft.Testing.Extensions.HotReload.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />

@@ -643,7 +643,7 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
+    private static void ThrowAssertAreEqualFailed<T>(T? expected, T? actual, string userMessage)
     {
         string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
             ? string.Format(
@@ -662,7 +662,7 @@ public sealed partial class Assert
                     userMessage,
                     ReplaceNulls(expected),
                     ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage, expected, actual);
     }
 
     [DoesNotReturn]
@@ -700,7 +700,7 @@ public sealed partial class Assert
             finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage, expected, actual);
     }
 
     /// <summary>
@@ -1277,7 +1277,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
         CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(expected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture), string.Empty);
+        CheckParameterNotNull(culture, "Assert.AreEqual", nameof(culture));
         message.ComputeAssertion(expectedExpression, actualExpression);
     }
 
@@ -1316,7 +1316,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
+        CheckParameterNotNull(culture, "Assert.AreEqual", "culture");
         if (!AreEqualFailing(expected, actual, ignoreCase, culture))
         {
             return;
@@ -1372,7 +1372,7 @@ public sealed partial class Assert
 #pragma warning restore IDE0060 // Remove unused parameter
         CultureInfo culture, [InterpolatedStringHandlerArgument(nameof(notExpected), nameof(actual), nameof(ignoreCase), nameof(culture))] ref AssertNonGenericAreNotEqualInterpolatedStringHandler message, [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture), string.Empty);
+        CheckParameterNotNull(culture, "Assert.AreNotEqual", nameof(culture));
         message.ComputeAssertion(notExpectedExpression, actualExpression);
     }
 
@@ -1412,7 +1412,7 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
-        CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
+        CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture");
         if (!AreNotEqualFailing(notExpected, actual, ignoreCase, culture))
         {
             return;

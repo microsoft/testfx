@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 {
     private readonly CommandLineHandler _commandLineHandler;
@@ -77,7 +78,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     commandLineOption.Name,
                     commandLineOption.Description,
                     commandLineOption.IsHidden,
-                    commandLineOption.IsBuiltIn));
+                    commandLineOption.IsBuiltIn,
+                    commandLineOption.ObsolescenceMessage));
             }
         }
 

@@ -176,14 +176,13 @@ internal sealed class TrxReportGenerator :
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             await _logger.LogDebugAsync($"""
-PlatformCommandLineProvider.ServerOption: {_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)}
 CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
 """).ConfigureAwait(false);
         }
 
-        if (!_commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) &&
-            _commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
+        if (_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
+            && !OperatingSystem.IsBrowser())
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
@@ -236,16 +235,12 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
                 await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
-            if (
-                // TestController is not used when we run in server mode
-                _commandLineOptionsService.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) ||
-                // If crash dump is not enabled we run trx in-process only
-                !_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
+            // If crash dump is not enabled we run trx in-process only
+            if (!_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
             {
-                // In server mode we report the trx in-process
                 await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
             }
-            else
+            else if (!OperatingSystem.IsBrowser())
             {
                 ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
                 ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);

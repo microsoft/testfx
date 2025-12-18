@@ -78,17 +78,16 @@ internal static class TestCaseExtensions
             // If we don't return UnitTestElement with the correct path to deployment directory, we will
             // end up trying to load the test assembly twice in the same appdomain, once with the default context and once in a LoadFrom context.
             // See https://github.com/microsoft/testfx/issues/6713
-            return unitTestElement.TestMethod.AssemblyName != source
-                ? unitTestElement.CloneWithUpdatedSource(source)
-                : unitTestElement;
+            return unitTestElement.TestMethod.AssemblyName == source
+                ? unitTestElement
+                : unitTestElement.CloneWithUpdatedSource(source);
         }
 
         string? testClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
         string name = testCase.GetTestName(testClassName);
 
-        TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null))
-            : new(name, testClassName!, source, testCase.DisplayName);
+        var testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
+
         var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -96,13 +95,8 @@ internal static class TestCaseExtensions
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
-            testMethod.TestCaseIndex = testCase.GetPropertyValue<int>(EngineConstants.TestCaseIndexProperty, 0);
+            testMethod.TestCaseIndex = testCase.GetPropertyValue(EngineConstants.TestCaseIndexProperty, 0);
             testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
-        }
-
-        if (testCase.GetPropertyValue(EngineConstants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)
-        {
-            testMethod.DeclaringClassFullName = declaringClassName;
         }
 
         UnitTestElement testElement = new(testMethod)
@@ -138,13 +132,9 @@ internal static class TestCaseExtensions
 
     internal static string? GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
 
-    internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedTypeProperty, value);
-
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
-
-    internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !StringEx.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !StringEx.IsNullOrWhiteSpace(testCase.GetManagedType());
 
     internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 
-    internal static void SetHierarchy(this TestCase testCase, params string?[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
+    internal static void SetHierarchy(this TestCase testCase, string?[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
 }

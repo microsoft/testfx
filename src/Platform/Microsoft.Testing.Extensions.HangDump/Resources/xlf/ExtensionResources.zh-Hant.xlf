@@ -147,16 +147,6 @@ Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full
         <target state="translated">您指定了一或多個停留傾印參數但並未加以啟用，請將 --hangdump 新增至命令列中</target>
         <note />
       </trans-unit>
-      <trans-unit id="MutexDoesNotExistErrorMessage">
-        <source>Cannot find mutex '{0}'</source>
-        <target state="translated">找不到 Mutex '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="MutexNameReceptionTimeoutErrorMessage">
-        <source>Mutex name wasn't received after '{0}' seconds</source>
-        <target state="translated">'{0}' 秒後未收到 Mutex 名稱</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">執行傾印時，下列測試仍在執行 (格式: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>

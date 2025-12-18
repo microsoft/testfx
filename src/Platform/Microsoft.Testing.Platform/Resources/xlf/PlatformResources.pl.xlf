@@ -32,6 +32,11 @@
         <target state="translated">Trwa anulowanie sesji testowej...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">Nie można utworzyć filtru wykonywania testu</target>
@@ -117,6 +122,11 @@
         <target state="translated">Opcja „--{0}” jest zastrzeżona i nie może być używana przez dostawców: „{0}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">Ostrzeżenie: opcja „--{0}” jest przestarzała. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">Opcja „--{0}” od dostawcy „{1}” (UID: {2}) używa zastrzeżonego prefiksu „--internal”</target>
@@ -140,11 +150,6 @@
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Nieoczekiwany argument {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Nieoczekiwany argument o wartości null przy indeksie {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
@@ -538,6 +543,11 @@ Dostępne wartości to „Trace”, „Debug”, „Information”, „Warning�
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">Opcja „--exit-on-process-exit” nie jest obsługiwana w środowiskach przeglądarki.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Zakończ proces testowy, jeśli proces zależny zostanie zakończony. Należy podać identyfikator PID.</target>
@@ -768,6 +778,11 @@ Pobiera jeden argument jako ciąg w formacie &lt;value&gt;[h|m|s], gdzie element
         <target state="translated">zakończone powodzeniem</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">Opróżnianie synchroniczne nie jest obsługiwane w środowiskach przeglądarki.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Fabryka „ITestExecutionFilterFactory” jest już ustawiona</target>
@@ -885,6 +900,11 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
         <target state="translated">Awaria sesji testowej adaptera testowego</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">Testowe rozszerzenia kontrolera hosta, które wymagają ponownego uruchomienia procesu, nie są obsługiwane na platformach przeglądarki/WebAssembly.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">Proces aplikacji testowej nie zakończył się pomyślnie, kod zakończenia: „{0}”</target>
@@ -980,6 +1000,11 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Ta lokalizacja programu jest uważana za nieosiągalną. Plik=„{0}”, Wiersz={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">Oczekiwanie na dołączenie debugera (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) nie jest obsługiwane w środowiskach przeglądarki.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

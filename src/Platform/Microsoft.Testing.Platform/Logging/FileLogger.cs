@@ -47,7 +47,14 @@ internal sealed class FileLogger : IDisposable
         _logLevel = logLevel;
         _console = console;
 
-        if (!_options.SyncFlush)
+        if (_options.SyncFlush)
+        {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.SyncFlushNotSupportedInBrowserErrorMessage);
+            }
+        }
+        else
         {
 #if NETCOREAPP
             _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
@@ -129,6 +136,11 @@ internal sealed class FileLogger : IDisposable
     {
         if (_options.SyncFlush)
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.SyncFlushNotSupportedInBrowserErrorMessage);
+            }
+
             InternalSyncLog(logLevel, state, exception, formatter, category);
         }
         else
@@ -137,6 +149,7 @@ internal sealed class FileLogger : IDisposable
         }
     }
 
+    [UnsupportedOSPlatform("browser")]
     private void InternalSyncLog<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
         if (!IsEnabled(logLevel))
@@ -144,9 +157,7 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
-#pragma warning disable CA1416 // Validate platform compatibility
         if (!_semaphore.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-#pragma warning restore CA1416
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }

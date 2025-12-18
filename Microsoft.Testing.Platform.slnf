@@ -2,6 +2,7 @@
   "solution": {
     "path": "TestFx.slnx",
     "projects": [
+      "samples\\FSharpPlayground\\FSharpPlayground.fsproj",
       "samples\\Playground\\Playground.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.AzureDevOpsReport\\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.AzureFoundry\\Microsoft.Testing.Extensions.AzureFoundry.csproj",
@@ -9,6 +10,7 @@
       "src\\Platform\\Microsoft.Testing.Extensions.HangDump\\Microsoft.Testing.Extensions.HangDump.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.HotReload\\Microsoft.Testing.Extensions.HotReload.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.MSBuild\\Microsoft.Testing.Extensions.MSBuild.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.OpenTelemetry\\Microsoft.Testing.Extensions.OpenTelemetry.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.Retry\\Microsoft.Testing.Extensions.Retry.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.Telemetry\\Microsoft.Testing.Extensions.Telemetry.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.TrxReport.Abstractions\\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj",

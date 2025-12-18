@@ -8,7 +8,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_DefaultSetting_CreateDump(string tfm)
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
@@ -27,13 +26,12 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_WithDotnetTest_CreateDump()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test --project \"{AssetFixture.TargetAssetPath}\" -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 8s --results-directory \"{resultDirectory}\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new Dictionary<string, string?>
             {
@@ -51,7 +49,28 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
+    public async Task HangDump_WithDotnetTest_NoHangButOverallTimeGreaterThanTimeout_ShouldPass()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent} --hangdump --hangdump-timeout 7s --results-directory \"{resultDirectory}\"",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "5000" },
+                { "SLEEPTIMEMS2", "5000" },
+            },
+            workingDirectory: AssetFixture.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        testResult.AssertExitCodeIs(ExitCodes.Success);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        Assert.IsEmpty(dumpFiles);
+    }
+
+    [TestMethod]
     public async Task HangDump_CustomFileName_CreateDump()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
@@ -69,7 +88,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_PathWithSpaces_CreateDump()
     {
         string resultDir = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
@@ -94,7 +112,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     [DataRow("Triage")]
     [DataRow("Full")]
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX, IgnoreMessage = "Investigate failures on macos")]
     public async Task HangDump_Formats_CreateDump(string format)
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
@@ -153,7 +170,6 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>

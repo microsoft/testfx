@@ -72,13 +72,13 @@ public sealed partial class Assert
     /// </exception>
     public static void StartsWith([NotNull] string? expectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedPrefix))] string expectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.StartsWith", "value", string.Empty);
-        CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix", string.Empty);
+        CheckParameterNotNull(value, "Assert.StartsWith", "value");
+        CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix");
         if (!value.StartsWith(expectedPrefix, comparisonType))
         {
             string userMessage = BuildUserMessageForExpectedPrefixExpressionAndValueExpression(message, expectedPrefixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, expectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.StartsWith", finalMessage);
+            ThrowAssertFailed("Assert.StartsWith", finalMessage, expectedPrefix, value);
         }
     }
 
@@ -144,13 +144,13 @@ public sealed partial class Assert
     /// </exception>
     public static void DoesNotStartWith([NotNull] string? notExpectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedPrefix))] string notExpectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
-        CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value", string.Empty);
-        CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix", string.Empty);
+        CheckParameterNotNull(value, "Assert.DoesNotStartWith", "value");
+        CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix");
         if (value.StartsWith(notExpectedPrefix, comparisonType))
         {
             string userMessage = BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(message, notExpectedPrefixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, notExpectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage, notExpectedPrefix, value);
         }
     }
 }

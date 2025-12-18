@@ -15,6 +15,7 @@ vsspell_ignored_words_842f80e2d4aa4288afdcd0e42833eeaf = runsettings|nullable|ar
 
 [*.{xlf,resx}]
 insert_final_newline = unset
+trim_trailing_whitespace = unset
 
 # Xml localization files
 [*.xlf]
@@ -340,6 +341,9 @@ dotnet_diagnostic.IDE0270.severity = warning
 
 # IDE0280: Use 'nameof'
 dotnet_diagnostic.IDE0280.severity = warning
+
+# IDE0370: Remove unnecessary suppression
+dotnet_diagnostic.IDE0370.severity = warning
 
 # IDE1005: Use conditional delegate call
 dotnet_diagnostic.IDE1005.severity = warning

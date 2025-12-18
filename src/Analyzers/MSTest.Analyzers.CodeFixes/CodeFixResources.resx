@@ -207,4 +207,10 @@
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
   </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
+    <value>Remove 'out' and 'ref' modifiers</value>
+  </data>
 </root>

@@ -327,7 +327,7 @@ internal
 #endif
     Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
-        if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
+        if (searchDirectorypaths.Count == 0)
         {
             return null;
         }
@@ -592,10 +592,7 @@ internal
 
                     assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
 
-                    if (assembly != null)
-                    {
-                        _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
-                    }
+                    _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
 
                     return assembly;
                 }
@@ -607,10 +604,7 @@ internal
 
                 assembly = Assembly.Load(assemblyNameToLoad);
 
-                if (assembly != null)
-                {
-                    _resolvedAssemblies[assemblyNameToLoad] = assembly;
-                }
+                _resolvedAssemblies[assemblyNameToLoad] = assembly;
 
                 return assembly;
             }

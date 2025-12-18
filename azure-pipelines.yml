@@ -14,7 +14,7 @@ pr:
       - .github/*
       - .devcontainer/*
       - docs/*
-      - .markdownlint.json
+      - .markdownlint-cli2.jsonc
       - .markdownlintignore
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.md
@@ -164,6 +164,34 @@ stages:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/CrashDumps'
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
+
+      - job: WindowsSamples
+        timeoutInMinutes: 30
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - task: PowerShell@2
+          displayName: 'Install Windows SDK'
+          inputs:
+            targetType: filePath
+            filePath: './eng/install-windows-sdk.ps1'
+            failOnStderr: true
+            showWarnings: true
+
+        - task: PowerShell@2
+          displayName: 'Build Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors'
+            failOnStderr: false
 
       - job: Linux
         timeoutInMinutes: 90

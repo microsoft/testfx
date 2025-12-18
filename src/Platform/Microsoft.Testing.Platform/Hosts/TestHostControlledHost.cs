@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerPipeClient, IHost innerHost, CancellationToken cancellationToken) : IHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly

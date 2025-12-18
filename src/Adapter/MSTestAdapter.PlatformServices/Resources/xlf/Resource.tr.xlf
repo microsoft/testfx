@@ -549,6 +549,11 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">Permütasyon için nesne sayısı yanlış. Değer, sıfırdan büyük olmalıdır.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_OutRefParametersNotSupported">
+        <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
+        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

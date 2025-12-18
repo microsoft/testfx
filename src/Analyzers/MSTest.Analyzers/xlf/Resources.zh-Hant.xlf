@@ -301,6 +301,16 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">DataRow 應該有效</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionFix">
+        <source>Use 'Assert.{0}' instead</source>
+        <target state="translated">改為使用 'Assert.{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
+        <source>Use proper Assert methods for all negated assertions</source>
+        <target state="translated">針對所有否定的判斷提示使用適當的 Assert 方法</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
         <source>Do not negate boolean assertions, instead use the opposite assertion</source>
         <target state="translated">請勿否定布林值判斷提示，而是使用相反的判斷提示</target>
@@ -1002,6 +1012,66 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
         <target state="translated">在 Catch 區塊中使用斷言會有問題，因為即使沒有拋出例外且 Catch 區塊從未執行，測試仍會通過。請使用 'Assert.Throws'、'Assert.ThrowsExactly'、'Assert.ThrowsAsync' 或 'Assert.ThrowsExactlyAsync' 來驗證是否有拋出例外，然後在不使用 try-catch 區塊的情況下，對捕捉到的例外進行進一步判斷提示。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+        <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
+        <target state="translated">一個組件應該要有 '[Parallelize]' 或 '[DoNotParallelize]' 屬性，但不能同時擁有兩者。若同時存在這兩個屬性，會造成設定上的歧義。當兩者並存時，系統會優先採用 '[DoNotParallelize]'，並停用平行化功能。</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
+        <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
+        <target state="translated">組件同時具有 '[Parallelize]' 與 '[DoNotParallelize]' 屬性，造成歧義</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
+        <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
+        <target state="translated">請勿同時使用 '[Parallelize]' 與 '[DoNotParallelize]' 屬性</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">使用 '[OSCondition]' 屬性取代具有提前回傳或 'Assert.Inconclusive'的 'RuntimeInformation.IsOSPlatform' 呼叫</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">使用 '[OSCondition]' 屬性取代具有提前回傳或 'Assert.Inconclusive'的 'RuntimeInformation.IsOSPlatform' 呼叫</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
+        <target state="translated">測試使用 'RuntimeInformation.IsOSPlatform' 且具有提前回傳或 'Assert.Inconclusive' 的方法，應改用 '[OSCondition]' 屬性。此屬性提供更具宣告性且易於探索的方式來指定作業系統專屬的測試需求。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeTitle">
+        <source>Avoid duplicate test method attributes</source>
+        <target state="translated">避免重複的測試方法屬性</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
+        <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
+        <target state="translated">測試方法 '{0}' 有多個繼承自 'TestMethodAttribute' 的屬性。只能使用一個測試方法屬性。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeDescription">
+        <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
+        <target state="translated">測試方法應標示唯一一個屬性，該屬性是或繼承自 'TestMethodAttribute'。當存在多個此類屬性時，僅會使用反射回傳的第一個屬性。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersTitle">
+        <source>Avoid using 'out' or 'ref' parameters in test methods</source>
+        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
+        <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
+        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersDescription">
+        <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
+        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
         <note />
       </trans-unit>
     </body>

@@ -145,9 +145,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     [TestMethod]
     // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-        // TODO: Crash dump is not working properly on macos, so we skip the test for now
         => await RetryHelper.RetryAsync(
             async () =>
             {
@@ -168,7 +166,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
 
                 // 1 trx file
-                Assert.AreEqual(1, entries.Count(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase)));
+                Assert.ContainsSingle(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase), entries);
 
                 // Number of dmp files seems to differ locally and in CI
                 int dumpFilesCount = entries.Count(x => x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase));
@@ -176,7 +174,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 if (dumpFilesCount == 2)
                 {
                     // Dump file inside the trx structure
-                    Assert.AreEqual(1, entries.Count(x => x.Contains($"{Path.DirectorySeparatorChar}In{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) && x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase)));
+                    Assert.ContainsSingle(x => x.Contains($"{Path.DirectorySeparatorChar}In{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) && x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase), entries);
                 }
                 else if (dumpFilesCount is 0 or > 2)
                 {
@@ -229,7 +227,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
         <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>

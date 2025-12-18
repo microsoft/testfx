@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.25575.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.25617.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e29f11a331730bd4f51024ba83fa067d2ab80ca9</Sha>
+      <Sha>47a8a69721dfea57b82121ac1458d2f5bba6abd2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.25575.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.25617.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e29f11a331730bd4f51024ba83fa067d2ab80ca9</Sha>
+      <Sha>47a8a69721dfea57b82121ac1458d2f5bba6abd2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.25575.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.25617.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e29f11a331730bd4f51024ba83fa067d2ab80ca9</Sha>
+      <Sha>47a8a69721dfea57b82121ac1458d2f5bba6abd2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.0-preview.25575.4">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.3.0-preview.25615.1">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>7a9d45a8e04ed6757f2ec2b8aecf84fe98f4e101</Sha>
+      <Sha>6f01d4879e975b9ea35d378c4454fa54cb51cd7c</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="4.1.0-preview.25576.6">
+    <Dependency Name="MSTest" Version="4.1.0-preview.25617.6">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>cbf317663738a486fa8bd8313e7edfc77df857eb</Sha>
+      <Sha>e183a03b1e200baa83f3b00b83633338d356581a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="2.1.0-preview.25576.6">
+    <Dependency Name="Microsoft.Testing.Platform" Version="2.1.0-preview.25617.6">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>cbf317663738a486fa8bd8313e7edfc77df857eb</Sha>
+      <Sha>e183a03b1e200baa83f3b00b83633338d356581a</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

@@ -32,6 +32,11 @@
         <target state="translated">Ruší se testovací relace...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">Nepovedlo se vytvořit filtr provádění testů.</target>
@@ -117,6 +122,11 @@
         <target state="translated">Možnost --{0} je vyhrazená a nelze ji použít zprostředkovateli: {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">Upozornění: Možnost --{0} je zastaralá. {1}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
         <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</target>
@@ -140,11 +150,6 @@
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
         <target state="translated">Neočekávaný argument {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CommandLineParserUnexpectedNullArgument">
-        <source>Unexpected null argument at index {0}</source>
-        <target state="translated">Neočekávaný argument null v indexu {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
@@ -538,6 +543,11 @@ Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</ta
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">Možnost --exit-on-process-exit není v prostředích prohlížeče podporována.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Pokud se závislý proces ukončí, ukončete testovací proces. Je nutné zadat identifikátor PID.</target>
@@ -768,6 +778,11 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
         <target state="translated">úspěšné</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">Synchronní vyprázdnění se v prostředích prohlížeče nepodporuje.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">Objekt pro vytváření ITestExecutionFilterFactory je už nastavený.</target>
@@ -885,6 +900,11 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <target state="translated">Selhání testovací relace testovacího adaptéru</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">Rozšíření testovacího hostitelského řadiče, která vyžadují restartování procesu, nejsou na platformách browser/WebAssembly podporována.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">Proces testovací aplikace nebyl řádně ukončen, ukončovací kód je {0}.</target>
@@ -980,6 +1000,11 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Toto umístění programu se považuje za nedostupné. File={0}, Line={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">Čekání na připojení ladicího programu (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) se v prostředích prohlížeče nepodporuje.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
