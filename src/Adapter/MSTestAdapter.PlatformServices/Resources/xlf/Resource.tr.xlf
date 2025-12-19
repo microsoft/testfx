@@ -551,7 +551,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="UTA_OutRefParametersNotSupported">
         <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
-        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <target state="translated">Uyarı: '{0}.{1}' test metodunda desteklenmeyen ve gelecekteki bir MSTest sürümünde izin verilmeyebilecek 'out' veya 'ref' parametreleri var.</target>
         <note />
       </trans-unit>
     </body>
