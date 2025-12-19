@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersFix">
         <source>Remove 'out' and 'ref' modifiers</source>
-        <target state="new">Remove 'out' and 'ref' modifiers</target>
+        <target state="translated">Usuń modyfikatory „out” i „ref”</target>
         <note />
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
