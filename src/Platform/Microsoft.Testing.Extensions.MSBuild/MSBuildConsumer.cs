@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly IServiceProvider _serviceProvider;

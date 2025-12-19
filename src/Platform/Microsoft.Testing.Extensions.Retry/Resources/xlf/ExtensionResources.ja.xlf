@@ -40,6 +40,11 @@ Moving last attempt asset files to the default result directory
         <target state="translated">ファイル '{0}' を '{1}' に移動しています</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">再試行拡張機能は、ブラウザー プラットフォームではサポートされていません。プラットフォームの制限により、ブラウザーベースのテストを再試行できません。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">処理 '{0}' を開始できませんでした</target>

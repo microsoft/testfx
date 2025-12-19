@@ -303,12 +303,12 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFix">
         <source>Use 'Assert.{0}' instead</source>
-        <target state="new">Use 'Assert.{0}' instead</target>
+        <target state="translated">Use "Assert.{0}" em vez disso</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
         <source>Use proper Assert methods for all negated assertions</source>
-        <target state="new">Use proper Assert methods for all negated assertions</target>
+        <target state="translated">Use métodos Assert adequados para todas as asserções negadas</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
@@ -1012,6 +1012,66 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
         <target state="translated">Usar assertivas em blocos catch é problemático porque o teste será aprovado mesmo que nenhuma exceção seja lançada e o bloco catch nunca seja executado. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' ou 'Assert.ThrowsExactlyAsync' para verificar se uma exceção foi lançada e, em seguida, faça asserções adicionais sobre a exceção capturada sem usar o bloco try-catch.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+        <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
+        <target state="translated">Um assembly deve ter o atributo "[Parallelize]" ou "[DoNotParallelize]", mas não ambos. Ter ambos os atributos cria uma configuração ambígua. Quando ambos estiverem presentes, "[DoNotParallelize]" terá precedência e a paralelização será desabilitada.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
+        <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
+        <target state="translated">O assembly tem os atributos "[Parallelize]" e "[DoNotParallelize]", o que cria ambiguidade</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
+        <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
+        <target state="translated">Não use os atributos "[Parallelize]" e "[DoNotParallelize]"</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Use o atributo "[OSCondition]" em vez de chamadas "RuntimeInformation.IsOSPlatform" com retorno antecipado ou "Assert.Inconclusive"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Use o atributo "[OSCondition]" em vez de chamadas "RuntimeInformation.IsOSPlatform" com retorno antecipado ou "Assert.Inconclusive"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
+        <target state="translated">Os métodos de teste que usam "RuntimeInformation.IsOSPlatform" com retorno antecipado ou "Assert.Inconclusive" devem usar o atributo "[OSCondition]". Esse atributo fornece uma maneira mais declarativa e detectável de especificar requisitos de teste específicos do sistema operacional.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeTitle">
+        <source>Avoid duplicate test method attributes</source>
+        <target state="translated">Evitar características de método de teste duplicadas</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
+        <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
+        <target state="translated">O método de teste '{0}' tem várias características que herdam de 'TestMethodAttribute'. Somente uma característica de método de teste deve ser usada.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeDescription">
+        <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
+        <target state="translated">Um método de teste deve ser marcado com exatamente uma característica que seja ou herde de 'TestMethodAttribute'. Quando várias dessas características estiverem presentes, somente a primeira retornada pela reflexão será usada.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersTitle">
+        <source>Avoid using 'out' or 'ref' parameters in test methods</source>
+        <target state="new">Avoid using 'out' or 'ref' parameters in test methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
+        <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
+        <target state="new">Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersDescription">
+        <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
+        <target state="new">'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</target>
         <note />
       </trans-unit>
     </body>

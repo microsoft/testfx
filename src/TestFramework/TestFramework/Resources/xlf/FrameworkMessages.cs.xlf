@@ -282,6 +282,16 @@ Skutečnost: {2}</target>
         <target state="translated">Špatný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="translated">{0} Očekávaný přesný typ:&lt;{1}&gt;. Skutečný typ:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">Nesprávný přesný typ:&lt;{1}&gt;. Skutečný typ:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">Řetězec „{0}“ odpovídá vzoru „{1}“. {2}</target>
@@ -315,7 +325,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
+        <target state="translated">Parametr {0} je neplatný. Hodnota nemůže být null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

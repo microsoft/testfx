@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplicationLifetime
 {
     private readonly IConfiguration _configuration;

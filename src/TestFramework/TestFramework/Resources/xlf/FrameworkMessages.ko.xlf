@@ -282,6 +282,16 @@ Actual: {2}</source>
         <target state="translated">잘못된 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="IsExactInstanceOfFailMsg">
+        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
+        <target state="translated">{0} 예상되는 정확한 형식:&lt;{1}&gt;. 실제 형식: &lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotExactInstanceOfFailMsg">
+        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
+        <target state="translated">잘못된 정확한 형식:&lt;{1}&gt;. 실제 형식: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">'{0}' 문자열이 '{1}' 패턴과 일치합니다. {2}</target>
@@ -315,7 +325,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
+        <target state="translated">'{0}' 매개 변수가 잘못되었습니다. 이 값은 null일 수 없습니다.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">

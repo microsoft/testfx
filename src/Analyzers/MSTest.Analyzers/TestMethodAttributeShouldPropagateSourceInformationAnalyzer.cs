@@ -13,7 +13,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0054: <inheritdoc cref="Resources.TestMethodAttributeShouldPropagateSourceInformationTitle"/>.
+/// MSTEST0057: <inheritdoc cref="Resources.TestMethodAttributeShouldPropagateSourceInformationTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzer : DiagnosticAnalyzer

@@ -24,6 +24,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// <summary>
 /// Task that invokes the Testing Platform.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";

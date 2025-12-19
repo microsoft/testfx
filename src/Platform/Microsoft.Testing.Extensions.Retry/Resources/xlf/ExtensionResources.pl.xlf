@@ -40,6 +40,11 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <target state="translated">Przenoszenie pliku „{0}” do {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Rozszerzenie ponawiania próby nie jest obsługiwane na platformie przeglądarki. Testów opartych na przeglądarce nie da się powtórzyć z powodu ograniczeń platformy.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Nie można uruchomić procesu „{0}”</target>

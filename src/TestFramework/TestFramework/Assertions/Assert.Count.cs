@@ -342,7 +342,7 @@ public sealed partial class Assert
             userMessage,
             expectedCount,
             actualCount);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
+        ThrowAssertFailed($"Assert.{assertionName}", finalMessage, expectedCount, actualCount);
     }
 
     [DoesNotReturn]

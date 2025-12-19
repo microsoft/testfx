@@ -32,6 +32,11 @@
         <target state="translated">테스트 세션을 취소하는 중...</target>
         <note />
       </trans-unit>
+      <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
+        <source>Browser platform is only supported on .NET 7.0 or greater.</source>
+        <target state="new">Browser platform is only supported on .NET 7.0 or greater.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">테스트 실행 필터를 만들지 못함</target>
@@ -115,6 +120,11 @@
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
         <target state="translated">'--{0}' 옵션은 예약되어 있으므로 공급자 '{0}'이(가) 사용할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionObsoleteWarning">
+        <source>Warning: Option '--{0}' is obsolete. {1}</source>
+        <target state="translated">경고: 옵션 '--{0}'이(가) 사용되지 않습니다. {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
@@ -533,6 +543,11 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
 {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
+        <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
+        <target state="translated">브라우저 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">종속 프로세스가 종료되면 테스트 프로세스를 종료합니다. PID를 제공해야 합니다.</target>
@@ -763,6 +778,11 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">성공</target>
         <note />
       </trans-unit>
+      <trans-unit id="SyncFlushNotSupportedInBrowserErrorMessage">
+        <source>Synchronous flush is not supported in browser environments.</source>
+        <target state="translated">브라우저 환경에서는 동기 플러시를 지원하지 않습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">'ITestExecutionFilterFactory' 팩터리가 이미 설정되어 있음</target>
@@ -880,6 +900,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">테스트 어댑터 테스트 세션 실패</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
+        <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
+        <target state="translated">프로세스를 다시 시작해야 하는 테스트 호스트 컨트롤러 확장은 브라우저/WebAssembly 플랫폼에서 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">테스트 애플리케이션 프로세스가 정상적으로 종료되지 않았습니다. 종료 코드는 '{0}'입니다.</target>
@@ -975,6 +1000,11 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">이 프로그램 위치에 연결할 수 없는 것으로 생각됩니다. File='{0}' Line={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
+        <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
+        <target state="translated">디버거 연결 대기(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1)는 브라우저 환경에서 지원되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

@@ -3199,6 +3199,126 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenUsingAreEqualWithCountPredicateEqualsOne_SuggestsContainsSingle()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    {|#0:Assert.AreEqual(1, collection.Count(x => x == 1))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    Assert.ContainsSingle(x => x == 1, collection);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsSingle", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAreEqualWithCountPredicateEqualsOne_StringPredicate_SuggestsContainsSingle()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var resultUsings = new List<string>();
+                    {|#0:Assert.AreEqual(1, resultUsings.Count(u => u == "System"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var resultUsings = new List<string>();
+                    Assert.ContainsSingle(u => u == "System", resultUsings);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsSingle", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAreEqualWithWhereCountEqualsOne_SuggestsContainsSingle()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    {|#0:Assert.AreEqual(1, collection.Where(x => x == 1).Count())|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            [TestClass]
+            public class TestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var collection = new List<int>();
+                    Assert.ContainsSingle(x => x == 1, collection);
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("ContainsSingle", "AreEqual"),
+            fixedCode);
+    }
+
     #endregion
 
     #region BCL Types with IComparable Tests

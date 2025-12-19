@@ -181,7 +181,8 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 """).ConfigureAwait(false);
         }
 
-        if (_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
+        if (_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
+            && !OperatingSystem.IsBrowser())
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
@@ -234,13 +235,12 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
                 await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
-            if (
-                // If crash dump is not enabled we run trx in-process only
-                !_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
+            // If crash dump is not enabled we run trx in-process only
+            if (!_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName))
             {
                 await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
             }
-            else
+            else if (!OperatingSystem.IsBrowser())
             {
                 ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
                 ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);

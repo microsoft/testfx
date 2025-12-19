@@ -41,6 +41,74 @@ public sealed partial class Assert
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
 
     /// <summary>
+    /// Helper function that creates and throws an AssertionFailedException with expected and actual values.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the expected and actual values.
+    /// </typeparam>
+    /// <param name="assertionName">
+    /// name of the assertion throwing an exception.
+    /// </param>
+    /// <param name="message">
+    /// The assertion failure message.
+    /// </param>
+    /// <param name="expected">
+    /// Expected value to store in exception data.
+    /// </param>
+    /// <param name="actual">
+    /// Actual value to store in exception data.
+    /// </param>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed<T>(string assertionName, string? message, T? expected = default, T? actual = default)
+    {
+        AssertFailedException exception = new(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+
+        // Store expected and actual values in exception Data for types with known good ToString implementations
+        if (HasKnownGoodToString(expected))
+        {
+            exception.Data["assert.expected"] = expected;
+        }
+
+        if (HasKnownGoodToString(actual))
+        {
+            exception.Data["assert.actual"] = actual;
+        }
+
+        throw exception;
+    }
+
+    private static bool HasKnownGoodToString<T>([NotNullWhen(true)] T? value)
+    {
+        if (value is null)
+        {
+            return false;
+        }
+
+        Type type = typeof(T);
+
+        // Unwrap nullable value types
+        type = Nullable.GetUnderlyingType(type) ?? type;
+
+        // Primitive types and string
+        if (type.IsPrimitive || type == typeof(string))
+        {
+            return true;
+        }
+
+        // Common types with good ToString implementations
+        return type == typeof(decimal)
+            || type == typeof(DateTime)
+            || type == typeof(DateTimeOffset)
+            || type == typeof(TimeSpan)
+            || type == typeof(Guid)
+            || type == typeof(Uri)
+            || type.IsEnum
+            || typeof(Exception).IsAssignableFrom(type);
+    }
+
+    /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
     /// </summary>
     /// <param name="format">

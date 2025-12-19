@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BrowserPlatformNotSupportedOnOlderFrameworks" xml:space="preserve">
+    <value>Browser platform is only supported on .NET 7.0 or greater.</value>
+  </data>
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>
@@ -316,6 +319,9 @@
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
   </data>
+  <data name="CommandLineOptionObsoleteWarning" xml:space="preserve">
+    <value>Warning: Option '--{0}' is obsolete. {1}</value>
+  </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
   </data>
@@ -483,6 +489,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="PlatformCommandLineExitOnProcessExitInvalidDependentProcess" xml:space="preserve">
     <value>Invalid PID '{0}'
 {1}</value>
+  </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser" xml:space="preserve">
+    <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
   </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
@@ -727,5 +736,14 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
     <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+  </data>
+  <data name="TestHostControllerProcessRestartNotSupportedOnWebAssembly" xml:space="preserve">
+    <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
+  </data>
+  <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Synchronous flush is not supported in browser environments.</value>
+  </data>
+  <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
   </data>
 </root>

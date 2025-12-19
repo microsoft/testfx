@@ -699,4 +699,43 @@ The type declaring these methods should also respect the following rules:
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
     <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</value>
   </data>
+  <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle" xml:space="preserve">
+    <value>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat" xml:space="preserve">
+    <value>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription" xml:space="preserve">
+    <value>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</value>
+    <comment>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</comment>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
+    <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+  </data>
+  <data name="UseOSConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
+    <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
+  </data>
+  <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
+    <value>Avoid duplicate test method attributes</value>
+  </data>
+  <data name="DuplicateTestMethodAttributeMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</value>
+  </data>
+  <data name="DuplicateTestMethodAttributeDescription" xml:space="preserve">
+    <value>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersTitle" xml:space="preserve">
+    <value>Avoid using 'out' or 'ref' parameters in test methods</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersMessageFormat" xml:space="preserve">
+    <value>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</value>
+  </data>
+  <data name="AvoidOutRefTestMethodParametersDescription" xml:space="preserve">
+    <value>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</value>
+  </data>
 </root>

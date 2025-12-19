@@ -40,6 +40,11 @@ Son deneme varlık dosyaları, varsayılan sonuç dizinine taşınıyor
         <target state="translated">'{0}' dosyasını '{1}'e taşıma</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Yeniden deneme uzantısı tarayıcı platformunda desteklenmemektedir. Tarayıcı tabanlı testler, platform sınırlamaları nedeniyle tekrar denenemez.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">'{0}' işlemi başlatılamadı</target>

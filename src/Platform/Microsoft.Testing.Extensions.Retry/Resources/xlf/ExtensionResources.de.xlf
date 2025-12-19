@@ -40,6 +40,11 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
         <target state="translated">Die Datei "{0}" wird nach "{1}" verschoben</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Die Wiederholungserweiterung wird auf der Browserplattform nicht unterstützt. Browserbasierte Tests können aufgrund von Plattformbeschränkungen nicht erneut ausgeführt werden.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Fehler beim Starten von Prozess "{0}".</target>

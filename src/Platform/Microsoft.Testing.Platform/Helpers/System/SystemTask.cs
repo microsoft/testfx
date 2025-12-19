@@ -14,6 +14,7 @@ internal sealed class SystemTask : ITask
     public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
         => Task.Run(function, cancellationToken);
 
+    [UnsupportedOSPlatform("browser")]
     public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
     {
         // We create custom thread so we can assign the name that will help us to identify the thread in the dump
@@ -44,9 +45,7 @@ internal sealed class SystemTask : ITask
             Name = name,
         };
 
-#pragma warning disable CA1416 // Validate platform compatibility
         thread.Start();
-#pragma warning restore CA1416
 
         return taskCompletionSource.Task;
     }
