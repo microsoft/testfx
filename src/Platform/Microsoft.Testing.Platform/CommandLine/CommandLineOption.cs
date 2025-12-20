@@ -23,8 +23,8 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     /// <param name="obsolescenceMessage">The obsolescence message for the command line option.</param>
     internal CommandLineOption(string name, string description, ArgumentArity arity, bool isHidden, bool isBuiltIn, string? obsolescenceMessage = null)
     {
-        Guard.NotNullOrWhiteSpace(name);
-        Guard.NotNullOrWhiteSpace(description);
+        Ensure.NotNullOrWhiteSpace(name);
+        Ensure.NotNullOrWhiteSpace(description);
         ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), PlatformResources.CommandLineInvalidArityErrorMessage);
 
         string errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name);

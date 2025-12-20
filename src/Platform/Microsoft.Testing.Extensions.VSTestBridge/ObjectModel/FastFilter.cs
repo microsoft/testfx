@@ -13,7 +13,7 @@ internal sealed class FastFilter
 {
     internal FastFilter(ImmutableDictionary<string, ISet<string>> filterProperties, Operation filterOperation, Operator filterOperator)
     {
-        Guard.NotNullOrEmpty(filterProperties);
+        Ensure.NotNullOrEmpty(filterProperties);
 
         FilterProperties = filterProperties;
 
@@ -41,7 +41,7 @@ internal sealed class FastFilter
 
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Guard.NotNull(propertyValueProvider);
+        Ensure.NotNull(propertyValueProvider);
 
         bool matched = false;
         foreach (string name in FilterProperties.Keys)
