@@ -150,7 +150,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX, "MyPrefix" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX, "MyPrefix" },
             },
             cancellationToken: TestContext.CancellationToken);
 
@@ -170,7 +170,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
             new Dictionary<string, string?>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "1" },
-                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE, "1" },
+                { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE, "1" },
             },
             cancellationToken: TestContext.CancellationToken);
 

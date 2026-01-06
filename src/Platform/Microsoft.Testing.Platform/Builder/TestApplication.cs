@@ -343,7 +343,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Override the prefix name
-        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX);
         if (!RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
             prefixName = environmentFilePrefix;
@@ -352,7 +352,7 @@ public sealed class TestApplication : ITestApplication
         bool synchronousWrite = result.IsOptionSet(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey);
 
         // Override the synchronous write
-        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE);
         if (!RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
             synchronousWrite = environmentSynchronousWrite == "1";
