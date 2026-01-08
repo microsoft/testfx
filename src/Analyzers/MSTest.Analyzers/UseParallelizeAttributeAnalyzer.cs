@@ -14,7 +14,7 @@ namespace MSTest.Analyzers;
 
 /// <summary>
 /// MSTEST0001: <inheritdoc cref="Resources.UseParallelizeAttributeAnalyzerTitle"/>.
-/// MSTEST0058: <inheritdoc cref="Resources.DoNotUseParallelizeAndDoNotParallelizeTogetherTitle"/>.
+/// MSTEST0059: <inheritdoc cref="Resources.DoNotUseParallelizeAndDoNotParallelizeTogetherTitle"/>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
