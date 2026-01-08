@@ -43,6 +43,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstance
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> object?
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(object? value, System.Type? expectedType, string? message = "", string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(object? value, System.Type? expectedType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler message, string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType<T>(object? value, string? message = "", string! valueExpression = "") -> T
@@ -52,4 +53,3 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfT
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType<T>(object? value, string? message = "", string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType<T>(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<T> message, string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Collections.IEnumerable! collection, string? message = "", string! collectionExpression = "") -> object?
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Func<object!, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> object?
