@@ -16,7 +16,7 @@ internal static class CountDownEventExtensions
             ? await countdownEvent.WaitBrowserAsync(millisecondsTimeOutInterval, cancellationToken).ConfigureAwait(false)
             : await countdownEvent.WaitNonBrowserAsync(millisecondsTimeOutInterval, cancellationToken).ConfigureAwait(false);
 
-    internal static async Task<bool> WaitBrowserAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
+    private static async Task<bool> WaitBrowserAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
         const int pollIntervalMs = 10;
         uint elapsedMs = 0;
@@ -39,7 +39,7 @@ internal static class CountDownEventExtensions
     }
 
     [UnsupportedOSPlatform("browser")]
-    internal static async Task<bool> WaitNonBrowserAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
+    private static async Task<bool> WaitNonBrowserAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
         RegisteredWaitHandle? registeredHandle = null;
         CancellationTokenRegistration tokenRegistration = default;
