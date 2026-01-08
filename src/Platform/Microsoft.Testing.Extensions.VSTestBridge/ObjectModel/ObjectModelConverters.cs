@@ -286,15 +286,8 @@ internal static class ObjectModelConverters
         }
     }
 
-    internal static void FixUpTestCase(this TestCase testCase, string? testAssemblyPath = null)
+    internal static void FixUpTestCase(this TestCase testCase)
     {
-        // To help framework authors using code generator, we replace the Source property of the test case with the
-        // test assembly path.
-        if (RoslynString.IsNullOrEmpty(testCase.Source) && !RoslynString.IsNullOrEmpty(testAssemblyPath))
-        {
-            testCase.Source = testAssemblyPath;
-        }
-
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
         if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))
