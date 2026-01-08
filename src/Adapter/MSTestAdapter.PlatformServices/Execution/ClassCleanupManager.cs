@@ -24,26 +24,31 @@ internal sealed class ClassCleanupManager
 
     public bool ShouldRunEndOfAssemblyCleanup => _remainingTestCountsByClass.IsEmpty;
 
-    public void MarkTestComplete(TestMethodInfo testMethodInfo, out bool shouldRunEndOfClassCleanup)
+    public void MarkTestComplete(TestMethod testMethod, out bool isLastTestInClass)
     {
-        shouldRunEndOfClassCleanup = false;
-
         lock (_remainingTestCountsByClass)
         {
-            if (!_remainingTestCountsByClass.TryGetValue(testMethodInfo.TestClassName, out int remainingCount))
+            if (!_remainingTestCountsByClass.TryGetValue(testMethod.FullClassName, out int remainingCount))
             {
-                return;
+                throw ApplicationStateGuard.Unreachable();
             }
 
             remainingCount--;
-            _remainingTestCountsByClass[testMethodInfo.TestClassName] = remainingCount;
-            if (remainingCount == 0)
+            _remainingTestCountsByClass[testMethod.FullClassName] = remainingCount;
+            isLastTestInClass = remainingCount == 0;
+        }
+    }
+
+    public void MarkClassComplete(string fullClassName)
+    {
+        lock (_remainingTestCountsByClass)
+        {
+            if (!_remainingTestCountsByClass.TryRemove(fullClassName, out int remainingTests) ||
+                remainingTests != 0)
             {
-                _remainingTestCountsByClass.TryRemove(testMethodInfo.TestClassName, out _);
-                if (testMethodInfo.Parent.HasExecutableCleanupMethod)
-                {
-                    shouldRunEndOfClassCleanup = true;
-                }
+                // We failed to remove the class, or we are incorrectly marking the class as complete while there are remaining tests.
+                // This should never happen.
+                throw ApplicationStateGuard.Unreachable();
             }
         }
     }
