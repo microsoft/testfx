@@ -12,10 +12,11 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-[UnsupportedOSPlatform("browser")]
 internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
+    [UnsupportedOSPlatformGuard("BROWSER")]
     private readonly bool _isEnabled;
+
     private readonly IEnvironment _environment;
 
     public TrxTestApplicationLifecycleCallbacks(
@@ -26,7 +27,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
            // TrxReportGenerator is enabled only when trx report is enabled
            commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName) &&
            // If crash dump is not enabled we run trx in-process only
-           commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
+           TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(commandLineOptionsService);
 
         _environment = environment;
     }
@@ -77,5 +78,11 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
         }
     }
 
-    public void Dispose() => NamedPipeClient?.Dispose();
+    public void Dispose()
+    {
+        if (_isEnabled)
+        {
+            NamedPipeClient?.Dispose();
+        }
+    }
 }
