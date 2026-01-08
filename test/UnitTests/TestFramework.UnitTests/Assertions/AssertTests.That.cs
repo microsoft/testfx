@@ -339,7 +339,7 @@ public partial class AssertTests : TestContainer
     public void That_StaticPropertyAccess_FailsAsExpected()
     {
         Action act = () => Assert.That(() => DateTime.Now.Year < 2000, "Current year should be before 2000");
-        var year = DateTime.Now.Year;
+        int year = DateTime.Now.Year;
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 $"""
