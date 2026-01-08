@@ -937,7 +937,7 @@ public class MSTestSettingsTests : TestContainer
             """;
 
         var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
-
+        settings.Should().NotBeNull();
         MSTestSettings.PopulateSettings(settings);
 
         MSTestSettings.CurrentSettings.CaptureDebugTraces.Should().BeFalse();
