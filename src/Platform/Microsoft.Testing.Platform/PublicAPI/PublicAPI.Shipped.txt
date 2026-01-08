@@ -45,8 +45,8 @@
 [TPEXP]Microsoft.Testing.Platform.Logging.ILoggingManager.AddProvider(System.Func<Microsoft.Testing.Platform.Logging.LogLevel, System.IServiceProvider!, Microsoft.Testing.Platform.Logging.ILoggerProvider!>! loggerProviderFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier
 [TPEXP]Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier.Complete() -> void
-Microsoft.Testing.Platform.Requests.NopFilter
-Microsoft.Testing.Platform.Requests.NopFilter.NopFilter() -> void
+[TPEXP]Microsoft.Testing.Platform.Requests.NopFilter
+[TPEXP]Microsoft.Testing.Platform.Requests.NopFilter.NopFilter() -> void
 [TPEXP]Microsoft.Testing.Platform.Requests.TreeNodeFilter
 [TPEXP]Microsoft.Testing.Platform.Requests.TreeNodeFilter.Filter.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Requests.TreeNodeFilter.MatchesFilter(string! testNodeFullPath, Microsoft.Testing.Platform.Extensions.Messages.PropertyBag! filterableProperties) -> bool
