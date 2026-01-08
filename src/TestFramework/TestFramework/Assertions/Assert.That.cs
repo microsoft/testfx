@@ -691,7 +691,7 @@ public static partial class AssertExtensions
 
                 // Keep at most 2 consecutive parentheses
                 int keepCount = Math.Min(count, 2);
-                result.Append(new string(currentChar, keepCount));
+                result.Append(currentChar, keepCount);
                 i += count;
             }
             else
