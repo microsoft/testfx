@@ -36,7 +36,6 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
