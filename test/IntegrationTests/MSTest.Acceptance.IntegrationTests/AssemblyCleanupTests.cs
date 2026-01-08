@@ -56,6 +56,7 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
