@@ -22,7 +22,6 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
-[UnsupportedOSPlatform("browser")]
 internal sealed class TrxProcessLifetimeHandler :
     ITestHostProcessLifetimeHandler,
     IDataConsumer,
@@ -94,23 +93,36 @@ internal sealed class TrxProcessLifetimeHandler :
            // TrxReportGenerator is enabled only when trx report is enabled
            _commandLineOptions.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)
            // If crash dump is not enabled we run trx in-process only
-           && _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName));
+           && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken cancellation)
     {
-        _waitConnectionTask = _task.Run(
-            async () =>
-            {
-                _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellation);
-                _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellation).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation).ConfigureAwait(false);
-            }, cancellation);
+        // IsEnabledAsync will only return true if we are out of process.
+        // If we are not out of process, then we are disabled. Hence, this won't be called.
+        // The extra check is to let the platform compatibility analyzer know that we are not running in browser.
+        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        // Note: Inlining this method produces a false positive warning for platform compatibility.
+        BeforeTestHostProcessStartCore(cancellation);
 
         return Task.CompletedTask;
     }
+
+    [UnsupportedOSPlatform("BROWSER")]
+    private void BeforeTestHostProcessStartCore(CancellationToken cancellationToken)
+        => _waitConnectionTask = _task.Run(
+            async () =>
+            {
+                _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
+                _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
+                _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
+                _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
+            }, cancellationToken);
 
     public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
     {
@@ -233,7 +245,12 @@ internal sealed class TrxProcessLifetimeHandler :
 #endif
 
     public void Dispose()
-        => _singleConnectionNamedPipeServer?.Dispose();
+    {
+        if (TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions))
+        {
+            _singleConnectionNamedPipeServer?.Dispose();
+        }
+    }
 
     private sealed class ExtensionInfo : IExtension
     {

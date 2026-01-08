@@ -44,10 +44,14 @@ public static class TrxReportExtensions
                 serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestFrameworkCapabilities(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                OperatingSystem.IsBrowser() ? null : serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
+                serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
+#if NETCOREAPP
         if (!OperatingSystem.IsBrowser())
+#else
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")))
+#endif
         {
             NonBrowserRegistrations(builder);
         }
