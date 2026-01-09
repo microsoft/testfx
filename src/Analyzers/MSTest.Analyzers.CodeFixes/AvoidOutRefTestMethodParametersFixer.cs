@@ -72,7 +72,7 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
                 editor.ReplaceNode(parameter, (node, _) =>
                 {
                     var parameter = (ParameterSyntax)node;
-                    return parameter.WithModifiers(parameter.Modifiers.RemoveAt(indexToRemove));
+                    return parameter.WithModifiers(parameter.Modifiers.RemoveAt(indexToRemove)).WithLeadingTrivia(parameter.GetLeadingTrivia());
                 });
             }
         }
