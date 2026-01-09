@@ -43,6 +43,7 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
         {
             DisplayName = "Test display name",
             Uid = "Uid1",
+            Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
         }));
         context.Complete();
     }
