@@ -21,7 +21,7 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
         testHostResult.AssertOutputContains("""
             TestClass1.Test1.
             TestClass1.Cleanup1 started.
-            TestClass2.Cleanup1 finished.
+            TestClass1.Cleanup1 finished.
             In AsmCleanup
             """);
     }
