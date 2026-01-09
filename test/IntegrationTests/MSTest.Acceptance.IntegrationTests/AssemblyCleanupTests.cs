@@ -14,10 +14,16 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
     public async Task AssemblyCleanupShouldRunAfterAllClassCleanupsHaveCompleted()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        testHostResult.AssertOutputContains("""
+            TestClass1.Test1.
+            TestClass1.Cleanup1 started.
+            TestClass2.Cleanup1 finished.
+            In AsmCleanup
+            """);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -50,6 +56,12 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="*.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
 
 #file TestClass1.cs
@@ -69,13 +81,15 @@ public class TestClass1
     [TestMethod]
     public void Test1()
     {
+        Console.WriteLine("TestClass1.Test1.");
     }
 
     [ClassCleanup]
     public static void Cleanup1()
     {
+        Console.WriteLine("TestClass1.Cleanup1 started.");
         Thread.Sleep(4000);
-        ClassCleanupFinished = true;
+        Console.WriteLine("TestClass1.Cleanup1 finished.");
     }
 }
 
@@ -97,9 +111,15 @@ public static class Asm
 {
     [AssemblyCleanup]
     public static void AsmCleanup()
-        => Assert.IsTrue(TestClass1.ClassCleanupFinished);
+        => Console.WriteLine("In AsmCleanup");
 }
 
+#file my.runsettings
+<RunSettings>
+  <MSTest>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+  </MSTest>
+</RunSettings>
 """;
     }
 
