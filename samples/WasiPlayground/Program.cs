@@ -19,7 +19,7 @@ testApplicationBuilder.AddAzureDevOpsProvider();
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 
-internal class DummyFramework : ITestFramework, IDataProducer
+internal sealed class DummyFramework : ITestFramework, IDataProducer
 {
     public string Uid => nameof(DummyFramework);
 
