@@ -45,6 +45,7 @@ public class ClassCleanupManagerTests : TestContainer
         classCleanupManager.ShouldRunEndOfAssemblyCleanup.Should().BeFalse();
 
         classCleanupManager.MarkTestComplete(testMethod, out shouldRunEndOfClassCleanup);
+        classCleanupManager.MarkClassComplete(fullClassName);
         // The cleanup should run here.
         shouldRunEndOfClassCleanup.Should().BeTrue();
         classCleanupManager.ShouldRunEndOfAssemblyCleanup.Should().BeTrue();
