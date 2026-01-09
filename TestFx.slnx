@@ -3,6 +3,7 @@
     <Project Path="samples/FSharpPlayground/FSharpPlayground.fsproj" />
     <Project Path="samples/FxExtensibility/FxExtensibility.csproj" />
     <Project Path="samples/Playground/Playground.csproj" />
+    <Project Path="samples/WasiPlayground/WasiPlayground.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
@@ -72,6 +73,7 @@
     <Project Path="src/Package/MSTest.Sdk/MSTest.Sdk.csproj" />
     <Project Path="src/Package/MSTest/MSTest.csproj" />
   </Folder>
+  <Folder Name="/src/Platform/" />
   <Folder Name="/test/">
     <File Path="test/.editorconfig" />
     <File Path="test/Directory.Build.props" />

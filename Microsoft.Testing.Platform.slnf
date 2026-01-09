@@ -4,6 +4,7 @@
     "projects": [
       "samples\\FSharpPlayground\\FSharpPlayground.fsproj",
       "samples\\Playground\\Playground.csproj",
+      "samples\\WasiPlayground\\WasiPlayground.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.AzureDevOpsReport\\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.AzureFoundry\\Microsoft.Testing.Extensions.AzureFoundry.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.CrashDump\\Microsoft.Testing.Extensions.CrashDump.csproj",
