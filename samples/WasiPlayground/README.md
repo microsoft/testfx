@@ -12,7 +12,7 @@ To run this project:
 
 As of today, this will produce this exception (it's not yet supported by MTP).
 
-```
+```console
 Unhandled Exception:
 System.PlatformNotSupportedException: Arg_PlatformNotSupported
    at System.Threading.Tasks.Task.InternalWaitCore(Int32 millisecondsTimeout, CancellationToken cancellationToken)
