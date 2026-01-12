@@ -5,3 +5,5 @@ Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.CommandLineO
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.ObsolescenceMessage.get -> string?
 Microsoft.Testing.Platform.Requests.NopFilter
 Microsoft.Testing.Platform.Requests.NopFilter.NopFilter() -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandler<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
