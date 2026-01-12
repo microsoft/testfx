@@ -33,7 +33,6 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     private readonly CancellationToken _cancellationToken;
     private readonly bool _isTrxEnabled;
     private readonly MessageLoggerAdapter _comboMessageLogger;
-    private readonly string _testAssemblyPath;
     private readonly INamedFeatureCapability? _namedFeatureCapability;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IClientInfo _clientInfo;
@@ -59,16 +58,12 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         }
         else if (testAssemblyPaths.Length > 1)
         {
-            _testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
-            if (!testAssemblyPaths.Contains(_testAssemblyPath))
+            if (!testAssemblyPaths.Contains(testAssemblyPath))
             {
                 throw new ArgumentException("None of the test assemblies are the test application.");
             }
-        }
-        else
-        {
-            _testAssemblyPath = testAssemblyPaths[0];
         }
 
         _namedFeatureCapability = namedFeatureCapability;
@@ -119,7 +114,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        testCase.FixUpTestCase(_testAssemblyPath);
+        testCase.FixUpTestCase();
 
         // Forward call to VSTest
         _frameworkHandle?.RecordEnd(testCase, outcome);
@@ -132,7 +127,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        testResult.TestCase.FixUpTestCase(_testAssemblyPath);
+        testResult.TestCase.FixUpTestCase();
 
         // Forward call to VSTest
         _frameworkHandle?.RecordResult(testResult);
@@ -151,7 +146,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        testCase.FixUpTestCase(_testAssemblyPath);
+        testCase.FixUpTestCase();
 
         // Forward call to VSTest
         _frameworkHandle?.RecordStart(testCase);
