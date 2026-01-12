@@ -89,10 +89,10 @@ public class Program
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
+
+            return 0;
 #endif
         }
-
-        return 0;
     }
 }
 
