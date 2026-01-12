@@ -210,9 +210,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
 
-                // We need to mark the class as complete to allow assembly cleanup to run.
-                // Note that we don't mark the class as complete when we are marking the last method.
-                // We need to only mark the class as complete after we are sure we have executed the class cleanup, to prevent concurrent runs of class cleanup and assembly cleanup.
+                // Mark the class as complete when all class cleanups are complete. When all classes are complete we progress to running assembly cleanup.
+                // Class is not complete until after all class cleanups are done, to prevent running assembly cleanup too early.
+                // Do not mark the class as complete when the last test method in the class completed. That is too early, we need to run class cleanups before marking class as complete.
                 _classCleanupManager.MarkClassComplete(testMethod.FullClassName);
             }
 
