@@ -96,7 +96,8 @@ extends:
           enableTelemetry: true
           jobs:
           - job: Windows
-            timeoutInMinutes: 90
+            # Allow build, test, publishing, etc to take 90 minutes, plus allow for 2 hours of manual validation before publishing to test-tools feed.
+            timeoutInMinutes: 210
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2026preview.scout.amd64
@@ -184,20 +185,28 @@ extends:
                   ArtifactName: TestResults_Windows_Attempt$(System.JobAttempt)
                 condition: always()
 
+            # Manual validation is only needed for RTM.
+            # This allows us to keep re-building the same RTM version if the manual validation fails, because in that case we wouldn't have published it to test-tools already.
+            # We will only publish if manual validation is successful.
+            - ${{ if ne(parameters.isRTM, False) }}:
+              - task: ManualValidation@0
+                displayName: 'Wait for manual validation before publishing to test-tools feed'
+                timeoutInMinutes: 120
+                inputs:
+                    notifyUsers: ''
+                    instructions: 'Please validate the build configuration and resume'
+                    onTimeout: 'reject'
+
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
 
-              # Final builds should not go into test-tools package feed, so we can keep re-building them until we are ready to ship to nuget.org.
-              # This has to depend on the parameter and not on variable, variables are not defined early enough to be used in templating condition.
-              # We still need the final builds on test-tools so that internal repos can consume it, so we will publish it manually.
-            - ${{ if eq(parameters.isRTM, False) }}:
-              - task: 1ES.PublishNuget@1
-                displayName: 'Publish NuGet packages to test-tools feed'
-                inputs:
-                  # Do not push symbol packages nor Microsoft.Testing.Platform package
-                  packageParentPath: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)'
-                  packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
-                  publishVstsFeed: 'public/test-tools'
+            - task: 1ES.PublishNuget@1
+              displayName: 'Publish NuGet packages to test-tools feed'
+              inputs:
+                # Do not push symbol packages nor Microsoft.Testing.Platform package
+                packageParentPath: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)'
+                packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
+                publishVstsFeed: 'public/test-tools'
 
           - job: Linux
             timeoutInMinutes: 90
