@@ -69,8 +69,7 @@ Out of process file artifacts produced:
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        // This should be TestHostProcessExitedNonGracefully instead of GenericFailure. This will likely be fixed by https://github.com/dotnet/sdk/pull/51857
-        result.AssertExitCodeIs(ExitCodes.GenericFailure);
+        result.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
         string trxFile = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
