@@ -443,9 +443,6 @@ internal class TestExecutionManager
         UnitTestRunner testRunner,
         bool usesAppDomains)
     {
-        bool hasAnyRunnableTests = false;
-        List<TestCase>? fixtureTests = null;
-
         IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass
             ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
             : tests;
@@ -464,15 +461,6 @@ internal class TestExecutionManager
                 break;
             }
 
-            // If it is a fixture test, add it to the list of fixture tests and do not execute it.
-            // It is executed by test itself.
-            if (currentTest.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
-            {
-                (fixtureTests ??= []).Add(currentTest);
-                continue;
-            }
-
-            hasAnyRunnableTests = true;
             UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
 
             testExecutionRecorder.RecordStart(currentTest);
@@ -508,44 +496,6 @@ internal class TestExecutionManager
             DateTimeOffset endTime = DateTimeOffset.Now;
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
-        }
-
-        // Once all tests have been executed, update the status of fixture tests.
-        if (fixtureTests is null)
-        {
-            return;
-        }
-
-        foreach (TestCase currentTest in fixtureTests)
-        {
-            _testRunCancellationToken?.ThrowIfCancellationRequested();
-
-            testExecutionRecorder.RecordStart(currentTest);
-
-            // If there were only fixture tests, send an inconclusive result.
-            if (!hasAnyRunnableTests)
-            {
-                var result = new TestTools.UnitTesting.TestResult
-                {
-                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive,
-                };
-
-                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
-                continue;
-            }
-
-            Trait trait = currentTest.Traits.First(t => t.Name == EngineConstants.FixturesTestTrait);
-            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
-            FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
-
-            if (fixtureTestResult.IsExecuted)
-            {
-                var result = new TestTools.UnitTesting.TestResult
-                {
-                    Outcome = fixtureTestResult.Outcome,
-                };
-                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
-            }
         }
     }
 

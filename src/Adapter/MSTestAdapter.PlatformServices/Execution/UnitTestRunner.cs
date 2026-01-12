@@ -23,8 +23,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal sealed class UnitTestRunner : MarshalByRefObject
 {
-    private readonly ConcurrentDictionary<string, TestAssemblyInfo> _assemblyFixtureTests = new();
-    private readonly ConcurrentDictionary<string, TestClassInfo> _classFixtureTests = new();
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
 
@@ -33,7 +31,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
     /// <param name="testsToRun"> The tests to run. </param>
-    public UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun)
+    public UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun)
         : this(settings, testsToRun, ReflectHelper.Instance)
     {
     }
@@ -44,7 +42,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <param name="settings"> Specifies adapter settings. </param>
     /// <param name="testsToRun"> The tests to run. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
-    internal UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
+    internal UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
     {
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
@@ -80,41 +78,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     [Obsolete]
 #endif
     public override object InitializeLifetimeService() => null!;
-
-    internal FixtureTestResult GetFixtureTestResult(TestMethod testMethod, string fixtureType)
-    {
-        // For the fixture methods, we need to return the appropriate result.
-        // Get matching testMethodInfo from the cache and return UnitTestOutcome for the fixture test.
-        if (fixtureType is EngineConstants.ClassInitializeFixtureTrait or EngineConstants.ClassCleanupFixtureTrait &&
-            _classFixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestClassInfo? testClassInfo))
-        {
-            UnitTestOutcome outcome = fixtureType switch
-            {
-                EngineConstants.ClassInitializeFixtureTrait => testClassInfo.IsClassInitializeExecuted ? GetOutcome(testClassInfo.ClassInitializationException) : UnitTestOutcome.Inconclusive,
-                EngineConstants.ClassCleanupFixtureTrait => testClassInfo.IsClassCleanupExecuted ? GetOutcome(testClassInfo.ClassCleanupException) : UnitTestOutcome.Inconclusive,
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
-
-            return new FixtureTestResult(true, outcome);
-        }
-        else if (fixtureType is EngineConstants.AssemblyInitializeFixtureTrait or EngineConstants.AssemblyCleanupFixtureTrait &&
-            _assemblyFixtureTests.TryGetValue(testMethod.AssemblyName, out TestAssemblyInfo? testAssemblyInfo))
-        {
-            Exception? exception = fixtureType switch
-            {
-                EngineConstants.AssemblyInitializeFixtureTrait => testAssemblyInfo.AssemblyInitializationException,
-                EngineConstants.AssemblyCleanupFixtureTrait => testAssemblyInfo.AssemblyCleanupException,
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
-
-            return new(true, GetOutcome(exception));
-        }
-
-        return new(false, UnitTestOutcome.Inconclusive);
-
-        // Local functions
-        static UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? UnitTestOutcome.Passed : UnitTestOutcome.Failed;
-    }
 
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
@@ -157,13 +120,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             else
             {
                 DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
-
-                // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-                if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests)
-                {
-                    _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
-                    _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
-                }
 
                 testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 

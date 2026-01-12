@@ -10,36 +10,12 @@ namespace Microsoft.Testing.Platform.Helpers;
 [ExcludeFromCodeCoverage]
 internal static class Sha256Hasher
 {
+    // https://github.com/dotnet/runtime/issues/99126
+    [UnsupportedOSPlatform("wasi")]
     public static string HashWithNormalizedCasing(string text)
     {
-        try
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(text.ToUpperInvariant());
-            byte[] hash = SHA256.HashData(bytes);
-            return Convert.ToHexStringLower(hash);
-        }
-        catch (PlatformNotSupportedException)
-        {
-            // SHA256 is not supported on WASM WASI and similar platforms.
-            // Fall back to a simple non-cryptographic hash for telemetry purposes.
-            return ComputeNonCryptographicHash(text.ToUpperInvariant());
-        }
-    }
-
-    private static string ComputeNonCryptographicHash(string text)
-    {
-        // Use a simple deterministic hash for platforms without SHA256 support.
-        // This is sufficient for telemetry correlation purposes.
-        int hash = text.GetHashCode();
-        byte[] hashBytes = BitConverter.GetBytes(hash);
-
-        // Expand to 32 bytes (SHA256 size) for consistency by repeating the pattern
-        byte[] expandedHash = new byte[32];
-        for (int i = 0; i < expandedHash.Length; i++)
-        {
-            expandedHash[i] = hashBytes[i % hashBytes.Length];
-        }
-
-        return Convert.ToHexStringLower(expandedHash);
+        byte[] bytes = Encoding.UTF8.GetBytes(text.ToUpperInvariant());
+        byte[] hash = SHA256.HashData(bytes);
+        return Convert.ToHexStringLower(hash);
     }
 }

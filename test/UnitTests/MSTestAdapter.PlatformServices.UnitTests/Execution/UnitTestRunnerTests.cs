@@ -69,6 +69,7 @@ public sealed class UnitTestRunnerTests : TestContainer
             });
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        adapterSettings.Should().NotBeNull();
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
@@ -315,7 +316,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
     #region private helpers
 
-    private MSTestSettings? GetSettingsWithDebugTrace(bool captureDebugTraceValue)
+    private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
     {
         string runSettingsXml =
             $"""
@@ -333,7 +334,9 @@ public sealed class UnitTestRunnerTests : TestContainer
                 actualReader.ReadInnerXml();
             });
 
-        return MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        return settings;
     }
 
     #endregion

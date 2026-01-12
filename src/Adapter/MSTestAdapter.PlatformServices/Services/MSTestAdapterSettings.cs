@@ -64,7 +64,6 @@ internal class MSTestAdapterSettings
         // <MSTestV2>
         //     <DeploymentEnabled>true</DeploymentEnabled>
         //     <DeployTestSourceDependencies>true</DeployTestSourceDependencies>
-        //     <ConsiderFixturesAsSpecialTests>true</ConsiderFixturesAsSpecialTests>
         //     <DeleteDeploymentDirectoryAfterTestRunIsComplete>true</DeleteDeploymentDirectoryAfterTestRunIsComplete>
         //     <AssemblyResolution>
         //          <Directory path= "% HOMEDRIVE %\directory "includeSubDirectories = "true" />

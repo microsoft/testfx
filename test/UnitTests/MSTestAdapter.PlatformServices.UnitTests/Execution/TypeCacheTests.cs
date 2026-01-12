@@ -914,7 +914,9 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
@@ -938,7 +940,9 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout")!;
@@ -967,7 +971,9 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;

@@ -551,7 +551,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="UTA_OutRefParametersNotSupported">
         <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
-        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <target state="translated">Avertissement : la méthode de test « {0}.{1} » utilise des paramètres « out » ou « ref » qui ne sont pas pris en charge et seront sans doute interdits dans une future version de MSTest.</target>
         <note />
       </trans-unit>
     </body>

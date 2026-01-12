@@ -69,6 +69,6 @@ public static class HangDumpExtensions
                 serviceProvider.GetClock()));
 
         builder.TestHost.AddDataConsumer(hangDumpActivityIndicatorComposite);
-        builder.TestHost.AddTestSessionLifetimeHandle(hangDumpActivityIndicatorComposite);
+        builder.TestHost.AddTestSessionLifetimeHandler(hangDumpActivityIndicatorComposite);
     }
 }

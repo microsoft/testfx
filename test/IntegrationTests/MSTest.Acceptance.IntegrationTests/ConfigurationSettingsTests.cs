@@ -238,8 +238,7 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
       "mapInconclusiveToFailed": true,
       "mapNotRunnableToFailed": true,
       "treatDiscoveryWarningsAsErrors": true,
-      "considerEmptyDataSourceAsInconclusive": true,
-      "considerFixturesAsSpecialTests": true
+      "considerEmptyDataSourceAsInconclusive": true
     },
     "deployment": {
       "enabled": true,

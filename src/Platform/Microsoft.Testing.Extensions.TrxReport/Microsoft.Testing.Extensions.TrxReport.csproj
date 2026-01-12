@@ -1,8 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
-    <RootNamespace>Microsoft.Testing.Extensions.TestReports</RootNamespace>
     <!--A file (CrashDumpCommandLineOptions.cs) is shared as a link file between projects. To avoid conflicts between both projects,
     different namespace is used for the shared file.-->
     <DefineConstants>$(DefineConstants);USE_TRX_NAMESPACE</DefineConstants>
