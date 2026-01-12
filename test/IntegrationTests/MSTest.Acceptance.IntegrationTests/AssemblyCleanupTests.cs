@@ -76,8 +76,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class TestClass1
 {
-    public static bool ClassCleanupFinished { get; private set; }
-
     [TestMethod]
     public void Test1()
     {
