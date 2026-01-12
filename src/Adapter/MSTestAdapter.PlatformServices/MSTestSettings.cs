@@ -176,13 +176,6 @@ internal sealed class MSTestSettings
     internal int TestCleanupTimeout { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether AssemblyInitialize, AssemblyCleanup, ClassInitialize and ClassCleanup methods are
-    /// reported as special tests (cannot be executed). When this feature is enabled, these methods will be reported as
-    /// separate entries in the TRX reports, in Test Explorer or in CLI.
-    /// </summary>
-    internal bool ConsiderFixturesAsSpecialTests { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether all timeouts should be cooperative.
     /// </summary>
     internal bool CooperativeCancellationTimeout { get; private set; }
@@ -204,7 +197,6 @@ internal sealed class MSTestSettings
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
-        CurrentSettings.ConsiderFixturesAsSpecialTests = settings.ConsiderFixturesAsSpecialTests;
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
         CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
@@ -634,21 +626,6 @@ internal sealed class MSTestSettings
                             break;
                         }
 
-                    case "CONSIDERFIXTURESASSPECIALTESTS":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.ConsiderFixturesAsSpecialTests = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "ConsiderFixturesAsSpecialTests"));
-                            }
-
-                            break;
-                        }
-
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         {
                             string value = reader.ReadInnerXml();
@@ -857,7 +834,6 @@ internal sealed class MSTestSettings
         //      "mapNotRunnableToFailed" : true/false
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
-        //      "considerFixturesAsSpecialTests" : true/false
         //  }
         //  ... remaining settings
         // }
@@ -872,7 +848,6 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
-        ParseBooleanSetting(configuration, "execution:considerFixturesAsSpecialTests", logger, value => settings.ConsiderFixturesAsSpecialTests = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);

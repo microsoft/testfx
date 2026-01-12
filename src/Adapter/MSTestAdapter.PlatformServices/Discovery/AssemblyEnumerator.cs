@@ -7,8 +7,6 @@ using System.Security;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
@@ -69,8 +67,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
         var tests = new List<UnitTestElement>();
-        // Contains list of assembly/class names for which we have already added fixture tests.
-        var fixturesTests = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
@@ -94,7 +90,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, fixturesTests);
+                dataSourcesUnfoldingStrategy);
             tests.AddRange(testsInType);
         }
 
@@ -154,8 +150,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        HashSet<string> fixturesTests)
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -172,12 +167,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (_typeCache.GetTestMethodInfoForDiscovery(test.TestMethod) is { } testMethodInfo)
                     {
-                        // Add fixture tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
-                        if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests)
-                        {
-                            AddFixtureTests(testMethodInfo, tests, fixturesTests);
-                        }
-
                         if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
                         {
                             continue;
@@ -198,88 +187,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
 
         return tests;
-    }
-
-    private static void AddFixtureTests(DiscoveryTestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
-    {
-        string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
-        string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
-        string classFullName = testMethodInfo.Parent.ClassType.FullName!;
-
-        // Check if fixtures for this assembly has already been added.
-        if (!fixtureTests.Contains(assemblyLocation))
-        {
-            _ = fixtureTests.Add(assemblyLocation);
-
-            // Add AssemblyInitialize and AssemblyCleanup fixture tests if they exist.
-            if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
-            {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName,
-                    classFullName, assemblyLocation, EngineConstants.AssemblyInitializeFixtureTrait));
-            }
-
-            if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
-            {
-                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName,
-                    classFullName, assemblyLocation, EngineConstants.AssemblyCleanupFixtureTrait));
-            }
-        }
-
-        // Check if fixtures for this class has already been added.
-        if (!fixtureTests.Contains(assemblyLocation + classFullName))
-        {
-            _ = fixtureTests.Add(assemblyLocation + classFullName);
-
-            // Add ClassInitialize and ClassCleanup fixture tests if they exist.
-            if (testMethodInfo.Parent.ClassInitializeMethod is not null)
-            {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, classFullName,
-                    assemblyLocation, EngineConstants.ClassInitializeFixtureTrait));
-            }
-
-            if (testMethodInfo.Parent.ClassCleanupMethod is not null)
-            {
-                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, classFullName,
-                    assemblyLocation, EngineConstants.ClassCleanupFixtureTrait));
-            }
-        }
-
-        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string classFullName,
-            string assemblyLocation, string fixtureType)
-        {
-            string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, EngineConstants.AssemblyFixturesHierarchyClassName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
-        }
-
-        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string classFullName,
-            string assemblyLocation, string fixtureType)
-        {
-            string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, classFullName, methodName];
-            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy, methodInfo);
-        }
-
-        static string GetMethodName(MethodInfo methodInfo)
-        {
-            ParameterInfo[] args = methodInfo.GetParameters();
-            return args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(',', args.Select(a => a.ParameterType.FullName))})"
-                : methodInfo.Name;
-        }
-
-        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string fixtureType, string methodName, string[] hierarchy, MethodInfo methodInfo)
-        {
-            string displayName = $"[{fixtureType}] {methodName}";
-            var method = new TestMethod(classFullName, methodName, hierarchy, methodName, classFullName, assemblyLocation, displayName, null)
-            {
-                MethodInfo = methodInfo,
-            };
-            return new UnitTestElement(method)
-            {
-                Traits = [new Trait(EngineConstants.FixturesTestTrait, fixtureType)],
-            };
-        }
     }
 
     private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
