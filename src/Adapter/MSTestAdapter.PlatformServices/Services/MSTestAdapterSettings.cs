@@ -57,7 +57,7 @@ internal class MSTestAdapterSettings
     /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class.</returns>
     public static MSTestAdapterSettings ToSettings(XmlReader reader)
     {
-        Guard.NotNull(reader);
+        Ensure.NotNull(reader);
 
         // Expected format of the xml is: -
         //
@@ -341,7 +341,7 @@ internal class MSTestAdapterSettings
 
     private void ReadAssemblyResolutionPath(XmlReader reader)
     {
-        Guard.NotNull(reader);
+        Ensure.NotNull(reader);
 
         // Expected format of the xml is: -
         //

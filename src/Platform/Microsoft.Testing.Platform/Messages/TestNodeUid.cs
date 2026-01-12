@@ -12,7 +12,7 @@ public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
     /// <summary>
     /// Gets the UID.
     /// </summary>
-    public string Value { get; init; } = Guard.NotNullOrWhiteSpace(value);
+    public string Value { get; init; } = Ensure.NotNullOrWhiteSpace(value);
 
     /// <summary>
     /// Implicitly converts a <see cref="TestNodeUid"/> to a <see cref="string"/>.

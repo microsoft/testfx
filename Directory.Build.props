@@ -77,6 +77,10 @@
 
   <!-- Polyfill config -->
   <PropertyGroup>
+    <PolyEnsure>true</PolyEnsure>
+    <!-- PolyGuard is temporary until the binary compat with VSTestBridge
+     https://github.com/microsoft/testfx/pull/7064#issuecomment-3623472023
+     https://github.com/microsoft/testfx/pull/6977 -->
     <PolyGuard>true</PolyGuard>
     <PolyStringInterpolation>true</PolyStringInterpolation>
     <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>

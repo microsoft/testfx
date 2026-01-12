@@ -27,13 +27,13 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
     {
-        Guard.NotNull(telemetryFactory);
+        Ensure.NotNull(telemetryFactory);
         _telemetryFactory = telemetryFactory;
     }
 
     public void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory)
     {
-        Guard.NotNull(openTelemetryProviderFactory);
+        Ensure.NotNull(openTelemetryProviderFactory);
         _openTelemetryProviderFactory = openTelemetryProviderFactory;
     }
 
