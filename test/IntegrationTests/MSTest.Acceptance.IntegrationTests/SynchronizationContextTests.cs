@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -61,39 +61,32 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
-    private UnitTestSynchronizationContext? _synchronizationContext;
+    private UnitTestSynchronizationContext? _syncContext;
 
     [TestInitialize]
     public void TestInitialize()
     {
-        _synchronizationContext = new UnitTestSynchronizationContext();
-        SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
+        _syncContext = new UnitTestSynchronizationContext();
+        SynchronizationContext.SetSynchronizationContext(_syncContext);
     }
 
     [TestMethod]
     public void TestMethod_SynchronizationContextShouldBePreserved()
     {
-        // Verify that the synchronization context set in TestInitialize is still active
-        var currentContext = SynchronizationContext.Current;
-        Assert.IsNotNull(currentContext, "SynchronizationContext should not be null");
-        Assert.AreSame(_synchronizationContext, currentContext, "SynchronizationContext should be the same instance set in TestInitialize");
+        Assert.IsNotNull(SynchronizationContext.Current);
+        Assert.AreSame(_syncContext, SynchronizationContext.Current);
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        _synchronizationContext?.Dispose();
-        SynchronizationContext.SetSynchronizationContext(null);
+        Assert.IsNotNull(SynchronizationContext.Current);
+        Assert.AreSame(_syncContext, SynchronizationContext.Current);
     }
 }
 
-// Simple custom SynchronizationContext for unit testing
-public class UnitTestSynchronizationContext : SynchronizationContext, IDisposable
+public class UnitTestSynchronizationContext : SynchronizationContext
 {
-    public void Dispose()
-    {
-        // Clean up resources if needed
-    }
 }
 """;
     }
