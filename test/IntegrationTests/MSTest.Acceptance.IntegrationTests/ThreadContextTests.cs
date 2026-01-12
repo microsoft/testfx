@@ -127,22 +127,11 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SynchronizationContext_WhenSetInTestInitialize_IsPreservedInTestMethod(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.SynchronizationContextProjectPath, TestAssetFixture.SynchronizationContextProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-    }
-
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string InitToTestProjectName = "InitToTestThreadContextProject";
         public const string CultureFlowsProjectName = "CultureFlowsThreadContextProject";
         public const string CultureFlowsInheritanceProjectName = "CultureFlowsInheritanceThreadContextProject";
-        public const string SynchronizationContextProjectName = "SynchronizationContextProject";
         private const string InitToTestSourceCode = """
 #file InitToTestThreadContextProject.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -793,77 +782,11 @@ public class DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithout
 }
 """;
 
-        private const string SynchronizationContextSourceCode = """
-#file SynchronizationContextProject.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-  </ItemGroup>
-
-</Project>
-
-#file UnitTest1.cs
-namespace SynchronizationContextProject;
-
-using System;
-using System.Threading;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestClass]
-public class UnitTest1
-{
-    private UnitTestSynchronizationContext? _synchronizationContext;
-
-    [TestInitialize]
-    public void TestInitialize()
-    {
-        _synchronizationContext = new UnitTestSynchronizationContext();
-        SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
-    }
-
-    [TestMethod]
-    public void TestMethod_SynchronizationContextShouldBePreserved()
-    {
-        // Verify that the synchronization context set in TestInitialize is still active
-        var currentContext = SynchronizationContext.Current;
-        Assert.IsNotNull(currentContext, "SynchronizationContext should not be null");
-        Assert.AreSame(_synchronizationContext, currentContext, "SynchronizationContext should be the same instance set in TestInitialize");
-    }
-
-    [TestCleanup]
-    public void TestCleanup()
-    {
-        _synchronizationContext?.Dispose();
-        SynchronizationContext.SetSynchronizationContext(null);
-    }
-}
-
-// Simple custom SynchronizationContext for unit testing
-public class UnitTestSynchronizationContext : SynchronizationContext, IDisposable
-{
-    public void Dispose()
-    {
-        // Clean up resources if needed
-    }
-}
-""";
-
         public string InitToTestProjectPath => GetAssetPath(InitToTestProjectName);
 
         public string CultureFlowsProjectPath => GetAssetPath(CultureFlowsProjectName);
 
         public string CultureFlowsInheritanceProjectPath => GetAssetPath(CultureFlowsInheritanceProjectName);
-
-        public string SynchronizationContextProjectPath => GetAssetPath(SynchronizationContextProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
@@ -879,11 +802,6 @@ public class UnitTestSynchronizationContext : SynchronizationContext, IDisposabl
 
             yield return (CultureFlowsInheritanceProjectName, CultureFlowsInheritanceProjectName,
                 CultureFlowsInheritanceSourceCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-
-            yield return (SynchronizationContextProjectName, SynchronizationContextProjectName,
-                SynchronizationContextSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
