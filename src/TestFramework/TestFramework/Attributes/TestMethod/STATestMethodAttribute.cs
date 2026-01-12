@@ -52,7 +52,7 @@ public class STATestMethodAttribute : TestMethodAttribute
             SynchronizationContext? originalContext = SynchronizationContext.Current;
             try
             {
-                var syncContext = new SingleThreadedSTASynchronizationContext();
+                using var syncContext = new SingleThreadedSTASynchronizationContext();
                 SynchronizationContext.SetSynchronizationContext(syncContext);
 
                 // The yield ensures that we switch to the STA thread created by SingleThreadedSTASynchronizationContext.

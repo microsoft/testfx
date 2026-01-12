@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationContext
+internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationContext, IDisposable
 {
     private readonly BlockingCollection<Action> _queue = [];
     private readonly Thread _thread;
@@ -60,4 +60,6 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
     }
 
     public void Complete() => _queue.CompleteAdding();
+
+    public void Dispose() => _queue.Dispose();
 }
