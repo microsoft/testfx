@@ -35,7 +35,7 @@ public static class RetryExtensions
         CompositeExtensionFactory<RetryDataConsumer> compositeExtensionFactory
             = new(serviceProvider => new RetryDataConsumer(serviceProvider));
         builder.TestHost.AddDataConsumer(compositeExtensionFactory);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
 
         if (builder is not TestApplicationBuilder testApplicationBuilder)
         {

@@ -57,7 +57,7 @@ public static class TrxReportExtensions
         }
 
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeTestSessionTrxService);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeTestSessionTrxService);
 
         builder.CommandLine.AddProvider(() => commandLine);
 
