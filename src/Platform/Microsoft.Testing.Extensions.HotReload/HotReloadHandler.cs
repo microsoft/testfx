@@ -46,6 +46,7 @@ internal sealed class HotReloadHandler
     [SupportedOSPlatformGuard("android")]
     [SupportedOSPlatformGuard("ios")]
     [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("wasi")]
     [SupportedOSPlatformGuard("browser")]
     private static bool IsCancelKeyPressNotSupported()
         => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
