@@ -3,9 +3,6 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
-// NOTE: The equivalent of this for "test host" is ITestApplicationLifecycleCallbacks, which is an unfortunate naming.
-// If we ever open orchestration before MTP v2 (https://github.com/microsoft/testfx/issues/5733), we should
-// consider if we are okay with this kinda inconsistent naming between test host and test host orchestrator.
 internal interface ITestHostOrchestratorApplicationLifetime : ITestHostOrchestratorExtension
 {
     /// <summary>

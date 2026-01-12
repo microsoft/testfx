@@ -196,13 +196,8 @@ internal sealed class MSTestSettings
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
-    public static void PopulateSettings(MSTestSettings? settings)
+    public static void PopulateSettings(MSTestSettings settings)
     {
-        if (settings == null)
-        {
-            return;
-        }
-
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
         CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;

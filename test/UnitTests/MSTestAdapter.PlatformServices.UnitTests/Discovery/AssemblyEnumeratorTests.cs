@@ -65,6 +65,7 @@ public class AssemblyEnumeratorTests : TestContainer
             });
         var mockMessageLogger = new Mock<IMessageLogger>();
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, mockMessageLogger.Object);
+        adapterSettings.Should().NotBeNull();
 
         // Constructor has the side effect of populating the passed settings to MSTestSettings.CurrentSettings
         _ = new AssemblyEnumerator(adapterSettings);
