@@ -984,7 +984,7 @@ namespace Jsonite
                             }
                             else if (IsHighSurrogate(c))
                             {
-                                // If we are dealing with high surroate, we need to lookahead.
+                                // If we are dealing with high surrogate, we need to lookahead.
                                 // If it's followed by a low surrogate, then we encode normally.
                                 if (i + 1 < text.Length && IsLowSurrogate(text[i + 1]))
                                 {
