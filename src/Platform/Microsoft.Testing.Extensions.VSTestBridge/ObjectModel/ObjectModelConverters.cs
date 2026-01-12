@@ -34,18 +34,6 @@ internal static class ObjectModelConverters
         valueType: typeof(string),
         owner: typeof(TestCase));
 
-    private static readonly TestProperty AssertActualProperty = TestProperty.Register(
-        id: "AssertActual",
-        label: "AssertActual",
-        valueType: typeof(string),
-        owner: typeof(TestResult));
-
-    private static readonly TestProperty AssertExpectedProperty = TestProperty.Register(
-        id: "AssertExpected",
-        label: "AssertExpected",
-        valueType: typeof(string),
-        owner: typeof(TestResult));
-
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
@@ -243,21 +231,11 @@ internal static class ObjectModelConverters
                 break;
 
             case TestOutcome.NotFound:
-                {
-                    VSTestException exception = new(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace);
-                    AddAssertDataToException(exception, testResult);
-                    testNode.Properties.Add(new ErrorTestNodeStateProperty(exception));
-                }
-
+                testNode.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
                 break;
 
             case TestOutcome.Failed:
-                {
-                    VSTestException exception = new(testResult.ErrorMessage, testResult.ErrorStackTrace);
-                    AddAssertDataToException(exception, testResult);
-                    testNode.Properties.Add(new FailedTestNodeStateProperty(exception));
-                }
-
+                testNode.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
                 break;
 
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
@@ -270,21 +248,6 @@ internal static class ObjectModelConverters
 
             default:
                 throw new NotSupportedException($"Unsupported test outcome value '{testResult.Outcome}'");
-        }
-    }
-
-    private static void AddAssertDataToException(VSTestException exception, TestResult testResult)
-    {
-        string? assertActual = testResult.GetPropertyValue<string>(AssertActualProperty, defaultValue: null);
-        if (assertActual is not null)
-        {
-            exception.Data["assert.actual"] = assertActual;
-        }
-
-        string? assertExpected = testResult.GetPropertyValue<string>(AssertExpectedProperty, defaultValue: null);
-        if (assertExpected is not null)
-        {
-            exception.Data["assert.expected"] = assertExpected;
         }
     }
 

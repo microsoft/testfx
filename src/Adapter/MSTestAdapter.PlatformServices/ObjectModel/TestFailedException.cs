@@ -35,15 +35,6 @@ internal sealed class TestFailedException : Exception
 
         Outcome = outcome;
         StackTraceInformation = stackTraceInformation;
-
-        // Copy Data from the real exception to preserve assertion metadata
-        if (realException?.Data is not null)
-        {
-            foreach (object key in realException.Data.Keys)
-            {
-                Data[key] = realException.Data[key];
-            }
-        }
     }
 
     /// <summary>
