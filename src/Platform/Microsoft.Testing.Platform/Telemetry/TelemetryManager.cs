@@ -33,7 +33,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public void AddOpenTelemetryProvider(Func<IServiceProvider, IOpenTelemetryProvider> openTelemetryProviderFactory)
     {
-        Guard.NotNull(openTelemetryProviderFactory);
+        Ensure.NotNull(openTelemetryProviderFactory);
         _openTelemetryProviderFactory = openTelemetryProviderFactory;
     }
 

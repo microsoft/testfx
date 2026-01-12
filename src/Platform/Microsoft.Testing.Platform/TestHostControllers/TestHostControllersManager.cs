@@ -31,7 +31,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(environmentVariableProviderFactory);
+        Ensure.NotNull(environmentVariableProviderFactory);
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
         _factoryOrdering.Add(environmentVariableProviderFactory);
     }
@@ -45,7 +45,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(compositeServiceFactory);
+        Ensure.NotNull(compositeServiceFactory);
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -63,7 +63,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(lifetimeHandler);
+        Ensure.NotNull(lifetimeHandler);
         _lifetimeHandlerFactories.Add(lifetimeHandler);
         _factoryOrdering.Add(lifetimeHandler);
     }
@@ -77,7 +77,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(compositeServiceFactory);
+        Ensure.NotNull(compositeServiceFactory);
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
@@ -96,7 +96,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
         }
 
-        Guard.NotNull(compositeServiceFactory);
+        Ensure.NotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
             throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
