@@ -50,20 +50,21 @@ public class STATestMethodAttribute : TestMethodAttribute
         if (UseSTASynchronizationContext)
         {
             SynchronizationContext? originalContext = SynchronizationContext.Current;
+            var syncContext = new SingleThreadedSTASynchronizationContext();
             try
             {
-                using var syncContext = new SingleThreadedSTASynchronizationContext();
                 SynchronizationContext.SetSynchronizationContext(syncContext);
 
                 // The yield ensures that we switch to the STA thread created by SingleThreadedSTASynchronizationContext.
                 await Task.Yield();
                 TestResult[] testResults = await ExecuteCoreAsync(testMethod).ConfigureAwait(false);
-                syncContext.Complete();
                 return testResults;
             }
             finally
             {
                 SynchronizationContext.SetSynchronizationContext(originalContext);
+                syncContext.Complete();
+                syncContext.Dispose();
             }
         }
 
