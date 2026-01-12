@@ -143,7 +143,7 @@ internal class AssemblyUtility
             {
                 // extension contains leading dot.
                 string satellite = Path.ChangeExtension(assemblyFileName, "resources" + extension);
-                string satellitePath = Path.Combine(assemblyDir, Path.Combine(dir, satellite));
+                string satellitePath = Path.Combine(assemblyDir, dir, satellite);
 
                 // We don't use Assembly.LoadFrom/Assembly.GetSatelliteAssemblies because this is rather slow
                 // (1620ms for 266 cultures when directories do not exist).
