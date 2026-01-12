@@ -541,6 +541,15 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             leftExpression = binaryOperation.LeftOperand.Syntax;
             rightExpression = binaryOperation.RightOperand.Syntax;
 
+            if (binaryOperation.LeftOperand.Type?.TypeKind == TypeKind.Enum &&
+                binaryOperation.RightOperand.Type?.TypeKind == TypeKind.Enum)
+            {
+                // Enums cannot use Assert.IsX methods.
+                // See https://devdiv.visualstudio.com/DevDiv/_workitems/edit/2673221
+                // https://developercommunity.visualstudio.com/t/MSTEST0037-warning-when-comparing-two-en/11022121
+                return ComparisonCheckStatus.Unknown;
+            }
+
             return binaryOperation.OperatorKind switch
             {
                 BinaryOperatorKind.GreaterThan => ComparisonCheckStatus.GreaterThan,
