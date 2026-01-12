@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
@@ -11,8 +12,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class FixtureMethodRunner
 {
-    internal static async Task<TestFailedException?> RunWithTimeoutAndCancellationAsync(
-        Func<Task> action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
+    internal static async SynchronizationContextPreservingTask<TestFailedException?> RunWithTimeoutAndCancellationAsync(
+        Func<SynchronizationContextPreservingTask> action, CancellationTokenSource cancellationTokenSource, TimeoutInfo? timeoutInfo, MethodInfo methodInfo,
         ExecutionContext? executionContext, string methodCanceledMessageFormat, string methodTimedOutMessageFormat,
         // When a test method is marked with [Timeout], this timeout is applied from ctor to destructor, so we need to take
         // that into account when processing the OCE of the action.
@@ -66,7 +67,7 @@ internal static class FixtureMethodRunner
             : RunWithTimeoutAndCancellationWithThreadPool(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static async Task<TestFailedException?> RunWithCooperativeCancellationAsync(Func<Task> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+    private static async Task<TestFailedException?> RunWithCooperativeCancellationAsync(Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
@@ -117,7 +118,7 @@ internal static class FixtureMethodRunner
     }
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
-        Func<Task> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
+        Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
@@ -178,7 +179,7 @@ internal static class FixtureMethodRunner
 
     [SupportedOSPlatform("windows")]
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
-        Func<Task> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
+        Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
         string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         TaskCompletionSource<int> tcs = new();
