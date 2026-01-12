@@ -15,9 +15,7 @@ public class TestClass
     [TestMethod]
     public void Test1()
     {
-        // string commonPart = new('a', 1000);
-        // string expected = commonPart + "expected";
-        // string actual = commonPart + "actual";
-        // Assert.AreEqual(expected, actual, ignoreCase: true);
+        Thread.Sleep(5000);
+        Assert.IsPositive(1);
     }
 }

@@ -51,16 +51,6 @@ internal static class TestResultExtensions
         testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
         testResult.SetPropertyValue(EngineConstants.InnerResultsCountProperty, frameworkTestResult.InnerResultsCount);
 
-        if (frameworkTestResult.ExceptionAssertActual is not null)
-        {
-            testResult.SetPropertyValue(EngineConstants.AssertActualProperty, frameworkTestResult.ExceptionAssertActual);
-        }
-
-        if (frameworkTestResult.ExceptionAssertExpected is not null)
-        {
-            testResult.SetPropertyValue(EngineConstants.AssertExpectedProperty, frameworkTestResult.ExceptionAssertExpected);
-        }
-
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {
             VSTestTestResultMessage message = new(VSTestTestResultMessage.StandardOutCategory, frameworkTestResult.LogOutput);
