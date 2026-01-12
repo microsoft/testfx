@@ -620,20 +620,9 @@ internal sealed class TestClassInfo
         return testFailedException;
     }
 
-    internal async Task RunClassCleanupAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TestMethodInfo testMethodInfo, TestResult[] results)
+    internal async Task RunClassCleanupAsync(ITestContext testContext, TestResult[] results)
     {
-        DebugEx.Assert(testMethodInfo.Parent == this, "Parent of testMethodInfo should be this TestClassInfo.");
-
-        classCleanupManager.MarkTestComplete(testMethodInfo, out bool shouldRunEndOfClassCleanup);
-        if (!shouldRunEndOfClassCleanup)
-        {
-            return;
-        }
-
-        // TODO: Looks like 'ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0' is always false?
-        // shouldRunEndOfClassCleanup should be false if there are no class cleanup methods at all.
-        if ((ClassCleanupMethod is null && BaseClassCleanupMethods.Count == 0)
-                || IsClassCleanupExecuted)
+        if (!HasExecutableCleanupMethod || IsClassCleanupExecuted)
         {
             // DoRun will already do nothing for this condition. So, we gain a bit of performance.
             return;

@@ -160,15 +160,23 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
 
             testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            if (testMethodInfo is not null)
+
+            _classCleanupManager.MarkTestComplete(testMethod, out bool isLastTestInClass);
+            if (isLastTestInClass && testMethodInfo is not null)
             {
-                await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result).ConfigureAwait(false);
+                await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
+
+                // Mark the class as complete when all class cleanups are complete. When all classes are complete we progress to running assembly cleanup.
+                // Class is not complete until after all class cleanups are done, to prevent running assembly cleanup too early.
+                // Do not mark the class as complete when the last test method in the class completed. That is too early, we need to run class cleanups before marking class as complete.
+                _classCleanupManager.MarkClassComplete(testMethod.FullClassName);
             }
 
-            if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
+            if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true &&
+                _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                await RunAssemblyCleanupIfNeededAsync(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result).ConfigureAwait(false);
+                await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
             }
 
             return result;
@@ -224,13 +232,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static async Task RunAssemblyCleanupIfNeededAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
+    private static async Task RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
-        if (!classCleanupManager.ShouldRunEndOfAssemblyCleanup)
-        {
-            return;
-        }
-
         try
         {
             IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
