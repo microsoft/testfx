@@ -111,6 +111,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     [DataRow("Heap")]
     [DataRow("Triage")]
     [DataRow("Full")]
+    [DataRow("None")]
     [TestMethod]
     public async Task HangDump_Formats_CreateDump(string format)
     {
@@ -125,8 +126,16 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
         string? dumpFile = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories).SingleOrDefault();
-        Assert.IsNotNull(dumpFile, $"Dump file not found '{format}'\n{testHostResult}'");
+        if (format != "None")
+        {
+            Assert.IsNotNull(dumpFile, $"Dump file not found '{format}'\n{testHostResult}'");
+        }
+        else
+        {
+            Assert.IsNull(dumpFile, $"Dump file was incorrectly created for None dump type.\n{testHostResult}'");
+        }
     }
 
     [TestMethod]
