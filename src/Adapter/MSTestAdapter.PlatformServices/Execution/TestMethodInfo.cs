@@ -808,7 +808,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeout?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
@@ -841,7 +845,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
@@ -880,7 +888,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeout?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
@@ -913,7 +925,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
