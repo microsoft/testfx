@@ -31,6 +31,8 @@
       <_DotnetRunArgs>run --project "$(MSBuildProjectFullPath)" -f $(TargetFramework)</_DotnetRunArgs>
       <_DotnetRunArgs Condition="'$(DeviceId)' != ''">$(_DotnetRunArgs) --device $(DeviceId)</_DotnetRunArgs>
       <_TestOutputFile>$(IntermediateOutputPath)device_test_output.txt</_TestOutputFile>
+      <_DeviceTestResultsPath>/data/user/0/$(ApplicationId)/files/TestResults</_DeviceTestResultsPath>
+      <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
     </PropertyGroup>
 
     <Message Text="Deploying and running tests on device..." Importance="high" />
@@ -49,9 +51,45 @@
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true" />
 
+    <!-- Collect test results from device -->
+    <CallTarget Targets="_CollectDeviceTestResults" />
+
     <Message Text="" Importance="high" />
     <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
     <Message Text="Device test exit code: $(_DeviceTestExitCode)" Importance="high" Condition="'$(_DeviceTestExitCode)' == '0'" />
     <Error Text="Device tests failed with exit code: $(_DeviceTestExitCode)" Condition="'$(_DeviceTestExitCode)' != '0'" />
+  </Target>
+
+  <Target Name="_CollectDeviceTestResults">
+    <PropertyGroup>
+      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
+      <_DeviceTestResultsPath>files/TestResults</_DeviceTestResultsPath>
+      <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
+    </PropertyGroup>
+
+    <!-- Create local TestResults directory -->
+    <MakeDir Directories="$(_LocalTestResultsPath)" />
+
+    <Message Text="" Importance="high" />
+    <Message Text="Collecting test results from device..." Importance="high" />
+
+    <!-- Get the most recent TRX file name -->
+    <Exec Command="adb $(_AdbDevice) shell &quot;run-as $(ApplicationId) ls -t $(_DeviceTestResultsPath)/ | head -1&quot; | tr -d '\r'"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_LatestTrxFileName" />
+    </Exec>
+
+    <!-- Pull the latest TRX file using run-as + cat -->
+    <Exec Command="adb $(_AdbDevice) shell &quot;run-as $(ApplicationId) cat $(_DeviceTestResultsPath)/$(_LatestTrxFileName)&quot; > &quot;$(_LocalTestResultsPath)/$(MSBuildProjectName).trx&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          Condition="'$(_LatestTrxFileName)' != '' AND $(_LatestTrxFileName.EndsWith('.trx'))" />
+
+    <!-- Show result -->
+    <Message Text="Test results: $(_LocalTestResultsPath)/$(MSBuildProjectName).trx" Importance="high" Condition="'$(_LatestTrxFileName)' != '' AND $(_LatestTrxFileName.EndsWith('.trx'))" />
   </Target>
 </Project>

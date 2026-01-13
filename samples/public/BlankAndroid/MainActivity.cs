@@ -23,7 +23,13 @@ public class MainActivity : Activity
                 // Configure test results directory to a writable location
                 var filesDir = FilesDir?.AbsolutePath ?? "/data/local/tmp";
                 var testResultsDir = Path.Combine(filesDir, "TestResults");
-                var args = new[] { "--results-directory", testResultsDir };
+
+                // Enable TRX report generation
+                var args = new[]
+                {
+                    "--results-directory", testResultsDir,
+                    "--report-trx"
+                };
 
                 Log.Info(TAG, $"Test results directory: {testResultsDir}");
 

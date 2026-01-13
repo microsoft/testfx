@@ -29,6 +29,7 @@
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageReference Include="Microsoft.Testing.Platform" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="MSTest.Engine" Version="$(MSTestAOTVersion)" />
     <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
   </ItemGroup>
