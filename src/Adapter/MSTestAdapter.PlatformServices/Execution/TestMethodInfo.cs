@@ -602,7 +602,7 @@ internal class TestMethodInfo : ITestMethod
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async Task RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(result != null, "result != null");
 
@@ -867,7 +867,7 @@ internal class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private async Task<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -910,7 +910,7 @@ internal class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private async Task<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
