@@ -10,6 +10,9 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <TrimMode>partial</TrimMode>
     
+    <!-- Mark as a test project - this enables all testing infrastructure -->
+    <IsTestProject>true</IsTestProject>
+    
     <!-- Enable Microsoft Testing Platform -->
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -19,11 +22,11 @@
     <UseMSTestEngine>true</UseMSTestEngine>
     <UseMSTestAdapter>false</UseMSTestAdapter>
     
-    <!-- Device test project -->
+    <!-- Device test project - uses MSBuild infrastructure instead of VSTest -->
+    <!-- This is set automatically by Microsoft.Testing.Platform.MSBuild.DeviceTesting.targets -->
+    <!-- but we set it here for compatibility with older package versions -->
     <_IsDeviceTestProject>true</_IsDeviceTestProject>
-    
-    <!-- Disable fast deployment - instrumentation requires all assemblies in APK -->
-    <!-- <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk> -->
+    <UseMSBuildTestInfrastructure>true</UseMSBuildTestInfrastructure>
   </PropertyGroup>
 
   <ItemGroup>

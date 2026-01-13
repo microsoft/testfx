@@ -32,11 +32,7 @@ public class MainActivity : Activity
             
             Directory.CreateDirectory(testResultsDir);
             
-            Log.Info(TAG, $"╔══════════════════════════════════════════════════════════════╗");
-            Log.Info(TAG, $"║               DEVICE TEST EXECUTION STARTING                 ║");
-            Log.Info(TAG, $"╠══════════════════════════════════════════════════════════════╣");
-            Log.Info(TAG, $"║  Results Directory: {testResultsDir}");
-            Log.Info(TAG, $"╚══════════════════════════════════════════════════════════════╝");
+            Log.Info(TAG, $"Test results directory: {testResultsDir}");
 
             // Configure test arguments
             var args = new[]
@@ -45,21 +41,12 @@ public class MainActivity : Activity
                 "--report-trx"
             };
 
-            Log.Info(TAG, "Calling MicrosoftTestingPlatformEntryPoint.Main...");
+            Log.Info(TAG, "Starting test execution...");
             
             // Run the tests via the generated entry point
             exitCode = await MicrosoftTestingPlatformEntryPoint.Main(args);
             
-            Log.Info(TAG, $"╔══════════════════════════════════════════════════════════════╗");
-            if (exitCode == 0)
-            {
-                Log.Info(TAG, $"║  ✓ TESTS PASSED (exit code: {exitCode})                        ║");
-            }
-            else
-            {
-                Log.Error(TAG, $"║  ✗ TESTS FAILED (exit code: {exitCode})                        ║");
-            }
-            Log.Info(TAG, $"╚══════════════════════════════════════════════════════════════╝");
+            Log.Info(TAG, $"Tests completed with exit code: {exitCode}");
         }
         catch (Exception ex)
         {
@@ -68,10 +55,9 @@ public class MainActivity : Activity
         }
         finally
         {
-            Log.Info(TAG, $"Test execution complete. Finishing activity with exit code: {exitCode}");
+            Log.Info(TAG, $"Finishing activity with exit code: {exitCode}");
             
             // Finish the activity and exit the process
-            // This signals to 'dotnet run' that the app has completed
             RunOnUiThread(() =>
             {
                 FinishAffinity();
