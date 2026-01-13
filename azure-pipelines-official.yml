@@ -96,7 +96,8 @@ extends:
           enableTelemetry: true
           jobs:
           - job: Windows
-            # Allow build, test, publishing, etc to take 90 minutes, plus allow for 2 hours of manual validation before publishing to test-tools feed.
+            # Allow build, test, publishing, etc to take 90 minutes, plus allow for 2 hours of manual validation.
+            # We will only publish to test-tools feed if manual validation passes and is manually approved.
             timeoutInMinutes: 210
             pool:
               name: $(DncEngInternalBuildPool)
