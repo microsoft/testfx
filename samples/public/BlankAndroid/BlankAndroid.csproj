@@ -8,10 +8,17 @@
     <ApplicationId>com.companyname.BlankAndroid</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <!--
-      Enables trim analyzers and full trimming during Release mode.
-      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
-    -->
     <TrimMode>full</TrimMode>
+    
+    <!-- Enable Microsoft Testing Platform -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    
+    <!-- Device test project - disable VSTest error -->
+    <_IsDeviceTestProject>true</_IsDeviceTestProject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
+  </ItemGroup>
 </Project>

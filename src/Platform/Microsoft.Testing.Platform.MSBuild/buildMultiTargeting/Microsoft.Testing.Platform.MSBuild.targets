@@ -258,10 +258,15 @@
     <PropertyGroup>
       <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
       <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>
+      <!-- Device projects (Android/iOS) don't use VSTest, they have special device testing infrastructure -->
+      <_IsDeviceTestProject Condition="'$(TargetFramework.Contains('android'))' == 'true' OR '$(TargetFramework.Contains('ios'))' == 'true'">true</_IsDeviceTestProject>
     </PropertyGroup>
 
     <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later. If you use dotnet test, you should opt-in to the new dotnet test experience. For more information, see https://aka.ms/dotnet-test-mtp-error"
-           Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(TargetFramework)'!='' AND '$(_SupportsGlobalJsonTestRunner)'=='true'" />
+           Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(TargetFramework)'!='' AND '$(_SupportsGlobalJsonTestRunner)'=='true' AND '$(_IsDeviceTestProject)'!='true'" />
+
+    <Warning Text="Device testing is not yet fully implemented. The project builds successfully but 'dotnet test' execution on devices requires Android SDK and emulator setup. To deploy manually: adb install $(TargetPath). For more information, see DEVICE_TESTING_DOTNET_TEST_STATUS.md"
+             Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(_IsDeviceTestProject)'=='true' AND '$(_SupportsGlobalJsonTestRunner)'=='true'" />
 
     <CallTarget Condition="'$(VSTestNoBuild)' != 'true' AND '$(TargetFramework)'!=''" Targets="BuildProject" />
 

@@ -79,6 +79,7 @@
     <!-- Pinned to 4.18.4 for security -->
     <PackageVersion Include="Moq" Version="4.18.4" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.386" />
+    <PackageVersion Include="MSTest" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)" />

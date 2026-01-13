@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <PackageId>Microsoft.Testing.Platform.Device.Android</PackageId>
+    <Description>Android device testing support for Microsoft Testing Platform</Description>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Testing.Platform.Device\Microsoft.Testing.Platform.Device.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+</Project>
