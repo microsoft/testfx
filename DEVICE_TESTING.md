@@ -19,15 +19,19 @@ dotnet test BlankAndroid.csproj -f net10.0-android \
   -p:DeviceId=emulator-5554 \
   -p:DotnetDevicePath=/path/to/dotnet11
 
-# Output:
-# MTP.TestSession: ║  Started: 2026-01-13 17:44:00  ║
+# Output (with 30-second long-running test):
+# MTP.TestSession: ║  Started: 2026-01-13 19:04:20  ║
 # MTP.TestResults: ▶ Running: SimpleTest_ShouldPass
 # MTP.TestResults: ✓ Passed:  SimpleTest_ShouldPass
 # MTP.TestResults: ✓ Passed:  AndroidPlatformTest
-# MTP.TestSession:   Test Run Completed - Duration: 0.06s
+# MTP.TestResults: ✓ Passed:  StringTest_ShouldPass
+# MTP.TestResults: ▶ Running: LongRunningTest_30Seconds
+# ... (waits 30 seconds) ...
+# MTP.TestResults: ✓ Passed:  LongRunningTest_30Seconds
+# MTP.TestSession:   Test Run Completed - Duration: 30.13s
 # Collecting test results from device...
 # Test results: bin/Debug/net10.0-android/TestResults/BlankAndroid.trx
-# Device test exit code: 0
+# ✓ Tests completed with exit code: 0
 ```
 
 ## What Works ✅
@@ -37,6 +41,7 @@ dotnet test BlankAndroid.csproj -f net10.0-android \
 | Build device test project | ✅ | Standard MSBuild |
 | Deploy to device/emulator | ✅ | Via `dotnet run --device` |
 | Execute tests on device | ✅ | Microsoft.Testing.Platform |
+| **Long-running tests** | ✅ | Tests wait for completion (tested with 30s test) |
 | Test results to console | ✅ | `IDataConsumer` extension |
 | Session start/end events | ✅ | `ITestSessionLifetimeHandler` |
 | Pass/Fail/Error output | ✅ | Logcat → Console filtering |

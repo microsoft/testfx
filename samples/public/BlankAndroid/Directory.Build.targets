@@ -23,41 +23,55 @@
     <Message Text="" Importance="high" />
     
     <CallTarget Targets="Build" Condition="'$(VSTestNoBuild)' != 'true'" />
-    <CallTarget Targets="_InvokeDeviceTestingPlatform" />
+    <CallTarget Targets="_RunTestsOnDevice" />
   </Target>
 
-  <Target Name="_InvokeDeviceTestingPlatform">
+  <!-- Run tests on device using dotnet run with logcat monitoring -->
+  <Target Name="_RunTestsOnDevice">
     <PropertyGroup>
+      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
       <_DotnetRunArgs>run --project "$(MSBuildProjectFullPath)" -f $(TargetFramework)</_DotnetRunArgs>
       <_DotnetRunArgs Condition="'$(DeviceId)' != ''">$(_DotnetRunArgs) --device $(DeviceId)</_DotnetRunArgs>
       <_TestOutputFile>$(IntermediateOutputPath)device_test_output.txt</_TestOutputFile>
-      <_DeviceTestResultsPath>/data/user/0/$(ApplicationId)/files/TestResults</_DeviceTestResultsPath>
       <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
     </PropertyGroup>
 
+    <!-- Clear logcat before running tests -->
+    <Exec Command="adb $(_AdbDevice) logcat -c"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true" />
+
+    <Message Text="" Importance="high" />
     <Message Text="Deploying and running tests on device..." Importance="high" />
+    <Message Text="Command: dotnet $(_DotnetRunArgs)" Importance="high" />
+    <Message Text="" Importance="high" />
     
-    <!-- Run dotnet run and capture output to a file -->
-    <Exec Command="&quot;$(DotnetDevicePath)&quot; $(_DotnetRunArgs) > &quot;$(_TestOutputFile)&quot; 2>&amp;1"
+    <!-- 
+      Run dotnet run which deploys and starts the app.
+      The app will call Java.Lang.JavaSystem.Exit() when tests complete.
+      We capture the output to get the exit code.
+    -->
+    <Exec Command="&quot;$(DotnetDevicePath)&quot; $(_DotnetRunArgs) 2>&amp;1 | tee &quot;$(_TestOutputFile)&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output TaskParameter="ExitCode" PropertyName="_DeviceTestExitCode" />
     </Exec>
 
-    <!-- Filter and display test output directly to console (stderr goes through even at minimal verbosity) -->
-    <Exec Command="grep -E 'MTP\.|BlankAndroid:|Tests completed|exit code' &quot;$(_TestOutputFile)&quot; | sed 's/^.*I //' 1>&amp;2 || true"
+    <!-- Get test results from logcat -->
+    <Message Text="" Importance="high" />
+    <Message Text="Test output from device:" Importance="high" />
+    <Exec Command="adb $(_AdbDevice) logcat -d -s BlankAndroid:I DeviceTests:I MTP:I TestInstrumentation:I | grep -E 'BlankAndroid|MTP|DeviceTests|TestInstrumentation' | tail -100"
           WorkingDirectory="$(MSBuildProjectDirectory)"
-          IgnoreExitCode="true"
-          IgnoreStandardErrorWarningFormat="true" />
+          IgnoreExitCode="true" />
 
     <!-- Collect test results from device -->
     <CallTarget Targets="_CollectDeviceTestResults" />
 
     <Message Text="" Importance="high" />
     <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
-    <Message Text="Device test exit code: $(_DeviceTestExitCode)" Importance="high" Condition="'$(_DeviceTestExitCode)' == '0'" />
-    <Error Text="Device tests failed with exit code: $(_DeviceTestExitCode)" Condition="'$(_DeviceTestExitCode)' != '0'" />
+    <Message Text="✓ Tests completed with exit code: $(_DeviceTestExitCode)" Importance="high" Condition="'$(_DeviceTestExitCode)' == '0'" />
+    <Error Text="✗ Tests failed with exit code: $(_DeviceTestExitCode)" Condition="'$(_DeviceTestExitCode)' != '0'" />
   </Target>
 
   <Target Name="_CollectDeviceTestResults">
@@ -74,7 +88,7 @@
     <Message Text="Collecting test results from device..." Importance="high" />
 
     <!-- Get the most recent TRX file name -->
-    <Exec Command="adb $(_AdbDevice) shell &quot;run-as $(ApplicationId) ls -t $(_DeviceTestResultsPath)/ | head -1&quot; | tr -d '\r'"
+    <Exec Command="adb $(_AdbDevice) shell &quot;run-as $(ApplicationId) ls -t $(_DeviceTestResultsPath)/ 2>/dev/null | head -1&quot; | tr -d '\r'"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
