@@ -123,14 +123,6 @@ internal sealed class TestAssemblyInfo
             return;
         }
 
-        if (testContext == null)
-        {
-            // TODO: This exception should be of type ArgumentNullException
-#pragma warning disable CA2201 // Do not raise reserved exception types
-            throw new NullReferenceException(Resource.TestContextIsNull);
-#pragma warning restore CA2201 // Do not raise reserved exception types
-        }
-
         // If assembly initialization is not done, then do it.
         if (!IsAssemblyInitializeExecuted)
         {

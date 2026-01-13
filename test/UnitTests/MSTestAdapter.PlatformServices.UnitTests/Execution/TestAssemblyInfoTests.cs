@@ -88,15 +88,6 @@ public class TestAssemblyInfoTests : TestContainer
         assemblyInitCallCount.Should().Be(0);
     }
 
-    public async Task RunAssemblyInitializeShouldThrowIfTestContextIsNull()
-    {
-        DummyTestClass.AssemblyInitializeMethodBody = _ => { };
-
-        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
-
-        await new Func<Task>(() => _testAssemblyInfo.RunAssemblyInitializeAsync(null!)).Should().ThrowAsync<NullReferenceException>();
-    }
-
     public async Task RunAssemblyInitializeShouldNotExecuteAssemblyInitializeIfItHasAlreadyExecuted()
     {
         int assemblyInitCallCount = 0;

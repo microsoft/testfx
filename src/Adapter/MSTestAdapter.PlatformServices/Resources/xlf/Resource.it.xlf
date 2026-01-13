@@ -295,11 +295,6 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Il metodo di pulizia del test "{0}.{1}" è stato annullato</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext non può essere Null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Messaggi di TestContext:</target>

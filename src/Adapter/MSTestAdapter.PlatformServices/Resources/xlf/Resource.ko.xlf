@@ -295,11 +295,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">테스트 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext는 null일 수 없습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">TestContext 메시지:</target>

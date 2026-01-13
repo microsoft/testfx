@@ -69,12 +69,6 @@ public class TypeCacheTests : TestContainer
         action.Should().Throw<ArgumentNullException>();
     }
 
-    public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
-    {
-        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
-        new Action(() => _typeCache.GetTestMethodInfo(testMethod, null!)).Should().Throw<ArgumentNullException>();
-    }
-
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
     {
         TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
