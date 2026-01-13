@@ -187,8 +187,7 @@ extends:
                 condition: always()
 
             # Manual validation is only needed for RTM.
-            # This allows us to keep re-building the same RTM version if the manual validation fails, because in that case we wouldn't have published it to test-tools already.
-            # We will only publish if manual validation is successful.
+            # This allows us to keep re-building the same RTM version until it passes manual validation, then we publish it to test-tools, where we have only one chance at publishing the final (RTM) package.
             - ${{ if ne(parameters.isRTM, False) }}:
               - task: ManualValidation@0
                 displayName: 'Wait for manual validation before publishing to test-tools feed'
