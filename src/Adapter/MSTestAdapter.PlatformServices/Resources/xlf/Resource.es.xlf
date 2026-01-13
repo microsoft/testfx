@@ -295,11 +295,6 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <target state="translated">Método de limpieza de pruebas "{0}.{1}" se canceló</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext no será null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Mensajes de TestContext:</target>

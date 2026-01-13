@@ -295,11 +295,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">Метод очистки теста "{0}.{1}" отменен</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext не может иметь значение NULL.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Сообщения TestContext:</target>

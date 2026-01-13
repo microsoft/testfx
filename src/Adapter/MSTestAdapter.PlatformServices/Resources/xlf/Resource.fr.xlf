@@ -295,11 +295,6 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">La méthode de nettoyage du test « {0}.{1} » a été annulée</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext ne peut pas être null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Messages TestContext :</target>

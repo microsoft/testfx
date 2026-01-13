@@ -295,11 +295,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">已取消测试清理方法“{0}.{1}”</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext 不能为 NULL。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">TestContext 消息:</target>

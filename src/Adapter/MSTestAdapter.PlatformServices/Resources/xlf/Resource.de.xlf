@@ -295,11 +295,6 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Die Testbereinigungsmethode "{0}.{1}" wurde abgebrochen</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">"TestContext" darf nicht NULL sein.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">TestContext-Meldungen:</target>

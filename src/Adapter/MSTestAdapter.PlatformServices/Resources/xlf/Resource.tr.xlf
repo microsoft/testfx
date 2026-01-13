@@ -295,11 +295,6 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">'{0}.{1}' test temizleme yöntemi iptal edildi</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext, Null olamaz.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">TestContext İletileri:</target>

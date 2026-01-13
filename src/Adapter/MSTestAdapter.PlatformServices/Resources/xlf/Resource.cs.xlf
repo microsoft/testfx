@@ -295,11 +295,6 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <target state="translated">Metoda čištění testu {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext nemůže být Null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Zprávy pro TestContext:</target>
