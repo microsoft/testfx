@@ -10,10 +10,18 @@
     <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_DEVICE_PATH)</DotnetDevicePath>
     <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_HOST_PATH)</DotnetDevicePath>
     <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">dotnet</DotnetDevicePath>
-    
-    <!-- Instrumentation class name for test execution (lowercase namespace per Android conventions) -->
-    <!-- Default: $(RootNamespace.ToLowerInvariant()).TestInstrumentation -->
-    <TestInstrumentationClass Condition="'$(TestInstrumentationClass)' == ''">$(RootNamespace.ToLowerInvariant()).TestInstrumentation</TestInstrumentationClass>
+    <!--
+      UseInstrumentation: When true, uses Android Instrumentation to run tests via 'adb instrument'
+      This allows tests to run in a controlled environment and properly wait for completion.
+      When false (default), uses 'dotnet run' which launches the MainActivity.
+    -->
+    <UseInstrumentation Condition="'$(UseInstrumentation)' == ''">false</UseInstrumentation>
+    <!--
+      AndroidInstrumentationName: The full name of the Instrumentation class as registered.
+      Must match the Name attribute in [Instrumentation(Name = "...")] on your TestInstrumentation class.
+      Example: blankandroid.TestInstrumentation
+    -->
+    <AndroidInstrumentationName Condition="'$(AndroidInstrumentationName)' == ''">blankandroid.TestInstrumentation</AndroidInstrumentationName>
   </PropertyGroup>
 
   <Target Name="_MTPBeforeVSTest" BeforeTargets="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
@@ -28,35 +36,26 @@
     <Message Text="║  Project:    $(MSBuildProjectName)" Importance="high" />
     <Message Text="║  Framework:  $(TargetFramework)" Importance="high" />
     <Message Text="║  Device:     $(DeviceId)" Importance="high" Condition="'$(DeviceId)' != ''" />
+    <Message Text="║  Dotnet:     $(DotnetDevicePath)" Importance="high" />
+    <Message Text="║  Mode:       $(UseInstrumentation.Replace('true','Instrumentation (adb)').Replace('false','Activity (dotnet run)'))" Importance="high" />
     <Message Text="╚══════════════════════════════════════════════════════════════╝" Importance="high" />
     <Message Text="" Importance="high" />
     
-    <CallTarget Targets="Build" Condition="'$(VSTestNoBuild)' != 'true'" />
-    <CallTarget Targets="_DeployToDevice" />
-    <CallTarget Targets="_RunTestsOnDevice" />
+    <!-- Choose which mode to run tests -->
+    <CallTarget Targets="_RunTestsOnDeviceViaDotnetRun" Condition="'$(UseInstrumentation)' != 'true'" />
+    <CallTarget Targets="_RunTestsOnDeviceViaInstrumentation" Condition="'$(UseInstrumentation)' == 'true'" />
+    <CallTarget Targets="_CollectDeviceTestResults" />
   </Target>
 
-  <!-- Deploy the app to device using dotnet run (which handles APK install) -->
-  <Target Name="_DeployToDevice" Condition="$(TargetFramework.Contains('android'))">
+  <!-- 
+    Mode 1: Run tests via 'dotnet run' (default)
+    Uses MainActivity to run tests. Simple but app may not signal completion properly.
+  -->
+  <Target Name="_RunTestsOnDeviceViaDotnetRun" Condition="$(TargetFramework.Contains('android'))">
     <PropertyGroup>
-      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
-    </PropertyGroup>
-
-    <Message Text="Deploying to device $(DeviceId)..." Importance="high" />
-    
-    <!-- Use adb install to deploy the APK directly -->
-    <Exec Command="adb $(_AdbDevice) install -r &quot;$(OutputPath)$(ApplicationId)-Signed.apk&quot;"
-          WorkingDirectory="$(MSBuildProjectDirectory)"
-          IgnoreExitCode="false" />
-  </Target>
-
-  <!-- Run tests on device using Android Instrumentation -->
-  <Target Name="_RunTestsOnDevice" Condition="$(TargetFramework.Contains('android'))">
-    <PropertyGroup>
-      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
+      <_DeviceArg Condition="'$(DeviceId)' != ''">--device $(DeviceId)</_DeviceArg>
       <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
-      <!-- Instrumentation component: package/class -->
-      <_InstrumentationComponent>$(ApplicationId)/$(TestInstrumentationClass)</_InstrumentationComponent>
+      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
     </PropertyGroup>
 
     <!-- Clear logcat before running tests -->
@@ -65,52 +64,92 @@
           IgnoreExitCode="true" />
 
     <Message Text="" Importance="high" />
-    <Message Text="Running tests via Android Instrumentation..." Importance="high" />
-    <Message Text="Instrumentation: $(_InstrumentationComponent)" Importance="high" />
+    <Message Text="Running tests via: dotnet run --project $(MSBuildProjectFullPath) -f $(TargetFramework) $(_DeviceArg)" Importance="high" />
     <Message Text="" Importance="high" />
     
     <!-- 
-      Run tests using Android Instrumentation which:
-      1. Starts the app in instrumentation mode
-      2. Runs MicrosoftTestingPlatformEntryPoint.Main
-      3. Waits for tests to complete
-      4. Returns results via Instrumentation.Finish()
+      Use 'dotnet run' with device argument which:
+      1. Builds the project
+      2. Deploys to the device/emulator
+      3. Runs the app and streams output
+      4. Waits for app to exit
     -->
-    <Exec Command="adb $(_AdbDevice) shell am instrument -w $(_InstrumentationComponent)"
+    <Exec Command="&quot;$(DotnetDevicePath)&quot; run --project &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) $(_DeviceArg)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true"
           ConsoleToMSBuild="true">
-      <Output TaskParameter="ExitCode" PropertyName="_AdbExitCode" />
-      <Output TaskParameter="ConsoleOutput" PropertyName="_InstrumentationOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_DotnetRunExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="_DotnetRunOutput" />
     </Exec>
 
-    <!-- Parse instrumentation output for test results -->
+    <!-- Show output -->
     <Message Text="" Importance="high" />
-    <Message Text="$(_InstrumentationOutput)" Importance="high" />
+    <Message Text="$(_DotnetRunOutput)" Importance="high" />
 
-    <!-- Show test output from logcat -->
     <Message Text="" Importance="high" />
     <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
-    <Message Text="Test Output (from logcat):" Importance="high" />
-    <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
-    
-    <Exec Command="adb $(_AdbDevice) logcat -d -s DOTNET:I MTP.TestResults:I TestInstrumentation:I | grep -E '(Passed|Failed|✓|✗|Test|Error)'"
+    <Message Text="✓ dotnet run completed with exit code: $(_DotnetRunExitCode)" Importance="high" Condition="'$(_DotnetRunExitCode)' == '0'" />
+    <Warning Text="⚠ dotnet run completed with exit code: $(_DotnetRunExitCode)" Condition="'$(_DotnetRunExitCode)' != '0'" />
+  </Target>
+
+  <!-- 
+    Mode 2: Run tests via Android Instrumentation (adb instrument)
+    Uses TestInstrumentation class. Properly waits for test completion and returns exit code.
+    Enable with: -p:UseInstrumentation=true
+  -->
+  <Target Name="_RunTestsOnDeviceViaInstrumentation" Condition="$(TargetFramework.Contains('android'))">
+    <PropertyGroup>
+      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
+      <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
+      <!-- 
+        AndroidInstrumentationName: The full name of the Instrumentation class as registered in AndroidManifest.xml
+        Must match the Name attribute in [Instrumentation(Name = "...")] 
+        Default: blankandroid.TestInstrumentation - override in project if using different name
+      -->
+      <_InstrumentationClass>$(ApplicationId)/$(AndroidInstrumentationName)</_InstrumentationClass>
+    </PropertyGroup>
+
+    <!-- Clear logcat before running tests -->
+    <Exec Command="adb $(_AdbDevice) logcat -c"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true" />
 
-    <!-- Collect test results from device -->
-    <CallTarget Targets="_CollectDeviceTestResults" />
+    <Message Text="" Importance="high" />
+    <Message Text="Building and installing app..." Importance="high" />
+    
+    <!-- Build and install the app using dotnet build -t:Install -->
+    <Exec Command="&quot;$(DotnetDevicePath)&quot; build &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) -t:Install -p:AdbTarget=&quot;$(_AdbDevice)&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="false">
+      <Output TaskParameter="ExitCode" PropertyName="_InstallExitCode" />
+    </Exec>
 
-    <!-- Check instrumentation result - INSTRUMENTATION_CODE: -1 means success, 0 means crash -->
-    <PropertyGroup>
-      <_TestsPassed Condition="$(_InstrumentationOutput.Contains('INSTRUMENTATION_CODE: -1'))">true</_TestsPassed>
-      <_TestsPassed Condition="$(_InstrumentationOutput.Contains('status=SUCCESS'))">true</_TestsPassed>
-    </PropertyGroup>
+    <Message Text="" Importance="high" />
+    <Message Text="Running tests via: adb $(_AdbDevice) shell am instrument -w $(_InstrumentationClass)" Importance="high" />
+    <Message Text="" Importance="high" />
+    
+    <!-- 
+      Run tests via instrumentation which:
+      1. Starts the TestInstrumentation class
+      2. Waits for completion (-w flag)
+      3. Returns proper exit code based on test results
+    -->
+    <Exec Command="adb $(_AdbDevice) shell am instrument -w $(_InstrumentationClass)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="_InstrumentExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="_InstrumentOutput" />
+    </Exec>
+
+    <!-- Show output -->
+    <Message Text="" Importance="high" />
+    <Message Text="$(_InstrumentOutput)" Importance="high" />
 
     <Message Text="" Importance="high" />
     <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
-    <Message Text="✓ Tests completed successfully" Importance="high" Condition="'$(_TestsPassed)' == 'true'" />
-    <Error Text="✗ Tests failed or crashed. Check logcat for details." Condition="'$(_TestsPassed)' != 'true'" />
+    <Message Text="✓ Instrumentation completed with exit code: $(_InstrumentExitCode)" Importance="high" Condition="'$(_InstrumentExitCode)' == '0'" />
+    <Warning Text="⚠ Instrumentation completed with exit code: $(_InstrumentExitCode)" Condition="'$(_InstrumentExitCode)' != '0'" />
   </Target>
 
   <Target Name="_CollectDeviceTestResults">

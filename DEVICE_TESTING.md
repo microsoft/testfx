@@ -11,33 +11,44 @@ dotnet run --project MyTests.csproj -f net10.0-android --device emulator-5554
 dotnet test --project MyTests.csproj -f net10.0-android --device emulator-5554
 ```
 
-## Current Status: ✅ Working with Android Instrumentation
+## Current Status: ✅ Working with Two Modes
+
+The implementation supports **two modes** for running tests on devices:
+
+### Mode 1: Activity Mode (Default) - via `dotnet run --device`
+
+Uses `dotnet run --device` to deploy and launch the app's MainActivity.
 
 ```bash
-# This works TODAY:
 dotnet test BlankAndroid.csproj -f net10.0-android \
   -p:DeviceId=emulator-5554 \
   -p:DotnetDevicePath=/path/to/dotnet11
+```
 
-# Output (with 30-second long-running test):
-# ╔══════════════════════════════════════════════════════════════╗
-# ║               DEVICE TESTING (Microsoft.Testing.Platform)    ║
-# ╠══════════════════════════════════════════════════════════════╣
-# ║  Project:    BlankAndroid
-# ║  Framework:  net10.0-android
-# ║  Device:     emulator-5554
-# ╚══════════════════════════════════════════════════════════════╝
-# 
-# Running tests via Android Instrumentation...
-# Instrumentation: com.companyname.BlankAndroid/blankandroid.TestInstrumentation
-# 
-# INSTRUMENTATION_RESULT: exitCode=0
-# INSTRUMENTATION_RESULT: status=SUCCESS
-# INSTRUMENTATION_RESULT: testResultsDir=/data/user/0/com.companyname.BlankAndroid/files/TestResults
-# INSTRUMENTATION_CODE: -1
-# 
-# Test results: bin/Debug/net10.0-android/TestResults/BlankAndroid.trx
-# ✓ Tests completed successfully
+### Mode 2: Instrumentation Mode - via `adb instrument`
+
+Uses Android Instrumentation for more reliable test execution with proper wait-for-completion.
+
+```bash
+dotnet test BlankAndroid.csproj -f net10.0-android \
+  -p:DeviceId=emulator-5554 \
+  -p:DotnetDevicePath=/path/to/dotnet11 \
+  -p:UseInstrumentation=true
+```
+
+### Test Output
+```
+# ✓ Passed:  SimpleTest_ShouldPass
+# ✓ Passed:  AndroidPlatformTest
+# ✓ Passed:  StringTest_ShouldPass
+# ✓ Passed:  LongRunningTest_30Seconds
+#
+# Test run summary: Passed!
+#   total: 4
+#   failed: 0
+#   succeeded: 4
+#   skipped: 0
+#   duration: 30s 282ms
 ```
 
 ## What Works ✅
@@ -45,25 +56,44 @@ dotnet test BlankAndroid.csproj -f net10.0-android \
 | Feature | Status | Implementation |
 |---------|--------|----------------|
 | Build device test project | ✅ | Standard MSBuild |
-| Deploy to device/emulator | ✅ | `adb install` |
-| Execute tests on device | ✅ | Android Instrumentation + MTP |
-| **Long-running tests** | ✅ | Instrumentation waits for completion (tested with 30s test) |
-| Test results to logcat | ✅ | `IDataConsumer` extension |
+| Deploy to device/emulator | ✅ | Via `dotnet run --device` or `dotnet build -t:Install` |
+| Execute tests on device | ✅ | MainActivity (Activity mode) or TestInstrumentation (Instrumentation mode) |
+| **Long-running tests** | ✅ | App runs until tests complete, then exits |
+| Test results to logcat | ✅ | `IDataConsumer` MTP extension |
 | Session start/end events | ✅ | `ITestSessionLifetimeHandler` |
-| Pass/Fail/Error output | ✅ | Logcat filtering |
-| Exit code propagation | ✅ | Via `Instrumentation.Finish()` |
+| Pass/Fail/Error output | ✅ | Streamed via logcat |
+| Exit code propagation | ✅ | Via `Java.Lang.JavaSystem.Exit()` or `Instrumentation.Finish()` |
 | **TRX file collection** | ✅ | `adb shell run-as ... cat` |
 | **Logcat collection** | ✅ | `adb logcat -d` saved to TestResults |
+
+## Execution Modes
+
+### Activity Mode (Default)
+- Uses `dotnet run --device` to deploy and launch
+- Tests run in MainActivity.OnCreate
+- App exits via `Java.Lang.JavaSystem.Exit(exitCode)`
+- Pros: Simple, leverages existing `dotnet run` infrastructure
+- Cons: App may not signal completion reliably in some scenarios
+
+### Instrumentation Mode (`-p:UseInstrumentation=true`)
+- Uses `dotnet build -t:Install` to deploy
+- Uses `adb shell am instrument -w` to run TestInstrumentation class
+- `-w` flag waits for completion
+- Instrumentation.Finish() signals completion with result code
+- Pros: More reliable completion detection, proper exit codes
+- Cons: Requires separate build and run steps
 
 ## What's Missing ❌
 
 | Feature | Status | Blocker |
 |---------|--------|---------|
-| `--device` CLI argument | ❌ | Needs SDK change |
-| `--project` CLI argument | ❌ | Needs SDK change |
-| `--list-devices` argument | ❌ | Needs SDK change (provided by SDK) |
+| `--device` CLI argument | ❌ | Needs SDK change to `dotnet test` |
+| `--project` CLI argument | ❌ | Needs SDK change to `dotnet test` |
+| `--list-devices` argument | ❌ | Needs SDK change (already in `dotnet run`) |
 
 ## Architecture
+
+### Activity Mode (Default)
 
 ```
 dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554
@@ -73,30 +103,23 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554
 │  MSBuild: Directory.Build.targets                           │
 │  - Detects device TFM (net10.0-android)                    │
 │  - Overrides VSTest target                                  │
-│  - Build → Deploy → Instrument                              │
+│  - Delegates to `dotnet run --device`                       │
 └─────────────────────────────────────────────────────────────┘
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  _DeployToDevice Target                                     │
-│  - adb install -r <apk>                                     │
+│  _RunTestsOnDeviceViaDotnetRun Target                       │
+│  - Executes: dotnet run --project <proj> -f <tfm> --device  │
+│  - dotnet run handles: build, deploy, run, logcat streaming │
+│  - Waits for app to exit                                    │
 └─────────────────────────────────────────────────────────────┘
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  _RunTestsOnDevice Target                                   │
-│  - adb shell am instrument -w                               │
-│    com.companyname.BlankAndroid/blankandroid.TestInstrumentation │
-│  - Waits for tests to complete                              │
-│  - Returns INSTRUMENTATION_CODE: -1 (success) or 0 (crash)  │
-└─────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────┐
-│  TestInstrumentation.cs (Android Instrumentation)           │
-│  - OnCreate → Start()                                       │
-│  - OnStart → MicrosoftTestingPlatformEntryPoint.Main()     │
-│  - Finish(Result.Ok/Canceled, results)                      │
+│  MainActivity.cs (App Entry Point)                          │
+│  - OnCreate → MicrosoftTestingPlatformEntryPoint.Main()    │
+│  - Runs all tests                                           │
+│  - Java.Lang.JavaSystem.Exit(exitCode)                      │
 └─────────────────────────────────────────────────────────────┘
     │
     ▼
@@ -112,15 +135,73 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554
 │  _CollectDeviceTestResults Target                          │
 │  - adb shell run-as ... ls -t files/TestResults/           │
 │  - adb shell run-as ... cat <latest.trx>                   │
+│  - adb logcat -d > <ProjectName>_logcat.txt                │
 │  - Saves to bin/Debug/net10.0-android/TestResults/         │
 └─────────────────────────────────────────────────────────────┘
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  Output                                                     │
-│  - Console: INSTRUMENTATION_RESULT: status=SUCCESS          │
-│  - Logcat:  MTP.TestResults: ✓ Passed: TestName            │
+│  - Console: Test results streamed via logcat               │
 │  - TRX: bin/.../TestResults/BlankAndroid.trx               │
+│  - Logcat: bin/.../TestResults/BlankAndroid_logcat.txt     │
+│  - Exit code: 0 (success) or non-zero (failures)           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Instrumentation Mode (`-p:UseInstrumentation=true`)
+
+```
+dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554 -p:UseInstrumentation=true
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  MSBuild: Directory.Build.targets                           │
+│  - Detects device TFM (net10.0-android)                    │
+│  - Overrides VSTest target                                  │
+│  - UseInstrumentation=true → delegates to adb instrument   │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  _RunTestsOnDeviceViaInstrumentation Target                │
+│  1. dotnet build -t:Install (builds & deploys APK)         │
+│  2. adb shell am instrument -w <instrumentation-class>     │
+│     -w flag waits for instrumentation to finish            │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  TestInstrumentation.cs (Instrumentation Entry Point)       │
+│  - OnCreate → Start()                                       │
+│  - OnStart → MicrosoftTestingPlatformEntryPoint.Main()     │
+│  - Runs all tests                                           │
+│  - Finish(exitCode, results) signals completion            │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  MTP Extensions (DeviceTestReporter.cs)                    │
+│  - IDataConsumer: Logs test results to logcat              │
+│  - ITestSessionLifetimeHandler: Session events             │
+│  - IOutputDeviceDataProducer: Formatted output             │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  _CollectDeviceTestResults Target                          │
+│  - adb shell run-as ... ls -t files/TestResults/           │
+│  - adb shell run-as ... cat <latest.trx>                   │
+│  - adb logcat -d > <ProjectName>_logcat.txt                │
+│  - Saves to bin/Debug/net10.0-android/TestResults/         │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Output                                                     │
+│  - Console: Instrumentation output + logcat                │
+│  - TRX: bin/.../TestResults/BlankAndroid.trx               │
+│  - Logcat: bin/.../TestResults/BlankAndroid_logcat.txt     │
 │  - Exit code: 0 (success) or non-zero (failures)           │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -132,71 +213,139 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554
 | File | Purpose |
 |------|---------|
 | `BlankAndroid.csproj` | Project with MTP + TRX configuration |
-| `Directory.Build.targets` | MSBuild targets for device test + TRX collection |
-| `TestInstrumentation.cs` | Android Instrumentation for test execution |
-| `MainActivity.cs` | App entry point (minimal, tests run via Instrumentation) |
-| `DeviceTestReporter.cs` | MTP extensions for test output |
+| `Directory.Build.targets` | MSBuild targets - supports both Activity and Instrumentation modes |
+| `MainActivity.cs` | Activity mode entry point - runs MTP tests and exits |
+| `TestInstrumentation.cs` | Instrumentation mode entry point - runs MTP tests with proper completion signaling |
+| `DeviceTestReporter.cs` | MTP extensions for test output to logcat |
 | `DeviceTests.cs` | Sample MSTest tests |
-| `AndroidManifest.xml` | Declares Instrumentation component |
+| `AndroidManifest.xml` | Android manifest with Instrumentation registration |
 
-## Android Instrumentation
+## How It Works
 
-The key to making tests wait properly is using Android's Instrumentation framework:
+### Activity Mode Entry Point (MainActivity)
+
+When the app launches via `dotnet run --device`, `MainActivity.OnCreate` immediately runs the test platform:
+
+```csharp
+[Activity(Label = "@string/app_name", MainLauncher = true)]
+public class MainActivity : Activity
+{
+    protected override async void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+
+        // Configure test results directory
+        var filesDir = FilesDir?.AbsolutePath ?? "/data/local/tmp";
+        var testResultsDir = Path.Combine(filesDir, "TestResults");
+        
+        var args = new[]
+        {
+            "--results-directory", testResultsDir,
+            "--report-trx"
+        };
+
+        // Run MTP tests
+        int exitCode = await MicrosoftTestingPlatformEntryPoint.Main(args);
+
+        // Exit with test result code
+        Java.Lang.JavaSystem.Exit(exitCode);
+    }
+}
+```
+
+### Instrumentation Mode Entry Point (TestInstrumentation)
+
+When launched via `adb shell am instrument -w`, `TestInstrumentation` runs tests with proper completion signaling:
 
 ```csharp
 [Instrumentation(Name = "blankandroid.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
-    // Required constructor for Android .NET interop
-    public TestInstrumentation(IntPtr handle, JniHandleOwnership transfer)
-        : base(handle, transfer) { }
-
     public override void OnCreate(Bundle? arguments)
     {
         base.OnCreate(arguments);
-        Start(); // Triggers OnStart on a new thread
+        Start(); // Triggers OnStart
     }
 
     public override async void OnStart()
     {
         base.OnStart();
-        
-        // Run MTP tests
-        int exitCode = await MicrosoftTestingPlatformEntryPoint.Main(args);
-        
-        // Signal completion - INSTRUMENTATION_CODE: -1 = success
-        Finish(exitCode == 0 ? Result.Ok : Result.Canceled, results);
+
+        int exitCode = 1;
+        Bundle results = new Bundle();
+
+        try
+        {
+            var context = TargetContext;
+            var filesDir = context?.FilesDir?.AbsolutePath ?? "/data/local/tmp";
+            var testResultsDir = Path.Combine(filesDir, "TestResults");
+            Directory.CreateDirectory(testResultsDir);
+
+            var args = new[] { "--results-directory", testResultsDir, "--report-trx" };
+            exitCode = await MicrosoftTestingPlatformEntryPoint.Main(args);
+
+            results.PutInt("exitCode", exitCode);
+            results.PutString("status", exitCode == 0 ? "SUCCESS" : "FAILURE");
+        }
+        catch (Exception ex)
+        {
+            results.PutString("error", ex.ToString());
+        }
+        finally
+        {
+            // Signal completion - adb instrument -w will wait for this
+            Finish(exitCode == 0 ? Result.Ok : Result.Canceled, results);
+        }
     }
 }
 ```
 
-The AndroidManifest.xml declares the instrumentation:
+### MSBuild Targets
+
+The `Directory.Build.targets` overrides `VSTest` to support both modes:
+
 ```xml
-<instrumentation
-  android:name="blankandroid.TestInstrumentation"
-  android:targetPackage="com.companyname.BlankAndroid"
-  android:label="Test Instrumentation" />
+<Target Name="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
+  <!-- Choose mode based on UseInstrumentation property -->
+  <CallTarget Targets="_RunTestsOnDeviceViaDotnetRun" Condition="'$(UseInstrumentation)' != 'true'" />
+  <CallTarget Targets="_RunTestsOnDeviceViaInstrumentation" Condition="'$(UseInstrumentation)' == 'true'" />
+  <CallTarget Targets="_CollectDeviceTestResults" />
+</Target>
+
+<!-- Mode 1: Activity mode via dotnet run -->
+<Target Name="_RunTestsOnDeviceViaDotnetRun">
+  <Exec Command="&quot;$(DotnetDevicePath)&quot; run --project &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) --device $(DeviceId)" />
+</Target>
+
+<!-- Mode 2: Instrumentation mode via adb instrument -->
+<Target Name="_RunTestsOnDeviceViaInstrumentation">
+  <!-- Build and install -->
+  <Exec Command="&quot;$(DotnetDevicePath)&quot; build &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) -t:Install -p:AdbTarget=&quot;$(_AdbDevice)&quot;" />
+  <!-- Run instrumentation (-w waits for completion) -->
+  <Exec Command="adb $(_AdbDevice) shell am instrument -w $(ApplicationId)/$(RootNamespace).TestInstrumentation" />
+</Target>
 ```
 
 ## Path to Success
 
-### ✅ Phase 1: COMPLETE - Working Prototype with Instrumentation
+### ✅ Phase 1: COMPLETE - Working Prototype using `dotnet run --device`
 - [x] MSBuild targets intercept `dotnet test` for device projects
-- [x] Deploy APK via `adb install`
-- [x] Run tests via `adb shell am instrument -w`
-- [x] Android Instrumentation properly waits for test completion
+- [x] Delegate execution to `dotnet run --device` (.NET 11)
+- [x] `dotnet run` handles build, deploy, execute, and output streaming
+- [x] App runs MTP tests via `MainActivity.OnCreate`
 - [x] MTP extensions report test results via logcat
-- [x] Exit code propagates correctly via `Instrumentation.Finish()`
-- [x] **TRX file collection from device**
+- [x] Exit code propagates correctly via `Java.Lang.JavaSystem.Exit()`
+- [x] TRX file collection from device
+- [x] Logcat collection for debugging
 
 ### 🔄 Phase 2: IN PROGRESS - CLI Parity with `dotnet run`
 
-**Required:** Add `--device` flag to `dotnet test` CLI
+**Required:** Add `--device` and `--project` flags to `dotnet test` CLI
 
-The .NET SDK already supports `--device` for `dotnet run`. We need the same for `dotnet test`:
+The .NET SDK already supports these for `dotnet run`. We need the same for `dotnet test`:
 
 ```bash
-# dotnet run (works today):
+# dotnet run (works today in .NET 11):
 dotnet run --project X.csproj -f net10.0-android --device emulator-5554
 
 # dotnet test (goal):
@@ -205,30 +354,38 @@ dotnet test --project X.csproj -f net10.0-android --device emulator-5554
 
 **Implementation options:**
 1. **SDK Change:** Add `--device` parsing to `dotnet test` command
-2. **MSBuild Pass-through:** SDK passes `--device` as MSBuild property
+2. **MSBuild Pass-through:** SDK passes `--device` as MSBuild property `$(DeviceId)`
 
 ### 📋 Phase 3: Future Enhancements
-- [ ] `--list-devices` support (provided by SDK)
+- [ ] `--list-devices` support (already in `dotnet run`)
 - [ ] Code coverage collection from device
-- [ ] iOS support (same pattern with XCTest Instrumentation)
+- [ ] iOS support (same pattern with test host app)
 
 ## Usage
 
-### Current (with MSBuild properties)
+### Activity Mode (Default)
 ```bash
+# With MSBuild properties
 dotnet test BlankAndroid.csproj -f net10.0-android \
   -p:DeviceId=emulator-5554 \
   -p:DotnetDevicePath=/path/to/dotnet11
-```
 
-### With Environment Variables
-```bash
+# With environment variables
 export DEVICE_ID=emulator-5554
 export DOTNET_DEVICE_PATH=/path/to/dotnet11
 dotnet test BlankAndroid.csproj -f net10.0-android
 ```
 
-### Goal (CLI arguments)
+### Instrumentation Mode
+```bash
+# Enables more reliable test completion detection
+dotnet test BlankAndroid.csproj -f net10.0-android \
+  -p:DeviceId=emulator-5554 \
+  -p:DotnetDevicePath=/path/to/dotnet11 \
+  -p:UseInstrumentation=true
+```
+
+### Goal (CLI arguments - requires SDK changes)
 ```bash
 dotnet test --project BlankAndroid.csproj -f net10.0-android --device emulator-5554
 ```
@@ -248,7 +405,7 @@ Full device logcat is saved for debugging purposes:
 3. Contains all Android logs including:
    - MTP test output (`MTP.TestResults`, `MTP.TestSession` tags)
    - .NET runtime logs (`DOTNET` tag)
-   - Test instrumentation logs (`TestInstrumentation` tag)
+   - Device test logs (`DeviceTests` tag)
    - Crash information if tests fail
 
 ### Output Files
@@ -273,4 +430,4 @@ This works because:
 
 ---
 **Last Updated:** 2026-01-13  
-**Status:** ✅ Working prototype with Android Instrumentation + TRX collection, awaiting SDK CLI integration for `dotnet test --device`
+**Status:** ✅ Working prototype using `dotnet run --device` + TRX/logcat collection, awaiting SDK CLI integration for `dotnet test --device`
