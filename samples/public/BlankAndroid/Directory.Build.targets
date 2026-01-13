@@ -1,39 +1,57 @@
 <Project>
-  <!-- For device projects, override the error check -->
   <PropertyGroup>
-    <SkipVSTestError Condition="$(TargetFramework.Contains('android')) OR $(TargetFramework.Contains('ios'))">true</SkipVSTestError>
+    <_IsDeviceTestProject Condition="$(TargetFramework.Contains('android')) OR $(TargetFramework.Contains('ios'))">true</_IsDeviceTestProject>
+    <UseMSBuildTestInfrastructure Condition="'$(_IsDeviceTestProject)' == 'true'">true</UseMSBuildTestInfrastructure>
+    <DeviceId Condition="'$(DeviceId)' == ''">$(DEVICE_ID)</DeviceId>
+    <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_DEVICE_PATH)</DotnetDevicePath>
+    <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">dotnet</DotnetDevicePath>
   </PropertyGroup>
 
-  <!-- Override _MTPBeforeVSTest to skip the error for device projects -->
-  <Target Name="_MTPBeforeVSTest" BeforeTargets="VSTest">
-    <PropertyGroup>
-      <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
-      <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>
-    </PropertyGroup>
-
-    <!-- Show error only for non-device projects -->
-    <Error Text="Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later. If you use dotnet test, you should opt-in to the new dotnet test experience. For more information, see https://aka.ms/dotnet-test-mtp-error"
-           Condition="'$(IsTestingPlatformApplication)'=='true' AND '$(TargetFramework)'!='' AND '$(_SupportsGlobalJsonTestRunner)'=='true' AND '$(SkipVSTestError)'!='true'" />
-
-    <CallTarget Condition="'$(VSTestNoBuild)' != 'true' AND '$(TargetFramework)'!=''" Targets="BuildProject" />
+  <Target Name="_MTPBeforeVSTest" BeforeTargets="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
+    <Message Text="Device project detected, skipping MTP VSTest error check" Importance="low" />
   </Target>
 
-  <!-- Override VSTest target for device projects to show status -->
-  <Target Name="VSTest" Condition="'$(SkipVSTestError)' == 'true'">
-    <Message Text="=== Device Testing Status ===" Importance="high" />
-    <Message Text="Project: $(MSBuildProjectName)" Importance="high" />
-    <Message Text="Target Framework: $(TargetFramework)" Importance="high" />
+  <Target Name="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
     <Message Text="" Importance="high" />
-    <Message Text="✅ Build completed successfully!" Importance="high" />
-    <Message Text="📦 APK generated: bin\Debug\$(TargetFramework)\$(ApplicationId)-Signed.apk" Importance="high" />
+    <Message Text="╔══════════════════════════════════════════════════════════════╗" Importance="high" />
+    <Message Text="║               DEVICE TESTING (Microsoft.Testing.Platform)    ║" Importance="high" />
+    <Message Text="╠══════════════════════════════════════════════════════════════╣" Importance="high" />
+    <Message Text="║  Project:    $(MSBuildProjectName)" Importance="high" />
+    <Message Text="║  Framework:  $(TargetFramework)" Importance="high" />
+    <Message Text="║  Device:     $(DeviceId)" Importance="high" Condition="'$(DeviceId)' != ''" />
+    <Message Text="╚══════════════════════════════════════════════════════════════╝" Importance="high" />
     <Message Text="" Importance="high" />
-    <Message Text="⚠️  Device test execution is in development." Importance="high" />
-    <Message Text="   Components are implemented but MSBuild wiring is incomplete." Importance="high" />
+    
+    <CallTarget Targets="Build" Condition="'$(VSTestNoBuild)' != 'true'" />
+    <CallTarget Targets="_InvokeDeviceTestingPlatform" />
+  </Target>
+
+  <Target Name="_InvokeDeviceTestingPlatform">
+    <PropertyGroup>
+      <_DotnetRunArgs>run --project "$(MSBuildProjectFullPath)" -f $(TargetFramework)</_DotnetRunArgs>
+      <_DotnetRunArgs Condition="'$(DeviceId)' != ''">$(_DotnetRunArgs) --device $(DeviceId)</_DotnetRunArgs>
+      <_TestOutputFile>$(IntermediateOutputPath)device_test_output.txt</_TestOutputFile>
+    </PropertyGroup>
+
+    <Message Text="Deploying and running tests on device..." Importance="high" />
+    
+    <!-- Run dotnet run and capture output to a file -->
+    <Exec Command="&quot;$(DotnetDevicePath)&quot; $(_DotnetRunArgs) > &quot;$(_TestOutputFile)&quot; 2>&amp;1"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true">
+      <Output TaskParameter="ExitCode" PropertyName="_DeviceTestExitCode" />
+    </Exec>
+
+    <!-- Filter and display test output directly to console (stderr goes through even at minimal verbosity) -->
+    <Exec Command="grep -E 'MTP\.|BlankAndroid:|Tests completed|exit code' &quot;$(_TestOutputFile)&quot; | sed 's/^.*I //' 1>&amp;2 || true"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true" />
+
     <Message Text="" Importance="high" />
-    <Message Text="Manual deployment:" Importance="high" />
-    <Message Text="  adb install -r bin\Debug\$(TargetFramework)\$(ApplicationId)-Signed.apk" Importance="high" />
-    <Message Text="" Importance="high" />
-    <Message Text="See: DEVICE_TESTING_DOTNET_TEST_STATUS.md" Importance="high" />
-    <Message Text="============================" Importance="high" />
+    <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
+    <Message Text="Device test exit code: $(_DeviceTestExitCode)" Importance="high" Condition="'$(_DeviceTestExitCode)' == '0'" />
+    <Error Text="Device tests failed with exit code: $(_DeviceTestExitCode)" Condition="'$(_DeviceTestExitCode)' != '0'" />
   </Target>
 </Project>

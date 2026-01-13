@@ -28,4 +28,16 @@ public class DeviceTests
         // Verify we're running on Android
         Assert.IsTrue(OperatingSystem.IsAndroid(), "Should be running on Android");
     }
+
+    [TestMethod]
+    public void StringTest_ShouldPass()
+    {
+        // Test string operations
+        string hello = "Hello";
+        string world = "World";
+
+        string result = $"{hello}, {world}!";
+
+        Assert.AreEqual("Hello, World!", result);
+    }
 }

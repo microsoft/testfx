@@ -145,3 +145,4 @@ project.fragment.lock.json
 
 # jetbrains temp
 .idea/
+.DS_Store

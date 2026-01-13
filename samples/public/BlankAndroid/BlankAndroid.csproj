@@ -8,17 +8,36 @@
     <ApplicationId>com.companyname.BlankAndroid</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <TrimMode>full</TrimMode>
+    <TrimMode>partial</TrimMode>
     
     <!-- Enable Microsoft Testing Platform -->
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
     
-    <!-- Device test project - disable VSTest error -->
+    <!-- Use MSTest Engine (source generation based) for device testing -->
+    <UseMSTestEngine>true</UseMSTestEngine>
+    <UseMSTestAdapter>false</UseMSTestAdapter>
+    
+    <!-- Device test project -->
     <_IsDeviceTestProject>true</_IsDeviceTestProject>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
+    <!-- Use source-generated MSTest for device testing (no PlatformServices dependency) -->
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="MSTest.Engine" Version="$(MSTestAOTVersion)" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
+  </ItemGroup>
+
+  <!-- Register custom device testing extensions -->
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="DeviceTestingExtensions">
+      <DisplayName>Device Testing Extensions</DisplayName>
+      <TypeFullName>BlankAndroid.DeviceTestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
   </ItemGroup>
 </Project>
