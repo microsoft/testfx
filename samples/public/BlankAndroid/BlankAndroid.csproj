@@ -21,6 +21,9 @@
     
     <!-- Device test project -->
     <_IsDeviceTestProject>true</_IsDeviceTestProject>
+    
+    <!-- Disable fast deployment - instrumentation requires all assemblies in APK -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
   </PropertyGroup>
 
   <ItemGroup>

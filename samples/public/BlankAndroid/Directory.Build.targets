@@ -3,8 +3,17 @@
     <_IsDeviceTestProject Condition="$(TargetFramework.Contains('android')) OR $(TargetFramework.Contains('ios'))">true</_IsDeviceTestProject>
     <UseMSBuildTestInfrastructure Condition="'$(_IsDeviceTestProject)' == 'true'">true</UseMSBuildTestInfrastructure>
     <DeviceId Condition="'$(DeviceId)' == ''">$(DEVICE_ID)</DeviceId>
+    <!-- 
+      DotnetDevicePath: Path to the dotnet executable with device support (.NET 11+)
+      Priority: 1) Explicit property, 2) Environment variable, 3) DOTNET_HOST_PATH (same SDK running this build), 4) system dotnet
+    -->
     <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_DEVICE_PATH)</DotnetDevicePath>
+    <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_HOST_PATH)</DotnetDevicePath>
     <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">dotnet</DotnetDevicePath>
+    
+    <!-- Instrumentation class name for test execution (lowercase namespace per Android conventions) -->
+    <!-- Default: $(RootNamespace.ToLowerInvariant()).TestInstrumentation -->
+    <TestInstrumentationClass Condition="'$(TestInstrumentationClass)' == ''">$(RootNamespace.ToLowerInvariant()).TestInstrumentation</TestInstrumentationClass>
   </PropertyGroup>
 
   <Target Name="_MTPBeforeVSTest" BeforeTargets="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
@@ -23,17 +32,31 @@
     <Message Text="" Importance="high" />
     
     <CallTarget Targets="Build" Condition="'$(VSTestNoBuild)' != 'true'" />
+    <CallTarget Targets="_DeployToDevice" />
     <CallTarget Targets="_RunTestsOnDevice" />
   </Target>
 
-  <!-- Run tests on device using dotnet run with logcat monitoring -->
-  <Target Name="_RunTestsOnDevice">
+  <!-- Deploy the app to device using dotnet run (which handles APK install) -->
+  <Target Name="_DeployToDevice" Condition="$(TargetFramework.Contains('android'))">
     <PropertyGroup>
       <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
-      <_DotnetRunArgs>run --project "$(MSBuildProjectFullPath)" -f $(TargetFramework)</_DotnetRunArgs>
-      <_DotnetRunArgs Condition="'$(DeviceId)' != ''">$(_DotnetRunArgs) --device $(DeviceId)</_DotnetRunArgs>
-      <_TestOutputFile>$(IntermediateOutputPath)device_test_output.txt</_TestOutputFile>
+    </PropertyGroup>
+
+    <Message Text="Deploying to device $(DeviceId)..." Importance="high" />
+    
+    <!-- Use adb install to deploy the APK directly -->
+    <Exec Command="adb $(_AdbDevice) install -r &quot;$(OutputPath)$(ApplicationId)-Signed.apk&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="false" />
+  </Target>
+
+  <!-- Run tests on device using Android Instrumentation -->
+  <Target Name="_RunTestsOnDevice" Condition="$(TargetFramework.Contains('android'))">
+    <PropertyGroup>
+      <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
       <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
+      <!-- Instrumentation component: package/class -->
+      <_InstrumentationComponent>$(ApplicationId)/$(TestInstrumentationClass)</_InstrumentationComponent>
     </PropertyGroup>
 
     <!-- Clear logcat before running tests -->
@@ -42,36 +65,52 @@
           IgnoreExitCode="true" />
 
     <Message Text="" Importance="high" />
-    <Message Text="Deploying and running tests on device..." Importance="high" />
-    <Message Text="Command: dotnet $(_DotnetRunArgs)" Importance="high" />
+    <Message Text="Running tests via Android Instrumentation..." Importance="high" />
+    <Message Text="Instrumentation: $(_InstrumentationComponent)" Importance="high" />
     <Message Text="" Importance="high" />
     
     <!-- 
-      Run dotnet run which deploys and starts the app.
-      The app will call Java.Lang.JavaSystem.Exit() when tests complete.
-      We capture the output to get the exit code.
+      Run tests using Android Instrumentation which:
+      1. Starts the app in instrumentation mode
+      2. Runs MicrosoftTestingPlatformEntryPoint.Main
+      3. Waits for tests to complete
+      4. Returns results via Instrumentation.Finish()
     -->
-    <Exec Command="&quot;$(DotnetDevicePath)&quot; $(_DotnetRunArgs) 2>&amp;1 | tee &quot;$(_TestOutputFile)&quot;"
+    <Exec Command="adb $(_AdbDevice) shell am instrument -w $(_InstrumentationComponent)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true"
-          IgnoreStandardErrorWarningFormat="true">
-      <Output TaskParameter="ExitCode" PropertyName="_DeviceTestExitCode" />
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="_AdbExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="_InstrumentationOutput" />
     </Exec>
 
-    <!-- Get test results from logcat -->
+    <!-- Parse instrumentation output for test results -->
     <Message Text="" Importance="high" />
-    <Message Text="Test output from device:" Importance="high" />
-    <Exec Command="adb $(_AdbDevice) logcat -d -s BlankAndroid:I DeviceTests:I MTP:I TestInstrumentation:I | grep -E 'BlankAndroid|MTP|DeviceTests|TestInstrumentation' | tail -100"
+    <Message Text="$(_InstrumentationOutput)" Importance="high" />
+
+    <!-- Show test output from logcat -->
+    <Message Text="" Importance="high" />
+    <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
+    <Message Text="Test Output (from logcat):" Importance="high" />
+    <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
+    
+    <Exec Command="adb $(_AdbDevice) logcat -d -s DOTNET:I MTP.TestResults:I TestInstrumentation:I | grep -E '(Passed|Failed|✓|✗|Test|Error)'"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true" />
 
     <!-- Collect test results from device -->
     <CallTarget Targets="_CollectDeviceTestResults" />
 
+    <!-- Check instrumentation result - INSTRUMENTATION_CODE: -1 means success, 0 means crash -->
+    <PropertyGroup>
+      <_TestsPassed Condition="$(_InstrumentationOutput.Contains('INSTRUMENTATION_CODE: -1'))">true</_TestsPassed>
+      <_TestsPassed Condition="$(_InstrumentationOutput.Contains('status=SUCCESS'))">true</_TestsPassed>
+    </PropertyGroup>
+
     <Message Text="" Importance="high" />
     <Message Text="══════════════════════════════════════════════════════════════" Importance="high" />
-    <Message Text="✓ Tests completed with exit code: $(_DeviceTestExitCode)" Importance="high" Condition="'$(_DeviceTestExitCode)' == '0'" />
-    <Error Text="✗ Tests failed with exit code: $(_DeviceTestExitCode)" Condition="'$(_DeviceTestExitCode)' != '0'" />
+    <Message Text="✓ Tests completed successfully" Importance="high" Condition="'$(_TestsPassed)' == 'true'" />
+    <Error Text="✗ Tests failed or crashed. Check logcat for details." Condition="'$(_TestsPassed)' != 'true'" />
   </Target>
 
   <Target Name="_CollectDeviceTestResults">
@@ -79,6 +118,7 @@
       <_AdbDevice Condition="'$(DeviceId)' != ''">-s $(DeviceId)</_AdbDevice>
       <_DeviceTestResultsPath>files/TestResults</_DeviceTestResultsPath>
       <_LocalTestResultsPath>$(OutputPath)TestResults</_LocalTestResultsPath>
+      <_LogcatFileName>$(MSBuildProjectName)_logcat.txt</_LogcatFileName>
     </PropertyGroup>
 
     <!-- Create local TestResults directory -->
@@ -86,6 +126,14 @@
 
     <Message Text="" Importance="high" />
     <Message Text="Collecting test results from device..." Importance="high" />
+
+    <!-- Capture full logcat to file for debugging -->
+    <Exec Command="adb $(_AdbDevice) logcat -d > &quot;$(_LocalTestResultsPath)/$(_LogcatFileName)&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true" />
+    
+    <Message Text="Logcat saved: $(_LocalTestResultsPath)/$(_LogcatFileName)" Importance="high" />
 
     <!-- Get the most recent TRX file name -->
     <Exec Command="adb $(_AdbDevice) shell &quot;run-as $(ApplicationId) ls -t $(_DeviceTestResultsPath)/ 2>/dev/null | head -1&quot; | tr -d '\r'"
