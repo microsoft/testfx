@@ -826,7 +826,7 @@ internal class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private async Task<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>

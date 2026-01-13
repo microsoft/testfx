@@ -67,7 +67,7 @@ internal static class FixtureMethodRunner
             : RunWithTimeoutAndCancellationWithThreadPool(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static async Task<TestFailedException?> RunWithCooperativeCancellationAsync(Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+    private static async SynchronizationContextPreservingTask<TestFailedException?> RunWithCooperativeCancellationAsync(Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
