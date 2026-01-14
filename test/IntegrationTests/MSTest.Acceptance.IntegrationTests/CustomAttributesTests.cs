@@ -10,6 +10,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesTests.TestAssetFixture>
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task CustomTestMethodAndTestClassAttributes_ShouldDiscoverAndRun(string tfm)
