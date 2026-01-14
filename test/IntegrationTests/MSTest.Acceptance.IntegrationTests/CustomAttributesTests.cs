@@ -31,7 +31,7 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        testHostResult.AssertOutputContains("Multiple attributes of type 'Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute' found.");
+        testHostResult.AssertStandardErrorContains("Multiple attributes of type 'Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute' found.");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
