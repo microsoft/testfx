@@ -43,6 +43,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstance
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.UseSTASynchronizationContext.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.STATestMethodAttribute.UseSTASynchronizationContext.set -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Func<object?, bool>! predicate, System.Collections.IEnumerable! collection, string? message = "", string! predicateExpression = "", string! collectionExpression = "") -> object?
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(object? value, System.Type? expectedType, string? message = "", string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(object? value, System.Type? expectedType, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler message, string! valueExpression = "") -> void
