@@ -10,5 +10,5 @@ internal static class TrxModeHelpers
     [UnsupportedOSPlatformGuard("BROWSER")]
     public static bool ShouldUseOutOfProcessTrxGeneration(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) &&
-            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+            !OperatingSystem.IsBrowser();
 }
