@@ -63,17 +63,22 @@ internal class ReflectHelper : MarshalByRefObject
     public override object InitializeLifetimeService() => null!;
 
     /// <summary>
-    /// Gets first attribute that matches the type or is derived from it.
-    /// Use this together with attribute that does not allow multiple. In such case there cannot be more attributes, and this will avoid the cost of
+    /// Gets first attribute that matches the type.
+    /// Use this together with attribute that does not allow multiple and is sealed. In such case there cannot be more attributes, and this will avoid the cost of
     /// checking for more than one attribute.
     /// </summary>
     /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
     /// <param name="attributeProvider">The type, assembly or method.</param>
     /// <returns>The attribute that is found or null.</returns>
-    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public virtual /* for tests, for moq */ TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
     {
+        // If the attribute is not sealed, then it can allow multiple, even if AllowMultiple is false.
+        // This happens when a derived type is also applied along with the base type.
+        // Or, if the derived type modifies the attribute usage to allow multiple.
+        // So we want to ensure this is only called for sealed attributes.
+        DebugEx.Assert(typeof(TAttribute).IsSealed, $"Expected '{typeof(TAttribute)}' to be sealed, but was not.");
+
         Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
 
         foreach (Attribute cachedAttribute in cachedAttributes)
@@ -85,6 +90,37 @@ internal class ReflectHelper : MarshalByRefObject
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Gets first attribute that matches the type or is derived from it.
+    /// Use this together with attribute that does not allow multiple. In such case there cannot be more attributes, and this will avoid the cost of
+    /// checking for more than one attribute.
+    /// </summary>
+    /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
+    /// <param name="attributeProvider">The type, assembly or method.</param>
+    /// <returns>The attribute that is found or null.</returns>
+    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
+    public virtual /* for tests, for moq */ TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
+        where TAttribute : Attribute
+    {
+        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
+
+        TAttribute? foundAttribute = null;
+        foreach (Attribute cachedAttribute in cachedAttributes)
+        {
+            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
+            {
+                if (foundAttribute is not null)
+                {
+                    throw new InvalidOperationException($"Multiple attributes of type '{typeof(TAttribute)}' found.");
+                }
+
+                foundAttribute = cachedAttributeAsTAttribute;
+            }
+        }
+
+        return foundAttribute;
     }
 
     /// <summary>

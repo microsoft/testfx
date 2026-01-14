@@ -285,7 +285,7 @@ internal class TestMethodInfo : ITestMethod
     {
         // Get the derived TestMethod attribute from reflection.
         // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
+        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
