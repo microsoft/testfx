@@ -14,13 +14,24 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task CustomTestMethodAndTestClassAttributes_ShouldDiscoverAndRun(string tfm)
+    public async Task CustomTestMethodAttribute_ShouldDiscoverAndRun(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter FullyQualifiedName~TestClass1", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task CustomTestClassAttribute_ShouldDiscoverAndRun(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter FullyQualifiedName~TestClass2", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
