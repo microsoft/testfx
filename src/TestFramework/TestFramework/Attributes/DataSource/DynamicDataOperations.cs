@@ -155,7 +155,7 @@ internal static class DynamicDataOperations
             List<object[]> objects = [];
             foreach (object? entry in enumerable)
             {
-                objects.Add([entry!]);
+                objects.Add([entry]);
             }
 
             data = objects;
