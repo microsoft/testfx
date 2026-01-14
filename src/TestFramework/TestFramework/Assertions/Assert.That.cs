@@ -56,7 +56,9 @@ public static partial class AssertExtensions
         }
     }
 
+#pragma warning disable IDE0051 // Remove unused private members - false positive
     private static string ExtractDetails(Expression expr)
+#pragma warning restore IDE0051 // Remove unused private members
     {
         var details = new Dictionary<string, object?>();
         ExtractVariablesFromExpression(expr, details);

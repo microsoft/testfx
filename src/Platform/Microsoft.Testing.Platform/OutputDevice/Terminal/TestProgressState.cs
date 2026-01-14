@@ -14,7 +14,7 @@ internal sealed class TestProgressState
         TargetFramework = targetFramework;
         Architecture = architecture;
         Stopwatch = stopwatch;
-        AssemblyName = Path.GetFileName(assembly)!;
+        AssemblyName = Path.GetFileName(assembly);
         IsDiscovery = isDiscovery;
     }
 
