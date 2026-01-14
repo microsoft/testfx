@@ -13,6 +13,9 @@
 .PARAMETER TreatWarningsAsErrors
     Whether to treat warnings as errors (default: false).
 
+.PARAMETER BinaryLogDirectory
+    Optional directory path where binary log files will be created for each solution.
+
 .EXAMPLE
     .\eng\build-samples.ps1
     Builds all samples in Release configuration.
@@ -20,12 +23,17 @@
 .EXAMPLE
     .\eng\build-samples.ps1 -Configuration Debug
     Builds all samples in Debug configuration.
+
+.EXAMPLE
+    .\eng\build-samples.ps1 -Configuration Release -BinaryLogDirectory "artifacts\log\Release"
+    Builds all samples with binary logs for each solution.
 #>
 
 [CmdletBinding()]
 param(
     [string]$Configuration = "Release",
-    [switch]$TreatWarningsAsErrors
+    [switch]$TreatWarningsAsErrors,
+    [string]$BinaryLogDirectory
 )
 
 Set-StrictMode -Version Latest
@@ -86,6 +94,12 @@ foreach ($solution in $solutions) {
             "/v:minimal"
         )
 
+        if ($BinaryLogDirectory) {
+            $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
+            $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
+            $buildArgs += "/bl:$binlogPath"
+        }
+
         & $msbuildPath $buildArgs
     }
     else {
@@ -95,6 +109,12 @@ foreach ($solution in $solutions) {
             "--configuration", $Configuration,
             "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
         )
+
+        if ($BinaryLogDirectory) {
+            $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
+            $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
+            $buildArgs += "-bl:$binlogPath"
+        }
 
         & $dotnetPath $buildArgs
     }
