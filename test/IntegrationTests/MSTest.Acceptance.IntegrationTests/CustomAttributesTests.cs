@@ -40,6 +40,7 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
         public const string DuplicateTestClassProjectName = "DuplicateTestClassAttribute";
 
         public string DuplicateTestMethodProjectPath => GetAssetPath(DuplicateTestMethodProjectName);
+
         public string DuplicateTestClassProjectPath => GetAssetPath(DuplicateTestClassProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
