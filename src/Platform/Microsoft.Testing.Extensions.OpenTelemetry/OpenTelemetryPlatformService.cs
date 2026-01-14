@@ -24,7 +24,7 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     public ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct
-        => new CounterWrapper<T>(_meter.CreateCounter<T>(name, unit, description, tags!));
+        => new CounterWrapper<T>(_meter.CreateCounter<T>(name, unit, description, tags));
 
     public IHistogram<T> CreateHistogram<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct

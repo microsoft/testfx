@@ -292,9 +292,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // If we are not "dotnet.exe" and not "mono", then we are given an executable from user and we are running on Windows.
         builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
-        if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
+        if (!RoslynString.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
-            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
+            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments.ItemSpec} ");
         }
 
         if (VSTestCLIRunSettings?.Length > 0)

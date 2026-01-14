@@ -83,7 +83,7 @@ internal sealed class FastFilter
         string? result = null;
         if (PropertyValueRegexReplacement == null)
         {
-            Match match = PropertyValueRegex!.Match(value);
+            Match match = PropertyValueRegex.Match(value);
             if (match.Success)
             {
                 result = match.Value;
@@ -91,7 +91,7 @@ internal sealed class FastFilter
         }
         else
         {
-            result = PropertyValueRegex!.Replace(value, PropertyValueRegexReplacement);
+            result = PropertyValueRegex.Replace(value, PropertyValueRegexReplacement);
         }
 
         return result;

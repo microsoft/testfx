@@ -62,8 +62,8 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
         }
 
         var client = new AzureOpenAIClient(
-            new Uri(endpoint!),
-            new ApiKeyCredential(apiKey!));
+            new Uri(endpoint),
+            new ApiKeyCredential(apiKey));
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());
     }

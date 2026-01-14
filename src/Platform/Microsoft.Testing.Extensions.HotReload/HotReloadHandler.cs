@@ -85,7 +85,7 @@ internal sealed class HotReloadHandler
         if (waitExecutionCompletion is not null)
         {
             await waitExecutionCompletion.ConfigureAwait(false);
-            await _outputDevice!.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
         }
 
         try
@@ -99,7 +99,7 @@ internal sealed class HotReloadHandler
 
         if (!IsClearNotSupported())
         {
-            _console!.Clear();
+            _console.Clear();
         }
 
         await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted), cancellationToken).ConfigureAwait(false);
