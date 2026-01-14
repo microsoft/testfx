@@ -185,6 +185,15 @@ stages:
             failOnStderr: true
             showWarnings: true
 
+        # Create the artifacts log directory to satisfy the inherited "Publish Logs" step from Arcade template.
+        # Without this, the Publish Logs step will emit a warning since it expects this directory to exist.
+        - task: PowerShell@2
+          displayName: 'Create artifacts log directory'
+          inputs:
+            targetType: 'inline'
+            script: |
+              New-Item -Path $(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig) -ItemType Directory -Force
+
         - task: PowerShell@2
           displayName: 'Build Samples'
           inputs:

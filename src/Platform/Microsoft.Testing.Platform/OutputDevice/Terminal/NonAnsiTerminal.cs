@@ -41,6 +41,7 @@ internal sealed class NonAnsiTerminal : SimpleTerminal
     [SupportedOSPlatformGuard("android")]
     [SupportedOSPlatformGuard("ios")]
     [SupportedOSPlatformGuard("tvos")]
+    [SupportedOSPlatformGuard("wasi")]
     [SupportedOSPlatformGuard("browser")]
     private bool IsForegroundColorNotSupported()
     {

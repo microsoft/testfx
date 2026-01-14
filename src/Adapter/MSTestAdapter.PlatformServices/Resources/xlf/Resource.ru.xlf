@@ -295,11 +295,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">Метод очистки теста "{0}.{1}" отменен</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext не может иметь значение NULL.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Сообщения TestContext:</target>
@@ -551,7 +546,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_OutRefParametersNotSupported">
         <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
-        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <target state="translated">Предупреждение: тестовый метод "{0}.{1}" содержит параметры "out" или "ref", которые не поддерживаются и могут быть запрещены в будущих версиях MSTest.</target>
         <note />
       </trans-unit>
     </body>

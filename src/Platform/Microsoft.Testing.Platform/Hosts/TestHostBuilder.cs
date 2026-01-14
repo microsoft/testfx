@@ -648,7 +648,11 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             ?? _testApplicationModuleInfo.TryGetAssemblyName()
             ?? "unknown";
 
-        builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")))
+        {
+            builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
+        }
+
         builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
         builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;
         builderMetadata[TelemetryProperties.HostProperties.OSArchitecturePropertyName] = RuntimeInformation.OSArchitecture;

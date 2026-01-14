@@ -307,9 +307,6 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="TestCleanupWasCancelled" xml:space="preserve">
     <value>Test cleanup method '{0}.{1}' was canceled</value>
   </data>
-  <data name="TestContextIsNull" xml:space="preserve">
-    <value>TestContext cannot be Null.</value>
-  </data>
   <data name="TestContextMessageBanner" xml:space="preserve">
     <value>TestContext Messages:</value>
   </data>

@@ -462,23 +462,6 @@ public class TestMethodInfoTests : TestContainer
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal).Should().BeTrue();
     }
 
-    public async Task TestMethodInfoInvokeShouldPreserveExceptionDataWhenWrappingException()
-    {
-        var innerException = new UTF.AssertFailedException("Assert failed");
-        innerException.Data["assert.expected"] = "expectedValue";
-        innerException.Data["assert.actual"] = "actualValue";
-        innerException.Data["custom.key"] = "customValue";
-
-        DummyTestClass.TestMethodBody = instance => throw innerException;
-
-        var exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException;
-
-        exception.Should().NotBeNull();
-        exception.Data["assert.expected"].Should().Be("expectedValue");
-        exception.Data["assert.actual"].Should().Be("actualValue");
-        exception.Data["custom.key"].Should().Be("customValue");
-    }
-
     public async Task TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContextAndTestContextProperty_InitializeBothTestContexts()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(TestContext)])!;

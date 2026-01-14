@@ -34,18 +34,6 @@ internal static class ObjectModelConverters
         valueType: typeof(string),
         owner: typeof(TestCase));
 
-    private static readonly TestProperty AssertActualProperty = TestProperty.Register(
-        id: "AssertActual",
-        label: "AssertActual",
-        valueType: typeof(string),
-        owner: typeof(TestResult));
-
-    private static readonly TestProperty AssertExpectedProperty = TestProperty.Register(
-        id: "AssertExpected",
-        label: "AssertExpected",
-        valueType: typeof(string),
-        owner: typeof(TestResult));
-
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
@@ -83,7 +71,9 @@ internal static class ObjectModelConverters
 
         if (testCase.CodeFilePath is not null)
         {
-            testNode.Properties.Add(new TestFileLocationProperty(testCase.CodeFilePath, new(new(testCase.LineNumber, -1), new(testCase.LineNumber, -1))));
+            var position = new LinePosition(testCase.LineNumber, -1);
+            testNode.Properties.Add(
+                new TestFileLocationProperty(testCase.CodeFilePath, lineSpan: new(position, position)));
         }
 
         return testNode;
@@ -241,21 +231,11 @@ internal static class ObjectModelConverters
                 break;
 
             case TestOutcome.NotFound:
-                {
-                    VSTestException exception = new(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace);
-                    AddAssertDataToException(exception, testResult);
-                    testNode.Properties.Add(new ErrorTestNodeStateProperty(exception));
-                }
-
+                testNode.Properties.Add(new ErrorTestNodeStateProperty(new VSTestException(testResult.ErrorMessage ?? "Not found", testResult.ErrorStackTrace)));
                 break;
 
             case TestOutcome.Failed:
-                {
-                    VSTestException exception = new(testResult.ErrorMessage, testResult.ErrorStackTrace);
-                    AddAssertDataToException(exception, testResult);
-                    testNode.Properties.Add(new FailedTestNodeStateProperty(exception));
-                }
-
+                testNode.Properties.Add(new FailedTestNodeStateProperty(new VSTestException(testResult.ErrorMessage, testResult.ErrorStackTrace)));
                 break;
 
             // It seems that NUnit inconclusive tests are reported as None which should be considered as Skipped.
@@ -271,30 +251,8 @@ internal static class ObjectModelConverters
         }
     }
 
-    private static void AddAssertDataToException(VSTestException exception, TestResult testResult)
+    internal static void FixUpTestCase(this TestCase testCase)
     {
-        string? assertActual = testResult.GetPropertyValue<string>(AssertActualProperty, defaultValue: null);
-        if (assertActual is not null)
-        {
-            exception.Data["assert.actual"] = assertActual;
-        }
-
-        string? assertExpected = testResult.GetPropertyValue<string>(AssertExpectedProperty, defaultValue: null);
-        if (assertExpected is not null)
-        {
-            exception.Data["assert.expected"] = assertExpected;
-        }
-    }
-
-    internal static void FixUpTestCase(this TestCase testCase, string? testAssemblyPath = null)
-    {
-        // To help framework authors using code generator, we replace the Source property of the test case with the
-        // test assembly path.
-        if (RoslynString.IsNullOrEmpty(testCase.Source) && !RoslynString.IsNullOrEmpty(testAssemblyPath))
-        {
-            testCase.Source = testAssemblyPath;
-        }
-
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
         if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))

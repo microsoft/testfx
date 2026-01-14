@@ -976,11 +976,39 @@ namespace Jsonite
                             // Intentionally diverging from the upstream code from xoofx/jsonite. See https://github.com/microsoft/testfx/issues/5120
 
                             // Also, https://datatracker.ietf.org/doc/html/rfc4627#section-2.5
-                            if (c < ' ' || IsHighSurrogate(c) || IsLowSurrogate(c))
+                            if (c < ' ')
                             {
                                 writer.Write('\\');
                                 writer.Write('u');
                                 writer.Write(((int)c).ToString("X4", CultureInfo.InvariantCulture));
+                            }
+                            else if (IsHighSurrogate(c))
+                            {
+                                // If we are dealing with high surrogate, we need to lookahead.
+                                // If it's followed by a low surrogate, then we encode normally.
+                                if (i + 1 < text.Length && IsLowSurrogate(text[i + 1]))
+                                {
+                                    writer.Write('\\');
+                                    writer.Write('u');
+                                    writer.Write(((int)c).ToString("X4", CultureInfo.InvariantCulture));
+
+                                    writer.Write('\\');
+                                    writer.Write('u');
+                                    writer.Write(((int)text[i + 1]).ToString("X4", CultureInfo.InvariantCulture));
+                                    i++;
+                                }
+                                else
+                                {
+                                    // If the high surrogate is the last in the string, or is not followed by a low surrogate.
+                                    // Then the string is invalid, and in that case we write a fallback char matching Rune.ReplacementChar
+                                    writer.Write("\\uFFFD");
+                                }
+                            }
+                            else if (IsLowSurrogate(c))
+                            {
+                                // If we hit this, it means we are dealing with a low surrogate, but the previous char wasn't a high surrogate.
+                                // This is also invalid and we must write a fallback char instead.
+                                writer.Write("\\uFFFD");
                             }
                             else
                             {

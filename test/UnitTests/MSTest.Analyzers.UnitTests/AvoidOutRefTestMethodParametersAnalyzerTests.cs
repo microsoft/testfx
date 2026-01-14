@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -107,6 +107,46 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
                 [TestMethod]
                 [DataRow("Hello", "World")]
                 public void TestMethod1(string s, string s2)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasOutAndRefParametersOnMultiLine_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow("Hello", "World")]
+                public void [|TestMethod1|](
+                    out string s,
+                    ref string s2)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow("Hello", "World")]
+                public void TestMethod1(
+                    string s,
+                    string s2)
                 {
                     s = "";
                 }

@@ -208,7 +208,7 @@ public sealed partial class Assert
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? expected, string? actual, bool ignoreCase, CultureInfo culture, out bool shouldAppend)
         {
-            Guard.NotNull(culture);
+            Ensure.NotNull(culture);
             shouldAppend = AreEqualFailing(expected, actual, ignoreCase, culture);
             if (shouldAppend)
             {
@@ -314,7 +314,7 @@ public sealed partial class Assert
 
         public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, string? notExpected, string? actual, bool ignoreCase, CultureInfo culture, out bool shouldAppend)
         {
-            Guard.NotNull(culture);
+            Ensure.NotNull(culture);
             shouldAppend = AreNotEqualFailing(notExpected, actual, ignoreCase, culture);
             if (shouldAppend)
             {
@@ -643,7 +643,7 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertAreEqualFailed<T>(T? expected, T? actual, string userMessage)
+    private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
     {
         string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
             ? string.Format(
@@ -662,7 +662,7 @@ public sealed partial class Assert
                     userMessage,
                     ReplaceNulls(expected),
                     ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage, expected, actual);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     [DoesNotReturn]
@@ -700,7 +700,7 @@ public sealed partial class Assert
             finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreEqual", finalMessage, expected, actual);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     /// <summary>

@@ -301,7 +301,7 @@ dotnet_diagnostic.IDE0082.severity = warning
 dotnet_diagnostic.IDE0083.severity = warning
 
 # IDE0090: Use 'new(...)'
-dotnet_diagnostic.IDE0090.severity = warning
+dotnet_diagnostic.IDE0090.severity = none
 
 # IDE0100: Remove unnecessary equality operator
 dotnet_diagnostic.IDE0100.severity = warning

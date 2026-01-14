@@ -307,7 +307,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThan", finalMessage, lowerBound, value);
+        ThrowAssertFailed("Assert.IsGreaterThan", finalMessage);
     }
 
     [DoesNotReturn]
@@ -319,7 +319,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage, lowerBound, value);
+        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
     }
 
     [DoesNotReturn]
@@ -331,7 +331,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThan", finalMessage, upperBound, value);
+        ThrowAssertFailed("Assert.IsLessThan", finalMessage);
     }
 
     [DoesNotReturn]
@@ -343,7 +343,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage, upperBound, value);
+        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
     }
 
     [DoesNotReturn]
@@ -354,7 +354,7 @@ public sealed partial class Assert
             FrameworkMessages.IsPositiveFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsPositive", finalMessage, actual: value);
+        ThrowAssertFailed("Assert.IsPositive", finalMessage);
     }
 
     [DoesNotReturn]
@@ -365,6 +365,6 @@ public sealed partial class Assert
             FrameworkMessages.IsNegativeFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsNegative", finalMessage, actual: value);
+        ThrowAssertFailed("Assert.IsNegative", finalMessage);
     }
 }

@@ -78,7 +78,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForExpectedSuffixExpressionAndValueExpression(message, expectedSuffixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, expectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.EndsWith", finalMessage, expectedSuffix, value);
+            ThrowAssertFailed("Assert.EndsWith", finalMessage);
         }
     }
 
@@ -152,7 +152,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(message, notExpectedSuffixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotEndWithFail, value, notExpectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage, notExpectedSuffix, value);
+            ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
         }
     }
 }

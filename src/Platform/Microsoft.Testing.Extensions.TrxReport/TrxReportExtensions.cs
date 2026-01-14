@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
@@ -44,16 +44,20 @@ public static class TrxReportExtensions
                 serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestFrameworkCapabilities(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                OperatingSystem.IsBrowser() ? null : serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
+                serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
+#if NETCOREAPP
         if (!OperatingSystem.IsBrowser())
+#else
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")))
+#endif
         {
             NonBrowserRegistrations(builder);
         }
 
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeTestSessionTrxService);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeTestSessionTrxService);
 
         builder.CommandLine.AddProvider(() => commandLine);
 

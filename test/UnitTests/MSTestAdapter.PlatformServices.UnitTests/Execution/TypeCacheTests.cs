@@ -69,12 +69,6 @@ public class TypeCacheTests : TestContainer
         action.Should().Throw<ArgumentNullException>();
     }
 
-    public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
-    {
-        TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
-        new Action(() => _typeCache.GetTestMethodInfo(testMethod, null!)).Should().Throw<ArgumentNullException>();
-    }
-
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
     {
         TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
@@ -914,7 +908,9 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
@@ -938,7 +934,9 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethodWithTimeout")!;
@@ -967,7 +965,9 @@ public class TypeCacheTests : TestContainer
             </RunSettings>
             """;
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object));
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
+        settings.Should().NotBeNull();
+        MSTestSettings.PopulateSettings(settings);
 
         Type type = typeof(DummyTestClassWithTestMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;

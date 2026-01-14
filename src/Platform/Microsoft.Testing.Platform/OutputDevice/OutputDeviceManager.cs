@@ -16,7 +16,7 @@ internal sealed class PlatformOutputDeviceManager
 
     public void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> platformOutputDeviceFactory)
     {
-        Guard.NotNull(platformOutputDeviceFactory);
+        Ensure.NotNull(platformOutputDeviceFactory);
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 

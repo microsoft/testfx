@@ -1,3 +1,9 @@
 #nullable enable
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Requests.NopFilter
+*REMOVED*[TPEXP]Microsoft.Testing.Platform.Requests.NopFilter.NopFilter() -> void
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.CommandLineOption(string! name, string! description, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity arity, bool isHidden, string? obsolescenceMessage = null) -> void
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.ObsolescenceMessage.get -> string?
+Microsoft.Testing.Platform.Requests.NopFilter
+Microsoft.Testing.Platform.Requests.NopFilter.NopFilter() -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHost.ITestSessionLifetimeHandler!>! testSessionLifetimeHandleFactory) -> void
+Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandler<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void

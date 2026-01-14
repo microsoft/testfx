@@ -295,11 +295,6 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">La méthode de nettoyage du test « {0}.{1} » a été annulée</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestContextIsNull">
-        <source>TestContext cannot be Null.</source>
-        <target state="translated">TestContext ne peut pas être null.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
         <target state="translated">Messages TestContext :</target>
@@ -551,7 +546,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="UTA_OutRefParametersNotSupported">
         <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
-        <target state="new">Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</target>
+        <target state="translated">Avertissement : la méthode de test « {0}.{1} » utilise des paramètres « out » ou « ref » qui ne sont pas pris en charge et seront sans doute interdits dans une future version de MSTest.</target>
         <note />
       </trans-unit>
     </body>

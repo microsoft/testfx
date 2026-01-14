@@ -26,7 +26,7 @@ builder.AddAzureDevOpsProvider();
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
     = new(_ => new SlowestTestsConsumer());
 builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
-builder.TestHost.AddTestSessionLifetimeHandle(slowestTestCompositeServiceFactory);
+builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 int returnValue = await app.RunAsync();
 Console.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");

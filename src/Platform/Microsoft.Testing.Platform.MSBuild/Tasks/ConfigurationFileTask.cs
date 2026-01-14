@@ -19,7 +19,7 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
 
     internal ConfigurationFileTask(IFileSystem? fileSystem)
     {
-        Guard.NotNull(fileSystem);
+        Ensure.NotNull(fileSystem);
         _fileSystem = fileSystem;
     }
 

@@ -207,19 +207,6 @@ public class TestClassInfoTests : TestContainer
         classInitCallCount.Should().Be(0);
     }
 
-    public void RunClassInitializeShouldThrowIfTestContextIsNull()
-    {
-        DummyTestClass.ClassInitializeMethodBody = tc => { };
-
-        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod")!;
-
-        TestResult result = GetResultOrRunClassInitialize(null);
-        var exception = result.TestFailureException as TestFailedException;
-        exception.Should().NotBeNull();
-        exception.Message.Should().Be("TestContext cannot be Null.");
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Error);
-    }
-
     public void RunClassInitializeShouldExecuteClassInitialize()
     {
         int classInitCallCount = 0;

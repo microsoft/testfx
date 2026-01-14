@@ -23,8 +23,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal sealed class UnitTestRunner : MarshalByRefObject
 {
-    private readonly ConcurrentDictionary<string, TestAssemblyInfo> _assemblyFixtureTests = new();
-    private readonly ConcurrentDictionary<string, TestClassInfo> _classFixtureTests = new();
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
 
@@ -33,7 +31,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
     /// <param name="testsToRun"> The tests to run. </param>
-    public UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun)
+    public UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun)
         : this(settings, testsToRun, ReflectHelper.Instance)
     {
     }
@@ -44,7 +42,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <param name="settings"> Specifies adapter settings. </param>
     /// <param name="testsToRun"> The tests to run. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
-    internal UnitTestRunner(MSTestSettings? settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
+    internal UnitTestRunner(MSTestSettings settings, UnitTestElement[] testsToRun, ReflectHelper reflectHelper)
     {
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
@@ -81,41 +79,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService() => null!;
 
-    internal FixtureTestResult GetFixtureTestResult(TestMethod testMethod, string fixtureType)
-    {
-        // For the fixture methods, we need to return the appropriate result.
-        // Get matching testMethodInfo from the cache and return UnitTestOutcome for the fixture test.
-        if (fixtureType is EngineConstants.ClassInitializeFixtureTrait or EngineConstants.ClassCleanupFixtureTrait &&
-            _classFixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestClassInfo? testClassInfo))
-        {
-            UnitTestOutcome outcome = fixtureType switch
-            {
-                EngineConstants.ClassInitializeFixtureTrait => testClassInfo.IsClassInitializeExecuted ? GetOutcome(testClassInfo.ClassInitializationException) : UnitTestOutcome.Inconclusive,
-                EngineConstants.ClassCleanupFixtureTrait => testClassInfo.IsClassCleanupExecuted ? GetOutcome(testClassInfo.ClassCleanupException) : UnitTestOutcome.Inconclusive,
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
-
-            return new FixtureTestResult(true, outcome);
-        }
-        else if (fixtureType is EngineConstants.AssemblyInitializeFixtureTrait or EngineConstants.AssemblyCleanupFixtureTrait &&
-            _assemblyFixtureTests.TryGetValue(testMethod.AssemblyName, out TestAssemblyInfo? testAssemblyInfo))
-        {
-            Exception? exception = fixtureType switch
-            {
-                EngineConstants.AssemblyInitializeFixtureTrait => testAssemblyInfo.AssemblyInitializationException,
-                EngineConstants.AssemblyCleanupFixtureTrait => testAssemblyInfo.AssemblyCleanupException,
-                _ => throw ApplicationStateGuard.Unreachable(),
-            };
-
-            return new(true, GetOutcome(exception));
-        }
-
-        return new(false, UnitTestOutcome.Inconclusive);
-
-        // Local functions
-        static UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? UnitTestOutcome.Passed : UnitTestOutcome.Failed;
-    }
-
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
     // If we removed AppDomains in v4, we should use the async method and remove this one.
@@ -131,8 +94,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Guard.NotNull(testMethod);
-        Guard.NotNull(testContextProperties);
+        Ensure.NotNull(testMethod);
+        Ensure.NotNull(testContextProperties);
 
         ITestContext? testContextForTestExecution = null;
         ITestContext? testContextForAssemblyInit = null;
@@ -157,13 +120,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             else
             {
                 DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
-
-                // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-                if (MSTestSettings.CurrentSettings.ConsiderFixturesAsSpecialTests)
-                {
-                    _assemblyFixtureTests.TryAdd(testMethod.AssemblyName, testMethodInfo.Parent.Parent);
-                    _classFixtureTests.TryAdd(testMethod.AssemblyName + testMethod.FullClassName, testMethodInfo.Parent);
-                }
 
                 testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
@@ -204,15 +160,26 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
 
             testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-            if (testMethodInfo is not null)
+
+            _classCleanupManager.MarkTestComplete(testMethod, out bool isLastTestInClass);
+            if (isLastTestInClass)
             {
-                await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, _classCleanupManager, testMethodInfo, result).ConfigureAwait(false);
+                if (testMethodInfo is not null)
+                {
+                    await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
+                }
+
+                // Mark the class as complete when all class cleanups are complete. When all classes are complete we progress to running assembly cleanup.
+                // Class is not complete until after all class cleanups are done, to prevent running assembly cleanup too early.
+                // Do not mark the class as complete when the last test method in the class completed. That is too early, we need to run class cleanups before marking class as complete.
+                _classCleanupManager.MarkClassComplete(testMethod.FullClassName);
             }
 
-            if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true)
+            if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true &&
+                _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                await RunAssemblyCleanupIfNeededAsync(testContextForAssemblyCleanup, _classCleanupManager, _typeCache, result).ConfigureAwait(false);
+                await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
             }
 
             return result;
@@ -268,13 +235,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static async Task RunAssemblyCleanupIfNeededAsync(ITestContext testContext, ClassCleanupManager classCleanupManager, TypeCache typeCache, TestResult[] results)
+    private static async Task RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
-        if (!classCleanupManager.ShouldRunEndOfAssemblyCleanup)
-        {
-            return;
-        }
-
         try
         {
             IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;

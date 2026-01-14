@@ -83,10 +83,6 @@ internal static class EngineConstants
 
     internal static readonly TestProperty InnerResultsCountProperty = TestProperty.Register("InnerResultsCount", InnerResultsCountLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestResult));
 
-    internal static readonly TestProperty AssertActualProperty = TestProperty.Register("AssertActual", AssertActualLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestResult));
-
-    internal static readonly TestProperty AssertExpectedProperty = TestProperty.Register("AssertExpected", AssertExpectedLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestResult));
-
     internal static readonly TestProperty TestRunIdProperty = TestProperty.Register(TestRunId, TestRunId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestPlanIdProperty = TestProperty.Register(TestPlanId, TestPlanId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
@@ -148,8 +144,6 @@ internal static class EngineConstants
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string InnerResultsCountLabel = "InnerResultsCount";
-    private const string AssertActualLabel = "AssertActual";
-    private const string AssertExpectedLabel = "AssertExpected";
     private const string WorkItemIdsLabel = "WorkItemIds";
 
     private const string TestRunId = "__Tfs_TestRunId__";

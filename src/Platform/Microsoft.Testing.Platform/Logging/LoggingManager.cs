@@ -12,7 +12,7 @@ internal sealed class LoggingManager : ILoggingManager
 
     public void AddProvider(Func<LogLevel, IServiceProvider, ILoggerProvider> loggerProviderFactory)
     {
-        Guard.NotNull(loggerProviderFactory);
+        Ensure.NotNull(loggerProviderFactory);
         _loggerProviderFullFactories.Add(loggerProviderFactory);
     }
 

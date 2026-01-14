@@ -321,8 +321,8 @@ public sealed partial class Assert
     private static TException ThrowsException<TException>(Action action, bool isStrictType, string? message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        Guard.NotNull(action);
-        Guard.NotNull(message);
+        Ensure.NotNull(action);
+        Ensure.NotNull(message);
 
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
@@ -341,8 +341,8 @@ public sealed partial class Assert
     private static TException ThrowsException<TException>(Action action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        Guard.NotNull(action);
-        Guard.NotNull(messageBuilder);
+        Ensure.NotNull(action);
+        Ensure.NotNull(messageBuilder);
 
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
@@ -477,8 +477,8 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, string? message, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        Guard.NotNull(action);
-        Guard.NotNull(message);
+        Ensure.NotNull(action);
+        Ensure.NotNull(message);
 
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
@@ -497,8 +497,8 @@ public sealed partial class Assert
     private static async Task<TException> ThrowsExceptionAsync<TException>(Func<Task> action, bool isStrictType, Func<Exception?, string> messageBuilder, string actionExpression, [CallerMemberName] string assertMethodName = "")
         where TException : Exception
     {
-        Guard.NotNull(action);
-        Guard.NotNull(messageBuilder);
+        Ensure.NotNull(action);
+        Ensure.NotNull(messageBuilder);
 
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
@@ -538,7 +538,7 @@ public sealed partial class Assert
                             userMessage,
                             typeof(TException),
                             ex.GetType());
-                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage, actual: ex);
+                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
 
@@ -578,7 +578,7 @@ public sealed partial class Assert
                             userMessage,
                             typeof(TException),
                             ex.GetType());
-                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage, actual: ex);
+                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
 

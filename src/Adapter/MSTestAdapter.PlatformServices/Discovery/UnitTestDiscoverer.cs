@@ -3,9 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,9 +100,6 @@ internal class UnitTestDiscoverer
 
     internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
-        bool hasAnyRunnableTests = false;
-        var fixtureTests = new List<TestCase>();
-
         // Get filter expression and skip discovery in case filter expression has parsing error.
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
         if (filterHasError)
@@ -115,38 +110,14 @@ internal class UnitTestDiscoverer
         foreach (UnitTestElement testElement in testElements)
         {
             var testCase = testElement.ToTestCase();
-            bool hasFixtureTraits = testElement.Traits?.Any(t => t.Name == EngineConstants.FixturesTestTrait) == true;
 
             // Filter tests based on test case filters
             if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
             {
-                // If test is a fixture test, add it to the list of fixture tests.
-                if (hasFixtureTraits)
-                {
-                    fixtureTests.Add(testCase);
-                }
-
                 continue;
             }
 
-            if (!hasAnyRunnableTests)
-            {
-                hasAnyRunnableTests = !hasFixtureTraits;
-            }
-
             discoverySink.SendTestCase(testCase);
-        }
-
-        // If there are runnable tests, then add all fixture tests to the discovery sink.
-        // Scenarios:
-        // 1. Execute only a fixture test => In this case, we do not need to track any other fixture tests. Selected fixture test will be tracked as will be marked as skipped.
-        // 2. Execute a runnable test => In this case, case add all fixture tests. We will update status of only those fixtures which are triggered by the selected test.
-        if (hasAnyRunnableTests)
-        {
-            foreach (TestCase testCase in fixtureTests)
-            {
-                discoverySink.SendTestCase(testCase);
-            }
         }
     }
 }

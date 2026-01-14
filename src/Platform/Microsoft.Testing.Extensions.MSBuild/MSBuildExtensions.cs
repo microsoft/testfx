@@ -42,6 +42,6 @@ public static class MSBuildExtensions
                 serviceProvider.GetCommandLineOptions()));
 
         builder.TestHost.AddDataConsumer(compositeExtensionFactory);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
     }
 }
