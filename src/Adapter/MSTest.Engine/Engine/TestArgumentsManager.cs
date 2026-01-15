@@ -110,7 +110,7 @@ internal sealed class TestArgumentsManager : ITestArgumentsManager
             if (arguments is not ITestArgumentsEntry testArgumentsEntry)
             {
                 shouldWrapInParenthesis = !isIndexArgumentPropertiesProvider;
-                testArgumentsEntry = argumentPropertiesProvider(new(arguments, testNode))!;
+                testArgumentsEntry = argumentPropertiesProvider(new(arguments, testNode));
             }
 
             string argumentFragmentUid = GetArgumentFragmentUid(testArgumentsEntry, shouldWrapInParenthesis);

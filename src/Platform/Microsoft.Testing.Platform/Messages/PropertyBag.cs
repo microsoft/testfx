@@ -203,7 +203,7 @@ public sealed partial class PropertyBag
             return default;
         }
 
-        TProperty property = enumerator.Current!;
+        TProperty property = enumerator.Current;
         return enumerator.MoveNext()
             ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
             : property;

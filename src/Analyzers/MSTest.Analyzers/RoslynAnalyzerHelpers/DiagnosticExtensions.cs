@@ -214,7 +214,7 @@ internal static class DiagnosticExtensions
                 else
                 {
                     RoslynDebug.Assert(s_syntaxTreeDiagnosticOptionsProperty != null);
-                    var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree)!;
+                    var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree);
                     if (options.TryGetValue(rule.Id, out ReportDiagnostic value))
                     {
                         configuredValue = value;
