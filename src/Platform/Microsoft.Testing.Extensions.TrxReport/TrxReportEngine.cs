@@ -462,7 +462,7 @@ internal sealed partial class TrxReportEngine
             // TODO: Are there other types?
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
-            string currentTestOutcome;
+            string currentTestOutcome = "Passed";
             TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
             if (testState is { } state
                 && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
@@ -473,10 +473,6 @@ internal sealed partial class TrxReportEngine
             else if (testState is SkippedTestNodeStateProperty)
             {
                 currentTestOutcome = "NotExecuted";
-            }
-            else
-            {
-                currentTestOutcome = "Passed";
             }
 
             unitTestResult.SetAttributeValue("outcome", currentTestOutcome);
