@@ -7,6 +7,7 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
 {
     private readonly BlockingCollection<Action> _queue = [];
     private readonly Thread _thread;
+    private readonly ManualResetEventSlim _threadCompleteSemaphore = new ManualResetEventSlim(initialState: false);
 
     public SingleThreadedSTASynchronizationContext()
     {
@@ -24,6 +25,8 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
             {
                 callback();
             }
+
+            _threadCompleteSemaphore.Set();
         })
         {
             IsBackground = true,
@@ -61,5 +64,19 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
 
     public void Complete() => _queue.CompleteAdding();
 
-    public void Dispose() => _queue.Dispose();
+    public void Dispose()
+    {
+        // Ensure we are disposing the BlockingCollection after the thread has finished.
+        // This avoids a race condition where we could dispose the queue while the thread is still in GetConsumingEnumerable.
+        // The complete flow is:
+        // 1. We call CompleteAdding
+        // 2. We call Dispose
+        // 3. Dispose waits thread completion.
+        // 4. GetConsumingEnumerable exits.
+        // 5. Thread completion is signaled
+        // 6. Dispose is unblocked, and disposes the queue.
+        _threadCompleteSemaphore.Wait();
+        _threadCompleteSemaphore.Dispose();
+        _queue.Dispose();
+    }
 }
