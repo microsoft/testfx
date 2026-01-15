@@ -183,6 +183,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">[MSTest][Discovery][{0}] {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateAttributeError">
+        <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
+        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
         <target state="translated">偵測到 '.runsettings' 和 '.testconfig.json' 檔案。請只選取其中一個測試設定檔。</target>

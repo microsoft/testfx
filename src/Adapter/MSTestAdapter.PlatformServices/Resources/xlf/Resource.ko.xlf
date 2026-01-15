@@ -183,6 +183,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">[MSTest][검색][{0}] {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateAttributeError">
+        <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
+        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
         <target state="translated">'.runsettings' 및 '.testconfig.json' 파일이 모두 검색되었습니다. 이러한 테스트 구성 파일 중 하나만 선택하세요.</target>

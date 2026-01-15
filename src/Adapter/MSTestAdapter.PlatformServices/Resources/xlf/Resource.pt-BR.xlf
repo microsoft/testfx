@@ -183,6 +183,11 @@ mas {4} argumentos recebidos, com tipos '{5}'.</target>
         <target state="translated">[MSTest][Descoberta][{0}] {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateAttributeError">
+        <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
+        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
         <target state="translated">Ambos os arquivos '.runsettings' e '.testconfig.json' foram detectados. Selecione apenas um desses arquivos de configuração de teste.</target>
