@@ -113,17 +113,17 @@ Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="translated">Dökümün türünü belirtin.
+        <target state="needs-review-translation">Dökümün türünü belirtin.
 Geçerli değerler 'Mini', 'Heap', 'Triage' (yalnızca .NET 6+'da mevcuttur) veya 'Full'dür.
 Varsayılan tür 'Full'dür</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="translated">'{0}' geçerli bir döküm türü değil.
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
+        <target state="needs-review-translation">'{0}' geçerli bir döküm türü değil.
 Geçerli seçenekler 'Mini', 'Heap', 'Triage' (yalnızca .NET 6+'da mevcuttur) ve 'Full’dür</target>
         <note />
       </trans-unit>

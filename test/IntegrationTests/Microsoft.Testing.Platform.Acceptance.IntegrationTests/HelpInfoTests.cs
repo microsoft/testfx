@@ -352,7 +352,7 @@ Extension options:
             Default is 30m.
     --hangdump-type
         Specify the type of the dump.
-        Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+        Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
     --no-ansi
         Disable outputting ANSI escape characters to screen.
@@ -563,7 +563,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Specify the type of the dump.
-        Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+        Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
         Default type is 'Full'
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
