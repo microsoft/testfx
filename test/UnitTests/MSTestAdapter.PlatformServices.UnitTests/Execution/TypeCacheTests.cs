@@ -812,7 +812,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));
@@ -831,7 +831,7 @@ public class TypeCacheTests : TestContainer
 
         _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<TimeoutAttribute>(methodInfo))
             .Returns(true);
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo)).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
@@ -986,7 +986,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetMethod("TestMethodWithDerivedTestMethodAttribute")!;
         TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));
@@ -1185,7 +1185,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", [])!;
         TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));
@@ -1202,7 +1202,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", [])!;
         TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));
@@ -1220,7 +1220,7 @@ public class TypeCacheTests : TestContainer
         MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", [])!;
         TestMethod testMethod = CreateTestMethod(methodInfo.Name, baseType.FullName!, "A", displayName: null);
 
-        _mockReflectHelper.Setup(rh => rh.GetFirstAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
+        _mockReflectHelper.Setup(rh => rh.GetSingleAttributeOrDefault<TestMethodAttribute>(It.IsAny<MethodInfo>())).CallBase();
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 CreateTestContextImplementationForMethod(testMethod));

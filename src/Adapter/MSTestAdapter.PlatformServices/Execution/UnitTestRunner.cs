@@ -184,14 +184,14 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
             return result;
         }
-        catch (TypeInspectionException ex)
+        catch (Exception ex)
         {
             // Catch any exception thrown while inspecting the test method and return failure.
             return
             [
                 new TestResult
                 {
-                    Outcome = UnitTestOutcome.Failed,
+                    Outcome = UnitTestOutcome.Error,
                     IgnoreReason = ex.Message,
                 }
             ];
