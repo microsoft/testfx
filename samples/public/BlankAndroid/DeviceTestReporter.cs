@@ -25,7 +25,7 @@ public static class DeviceTestingPlatformBuilderHook
             new DeviceTestReporter(serviceProvider.GetOutputDevice()));
 
         // Register the session lifetime handler
-        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
+        builder.TestHost.AddTestSessionLifetimeHandle(serviceProvider =>
             new DeviceTestSessionHandler(serviceProvider.GetOutputDevice()));
     }
 }

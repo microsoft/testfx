@@ -1,34 +1,29 @@
 <Project>
   <!--
-    Device Testing Targets
-    ======================
-    This file configures the build targets for device testing (Android/iOS).
+    This Directory.Build.targets file imports the Android device testing targets.
     
-    In production, these targets would be imported automatically from the platform SDKs
-    (dotnet/android, dotnet/ios) when a project targets a device TFM and has IsTestProject=true.
+    In production, these targets would be imported automatically from the dotnet/android SDK
+    when a project targets net*-android and has IsTestProject=true.
     
-    For local development, we import them from the source projects.
+    For development/testing, we import them from the local file.
   -->
   
-  <!-- 
-    Import Microsoft.Testing.Platform.MSBuild targets for entry point generation.
-    When using project references instead of package references, we need to manually import these.
-  -->
-  <PropertyGroup>
-    <MicrosoftTestingPlatformMSBuildTaskFolder>$(MSBuildThisFileDirectory)../../../artifacts/bin/Microsoft.Testing.Platform.MSBuild/$(Configuration)/net9.0/</MicrosoftTestingPlatformMSBuildTaskFolder>
+  <!-- Set device test project flag early to skip VSTest error in NuGet package -->
+  <PropertyGroup Condition="'$(TargetFramework)' != '' AND $(TargetFramework.Contains('android'))">
+    <_IsDeviceTestProject>true</_IsDeviceTestProject>
+    <UseMSBuildTestInfrastructure>true</UseMSBuildTestInfrastructure>
   </PropertyGroup>
-  
-  <Import Project="$(MSBuildThisFileDirectory)../../../src/Platform/Microsoft.Testing.Platform.MSBuild/buildMultiTargeting/Microsoft.Testing.Platform.MSBuild.targets" />
   
   <!-- 
     Override _MTPBeforeVSTest to prevent error for device projects.
-    Device projects use MSBuild test infrastructure instead of VSTest.
+    The installed NuGet package (2.0.2) doesn't have device testing support yet,
+    so we need to override its error-throwing target.
   -->
   <Target Name="_MTPBeforeVSTest" BeforeTargets="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
-    <Message Text="Device test project detected - using MSBuild test infrastructure" Importance="high" />
+    <Message Text="Device test project detected - skipping VSTest error check" Importance="high" />
   </Target>
   
-  <!-- Import platform-specific device testing targets -->
+  <!-- Import Android device testing targets (will live in dotnet/android SDK) -->
   <Import Project="$(MSBuildThisFileDirectory)Sdk.DeviceTesting.Android.targets"
-          Condition="$(TargetFramework.Contains('android'))" />
+          Condition="'$(TargetFramework)' != '' AND $(TargetFramework.Contains('android'))" />
 </Project>
