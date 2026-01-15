@@ -184,8 +184,8 @@ but received {4} argument(s), with types '{5}'.</source>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateAttributeError">
-        <source>Multiple attributes of type '{0}' were found. Only one is allowed.</source>
-        <target state="new">Multiple attributes of type '{0}' were found. Only one is allowed.</target>
+        <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
+        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
