@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 
@@ -120,7 +121,12 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
                 return document;
             }
 
-            editor.ReplaceNode(conditionNodeToBeReplaced, SyntaxFactory.Argument(replacementExpressionNode).WithAdditionalAnnotations(Formatter.Annotation));
+            // Preserve the leading trivia from the original argument, remove any trailing trivia from the replacement
+            ArgumentSyntax newArgument = SyntaxFactory.Argument(
+                replacementExpressionNode
+                    .WithLeadingTrivia(conditionNodeToBeReplaced.GetLeadingTrivia())
+                    .WithoutTrailingTrivia());
+            editor.ReplaceNode(conditionNodeToBeReplaced, newArgument);
         }
 
         return editor.GetChangedDocument();
@@ -163,9 +169,47 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             ExpressionSyntax expression => expression,
             _ => throw new InvalidOperationException($"Unexpected node type for expected argument: {expectedNode.GetType()}"),
         };
-        newArgumentList = newArgumentList.ReplaceNode(conditionNode, SyntaxFactory.Argument(expectedExpression).WithAdditionalAnnotations(Formatter.Annotation));
-        int insertionIndex = argumentList.Arguments.IndexOf(conditionNode) + 1;
-        newArgumentList = newArgumentList.WithArguments(newArgumentList.Arguments.Insert(insertionIndex, SyntaxFactory.Argument(actualNode).WithAdditionalAnnotations(Formatter.Annotation)));
+
+        // Preserve the leading trivia from the original condition argument, remove trailing trivia
+        ArgumentSyntax newExpectedArgument = SyntaxFactory.Argument(
+            expectedExpression
+                .WithLeadingTrivia(conditionNode.GetLeadingTrivia())
+                .WithoutTrailingTrivia());
+
+        int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+
+        // Build the new arguments list explicitly to preserve trivia correctly
+        var newArguments = new List<ArgumentSyntax>();
+        var newSeparators = new List<SyntaxToken>();
+
+        // Add the new expected argument (replacing condition)
+        newArguments.Add(newExpectedArgument);
+
+        // Add separator after expected argument with just a standard comma
+        newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
+
+        // Add the new actual argument with a space as leading trivia (standard formatting after comma)
+        ArgumentSyntax newActualArgument = SyntaxFactory.Argument(
+            actualNode
+                .WithoutLeadingTrivia()
+                .WithoutTrailingTrivia()
+                .WithLeadingTrivia(SyntaxFactory.Space));
+        newArguments.Add(newActualArgument);
+
+        // Add remaining arguments (e.g., message) with their original separators and trivia
+        IReadOnlyList<SyntaxToken> originalSeparators = argumentList.Arguments.GetSeparators().ToList();
+        for (int i = conditionIndex + 1; i < argumentList.Arguments.Count; i++)
+        {
+            // Get the separator that was before this argument (at index i-1 in the separators list)
+            if (i - 1 < originalSeparators.Count)
+            {
+                newSeparators.Add(originalSeparators[i - 1]);
+            }
+
+            newArguments.Add(argumentList.Arguments[i]);
+        }
+
+        newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments, newSeparators));
 
         editor.ReplaceNode(argumentList, newArgumentList);
 

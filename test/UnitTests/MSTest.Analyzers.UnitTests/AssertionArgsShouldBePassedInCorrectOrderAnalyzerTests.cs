@@ -1022,9 +1022,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     string s = "";
 
                     Assert.AreEqual(
-                        "",
-                        s,
-                        "values should match");
+                        "", s, "values should match");
                 }
             }
             """;

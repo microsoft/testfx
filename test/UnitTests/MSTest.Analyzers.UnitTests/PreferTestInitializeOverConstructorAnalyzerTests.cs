@@ -217,6 +217,8 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
             {
                 private int _x;
 
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+
                 [TestInitialize]
                 public void TestInitialize()
                 {
@@ -225,8 +227,6 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
                         2,
                         3);
                 }
-
-                private int SomeMethod(int a, int b, int c) => a + b + c;
             }
             """;
 
