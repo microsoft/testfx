@@ -31,7 +31,6 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
-        
         testHostResult.AssertStandardErrorContains("Only one attribute of type 'Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute' is allowed, but multiple were found.");
     }
 
