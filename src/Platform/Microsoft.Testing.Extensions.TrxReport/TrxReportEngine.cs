@@ -169,15 +169,14 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out string resultSummaryOutcome);
+            AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun, uncategorizedTestId);
 
-            // NotExecuted is the status for the skipped test.
-            resultSummaryOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success ? "Failed" : resultSummaryOutcome is "Passed" or "NotExecuted" ? "Completed" : resultSummaryOutcome;
+            string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
-            await AddResultSummaryAsync(testRun, resultSummaryOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed).ConfigureAwait(false);
+            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed).ConfigureAwait(false);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -413,7 +412,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private void AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out string resultSummaryOutcome)
+    private void AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
     {
         var results = new XElement("Results");
 
@@ -423,7 +422,7 @@ internal sealed partial class TrxReportEngine
 
         testEntries = new XElement("TestEntries");
         uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
-        resultSummaryOutcome = "Passed";
+        hasFailedTests = false;
         foreach (TestNodeUpdateMessage nodeMessage in _testNodeUpdatedMessages)
         {
             TestNode testNode = nodeMessage.TestNode;
@@ -463,19 +462,24 @@ internal sealed partial class TrxReportEngine
             // TODO: Are there other types?
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
-            string outcome = "Passed";
+            string currentTestOutcome;
             TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
             if (testState is { } state
                 && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
             {
-                outcome = resultSummaryOutcome = "Failed";
+                currentTestOutcome = "Failed";
+                hasFailedTests = true;
             }
             else if (testState is SkippedTestNodeStateProperty)
             {
-                outcome = resultSummaryOutcome = "NotExecuted";
+                currentTestOutcome = "NotExecuted";
+            }
+            else
+            {
+                currentTestOutcome = "Passed";
             }
 
-            unitTestResult.SetAttributeValue("outcome", outcome);
+            unitTestResult.SetAttributeValue("outcome", currentTestOutcome);
 
             unitTestResult.SetAttributeValue("testListId", uncategorizedTestId);
 
