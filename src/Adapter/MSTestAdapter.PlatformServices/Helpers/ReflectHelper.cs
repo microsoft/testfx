@@ -113,7 +113,7 @@ internal class ReflectHelper : MarshalByRefObject
             {
                 if (foundAttribute is not null)
                 {
-                    throw new InvalidOperationException($"Multiple attributes of type '{typeof(TAttribute)}' found.");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(TAttribute)));
                 }
 
                 foundAttribute = cachedAttributeAsTAttribute;
