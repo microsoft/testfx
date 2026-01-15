@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 
@@ -197,7 +196,7 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         newArguments.Add(newActualArgument);
 
         // Add remaining arguments (e.g., message) with their original separators and trivia
-        IReadOnlyList<SyntaxToken> originalSeparators = argumentList.Arguments.GetSeparators().ToList();
+        var originalSeparators = argumentList.Arguments.GetSeparators().ToList();
         for (int i = conditionIndex + 1; i < argumentList.Arguments.Count; i++)
         {
             // Get the separator that was before this argument (at index i-1 in the separators list)
