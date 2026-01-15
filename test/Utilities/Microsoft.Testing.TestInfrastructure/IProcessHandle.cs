@@ -15,6 +15,8 @@ public interface IProcessHandle
 
     TextReader StandardOutput { get; }
 
+    bool HasExited { get; }
+
     void Dispose();
 
     void Kill();
