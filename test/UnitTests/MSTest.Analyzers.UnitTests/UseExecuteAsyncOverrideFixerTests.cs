@@ -93,7 +93,7 @@ public sealed class UseExecuteAsyncOverrideFixerTests
                     {
                         return new TestResult[] { };
                     }
-                    
+
                     return new TestResult[] { };
                 }
             }
@@ -111,7 +111,7 @@ public sealed class UseExecuteAsyncOverrideFixerTests
                     {
                         return Task.FromResult(new TestResult[] { });
                     }
-                    
+
                     return Task.FromResult(new TestResult[] { });
                 }
             }
@@ -157,5 +157,46 @@ public sealed class UseExecuteAsyncOverrideFixerTests
 
         // Should not offer a code fix since return type is not TestResult[]
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task FixExecuteOverrideWithMultiLineExpression_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class C : TestMethodAttribute
+            {
+                public override TestResult[] {|CS0115:Execute|}(ITestMethod testMethod)
+                {
+                    return CreateResults(
+                        1,
+                        2,
+                        3);
+                }
+
+                private TestResult[] CreateResults(int a, int b, int c) => new TestResult[] { };
+            }
+            """;
+
+        string fixedCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class C : TestMethodAttribute
+            {
+                public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+                {
+                    return Task.FromResult(CreateResults(
+                        1,
+                        2,
+                        3));
+                }
+
+                private TestResult[] CreateResults(int a, int b, int c) => new TestResult[] { };
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

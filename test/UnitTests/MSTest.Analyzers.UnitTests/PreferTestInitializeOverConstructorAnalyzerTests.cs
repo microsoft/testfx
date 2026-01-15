@@ -50,7 +50,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
             public class MyTestClass
             {
                 int y, x;
-            
+
                 [TestInitialize]
                 public void BeforeEachTest()
                 {
@@ -105,7 +105,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             [AttributeUsage(AttributeTargets.Method)]
             public class TestInitializeAttribute : Attribute { }
 
@@ -113,7 +113,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
             public class MyTestClass
             {
                 int x;
-            
+
                 [TestInitialize]
                 public void BeforeEachTest()
                 {
@@ -132,17 +132,17 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
 
             [AttributeUsage(AttributeTargets.Method)]
             public class TestInitializeAttribute : Attribute { }
-            
+
             [TestClass]
             public class MyTestClass
             {
                 int x;
-            
+
                 [TestInitialize]
                 public void BeforeEachTest()
                 {
                 }
-            
+
                 [TestInitialize]
                 public void TestInitialize()
                 {
@@ -185,5 +185,51 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasCtorWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+
+                public [|MyTestClass|]()
+                {
+                    _x = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                    _x = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

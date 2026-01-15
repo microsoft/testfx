@@ -55,7 +55,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                 public void TestMethod()
                 {
                     bool b = true;
-            
+
                     [|Assert.IsTrue(!true)|];
                     [|Assert.IsTrue(!false)|];
                     [|Assert.IsTrue(!b)|];
@@ -85,7 +85,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                 public void TestMethod()
                 {
                     bool b = true;
-            
+
                     Assert.IsFalse(true);
                     Assert.IsFalse(false);
                     Assert.IsFalse(b);
@@ -427,7 +427,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                     bool condition1 = true;
                     bool condition2 = false;
                     bool condition3 = true;
-                    
+
                     [|Assert.IsTrue(!condition1)|];
                     [|Assert.IsFalse(!condition2)|];
                     [|Assert.IsTrue(!condition3)|];
@@ -447,7 +447,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                     bool condition1 = true;
                     bool condition2 = false;
                     bool condition3 = true;
-                    
+
                     Assert.IsFalse(condition1);
                     Assert.IsTrue(condition2);
                     Assert.IsFalse(condition3);
@@ -752,6 +752,46 @@ public sealed class DoNotNegateBooleanAssertionAnalyzerTests
                 public void TestMethod()
                 {
                     Assert.IsTrue(condition: GetBoolean());
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithNegation_MultiLineWithDifferentIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    [|Assert.IsTrue(
+                        !condition,
+                        "condition should be false")|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    bool condition = true;
+                    Assert.IsFalse(
+                        condition,
+                        "condition should be false");
                 }
             }
             """;

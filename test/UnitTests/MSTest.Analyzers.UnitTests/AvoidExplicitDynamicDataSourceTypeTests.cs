@@ -263,4 +263,56 @@ public sealed class AvoidExplicitDynamicDataSourceTypeTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenDynamicDataWithMultiLineTestBody_PreservesIndentation()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [[|DynamicData("Data", DynamicDataSourceType.Property)|]]
+                [TestMethod]
+                public void TestMethod(object[] o)
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DynamicData("Data")]
+                [TestMethod]
+                public void TestMethod(object[] o)
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
