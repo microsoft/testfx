@@ -7,7 +7,7 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
 {
     private readonly BlockingCollection<Action> _queue = [];
     private readonly Thread _thread;
-    private readonly ManualResetEventSlim _threadCompleteSemaphore = new ManualResetEventSlim(initialState: false);
+    private readonly ManualResetEventSlim _threadCompleteSignal = new ManualResetEventSlim(initialState: false);
 
     public SingleThreadedSTASynchronizationContext()
     {
@@ -26,7 +26,7 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
                 callback();
             }
 
-            _threadCompleteSemaphore.Set();
+            _threadCompleteSignal.Set();
         })
         {
             IsBackground = true,
@@ -75,8 +75,8 @@ internal sealed class SingleThreadedSTASynchronizationContext : SynchronizationC
         // 4. GetConsumingEnumerable exits.
         // 5. Thread completion is signaled
         // 6. Dispose is unblocked, and disposes the queue.
-        _threadCompleteSemaphore.Wait();
-        _threadCompleteSemaphore.Dispose();
+        _threadCompleteSignal.Wait();
+        _threadCompleteSignal.Dispose();
         _queue.Dispose();
     }
 }
