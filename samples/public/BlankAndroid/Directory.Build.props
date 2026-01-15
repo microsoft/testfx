@@ -3,13 +3,53 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   
   <!--
-    Set device test project properties early (before NuGet package targets).
-    This prevents the VSTest error in Microsoft.Testing.Platform.MSBuild from being raised.
+    Device Testing Props
+    ====================
+    Configure properties for device test projects (Android/iOS).
+    These settings are applied early, before NuGet package targets.
+    
+    Note: TargetFramework is not yet available in Directory.Build.props, so we set
+    properties unconditionally here. The Directory.Build.targets will handle
+    platform-specific configuration.
   -->
-  <PropertyGroup Condition="'$(TargetFramework)' != '' AND ($(TargetFramework.Contains('android')) OR $(TargetFramework.Contains('ios')))">
+  <PropertyGroup>
+    <!-- Mark as device test project -->
     <_IsDeviceTestProject>true</_IsDeviceTestProject>
     <UseMSBuildTestInfrastructure>true</UseMSBuildTestInfrastructure>
-    <!-- Opt-in to new dotnet test experience to bypass VSTest error -->
+    
+    <!-- Enable Microsoft Testing Platform -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
+    
+    <!-- Use MSTest Engine (source generation based) for device testing -->
+    <UseMSTestEngine>true</UseMSTestEngine>
+    <UseMSTestAdapter>false</UseMSTestAdapter>
+    
+    <!-- Opt-in to new dotnet test experience -->
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
+
+  <!--
+    Project References for Local Development
+    =========================================
+    When developing against local source, use project references instead of NuGet packages.
+    This allows testing changes without publishing packages.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/TestFramework/TestFramework/TestFramework.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Adapter/MSTest.Engine/MSTest.Engine.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../../src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!--
+    Import props from referenced projects to register their TestingPlatformBuilderHooks.
+    This is required when using project references instead of package references.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)../../../src/Adapter/MSTest.Engine/buildMultiTargeting/MSTest.Engine.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../../../src/Platform/Microsoft.Testing.Extensions.TrxReport/buildMultiTargeting/Microsoft.Testing.Extensions.TrxReport.props" />
 </Project>

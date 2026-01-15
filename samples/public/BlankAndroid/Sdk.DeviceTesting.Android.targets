@@ -22,7 +22,7 @@
       dotnet test MyTests.csproj -f net10.0-android -p:DeviceId=emulator-5554
       
     Note: This file will be moved to the dotnet/android SDK repository.
-          The device discovery (--list-devices) is provided by the dotnet SDK itself.
+          The device discovery (list-devices option) is provided by the dotnet SDK itself.
   -->
 
   <!-- Detect Android test projects -->
