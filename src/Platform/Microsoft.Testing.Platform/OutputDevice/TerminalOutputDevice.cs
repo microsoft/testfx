@@ -125,6 +125,19 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         // TODO: Replace this with proper CI detection that we already have in telemetry. https://github.com/microsoft/testfx/issues/5533#issuecomment-2838893327
         bool inCI = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase) || string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
+
+        AnsiMode ansiMode = AnsiMode.AnsiIfPossible;
+        if (noAnsi)
+        {
+            // User explicitly specified --no-ansi.
+            // We should respect that.
+            ansiMode = AnsiMode.NoAnsi;
+        }
+        else if (inCI)
+        {
+            ansiMode = AnsiMode.SimpleAnsi;
+        }
+
         bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
 
         // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
@@ -158,8 +171,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
-            UseAnsi = !noAnsi,
-            UseCIAnsi = inCI,
+            AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
         });
