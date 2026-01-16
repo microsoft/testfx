@@ -11,6 +11,41 @@ dotnet run --project MyTests.csproj -f net10.0-android --device emulator-5554
 dotnet test --project MyTests.csproj -f net10.0-android --device emulator-5554
 ```
 
+## Quick Start
+
+### Prerequisites
+
+1. **Install the .NET SDK** (done automatically by restore):
+   ```bash
+   ./restore.sh
+   ```
+
+2. **Install Android workloads**:
+   ```bash
+   ./eng/install-workloads.sh android
+   ```
+
+3. **Start an Android emulator** or connect a device:
+   ```bash
+   # List available devices
+   adb devices
+   ```
+
+### Running Device Tests
+
+```bash
+# Activity Mode (default)
+dotnet test samples/public/BlankAndroid/BlankAndroid.csproj \
+  -f net10.0-android \
+  -p:DeviceId=emulator-5554
+
+# Instrumentation Mode (more reliable)
+dotnet test samples/public/BlankAndroid/BlankAndroid.csproj \
+  -f net10.0-android \
+  -p:DeviceId=emulator-5554 \
+  -p:UseInstrumentation=true
+```
+
 ## Current Status: ✅ Working with Two Modes
 
 The implementation supports **two modes** for running tests on devices:
@@ -21,8 +56,7 @@ Uses `dotnet run --device` to deploy and launch the app's MainActivity.
 
 ```bash
 dotnet test BlankAndroid.csproj -f net10.0-android \
-  -p:DeviceId=emulator-5554 \
-  -p:DotnetDevicePath=/path/to/dotnet11
+  -p:DeviceId=emulator-5554
 ```
 
 ### Mode 2: Instrumentation Mode - via `adb instrument`
@@ -32,7 +66,6 @@ Uses Android Instrumentation for more reliable test execution with proper wait-f
 ```bash
 dotnet test BlankAndroid.csproj -f net10.0-android \
   -p:DeviceId=emulator-5554 \
-  -p:DotnetDevicePath=/path/to/dotnet11 \
   -p:UseInstrumentation=true
 ```
 
@@ -65,6 +98,7 @@ dotnet test BlankAndroid.csproj -f net10.0-android \
 | Exit code propagation | ✅ | Via `Java.Lang.JavaSystem.Exit()` or `Instrumentation.Finish()` |
 | **TRX file collection** | ✅ | `adb shell run-as ... cat` |
 | **Logcat collection** | ✅ | `adb logcat -d` saved to TestResults |
+| **Workload check** | ✅ | Fails with helpful message if Android workload not installed |
 
 ## What's Missing ❌
 
@@ -100,7 +134,6 @@ When a project targets `net*-android` and has `IsTestProject=true`, these target
 | Property | Description | Default |
 |----------|-------------|---------|
 | `DeviceId` | Device/emulator ID (e.g., `emulator-5554`) | `$(DEVICE_ID)` env var |
-| `DotnetDevicePath` | Path to .NET 11+ SDK with device support | `$(DOTNET_HOST_PATH)` or `dotnet` |
 | `UseInstrumentation` | Use Android Instrumentation mode | `false` |
 | `AndroidInstrumentationName` | Instrumentation class name | `$(RootNamespace.ToLower()).TestInstrumentation` |
 
@@ -111,8 +144,9 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  MSBuild: Microsoft.Testing.Platform.MSBuild.DeviceTesting.targets │
+│  MSBuild: Sdk.DeviceTesting.Android.targets                 │
 │  - Detects device TFM (net10.0-android)                    │
+│  - Checks Android workload is installed                     │
 │  - Sets UseMSBuildTestInfrastructure=true                  │
 │  - Overrides VSTest target                                  │
 └─────────────────────────────────────────────────────────────┘
@@ -158,7 +192,7 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554 -p:
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  MSBuild: Microsoft.Testing.Platform.MSBuild.DeviceTesting.targets │
+│  MSBuild: Sdk.DeviceTesting.Android.targets                 │
 │  - Detects device TFM (net10.0-android)                    │
 │  - UseInstrumentation=true → delegates to adb instrument   │
 └─────────────────────────────────────────────────────────────┘
@@ -200,6 +234,13 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554 -p:
 | `TestInstrumentation.cs` | Instrumentation mode entry point |
 | `DeviceTestReporter.cs` | MTP extensions for logcat output |
 | `DeviceTests.cs` | Sample MSTest tests |
+
+### Workload Installation Scripts
+
+| File | Purpose |
+|------|---------|
+| `eng/install-workloads.sh` | Install Android/iOS workloads (macOS/Linux) |
+| `eng/install-workloads.ps1` | Install Android/iOS workloads (Windows) |
 
 ## Creating a Device Test Project
 
@@ -244,16 +285,23 @@ dotnet test BlankAndroid.csproj -f net10.0-android -p:DeviceId=emulator-5554 -p:
 
 ## Usage
 
+### Setup (One-time)
+```bash
+# 1. Install the .NET SDK
+./restore.sh
+
+# 2. Install Android workloads
+./eng/install-workloads.sh android
+```
+
 ### Activity Mode (Default)
 ```bash
 # With MSBuild properties
 dotnet test BlankAndroid.csproj -f net10.0-android \
-  -p:DeviceId=emulator-5554 \
-  -p:DotnetDevicePath=/path/to/dotnet11
+  -p:DeviceId=emulator-5554
 
 # With environment variables
 export DEVICE_ID=emulator-5554
-export DOTNET_DEVICE_PATH=/path/to/dotnet11
 dotnet test BlankAndroid.csproj -f net10.0-android
 ```
 
@@ -262,7 +310,6 @@ dotnet test BlankAndroid.csproj -f net10.0-android
 # Enables more reliable test completion detection
 dotnet test BlankAndroid.csproj -f net10.0-android \
   -p:DeviceId=emulator-5554 \
-  -p:DotnetDevicePath=/path/to/dotnet11 \
   -p:UseInstrumentation=true
 ```
 
@@ -282,6 +329,8 @@ dotnet test --project BlankAndroid.csproj -f net10.0-android --device emulator-5
 - [x] Test result reporting via logcat
 - [x] TRX file collection from device
 - [x] Logcat collection for debugging
+- [x] Workload installation scripts
+- [x] Workload check before running tests
 
 ### 🔄 Phase 2: IN PROGRESS - CLI Parity with `dotnet run`
 
@@ -314,6 +363,21 @@ bin/Debug/net10.0-android/TestResults/
 - **TRX:** `adb shell run-as <app-id> cat files/TestResults/<file.trx>`
 - **Logcat:** `adb logcat -d > TestResults/<ProjectName>_logcat.txt`
 
+## Troubleshooting
+
+### "Android workload is not installed"
+Run the workload installation script:
+```bash
+./eng/install-workloads.sh android
+```
+
+### "Device not found"
+1. Check device is connected: `adb devices`
+2. Specify the device ID: `-p:DeviceId=emulator-5554`
+
+### Build errors with Activity/Bundle not found
+This can happen on first build with project references. Run the build twice or build from the repo root first.
+
 ## References
 
 - [MAUI Device Testing Spec](https://github.com/dotnet/maui/pull/33117)
@@ -322,5 +386,5 @@ bin/Debug/net10.0-android/TestResults/
 - [Android Instrumentation](https://developer.android.com/reference/android/app/Instrumentation)
 
 ---
-**Last Updated:** 2026-01-13  
+**Last Updated:** 2026-01-16  
 **Status:** ✅ Working prototype with Android device testing targets ready for migration to dotnet/android SDK

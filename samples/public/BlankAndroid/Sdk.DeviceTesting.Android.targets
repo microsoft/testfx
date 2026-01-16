@@ -9,12 +9,15 @@
     When integrated into the Android SDK, these targets will be automatically imported
     when IsTestProject=true and the project targets net*-android.
     
+    Prerequisites:
+      1. Run ./restore.sh to install the .NET SDK in .dotnet folder
+      2. Run ./eng/install-workloads.sh android to install Android workloads
+    
     Usage:
       Set IsTestProject=true in your project file, and target a device TFM (net10.0-android, etc.)
       
     Properties:
       - DeviceId: The device/emulator ID to deploy to (e.g., emulator-5554)
-      - DotnetDevicePath: Path to dotnet executable with device support (.NET 11+)
       - UseInstrumentation: When true, uses Android Instrumentation (adb instrument) instead of dotnet run
       - AndroidInstrumentationName: The instrumentation class name (default: $(RootNamespace.ToLower()).TestInstrumentation)
       
@@ -38,14 +41,6 @@
     
     <!-- Device ID from property or environment variable -->
     <DeviceId Condition="'$(DeviceId)' == ''">$(DEVICE_ID)</DeviceId>
-    
-    <!-- 
-      DotnetDevicePath: Path to the dotnet executable with device support (.NET 11+)
-      Priority: 1) Explicit property, 2) Environment variable, 3) DOTNET_HOST_PATH (same SDK running this build), 4) system dotnet
-    -->
-    <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_DEVICE_PATH)</DotnetDevicePath>
-    <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">$(DOTNET_HOST_PATH)</DotnetDevicePath>
-    <DotnetDevicePath Condition="'$(DotnetDevicePath)' == ''">dotnet</DotnetDevicePath>
     
     <!--
       UseInstrumentation: When true, uses Android Instrumentation to run tests via 'adb instrument'
@@ -71,8 +66,26 @@
     </PropertyGroup>
   </Target>
 
+  <!-- Check that Android workload is installed -->
+  <Target Name="_CheckAndroidWorkload" BeforeTargets="VSTest" Condition="'$(_IsAndroidTestProject)' == 'true'">
+    <PropertyGroup>
+      <_WorkloadListOutput></_WorkloadListOutput>
+    </PropertyGroup>
+    
+    <!-- Check if android workload is installed -->
+    <Exec Command="dotnet workload list"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_WorkloadListOutput" />
+    </Exec>
+    
+    <Error Text="Android workload is not installed. Please run: ./eng/install-workloads.sh android"
+           Condition="!$(_WorkloadListOutput.Contains('android'))" />
+  </Target>
+
   <!-- Override VSTest target for Android device projects -->
-  <Target Name="VSTest" Condition="'$(_IsAndroidTestProject)' == 'true'">
+  <Target Name="VSTest" Condition="'$(_IsAndroidTestProject)' == 'true'" DependsOnTargets="_CheckAndroidWorkload">
     <Message Text="" Importance="high" />
     <Message Text="╔══════════════════════════════════════════════════════════════╗" Importance="high" />
     <Message Text="║               ANDROID DEVICE TESTING                         ║" Importance="high" />
@@ -80,7 +93,6 @@
     <Message Text="║  Project:    $(MSBuildProjectName)" Importance="high" />
     <Message Text="║  Framework:  $(TargetFramework)" Importance="high" />
     <Message Text="║  Device:     $(DeviceId)" Importance="high" Condition="'$(DeviceId)' != ''" />
-    <Message Text="║  Dotnet:     $(DotnetDevicePath)" Importance="high" />
     <Message Text="║  Mode:       $(UseInstrumentation.Replace('true','Instrumentation (adb)').Replace('false','Activity (dotnet run)'))" Importance="high" />
     <Message Text="╚══════════════════════════════════════════════════════════════╝" Importance="high" />
     <Message Text="" Importance="high" />
@@ -118,7 +130,7 @@
       3. Runs the app and streams output
       4. Waits for app to exit
     -->
-    <Exec Command="&quot;$(DotnetDevicePath)&quot; run --project &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) $(_DeviceArg)"
+    <Exec Command="dotnet run --project &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) $(_DeviceArg)"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="true"
           ConsoleToMSBuild="true">
@@ -157,7 +169,7 @@
     <Message Text="Building and installing app..." Importance="high" />
     
     <!-- Build and install the app using dotnet build -t:Install -->
-    <Exec Command="&quot;$(DotnetDevicePath)&quot; build &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) -t:Install -p:AdbTarget=&quot;$(_AdbDevice)&quot;"
+    <Exec Command="dotnet build &quot;$(MSBuildProjectFullPath)&quot; -f $(TargetFramework) -t:Install -p:AdbTarget=&quot;$(_AdbDevice)&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)"
           IgnoreExitCode="false">
       <Output TaskParameter="ExitCode" PropertyName="_InstallExitCode" />
