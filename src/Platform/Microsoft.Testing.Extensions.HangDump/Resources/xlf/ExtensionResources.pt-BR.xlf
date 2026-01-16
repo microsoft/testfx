@@ -115,16 +115,16 @@ O valor de tempo limite é especificado em um dos seguintes formatos:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="needs-review-translation">Especifique o tipo do despejo.
-Os valores válidos são "Mini", "Heap", "Triage" (disponível somente no .NET 6+) ou "Full".
-O tipo padrão é ''Full''</target>
+        <target state="new">Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="needs-review-translation">"{0}" não é um tipo de despejo válido.
-As opções válidas são ''Mini'', ''Heap'', ''Triage'' (disponível somente no .NET 6+) e ''Full''</target>
+        <target state="new">'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
