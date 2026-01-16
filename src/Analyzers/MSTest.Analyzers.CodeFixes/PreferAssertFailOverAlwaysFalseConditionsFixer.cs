@@ -70,7 +70,10 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
         if (additionalLocations.Count >= 1)
         {
             IEnumerable<ArgumentSyntax> arguments = additionalLocations.Select(location => (ArgumentSyntax)invocationExpr.FindNode(location.SourceSpan));
-            newInvocationExpr = newInvocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments)));
+            newInvocationExpr = newInvocationExpr.WithArgumentList(
+                SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(arguments))
+                    .WithOpenParenToken(invocationExpr.ArgumentList.OpenParenToken)
+                    .WithCloseParenToken(invocationExpr.ArgumentList.CloseParenToken));
         }
 
         editor.ReplaceNode(invocationExpr, newInvocationExpr);
