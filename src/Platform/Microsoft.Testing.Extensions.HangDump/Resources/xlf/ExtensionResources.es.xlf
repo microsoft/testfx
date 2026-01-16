@@ -113,18 +113,18 @@ El valor de tiempo de espera se especifica en uno de los formatos siguientes:
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) or 'Full'.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="translated">Especifique el tipo de volcado.
-Los valores válidos son 'Mini', 'Heap', 'Triage' (solo disponible en .NET 6+) o 'Full'.
-El tipo predeterminado es 'Full'</target>
+        <target state="new">Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'</source>
-        <target state="translated">'{0}' no es un tipo de volcado válido.
-Las opciones válidas son 'Mini', 'Heap', 'Triage' (solo disponible en .NET 6+) y 'Full'</target>
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
+        <target state="new">'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
