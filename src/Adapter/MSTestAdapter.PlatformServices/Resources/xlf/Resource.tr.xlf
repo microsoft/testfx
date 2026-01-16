@@ -183,6 +183,11 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
         <target state="translated">[MSTest][Discovery][{0}] {1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DuplicateAttributeError">
+        <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
+        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
         <target state="translated">Hem '.runsettings' hem de '.testconfig.json' dosyaları algılandı. Lütfen bu test yapılandırma dosyalarından yalnızca birini seçin.</target>

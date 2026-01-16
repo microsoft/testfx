@@ -27,11 +27,11 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     [SupportedOSPlatformGuard("wasi")]
     [SupportedOSPlatformGuard("browser")]
     private static bool IsCancelKeyPressNotSupported()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+        => OperatingSystem.IsAndroid() ||
+            OperatingSystem.IsIOS() ||
+            OperatingSystem.IsTvOS() ||
+            OperatingSystem.IsWasi() ||
+            OperatingSystem.IsBrowser();
 
     public void CancelAfter(TimeSpan timeout) => _cancellationTokenSource.CancelAfter(timeout);
 

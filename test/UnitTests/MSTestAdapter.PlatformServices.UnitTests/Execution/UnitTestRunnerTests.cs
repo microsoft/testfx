@@ -260,7 +260,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Error);
         results[0].IgnoreReason.Should().Be(expectedMessage);
     }
 

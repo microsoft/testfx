@@ -49,11 +49,11 @@ internal sealed class HotReloadHandler
     [SupportedOSPlatformGuard("wasi")]
     [SupportedOSPlatformGuard("browser")]
     private static bool IsCancelKeyPressNotSupported()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
+        => OperatingSystem.IsAndroid() ||
+            OperatingSystem.IsIOS() ||
+            OperatingSystem.IsTvOS() ||
+            OperatingSystem.IsWasi() ||
+            OperatingSystem.IsBrowser();
 
     // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
     public static void ClearCache(Type[]? _)
@@ -86,7 +86,7 @@ internal sealed class HotReloadHandler
         if (waitExecutionCompletion is not null)
         {
             await waitExecutionCompletion.ConfigureAwait(false);
-            await _outputDevice!.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
         }
 
         try
@@ -100,7 +100,7 @@ internal sealed class HotReloadHandler
 
         if (!IsClearNotSupported())
         {
-            _console!.Clear();
+            _console.Clear();
         }
 
         await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted), cancellationToken).ConfigureAwait(false);
@@ -112,8 +112,8 @@ internal sealed class HotReloadHandler
     [SupportedOSPlatformGuard("ios")]
     [SupportedOSPlatformGuard("tvos")]
     private static bool IsClearNotSupported()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"));
+        => OperatingSystem.IsAndroid() ||
+            OperatingSystem.IsIOS() ||
+            OperatingSystem.IsTvOS();
 #endif
 }

@@ -311,7 +311,7 @@ public sealed partial class Assert
     public static T IsExactInstanceOfType<T>([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         IsExactInstanceOfType(value, typeof(T), message, valueExpression);
-        return (T)value!;
+        return (T)value;
     }
 
     /// <inheritdoc cref="IsExactInstanceOfType{T}(object?, string, string)" />

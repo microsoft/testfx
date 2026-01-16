@@ -56,7 +56,9 @@ public static partial class AssertExtensions
         }
     }
 
+#pragma warning disable IDE0051 // Remove unused private members - false positive
     private static string ExtractDetails(Expression expr)
+#pragma warning restore IDE0051 // Remove unused private members
     {
         var details = new Dictionary<string, object?>();
         ExtractVariablesFromExpression(expr, details);
@@ -691,7 +693,7 @@ public static partial class AssertExtensions
 
                 // Keep at most 2 consecutive parentheses
                 int keepCount = Math.Min(count, 2);
-                result.Append(new string(currentChar, keepCount));
+                result.Append(currentChar, keepCount);
                 i += count;
             }
             else

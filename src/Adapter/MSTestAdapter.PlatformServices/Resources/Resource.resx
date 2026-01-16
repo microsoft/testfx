@@ -455,4 +455,7 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_OutRefParametersNotSupported" xml:space="preserve">
     <value>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</value>
   </data>
+  <data name="DuplicateAttributeError" xml:space="preserve">
+    <value>Only one attribute of type '{0}' is allowed, but multiple were found.</value>
+  </data>
 </root>
