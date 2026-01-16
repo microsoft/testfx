@@ -55,3 +55,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfT
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType<T>(object? value, string? message = "", string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotExactInstanceOfType<T>(object? value, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<T> message, string! valueExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ContainsSingle(System.Collections.IEnumerable! collection, string? message = "", string! collectionExpression = "") -> object?
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.DisplayName.init -> void
+*REMOVED*Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.UnfoldingStrategy.init -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.DisplayName.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.UnfoldingStrategy.set -> void
