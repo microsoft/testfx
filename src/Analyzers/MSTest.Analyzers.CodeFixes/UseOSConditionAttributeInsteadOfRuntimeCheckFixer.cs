@@ -108,6 +108,25 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckFixer : CodeFixP
         MethodDeclarationSyntax trackedMethod = methodDeclaration.TrackNodes(ifStatement);
         IfStatementSyntax? trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);
 
+        if (trackedIfStatement is null)
+        {
+            return null;
+        }
+
+        // Remove blank line from leading trivia of the next statement (if any)
+        if (trackedIfStatement.Parent is BlockSyntax block)
+        {
+            int index = block.Statements.IndexOf(trackedIfStatement);
+            if (index >= 0 && index < block.Statements.Count - 1)
+            {
+                StatementSyntax nextStatement = block.Statements[index + 1];
+                SyntaxTriviaList cleanedTrivia = new(nextStatement.GetLeadingTrivia().Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia)));
+                StatementSyntax newNextStatement = nextStatement.WithLeadingTrivia(cleanedTrivia);
+                trackedMethod = trackedMethod.ReplaceNode(nextStatement, newNextStatement);
+                trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);
+            }
+        }
+
         return trackedIfStatement is not null
             ? trackedMethod.RemoveNode(trackedIfStatement, SyntaxRemoveOptions.KeepNoTrivia)
             : null;

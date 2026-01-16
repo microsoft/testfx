@@ -57,7 +57,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             [TestClass]
             public class MyTestClass
             {
@@ -71,7 +71,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         string fixedCode = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             [TestClass]
             public class MyTestClass : IDisposable
             {
@@ -90,7 +90,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             public class LocalBase{}
 
             [TestClass]
@@ -107,7 +107,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
             using System;
 
             public class LocalBase{}
-            
+
             [TestClass]
             public class MyTestClass : LocalBase, IDisposable
             {
@@ -125,7 +125,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             [TestClass]
             public class MyTestClass : IDisposable
             {
@@ -144,7 +144,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             [TestClass]
             public class MyTestClass : IDisposable
             {
@@ -188,7 +188,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
         string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             public partial class MyTestClass : IDisposable
             {
                 public void Dispose()
@@ -197,7 +197,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzerTests
                     int y = 1;
                 }
             }
-            
+
             [TestClass]
             public partial class MyTestClass
             {
@@ -341,7 +341,7 @@ public partial class MyTestClass : IDisposable
             using System.Threading.Tasks;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             [TestClass]
             public class MyTestClass
             {
@@ -365,7 +365,7 @@ public partial class MyTestClass : IDisposable
             using System.Threading.Tasks;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System;
-            
+
             [TestClass]
             public class MyTestClass
             {
@@ -380,4 +380,46 @@ public partial class MyTestClass : IDisposable
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 #endif
+
+    [TestMethod]
+    public async Task WhenTestClassHasTestCleanupWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public void [|MyTestCleanup|]()
+                {
+                    Cleanup(
+                        1,
+                        2,
+                        3);
+                }
+
+                private void Cleanup(int a, int b, int c) { }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void Dispose()
+                {
+                    Cleanup(
+                        1,
+                        2,
+                        3);
+                }
+
+                private void Cleanup(int a, int b, int c) { }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

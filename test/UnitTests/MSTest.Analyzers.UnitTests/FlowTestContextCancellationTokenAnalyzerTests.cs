@@ -412,7 +412,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
             public class MyTestClass
             {
                 private readonly TestContext _testContext;
-            
+
                 public MyTestClass(TestContext testContext)
                     => _testContext = testContext;
 
@@ -604,7 +604,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                     using Microsoft.VisualStudio.TestTools.UnitTesting;
                     using System.Threading;
                     using System.Threading.Tasks;
-                    
+
                     [TestClass]
                     public partial class MyTestClass
                     {
@@ -614,7 +614,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                             await [|Task.Delay(1000)|];
                             await [|Task.Delay(2000)|];
                         }
-                    
+
                         [TestMethod]
                         public async Task Test2()
                         {
@@ -626,7 +626,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                     using Microsoft.VisualStudio.TestTools.UnitTesting;
                     using System.Threading;
                     using System.Threading.Tasks;
-                    
+
                     public partial class MyTestClass
                     {
                         [TestMethod]
@@ -635,7 +635,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                             await [|Task.Delay(1000)|];
                             await [|Task.Delay(2000)|];
                         }
-                    
+
                         [TestMethod]
                         public async Task Test4()
                         {
@@ -653,7 +653,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                     using Microsoft.VisualStudio.TestTools.UnitTesting;
                     using System.Threading;
                     using System.Threading.Tasks;
-                    
+
                     [TestClass]
                     public partial class MyTestClass
                     {
@@ -663,7 +663,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                             await Task.Delay(1000, TestContext.CancellationToken);
                             await Task.Delay(2000, TestContext.CancellationToken);
                         }
-                    
+
                         [TestMethod]
                         public async Task Test2()
                         {
@@ -677,7 +677,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                     using Microsoft.VisualStudio.TestTools.UnitTesting;
                     using System.Threading;
                     using System.Threading.Tasks;
-                    
+
                     public partial class MyTestClass
                     {
                         [TestMethod]
@@ -780,6 +780,50 @@ public sealed class FlowTestContextCancellationTokenAnalyzerTests
                 {
                     TestHelper.DoSomething("test", ct: TestContext.CancellationToken);
                     TestHelper.DoSomething("test", 42, TestContext.CancellationToken);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTaskDelayWithoutCancellationToken_MultiLineWithDifferentIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await [|Task.Delay(
+                        1000)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Task.Delay(
+                        1000, TestContext.CancellationToken);
                 }
             }
             """;
