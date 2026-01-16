@@ -115,16 +115,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="needs-review-translation">Укажите тип дампа.
-Допустимые значения: "Mini", "Heap", "Triage" (доступно только в .NET 6+) или "Full".
-Тип по умолчанию — "Full"</target>
+        <target state="new">Specify the type of the dump.
+Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
+Default type is 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="needs-review-translation">"{0}" не является допустимым типом дампа.
-Допустимые параметры: "Mini", "Heap", "Triage" (доступно только в .NET 6+) и "Full"</target>
+        <target state="new">'{0}' is not a valid dump type.
+Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
