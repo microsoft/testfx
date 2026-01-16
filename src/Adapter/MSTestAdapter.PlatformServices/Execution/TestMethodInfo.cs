@@ -29,10 +29,6 @@ internal class TestMethodInfo : ITestMethod
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
-    private object? _classInstance;
-    private bool _isTestContextSet;
-    private bool _isTestCleanupInvoked;
-
     private ExecutionContext? _executionContext;
 
 #if NETFRAMEWORK
@@ -346,7 +342,8 @@ internal class TestMethodInfo : ITestMethod
         var result = new TestResult();
 
         Exception? testRunnerException = null;
-        _isTestCleanupInvoked = false;
+        object? classInstance = null;
+        bool isTestContextSet = false;
 
         try
         {
@@ -365,8 +362,8 @@ internal class TestMethodInfo : ITestMethod
                 bool setTestContextSucessful = false;
                 if (_executionContext is null)
                 {
-                    _classInstance = CreateTestClassInstance(result);
-                    setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
+                    classInstance = CreateTestClassInstance(result);
+                    setTestContextSucessful = classInstance != null && SetTestContext(classInstance, result);
                 }
                 else
                 {
@@ -379,8 +376,8 @@ internal class TestMethodInfo : ITestMethod
                     {
                         try
                         {
-                            _classInstance = CreateTestClassInstance(result);
-                            setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
+                            classInstance = CreateTestClassInstance(result);
+                            setTestContextSucessful = classInstance != null && SetTestContext(classInstance, result);
                         }
                         finally
                         {
@@ -395,13 +392,13 @@ internal class TestMethodInfo : ITestMethod
                 if (setTestContextSucessful)
                 {
                     // For any failure after this point, we must run TestCleanup
-                    _isTestContextSet = true;
+                    isTestContextSet = true;
 
-                    if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource).ConfigureAwait(false))
+                    if (await RunTestInitializeMethodAsync(classInstance!, result, timeoutTokenSource).ConfigureAwait(false))
                     {
                         if (_executionContext is null)
                         {
-                            Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
+                            Task? invokeResult = MethodInfo.GetInvokeResultAsync(classInstance, arguments);
                             if (invokeResult is not null)
                             {
                                 await invokeResult.ConfigureAwait(false);
@@ -418,7 +415,7 @@ internal class TestMethodInfo : ITestMethod
 #if NETFRAMEWORK
                                     CallContext.HostContext = _hostContext;
 #endif
-                                    Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
+                                    Task? invokeResult = MethodInfo.GetInvokeResultAsync(classInstance, arguments);
                                     if (invokeResult is not null)
                                     {
                                         await invokeResult.ConfigureAwait(false);
@@ -501,7 +498,10 @@ internal class TestMethodInfo : ITestMethod
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
         // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
-        await RunTestCleanupMethodAsync(result, timeoutTokenSource).ConfigureAwait(false);
+        if (classInstance is not null && isTestContextSet)
+        {
+            await RunTestCleanupMethodAsync(result, timeoutTokenSource, classInstance).ConfigureAwait(false);
+        }
 
         return testRunnerException != null ? throw testRunnerException : result;
     }
@@ -600,20 +600,19 @@ internal class TestMethodInfo : ITestMethod
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
+    /// <param name="classInstance">The instance of the test class created to run this test.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async Task RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async Task RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource, object classInstance)
     {
         DebugEx.Assert(result != null, "result != null");
 
-        if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked ||
+        if (!HasCleanupsToInvoke(classInstance))
+        {
             // Fast check to see if we can return early.
             // This avoids the code below that allocates CancellationTokenSource
-            !HasCleanupsToInvoke())
-        {
             return;
         }
 
-        _isTestCleanupInvoked = true;
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
         Exception? testCleanupException;
         try
@@ -632,25 +631,25 @@ internal class TestMethodInfo : ITestMethod
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
-                    ? await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeCleanupMethodAsync(testCleanupMethod, classInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
+                    testCleanupException = await InvokeCleanupMethodAsync(testCleanupMethod, classInstance, timeoutTokenSource).ConfigureAwait(false);
                 }
             }
             finally
             {
 #if NET6_0_OR_GREATER
-                if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
+                if (classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
                 {
                     // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
                     await classInstanceAsAsyncDisposable.DisposeAsync().ConfigureAwait(false);
                 }
 #endif
-                if (_classInstance is IDisposable classInstanceAsDisposable)
+                if (classInstance is IDisposable classInstanceAsDisposable)
                 {
                     classInstanceAsDisposable.Dispose();
                 }
@@ -691,12 +690,12 @@ internal class TestMethodInfo : ITestMethod
         result.TestFailureException = realException;
     }
 
-    private bool HasCleanupsToInvoke() =>
+    private bool HasCleanupsToInvoke(object classInstance) =>
         Parent.TestCleanupMethod is not null ||
         Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
-        _classInstance is IDisposable ||
+        classInstance is IDisposable ||
 #if NET6_0_OR_GREATER
-        _classInstance is IAsyncDisposable ||
+        classInstance is IAsyncDisposable ||
 #endif
         Parent.Parent.GlobalTestCleanups is { Count: > 0 };
 
@@ -1119,13 +1118,6 @@ internal class TestMethodInfo : ITestMethod
 
         TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UTFUnitTestOutcome.Timeout, errorMessage) };
 
-        // TODO: execution context propagation here may still not be accurate.
-        // if test init was successfully executed by ExecuteAsyncAction, but then the test itself timed out or cancelled,
-        // then at this point we will run the cleanup on an execution context that doesn't have any state set by the test initialize.
-
-        // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
-        // The method already checks if the cleanup was already executed.
-        await RunTestCleanupMethodAsync(timeoutResult, null).ConfigureAwait(false);
         return timeoutResult;
 
         // Local functions
