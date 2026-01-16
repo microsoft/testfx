@@ -536,30 +536,32 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         DateTimeOffset requestStop = _clock.UtcNow;
 
         RoslynDebug.Assert(requestExecuteStop != null);
+        bool isRunRequest = method switch
+        {
+            JsonRpcMethods.TestingRunTests => true,
+            JsonRpcMethods.TestingDiscoverTests => false,
+            _ => throw new NotImplementedException($"Request not implemented '{method}'"),
+        };
 
-        Dictionary<string, object> metadata = method == JsonRpcMethods.TestingRunTests
+        Dictionary<string, object> metadata = isRunRequest
             ? GetRunMetrics(
                 (RunRequestArgs)args,
                 requestStart, requestStop,
                 adapterLoadStart, adapterLoadStop,
                 requestExecuteStart, (DateTimeOffset)requestExecuteStop,
                 testNodeUpdateProcessor.GetTestNodeStatistics())
-            : method == JsonRpcMethods.TestingDiscoverTests
-                ? GetDiscoveryMetrics(
+            : GetDiscoveryMetrics(
                     (DiscoverRequestArgs)args,
                     requestStart, requestStop,
                     adapterLoadStart, adapterLoadStop,
                     requestExecuteStart, (DateTimeOffset)requestExecuteStop,
-                    testNodeUpdateProcessor.GetTestNodeStatistics().TotalDiscoveredTests)
-                : throw new NotImplementedException($"Request not implemented '{method}'");
+                    testNodeUpdateProcessor.GetTestNodeStatistics().TotalDiscoveredTests);
 
-        await _telemetryService.LogEventAsync(TelemetryEvents.TestsRunEventName, metadata, cancellationToken).ConfigureAwait(false);
+        await _telemetryService.LogEventAsync(isRunRequest ? TelemetryEvents.TestsRunEventName : TelemetryEvents.TestsDiscoveryEventName, metadata, cancellationToken).ConfigureAwait(false);
 
-        return method == JsonRpcMethods.TestingRunTests
+        return isRunRequest
             ? new RunResponseArgs([.. testNodeUpdateProcessor.Artifacts])
-            : method == JsonRpcMethods.TestingDiscoverTests
-                ? (ResponseArgsBase)new DiscoverResponseArgs()
-                : throw new NotImplementedException($"Request not implemented '{method}'");
+            : new DiscoverResponseArgs();
     }
 
     internal static Dictionary<string, object> GetDiscoveryMetrics(
