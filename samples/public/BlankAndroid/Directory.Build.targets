@@ -1,0 +1,29 @@
+<Project>
+  <!--
+    This Directory.Build.targets file imports the Android device testing targets.
+    
+    In production, these targets would be imported automatically from the dotnet/android SDK
+    when a project targets net*-android and has IsTestProject=true.
+    
+    For development/testing, we import them from the local file.
+  -->
+  
+  <!-- Set device test project flag early to skip VSTest error in NuGet package -->
+  <PropertyGroup Condition="'$(TargetFramework)' != '' AND $(TargetFramework.Contains('android'))">
+    <_IsDeviceTestProject>true</_IsDeviceTestProject>
+    <UseMSBuildTestInfrastructure>true</UseMSBuildTestInfrastructure>
+  </PropertyGroup>
+  
+  <!-- 
+    Override _MTPBeforeVSTest to prevent error for device projects.
+    The installed NuGet package (2.0.2) doesn't have device testing support yet,
+    so we need to override its error-throwing target.
+  -->
+  <Target Name="_MTPBeforeVSTest" BeforeTargets="VSTest" Condition="'$(_IsDeviceTestProject)' == 'true'">
+    <Message Text="Device test project detected - skipping VSTest error check" Importance="high" />
+  </Target>
+  
+  <!-- Import Android device testing targets (will live in dotnet/android SDK) -->
+  <Import Project="$(MSBuildThisFileDirectory)Sdk.DeviceTesting.Android.targets"
+          Condition="'$(TargetFramework)' != '' AND $(TargetFramework.Contains('android'))" />
+</Project>

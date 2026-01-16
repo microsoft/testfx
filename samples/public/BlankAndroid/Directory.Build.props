@@ -1,0 +1,15 @@
+<Project>
+  <!-- Import parent props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  
+  <!--
+    Set device test project properties early (before NuGet package targets).
+    This prevents the VSTest error in Microsoft.Testing.Platform.MSBuild from being raised.
+  -->
+  <PropertyGroup Condition="'$(TargetFramework)' != '' AND ($(TargetFramework.Contains('android')) OR $(TargetFramework.Contains('ios')))">
+    <_IsDeviceTestProject>true</_IsDeviceTestProject>
+    <UseMSBuildTestInfrastructure>true</UseMSBuildTestInfrastructure>
+    <!-- Opt-in to new dotnet test experience to bypass VSTest error -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+</Project>

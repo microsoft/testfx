@@ -12,5 +12,17 @@
     <!-- empty line to avoid merge conflicts for darc PRs to update CC and MSTest+MTP -->
     <MSTestVersion>4.1.0-preview.26065.7</MSTestVersion>
     <MicrosoftTestingPlatformVersion>2.1.0-preview.26065.7</MicrosoftTestingPlatformVersion>
+
+    <MicrosoftAndroidSdkWindowsPackageVersion>36.1.99-ci.main.92</MicrosoftAndroidSdkWindowsPackageVersion>
+   
+    <MicrosoftMacCatalystSdknet110_262PackageVersion>26.2.11233-ci.net11-0</MicrosoftMacCatalystSdknet110_262PackageVersion>
+    <MicrosoftmacOSSdknet110_262PackageVersion>26.2.11233-ci.net11-0</MicrosoftmacOSSdknet110_262PackageVersion>
+    <MicrosoftiOSSdknet110_262PackageVersion>26.2.11233-ci.net11-0</MicrosoftiOSSdknet110_262PackageVersion>
+    <MicrosofttvOSSdknet110_262PackageVersion>26.2.11233-ci.net11-0</MicrosofttvOSSdknet110_262PackageVersion>
+    <MicrosoftMacCatalystSdkPackageVersion>$(MicrosoftMacCatalystSdknet110_262PackageVersion)</MicrosoftMacCatalystSdkPackageVersion>
+    <MicrosoftmacOSSdkPackageVersion>$(MicrosoftmacOSSdknet110_262PackageVersion)</MicrosoftmacOSSdkPackageVersion>
+    <MicrosoftiOSSdkPackageVersion>$(MicrosoftiOSSdknet110_262PackageVersion)</MicrosoftiOSSdkPackageVersion>
+    <MicrosofttvOSSdkPackageVersion>$(MicrosofttvOSSdknet110_262PackageVersion)</MicrosofttvOSSdkPackageVersion>
+
   </PropertyGroup>
 </Project>

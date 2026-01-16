@@ -25,5 +25,26 @@
       <Uri>https://github.com/microsoft/testfx</Uri>
       <Sha>f2ca2cf2507b769ba4e6609683619243588ee4c1</Sha>
     </Dependency>
+
+    <Dependency Name="Microsoft.Android.Sdk.Windows" Version="36.1.99-ci.main.92">
+      <Uri>https://github.com/dotnet/android</Uri>
+      <Sha>097742b3d08fcf96472e20f05794779a4b05157a</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.MacCatalyst.Sdk.net11.0_26.2" Version="26.2.11233-ci.net11-0">
+      <Uri>https://github.com/dotnet/macios</Uri>
+      <Sha>13be6a67ad7fb5968639d67a357bd04f892ed381</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.macOS.Sdk.net11.0_26.2" Version="26.2.11233-ci.net11-0">
+      <Uri>https://github.com/dotnet/macios</Uri>
+      <Sha>13be6a67ad7fb5968639d67a357bd04f892ed381</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.iOS.Sdk.net11.0_26.2" Version="26.2.11233-ci.net11-0">
+      <Uri>https://github.com/dotnet/macios</Uri>
+      <Sha>13be6a67ad7fb5968639d67a357bd04f892ed381</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.tvOS.Sdk.net11.0_26.2" Version="26.2.11233-ci.net11-0">
+      <Uri>https://github.com/dotnet/macios</Uri>
+      <Sha>13be6a67ad7fb5968639d67a357bd04f892ed381</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
