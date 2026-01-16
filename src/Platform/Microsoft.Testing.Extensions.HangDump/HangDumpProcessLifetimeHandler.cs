@@ -354,12 +354,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
 #if NETCOREAPP
         DiagnosticsClient diagnosticsClient = new(process.Id);
-        DumpType dumpType = _dumpType.ToLowerInvariant().Trim() switch
+        DumpType? dumpType = _dumpType.ToLowerInvariant().Trim() switch
         {
             "mini" => DumpType.Normal,
             "heap" => DumpType.WithHeap,
             "triage" => DumpType.Triage,
             "full" => DumpType.Full,
+            "none" => null,
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
@@ -372,7 +373,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         try
         {
-            diagnosticsClient.WriteDump(dumpType, finalDumpFileName, logDumpGeneration: false);
+            // Skip creating the dump if the option is set to none, and just kill the process.
+            if (dumpType.HasValue)
+            {
+                diagnosticsClient.WriteDump(dumpType.Value, finalDumpFileName, logDumpGeneration: false);
+                _dumpFiles.Add(finalDumpFileName);
+            }
         }
         catch (Exception e)
         {
@@ -381,17 +387,23 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 
 #else
-        MiniDumpWriteDump.MiniDumpTypeOption miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
+        MiniDumpWriteDump.MiniDumpTypeOption? miniDumpTypeOption = _dumpType.ToLowerInvariant().Trim() switch
         {
             "mini" => MiniDumpWriteDump.MiniDumpTypeOption.Mini,
             "heap" => MiniDumpWriteDump.MiniDumpTypeOption.Heap,
             "full" => MiniDumpWriteDump.MiniDumpTypeOption.Full,
+            "none" => null,
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
         try
         {
-            MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(process.Id, finalDumpFileName, miniDumpTypeOption);
+            // Skip creating the dump if the option is set to none, and just kill the process.
+            if (miniDumpTypeOption.HasValue)
+            {
+                MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(process.Id, finalDumpFileName, miniDumpTypeOption.Value);
+                _dumpFiles.Add(finalDumpFileName);
+            }
         }
         catch (Exception e)
         {
@@ -399,8 +411,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, process.Id, process.Name, e)), cancellationToken).ConfigureAwait(false);
         }
 #endif
-
-        _dumpFiles.Add(finalDumpFileName);
     }
 
     private static void NotifyCrashDumpServiceIfEnabled()
