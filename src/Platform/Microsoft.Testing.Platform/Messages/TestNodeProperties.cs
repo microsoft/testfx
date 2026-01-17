@@ -255,7 +255,7 @@ public sealed class FailedTestNodeStateProperty : TestNodeStateProperty, IEquata
     /// <param name="exception">Failure exception.</param>
     /// <param name="explanation">Failure explanation.</param>
     public FailedTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets the failure exception.
@@ -322,7 +322,7 @@ public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty, IEquatab
     /// <param name="exception">Error exception.</param>
     /// <param name="explanation">Error explanation.</param>
     public ErrorTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets the error exception.
@@ -389,7 +389,7 @@ public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty, IEquat
     /// <param name="exception">Timeout exception.</param>
     /// <param name="explanation">Timeout explanation.</param>
     public TimeoutTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets get the timeout exception.
@@ -463,7 +463,7 @@ public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty, IEqu
     /// <param name="exception">Cancellation exception.</param>
     /// <param name="explanation">Cancellation explanation.</param>
     public CancelledTestNodeStateProperty(Exception exception, string? explanation = null)
-        : base(explanation ?? exception.Message) => Exception = exception;
+        : base(explanation) => Exception = exception;
 
     /// <summary>
     /// Gets the cancellation exception.
