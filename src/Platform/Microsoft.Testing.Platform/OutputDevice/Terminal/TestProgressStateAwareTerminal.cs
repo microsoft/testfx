@@ -21,8 +21,6 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
-    private readonly bool _writeProgressImmediatelyAfterOutput;
-    private readonly int _updateEvery;
     private TestProgressState?[] _progressItems = [];
     private bool? _showProgressCached;
 
@@ -43,7 +41,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         try
         {
-            while (!_cts.Token.WaitHandle.WaitOne(_updateEvery))
+            // When writing to ANSI, we update the progress in place and it should look responsive so we
+            // update every half second, because we only show seconds on the screen, so it is good enough.
+            // When writing to non-ANSI, we never show progress as the output can get long and messy.
+            while (!_cts.Token.WaitHandle.WaitOne(500))
             {
                 lock (_lock)
                 {
@@ -69,12 +70,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         _terminal.EraseProgress();
     }
 
-    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, bool writeProgressImmediatelyAfterOutput, int updateEvery)
+    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress)
     {
         _terminal = terminal;
         _showProgress = showProgress;
-        _writeProgressImmediatelyAfterOutput = writeProgressImmediatelyAfterOutput;
-        _updateEvery = updateEvery;
     }
 
     public int AddWorker(TestProgressState testWorker)
@@ -134,10 +133,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     _terminal.StartUpdate();
                     _terminal.EraseProgress();
                     write(_terminal);
-                    if (_writeProgressImmediatelyAfterOutput)
-                    {
-                        _terminal.RenderProgress(_progressItems);
-                    }
+                    _terminal.RenderProgress(_progressItems);
                 }
                 finally
                 {
