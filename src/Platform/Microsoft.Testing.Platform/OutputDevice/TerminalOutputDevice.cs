@@ -152,9 +152,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             showPassed = () => true;
         }
 
-        Func<bool?> shouldShowProgress = noProgress
+        Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
             // User preference is to not show progress.
-            ? () => false
+            // Or, we are in terminal that's not capable of changing cursor and we can't update progress in-place.
+            // In that case, we force disable progress as well.
+            ? static () => false
             // User preference is to allow showing progress, figure if we should actually show it based on whether or not we are a testhost controller.
             //
             // TestHost controller is not running any tests and it should not be writing progress.
