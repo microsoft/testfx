@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -601,7 +602,7 @@ internal class TestMethodInfo : ITestMethod
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async Task RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(result != null, "result != null");
 
@@ -708,7 +709,7 @@ internal class TestMethodInfo : ITestMethod
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async Task<bool> RunTestInitializeMethodAsync(object classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(classInstance != null, "classInstance != null");
         DebugEx.Assert(result != null, "result != null");
@@ -786,7 +787,7 @@ internal class TestMethodInfo : ITestMethod
         return false;
     }
 
-    private async Task<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -807,7 +808,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeout?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
@@ -825,7 +830,7 @@ internal class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private async Task<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
@@ -840,7 +845,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
@@ -858,7 +867,7 @@ internal class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private async Task<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -879,7 +888,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeout?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif
@@ -897,7 +910,7 @@ internal class TestMethodInfo : ITestMethod
         return result;
     }
 
-    private async Task<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
     {
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
@@ -912,7 +925,11 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
+                {
+                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
+                }
+
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
 #endif

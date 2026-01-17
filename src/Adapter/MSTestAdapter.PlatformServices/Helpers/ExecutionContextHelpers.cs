@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class ExecutionContextHelpers
@@ -23,7 +25,7 @@ internal static class ExecutionContextHelpers
         }
     }
 
-    internal static async Task RunOnContextAsync(ExecutionContext? executionContext, Func<Task> action)
+    internal static async SynchronizationContextPreservingTask RunOnContextAsync(ExecutionContext? executionContext, Func<SynchronizationContextPreservingTask> action)
     {
         if (executionContext is null)
         {
@@ -37,8 +39,8 @@ internal static class ExecutionContextHelpers
             // Otherwise, it will throw InvalidOperationException with message:
             // Cannot apply a context that has been marshaled across AppDomains, that was not acquired through a Capture operation or that has already been the argument to a Set call.
             executionContext = executionContext.CreateCopy();
-            Task? t = null;
-            ExecutionContext.Run(executionContext, action => t = ((Func<Task>)action!).Invoke(), action);
+            SynchronizationContextPreservingTask? t = null;
+            ExecutionContext.Run(executionContext, action => t = ((Func<SynchronizationContextPreservingTask>)action!).Invoke(), action);
             if (t is not null)
             {
                 await t.ConfigureAwait(false);
