@@ -44,7 +44,8 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             // When writing to ANSI, we update the progress in place and it should look responsive so we
             // update every half second, because we only show seconds on the screen, so it is good enough.
             // When writing to non-ANSI, we never show progress as the output can get long and messy.
-            while (!_cts.Token.WaitHandle.WaitOne(500))
+            const int AnsiUpdateCadenceInMs = 500;
+            while (!_cts.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
             {
                 lock (_lock)
                 {
