@@ -115,16 +115,16 @@ Der Timeoutwert wird in einem der folgenden Formate angegeben:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">Geben Sie den Typ des Speicherabbilds an.
+Gültige Werte sind „Mini“, „Heap“, „Triage“, „None“ (nur in .NET 6 und höher verfügbar) oder „Full“.
+Der Standardtyp ist „Full“.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">„{0}“ ist kein gültiger Speicherabbildtyp.
+Gültige Optionen sind „Mini“, „Heap“, „Triage“ (nur in .NET 6 und höher verfügbar) und „Full“.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
