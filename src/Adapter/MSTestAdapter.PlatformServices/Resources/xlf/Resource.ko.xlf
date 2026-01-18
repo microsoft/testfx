@@ -185,7 +185,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="DuplicateAttributeError">
         <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
-        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <target state="translated">'{0}' 형식의 특성은 하나만 허용되지만 여러 개가 발견되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">

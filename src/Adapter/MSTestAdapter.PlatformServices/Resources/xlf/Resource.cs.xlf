@@ -185,7 +185,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="DuplicateAttributeError">
         <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
-        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <target state="translated">Je povolen pouze jeden atribut typu {0}, ale bylo nalezeno více atributů.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">

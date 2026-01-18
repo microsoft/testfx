@@ -185,7 +185,7 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
       </trans-unit>
       <trans-unit id="DuplicateAttributeError">
         <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
-        <target state="new">Only one attribute of type '{0}' is allowed, but multiple were found.</target>
+        <target state="translated">È consentito un solo attributo di tipo '{0}', ma ne sono stati trovati diversi.</target>
         <note />
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">

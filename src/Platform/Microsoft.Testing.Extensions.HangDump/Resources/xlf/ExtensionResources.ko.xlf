@@ -115,16 +115,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">덤프의 유형을 지정합니다.
+유효한 값은 'Mini', 'Heap', 'Triage', 'None'(.NET 6+에서만 사용 가능) 또는 'Full'입니다.
+기본 유형은 'Full'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">'{0}'은(는) 올바른 덤프 유형이 아닙니다.
+유효한 옵션은 'Mini', 'Heap', 'Triage', 'None'(.NET 6 이상에서만 사용 가능) 및 'Full'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
