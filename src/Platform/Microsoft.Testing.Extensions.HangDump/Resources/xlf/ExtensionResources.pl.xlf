@@ -115,16 +115,16 @@ Wartość limitu czasu jest określana w jednym z następujących formatów:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">Określ typ zrzutu.
+Prawidłowe wartości to „Mini”, „Heap”, „Triage”, „None” (dostępne tylko na platformie .NET 6+) lub „Full”.
+Domyślny typ to „Full”</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">„{0}” nie jest prawidłowym typem zrzutu.
+Prawidłowe opcje to „Mini”, „Heap”, „Triage”, „None” (dostępne tylko na platformie .NET 6+) i „Full”</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">

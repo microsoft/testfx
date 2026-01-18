@@ -115,16 +115,16 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) or 'Full'.
-Default type is 'Full'</target>
+        <target state="translated">指定傾印的類型。
+有效值為 'Mini'、'Heap'、'Triage'、'None' (僅適用 .NET 6+) 或 'Full'。
+預設類型為 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type.
-Valid options are 'Mini', 'Heap', 'Triage', 'None' (only available in .NET 6+) and 'Full'</target>
+        <target state="translated">'{0}' 不是有效的傾印類型。
+有效的選項為 'Mini'、'Heap'、'Triage'、'None' (僅適用 .NET 6+) 和 'Full'</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
