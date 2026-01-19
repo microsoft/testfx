@@ -86,6 +86,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _options = options;
 
+        Func<bool?> showProgress = options.ShowProgress;
         ITerminal terminal;
         if (_options.AnsiMode == AnsiMode.SimpleAnsi)
         {
@@ -106,9 +107,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
             };
 
             terminal = useAnsi ? new AnsiTerminal(console) : new NonAnsiTerminal(console);
+            if (!useAnsi)
+            {
+                showProgress = () => false;
+            }
         }
 
-        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, _options.ShowProgress);
+        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress);
     }
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
