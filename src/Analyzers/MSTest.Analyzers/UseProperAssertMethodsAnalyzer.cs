@@ -259,12 +259,13 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             }
 
             INamedTypeSymbol objectTypeSymbol = context.Compilation.GetSpecialType(SpecialType.System_Object);
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqEnumerable, out INamedTypeSymbol? enumerableTypeSymbol);
 
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol), OperationKind.Invocation);
+            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
@@ -281,19 +282,19 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (targetMethod.Name)
         {
             case "IsTrue":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol, enumerableTypeSymbol);
                 break;
 
             case "IsFalse":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol, enumerableTypeSymbol);
                 break;
 
             case "AreEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true, objectTypeSymbol);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true, objectTypeSymbol, enumerableTypeSymbol);
                 break;
 
             case "AreNotEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol, enumerableTypeSymbol);
                 break;
         }
     }
@@ -566,24 +567,25 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
-     IOperation operation,
-     out SyntaxNode? collectionExpression,
-     out SyntaxNode? predicateExpression,
-     out IOperation? countOperation)
+        IOperation operation,
+        INamedTypeSymbol? enumerableTypeSymbol,
+        out SyntaxNode? collectionExpression,
+        out SyntaxNode? predicateExpression,
+        out IOperation? countOperation)
     {
         collectionExpression = null;
         predicateExpression = null;
         countOperation = null;
 
-        if (operation is not IInvocationOperation invocation)
+        if (enumerableTypeSymbol is null ||
+            operation is not IInvocationOperation invocation)
         {
             return LinqPredicateCheckStatus.Unknown;
         }
 
         string methodName = invocation.TargetMethod.Name;
-        string? containingType = invocation.TargetMethod.ContainingType?.ToDisplayString();
 
-        if (containingType != "System.Linq.Enumerable")
+        if (!SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, enumerableTypeSymbol))
         {
             return LinqPredicateCheckStatus.Unknown;
         }
@@ -591,12 +593,12 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         // Check for Where().Method() patterns
         if (invocation.Arguments.Length == 1)
         {
-            if (TryMatchWherePattern(invocation, "Any", out collectionExpression, out predicateExpression))
+            if (TryMatchWherePattern(invocation, "Any", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
             {
                 return LinqPredicateCheckStatus.WhereAny;
             }
 
-            if (TryMatchWherePattern(invocation, "Count", out collectionExpression, out predicateExpression))
+            if (TryMatchWherePattern(invocation, "Count", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
             {
                 countOperation = operation;
                 return LinqPredicateCheckStatus.WhereCount;
@@ -607,7 +609,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (methodName)
         {
             case "Any":
-                if (TryMatchLinqMethod(invocation, "Any", out collectionExpression, out predicateExpression))
+                if (TryMatchLinqMethod(invocation, "Any", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
                 {
                     return LinqPredicateCheckStatus.Any;
                 }
@@ -615,7 +617,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 break;
 
             case "Count":
-                if (TryMatchLinqMethod(invocation, "Count", out collectionExpression, out predicateExpression))
+                if (TryMatchLinqMethod(invocation, "Count", enumerableTypeSymbol, out collectionExpression, out predicateExpression))
                 {
                     countOperation = operation;
                     return LinqPredicateCheckStatus.Count;
@@ -627,7 +629,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return LinqPredicateCheckStatus.Unknown;
     }
 
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol)
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
@@ -666,6 +668,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         // Check for LINQ predicate patterns that suggest Contains/DoesNotContain
         LinqPredicateCheckStatus linqStatus = RecognizeLinqPredicateCheck(
             conditionArgument,
+            enumerableTypeSymbol,
             out SyntaxNode? linqCollectionExpr,
             out SyntaxNode? predicateExpr,
             out _);
@@ -772,6 +775,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             // Use RecognizeLinqPredicateCheck to properly validate LINQ Count method
             LinqPredicateCheckStatus countLinqStatus = RecognizeLinqPredicateCheck(
                 binaryOp.LeftOperand,
+                enumerableTypeSymbol,
                 out SyntaxNode? countCollectionExpr,
                 out SyntaxNode? countPredicateExpr,
                 out _);
@@ -892,7 +896,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol)
+    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
     {
         // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
         if (isAreEqualInvocation)
@@ -903,6 +907,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 // Check for LINQ predicate patterns that suggest ContainsSingle
                 LinqPredicateCheckStatus linqStatus2 = RecognizeLinqPredicateCheck(
                     actualArgumentValue,
+                    enumerableTypeSymbol,
                     out SyntaxNode? linqCollectionExpr2,
                     out SyntaxNode? predicateExpr2,
                     out _);
@@ -1045,17 +1050,18 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool TryMatchWherePattern(
-    IInvocationOperation invocation,
-    string methodName,
-    out SyntaxNode? collectionExpression,
-    out SyntaxNode? predicateExpression)
+        IInvocationOperation invocation,
+        string methodName,
+        INamedTypeSymbol enumerableTypeSymbol,
+        out SyntaxNode? collectionExpression,
+        out SyntaxNode? predicateExpression)
     {
         if (invocation.TargetMethod.Name == methodName &&
-            invocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, enumerableTypeSymbol) &&
             invocation.Arguments.Length == 1 &&
             invocation.Arguments[0].Value is IInvocationOperation whereInvocation &&
             whereInvocation.TargetMethod.Name == "Where" &&
-            whereInvocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable" &&
+            SymbolEqualityComparer.Default.Equals(whereInvocation.TargetMethod.ContainingType, enumerableTypeSymbol) &&
             whereInvocation.Arguments.Length == 2)
         {
             collectionExpression = whereInvocation.Arguments[0].Value.Syntax;
@@ -1069,13 +1075,14 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool TryMatchLinqMethod(
-    IInvocationOperation invocation,
-    string methodName,
-    out SyntaxNode? collectionExpression,
-    out SyntaxNode? predicateExpression)
+        IInvocationOperation invocation,
+        string methodName,
+        INamedTypeSymbol enumerableTypeSymbol,
+        out SyntaxNode? collectionExpression,
+        out SyntaxNode? predicateExpression)
     {
         if (invocation.TargetMethod.Name == methodName &&
-            invocation.TargetMethod.ContainingType?.ToDisplayString() == "System.Linq.Enumerable")
+            SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, enumerableTypeSymbol))
         {
             // Extension method with predicate: Method(collection, predicate)
             if (invocation.Arguments.Length == 2)
