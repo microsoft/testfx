@@ -808,10 +808,7 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                if (timeout?.CooperativeCancellation == false || _executionContext is not null)
-                {
-                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
-                }
+                CaptureExecutionContextAfterFixtureIfNeeded(timeout);
 
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
@@ -845,10 +842,7 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
-                {
-                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
-                }
+                CaptureExecutionContextAfterFixtureIfNeeded(timeoutInfo);
 
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
@@ -888,10 +882,7 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                if (timeout?.CooperativeCancellation == false || _executionContext is not null)
-                {
-                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
-                }
+                CaptureExecutionContextAfterFixtureIfNeeded(timeout);
 
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
@@ -925,10 +916,7 @@ internal class TestMethodInfo : ITestMethod
                     await task.ConfigureAwait(false);
                 }
 
-                if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
-                {
-                    _executionContext = ExecutionContext.Capture() ?? _executionContext;
-                }
+                CaptureExecutionContextAfterFixtureIfNeeded(timeoutInfo);
 
 #if NETFRAMEWORK
                 _hostContext = CallContext.HostContext;
@@ -945,6 +933,21 @@ internal class TestMethodInfo : ITestMethod
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
 
         return result;
+    }
+
+    private void CaptureExecutionContextAfterFixtureIfNeeded(TimeoutInfo? timeoutInfo)
+    {
+        // After we execute a global test initialize, test initialize, test cleanup, or global test cleanup, we
+        // might need to capture the execution context.
+        // Generally, we do so only if the method has a timeout and that timeout is non-cooperative.
+        // For all other cases, we already use a custom task that preserves synchronization and execution contexts.
+        // NOTE: it seems that in .NET Framework, the synchronization context is part of the execution context.
+        // However, this doesn't appear to be the case in .NET (Core) where the synchronization context is strictly tied to current thread.
+        // In addition, if execution context was captured before (due to use of non-cooperage timeout in a previously run fixture), we still capture here again.
+        if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
+        {
+            _executionContext = ExecutionContext.Capture() ?? _executionContext;
+        }
     }
 
     /// <summary>
