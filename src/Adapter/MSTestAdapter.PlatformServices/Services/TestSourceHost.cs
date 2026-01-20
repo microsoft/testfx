@@ -157,10 +157,12 @@ internal class TestSourceHost : ITestSourceHost
 
             _logger.LogInfo("DesktopTestSourceHost.SetupHost(): assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
 
+            // Create AssemblyResolver without logger first - the logger cannot be passed across
+            // AppDomain boundaries until the assembly containing the logger type is loaded.
             object resolver = AppDomainUtilities.CreateInstance(
                 AppDomain,
                 assemblyResolverType,
-                [resolutionPaths, _logger]);
+                [resolutionPaths, null]);
 
             _logger.LogInfo(
                 "DesktopTestSourceHost.SetupHost(): resolver type: {0} , resolve type assembly: {1} ",
@@ -168,6 +170,9 @@ internal class TestSourceHost : ITestSourceHost
                 resolver.GetType().Assembly.Location);
 
             _childDomainAssemblyResolver = (AssemblyResolver)resolver;
+
+            // Now that the assembly is loaded in the child domain, we can flow the logger
+            _childDomainAssemblyResolver.Logger = _logger;
 
             _ = TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_childDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName), _logger);
         }

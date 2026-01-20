@@ -9,26 +9,40 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
-/*
- * /!\ WARNING /!\
- * DO NOT USE EQTTRACE IN THIS CLASS AS IT WILL CAUSE LOAD ISSUE BECAUSE OF THE APPDOMAIN
- * ASSEMBLY RESOLVER SETUP.
- */
-
 /// <summary>
 /// Utility function for Assembly related info
 /// The caller is supposed to create AppDomain and create instance of given class in there.
 /// </summary>
 internal sealed class AssemblyLoadWorker : MarshalByRefObject
 {
-    private readonly IAssemblyUtility _assemblyUtility;
-
-    public AssemblyLoadWorker(IAdapterTraceLogger logger)
-        : this(new AssemblyUtility(logger))
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AssemblyLoadWorker"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Use the parameterless constructor when creating instances in child AppDomains,
+    /// then set the <see cref="Logger"/> property after construction. This is necessary because
+    /// the logger cannot be passed as a constructor argument across AppDomain boundaries.
+    /// </remarks>
+    public AssemblyLoadWorker()
     {
     }
 
-    internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility) => _assemblyUtility = assemblyUtility;
+    internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility) => AssemblyUtility = assemblyUtility;
+
+    /// <summary>
+    /// Gets or sets the logger to use for tracing.
+    /// </summary>
+    /// <remarks>
+    /// This property allows setting the logger after construction, which is necessary when creating
+    /// instances in child AppDomains. The logger cannot be passed as a constructor argument because
+    /// the CLR needs to marshal arguments before the instance is created, but the AssemblyResolver
+    /// (which enables type resolution in the child domain) doesn't exist yet at that point.
+    /// </remarks>
+    public IAdapterTraceLogger? Logger { get; set; }
+
+    private IAssemblyUtility? AssemblyUtility { get; set; }
+
+    private IAssemblyUtility GetOrCreateAssemblyUtility() => AssemblyUtility ??= new AssemblyUtility(Logger!);
 
     /// <summary>
     /// Returns the full path to the dependent assemblies of the parameter managed assembly recursively.
@@ -47,7 +61,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         try
         {
             // First time we load in LoadFromContext to avoid issues.
-            assembly = _assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
+            assembly = GetOrCreateAssemblyUtility().ReflectionOnlyLoadFrom(assemblyPath);
         }
         catch (Exception ex)
         {
@@ -92,7 +106,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
 
         try
         {
-            Assembly a = _assemblyUtility.ReflectionOnlyLoadFrom(path);
+            Assembly a = GetOrCreateAssemblyUtility().ReflectionOnlyLoadFrom(path);
             return GetTargetFrameworkStringFromAssembly(a);
         }
         catch (BadImageFormatException)
@@ -236,7 +250,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
             string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
             DebugEx.Assert(!StringEx.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
-            assembly = _assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
+            assembly = GetOrCreateAssemblyUtility().ReflectionOnlyLoad(postPolicyAssembly);
             visitedAssemblies.Add(assembly.FullName);   // Just in case.
         }
         catch (Exception ex)

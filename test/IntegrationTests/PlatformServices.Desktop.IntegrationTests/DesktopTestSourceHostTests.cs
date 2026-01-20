@@ -5,6 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnitTests;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -74,7 +75,7 @@ public class DesktopTestSourceHostTests : TestContainer
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
             GetMockedIRunSettings(runSettingsXml).Object,
             null,
-            new Mock<IAdapterTraceLogger>().Object);
+            new FakeTraceLogger());
         _testSourceHost.SetupHost();
 
         var asm = Assembly.LoadFrom(sampleProjectPath);
@@ -88,7 +89,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void DisposeShouldUnloadChildAppDomain()
     {
         string testSourceHandler = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSourceHandler, null, null, new Mock<IAdapterTraceLogger>().Object);
+        _testSourceHost = new TestSourceHost(testSourceHandler, null, null, new FakeTraceLogger());
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created

@@ -94,16 +94,26 @@ internal static class AppDomainUtilities
                 Path.GetDirectoryName(testSourcePath),
             };
 
-            CreateInstance(
-                appDomain,
-                assemblyResolverType,
-                [resolutionPaths]);
+            // Create AssemblyResolver without logger first - the logger cannot be passed across
+            // AppDomain boundaries until the assembly containing the logger type is loaded.
+            using var resolver =
+                (AssemblyResolver)CreateInstance(
+                    appDomain,
+                    assemblyResolverType,
+                    [resolutionPaths, null]);
 
+            // Now that the assembly is loaded in the child domain, we can flow the logger
+            resolver.Logger = logger;
+
+            // Create AssemblyLoadWorker without arguments first, then set the logger
             var assemblyLoadWorker =
                 (AssemblyLoadWorker)CreateInstance(
                 appDomain,
                 typeof(AssemblyLoadWorker),
-                [logger]);
+                null);
+
+            // Now that the assembly is loaded in the child domain, we can flow the logger
+            assemblyLoadWorker.Logger = logger;
 
             string targetFramework = assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath, out string? errorMessage);
 

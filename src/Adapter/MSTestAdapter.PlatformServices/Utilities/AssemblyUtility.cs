@@ -218,15 +218,24 @@ internal class AssemblyUtility
             _logger.PrepareRemoteAppDomain(appDomain);
 
             // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
+            // Create without logger first - logger cannot be passed across AppDomain boundaries
+            // until the AssemblyResolver is set up to resolve the logger type.
             using var resolver =
                 (AssemblyResolver)AppDomainUtilities.CreateInstance(
                     appDomain,
                     assemblyResolverType,
-                    [GetResolutionPaths()]);
+                    [GetResolutionPaths(), null]);
+
+            // Now that the assembly is loaded in the child domain, we can flow the logger
+            resolver.Logger = _logger;
 
             // This has to be Load, otherwise Serialization of argument types will not work correctly.
+            // Create without arguments first, then set the logger.
             var worker =
-                (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), [_logger]);
+                (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
+
+            // Now that the assembly is loaded in the child domain, we can flow the logger
+            worker.Logger = _logger;
 
             _logger.LogInfo("AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
 

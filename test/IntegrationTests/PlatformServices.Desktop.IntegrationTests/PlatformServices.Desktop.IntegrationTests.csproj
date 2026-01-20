@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="$(RepoRoot)test\Utilities\FakeTraceLogger.cs" Link="FakeTraceLogger.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Moq" />
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="StrongNamer" />

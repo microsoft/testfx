@@ -8,6 +8,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnitTests;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -17,42 +18,6 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests;
-
-/// <summary>
-/// A fake logger that can be used across AppDomain boundaries.
-/// Moq proxies are not serializable and cannot cross AppDomain boundaries.
-/// </summary>
-[Serializable]
-internal sealed class FakeTraceLogger : MarshalByRefObject, IAdapterTraceLogger
-{
-    public bool IsInfoEnabled => false;
-
-    public bool IsWarningEnabled => false;
-
-    public bool IsErrorEnabled => false;
-
-    public bool IsVerboseEnabled => false;
-
-    public void LogError(string format, params object?[] args)
-    {
-    }
-
-    public void LogWarning(string format, params object?[] args)
-    {
-    }
-
-    public void LogInfo(string format, params object?[] args)
-    {
-    }
-
-    public void LogVerbose(string format, params object?[] args)
-    {
-    }
-
-    public void PrepareRemoteAppDomain(AppDomain appDomain)
-    {
-    }
-}
 
 public class DesktopTestSourceHostTests : TestContainer
 {

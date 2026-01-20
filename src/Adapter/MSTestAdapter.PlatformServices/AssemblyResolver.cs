@@ -84,13 +84,27 @@ internal
     /// </summary>
     private readonly Lock _syncLock = new();
 
-    /// <summary>
-    /// The logger to use for tracing.
-    /// </summary>
-    private readonly IAdapterTraceLogger? _logger;
-
     private static List<string>? s_currentlyLoading;
     private bool _disposed;
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Gets or sets the logger to use for tracing.
+    /// </summary>
+    /// <remarks>
+    /// This property allows setting the logger after construction, which is necessary when creating
+    /// instances in child AppDomains. The logger cannot be passed as a constructor argument because
+    /// the CLR needs to marshal arguments before the instance is created, but the AssemblyResolver
+    /// (which enables type resolution in the child domain) doesn't exist yet at that point.
+    /// By setting the logger after construction, the assembly is already loaded and the logger type
+    /// can be properly resolved for creating a transparent proxy.
+    /// </remarks>
+#else
+    /// <summary>
+    /// Gets or sets the logger to use for tracing.
+    /// </summary>
+#endif
+    public IAdapterTraceLogger? Logger { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyResolver"/> class.
@@ -99,7 +113,8 @@ internal
     /// A list of directories for resolution path.
     /// </param>
     /// <param name="logger">
-    /// The logger to use for tracing. Can be null if logging is not needed.
+    /// The logger to use for tracing. Can be null if logging is not needed, or if the logger
+    /// will be set later via the <see cref="Logger"/> property (necessary for cross-AppDomain scenarios).
     /// </param>
     /// <remarks>
     /// If there are additional paths where a recursive search is required
@@ -111,7 +126,7 @@ internal
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
-        _logger = logger;
+        Logger = logger;
 
         AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK
@@ -631,7 +646,7 @@ internal
     /// <returns><c>true</c> if it's safe to log; <c>false</c> otherwise.</returns>
     // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
     private bool CanSafelyLog(string? assemblyName) =>
-        _logger is not null
+        Logger is not null
             && !StringEx.IsNullOrEmpty(assemblyName)
             && !assemblyName.StartsWith(LoggerAssemblyName, StringComparison.Ordinal)
             && !assemblyName.StartsWith(LoggerAssemblyNameLegacy, StringComparison.Ordinal)
@@ -642,9 +657,9 @@ internal
     /// </summary>
     private void SafeLogInfo(string? assemblyName, string format, params object?[] args)
     {
-        if (CanSafelyLog(assemblyName) && _logger!.IsInfoEnabled)
+        if (CanSafelyLog(assemblyName) && Logger!.IsInfoEnabled)
         {
-            _logger.LogInfo(format, args);
+            Logger.LogInfo(format, args);
         }
     }
 
@@ -653,9 +668,9 @@ internal
     /// </summary>
     private void SafeLogWarning(string? assemblyName, string format, params object?[] args)
     {
-        if (CanSafelyLog(assemblyName) && _logger!.IsWarningEnabled)
+        if (CanSafelyLog(assemblyName) && Logger!.IsWarningEnabled)
         {
-            _logger.LogWarning(format, args);
+            Logger.LogWarning(format, args);
         }
     }
 
@@ -664,9 +679,9 @@ internal
     /// </summary>
     private void SafeLogVerbose(string? assemblyName, string format, params object?[] args)
     {
-        if (CanSafelyLog(assemblyName) && _logger!.IsVerboseEnabled)
+        if (CanSafelyLog(assemblyName) && Logger!.IsVerboseEnabled)
         {
-            _logger.LogVerbose(format, args);
+            Logger.LogVerbose(format, args);
         }
     }
 
