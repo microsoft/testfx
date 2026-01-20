@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
 
 [AsyncMethodBuilder(typeof(SynchronizationContextPreservingAsyncTaskMethodBuilder<>))]
-internal sealed class SynchronizationContextPreservingTask<TResult>
+internal readonly struct SynchronizationContextPreservingTask<TResult>
 {
     private readonly Task<TResult> _innerTask;
 
@@ -19,7 +19,7 @@ internal sealed class SynchronizationContextPreservingTask<TResult>
 }
 
 [AsyncMethodBuilder(typeof(SynchronizationContextPreservingAsyncTaskMethodBuilder))]
-internal sealed class SynchronizationContextPreservingTask
+internal readonly struct SynchronizationContextPreservingTask
 {
     private readonly Task _innerTask;
 

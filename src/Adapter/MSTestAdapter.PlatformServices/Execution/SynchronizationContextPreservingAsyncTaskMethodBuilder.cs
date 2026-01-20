@@ -22,9 +22,11 @@ internal struct SynchronizationContextPreservingAsyncTaskMethodBuilder
     public void SetStateMachine(IAsyncStateMachine stateMachine)
         => _inner.SetStateMachine(stateMachine);
 
-#pragma warning disable
+#pragma warning disable CA1822 // Mark members as static
+#pragma warning disable IDE0251 // Make member 'readonly'
     public void Start<TStateMachine>(ref TStateMachine stateMachine)
-#pragma warning restore
+#pragma warning restore IDE0251 // Make member 'readonly'
+#pragma warning restore CA1822 // Mark members as static
         where TStateMachine : IAsyncStateMachine
         // Start is the whole reason why we have this custom builder.
         // BCL implementation restores back SynchronizationContext.
@@ -66,9 +68,11 @@ internal struct SynchronizationContextPreservingAsyncTaskMethodBuilder<TResult>
     public void SetStateMachine(IAsyncStateMachine stateMachine)
         => _inner.SetStateMachine(stateMachine);
 
-#pragma warning disable
+#pragma warning disable CA1822 // Mark members as static
+#pragma warning disable IDE0251 // Make member 'readonly'
     public void Start<TStateMachine>(ref TStateMachine stateMachine)
-#pragma warning restore
+#pragma warning restore IDE0251 // Make member 'readonly'
+#pragma warning restore CA1822 // Mark members as static
         where TStateMachine : IAsyncStateMachine
         // Start is the whole reason why we have this custom builder.
         // BCL implementation restores back SynchronizationContext.
