@@ -14,7 +14,27 @@ public sealed class SynchronizationContextTests : AcceptanceTestBase<Synchroniza
     public async Task SynchronizationContext_WhenSetInTestInitialize_IsPreservedInTestMethod(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new Dictionary<string, string?>()
+            {
+                ["SET_SYNC_CONTEXT_TEST_INIT"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task SynchronizationContext_WhenSetInGlobalTestInitialize_IsPreservedInBothTestInitAndTestMethod(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new Dictionary<string, string?>()
+            {
+                ["SET_SYNC_CONTEXT_GLOBAL_TEST_INIT"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
+
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -61,24 +81,40 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
-    private UnitTestSynchronizationContext? _syncContext;
+    private static UnitTestSynchronizationContext? _syncContext;
+
+    [GlobalTestInitialize]
+    public static void GlobalTestInit(TestContext _)
+        => SetSyncContextIfRequested("SET_SYNC_CONTEXT_GLOBAL_TEST_INIT");
 
     [TestInitialize]
     public void TestInitialize()
     {
-        _syncContext = new UnitTestSynchronizationContext();
-        SynchronizationContext.SetSynchronizationContext(_syncContext);
+        SetSyncContextIfRequested("SET_SYNC_CONTEXT_TEST_INIT");
+        AssertSyncContext();
     }
 
     [TestMethod]
     public void TestMethod_SynchronizationContextShouldBePreserved()
+        => AssertSyncContext();
+
+    [TestCleanup]
+    public void TestCleanup()
     {
         Assert.IsNotNull(SynchronizationContext.Current);
         Assert.AreSame(_syncContext, SynchronizationContext.Current);
     }
 
-    [TestCleanup]
-    public void TestCleanup()
+    private static void SetSyncContextIfRequested(string envVariable)
+    {
+        if (Environment.GetEnvironmentVariable(envVariable) == "1")
+        {
+            _syncContext = new UnitTestSynchronizationContext();
+            SynchronizationContext.SetSynchronizationContext(_syncContext);
+        }
+    }
+
+    private static void AssertSyncContext()
     {
         Assert.IsNotNull(SynchronizationContext.Current);
         Assert.AreSame(_syncContext, SynchronizationContext.Current);
