@@ -481,11 +481,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         policiesService.ProcessRole = TestProcessRole.TestHost;
         await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
-        // Setup the test host working folder.
-        // Out of the test host controller extension the current working directory is the test host working directory.
-        string? currentWorkingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
-
         testHostControllerInfo.IsCurrentProcessTestHostController = false;
 
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
