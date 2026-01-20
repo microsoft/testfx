@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppCont
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -18,9 +17,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 internal sealed class FileOperations : IFileOperations
 {
     private readonly ConcurrentDictionary<string, Assembly> _assemblyCache = new();
+#if NETFRAMEWORK
+    private readonly IAdapterTraceLogger _logger;
+#endif
 
 #if WIN_UI
     private readonly bool _isPackaged = AppModel.IsPackagedProcess();
+#endif
+
+#if NETFRAMEWORK
+    public FileOperations(IAdapterTraceLogger logger) => _logger = logger;
 #endif
 
     /// <summary>
@@ -106,7 +112,7 @@ internal sealed class FileOperations : IFileOperations
     }
 
 #if NETFRAMEWORK
-    private static object? SafeInvoke<T>(Func<T> action, string? messageFormatOnException = null)
+    private object? SafeInvoke<T>(Func<T> action, string? messageFormatOnException = null)
     {
         try
         {
@@ -119,7 +125,7 @@ internal sealed class FileOperations : IFileOperations
                 messageFormatOnException = "{0}";
             }
 
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
+            _logger.LogError(messageFormatOnException, exception.Message);
         }
 
         return null;

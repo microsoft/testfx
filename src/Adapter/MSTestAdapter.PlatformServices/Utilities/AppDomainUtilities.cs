@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,11 +37,12 @@ internal static class AppDomainUtilities
     /// </summary>
     /// <param name="setup">AppdomainSetup for app domain creation.</param>
     /// <param name="frameworkVersionString">The target framework version of the test source.</param>
+    /// <param name="logger">The logger.</param>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
-    internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString)
+    internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString, IAdapterTraceLogger logger)
     {
-        if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
+        if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString, logger).CompareTo(Version45) > 0)
         {
             PropertyInfo? pInfo = typeof(AppDomainSetup).GetProperty(EngineConstants.TargetFrameworkName);
             pInfo?.SetValue(setup, frameworkVersionString, null);
@@ -53,19 +55,20 @@ internal static class AppDomainUtilities
     /// <param name="testSourcePath">
     /// The path of the dll.
     /// </param>
+    /// <param name="logger">The logger.</param>
     /// <returns>
     /// Framework string
     /// TODO: Need to add components/E2E tests to cover these scenarios.
     /// </returns>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
-    internal static string GetTargetFrameworkVersionString(string testSourcePath)
+    internal static string GetTargetFrameworkVersionString(string testSourcePath, IAdapterTraceLogger logger)
     {
         AppDomainSetup appDomainSetup = new()
         {
             LoaderOptimization = LoaderOptimization.MultiDomainHost,
         };
 
-        SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
+        SetConfigurationFile(appDomainSetup, new DeploymentUtility(logger).GetConfigFile(testSourcePath), logger);
 
         if (!File.Exists(testSourcePath))
         {
@@ -78,8 +81,7 @@ internal static class AppDomainUtilities
         {
             appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
 
-            // Wire the eqttrace logs in this domain to the current domain.
-            EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+            logger.PrepareRemoteAppDomain(appDomain);
 
             // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
             // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
@@ -87,10 +89,10 @@ internal static class AppDomainUtilities
             Type assemblyResolverType = typeof(AssemblyResolver);
 
             var resolutionPaths = new List<string>
-                {
-                    Path.GetDirectoryName(typeof(TestCase).Assembly.Location),
-                    Path.GetDirectoryName(testSourcePath),
-                };
+            {
+                Path.GetDirectoryName(typeof(TestCase).Assembly.Location),
+                Path.GetDirectoryName(testSourcePath),
+            };
 
             CreateInstance(
                 appDomain,
@@ -101,22 +103,22 @@ internal static class AppDomainUtilities
                 (AssemblyLoadWorker)CreateInstance(
                 appDomain,
                 typeof(AssemblyLoadWorker),
-                null);
+                [logger]);
 
             string targetFramework = assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath, out string? errorMessage);
 
             if (errorMessage is not null)
             {
-                EqtTrace.Error(errorMessage);
+                logger.LogError("{0}", errorMessage);
             }
 
             return targetFramework;
         }
         catch (Exception exception)
         {
-            if (EqtTrace.IsErrorEnabled)
+            if (logger.IsErrorEnabled)
             {
-                EqtTrace.Error(exception);
+                logger.LogError("{0}", exception);
             }
         }
         finally
@@ -135,8 +137,9 @@ internal static class AppDomainUtilities
     /// </summary>
     /// <param name="appDomainSetup"> The app Domain Setup. </param>
     /// <param name="testSourceConfigFile"> The test Source Config File. </param>
+    /// <param name="logger">The logger.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string? testSourceConfigFile)
+    internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string? testSourceConfigFile, IAdapterTraceLogger logger)
     {
         if (StringEx.IsNullOrEmpty(testSourceConfigFile))
         {
@@ -145,11 +148,7 @@ internal static class AppDomainUtilities
             return;
         }
 
-        if (EqtTrace.IsInfoEnabled)
-        {
-            EqtTrace.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
-        }
-
+        logger.LogInfo("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
         appDomainSetup.ConfigurationFile = Path.GetFullPath(testSourceConfigFile);
 
         try
@@ -170,10 +169,7 @@ internal static class AppDomainUtilities
         }
         catch (Exception ex)
         {
-            if (EqtTrace.IsErrorEnabled)
-            {
-                EqtTrace.Error("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
-            }
+            logger.LogError("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
         }
     }
 
@@ -222,8 +218,9 @@ internal static class AppDomainUtilities
     /// Get the Version for the target framework version string.
     /// </summary>
     /// <param name="version">Target framework string.</param>
+    /// <param name="logger">The logger.</param>
     /// <returns>Framework Version.</returns>
-    internal static Version GetTargetFrameworkVersionFromVersionString(string version)
+    internal static Version GetTargetFrameworkVersionFromVersionString(string version, IAdapterTraceLogger logger)
     {
         try
         {
@@ -236,7 +233,7 @@ internal static class AppDomainUtilities
         catch (FormatException ex)
         {
             // if the version is ".NETPortable,Version=v4.5,Profile=Profile259", then above code will throw exception.
-            EqtTrace.Warning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
+            logger.LogWarning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
         }
 
         return DefaultVersion;

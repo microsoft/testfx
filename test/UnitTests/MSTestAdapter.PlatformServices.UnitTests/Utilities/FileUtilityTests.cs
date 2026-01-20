@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using Moq;
@@ -14,12 +15,16 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 public class FileUtilityTests : TestContainer
 {
     private readonly Mock<FileUtility> _fileUtility;
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
 
     public FileUtilityTests()
-        => _fileUtility = new Mock<FileUtility>
+    {
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
+        _fileUtility = new Mock<FileUtility>(_mockAdapterLogger.Object)
         {
             CallBase = true,
         };
+    }
 
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
     {

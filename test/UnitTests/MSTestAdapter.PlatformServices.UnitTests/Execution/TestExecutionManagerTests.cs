@@ -30,6 +30,9 @@ public class TestExecutionManagerTests : TestContainer
     private readonly TestExecutionManager _testExecutionManager;
     private readonly Mock<IMessageLogger> _mockMessageLogger;
     private readonly Mock<ITestSourceHandler> _mockTestSourceHandler;
+#if NETFRAMEWORK
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
+#endif
 
     private readonly TestProperty[] _tcmKnownProperties =
     [
@@ -61,6 +64,9 @@ public class TestExecutionManagerTests : TestContainer
         _cancellationToken = new TestRunCancellationToken();
         _mockMessageLogger = new Mock<IMessageLogger>();
         _mockTestSourceHandler = new Mock<ITestSourceHandler>();
+#if NETFRAMEWORK
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
+#endif
 
         _testExecutionManager = new TestExecutionManager(
             new EnvironmentWrapper(),
@@ -578,7 +584,11 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.SetupMockReflectionOperations();
 
             var originalReflectionOperation = new ReflectionOperations();
+#if NETFRAMEWORK
+            var originalFileOperation = new FileOperations(_mockAdapterLogger.Object);
+#else
             var originalFileOperation = new FileOperations();
+#endif
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
                 .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
@@ -637,7 +647,11 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.SetupMockReflectionOperations();
 
             var originalReflectionOperation = new ReflectionOperations();
+#if NETFRAMEWORK
+            var originalFileOperation = new FileOperations(_mockAdapterLogger.Object);
+#else
             var originalFileOperation = new FileOperations();
+#endif
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
                 .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));
@@ -738,7 +752,11 @@ public class TestExecutionManagerTests : TestContainer
             testablePlatformService.SetupMockReflectionOperations();
 
             var originalReflectionOperation = new ReflectionOperations();
+#if NETFRAMEWORK
+            var originalFileOperation = new FileOperations(_mockAdapterLogger.Object);
+#else
             var originalFileOperation = new FileOperations();
+#endif
 
             testablePlatformService.MockReflectionOperations.Setup(ro => ro.GetDeclaredConstructors(It.IsAny<Type>()))
                 .Returns((Type classType) => originalReflectionOperation.GetDeclaredConstructors(classType));

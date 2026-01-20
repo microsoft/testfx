@@ -5,6 +5,7 @@
 
 using System.Data.SqlClient;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -14,8 +15,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 /// </summary>
 internal sealed class SqlDataConnection : TestDataConnectionSql
 {
-    public SqlDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
-        : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
+    public SqlDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders, IAdapterTraceLogger logger)
+        : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders, logger)
     {
     }
 

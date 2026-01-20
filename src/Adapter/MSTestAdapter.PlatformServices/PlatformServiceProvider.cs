@@ -30,7 +30,12 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [AllowNull]
     public ITestDataSource TestDataSource
     {
-        get => field ??= new TestDataSource();
+        get => field
+#if NETFRAMEWORK
+            ??= new TestDataSource(AdapterTraceLogger);
+#else
+            ??= new TestDataSource();
+#endif
         private set;
     }
 
@@ -42,7 +47,12 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [AllowNull]
     public IFileOperations FileOperations
     {
-        get => field ??= new FileOperations();
+        get => field
+#if NETFRAMEWORK
+            ??= new FileOperations(AdapterTraceLogger);
+#else
+            ??= new FileOperations();
+#endif
         private set;
     }
 
@@ -63,7 +73,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     [AllowNull]
     public ITestDeployment TestDeployment
     {
-        get => field ??= new TestDeployment();
+        get => field ??= new TestDeployment(AdapterTraceLogger);
         private set;
     }
 #endif
@@ -143,7 +153,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
         TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
         TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle)
     {
-        var testSourceHost = new TestSourceHost(source, runSettings, frameworkHandle);
+        var testSourceHost = new TestSourceHost(source, runSettings, frameworkHandle, AdapterTraceLogger);
         testSourceHost.SetupHost();
 
         return testSourceHost;

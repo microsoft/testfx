@@ -6,6 +6,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -25,6 +26,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
     private readonly Mock<ReflectionUtility> _mockReflectionUtility;
     private readonly Mock<FileUtility> _mockFileUtility;
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
 
 #pragma warning disable IDE0052 // Remove unread private members
     private IList<string> _warnings;
@@ -33,7 +35,8 @@ public class DesktopTestDeploymentTests : TestContainer
     public DesktopTestDeploymentTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
+        _mockFileUtility = new Mock<FileUtility>(_mockAdapterLogger.Object);
         _warnings = [];
 
         // Reset adapter settings.
@@ -157,7 +160,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe")))).Returns(true);
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        var mockAssemblyUtility = new Mock<AssemblyUtility>();
+        var mockAssemblyUtility = new Mock<AssemblyUtility>(_mockAdapterLogger.Object);
         mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
             .Returns(Array.Empty<string>());
@@ -171,8 +174,9 @@ public class DesktopTestDeploymentTests : TestContainer
 
         return new TestDeployment(
             deploymentItemUtility,
-            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object),
-            _mockFileUtility.Object);
+            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object, _mockAdapterLogger.Object),
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
     }
     #endregion
 }

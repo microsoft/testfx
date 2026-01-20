@@ -20,36 +20,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed class TestDeployment : ITestDeployment
 {
-    #region Service Utility Variables
-
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly DeploymentUtility _deploymentUtility;
     private readonly FileUtility _fileUtility;
+    private readonly IAdapterTraceLogger _logger;
     private MSTestAdapterSettings? _adapterSettings;
 
-    #endregion
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestDeployment"/> class.
-    /// </summary>
-    public TestDeployment()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new DeploymentUtility(), new FileUtility())
+    public TestDeployment(IAdapterTraceLogger logger)
+        : this(new DeploymentItemUtility(new ReflectionUtility()), new DeploymentUtility(logger), new FileUtility(logger), logger)
     {
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestDeployment"/> class. Used for unit tests.
-    /// </summary>
-    /// <param name="deploymentItemUtility"> The deployment item utility. </param>
-    /// <param name="deploymentUtility"> The deployment utility. </param>
-    /// <param name="fileUtility"> The file utility. </param>
-    internal TestDeployment(DeploymentItemUtility deploymentItemUtility, DeploymentUtility deploymentUtility, FileUtility fileUtility)
+    internal TestDeployment(DeploymentItemUtility deploymentItemUtility, DeploymentUtility deploymentUtility, FileUtility fileUtility, IAdapterTraceLogger logger)
     {
         _deploymentItemUtility = deploymentItemUtility;
         _deploymentUtility = deploymentUtility;
         _fileUtility = fileUtility;
         _adapterSettings = null;
         RunDirectories = null;
+        _logger = logger;
     }
 
     /// <summary>
@@ -79,11 +68,11 @@ internal sealed class TestDeployment : ITestDeployment
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+            _logger.LogInfo("Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
 
             _fileUtility.DeleteDirectories(RunDirectories.RootDeploymentDirectory);
 
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+            _logger.LogInfo("Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
         }
     }
 
@@ -188,7 +177,7 @@ internal sealed class TestDeployment : ITestDeployment
         DebugEx.Assert(_adapterSettings is not null, "Adapter settings should not be null.");
         if (!_adapterSettings.DeploymentEnabled)
         {
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: CanDeploy is false.");
+            _logger.LogInfo("MSTestExecutor: CanDeploy is false.");
             return false;
         }
 

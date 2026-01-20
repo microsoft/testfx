@@ -30,4 +30,27 @@ internal interface IAdapterTraceLogger
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
     void LogInfo(string format, params object?[] args);
+
+    /// <summary>
+    /// Log a verbose message in a given format.
+    /// </summary>
+    /// <param name="format"> The format. </param>
+    /// <param name="args"> The args. </param>
+    void LogVerbose(string format, params object?[] args);
+
+    bool IsInfoEnabled { get; }
+
+    bool IsWarningEnabled { get; }
+
+    bool IsErrorEnabled { get; }
+
+    bool IsVerboseEnabled { get; }
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Prepares a remote AppDomain for tracing by setting up the trace listeners.
+    /// </summary>
+    /// <param name="appDomain">The AppDomain to prepare.</param>
+    void PrepareRemoteAppDomain(AppDomain appDomain);
+#endif
 }

@@ -8,7 +8,7 @@ using System.Security;
 using System.Security.Permissions;
 #endif
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -84,6 +84,11 @@ internal
     /// </summary>
     private readonly Lock _syncLock = new();
 
+    /// <summary>
+    /// The logger to use for tracing.
+    /// </summary>
+    private readonly IAdapterTraceLogger? _logger;
+
     private static List<string>? s_currentlyLoading;
     private bool _disposed;
 
@@ -93,16 +98,20 @@ internal
     /// <param name="directories">
     /// A list of directories for resolution path.
     /// </param>
+    /// <param name="logger">
+    /// The logger to use for tracing. Can be null if logging is not needed.
+    /// </param>
     /// <remarks>
     /// If there are additional paths where a recursive search is required
     /// call AddSearchDirectoryFromRunSetting method with that list.
     /// </remarks>
-    public AssemblyResolver(IList<string> directories)
+    public AssemblyResolver(IList<string> directories, IAdapterTraceLogger? logger)
     {
         Ensure.NotNullOrEmpty(directories);
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
+        _logger = logger;
 
         AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
 #if NETFRAMEWORK
@@ -342,18 +351,11 @@ internal
         }
         catch (Exception ex)
         {
-            SafeLog(
+            SafeLogInfo(
                 name,
-                () =>
-                {
-                    if (EqtTrace.IsInfoEnabled)
-                    {
-                        EqtTrace.Info(
-                            "MSTest.AssemblyResolver.OnResolve: Failed to create assemblyName '{0}'. Reason: {1} ",
-                            name,
-                            ex);
-                    }
-                });
+                "MSTest.AssemblyResolver.OnResolve: Failed to create assemblyName '{0}'. Reason: {1} ",
+                name,
+                ex);
 
             return null;
         }
@@ -367,15 +369,11 @@ internal
                 continue;
             }
 
-            SafeLog(
+            SafeLogVerbose(
                 name,
-                () =>
-                {
-                    if (EqtTrace.IsVerboseEnabled)
-                    {
-                        EqtTrace.Verbose("MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'", requestedName.Name, dir);
-                    }
-                });
+                "MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'",
+                requestedName.Name,
+                dir);
 
             foreach (string extension in new string[] { ".dll", ".exe" })
             {
@@ -389,15 +387,11 @@ internal
                     // the ResourceHelper's currentlyLoading stack to null if an exception occurs.
                     if (s_currentlyLoading != null && s_currentlyLoading.Count > 0 && s_currentlyLoading.LastIndexOf(assemblyPath) != -1)
                     {
-                        SafeLog(
+                        SafeLogInfo(
                             name,
-                            () =>
-                            {
-                                if (EqtTrace.IsInfoEnabled)
-                                {
-                                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
-                                }
-                            });
+                            "MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.",
+                            name,
+                            assemblyPath);
                         _resolvedAssemblies[name] = null;
                         return null;
                     }
@@ -497,27 +491,17 @@ internal
             return null;
         }
 
-        SafeLog(
+        SafeLogInfo(
             args.Name,
-            () =>
-            {
-                if (EqtTrace.IsInfoEnabled)
-                {
-                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'", args.Name);
-                }
-            });
+            "MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'",
+            args.Name);
 
         string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 
-        SafeLog(
+        SafeLogInfo(
             assemblyNameToLoad,
-            () =>
-            {
-                if (EqtTrace.IsInfoEnabled)
-                {
-                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'", assemblyNameToLoad);
-                }
-            });
+            "MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'",
+            assemblyNameToLoad);
 
         lock (_syncLock)
         {
@@ -561,17 +545,10 @@ internal
                 else
                 {
                     // generate warning that path does not exist.
-                    SafeLog(
+                    SafeLogWarning(
                         assemblyNameToLoad,
-                        () =>
-                        {
-                            if (EqtTrace.IsWarningEnabled)
-                            {
-                                EqtTrace.Warning(
-                                "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
-                                currentNode.DirectoryPath);
-                            }
-                        });
+                        "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
+                        currentNode.DirectoryPath);
                 }
             }
 
@@ -610,15 +587,11 @@ internal
             }
             catch (Exception ex)
             {
-                SafeLog(
+                SafeLogInfo(
                     args.Name,
-                    () =>
-                    {
-                        if (EqtTrace.IsInfoEnabled)
-                        {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
-                        }
-                    });
+                    "MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}",
+                    assemblyNameToLoad,
+                    ex);
             }
 
             return assembly;
@@ -639,15 +612,10 @@ internal
             : _resolvedAssemblies.TryGetValue(assemblyName, out assembly);
         if (isFoundInCache)
         {
-            SafeLog(
+            SafeLogInfo(
                 assemblyName,
-                () =>
-                {
-                    if (EqtTrace.IsInfoEnabled)
-                    {
-                        EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved '{0}'", assemblyName);
-                    }
-                });
+                "MSTest.AssemblyResolver.OnResolve: Resolved '{0}'",
+                assemblyName);
             return true;
         }
 
@@ -655,22 +623,50 @@ internal
     }
 
     /// <summary>
-    /// Call logger APIs safely. We do not want a stackoverflow when objectmodel assembly itself
-    /// is being resolved and an EqtTrace message prompts the load of the same dll again.
-    /// CLR does not trigger a load when the EqtTrace messages are in a lambda expression. Leaving it that way
-    /// to preserve readability instead of creating wrapper functions.
+    /// Checks if it's safe to log for the given assembly name.
+    /// We do not want a stack overflow when objectmodel assembly itself
+    /// is being resolved and logging prompts the load of the same dll again.
     /// </summary>
     /// <param name="assemblyName">The assembly being resolved.</param>
-    /// <param name="loggerAction">The logger function.</param>
-    private static void SafeLog(string? assemblyName, Action loggerAction)
-    {
-        // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
-        if (!StringEx.IsNullOrEmpty(assemblyName)
+    /// <returns><c>true</c> if it's safe to log; <c>false</c> otherwise.</returns>
+    // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
+    private bool CanSafelyLog(string? assemblyName) =>
+        _logger is not null
+            && !StringEx.IsNullOrEmpty(assemblyName)
             && !assemblyName.StartsWith(LoggerAssemblyName, StringComparison.Ordinal)
             && !assemblyName.StartsWith(LoggerAssemblyNameLegacy, StringComparison.Ordinal)
-            && !assemblyName.StartsWith(PlatformServicesResourcesName, StringComparison.Ordinal))
+            && !assemblyName.StartsWith(PlatformServicesResourcesName, StringComparison.Ordinal);
+
+    /// <summary>
+    /// Safely logs an info message if logging is available and safe.
+    /// </summary>
+    private void SafeLogInfo(string? assemblyName, string format, params object?[] args)
+    {
+        if (CanSafelyLog(assemblyName) && _logger!.IsInfoEnabled)
         {
-            loggerAction.Invoke();
+            _logger.LogInfo(format, args);
+        }
+    }
+
+    /// <summary>
+    /// Safely logs a warning message if logging is available and safe.
+    /// </summary>
+    private void SafeLogWarning(string? assemblyName, string format, params object?[] args)
+    {
+        if (CanSafelyLog(assemblyName) && _logger!.IsWarningEnabled)
+        {
+            _logger.LogWarning(format, args);
+        }
+    }
+
+    /// <summary>
+    /// Safely logs a verbose message if logging is available and safe.
+    /// </summary>
+    private void SafeLogVerbose(string? assemblyName, string format, params object?[] args)
+    {
+        if (CanSafelyLog(assemblyName) && _logger!.IsVerboseEnabled)
+        {
+            _logger.LogVerbose(format, args);
         }
     }
 
@@ -715,29 +711,20 @@ internal
                 _resolvedAssemblies[assemblyName] = assembly;
             }
 
-            SafeLog(
+            SafeLogInfo(
                 assemblyName,
-                () =>
-                    {
-                        if (EqtTrace.IsInfoEnabled)
-                        {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'", assemblyName);
-                        }
-                    });
+                "MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'",
+                assemblyName);
 
             return assembly;
         }
         catch (FileLoadException ex)
         {
-            SafeLog(
+            SafeLogInfo(
                 assemblyName,
-                () =>
-                    {
-                        if (EqtTrace.IsInfoEnabled)
-                        {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
-                        }
-                    });
+                "MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ",
+                assemblyName,
+                ex);
 
             // Re-throw FileLoadException, because this exception means that the assembly
             // was found, but could not be loaded. This will allow us to report a more
@@ -747,15 +734,11 @@ internal
         catch (Exception ex)
         {
             // For all other exceptions, try the next extension.
-            SafeLog(
+            SafeLogInfo(
                 assemblyName,
-                () =>
-                    {
-                        if (EqtTrace.IsInfoEnabled)
-                        {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
-                        }
-                    });
+                "MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ",
+                assemblyName,
+                ex);
         }
 
         return null;

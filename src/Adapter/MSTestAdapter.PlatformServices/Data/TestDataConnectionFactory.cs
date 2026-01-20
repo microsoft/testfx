@@ -3,6 +3,8 @@
 
 #if NETFRAMEWORK
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -25,12 +27,16 @@ internal class TestDataConnectionFactory
     private static readonly Dictionary<string, TestDataConnectionFactory> SpecializedProviders = new()
     {
         // The XML case is quite unlike all others, as there is no real DB connection at all!
-        { XmlProvider, new XmlTestDataConnectionFactory() },
+        { XmlProvider, new XmlTestDataConnectionFactory(PlatformServiceProvider.Instance.AdapterTraceLogger) },
 
         // The CSV case does use a database connection, but it is hidden, and schema
         // queries are highly specialized
-        { CsvProvider, new CsvTestDataConnectionFactory() },
+        { CsvProvider, new CsvTestDataConnectionFactory(PlatformServiceProvider.Instance.AdapterTraceLogger) },
     };
+
+    public TestDataConnectionFactory(IAdapterTraceLogger logger) => Logger = logger;
+
+    protected IAdapterTraceLogger Logger { get; }
 
     /// <summary>
     /// Construct a wrapper for a database connection, what is actually returned indirectly depends
@@ -58,7 +64,7 @@ internal class TestDataConnectionFactory
         {
             // Default is to use a conventional SQL based connection, this create method in turn
             // handles variations between DB based implementations
-            return TestDataConnectionSql.Create(invariantProviderName, connectionString, dataFolders);
+            return TestDataConnectionSql.Create(invariantProviderName, connectionString, dataFolders, Logger);
         }
     }
 
@@ -66,12 +72,24 @@ internal class TestDataConnectionFactory
 
     private sealed class XmlTestDataConnectionFactory : TestDataConnectionFactory
     {
-        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new XmlDataConnection(connectionString, dataFolders);
+        public XmlTestDataConnectionFactory(IAdapterTraceLogger logger)
+            : base(logger)
+        {
+        }
+
+        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
+            => new XmlDataConnection(connectionString, dataFolders, Logger);
     }
 
     private sealed class CsvTestDataConnectionFactory : TestDataConnectionFactory
     {
-        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new CsvDataConnection(connectionString, dataFolders);
+        public CsvTestDataConnectionFactory(IAdapterTraceLogger logger)
+            : base(logger)
+        {
+        }
+
+        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
+            => new CsvDataConnection(connectionString, dataFolders, Logger);
     }
 
     #endregion TestDataConnectionFactories

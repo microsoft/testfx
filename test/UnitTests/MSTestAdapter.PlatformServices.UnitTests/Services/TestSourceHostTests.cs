@@ -5,6 +5,9 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -15,7 +18,7 @@ public class TestSourceHostTests : TestContainer
 {
     private readonly TestSourceHost _testSourceHost;
 
-    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null!, null, null);
+    public TestSourceHostTests() => _testSourceHost = new TestSourceHost(null!, null, null, new Mock<IAdapterTraceLogger>().Object);
 
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {

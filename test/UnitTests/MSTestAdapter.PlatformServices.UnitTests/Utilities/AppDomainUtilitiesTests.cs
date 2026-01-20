@@ -4,7 +4,10 @@
 #if NETFRAMEWORK
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -39,7 +42,7 @@ public class AppDomainUtilitiesTests : TestContainer
 <configuration>
 </configuration>";
 
-        AppDomainUtilities.SetConfigurationFile(setup, configFile);
+        AppDomainUtilities.SetConfigurationFile(setup, configFile, new Mock<IAdapterTraceLogger>().Object);
 
         // Assert Config file being set.
         setup.ConfigurationFile.Should().Be(configFile);
@@ -66,7 +69,7 @@ public class AppDomainUtilitiesTests : TestContainer
     {
         AppDomainSetup setup = new();
 
-        AppDomainUtilities.SetConfigurationFile(setup, null);
+        AppDomainUtilities.SetConfigurationFile(setup, null, new Mock<IAdapterTraceLogger>().Object);
 
         // Assert Config file being set.
         AppDomain.CurrentDomain.SetupInformation.ConfigurationFile.Should().Be(setup.ConfigurationFile);
@@ -78,7 +81,7 @@ public class AppDomainUtilitiesTests : TestContainer
     {
         var expected = new Version();
 
-        Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
+        Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259", new Mock<IAdapterTraceLogger>().Object);
 
         version.Major.Should().Be(expected.Major);
         version.Minor.Should().Be(expected.Minor);
@@ -88,7 +91,7 @@ public class AppDomainUtilitiesTests : TestContainer
     {
         var expected = new Version("4.5");
 
-        Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
+        Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5", new Mock<IAdapterTraceLogger>().Object);
 
         version.Major.Should().Be(expected.Major);
         version.Minor.Should().Be(expected.Minor);

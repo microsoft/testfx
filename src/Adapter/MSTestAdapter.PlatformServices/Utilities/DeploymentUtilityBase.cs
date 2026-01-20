@@ -5,7 +5,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -23,17 +23,28 @@ internal abstract class DeploymentUtilityBase
     /// </summary>
     protected const string DeploymentFolderPrefix = "Deploy";
 
-    public DeploymentUtilityBase()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new AssemblyUtility(), new FileUtility())
+    public DeploymentUtilityBase(IAdapterTraceLogger logger)
+        : this(
+            new DeploymentItemUtility(new ReflectionUtility()),
+#if NETFRAMEWORK
+            new AssemblyUtility(logger),
+#else
+            new AssemblyUtility(),
+#endif
+            new FileUtility(logger),
+            logger)
     {
     }
 
-    public DeploymentUtilityBase(DeploymentItemUtility deploymentItemUtility, AssemblyUtility assemblyUtility, FileUtility fileUtility)
+    public DeploymentUtilityBase(DeploymentItemUtility deploymentItemUtility, AssemblyUtility assemblyUtility, FileUtility fileUtility, IAdapterTraceLogger logger)
     {
         DeploymentItemUtility = deploymentItemUtility;
         AssemblyUtility = assemblyUtility;
         FileUtility = fileUtility;
+        Logger = logger;
     }
+
+    protected IAdapterTraceLogger Logger { get; }
 
     protected FileUtility FileUtility { get; set; }
 
@@ -258,8 +269,7 @@ internal abstract class DeploymentUtilityBase
                     }
                     else if (!string.Equals(fileToDeploy, value, StringComparison.OrdinalIgnoreCase))
                     {
-                        EqtTrace.WarningIf(
-                            EqtTrace.IsWarningEnabled,
+                        Logger.LogWarning(
                             "Conflict during copying file: '{0}' and '{1}' are from different origins although they might be the same.",
                             fileToDeploy,
                             value);
@@ -412,17 +422,17 @@ internal abstract class DeploymentUtilityBase
     private bool Deploy(string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
     {
         Ensure.NotNull(runDirectories);
-        if (EqtTrace.IsInfoEnabled)
+        if (Logger.IsInfoEnabled)
         {
-            EqtTrace.Info("MSTestExecutor: Found that deployment items for source {0} are: ", source);
+            Logger.LogInfo("MSTestExecutor: Found that deployment items for source {0} are: ", source);
             foreach (DeploymentItem item in deploymentItems)
             {
-                EqtTrace.Info("MSTestExecutor: SourcePath: - {0}", item.SourcePath);
+                Logger.LogInfo("MSTestExecutor: SourcePath: - {0}", item.SourcePath);
             }
         }
 
         // Do the deployment.
-        EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
+        Logger.LogInfo("MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
         IEnumerable<string> warnings = Deploy([.. deploymentItems], source, runDirectories.OutDirectory, GetTestResultsDirectory(runContext));
 
         // Log warnings

@@ -16,11 +16,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #pragma warning disable CA1852 // Seal internal types - Inherited in test
 internal class MSTestAdapterSettings
 {
+    private readonly IAdapterTraceLogger _logger;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
     /// </summary>
-    public MSTestAdapterSettings()
+    public MSTestAdapterSettings(IAdapterTraceLogger logger)
     {
+        _logger = logger;
         DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
         DeploymentEnabled = true;
         DeployTestSourceDependencies = true;
@@ -278,11 +281,7 @@ internal class MSTestAdapterSettings
             else
             {
                 warningMessage = $"The Directory: {path}, has following problem: This is not an absolute path. A base directory should be provided for this to be used as a relative path.";
-
-                if (EqtTrace.IsWarningEnabled)
-                {
-                    EqtTrace.Warning(warningMessage);
-                }
+                _logger.LogWarning(warningMessage);
 
                 return null;
             }
@@ -303,11 +302,7 @@ internal class MSTestAdapterSettings
         if (!StringEx.IsNullOrEmpty(warningMessage))
         {
             warningMessage = $"The Directory: {path}, has following problem: {warningMessage}";
-
-            if (EqtTrace.IsWarningEnabled)
-            {
-                EqtTrace.Warning(warningMessage);
-            }
+            _logger.LogWarning(warningMessage);
 
             return null;
         }
@@ -318,7 +313,7 @@ internal class MSTestAdapterSettings
         }
 
         // generate warning that path does not exist.
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, $"The Directory: {path}, does not exist.");
+        _logger.LogWarning($"The Directory: {path}, does not exist.");
 
         return null;
     }

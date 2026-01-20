@@ -7,6 +7,7 @@ using System.Security.Policy;
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -17,12 +18,48 @@ using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
+/// <summary>
+/// A fake logger that can be used across AppDomain boundaries.
+/// Moq proxies are not serializable and cannot cross AppDomain boundaries.
+/// </summary>
+[Serializable]
+internal sealed class FakeTraceLogger : MarshalByRefObject, IAdapterTraceLogger
+{
+    public bool IsInfoEnabled => false;
+
+    public bool IsWarningEnabled => false;
+
+    public bool IsErrorEnabled => false;
+
+    public bool IsVerboseEnabled => false;
+
+    public void LogError(string format, params object?[] args)
+    {
+    }
+
+    public void LogWarning(string format, params object?[] args)
+    {
+    }
+
+    public void LogInfo(string format, params object?[] args)
+    {
+    }
+
+    public void LogVerbose(string format, params object?[] args)
+    {
+    }
+
+    public void PrepareRemoteAppDomain(AppDomain appDomain)
+    {
+    }
+}
+
 public class DesktopTestSourceHostTests : TestContainer
 {
     public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null, null, new Mock<IAdapterTraceLogger>().Object);
 
         // Execute
         // It should return public and private path if it is not running in portable mode.
@@ -43,7 +80,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null, null, new Mock<IAdapterTraceLogger>().Object);
 
         // Execute
         // It should not return public and private path if it is running in portable mode.
@@ -57,7 +94,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddAdapterFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null, null, new Mock<IAdapterTraceLogger>().Object);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -69,7 +106,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddTestPlatformFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null, null, new Mock<IAdapterTraceLogger>().Object);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -84,7 +121,7 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
         int currentAppDomainId = dummyClass.AppDomainId;
 
-        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null);
+        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null, new FakeTraceLogger());
         sut.SetupHost();
 
         // Execute
@@ -104,7 +141,7 @@ public class DesktopTestSourceHostTests : TestContainer
         _ = new DummyClass();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null, null, new FakeTraceLogger()) { CallBase = true };
 
         try
         {
@@ -138,7 +175,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        TestSourceHost sourceHost = new(location, mockRunSettings.Object, null);
+        TestSourceHost sourceHost = new(location, mockRunSettings.Object, null, new FakeTraceLogger());
 
         try
         {
@@ -161,7 +198,7 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null, null, new FakeTraceLogger()) { CallBase = true };
 
         try
         {
@@ -185,7 +222,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
         testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
-        var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object);
+        var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object, new Mock<IAdapterTraceLogger>().Object);
         sourceHost.SetupHost();
 
         // Act
@@ -210,7 +247,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null, new Mock<IAdapterTraceLogger>().Object) { CallBase = true };
 
         try
         {
@@ -241,7 +278,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null, new FakeTraceLogger()) { CallBase = true };
 
         try
         {

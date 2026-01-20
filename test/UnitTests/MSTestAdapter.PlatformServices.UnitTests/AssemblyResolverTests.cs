@@ -190,7 +190,7 @@ public class AssemblyResolverTests : TestContainer
 internal class TestableAssemblyResolver : AssemblyResolver
 {
     public TestableAssemblyResolver(IList<string> directories)
-        : base(directories)
+        : base(directories, logger: null)
     {
     }
 

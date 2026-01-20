@@ -5,6 +5,9 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -14,7 +17,7 @@ public class VSInstallationUtilitiesTests : TestContainer
 {
     public void CheckResolutionPathsDoNotContainPrivateAssembliesPathTest()
     {
-        TestSourceHost isolatedHost = new(null!, null, null);
+        TestSourceHost isolatedHost = new(null!, null, null, new Mock<IAdapterTraceLogger>().Object);
         List<string> paths = isolatedHost.GetResolutionPaths(Assembly.GetExecutingAssembly().FullName, true);
         (!paths.Contains(EngineConstants.PublicAssemblies) || paths.Contains(EngineConstants.PrivateAssemblies)).Should().BeTrue();
     }

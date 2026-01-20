@@ -5,6 +5,7 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -29,6 +30,7 @@ public class DeploymentUtilityTests : TestContainer
     private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
     private readonly Mock<IRunContext> _mockRunContext;
     private readonly Mock<ITestExecutionRecorder> _mockTestExecutionRecorder;
+    private readonly Mock<IAdapterTraceLogger> _mockAdapterLogger;
 
     private readonly DeploymentUtility _deploymentUtility;
 
@@ -41,14 +43,21 @@ public class DeploymentUtilityTests : TestContainer
     public DeploymentUtilityTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
-        _mockFileUtility = new Mock<FileUtility>();
-        _mockAssemblyUtility = new Mock<AssemblyUtility>();
+        _mockAdapterLogger = new Mock<IAdapterTraceLogger>();
+        _mockFileUtility = new Mock<FileUtility>(_mockAdapterLogger.Object);
+        _mockAssemblyUtility =
+#if NETFRAMEWORK
+            new Mock<AssemblyUtility>(_mockAdapterLogger.Object);
+#else
+            new Mock<AssemblyUtility>();
+#endif
         _warnings = [];
 
         _deploymentUtility = new DeploymentUtility(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
             _mockAssemblyUtility.Object,
-            _mockFileUtility.Object);
+            _mockFileUtility.Object,
+            _mockAdapterLogger.Object);
 
         _mockRunContext = new Mock<IRunContext>();
         _mockTestExecutionRecorder = new Mock<ITestExecutionRecorder>();
