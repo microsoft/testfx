@@ -43,7 +43,7 @@ internal static class ExecutionContextHelpers
             ExecutionContext.Run(executionContext, action => t = ((Func<SynchronizationContextPreservingTask>)action!).Invoke(), action);
             if (t is not null)
             {
-                await t.ConfigureAwait(false);
+                await t.Value.ConfigureAwait(false);
             }
         }
     }
