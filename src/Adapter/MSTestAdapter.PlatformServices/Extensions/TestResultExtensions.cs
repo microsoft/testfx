@@ -2,12 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using VSTestAttachmentSet = Microsoft.VisualStudio.TestPlatform.ObjectModel.AttachmentSet;
 using VSTestTestCase = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase;
@@ -108,52 +104,5 @@ internal static class TestResultExtensions
         }
 
         return testResult;
-    }
-
-    /// <summary>
-    /// Converts the test framework's TestResult objects array to a serializable UnitTestResult objects array.
-    /// </summary>
-    /// <param name="testResults">The test framework's TestResult object array.</param>
-    /// <returns>The serializable UnitTestResult object array.</returns>
-    public static UnitTestResult[] ToUnitTestResults(this TestResult[] testResults)
-    {
-        var unitTestResults = new UnitTestResult[testResults.Length];
-
-        int i = 0;
-        foreach (TestResult testResult in testResults)
-        {
-            UTF.UnitTestOutcome outcome = testResult.Outcome;
-
-            UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
-                ? new UnitTestResult(
-                    new TestFailedException(
-                        outcome,
-                        testFailureException.TryGetMessage(),
-                        testFailureException is TestFailedException testException
-                            ? testException.StackTraceInformation
-                            : testFailureException.TryGetStackTraceInformation()))
-                : new UnitTestResult { Outcome = outcome.ToUnitTestOutcome() };
-
-            if (testResult.IgnoreReason is not null)
-            {
-                unitTestResult.ErrorMessage = testResult.IgnoreReason;
-            }
-
-            unitTestResult.StandardOut = testResult.LogOutput;
-            unitTestResult.StandardError = testResult.LogError;
-            unitTestResult.DebugTrace = testResult.DebugTrace;
-            unitTestResult.TestContextMessages = testResult.TestContextMessages;
-            unitTestResult.Duration = testResult.Duration;
-            unitTestResult.DisplayName = testResult.DisplayName;
-            unitTestResult.DatarowIndex = testResult.DatarowIndex;
-            unitTestResult.ResultFiles = testResult.ResultFiles;
-            unitTestResult.ExecutionId = testResult.ExecutionId;
-            unitTestResult.ParentExecId = testResult.ParentExecId;
-            unitTestResult.InnerResultsCount = testResult.InnerResultsCount;
-            unitTestResults[i] = unitTestResult;
-            i++;
-        }
-
-        return unitTestResults;
     }
 }
