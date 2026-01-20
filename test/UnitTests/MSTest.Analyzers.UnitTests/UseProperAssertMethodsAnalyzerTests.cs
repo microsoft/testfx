@@ -1387,6 +1387,29 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+#if NET
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithStringStartsWithChar()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string myString = "Hello World";
+                    Assert.IsTrue(myString.StartsWith('H'));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+#endif
+
     [TestMethod]
     public async Task WhenAssertIsTrueWithStringEndsWith()
     {

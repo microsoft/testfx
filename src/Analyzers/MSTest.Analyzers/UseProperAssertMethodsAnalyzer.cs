@@ -451,7 +451,9 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             invocation.Arguments.Length == 1)
         {
             string methodName = invocation.TargetMethod.Name;
-            if (methodName is "StartsWith" or "EndsWith" or "Contains")
+            if (methodName is "StartsWith" or "EndsWith" or "Contains" &&
+                invocation.Arguments.Length > 0 &&
+                invocation.Arguments[0].Parameter?.Type.SpecialType == SpecialType.System_String)
             {
                 stringExpression = invocation.Instance?.Syntax;
                 substringExpression = invocation.Arguments[0].Value.Syntax;
