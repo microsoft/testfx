@@ -943,7 +943,7 @@ internal class TestMethodInfo : ITestMethod
         // For all other cases, we already use a custom task that preserves synchronization and execution contexts.
         // NOTE: it seems that in .NET Framework, the synchronization context is part of the execution context.
         // However, this doesn't appear to be the case in .NET (Core) where the synchronization context is strictly tied to current thread.
-        // In addition, if execution context was captured before (due to use of non-cooperage timeout in a previously run fixture), we still capture here again.
+        // In addition, if execution context was captured before (due to use of non-cooperative timeout in a previously run fixture), we still capture here again.
         if (timeoutInfo?.CooperativeCancellation == false || _executionContext is not null)
         {
             _executionContext = ExecutionContext.Capture() ?? _executionContext;
