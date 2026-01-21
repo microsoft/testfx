@@ -79,11 +79,17 @@ internal sealed class TestDeployment : ITestDeployment
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            {
+                TraceLoggerHelper.Instance.Info("Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+            }
 
             _fileUtility.DeleteDirectories(RunDirectories.RootDeploymentDirectory);
 
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            {
+                TraceLoggerHelper.Instance.Info("Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+            }
         }
     }
 
@@ -188,7 +194,11 @@ internal sealed class TestDeployment : ITestDeployment
         DebugEx.Assert(_adapterSettings is not null, "Adapter settings should not be null.");
         if (!_adapterSettings.DeploymentEnabled)
         {
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: CanDeploy is false.");
+            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            {
+                TraceLoggerHelper.Instance.Info("MSTestExecutor: CanDeploy is false.");
+            }
+
             return false;
         }
 

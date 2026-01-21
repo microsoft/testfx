@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -18,16 +17,14 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
     /// <param name="args"> The args. </param>
     public void LogError(string format, params object?[] args)
     {
-#if !WINDOWS_UWP && !WIN_UI
-        if (EqtTrace.IsErrorEnabled)
+        if (TraceLoggerHelper.Instance.IsErrorEnabled)
         {
-            EqtTrace.Error(PrependAdapterName(format), args);
-        }
+#if !WINDOWS_UWP && !WIN_UI
+            TraceLoggerHelper.Instance.Error(PrependAdapterName(format), args);
 #else
-#pragma warning disable IDE0022 // Use expression body for method
-        EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, format, args);
-#pragma warning restore IDE0022 // Use expression body for method
+            TraceLoggerHelper.Instance.Error(format, args);
 #endif
+        }
     }
 
     /// <summary>
@@ -37,16 +34,14 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
     /// <param name="args"> The args. </param>
     public void LogWarning(string format, params object?[] args)
     {
-#if !WINDOWS_UWP && !WIN_UI
-        if (EqtTrace.IsWarningEnabled)
+        if (TraceLoggerHelper.Instance.IsWarningEnabled)
         {
-            EqtTrace.Warning(PrependAdapterName(format), args);
-        }
+#if !WINDOWS_UWP && !WIN_UI
+            TraceLoggerHelper.Instance.Warning(PrependAdapterName(format), args);
 #else
-#pragma warning disable IDE0022 // Use expression body for method
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, format, args);
-#pragma warning restore IDE0022 // Use expression body for method
+            TraceLoggerHelper.Instance.Warning(format, args);
 #endif
+        }
     }
 
     /// <summary>
@@ -56,16 +51,14 @@ internal sealed class AdapterTraceLogger : IAdapterTraceLogger
     /// <param name="args"> The args. </param>
     public void LogInfo(string format, params object?[] args)
     {
-#if !WINDOWS_UWP && !WIN_UI
-        if (EqtTrace.IsInfoEnabled)
+        if (TraceLoggerHelper.Instance.IsInfoEnabled)
         {
-            EqtTrace.Info(PrependAdapterName(format), args);
-        }
+#if !WINDOWS_UWP && !WIN_UI
+            TraceLoggerHelper.Instance.Info(PrependAdapterName(format), args);
 #else
-#pragma warning disable IDE0022 // Use expression body for method
-        EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
-#pragma warning restore IDE0022 // Use expression body for method
+            TraceLoggerHelper.Instance.Info(format, args);
 #endif
+        }
     }
 
 #if !WINDOWS_UWP && !WIN_UI

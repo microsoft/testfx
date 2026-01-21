@@ -4,7 +4,6 @@
 #if !WINDOWS_UWP
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -148,7 +147,11 @@ internal class FileUtility
         }
         catch (ArgumentException ex)
         {
-            EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
+            if (TraceLoggerHelper.Instance.IsWarningEnabled)
+            {
+                TraceLoggerHelper.Instance.Warning("Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
+            }
+
             return null;
         }
 
@@ -167,11 +170,13 @@ internal class FileUtility
         }
         else if (!string.Equals(pdbSource, value, StringComparison.OrdinalIgnoreCase))
         {
-            EqtTrace.WarningIf(
-                EqtTrace.IsWarningEnabled,
-                "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
-                pdbSource,
-                value);
+            if (TraceLoggerHelper.Instance.IsWarningEnabled)
+            {
+                TraceLoggerHelper.Instance.Warning(
+                    "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
+                    pdbSource,
+                    value);
+            }
         }
 
         return null;
@@ -232,7 +237,10 @@ internal class FileUtility
         }
         catch (Exception ex)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
+            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            {
+                TraceLoggerHelper.Instance.Error("DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
+            }
         }
     }
 
@@ -257,9 +265,9 @@ internal class FileUtility
     {
         if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {
-            if (EqtTrace.IsWarningEnabled)
+            if (TraceLoggerHelper.Instance.IsWarningEnabled)
             {
-                EqtTrace.Warning("Path is either null or invalid. Path = '{0}'", path);
+                TraceLoggerHelper.Instance.Warning("Path is either null or invalid. Path = '{0}'", path);
             }
 
             return null;
@@ -268,9 +276,9 @@ internal class FileUtility
         string pdbFile = Path.ChangeExtension(path, ".pdb");
         if (File.Exists(pdbFile))
         {
-            if (EqtTrace.IsInfoEnabled)
+            if (TraceLoggerHelper.Instance.IsInfoEnabled)
             {
-                EqtTrace.Info("Pdb file found for path '{0}'", path);
+                TraceLoggerHelper.Instance.Info("Pdb file found for path '{0}'", path);
             }
 
             return pdbFile;

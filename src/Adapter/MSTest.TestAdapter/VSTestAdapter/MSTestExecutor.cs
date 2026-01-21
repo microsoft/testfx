@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
@@ -24,6 +25,11 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// Token for canceling the test run.
     /// </summary>
     private TestRunCancellationToken? _testRunCancellationToken;
+
+    static MSTestExecutor()
+    {
+        TraceLoggerHelper.Instance = EqtTraceLogger.Instance;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.

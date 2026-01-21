@@ -279,9 +279,9 @@ internal class MSTestAdapterSettings
             {
                 warningMessage = $"The Directory: {path}, has following problem: This is not an absolute path. A base directory should be provided for this to be used as a relative path.";
 
-                if (EqtTrace.IsWarningEnabled)
+                if (TraceLoggerHelper.Instance.IsWarningEnabled)
                 {
-                    EqtTrace.Warning(warningMessage);
+                    TraceLoggerHelper.Instance.Warning(warningMessage);
                 }
 
                 return null;
@@ -304,9 +304,9 @@ internal class MSTestAdapterSettings
         {
             warningMessage = $"The Directory: {path}, has following problem: {warningMessage}";
 
-            if (EqtTrace.IsWarningEnabled)
+            if (TraceLoggerHelper.Instance.IsWarningEnabled)
             {
-                EqtTrace.Warning(warningMessage);
+                TraceLoggerHelper.Instance.Warning(warningMessage);
             }
 
             return null;
@@ -318,7 +318,10 @@ internal class MSTestAdapterSettings
         }
 
         // generate warning that path does not exist.
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, $"The Directory: {path}, does not exist.");
+        if (TraceLoggerHelper.Instance.IsWarningEnabled)
+        {
+            TraceLoggerHelper.Instance.Warning($"The Directory: {path}, does not exist.");
+        }
 
         return null;
     }

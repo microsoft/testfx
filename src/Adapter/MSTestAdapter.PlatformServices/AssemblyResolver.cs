@@ -8,7 +8,6 @@ using System.Security;
 using System.Security.Permissions;
 #endif
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -30,7 +29,7 @@ internal
     IDisposable
 {
     /// <summary>
-    /// The assembly name of the dll containing logger APIs(EqtTrace) from the TestPlatform.
+    /// The assembly name of the dll containing logger APIs(TraceLoggerHelper.Instance) from the TestPlatform.
     /// </summary>
     /// <remarks>
     /// The reason we have this is because the AssemblyResolver itself logs information during resolution.
@@ -39,7 +38,7 @@ internal
     private const string LoggerAssemblyNameLegacy = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
 
     /// <summary>
-    /// The assembly name of the dll containing logger APIs(EqtTrace) from the TestPlatform.
+    /// The assembly name of the dll containing logger APIs(TraceLoggerHelper.Instance) from the TestPlatform.
     /// </summary>
     /// <remarks>
     /// The reason we have this is because the AssemblyResolver itself logs information during resolution.
@@ -346,9 +345,9 @@ internal
                 name,
                 () =>
                 {
-                    if (EqtTrace.IsInfoEnabled)
+                    if (TraceLoggerHelper.Instance.IsInfoEnabled)
                     {
-                        EqtTrace.Info(
+                        TraceLoggerHelper.Instance.Info(
                             "MSTest.AssemblyResolver.OnResolve: Failed to create assemblyName '{0}'. Reason: {1} ",
                             name,
                             ex);
@@ -371,9 +370,9 @@ internal
                 name,
                 () =>
                 {
-                    if (EqtTrace.IsVerboseEnabled)
+                    if (TraceLoggerHelper.Instance.IsVerboseEnabled)
                     {
-                        EqtTrace.Verbose("MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'", requestedName.Name, dir);
+                        TraceLoggerHelper.Instance.Verbose("MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'", requestedName.Name, dir);
                     }
                 });
 
@@ -393,9 +392,9 @@ internal
                             name,
                             () =>
                             {
-                                if (EqtTrace.IsInfoEnabled)
+                                if (TraceLoggerHelper.Instance.IsInfoEnabled)
                                 {
-                                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
+                                    TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
                                 }
                             });
                         _resolvedAssemblies[name] = null;
@@ -501,9 +500,9 @@ internal
             args.Name,
             () =>
             {
-                if (EqtTrace.IsInfoEnabled)
+                if (TraceLoggerHelper.Instance.IsInfoEnabled)
                 {
-                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'", args.Name);
+                    TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'", args.Name);
                 }
             });
 
@@ -513,9 +512,9 @@ internal
             assemblyNameToLoad,
             () =>
             {
-                if (EqtTrace.IsInfoEnabled)
+                if (TraceLoggerHelper.Instance.IsInfoEnabled)
                 {
-                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'", assemblyNameToLoad);
+                    TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'", assemblyNameToLoad);
                 }
             });
 
@@ -565,9 +564,9 @@ internal
                         assemblyNameToLoad,
                         () =>
                         {
-                            if (EqtTrace.IsWarningEnabled)
+                            if (TraceLoggerHelper.Instance.IsWarningEnabled)
                             {
-                                EqtTrace.Warning(
+                                TraceLoggerHelper.Instance.Warning(
                                 "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
                                 currentNode.DirectoryPath);
                             }
@@ -614,9 +613,9 @@ internal
                     args.Name,
                     () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (TraceLoggerHelper.Instance.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
+                            TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
                         }
                     });
             }
@@ -643,9 +642,9 @@ internal
                 assemblyName,
                 () =>
                 {
-                    if (EqtTrace.IsInfoEnabled)
+                    if (TraceLoggerHelper.Instance.IsInfoEnabled)
                     {
-                        EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved '{0}'", assemblyName);
+                        TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Resolved '{0}'", assemblyName);
                     }
                 });
             return true;
@@ -656,8 +655,8 @@ internal
 
     /// <summary>
     /// Call logger APIs safely. We do not want a stackoverflow when objectmodel assembly itself
-    /// is being resolved and an EqtTrace message prompts the load of the same dll again.
-    /// CLR does not trigger a load when the EqtTrace messages are in a lambda expression. Leaving it that way
+    /// is being resolved and an TraceLoggerHelper.Instance message prompts the load of the same dll again.
+    /// CLR does not trigger a load when the TraceLoggerHelper.Instance messages are in a lambda expression. Leaving it that way
     /// to preserve readability instead of creating wrapper functions.
     /// </summary>
     /// <param name="assemblyName">The assembly being resolved.</param>
@@ -719,9 +718,9 @@ internal
                 assemblyName,
                 () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (TraceLoggerHelper.Instance.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'", assemblyName);
+                            TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'", assemblyName);
                         }
                     });
 
@@ -733,9 +732,9 @@ internal
                 assemblyName,
                 () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (TraceLoggerHelper.Instance.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
+                            TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
                         }
                     });
 
@@ -751,9 +750,9 @@ internal
                 assemblyName,
                 () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (TraceLoggerHelper.Instance.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
+                            TraceLoggerHelper.Instance.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
                         }
                     });
         }

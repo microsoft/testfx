@@ -4,9 +4,7 @@
 #if !WINDOWS_UWP
 
 #if NETFRAMEWORK
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -112,10 +110,11 @@ internal class AssemblyUtility
     {
         if (!IsAssemblyExtension(Path.GetExtension(assemblyPath)) || !IsAssembly(assemblyPath))
         {
-            EqtTrace.ErrorIf(
-                    EqtTrace.IsErrorEnabled,
-                    "AssemblyUtilities.GetSatelliteAssemblies: the specified file '{0}' is not managed assembly.",
-                    assemblyPath);
+            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            {
+                TraceLoggerHelper.Instance.Error("AssemblyUtilities.GetSatelliteAssemblies: the specified file '{0}' is not managed assembly.", assemblyPath);
+            }
+
             Debug.Fail("AssemblyUtilities.GetSatelliteAssemblies: the file '" + assemblyPath + "' is not an assembly.");
 
             // If e.g. this is unmanaged dll, we don't care about the satellites.
@@ -152,10 +151,11 @@ internal class AssemblyUtility
                     // If the satellite found is not a managed assembly we do not report it as a reference.
                     if (!IsAssembly(satellitePath))
                     {
-                        EqtTrace.ErrorIf(
-                            EqtTrace.IsErrorEnabled,
-                            "AssemblyUtilities.GetSatelliteAssemblies: found assembly '{0}' installed as satellite but it's not managed assembly.",
-                            satellitePath);
+                        if (TraceLoggerHelper.Instance.IsErrorEnabled)
+                        {
+                            TraceLoggerHelper.Instance.Error("AssemblyUtilities.GetSatelliteAssemblies: found assembly '{0}' installed as satellite but it's not managed assembly.", satellitePath);
+                        }
+
                         continue;
                     }
 
@@ -179,7 +179,10 @@ internal class AssemblyUtility
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
-        EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: start.");
+        if (TraceLoggerHelper.Instance.IsInfoEnabled)
+        {
+            TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: start.");
+        }
 
         AppDomainSetup setupInfo = new();
         string dllDirectory = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
@@ -189,7 +192,10 @@ internal class AssemblyUtility
 
         AppDomainUtilities.SetConfigurationFile(setupInfo, configFile);
 
-        EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: Using config file: '{0}'.", setupInfo.ConfigurationFile);
+        if (TraceLoggerHelper.Instance.IsInfoEnabled)
+        {
+            TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: Using config file: '{0}'.", setupInfo.ConfigurationFile);
+        }
 
         setupInfo.LoaderOptimization = LoaderOptimization.MultiDomainHost;
 
@@ -208,14 +214,14 @@ internal class AssemblyUtility
             _ = string.Format(CultureInfo.InvariantCulture, Resource.CannotFindFile, string.Empty);
 
             appDomain = AppDomain.CreateDomain("Dependency finder domain", null, setupInfo);
-            if (EqtTrace.IsInfoEnabled)
+            if (TraceLoggerHelper.Instance.IsInfoEnabled)
             {
-                EqtTrace.Info("AssemblyDependencyFinder.GetDependentAssemblies: Created AppDomain.");
+                TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: Created AppDomain.");
             }
 
             Type assemblyResolverType = typeof(AssemblyResolver);
 
-            EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+            TraceLoggerHelper.Instance.SetupRemoteEqtTraceListeners(appDomain);
 
             // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
             using var resolver =
@@ -228,7 +234,10 @@ internal class AssemblyUtility
             var worker =
                 (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
 
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
+            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            {
+                TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
+            }
 
             IReadOnlyCollection<string> allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
             var dependenciesFromDllDirectory = new List<string>();
@@ -249,9 +258,17 @@ internal class AssemblyUtility
         {
             if (appDomain != null)
             {
-                EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain...");
+                if (TraceLoggerHelper.Instance.IsInfoEnabled)
+                {
+                    TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain...");
+                }
+
                 AppDomain.Unload(appDomain);
-                EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain succeeded.");
+
+                if (TraceLoggerHelper.Instance.IsInfoEnabled)
+                {
+                    TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain succeeded.");
+                }
             }
         }
     }

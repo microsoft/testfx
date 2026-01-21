@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppCont
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -119,7 +118,10 @@ internal sealed class FileOperations : IFileOperations
                 messageFormatOnException = "{0}";
             }
 
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
+            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            {
+                TraceLoggerHelper.Instance.Error(messageFormatOnException, exception.Message);
+            }
         }
 
         return null;
