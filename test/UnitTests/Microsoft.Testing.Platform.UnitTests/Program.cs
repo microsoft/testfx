@@ -19,7 +19,10 @@ builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
+
+#if !NETFRAMEWORK
 if (!OperatingSystem.IsBrowser())
+#endif
 {
     builder.AddHangDumpProvider();
 }
