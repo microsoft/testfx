@@ -67,6 +67,7 @@
 
   <ItemGroup>
     <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
   </ItemGroup>
 
   <ItemGroup Label="NuGet">

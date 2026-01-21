@@ -62,6 +62,11 @@ internal interface IPlatformServiceProvider
     bool IsGracefulStopRequested { get; set; }
 
     /// <summary>
+    /// Gets or sets an instance to the managed name utility service.
+    /// </summary>
+    IManagedNameUtilityService ManagedNameUtilityService { get; set; }
+
+    /// <summary>
     /// Creates an instance to the platform service for a test source host.
     /// </summary>
     /// <param name="source">

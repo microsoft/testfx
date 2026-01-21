@@ -35,6 +35,8 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<IReflectionOperations> MockReflectionOperations { get; set; } = null!;
 
+    public Mock<IManagedNameUtilityService> MockManagedNameUtilityService { get; } = new();
+
     #endregion
 
     public IFileOperations FileOperations => MockFileOperations.Object;
@@ -60,6 +62,8 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     }
 
     public ITestDataSource TestDataSource => MockTestDataSource.Object;
+
+    public IManagedNameUtilityService ManagedNameUtilityService { get => MockManagedNameUtilityService.Object; set => throw new NotSupportedException(); }
 
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 

@@ -112,6 +112,15 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     public bool IsGracefulStopRequested { get; set; }
 
     /// <summary>
+    /// Gets or sets an instance to the managed name utility service.
+    /// </summary>
+    public IManagedNameUtilityService ManagedNameUtilityService
+    {
+        get => field ?? throw new InvalidOperationException("ManagedNameUtilityService has not been initialized. Ensure the test adapter has set this service before use.");
+        set;
+    }
+
+    /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
     [field: AllowNull]

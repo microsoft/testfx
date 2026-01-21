@@ -22,6 +22,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         IServiceProvider serviceProvider, ITestFrameworkCapabilities capabilities)
         : base(mstestExtension, getTestAssemblies, serviceProvider, capabilities)
     {
+        PlatformServiceProviderInitializer.EnsureInitialized();
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
     }

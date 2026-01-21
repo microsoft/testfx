@@ -3,7 +3,7 @@
 
 using System.Collections.ObjectModel;
 
-using Microsoft.TestPlatform.AdapterUtilities;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
