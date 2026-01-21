@@ -337,6 +337,9 @@ Common scenarios where this rule triggers:
   <data name="TestClassShouldHaveTestMethodMessageFormat" xml:space="preserve">
     <value>Test class '{0}' does not contain any test method (method marked with '[TestMethod]'). Add a test method, or remove '[TestClass]' if this is a base class or not intended to be a test class.</value>
   </data>
+  <data name="TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes" xml:space="preserve">
+    <value>Test class '{0}' does not contain any test method (method marked with '[TestMethod]'), but base class '{1}' contains assembly-level attributes. Make the class 'static' if it is only intended to contain assembly-level initialization or cleanup methods, or add a test method.</value>
+  </data>
   <data name="TestClassShouldHaveTestMethodTitle" xml:space="preserve">
     <value>Test class should have test method</value>
   </data>

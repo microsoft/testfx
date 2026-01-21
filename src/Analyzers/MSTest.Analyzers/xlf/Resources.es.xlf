@@ -642,6 +642,11 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">La clase de prueba '{0}' debe ser válida</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes">
+        <source>Test class '{0}' does not contain any test method (method marked with '[TestMethod]'), but base class '{1}' contains assembly-level attributes. Make the class 'static' if it is only intended to contain assembly-level initialization or cleanup methods, or add a test method.</source>
+        <target state="new">Test class '{0}' does not contain any test method (method marked with '[TestMethod]'), but base class '{1}' contains assembly-level attributes. Make the class 'static' if it is only intended to contain assembly-level initialization or cleanup methods, or add a test method.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
         <target state="translated">La propiedad 'TestContext' debe ser válida</target>
