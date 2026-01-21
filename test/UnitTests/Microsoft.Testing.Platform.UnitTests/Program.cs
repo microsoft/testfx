@@ -20,8 +20,6 @@ builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
 
-_ = Polyfill.Nanoseconds(TimeSpan.FromSeconds(50));
-
 #if !NETFRAMEWORK
 if (!OperatingSystem.IsBrowser())
 #endif
