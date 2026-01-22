@@ -91,16 +91,7 @@ internal static class ManagedNameHelper
             method = ((MethodInfo)method).GetGenericMethodDefinition();
         }
 
-        var typeBuilder = new StringBuilder();
         var methodBuilder = new StringBuilder();
-
-        // Namespace and Type Name (with arity designation)
-        // hierarchyPos contains [startIndexOfNamespace, endIndexOfNameSpace, endIndexOfTypeName]
-        int[]? hierarchyPos = AppendTypeString(typeBuilder, semanticType, closedType: useClosedTypes);
-        if (hierarchyPos is null || hierarchyPos.Length != 3)
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
 
         // Method Name with method arity
         int arity = method.GetGenericArguments().Length;
@@ -238,17 +229,16 @@ internal static class ManagedNameHelper
         });
     }
 
-    private static int[]? AppendTypeString(StringBuilder b, Type? type, bool closedType)
+    private static void AppendTypeString(StringBuilder b, Type? type, bool closedType)
     {
         if (type is null)
         {
-            return null;
+            return;
         }
 
-        int[]? hierarchies = null;
         if (type.IsArray)
         {
-            hierarchies = AppendTypeString(b, type.GetElementType(), closedType);
+            AppendTypeString(b, type.GetElementType(), closedType);
             b.Append('[');
             for (int i = 0; i < type.GetArrayRank() - 1; i++)
             {
@@ -269,19 +259,10 @@ internal static class ManagedNameHelper
         }
         else
         {
-            hierarchies = new int[3];
-            hierarchies[0] = b.Length;
-
             if (type.Namespace != null)
             {
                 AppendNamespace(b, type.Namespace);
-                hierarchies[1] = b.Length;
-
                 b.Append('.');
-            }
-            else
-            {
-                hierarchies[1] = hierarchies[0];
             }
 
             AppendNestedTypeName(b, type);
@@ -289,11 +270,7 @@ internal static class ManagedNameHelper
             {
                 AppendGenericTypeParameters(b, type);
             }
-
-            hierarchies[2] = b.Length;
         }
-
-        return hierarchies;
     }
 
     private static void AppendNamespace(StringBuilder b, string? namespaceString)
