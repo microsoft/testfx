@@ -60,7 +60,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration).ConfigureAwait(false);
     }
 
-    protected internal override void AddAdditionalProperties(TestCase testCase, TestNode testNode)
+    protected internal override void AddAdditionalProperties(TestNode testNode, TestCase testCase)
     {
         if (TryGetMethodIdentifierProperty(testCase, out TestMethodIdentifierProperty? testMethodIdentifierProperty))
         {

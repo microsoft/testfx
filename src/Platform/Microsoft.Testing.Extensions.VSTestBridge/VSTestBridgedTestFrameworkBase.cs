@@ -66,9 +66,9 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <summary>
     /// Allows test frameworks built with the VSTestBridge to add additional properties to the TestNode, for example, TestMethodIdentifierProperty.
     /// </summary>
-    /// <param name="testCase">The VSTest test case for the current test node.</param>
     /// <param name="testNode">The MTP test node being constructed.</param>
-    protected internal virtual void AddAdditionalProperties(TestCase testCase, TestNode testNode)
+    /// <param name="testCase">The VSTest test case for the current test node.</param>
+    protected internal virtual void AddAdditionalProperties(TestNode testNode, TestCase testCase)
     {
     }
 

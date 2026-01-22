@@ -30,7 +30,7 @@ internal static class ObjectModelConverters
         this TestCase testCase,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
-        Action<TestCase, TestNode> addAdditionalProperties,
+        Action<TestNode, TestCase> addAdditionalProperties,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo,
@@ -58,7 +58,7 @@ internal static class ObjectModelConverters
                 new TestFileLocationProperty(testCase.CodeFilePath, lineSpan: new(position, position)));
         }
 
-        addAdditionalProperties(testCase, testNode);
+        addAdditionalProperties(testNode, testCase);
         return testNode;
     }
 
@@ -127,7 +127,7 @@ internal static class ObjectModelConverters
         this TestResult testResult,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
-        Action<TestCase, TestNode> addAdditionalProperties,
+        Action<TestNode, TestCase> addAdditionalProperties,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo)
