@@ -742,7 +742,7 @@ The type declaring these methods should also respect the following rules:
     <value>Test classes should have valid constructors</value>
   </data>
   <data name="TestClassConstructorShouldBeValidMessageFormat" xml:space="preserve">
-    <value>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'</value>
+    <value>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</value>
   </data>
   <data name="TestClassConstructorShouldBeValidDescription" xml:space="preserve">
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
