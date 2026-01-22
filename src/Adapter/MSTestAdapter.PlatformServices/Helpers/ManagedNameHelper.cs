@@ -154,6 +154,8 @@ internal static class ManagedNameHelper
             method = MethodBase.GetMethodFromHandle(methodHandle, semanticType.TypeHandle)!;
         }
 
+        managedTypeName = semanticType.FullName!;
+
         if (method.IsGenericMethod && !useClosedTypes)
         {
             // If this method is generic, then convert to the generic method definition
@@ -206,20 +208,20 @@ internal static class ManagedNameHelper
 
         int methodNameEndIndex = methodBuilder.Length;
 
-        managedTypeName = typeBuilder.ToString();
+        string escapedManagedTypeName = typeBuilder.ToString();
         managedMethodName = methodBuilder.ToString();
 
         hierarchyValues = new string[HierarchyConstants.Levels.TotalLevelCount];
         hierarchyValues[HierarchyConstants.Levels.TestGroupIndex] = managedMethodName.Substring(0, methodNameEndIndex);
         if (hierarchyPos[1] == hierarchyPos[0]) // No namespace
         {
-            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = managedTypeName.Substring(0, hierarchyPos[2]);
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = escapedManagedTypeName.Substring(0, hierarchyPos[2]);
             hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = null;
         }
         else
         {
-            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = managedTypeName.Substring(hierarchyPos[1] + 1, hierarchyPos[2] - hierarchyPos[1] - 1);
-            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = managedTypeName.Substring(hierarchyPos[0], hierarchyPos[1] - hierarchyPos[0]);
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = escapedManagedTypeName.Substring(hierarchyPos[1] + 1, hierarchyPos[2] - hierarchyPos[1] - 1);
+            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = escapedManagedTypeName.Substring(hierarchyPos[0], hierarchyPos[1] - hierarchyPos[0]);
         }
 
         Assembly? assembly = method.DeclaringType?.Assembly;
@@ -264,8 +266,7 @@ internal static class ManagedNameHelper
     /// </remarks>
     public static MethodBase GetMethod(Assembly assembly, string managedTypeName, string managedMethodName)
     {
-        string parsedManagedTypeName = ParseEscapedString(managedTypeName);
-        Type type = assembly.GetType(parsedManagedTypeName, throwOnError: false, ignoreCase: false)
+        Type type = assembly.GetType(managedTypeName, throwOnError: false, ignoreCase: false)
             ?? throw new InvalidManagedNameException();
 
         MethodInfo? method = null;
