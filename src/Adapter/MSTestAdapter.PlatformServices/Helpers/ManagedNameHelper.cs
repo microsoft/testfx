@@ -8,56 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Hel
 [Embedded]
 internal static class ManagedNameHelper
 {
-    /// <summary>
-    /// Gets fully qualified managed type and method name from given <see href="MethodBase" /> instance.
-    /// </summary>
-    /// <param name="method">
-    /// A <see cref="MethodBase" /> instance to get fully qualified managed type and method name.
-    /// </param>
-    /// <param name="managedTypeName">
-    /// When this method returns, contains the fully qualified managed type name of the <paramref name="method"/>.
-    /// This parameter is passed uninitialized; any value originally supplied in result will be overwritten.
-    /// The format is defined in <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md#managedtype-property">the RFC</see>.
-    /// </param>
-    /// <param name="managedMethodName">
-    /// When this method returns, contains the fully qualified managed method name of the <paramref name="method"/>.
-    /// This parameter is passed uninitialized; any value originally supplied in result will be overwritten.
-    /// The format is defined in <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md#managedmethod-property">the RFC</see>.
-    /// </param>
-    /// <param name="hierarchyValues">
-    /// When this method returns, contains the default test hierarchy values of the <paramref name="method"/>.
-    /// This parameter is passed uninitialized; any value originally supplied in result will be overwritten.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="method"/> is null.
-    /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// <paramref name="method"/> must describe a method.
-    /// </exception>
-    /// <exception cref="NotImplementedException">
-    /// Required functionality on <paramref name="method"/> is missing on the current platform.
-    /// </exception>
-    /// <remarks>
-    /// More information about <paramref name="managedTypeName"/> and <paramref name="managedMethodName"/> can be found in
-    /// <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md">the RFC</see>.
-    /// </remarks>
-    public static void GetManagedName(MethodBase method, out string managedTypeName, out string managedMethodName, out string?[] hierarchyValues)
-    {
-        if (!method.IsGenericMethod && method.ReflectedType is { } semanticType && !semanticType.IsGenericType)
-        {
-            // We are dealing with non-generic method in non-generic type.
-            // So, it doesn't matter what we pass as "useClosedTypes".
-            // Instead of calling GetManagedNameAndHierarchy that does repeated work, we call it only once.
-            GetManagedNameAndHierarchy(method, false, out managedTypeName, out managedMethodName, out hierarchyValues);
-        }
-        else
-        {
-            GetManagedNameAndHierarchy(method, false, out managedTypeName, out managedMethodName, out _);
-            GetManagedNameAndHierarchy(method, true, out _, out _, out hierarchyValues);
-        }
-    }
-
-    private static void GetManagedNameAndHierarchy(MethodBase method, bool useClosedTypes, out string managedTypeName, out string managedMethodName, out string?[] hierarchyValues)
+    public static void GetManagedNameAndHierarchy(MethodBase method, out string managedTypeName, out string managedMethodName, out string?[] hierarchyValues)
     {
         _ = method ?? throw new ArgumentNullException(nameof(method));
 
@@ -68,7 +19,7 @@ internal static class ManagedNameHelper
 
         Type semanticType = method.ReflectedType ?? throw ApplicationStateGuard.Unreachable();
 
-        if (semanticType.IsGenericType && !useClosedTypes)
+        if (semanticType.IsGenericType)
         {
             // The type might have some of its generic parameters specified, so make
             // sure we are working with the open form of the generic type.
@@ -84,7 +35,7 @@ internal static class ManagedNameHelper
 
         managedTypeName = semanticType.FullName!;
 
-        if (method.IsGenericMethod && !useClosedTypes)
+        if (method.IsGenericMethod)
         {
             // If this method is generic, then convert to the generic method definition
             // so that we get the open generic type definitions for parameters.
@@ -98,15 +49,8 @@ internal static class ManagedNameHelper
         AppendMethodString(methodBuilder, method.Name, arity);
         if (arity > 0)
         {
-            if (useClosedTypes)
-            {
-                AppendGenericMethodParameters(methodBuilder, method);
-            }
-            else
-            {
-                methodBuilder.Append('`');
-                methodBuilder.Append(arity);
-            }
+            methodBuilder.Append('`');
+            methodBuilder.Append(arity);
         }
 
         // Type Parameters
@@ -408,12 +352,6 @@ internal static class ManagedNameHelper
         AppendMethodString(b, typeName, arity - outerArity);
         b.Append('*', stars);
         return arity;
-    }
-
-    private static void AppendGenericMethodParameters(StringBuilder methodBuilder, MethodBase method)
-    {
-        Type[] genericArguments = method.GetGenericArguments();
-        AppendGenericArguments(methodBuilder, genericArguments);
     }
 
     private static void AppendGenericTypeParameters(StringBuilder b, Type type)
