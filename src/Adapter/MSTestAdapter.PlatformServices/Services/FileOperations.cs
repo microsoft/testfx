@@ -4,6 +4,9 @@
 #if WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
+#if NETFRAMEWORK
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -118,9 +121,9 @@ internal sealed class FileOperations : IFileOperations
                 messageFormatOnException = "{0}";
             }
 
-            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                TraceLoggerHelper.Instance.Error(messageFormatOnException, exception.Message);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(messageFormatOnException, exception.Message);
             }
         }
 

@@ -225,7 +225,11 @@ internal class TestExecutionManager
 
             if (testResult.Outcome == TestOutcome.Failed)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+                }
+
 #if !WINDOWS_UWP && !WIN_UI
                 _hasAnyTestFailed = true;
 #endif
@@ -285,7 +289,11 @@ internal class TestExecutionManager
 
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
+
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Created unit-test runner {0}", source);
+        }
 
         // Default test set is filtered tests based on user provided filter criteria
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
@@ -316,7 +324,10 @@ internal class TestExecutionManager
         }
         catch (Exception ex)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
+            }
         }
 
         TestAssemblySettings sourceSettings = (sourceSettingsProvider != null)
@@ -410,7 +421,11 @@ internal class TestExecutionManager
                 catch (Exception ex)
                 {
                     string exceptionToString = ex.ToString();
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+                    }
+
                     frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
                     throw;
                 }
@@ -432,7 +447,10 @@ internal class TestExecutionManager
             testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executed tests belonging to source {0}", source);
+        }
     }
 
     private async Task ExecuteTestsWithTestRunnerAsync(
@@ -467,7 +485,10 @@ internal class TestExecutionManager
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executing test {0}", unitTestElement.TestMethod.Name);
+            }
 
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
@@ -491,7 +512,10 @@ internal class TestExecutionManager
                 unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
             }
 
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executed test {0}", unitTestElement.TestMethod.Name);
+            }
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 

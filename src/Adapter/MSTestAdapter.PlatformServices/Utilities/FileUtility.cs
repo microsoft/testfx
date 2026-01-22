@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -147,9 +148,9 @@ internal class FileUtility
         }
         catch (ArgumentException ex)
         {
-            if (TraceLoggerHelper.Instance.IsWarningEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                TraceLoggerHelper.Instance.Warning("Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("Error while trying to locate pdb for deployed assembly '{0}': {1}", destinationFile, ex);
             }
 
             return null;
@@ -170,9 +171,9 @@ internal class FileUtility
         }
         else if (!string.Equals(pdbSource, value, StringComparison.OrdinalIgnoreCase))
         {
-            if (TraceLoggerHelper.Instance.IsWarningEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                TraceLoggerHelper.Instance.Warning(
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
                     "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
                     pdbSource,
                     value);
@@ -237,9 +238,9 @@ internal class FileUtility
         }
         catch (Exception ex)
         {
-            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                TraceLoggerHelper.Instance.Error("DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error("DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
             }
         }
     }
@@ -265,9 +266,9 @@ internal class FileUtility
     {
         if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {
-            if (TraceLoggerHelper.Instance.IsWarningEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                TraceLoggerHelper.Instance.Warning("Path is either null or invalid. Path = '{0}'", path);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("Path is either null or invalid. Path = '{0}'", path);
             }
 
             return null;
@@ -276,9 +277,9 @@ internal class FileUtility
         string pdbFile = Path.ChangeExtension(path, ".pdb");
         if (File.Exists(pdbFile))
         {
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("Pdb file found for path '{0}'", path);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Pdb file found for path '{0}'", path);
             }
 
             return pdbFile;

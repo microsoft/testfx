@@ -49,10 +49,11 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
-    [field: AllowNull]
-    [field: MaybeNull]
-    [AllowNull]
-    public IAdapterTraceLogger AdapterTraceLogger { get => field ??= new AdapterTraceLogger(); set; }
+    public ITraceLogger AdapterTraceLogger
+    {
+        get => field ??= NopTraceLogger.Instance;
+        set;
+    }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>

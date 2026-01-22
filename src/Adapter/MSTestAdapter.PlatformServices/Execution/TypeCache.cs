@@ -353,10 +353,13 @@ internal sealed class TypeCache : MarshalByRefObject
                     catch (Exception ex)
                     {
                         // If we fail to discover type from an assembly, then do not abort. Pick the next type.
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                            "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
-                            t.FullName,
-                            ex);
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                        {
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                                "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
+                                t.FullName,
+                                ex);
+                        }
 
                         continue;
                     }

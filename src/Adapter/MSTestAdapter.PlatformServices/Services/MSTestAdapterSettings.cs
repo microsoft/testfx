@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -279,9 +280,9 @@ internal class MSTestAdapterSettings
             {
                 warningMessage = $"The Directory: {path}, has following problem: This is not an absolute path. A base directory should be provided for this to be used as a relative path.";
 
-                if (TraceLoggerHelper.Instance.IsWarningEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                 {
-                    TraceLoggerHelper.Instance.Warning(warningMessage);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(warningMessage);
                 }
 
                 return null;
@@ -304,9 +305,9 @@ internal class MSTestAdapterSettings
         {
             warningMessage = $"The Directory: {path}, has following problem: {warningMessage}";
 
-            if (TraceLoggerHelper.Instance.IsWarningEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
-                TraceLoggerHelper.Instance.Warning(warningMessage);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(warningMessage);
             }
 
             return null;
@@ -318,9 +319,9 @@ internal class MSTestAdapterSettings
         }
 
         // generate warning that path does not exist.
-        if (TraceLoggerHelper.Instance.IsWarningEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
         {
-            TraceLoggerHelper.Instance.Warning($"The Directory: {path}, does not exist.");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"The Directory: {path}, does not exist.");
         }
 
         return null;

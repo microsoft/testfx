@@ -4,6 +4,7 @@
 #if NETFRAMEWORK
 using System.Data;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -107,9 +108,9 @@ internal sealed class XmlDataConnection : TestDataConnection
         {
             // Yes, we get exceptions other than SecurityException and XmlException too!
             // So we handle all exceptions!
-            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                TraceLoggerHelper.Instance.Error(exception.Message + " for XML data source " + _fileName);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(exception.Message + " for XML data source " + _fileName);
             }
         }
 

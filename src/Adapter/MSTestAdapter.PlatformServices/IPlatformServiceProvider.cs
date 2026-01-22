@@ -27,7 +27,7 @@ internal interface IPlatformServiceProvider
     /// <summary>
     /// Gets or sets an instance to the platform service for trace logging.
     /// </summary>
-    IAdapterTraceLogger AdapterTraceLogger { get; set; }
+    ITraceLogger AdapterTraceLogger { get; set; }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>

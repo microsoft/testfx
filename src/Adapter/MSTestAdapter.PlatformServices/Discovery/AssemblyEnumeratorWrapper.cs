@@ -64,7 +64,10 @@ internal sealed class AssemblyEnumeratorWrapper
                 // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("{0}", loaderEx);
+                    }
                 }
             }
 
@@ -98,7 +101,10 @@ internal sealed class AssemblyEnumeratorWrapper
         }
         catch
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.OlderTFMVersionFound);
+            }
         }
 
         // This method runs inside of appdomain, when appdomains are available and enabled.

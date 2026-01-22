@@ -8,6 +8,7 @@ using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -487,9 +488,9 @@ internal class TestDataConnectionSql : TestDataConnection
                     WriteDiagnostics("Failed to get schema table");
 
                     // This can be normal case as some providers do not support views.
-                    if (TraceLoggerHelper.Instance.IsWarningEnabled)
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                     {
-                        TraceLoggerHelper.Instance.Warning("DataUtil.GetDataTablesAndViews: exception (can be normal case as some providers do not support views): " + ex);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("DataUtil.GetDataTablesAndViews: exception (can be normal case as some providers do not support views): " + ex);
                     }
 
                     continue;
@@ -781,10 +782,10 @@ internal class TestDataConnectionSql : TestDataConnection
         // We need to escape bad characters in table name like [Sheet1$] in Excel.
         // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
         string quotedTableName = PrepareNameForSql(tableName);
-        if (TraceLoggerHelper.Instance.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            TraceLoggerHelper.Instance.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
-            TraceLoggerHelper.Instance.Info("ReadTable: data driven test: will use table name: {0}", tableName);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("ReadTable: data driven test: will use table name: {0}", tableName);
         }
 
         command.Connection = Connection;

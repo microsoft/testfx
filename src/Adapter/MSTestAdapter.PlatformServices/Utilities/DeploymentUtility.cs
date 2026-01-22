@@ -5,6 +5,9 @@
 
 #if NETFRAMEWORK
 using System.Security;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -32,7 +35,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
 #if NETFRAMEWORK
         if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
         {
-            TraceLoggerHelper.Instance.Info("Adding the references and satellite assemblies to the deployment items list");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Adding the references and satellite assemblies to the deployment items list");
 
             // Get the referenced assemblies.
             ProcessNewStorage(testSourceHandler, deploymentItems, warnings);
@@ -46,7 +49,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
         }
         else
         {
-            TraceLoggerHelper.Instance.Info("Adding the test source directory to the deployment items list");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Adding the test source directory to the deployment items list");
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSourceHandler)));
         }
 #else
@@ -148,9 +151,9 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             catch (Exception ex) when (ex is ArgumentException or SecurityException or IOException or NotSupportedException)
             {
                 // IOException covers PathTooLongException.
-                if (TraceLoggerHelper.Instance.IsWarningEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                 {
-                    TraceLoggerHelper.Instance.Warning("DeploymentManager.GetSatellites: {0}", ex);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("DeploymentManager.GetSatellites: {0}", ex);
                 }
             }
 
@@ -184,9 +187,9 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             catch (Exception ex) when (ex is ArgumentException or SecurityException or IOException)
             {
                 // IOException covers PathTooLongException.
-                if (TraceLoggerHelper.Instance.IsWarningEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                 {
-                    TraceLoggerHelper.Instance.Warning("DeploymentManager.GetSatellites: {0}", ex);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("DeploymentManager.GetSatellites: {0}", ex);
                 }
 
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
@@ -222,10 +225,10 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             warnings.Add(warning);
         }
 
-        if (TraceLoggerHelper.Instance.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            TraceLoggerHelper.Instance.Info("DeploymentManager: Source:{0} has following references", testSourceHandler);
-            TraceLoggerHelper.Instance.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DeploymentManager: Source:{0} has following references", testSourceHandler);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
         }
 
         foreach (string reference in references)
@@ -233,9 +236,9 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             DeploymentItem deploymentItem = new(reference, string.Empty, DeploymentItemOriginType.Dependency);
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, deploymentItem);
 
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("DeploymentManager: Reference:{0} ", reference);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DeploymentManager: Reference:{0} ", reference);
             }
         }
     }

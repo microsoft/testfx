@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP && !WIN_UI
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -79,16 +80,16 @@ internal sealed class TestDeployment : ITestDeployment
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
             }
 
             _fileUtility.DeleteDirectories(RunDirectories.RootDeploymentDirectory);
 
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
             }
         }
     }
@@ -194,9 +195,9 @@ internal sealed class TestDeployment : ITestDeployment
         DebugEx.Assert(_adapterSettings is not null, "Adapter settings should not be null.");
         if (!_adapterSettings.DeploymentEnabled)
         {
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("MSTestExecutor: CanDeploy is false.");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor: CanDeploy is false.");
             }
 
             return false;

@@ -400,7 +400,11 @@ internal sealed class TestClassInfo
                 }
                 catch (Exception ex)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                    }
+
                     return new TestResult
                     {
                         TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
@@ -413,7 +417,10 @@ internal sealed class TestClassInfo
                 // If the requested apartment state is STA and the OS is not Windows, then warn the user.
                 if (!isWindowsOS && isSTATestClass)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                    }
                 }
 
                 return await DoRunAsync().ConfigureAwait(false);
@@ -640,7 +647,10 @@ internal sealed class TestClassInfo
             }
             catch (Exception ex)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(ex.ToString());
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                }
             }
         }
         else
@@ -648,7 +658,10 @@ internal sealed class TestClassInfo
             // If the requested apartment state is STA and the OS is not Windows, then warn the user.
             if (!isWindowsOS && isSTATestClass)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                }
             }
 
             await DoRunAsync().ConfigureAwait(false);

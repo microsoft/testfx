@@ -9,8 +9,6 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,6 +24,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
     {
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
     }
 
     /// <inheritdoc />
@@ -38,9 +37,6 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
-        // TODO: Merge AdapterTraceLogger above with TraceLoggerHelper.Instance here, and have a sensible implementation other than NopTraceLogger.
-        TraceLoggerHelper.Instance = new NopTraceLogger();
         new MSTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
         return Task.CompletedTask;
     }
@@ -54,10 +50,6 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         {
             Debugger.Launch();
         }
-
-        PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
-        // TODO: Merge AdapterTraceLogger above with TraceLoggerHelper.Instance here, and have a sensible implementation other than NopTraceLogger.
-        TraceLoggerHelper.Instance = new NopTraceLogger();
 
         MSTestExecutor testExecutor = new(cancellationToken);
         await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration).ConfigureAwait(false);

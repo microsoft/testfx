@@ -6,6 +6,7 @@
 using System.Data;
 using System.Data.OleDb;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -62,9 +63,9 @@ internal sealed class CsvDataConnection : TestDataConnection
         }
         catch (Exception exception)
         {
-            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                TraceLoggerHelper.Instance.Error(exception.Message + " for CSV data source " + _fileName);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(exception.Message + " for CSV data source " + _fileName);
             }
         }
 

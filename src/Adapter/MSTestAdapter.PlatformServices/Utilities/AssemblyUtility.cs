@@ -4,6 +4,7 @@
 #if !WINDOWS_UWP
 
 #if NETFRAMEWORK
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
@@ -110,9 +111,9 @@ internal class AssemblyUtility
     {
         if (!IsAssemblyExtension(Path.GetExtension(assemblyPath)) || !IsAssembly(assemblyPath))
         {
-            if (TraceLoggerHelper.Instance.IsErrorEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
             {
-                TraceLoggerHelper.Instance.Error("AssemblyUtilities.GetSatelliteAssemblies: the specified file '{0}' is not managed assembly.", assemblyPath);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error("AssemblyUtilities.GetSatelliteAssemblies: the specified file '{0}' is not managed assembly.", assemblyPath);
             }
 
             Debug.Fail("AssemblyUtilities.GetSatelliteAssemblies: the file '" + assemblyPath + "' is not an assembly.");
@@ -151,9 +152,9 @@ internal class AssemblyUtility
                     // If the satellite found is not a managed assembly we do not report it as a reference.
                     if (!IsAssembly(satellitePath))
                     {
-                        if (TraceLoggerHelper.Instance.IsErrorEnabled)
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
                         {
-                            TraceLoggerHelper.Instance.Error("AssemblyUtilities.GetSatelliteAssemblies: found assembly '{0}' installed as satellite but it's not managed assembly.", satellitePath);
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Error("AssemblyUtilities.GetSatelliteAssemblies: found assembly '{0}' installed as satellite but it's not managed assembly.", satellitePath);
                         }
 
                         continue;
@@ -179,9 +180,9 @@ internal class AssemblyUtility
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
-        if (TraceLoggerHelper.Instance.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: start.");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("AssemblyDependencyFinder.GetDependentAssemblies: start.");
         }
 
         AppDomainSetup setupInfo = new();
@@ -192,9 +193,9 @@ internal class AssemblyUtility
 
         AppDomainUtilities.SetConfigurationFile(setupInfo, configFile);
 
-        if (TraceLoggerHelper.Instance.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: Using config file: '{0}'.", setupInfo.ConfigurationFile);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("AssemblyDependencyFinder.GetDependentAssemblies: Using config file: '{0}'.", setupInfo.ConfigurationFile);
         }
 
         setupInfo.LoaderOptimization = LoaderOptimization.MultiDomainHost;
@@ -214,14 +215,14 @@ internal class AssemblyUtility
             _ = string.Format(CultureInfo.InvariantCulture, Resource.CannotFindFile, string.Empty);
 
             appDomain = AppDomain.CreateDomain("Dependency finder domain", null, setupInfo);
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: Created AppDomain.");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("AssemblyDependencyFinder.GetDependentAssemblies: Created AppDomain.");
             }
 
             Type assemblyResolverType = typeof(AssemblyResolver);
 
-            TraceLoggerHelper.Instance.SetupRemoteEqtTraceListeners(appDomain);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.SetupRemoteEqtTraceListeners(appDomain);
 
             // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
             using var resolver =
@@ -234,9 +235,9 @@ internal class AssemblyUtility
             var worker =
                 (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
 
-            if (TraceLoggerHelper.Instance.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
             }
 
             IReadOnlyCollection<string> allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
@@ -258,16 +259,16 @@ internal class AssemblyUtility
         {
             if (appDomain != null)
             {
-                if (TraceLoggerHelper.Instance.IsInfoEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                 {
-                    TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain...");
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain...");
                 }
 
                 AppDomain.Unload(appDomain);
 
-                if (TraceLoggerHelper.Instance.IsInfoEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                 {
-                    TraceLoggerHelper.Instance.Info("AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain succeeded.");
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain succeeded.");
                 }
             }
         }

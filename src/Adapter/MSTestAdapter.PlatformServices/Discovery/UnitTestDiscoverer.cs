@@ -73,10 +73,14 @@ internal class UnitTestDiscoverer
             // log the warnings
             foreach (string warning in warnings)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
-                    source,
-                    warning);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
+                        "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
+                        source,
+                        warning);
+                }
+
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
                 logger.SendMessage(TestMessageLevel.Warning, message);
             }
@@ -88,10 +92,13 @@ internal class UnitTestDiscoverer
             return;
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-            "MSTestDiscoverer: Found {0} tests from source {1}",
-            testElements.Count,
-            source);
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
+                "MSTestDiscoverer: Found {0} tests from source {1}",
+                testElements.Count,
+                source);
+        }
 
         SendTestCases(testElements, discoverySink, discoveryContext, logger);
     }
