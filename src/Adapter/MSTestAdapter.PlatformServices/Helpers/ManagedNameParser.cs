@@ -1,15 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-
-#if VSTESTBRIDGE
-namespace Microsoft.Testing.Extensions.VSTestBridge;
-#else
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
-#endif
 
-[Embedded]
 internal static class ManagedNameParser
 {
     /// <summary>

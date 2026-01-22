@@ -1,1 +1,2 @@
 #nullable enable
+virtual Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase.AddAdditionalProperties(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase, Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> void

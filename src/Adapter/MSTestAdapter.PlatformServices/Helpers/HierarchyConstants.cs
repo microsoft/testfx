@@ -1,14 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 
 /// <summary>
 /// Constants to help declare Hierarchy test property.
 /// </summary>
-[Embedded]
 internal static class HierarchyConstants
 {
     /// <summary>

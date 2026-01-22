@@ -1,11 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 
-[Embedded]
 internal static class ManagedNameHelper
 {
     public static void GetManagedNameAndHierarchy(MethodBase method, out string managedTypeName, out string managedMethodName, out string?[] hierarchyValues)

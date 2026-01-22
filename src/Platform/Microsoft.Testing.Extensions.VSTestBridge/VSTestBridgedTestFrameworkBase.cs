@@ -64,6 +64,15 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     protected internal virtual bool UseFullyQualifiedNameAsTestNodeUid { get; }
 
     /// <summary>
+    /// Allows test frameworks built with the VSTestBridge to add additional properties to the TestNode, for example, TestMethodIdentifierProperty.
+    /// </summary>
+    /// <param name="testCase">The VSTest test case for the current test node.</param>
+    /// <param name="testNode">The MTP test node being constructed.</param>
+    protected internal virtual void AddAdditionalProperties(TestCase testCase, TestNode testNode)
+    {
+    }
+
+    /// <summary>
     /// Gets a value indicating whether the TRX report is enabled.
     /// </summary>
     protected internal bool IsTrxEnabled { get; }

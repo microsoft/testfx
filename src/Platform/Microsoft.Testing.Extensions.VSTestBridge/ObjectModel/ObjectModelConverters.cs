@@ -21,18 +21,6 @@ internal static class ObjectModelConverters
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
 
-    private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-        id: "TestCase.ManagedType",
-        label: "TestCase.ManagedType",
-        valueType: typeof(string),
-        owner: typeof(TestCase));
-
-    private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-        id: "TestCase.ManagedMethod",
-        label: "TestCase.ManagedMethod",
-        valueType: typeof(string),
-        owner: typeof(TestCase));
-
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
@@ -42,6 +30,7 @@ internal static class ObjectModelConverters
         this TestCase testCase,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
+        Action<TestCase, TestNode> addAdditionalProperties,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo,
@@ -54,12 +43,6 @@ internal static class ObjectModelConverters
             Uid = new TestNodeUid(testNodeUid),
             DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
-
-        // This will be false for Expecto and NUnit currently, as they don't provide ManagedType/ManagedMethod.
-        if (TryGetMethodIdentifierProperty(testCase, out TestMethodIdentifierProperty? methodIdentifierProperty))
-        {
-            testNode.Properties.Add(methodIdentifierProperty);
-        }
 
         CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
 
@@ -75,6 +58,7 @@ internal static class ObjectModelConverters
                 new TestFileLocationProperty(testCase.CodeFilePath, lineSpan: new(position, position)));
         }
 
+        addAdditionalProperties(testCase, testNode);
         return testNode;
     }
 
@@ -143,11 +127,12 @@ internal static class ObjectModelConverters
         this TestResult testResult,
         bool isTrxEnabled,
         bool useFullyQualifiedNameAsUid,
+        Action<TestCase, TestNode> addAdditionalProperties,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, addAdditionalProperties, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
@@ -260,43 +245,6 @@ internal static class ObjectModelConverters
         }
 
         testCase.ExecutorUri = ExecutorUri;
-    }
-
-    private static bool TryGetMethodIdentifierProperty(TestCase testCase, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
-    {
-        string? managedType = testCase.GetPropertyValue<string>(ManagedTypeProperty, defaultValue: null);
-        string? managedMethod = testCase.GetPropertyValue<string>(ManagedMethodProperty, defaultValue: null);
-        // NOTE: ManagedMethod, in case of MSTest, will have the parameter types.
-        // So, we prefer using it to display the parameter types in Test Explorer.
-        if (RoslynString.IsNullOrEmpty(managedType) || RoslynString.IsNullOrEmpty(managedMethod))
-        {
-            methodIdentifierProperty = null;
-            return false;
-        }
-
-        methodIdentifierProperty = GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(managedType, managedMethod);
-        return true;
-    }
-
-    private static TestMethodIdentifierProperty GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
-        string managedType,
-        string managedMethod)
-    {
-        ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
-
-        parameterTypes ??= [];
-
-        int lastIndexOfDot = managedType.LastIndexOf('.');
-        string @namespace = lastIndexOfDot == -1 ? string.Empty : managedType.Substring(0, lastIndexOfDot);
-        string typeName = lastIndexOfDot == -1 ? managedType : managedType.Substring(lastIndexOfDot + 1);
-
-        // In the context of the VSTestBridge where we only have access to VSTest object model, we cannot determine ReturnTypeFullName.
-        // For now, we lose this bit of information.
-        // If really needed in the future, we can introduce a VSTest property to hold this info.
-        // But the eventual goal should be to stop using the VSTestBridge altogether.
-        // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
-        // Or alternatively, does VSTest object model expose the assembly full name somewhere?
-        return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)
