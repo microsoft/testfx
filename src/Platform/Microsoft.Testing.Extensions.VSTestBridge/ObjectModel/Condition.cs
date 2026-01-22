@@ -69,87 +69,59 @@ internal sealed class Condition
     /// </summary>
     internal Operation Operation { get; }
 
+    private bool EvaluateEqualOperation(string[]? multiValue)
+    {
+        // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
+        if (multiValue != null)
+        {
+            foreach (string propertyValue in multiValue)
+            {
+                if (string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool EvaluateContainsOperation(string[]? multiValue)
+    {
+        if (multiValue != null)
+        {
+            foreach (string propertyValue in multiValue)
+            {
+                RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
+                if (propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Evaluate this condition for testObject.
     /// </summary>
     internal bool Evaluate(Func<string, object?> propertyValueProvider)
     {
-        Ensure.NotNull(propertyValueProvider);
-        bool result = false;
+        ValidateArg.NotNull(propertyValueProvider, nameof(propertyValueProvider));
         string[]? multiValue = GetPropertyValue(propertyValueProvider);
-        switch (Operation)
+        bool result = Operation switch
         {
-            case Operation.Equal:
-                // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        result = result || string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase);
-                        if (result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            case Operation.NotEqual:
-                // all values in multi-valued property should not match 'this.Value' for NotEqual to evaluate true.
-                result = true;
-
-                // if value is null.
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        result = result && !string.Equals(propertyValue, Value, StringComparison.OrdinalIgnoreCase);
-                        if (!result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            case Operation.Contains:
-                // if any value in multi-valued property contains 'this.Value' for 'Contains' to be true.
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result || propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
-                        if (result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-
-            case Operation.NotContains:
-                // all values in multi-valued property should not contain 'this.Value' for NotContains to evaluate true.
-                result = true;
-
-                if (multiValue != null)
-                {
-                    foreach (string propertyValue in multiValue)
-                    {
-                        RoslynDebug.Assert(propertyValue != null, "PropertyValue can not be null.");
-                        result = result && !propertyValue.Contains(Value, StringComparison.OrdinalIgnoreCase);
-                        if (!result)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                break;
-        }
+            // if any value in multi-valued property matches 'this.Value', for Equal to evaluate true.
+            Operation.Equal => EvaluateEqualOperation(multiValue),
+            // all values in multi-valued property should not match 'this.Value' for NotEqual to evaluate true.
+            Operation.NotEqual => !EvaluateEqualOperation(multiValue),
+            // if any value in multi-valued property contains 'this.Value' for 'Contains' to be true.
+            Operation.Contains => EvaluateContainsOperation(multiValue),
+            // all values in multi-valued property should not contain 'this.Value' for NotContains to evaluate true.
+            Operation.NotContains => !EvaluateContainsOperation(multiValue),
+            _ => false,
+        };
 
         return result;
     }
