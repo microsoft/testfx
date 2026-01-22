@@ -251,7 +251,25 @@ internal static class AppDomainUtilities
         Type staticStateHelperType = typeof(StaticStateHelper);
         var staticStateHelper = appDomain.CreateInstanceFromAndUnwrap(staticStateHelperType.Assembly.Location, staticStateHelperType.FullName) as StaticStateHelper;
         staticStateHelper?.SetUICulture(CultureInfo.DefaultThreadCurrentUICulture);
-        staticStateHelper?.SetTrace(PlatformServiceProvider.Instance.AdapterTraceLogger);
+
+        try
+        {
+            staticStateHelper?.SetTrace(PlatformServiceProvider.Instance.AdapterTraceLogger);
+        }
+        catch (Exception ex)
+        {
+            // Extremely bad to catch exception this way, but this happens with MTP when deployment items are used.
+            // This is likely because child app domain has a different directory and the assembly identity is considered different.
+            // This then causes:
+            // System.ArgumentException: Object type cannot be converted to target type.
+            // Historically, we never moved the logger instance to the inner appdomain for MTP.
+            // So ignoring for the niche scenario of MTP with deployment items is a better behavior than before.
+            // Ideally, we should find a way to always propagate the logger correctly.
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"Failed to set trace logger '{PlatformServiceProvider.Instance.AdapterTraceLogger}' in app domain '{appDomain.FriendlyName}'. Error: {ex.Message}");
+            }
+        }
     }
 
     private sealed class StaticStateHelper : MarshalByRefObject
