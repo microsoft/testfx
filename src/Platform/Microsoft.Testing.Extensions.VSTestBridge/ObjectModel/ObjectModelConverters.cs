@@ -145,6 +145,9 @@ internal static class ObjectModelConverters
                 testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
             }
 
+            // TODO: Consider retrieving TestMethodIdentifierProperty first (which could have been added through addAdditionalProperties.
+            // VSTest's TestCase.FQN is very non-standard.
+            // We should avoid using it if we can.
             if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
             {
                 testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedType));
