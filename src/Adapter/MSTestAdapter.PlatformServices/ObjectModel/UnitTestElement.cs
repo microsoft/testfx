@@ -121,7 +121,7 @@ internal sealed class UnitTestElement
             testCase.SetPropertyValue(EngineConstants.ParameterTypesProperty, TestMethod.ParameterTypes);
         }
 
-        IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
+        IReadOnlyCollection<string?>? hierarchy = TestMethod.Hierarchy;
         if (hierarchy is { Count: > 0 })
         {
             testCase.SetHierarchy([.. hierarchy]);

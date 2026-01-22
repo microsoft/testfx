@@ -21,8 +21,6 @@ internal sealed class TestMethod : ITestMethod
     /// </summary>
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
-    private readonly ReadOnlyCollection<string?> _hierarchy;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethod"/> class.
     /// </summary>
@@ -55,16 +53,11 @@ internal sealed class TestMethod : ITestMethod
 
         AssemblyName = assemblyName;
 
-        if (hierarchyValues is null)
+        if (hierarchyValues is not null)
         {
-            hierarchyValues = new string?[HierarchyConstants.Levels.TotalLevelCount];
-            hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null;
-            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
-            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = name;
-            hierarchyValues[HierarchyConstants.Levels.TestGroupIndex] = name;
+            Hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
         }
 
-        _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
     }
@@ -91,7 +84,7 @@ internal sealed class TestMethod : ITestMethod
     public bool HasManagedMethodAndTypeProperties => !StringEx.IsNullOrWhiteSpace(ManagedTypeName) && !StringEx.IsNullOrWhiteSpace(ManagedMethodName);
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string?> Hierarchy => _hierarchy;
+    public IReadOnlyCollection<string?>? Hierarchy { get; }
 
     /// <summary>
     /// Gets or sets type of dynamic data if any.
