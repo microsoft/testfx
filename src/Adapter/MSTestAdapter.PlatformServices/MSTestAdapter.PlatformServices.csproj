@@ -35,7 +35,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 

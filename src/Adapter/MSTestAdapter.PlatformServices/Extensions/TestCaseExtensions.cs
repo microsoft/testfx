@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,9 +14,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 /// </summary>
 internal static class TestCaseExtensions
 {
+    private const string ManagedTypeLabel = "ManagedType";
+    private const string ManagedMethodLabel = "ManagedMethod";
+    private const string ManagedTypePropertyId = "TestCase." + ManagedTypeLabel;
+    private const string ManagedMethodPropertyId = "TestCase." + ManagedMethodLabel;
+
     internal static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-        id: ManagedNameConstants.ManagedTypePropertyId,
-        label: ManagedNameConstants.ManagedTypeLabel,
+        id: ManagedTypePropertyId,
+        label: ManagedTypeLabel,
         category: string.Empty,
         description: string.Empty,
         valueType: typeof(string),
@@ -25,8 +30,8 @@ internal static class TestCaseExtensions
         owner: typeof(TestCase));
 
     internal static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-        id: ManagedNameConstants.ManagedMethodPropertyId,
-        label: ManagedNameConstants.ManagedMethodLabel,
+        id: ManagedMethodPropertyId,
+        label: ManagedMethodLabel,
         category: string.Empty,
         description: string.Empty,
         valueType: typeof(string),

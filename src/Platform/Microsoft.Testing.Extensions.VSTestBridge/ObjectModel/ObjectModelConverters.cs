@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -287,7 +286,9 @@ internal static class ObjectModelConverters
 
         parameterTypes ??= [];
 
-        ManagedNameParser.ParseManagedTypeName(managedType, out string @namespace, out string typeName);
+        int lastIndexOfDot = managedType.LastIndexOf('.');
+        string @namespace = lastIndexOfDot == -1 ? string.Empty : managedType.Substring(0, lastIndexOfDot);
+        string typeName = lastIndexOfDot == -1 ? managedType : managedType.Substring(lastIndexOfDot + 1);
 
         // In the context of the VSTestBridge where we only have access to VSTest object model, we cannot determine ReturnTypeFullName.
         // For now, we lose this bit of information.
