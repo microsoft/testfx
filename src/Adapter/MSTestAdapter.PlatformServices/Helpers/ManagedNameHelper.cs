@@ -134,22 +134,21 @@ internal static class ManagedNameHelper
             methodBuilder[methodBuilder.Length - 1] = ')';
         }
 
-        int methodNameEndIndex = methodBuilder.Length;
-
-        string escapedManagedTypeName = typeBuilder.ToString();
         managedMethodName = methodBuilder.ToString();
 
         hierarchyValues = new string[HierarchyConstants.Levels.TotalLevelCount];
-        hierarchyValues[HierarchyConstants.Levels.TestGroupIndex] = managedMethodName.Substring(0, methodNameEndIndex);
-        if (hierarchyPos[1] == hierarchyPos[0]) // No namespace
+        hierarchyValues[HierarchyConstants.Levels.TestGroupIndex] = managedMethodName;
+
+        if (semanticType.Namespace is { } @semanticTypeNamespace)
         {
-            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = escapedManagedTypeName.Substring(0, hierarchyPos[2]);
-            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = null;
+            int lastIndexOfDot = semanticType.FullName!.LastIndexOf('.');
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = semanticType.FullName!.Substring(lastIndexOfDot + 1);
+            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = semanticTypeNamespace;
         }
         else
         {
-            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = escapedManagedTypeName.Substring(hierarchyPos[1] + 1, hierarchyPos[2] - hierarchyPos[1] - 1);
-            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = escapedManagedTypeName.Substring(hierarchyPos[0], hierarchyPos[1] - hierarchyPos[0]);
+            hierarchyValues[HierarchyConstants.Levels.ClassIndex] = semanticType.FullName;
+            hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = null;
         }
 
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.

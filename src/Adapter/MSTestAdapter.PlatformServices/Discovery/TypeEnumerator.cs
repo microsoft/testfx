@@ -128,7 +128,7 @@ internal class TypeEnumerator
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
-        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
+        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[] hierarchyValues);
         var testMethod = new TestMethod(managedType, managedMethod, hierarchyValues, method.Name, _type.FullName!, _assemblyFilePath, null, string.Join(",", method.GetParameters().Select(p => p.ParameterType.ToString())))
         {
             MethodInfo = method,
