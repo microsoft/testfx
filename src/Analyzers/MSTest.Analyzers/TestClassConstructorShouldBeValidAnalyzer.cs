@@ -58,25 +58,17 @@ public sealed class TestClassConstructorShouldBeValidAnalyzer : DiagnosticAnalyz
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
         if (namedTypeSymbol.TypeKind != TypeKind.Class
+            || namedTypeSymbol.IsAbstract
+            || namedTypeSymbol.IsStatic
             || !namedTypeSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testClassAttributeSymbol)))
         {
             return;
         }
 
-        // Check if there's at least one valid constructor
         bool hasValidConstructor = false;
-        bool hasAnyConstructor = false;
 
-        foreach (IMethodSymbol constructor in namedTypeSymbol.Constructors)
+        foreach (IMethodSymbol constructor in namedTypeSymbol.InstanceConstructors)
         {
-            // Skip implicit constructors
-            if (constructor.IsImplicitlyDeclared)
-            {
-                continue;
-            }
-
-            hasAnyConstructor = true;
-
             // Check if constructor is public
             if (constructor.DeclaredAccessibility != Accessibility.Public)
             {
@@ -100,8 +92,7 @@ public sealed class TestClassConstructorShouldBeValidAnalyzer : DiagnosticAnalyz
             }
         }
 
-        // If there are explicit constructors but none are valid, report diagnostic
-        if (hasAnyConstructor && !hasValidConstructor)
+        if (!hasValidConstructor)
         {
             context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassConstructorShouldBeValidRule, namedTypeSymbol.Name));
         }
