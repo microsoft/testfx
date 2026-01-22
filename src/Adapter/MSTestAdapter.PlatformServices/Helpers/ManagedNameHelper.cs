@@ -8,53 +8,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Hel
 [Embedded]
 internal static class ManagedNameHelper
 {
-    private readonly struct AssemblyNameCache
-    {
-        public AssemblyNameCache(Assembly? assembly, string simpleName)
-        {
-            Assembly = assembly;
-            SimpleName = simpleName;
-        }
-
-        public Assembly? Assembly { get; }
-
-        public string SimpleName { get; }
-    }
-
-    private static AssemblyNameCache? s_lastAssemblyNameCache;
-
-    /// <summary>
-    /// Gets fully qualified managed type and method name from given <see href="MethodBase" /> instance.
-    /// </summary>
-    /// <param name="method">
-    /// A <see cref="MethodBase" /> instance to get fully qualified managed type and method name.
-    /// </param>
-    /// <param name="managedTypeName">
-    /// When this method returns, contains the fully qualified managed type name of the <paramref name="method"/>.
-    /// This parameter is passed uninitialized; any value originally supplied in result will be overwritten.
-    /// The format is defined in <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md#managedtype-property">the RFC</see>.
-    /// </param>
-    /// <param name="managedMethodName">
-    /// When this method returns, contains the fully qualified managed method name of the <paramref name="method"/>.
-    /// This parameter is passed uninitialized; any value originally supplied in result will be overwritten.
-    /// The format is defined in <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md#managedmethod-property">the RFC</see>.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="method"/> is null.
-    /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// <paramref name="method"/> must describe a method.
-    /// </exception>
-    /// <exception cref="NotImplementedException">
-    /// Required functionality on <paramref name="method"/> is missing on the current platform.
-    /// </exception>
-    /// <remarks>
-    /// More information about <paramref name="managedTypeName"/> and <paramref name="managedMethodName"/> can be found in
-    /// <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md">the RFC</see>.
-    /// </remarks>
-    public static void GetManagedName(MethodBase method, out string managedTypeName, out string managedMethodName)
-     => GetManagedNameAndHierarchy(method, false, out managedTypeName, out managedMethodName, out _);
-
     /// <summary>
     /// Gets fully qualified managed type and method name from given <see href="MethodBase" /> instance.
     /// </summary>
@@ -102,31 +55,6 @@ internal static class ManagedNameHelper
             GetManagedNameAndHierarchy(method, false, out managedTypeName, out managedMethodName, out _);
             GetManagedNameAndHierarchy(method, true, out _, out _, out hierarchyValues);
         }
-    }
-
-    /// <summary>
-    /// Gets default hierarchy values for a given <paramref name="method"/>.
-    /// </summary>
-    /// <param name="method">
-    /// A <see cref="MethodBase" /> instance to get default hierarchy values.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    /// <paramref name="method"/> is null.
-    /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// <paramref name="method"/> must describe a method.
-    /// </exception>
-    /// <exception cref="NotImplementedException">
-    /// Required functionality on <paramref name="method"/> is missing on the current platform.
-    /// </exception>
-    /// <returns>
-    /// The hierarchy values.
-    /// </returns>
-    public static string?[] GetManagedHierarchy(MethodBase method)
-    {
-        GetManagedNameAndHierarchy(method, true, out _, out _, out string?[]? hierarchyValues);
-
-        return hierarchyValues;
     }
 
     private static void GetManagedNameAndHierarchy(MethodBase method, bool useClosedTypes, out string managedTypeName, out string managedMethodName, out string?[] hierarchyValues)
@@ -224,18 +152,7 @@ internal static class ManagedNameHelper
             hierarchyValues[HierarchyConstants.Levels.NamespaceIndex] = escapedManagedTypeName.Substring(hierarchyPos[0], hierarchyPos[1] - hierarchyPos[0]);
         }
 
-        Assembly? assembly = method.DeclaringType?.Assembly;
-        if (s_lastAssemblyNameCache is { } cache &&
-            cache.Assembly == assembly)
-        {
-            hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = cache.SimpleName;
-        }
-        else
-        {
-            string assemblyName = assembly?.GetName()?.Name ?? string.Empty;
-            hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = assemblyName;
-            s_lastAssemblyNameCache = new AssemblyNameCache(assembly, assemblyName);
-        }
+        hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
     }
 
     /// <summary>
