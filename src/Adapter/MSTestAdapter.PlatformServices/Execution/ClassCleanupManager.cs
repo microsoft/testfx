@@ -14,9 +14,8 @@ internal sealed class ClassCleanupManager
 
     public ClassCleanupManager(IEnumerable<UnitTestElement> testsToRun)
     {
-        IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait));
         _remainingTestCountsByClass =
-            new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
+            new(testsToRun.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(
                     g => g.Key,
                     g => g.Count()));
