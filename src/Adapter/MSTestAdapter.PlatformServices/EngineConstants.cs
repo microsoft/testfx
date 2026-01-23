@@ -36,11 +36,6 @@ internal static class EngineConstants
     internal const string AssemblyFixturesHierarchyClassName = "[Assembly]";
 
     /// <summary>
-    /// Discover fixtures or not.
-    /// </summary>
-    internal const string FixturesTestTrait = "FixturesTrait";
-
-    /// <summary>
     /// Assembly initialize.
     /// </summary>
     internal const string AssemblyInitializeFixtureTrait = "AssemblyInitialize";

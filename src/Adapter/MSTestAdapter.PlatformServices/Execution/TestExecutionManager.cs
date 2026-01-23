@@ -251,12 +251,6 @@ internal class TestExecutionManager
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
-            // If this is a fixture test, return true. Fixture tests are not filtered out and are always available for the status.
-            if (test.Traits.Any(t => t.Name == EngineConstants.FixturesTestTrait))
-            {
-                return true;
-            }
-
             // Skip test if not fitting filter criteria.
             return false;
         }
