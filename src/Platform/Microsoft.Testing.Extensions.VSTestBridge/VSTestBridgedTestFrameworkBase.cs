@@ -19,6 +19,9 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 /// </summary>
 public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProducer
 {
+    private readonly ITrxReportCapability? _trxReportCapability;
+    private bool? _isTrxEnabled;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="VSTestBridgedTestFrameworkBase"/> class.
     /// </summary>
@@ -28,10 +31,9 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     {
         Ensure.NotNull(serviceProvider);
         ServiceProvider = serviceProvider;
-        ITrxReportCapability? capability = capabilities.GetCapability<ITrxReportCapability>();
-        IsTrxEnabled = capability is IInternalVSTestBridgeTrxReportCapability internalCapability
-            ? internalCapability.IsTrxEnabled
-            : capability is ITrxReportCapability { IsSupported: true };
+        // NOTE: It's too early to determine from the capability at this point whether or not trx is enabled.
+        // We store the capability and check it later when IsTrxEnabled is accessed.
+        _trxReportCapability = capabilities.GetCapability<ITrxReportCapability>();
     }
 
     /// <inheritdoc />
@@ -66,7 +68,10 @@ public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProd
     /// <summary>
     /// Gets a value indicating whether the TRX report is enabled.
     /// </summary>
-    protected internal bool IsTrxEnabled { get; }
+    protected internal bool IsTrxEnabled
+        => _isTrxEnabled ??= _trxReportCapability is IInternalVSTestBridgeTrxReportCapability internalCapability
+            ? internalCapability.IsTrxEnabled
+            : _trxReportCapability is ITrxReportCapability { IsSupported: true };
 
     /// <inheritdoc />
     public abstract Task<bool> IsEnabledAsync();
