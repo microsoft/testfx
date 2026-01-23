@@ -31,8 +31,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" />
-    <!-- Deps of MSTest.TestAdapter -->
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" />
 
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>

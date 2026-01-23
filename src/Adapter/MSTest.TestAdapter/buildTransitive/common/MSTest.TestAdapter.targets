@@ -35,11 +35,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
-    <TestAdapterContent Include="$(MSBuildThisFileDirectory)\Microsoft.TestPlatform.AdapterUtilities.dll">
-      <Link>Microsoft.TestPlatform.AdapterUtilities.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>False</Visible>
-    </TestAdapterContent>
   </ItemGroup>
 
   <ItemGroup>
