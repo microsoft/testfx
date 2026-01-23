@@ -5,12 +5,14 @@
 
 #if NETFRAMEWORK
 using System.Security;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -33,7 +35,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
 #if NETFRAMEWORK
         if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
         {
-            EqtTrace.Info("Adding the references and satellite assemblies to the deployment items list");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Adding the references and satellite assemblies to the deployment items list");
 
             // Get the referenced assemblies.
             ProcessNewStorage(testSourceHandler, deploymentItems, warnings);
@@ -47,7 +49,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
         }
         else
         {
-            EqtTrace.Info("Adding the test source directory to the deployment items list");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Adding the test source directory to the deployment items list");
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSourceHandler)));
         }
 #else
@@ -146,22 +148,13 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
                     continue;
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is ArgumentException or SecurityException or IOException or NotSupportedException)
             {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-            }
-            catch (SecurityException ex)
-            {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-            }
-            catch (IOException ex)
-            {
-                // This covers PathTooLongException.
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-            }
-            catch (NotSupportedException ex)
-            {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
+                // IOException covers PathTooLongException.
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("DeploymentManager.GetSatellites: {0}", ex);
+                }
             }
 
             // Note: now Path operations with itemPath should not result in any exceptions.
@@ -191,22 +184,14 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
                     DeploymentItemUtility.AddDeploymentItem(satellites, satelliteItem);
                 }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is ArgumentException or SecurityException or IOException)
             {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
-                warnings.Add(warning);
-            }
-            catch (SecurityException ex)
-            {
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
-                warnings.Add(warning);
-            }
-            catch (IOException ex)
-            {
-                // This covers PathTooLongException.
-                EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
+                // IOException covers PathTooLongException.
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning("DeploymentManager.GetSatellites: {0}", ex);
+                }
+
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
                 warnings.Add(warning);
             }
@@ -240,10 +225,10 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             warnings.Add(warning);
         }
 
-        if (EqtTrace.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            EqtTrace.Info("DeploymentManager: Source:{0} has following references", testSourceHandler);
-            EqtTrace.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DeploymentManager: Source:{0} has following references", testSourceHandler);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
         }
 
         foreach (string reference in references)
@@ -251,9 +236,9 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
             DeploymentItem deploymentItem = new(reference, string.Empty, DeploymentItemOriginType.Dependency);
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, deploymentItem);
 
-            if (EqtTrace.IsInfoEnabled)
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
-                EqtTrace.Info("DeploymentManager: Reference:{0} ", reference);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DeploymentManager: Reference:{0} ", reference);
             }
         }
     }

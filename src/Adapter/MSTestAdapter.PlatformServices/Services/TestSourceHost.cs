@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
-#if !WINDOWS_UWP
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -114,9 +117,9 @@ internal class TestSourceHost : ITestSourceHost
 #if NET && !WINDOWS_UWP
         List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
 
-        if (EqtTrace.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
         }
 
         var assemblyResolver = new AssemblyResolver(resolutionPaths);
@@ -131,9 +134,9 @@ internal class TestSourceHost : ITestSourceHost
 #elif NETFRAMEWORK
         List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
-        if (EqtTrace.IsInfoEnabled)
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
-            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
         }
 
         // NOTE: These 2 lines are super important, see https://github.com/microsoft/testfx/issues/2922
@@ -154,14 +157,14 @@ internal class TestSourceHost : ITestSourceHost
             string? configFile = GetConfigFileForTestSource(_sourceFileName);
             AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
 
-            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", _sourceFileName, appDomainSetup.ApplicationBase);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", _sourceFileName, appDomainSetup.ApplicationBase);
 
             string domainName = $"TestSourceHost: Enumerating source ({_sourceFileName})";
             AppDomain = _appDomain.CreateDomain(domainName, null!, appDomainSetup);
 
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recursive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
-            EqtTrace.SetupRemoteEqtTraceListeners(AppDomain);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.SetupRemoteEqtTraceListeners(AppDomain);
 
             // Force loading Microsoft.TestPlatform.CoreUtilities in the new app domain to ensure there is no assembly resolution issue.
             // For unknown reasons, with MSTest 3.4+ we start to see infinite cycles of assembly resolution of this dll in the new app
@@ -172,14 +175,14 @@ internal class TestSourceHost : ITestSourceHost
             // Add an assembly resolver in the child app-domain...
             Type assemblyResolverType = typeof(AssemblyResolver);
 
-            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
 
             object resolver = AppDomainUtilities.CreateInstance(
                 AppDomain,
                 assemblyResolverType,
                 [resolutionPaths]);
 
-            EqtTrace.Info(
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
                 "DesktopTestSourceHost.SetupHost(): resolver type: {0} , resolve type assembly: {1} ",
                 resolver.GetType().FullName,
                 resolver.GetType().Assembly.Location);
@@ -234,7 +237,7 @@ internal class TestSourceHost : ITestSourceHost
             catch (Exception exception)
             {
                 // This happens usually when a test spawns off a thread and fails to clean it up.
-                EqtTrace.Error("DesktopTestSourceHost.Dispose(): The app domain running tests could not be unloaded. Exception: {0}", exception);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error("DesktopTestSourceHost.Dispose(): The app domain running tests could not be unloaded. Exception: {0}", exception);
 
                 if (_frameworkHandle != null)
                 {
@@ -242,7 +245,7 @@ internal class TestSourceHost : ITestSourceHost
                     // since we have issues in unloading appdomain. We do so to avoid any assembly locking issues.
                     _frameworkHandle.EnableShutdownAfterTestRun = true;
 
-                    EqtTrace.Verbose("DesktopTestSourceHost.Dispose(): Notifying the test platform that the test host process should be shut down because the app domain running tests could not be unloaded successfully.");
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Verbose("DesktopTestSourceHost.Dispose(): Notifying the test platform that the test host process should be shut down because the app domain running tests could not be unloaded successfully.");
                 }
             }
 
@@ -290,7 +293,7 @@ internal class TestSourceHost : ITestSourceHost
 #else
             Environment.CurrentDirectory = dirName!;
 #if NETFRAMEWORK
-            EqtTrace.Info("MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
 #endif
 #endif
         }
@@ -305,7 +308,7 @@ internal class TestSourceHost : ITestSourceHost
 
         if (setWorkingDirectoryException != null)
         {
-            EqtTrace.Error("MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Error("MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
         }
     }
 
@@ -372,7 +375,7 @@ internal class TestSourceHost : ITestSourceHost
 
         if (!isPortableMode)
         {
-            EqtTrace.Info("DesktopTestSourceHost.GetResolutionPaths(): Not running in portable mode");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.GetResolutionPaths(): Not running in portable mode");
 
 #if NETFRAMEWORK
             string? pathToPublicAssemblies = VSInstallationUtilities.PathToPublicAssemblies;
@@ -430,7 +433,7 @@ internal class TestSourceHost : ITestSourceHost
         }
         catch (Exception exception)
         {
-            EqtTrace.Error(
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
                 "DesktopTestSourceHost.AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(): Exception hit while trying to set assembly resolver for domain. Exception : {0} \n Message : {1}",
                 exception,
                 exception.Message);

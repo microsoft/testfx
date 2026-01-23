@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
@@ -48,7 +49,18 @@ internal sealed class MSTestExecutor : ITestExecutor
 #pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     [ModuleInitializer]
 #pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
-    internal static void EnsureAdapterAndFrameworkVersions()
+    internal static void MSTestModuleInitializer()
+    {
+        SetPlatformLogger();
+        EnsureAdapterAndFrameworkVersions();
+    }
+
+    private static void SetPlatformLogger()
+        // We set the logger to the VSTest EqtTrace logger as soon as possible via ModuleInitializer.
+        // If MTP is used, this will get replaced later.
+        => PlatformServiceProvider.Instance.AdapterTraceLogger = EqtTraceLogger.Instance;
+
+    private static void EnsureAdapterAndFrameworkVersions()
     {
         string? adapterVersion = typeof(MSTestExecutor).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         string? frameworkVersion = typeof(TestMethodAttribute).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
@@ -85,7 +97,11 @@ internal sealed class MSTestExecutor : ITestExecutor
 
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
+        }
+
         Ensure.NotNull(frameworkHandle);
         Ensure.NotNullOrEmpty(tests);
 
@@ -99,7 +115,11 @@ internal sealed class MSTestExecutor : ITestExecutor
 
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from sources.");
+        }
+
         Ensure.NotNull(frameworkHandle);
         Ensure.NotNullOrEmpty(sources);
 

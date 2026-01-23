@@ -28,6 +28,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
     {
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
     }
 
     /// <inheritdoc />
@@ -40,7 +41,6 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         new MSTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration);
         return Task.CompletedTask;
     }
@@ -55,7 +55,6 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger = new BridgedTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         MSTestExecutor testExecutor = new(cancellationToken);
         await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration).ConfigureAwait(false);
     }

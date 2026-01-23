@@ -121,7 +121,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 // If we have multiple loader exceptions, we log them all as errors, and then throw the original exception.
                 foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("{0}", loaderEx);
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("{0}", loaderEx);
+                    }
                 }
             }
 
@@ -182,7 +185,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // If we fail to discover type from a class, then don't abort the discovery
             // Move to the next type.
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CouldNotInspectTypeDuringDiscovery, typeFullName, assemblyFileName, exception.Message);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"AssemblyEnumerator: {message}");
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info($"AssemblyEnumerator: {message}");
+            }
+
             warningMessages.Add(message);
         }
 
@@ -245,7 +252,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         catch (Exception ex)
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info($"DynamicDataEnumerator: {message}");
+            }
 
             if (tempListOfTests.Count > 0)
             {
@@ -342,7 +352,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 warning += Environment.NewLine;
                 warning += ex.ToString();
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning($"DynamicDataEnumerator: {warning}");
+                }
 
                 // Serialization failed for the type, bail out. Caller will handle adding the original test.
                 return false;

@@ -57,8 +57,11 @@ internal static class ExceptionHelper
                 }
                 catch (Exception)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-                        "StackTraceHelper.GetStackTraceInformation: Failed to get stack trace info.");
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                            "StackTraceHelper.GetStackTraceInformation: Failed to get stack trace info.");
+                    }
                 }
             }
         }
