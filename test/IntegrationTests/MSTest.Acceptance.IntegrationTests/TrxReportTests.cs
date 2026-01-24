@@ -87,5 +87,5 @@ public class UnitTest1
 """;
     }
 
-    public TestContext TestContext { get; set; }
+    public TestContext TestContext { get; set; } = null!;
 }
