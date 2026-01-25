@@ -1076,17 +1076,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
         <source>Test classes should have valid constructors</source>
-        <target state="new">Test classes should have valid constructors</target>
+        <target state="translated">Les classes de test doivent avoir des constructeurs valides</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">La classe de test « {0} » ne dispose pas d’un constructeur valide. Les constructeurs valides sont « publics » et sans paramètre ou avec un paramètre de type « TestContext ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Les classes de test doivent posséder un constructeur public, soit sans paramètre, soit acceptant un seul paramètre de type TestContext. Cela permet au framework de test d’instancier correctement la classe de test.</target>
         <note />
       </trans-unit>
     </body>

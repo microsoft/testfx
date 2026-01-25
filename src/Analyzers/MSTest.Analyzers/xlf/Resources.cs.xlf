@@ -1076,17 +1076,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
         <source>Test classes should have valid constructors</source>
-        <target state="new">Test classes should have valid constructors</target>
+        <target state="translated">Testovací třídy by měly mít platné konstruktory.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">Testovací třída {0} nemá platný konstruktor. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Testovací třídy musí mít veřejný konstruktor, který je buď bez parametrů, nebo přijímá jeden parametr typu TestContext. To umožňuje testovací architektuře správně vytvořit instanci testovací třídy.</target>
         <note />
       </trans-unit>
     </body>
