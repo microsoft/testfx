@@ -1076,17 +1076,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
         <source>Test classes should have valid constructors</source>
-        <target state="new">Test classes should have valid constructors</target>
+        <target state="translated">測試類別應具備有效的建構函式</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">測試類別 '{0}' 沒有有效的建構函式。有效的建構函式為 'public' 且無參數或具有一個類型為 'TestContext' 的參數。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">測試類別必須有一個公開建構函式，該建構函式要麼無參數，要麼接受單一的 TestContext 參數。這讓測試架構可正確建立測試類別的執行個體。</target>
         <note />
       </trans-unit>
     </body>

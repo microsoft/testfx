@@ -1076,17 +1076,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
         <source>Test classes should have valid constructors</source>
-        <target state="new">Test classes should have valid constructors</target>
+        <target state="translated">Las clases de prueba deben tener constructores válidos</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">La clase de prueba ''{0}'' no tiene un constructor válido. Los constructores válidos son ''public'' y sin parámetros o con un parámetro de tipo ''TestContext''.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Las clases de prueba deben tener un constructor público que no tenga parámetros o acepte un único parámetro TestContext. Esto permite que el marco de pruebas cree instancias de la clase de prueba correctamente.</target>
         <note />
       </trans-unit>
     </body>
