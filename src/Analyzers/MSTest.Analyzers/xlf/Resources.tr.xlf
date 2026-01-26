@@ -1078,17 +1078,17 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
         <source>Test classes should have valid constructors</source>
-        <target state="new">Test classes should have valid constructors</target>
+        <target state="translated">Test sınıfları geçerli oluşturuculara sahip olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">‘{0}’ test sınıfının geçerli bir oluşturucusu yok Geçerli oluşturucular 'public' ve parametresiz veya 'TestContext' türünde tek bir parametre içeriyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Test sınıfları, parametresiz olan veya tek bir TestContext parametresini kabul eden bir genel oluşturucuya sahip olmalıdır. Bu, test çerçevesinin test sınıfının örneğini doğru şekilde oluşturmasına olanak tanır.</target>
         <note />
       </trans-unit>
     </body>
