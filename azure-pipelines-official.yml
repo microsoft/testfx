@@ -26,6 +26,10 @@ parameters:
   displayName: "Skip tests"
   type: boolean
   default: False
+- name: codeqlforce
+  displayName: "Try collecting CodeQL before default CodeQL cadence"
+  type: boolean
+  default: False
 
 variables:
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
@@ -51,7 +55,7 @@ variables:
   # This is only a hint for the tool, it might reject to run it if it already has up to date data.
   # See the Starting Code QL step for details.
   - name: Codeql.Cadence 
-    value: 0
+    value: ${{ if parameters.codeqlforce, 0, 72) }}
 
   - ${{ if eq(parameters.isRTM, True) }}:
     - name: _ReleaseVersionKind
