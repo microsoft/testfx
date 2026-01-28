@@ -6,5 +6,4 @@ namespace Microsoft.Testing.Framework;
 internal static class TestFrameworkConstants
 {
     public const string DefaultSemVer = MSTestEngineRepositoryVersion.Version;
-    public const string TestAdapterExecutorUri = "executor://testing-framework";
 }
