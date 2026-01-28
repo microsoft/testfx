@@ -12,9 +12,9 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
 {
     public enum Lifecycle
     {
-        Constructor,
         AssemblyInitialize,
         ClassInitialize,
+        Constructor,
         TestInitialize,
         TestMethod,
         TestCleanup,
