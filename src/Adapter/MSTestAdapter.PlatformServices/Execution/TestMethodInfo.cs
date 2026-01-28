@@ -532,7 +532,7 @@ internal class TestMethodInfo : ITestMethod
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
-    private static TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
+    private TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 
@@ -569,12 +569,18 @@ internal class TestMethodInfo : ITestMethod
             return new TestFailedException(outcome, exceptionMessage, exceptionStackTraceInfo, realException);
         }
 
-        errorMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            Resource.UTA_TestMethodThrows,
-            className,
-            methodName,
-            realException.GetFormattedExceptionMessage());
+        errorMessage = _classInstance is null
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_InstanceCreationError,
+                TestClassName,
+                realException.GetFormattedExceptionMessage())
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestMethodThrows,
+                className,
+                methodName,
+                realException.GetFormattedExceptionMessage());
 
         // Handle special case of UI objects in TestMethod to suggest UITestMethod
         if (realException.HResult == -2147417842)
