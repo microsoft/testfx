@@ -1002,9 +1002,7 @@ internal class TestMethodInfo : ITestMethod
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private object? CreateTestClassInstance()
-    {
-        return Parent.Constructor.Invoke(Parent.IsParameterlessConstructor ? null : [TestContext]);
-    }
+        => Parent.Constructor.Invoke(Parent.IsParameterlessConstructor ? null : [TestContext]);
 
     /// <summary>
     /// Execute test with a timeout.
