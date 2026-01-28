@@ -507,6 +507,10 @@ public sealed class TerminalTestReporterTests
 
         public int BufferWidth => int.MinValue;
 
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth => 120;
+
         public bool IsOutputRedirected => false;
 
         public string Output => _output.ToString();
@@ -808,5 +812,76 @@ public sealed class TerminalTestReporterTests
 
         // Assert - should contain information about 2 tests discovered
         Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+    }
+
+    [TestMethod]
+    public void SimpleTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new NonAnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new AnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    internal class TestConsoleWithDifferentBufferAndWindowWidth : IConsole
+    {
+        public int BufferHeight { get; set; } = 300;
+
+        public int BufferWidth { get; set; } = 4096;
+
+        public int WindowHeight { get; set; } = 30;
+
+        public int WindowWidth { get; set; } = 120;
+
+        public bool IsOutputRedirected => false;
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value)
+        {
+        }
+
+        public void Write(char value)
+        {
+        }
+
+        public void WriteLine()
+        {
+        }
+
+        public void WriteLine(string? value)
+        {
+        }
     }
 }
