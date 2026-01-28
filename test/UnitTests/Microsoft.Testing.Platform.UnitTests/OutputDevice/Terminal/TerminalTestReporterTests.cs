@@ -507,6 +507,10 @@ public sealed class TerminalTestReporterTests
 
         public int BufferWidth => int.MinValue;
 
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth => 120;
+
         public bool IsOutputRedirected => false;
 
         public string Output => _output.ToString();
