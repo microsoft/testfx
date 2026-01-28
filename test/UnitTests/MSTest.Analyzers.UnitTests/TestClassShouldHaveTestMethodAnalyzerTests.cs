@@ -201,7 +201,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             public class BaseClass : BaseBase
             {
             }
-            
+
             [TestClass]
             public class Derived : BaseClass
             {
@@ -219,7 +219,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             public class BaseClass
             {
             }
-            
+
             [TestClass]
             public class {|#0:Derived|} : BaseClass
             {
@@ -245,7 +245,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
                {
                }
             }
-            
+
             [TestClass]
             public class {|#0:Derived|} : BaseClass
             {
@@ -253,9 +253,9 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             """;
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes)
                 .WithLocation(0)
-                .WithArguments("Derived"));
+                .WithArguments("Derived", "BaseClass"));
     }
 
     [TestMethod]
@@ -283,9 +283,9 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             """;
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes)
                 .WithLocation(0)
-                .WithArguments("Derived"));
+                .WithArguments("Derived", "BaseBase"));
     }
 
     [TestMethod]

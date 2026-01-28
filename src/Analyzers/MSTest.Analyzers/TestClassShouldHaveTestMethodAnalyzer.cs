@@ -32,9 +32,13 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    /// <inheritdoc cref="Resources.TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes" />
+    public static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes = TestClassShouldHaveTestMethodRule
+        .WithMessage(new LocalizableResourceString(nameof(Resources.TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TestClassShouldHaveTestMethodRule);
+        = ImmutableArray.Create(TestClassShouldHaveTestMethodRule, TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -78,10 +82,13 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        bool hasAssemblyAttribute = false;
+        bool hasAssemblyAttributeInCurrentClass = false;
+        bool hasAssemblyAttributeInBaseClass = false;
+        INamedTypeSymbol? baseClassWithAssemblyAttribute = null;
         bool hasTestMethod = false;
 
         INamedTypeSymbol? currentType = classSymbol;
+        bool isCurrentClass = true;
         do
         {
             foreach (ISymbol classMember in currentType.GetMembers())
@@ -98,18 +105,44 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
                         || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, globalTestInitializeAttributeSymbol)
                         || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, globalTestCleanupAttributeSymbol))
                     {
-                        hasAssemblyAttribute = true;
+                        if (isCurrentClass)
+                        {
+                            hasAssemblyAttributeInCurrentClass = true;
+                        }
+                        else
+                        {
+                            hasAssemblyAttributeInBaseClass = true;
+                            baseClassWithAssemblyAttribute ??= currentType;
+                        }
                     }
                 }
             }
 
             currentType = currentType.BaseType;
+            isCurrentClass = false;
         }
         while (currentType is not null);
 
-        if (!hasTestMethod && (!classSymbol.IsStatic || (classSymbol.IsStatic && !hasAssemblyAttribute)))
+        if (hasTestMethod)
         {
-            context.ReportDiagnostic(classSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule, classSymbol.Name));
+            return;
         }
+
+        // Static class with assembly attributes in the current class is valid
+        if (classSymbol.IsStatic && hasAssemblyAttributeInCurrentClass)
+        {
+            return;
+        }
+
+        // Non-static class that inherits assembly attributes from base class - suggest making it static
+        if (!classSymbol.IsStatic && hasAssemblyAttributeInBaseClass && baseClassWithAssemblyAttribute is not null)
+        {
+            context.ReportDiagnostic(classSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes, classSymbol.Name, baseClassWithAssemblyAttribute.Name));
+
+            return;
+        }
+
+        // All other cases: class without test methods
+        context.ReportDiagnostic(classSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule, classSymbol.Name));
     }
 }
