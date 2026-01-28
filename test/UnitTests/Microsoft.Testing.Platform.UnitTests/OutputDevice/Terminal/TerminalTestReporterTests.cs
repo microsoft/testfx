@@ -821,7 +821,7 @@ public sealed class TerminalTestReporterTests
         var console = new TestConsoleWithDifferentBufferAndWindowWidth
         {
             BufferWidth = 4096,
-            WindowWidth = 120
+            WindowWidth = 120,
         };
 
         var terminal = new NonAnsiTerminal(console);
@@ -837,7 +837,7 @@ public sealed class TerminalTestReporterTests
         var console = new TestConsoleWithDifferentBufferAndWindowWidth
         {
             BufferWidth = 4096,
-            WindowWidth = 120
+            WindowWidth = 120,
         };
 
         var terminal = new AnsiTerminal(console);
@@ -864,14 +864,24 @@ public sealed class TerminalTestReporterTests
 
         public ConsoleColor GetForegroundColor() => ConsoleColor.White;
 
-        public void SetForegroundColor(ConsoleColor color) { }
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
 
-        public void Write(string? value) { }
+        public void Write(string? value)
+        {
+        }
 
-        public void Write(char value) { }
+        public void Write(char value)
+        {
+        }
 
-        public void WriteLine() { }
+        public void WriteLine()
+        {
+        }
 
-        public void WriteLine(string? value) { }
+        public void WriteLine(string? value)
+        {
+        }
     }
 }
