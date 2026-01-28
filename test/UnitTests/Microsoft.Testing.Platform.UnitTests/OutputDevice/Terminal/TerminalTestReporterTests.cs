@@ -824,7 +824,7 @@ public sealed class TerminalTestReporterTests
             WindowWidth = 120
         };
 
-        var terminal = new SimpleTerminal(console);
+        var terminal = new NonAnsiTerminal(console);
 
         // Assert - Width should use WindowWidth, not BufferWidth
         Assert.AreEqual(120, terminal.Width);
