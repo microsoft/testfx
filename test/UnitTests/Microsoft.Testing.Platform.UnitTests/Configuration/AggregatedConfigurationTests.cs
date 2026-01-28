@@ -33,7 +33,7 @@ public sealed class AggregatedConfigurationTests
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
-        Assert.AreEqual(expected, new AggregatedConfiguration([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [], []))[key]);
+        Assert.AreEqual(expected, new AggregatedConfiguration([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new SystemEnvironment(), new(null, [], []))[key]);
     }
 
     [TestMethod]
@@ -43,7 +43,7 @@ public sealed class AggregatedConfigurationTests
     {
         Mock<IConfigurationProvider> mockProvider = new();
 
-        AggregatedConfiguration aggregatedConfiguration = new([mockProvider.Object], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [], []));
+        AggregatedConfiguration aggregatedConfiguration = new([mockProvider.Object], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new SystemEnvironment(), new(null, [], []));
         Assert.IsNull(aggregatedConfiguration[key]);
     }
 
@@ -53,21 +53,21 @@ public sealed class AggregatedConfigurationTests
     [DataRow(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
     public void IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string key)
     {
-        AggregatedConfiguration aggregatedConfiguration = new([new FakeConfigurationProvider(ExpectedPath)], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [], []));
+        AggregatedConfiguration aggregatedConfiguration = new([new FakeConfigurationProvider(ExpectedPath)], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new SystemEnvironment(), new(null, [], []));
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[key]);
     }
 
     [TestMethod]
     public void IndexerTest_ResultDirectorySet_DirectoryIsNotNull()
     {
-        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
+        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new SystemEnvironment(), new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
     }
 
     [TestMethod]
     public void IndexerTest_CurrentWorkingDirectorySet_DirectoryIsNotNull()
     {
-        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new(null, [], []));
+        AggregatedConfiguration aggregatedConfiguration = new([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object, new SystemEnvironment(), new(null, [], []));
 
         aggregatedConfiguration.SetCurrentWorkingDirectory(ExpectedPath);
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
@@ -86,7 +86,7 @@ public sealed class AggregatedConfigurationTests
         Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
-        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
+        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new SystemEnvironment(), new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
 
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
@@ -108,7 +108,7 @@ public sealed class AggregatedConfigurationTests
         Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
-        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
+        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new SystemEnvironment(), new(null, [new CommandLineParseOption("results-directory", [ExpectedPath])], []));
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
 
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
@@ -130,7 +130,7 @@ public sealed class AggregatedConfigurationTests
         Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
 
-        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new(null, [], []));
+        AggregatedConfiguration aggregatedConfiguration = new([], mockTestApplicationModuleInfo.Object, mockFileSystem.Object, new SystemEnvironment(), new(null, [], []));
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
 
         string expectedPath = "a" + Path.DirectorySeparatorChar + "b" + Path.DirectorySeparatorChar + "TestResults";
