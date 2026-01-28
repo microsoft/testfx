@@ -697,11 +697,6 @@ public class TestMethodInfoTests : TestContainer
 #pragma warning disable RS0030 // Do not use banned APIs
         DummyTestClass.TestConstructorMethodBody = () => UTF.Assert.Inconclusive("dummyInconclusiveMessage");
 #pragma warning restore RS0030 // Do not use banned APIs
-        string errorMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            Resource.UTA_InstanceCreationError,
-            typeof(DummyTestClass).FullName,
-            "Assert.Inconclusive failed. dummyInconclusiveMessage");
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
         {
@@ -717,7 +712,7 @@ public class TestMethodInfoTests : TestContainer
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Message.Should().Be(errorMessage);
+        exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.InnerException.Should().BeOfType<UTF.AssertInconclusiveException>();
 #if DEBUG
