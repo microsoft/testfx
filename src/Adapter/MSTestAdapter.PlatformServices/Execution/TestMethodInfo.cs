@@ -997,12 +997,8 @@ internal class TestMethodInfo : ITestMethod
     /// <summary>
     /// Creates an instance of TestClass. The TestMethod is invoked on this instance.
     /// </summary>
-    /// <param name="result">
-    /// Reference to the <see cref="TestResult"/> for this TestMethod.
-    /// Outcome and TestFailureException are updated based on instance creation.
-    /// </param>
     /// <returns>
-    /// An instance of the TestClass. Returns null if there are errors during class instantiation.
+    /// An instance of the TestClass.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private object? CreateTestClassInstance()
