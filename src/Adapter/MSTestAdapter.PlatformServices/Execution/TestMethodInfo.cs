@@ -1050,7 +1050,7 @@ internal class TestMethodInfo : ITestMethod
                     exceptionMessage);
 
                 result.Outcome = UTF.UnitTestOutcome.Inconclusive;
-                result.TestFailureException = new TestFailedException(UTFUnitTestOutcome.Inconclusive, errorMessage, stackTraceInfo);
+                result.TestFailureException = new TestFailedException(UTFUnitTestOutcome.Inconclusive, errorMessage, stackTraceInfo, realException);
             }
             else
             {
