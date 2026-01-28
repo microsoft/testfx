@@ -12,6 +12,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
 {
     public enum Lifecycle
     {
+        Constructor,
         AssemblyInitialize,
         ClassInitialize,
         TestInitialize,
@@ -22,6 +23,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
     }
 
     [TestMethod]
+    [DataRow(Lifecycle.Constructor)]
     [DataRow(Lifecycle.AssemblyInitialize)]
     [DataRow(Lifecycle.ClassInitialize)]
     [DataRow(Lifecycle.TestInitialize)]
@@ -52,6 +54,15 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         }
 
         testHostResult.AssertOutputContains("AssemblyInitialize called");
+
+        if (inconclusiveStep >= Lifecycle.Constructor)
+        {
+            testHostResult.AssertOutputContains("Constructor called");
+        }
+        else
+        {
+            testHostResult.AssertOutputDoesNotContain("Constructor called");
+        }
 
         if (inconclusiveStep >= Lifecycle.ClassInitialize)
         {
@@ -154,6 +165,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
+    public UnitTest1()
+    {
+        Console.WriteLine("Constructor called");
+        if (Environment.GetEnvironmentVariable("ConstructorInconclusive") == "1")
+        {
+            Assert.Inconclusive();
+        }
+    }
+
     [AssemblyInitialize]
     public static void AsmInitialize(TestContext _)
     {

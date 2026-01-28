@@ -1038,6 +1038,20 @@ internal class TestMethodInfo : ITestMethod
                 result.Outcome = UTF.UnitTestOutcome.Timeout;
                 result.TestFailureException = new TestFailedException(UTFUnitTestOutcome.Timeout, string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout));
             }
+            else if (realException is AssertInconclusiveException)
+            {
+                string exceptionMessage = realException.TryGetMessage();
+                StackTraceInformation? stackTraceInfo = realException.GetStackTraceInformation();
+
+                string errorMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_InstanceCreationError,
+                    TestClassName,
+                    exceptionMessage);
+
+                result.Outcome = UTF.UnitTestOutcome.Inconclusive;
+                result.TestFailureException = new TestFailedException(UTFUnitTestOutcome.Inconclusive, errorMessage, stackTraceInfo);
+            }
             else
             {
                 string exceptionMessage = realException.GetFormattedExceptionMessage();
