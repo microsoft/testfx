@@ -691,6 +691,36 @@ public class TestMethodInfoTests : TestContainer
 #endif
     }
 
+    public async Task TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult()
+    {
+        // Arrange.
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestConstructorMethodBody = () => UTF.Assert.Inconclusive("dummyInconclusiveMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
+
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        exception.InnerException.Should().BeOfType<UTF.AssertInconclusiveException>();
+#if DEBUG
+        exception.StackTraceInformation!.ErrorStackTrace.Contains(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
+#endif
+    }
+
     #endregion
 
     #region TestCleanup method setup
