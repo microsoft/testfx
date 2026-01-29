@@ -19,6 +19,8 @@ public sealed class ExceptionHelperTests : TestContainer
 
         string result = aggregateException.GetFormattedExceptionMessage();
 
+        // Should include AggregateException itself
+        result.Should().Contain("System.AggregateException");
         result.Should().Contain("System.InvalidOperationException: First exception");
         result.Should().Contain("System.ArgumentException: Second exception");
     }
@@ -32,6 +34,8 @@ public sealed class ExceptionHelperTests : TestContainer
 
         string result = aggregateException.GetFormattedExceptionMessage();
 
+        // Should include all exception types
+        result.Should().Contain("System.AggregateException");
         result.Should().Contain("System.InvalidOperationException: Inner exception");
         result.Should().Contain("System.ArgumentException: Outer exception");
     }
@@ -77,5 +81,24 @@ public sealed class ExceptionHelperTests : TestContainer
         result.Should().NotBeNull();
         result!.ErrorStackTrace.Should().Contain("InvalidOperationException");
         result.ErrorStackTrace.Should().Contain("ArgumentException");
+    }
+
+    public void GetFormattedExceptionMessageShouldHandleCircularReferences()
+    {
+        // Create a simple scenario where we can test circular reference protection
+        var exception1 = new InvalidOperationException("First exception");
+        var exception2 = new ArgumentException("Second exception");
+        var aggregateException = new AggregateException(exception1, exception2);
+
+        // While we can't easily create true circular references with regular exceptions,
+        // we can verify the method doesn't crash with nested AggregateExceptions
+        var outerAggregate = new AggregateException(aggregateException, new InvalidOperationException("Outer"));
+
+        string result = outerAggregate.GetFormattedExceptionMessage();
+
+        // Should include all exceptions without stack overflow
+        result.Should().NotBeNull();
+        result.Should().Contain("InvalidOperationException");
+        result.Should().Contain("ArgumentException");
     }
 }
