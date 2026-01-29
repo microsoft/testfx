@@ -26,9 +26,23 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
             """);
     }
 
+    [TestMethod]
+    public async Task AssemblyCleanupExceptionShouldNotHideTestFailure()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName2, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
+        // Should see both the test failure message and the assembly cleanup exception
+        testHostResult.AssertOutputContains("I want to see this");
+        testHostResult.AssertOutputContains("but I only see this");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "AssemblyCleanupTests";
+        public const string ProjectName2 = "AssemblyCleanupExceptionTests";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
@@ -36,6 +50,11 @@ public sealed class AssemblyCleanupTests : AcceptanceTestBase<AssemblyCleanupTes
         {
             yield return (ProjectName, ProjectName,
                 SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (ProjectName2, ProjectName2,
+                SourceCode2
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
@@ -118,6 +137,45 @@ public static class Asm
     <CaptureTraceOutput>false</CaptureTraceOutput>
   </MSTest>
 </RunSettings>
+""";
+
+        private const string SourceCode2 = """
+#file AssemblyCleanupExceptionTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file Test1.cs
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class Test1
+{
+    [TestMethod]
+    public void TestMethod1()
+    {
+        Assert.Fail("I want to see this");
+    }
+
+    [AssemblyCleanup]
+    public static void Shutdown()
+    {
+        throw new Exception("... but I only see this");
+    }
+}
 """;
     }
 

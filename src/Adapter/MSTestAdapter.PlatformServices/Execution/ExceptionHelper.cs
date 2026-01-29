@@ -27,40 +27,55 @@ internal static class ExceptionHelper
 
         Stack<string> stackTraces = new();
 
-        for (Exception? curException = ex;
-            curException != null;
-            curException = curException.InnerException)
+        // Special handling for AggregateException to include all inner exceptions
+        if (ex is AggregateException aggregateException)
         {
-            // TODO:Fix the shadow stack-trace used in Private Object
-            // (Look-in Assertion.cs in the UnitTestFramework assembly)
-
-            // Sometimes the stack trace can be null, but the inner stack trace
-            // contains information. We are not interested in null stack traces
-            // so we simply ignore this case
-            try
+            foreach (Exception innerException in aggregateException.InnerExceptions)
             {
-                if (curException.StackTrace != null)
+                StackTraceInformation? innerStackTrace = GetStackTraceInformation(innerException);
+                if (innerStackTrace?.ErrorStackTrace != null)
                 {
-                    stackTraces.Push(curException.StackTrace);
+                    stackTraces.Push(innerStackTrace.ErrorStackTrace);
                 }
             }
-            catch (Exception e)
+        }
+        else
+        {
+            for (Exception? curException = ex;
+                curException != null;
+                curException = curException.InnerException)
             {
-                // curException.StackTrace can throw exception, Although MSDN doc doesn't say that.
+                // TODO:Fix the shadow stack-trace used in Private Object
+                // (Look-in Assertion.cs in the UnitTestFramework assembly)
+
+                // Sometimes the stack trace can be null, but the inner stack trace
+                // contains information. We are not interested in null stack traces
+                // so we simply ignore this case
                 try
                 {
-                    // try to get stack trace
-                    if (e.StackTrace != null)
+                    if (curException.StackTrace != null)
                     {
-                        stackTraces.Push(e.StackTrace);
+                        stackTraces.Push(curException.StackTrace);
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    // curException.StackTrace can throw exception, Although MSDN doc doesn't say that.
+                    try
                     {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
-                            "StackTraceHelper.GetStackTraceInformation: Failed to get stack trace info.");
+                        // try to get stack trace
+                        if (e.StackTrace != null)
+                        {
+                            stackTraces.Push(e.StackTrace);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                        {
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                                "StackTraceHelper.GetStackTraceInformation: Failed to get stack trace info.");
+                        }
                     }
                 }
             }
@@ -100,6 +115,24 @@ internal static class ExceptionHelper
 
         StringBuilder result = new();
         bool first = true;
+
+        // Special handling for AggregateException to include all inner exceptions
+        if (ex is AggregateException aggregateException)
+        {
+            foreach (Exception innerException in aggregateException.InnerExceptions)
+            {
+                if (!first)
+                {
+                    result.Append(" ---> ");
+                }
+
+                result.Append(GetFormattedExceptionMessage(innerException));
+                first = false;
+            }
+
+            return result.ToString();
+        }
+
         for (Exception? curException = ex;
              curException != null;
              curException = curException.InnerException)
