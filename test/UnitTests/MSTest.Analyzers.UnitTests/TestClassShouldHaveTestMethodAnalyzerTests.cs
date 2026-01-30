@@ -253,7 +253,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             """;
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes)
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRuleBaseClassHasAssemblyAttributes)
                 .WithLocation(0)
                 .WithArguments("Derived", "BaseClass"));
     }
@@ -283,7 +283,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
             """;
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes)
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRuleBaseClassHasAssemblyAttributes)
                 .WithLocation(0)
                 .WithArguments("Derived", "BaseBase"));
     }
