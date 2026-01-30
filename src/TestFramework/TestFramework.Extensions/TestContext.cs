@@ -15,6 +15,26 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public abstract class TestContext
 {
+    private static readonly AsyncLocal<TestContext?> CurrentContext = new();
+
+    /// <summary>
+    /// Gets the current <see cref="TestContext"/> instance.
+    /// </summary>
+    /// <remarks>
+    /// This property returns the context for the currently executing test. When accessed outside of a test execution,
+    /// it returns <see langword="null"/>.
+    /// </remarks>
+    [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
+    public static TestContext? Current => CurrentContext.Value;
+
+    /// <summary>
+    /// Sets the current <see cref="TestContext"/> for the async context.
+    /// </summary>
+    /// <param name="testContext">The test context to set, or <see langword="null"/> to clear.</param>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static void SetCurrentContext(TestContext? testContext)
+        => CurrentContext.Value = testContext;
+
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
     internal static readonly string TestNameLabel = nameof(TestName);
 #if !WINDOWS_UWP && !WIN_UI

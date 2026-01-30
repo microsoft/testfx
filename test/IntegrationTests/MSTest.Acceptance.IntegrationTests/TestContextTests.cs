@@ -67,6 +67,20 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TestContext_Current_ReturnsCorrectInstance(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCurrent", cancellationToken: TestContext.CancellationToken);
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        // IAsyncDisposable test only runs on .NET Core, so we have 8 tests on .NET Core, 7 on .NET Framework
+        int expectedPassed = tfm == "net462" ? 7 : 8;
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: expectedPassed, skipped: 0);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestTestContext";
@@ -112,6 +126,7 @@ using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
 #endif
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -450,6 +465,205 @@ public class TestContextTestPropertyImpl : TestContextTestPropertyBase
     {
     }
 }
+
+#pragma warning disable MSTESTEXP // TestContext.Current is experimental
+[TestClass]
+public class TestContextCurrentStatic
+{
+    [TestInitialize]
+    public void TestInit()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethod", TestContext.Current.TestName);
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethod", TestContext.Current.TestName);
+        Assert.AreEqual("TestContextCurrentStatic", TestContext.Current.FullyQualifiedTestClassName);
+    }
+
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethod", TestContext.Current.TestName);
+    }
+}
+
+[TestClass]
+public class TestContextCurrentStaticWithHelper
+{
+    [TestMethod]
+    public void TestMethodUsingHelper()
+    {
+        AssertHelper.AssertIsRunningTest("TestMethodUsingHelper");
+    }
+}
+
+[TestClass]
+public class TestContextCurrentInConstructorAndDispose : IDisposable
+{
+    public TestContextCurrentInConstructorAndDispose()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethod", TestContext.Current.TestName);
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.IsNotNull(TestContext.Current);
+    }
+
+    public void Dispose()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethod", TestContext.Current.TestName);
+    }
+}
+
+#if !NETFRAMEWORK
+[TestClass]
+public class TestContextCurrentInAsyncDispose : IAsyncDisposable
+{
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.IsNotNull(TestContext.Current);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethod", TestContext.Current.TestName);
+        return ValueTask.CompletedTask;
+    }
+}
+#endif
+
+[TestClass]
+public class TestContextCurrentAsyncInitCleanup
+{
+    [TestInitialize]
+    public async Task TestInitAsync()
+    {
+        await Task.Yield();
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethodAsync", TestContext.Current.TestName);
+    }
+
+    [TestMethod]
+    public async Task TestMethodAsync()
+    {
+        await Task.Yield();
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethodAsync", TestContext.Current.TestName);
+    }
+
+    [TestCleanup]
+    public async Task TestCleanupAsync()
+    {
+        await Task.Yield();
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual("TestMethodAsync", TestContext.Current.TestName);
+    }
+}
+
+[TestClass]
+public class TestContextCurrentClassInitCleanup
+{
+    private static string s_testName;
+
+    [ClassInitialize]
+    public static void ClassInit(TestContext context)
+    {
+        Assert.IsNotNull(TestContext.Current);
+        s_testName = TestContext.Current.TestName;
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        // ClassInitialize runs in the context of the first test
+        Assert.AreEqual(s_testName, TestContext.Current.TestName);
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Assert.IsNotNull(TestContext.Current);
+    }
+}
+
+[TestClass]
+public class TestContextCurrentClassInitCleanupAsync
+{
+    private static string s_testName;
+
+    [ClassInitialize]
+    public static async Task ClassInitAsync(TestContext context)
+    {
+        await Task.Yield();
+        Assert.IsNotNull(TestContext.Current);
+        s_testName = TestContext.Current.TestName;
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual(s_testName, TestContext.Current.TestName);
+    }
+
+    [ClassCleanup]
+    public static async Task ClassCleanupAsync()
+    {
+        await Task.Yield();
+        Assert.IsNotNull(TestContext.Current);
+    }
+}
+
+public static class AssertHelper
+{
+    public static void AssertIsRunningTest(string expectedTestName)
+    {
+        Assert.IsNotNull(TestContext.Current);
+        Assert.AreEqual(expectedTestName, TestContext.Current.TestName);
+    }
+}
+
+[TestClass]
+public class TestContextCurrentAssemblyInitCleanup
+{
+    private static bool s_assemblyInitCalled;
+
+    [AssemblyInitialize]
+    public static void AssemblyInit(TestContext context)
+    {
+        Assert.IsNotNull(TestContext.Current);
+        // Verify TestContext.Current matches the parameter passed
+        Assert.AreSame(context, TestContext.Current);
+        s_assemblyInitCalled = true;
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+        Assert.IsTrue(s_assemblyInitCalled, "AssemblyInitialize should have been called");
+        Assert.IsNotNull(TestContext.Current);
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+    {
+        Assert.IsNotNull(TestContext.Current);
+    }
+}
+#pragma warning restore MSTESTEXP // TestContext.Current is experimental
 """;
     }
 
