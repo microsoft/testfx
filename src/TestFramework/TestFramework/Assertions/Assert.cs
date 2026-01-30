@@ -50,6 +50,11 @@ public sealed partial class Assert
             }
         }
 
+        if (AssertionFailureSettings.CaptureDumpOnFailure)
+        {
+            DumpUtility.TryCaptureDump(AssertionFailureSettings.DumpDirectory);
+        }
+
         throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
     }

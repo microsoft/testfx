@@ -66,6 +66,7 @@ internal sealed class MSTestSettings
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
         LaunchDebuggerOnFailure = false;
+        CaptureDumpOnFailure = false;
     }
 
     /// <summary>
@@ -192,6 +193,11 @@ internal sealed class MSTestSettings
     internal bool LaunchDebuggerOnFailure { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether to capture a memory dump when an assertion fails.
+    /// </summary>
+    internal bool CaptureDumpOnFailure { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -217,6 +223,7 @@ internal sealed class MSTestSettings
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnFailure = settings.LaunchDebuggerOnFailure;
+        CurrentSettings.CaptureDumpOnFailure = settings.CaptureDumpOnFailure;
     }
 
 #if !WINDOWS_UWP
@@ -678,6 +685,21 @@ internal sealed class MSTestSettings
                             break;
                         }
 
+                    case "CAPTUREDUMPONFAILURE":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(value, out result))
+                            {
+                                settings.CaptureDumpOnFailure = result;
+                            }
+                            else
+                            {
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CaptureDumpOnFailure"));
+                            }
+
+                            break;
+                        }
+
                     default:
                         {
                             PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());
@@ -857,6 +879,7 @@ internal sealed class MSTestSettings
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
         //      "launchDebuggerOnFailure" : true/false
+        //      "captureDumpOnFailure" : true/false
         //  }
         //  ... remaining settings
         // }
@@ -872,6 +895,7 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
         ParseBooleanSetting(configuration, "execution:launchDebuggerOnFailure", logger, value => settings.LaunchDebuggerOnFailure = value);
+        ParseBooleanSetting(configuration, "execution:captureDumpOnFailure", logger, value => settings.CaptureDumpOnFailure = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);

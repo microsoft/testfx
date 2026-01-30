@@ -13,4 +13,14 @@ internal static class AssertionFailureSettings
     /// Gets or sets a value indicating whether to launch the debugger when an assertion fails.
     /// </summary>
     public static bool LaunchDebuggerOnFailure { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to capture a memory dump when an assertion fails.
+    /// </summary>
+    public static bool CaptureDumpOnFailure { get; set; }
+
+    /// <summary>
+    /// Gets or sets the directory where dumps will be written.
+    /// </summary>
+    public static string? DumpDirectory { get; set; }
 }
