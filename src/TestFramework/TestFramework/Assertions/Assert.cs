@@ -37,8 +37,22 @@ public sealed partial class Assert
     [DoesNotReturn]
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
+    {
+        if (AssertionFailureSettings.LaunchDebuggerOnFailure)
+        {
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+            else
+            {
+                Debugger.Launch();
+            }
+        }
+
+        throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+    }
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.

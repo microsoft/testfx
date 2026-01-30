@@ -65,6 +65,7 @@ internal sealed class MSTestSettings
         TestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
+        LaunchDebuggerOnFailure = false;
     }
 
     /// <summary>
@@ -186,6 +187,11 @@ internal sealed class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether to launch the debugger when an assertion fails.
+    /// </summary>
+    internal bool LaunchDebuggerOnFailure { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -210,6 +216,7 @@ internal sealed class MSTestSettings
         CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
+        CurrentSettings.LaunchDebuggerOnFailure = settings.LaunchDebuggerOnFailure;
     }
 
 #if !WINDOWS_UWP
@@ -656,6 +663,21 @@ internal sealed class MSTestSettings
                             break;
                         }
 
+                    case "LAUNCHDEBUGGERONFAILURE":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (bool.TryParse(value, out result))
+                            {
+                                settings.LaunchDebuggerOnFailure = result;
+                            }
+                            else
+                            {
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "LaunchDebuggerOnFailure"));
+                            }
+
+                            break;
+                        }
+
                     default:
                         {
                             PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());
@@ -834,6 +856,7 @@ internal sealed class MSTestSettings
         //      "mapNotRunnableToFailed" : true/false
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
+        //      "launchDebuggerOnFailure" : true/false
         //  }
         //  ... remaining settings
         // }
@@ -848,6 +871,7 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
+        ParseBooleanSetting(configuration, "execution:launchDebuggerOnFailure", logger, value => settings.LaunchDebuggerOnFailure = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
