@@ -578,10 +578,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
     }
 
     public async Task TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
@@ -648,10 +646,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Message.Should().Be(errorMessage);
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<AssertFailedException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
     }
 
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
@@ -685,10 +681,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Message.Should().Be(errorMessage);
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
     }
 
     #endregion
@@ -834,11 +828,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
-
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
@@ -864,10 +855,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
@@ -893,10 +882,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<AssertFailedException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
     }
 
     public async Task TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
@@ -937,10 +924,8 @@ public class TestMethodInfoTests : TestContainer
 
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Should().NotBeNull();
-#if DEBUG
         ((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()").Should().BeTrue();
         ((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()").Should().BeTrue();
-#endif
     }
 
     public async Task TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()
@@ -1470,33 +1455,53 @@ public class TestMethodInfoTests : TestContainer
             }
         }
 
+        // On .NET Framework, the JIT aggressively inlines small methods in Release mode,
+        // which removes stack frames. NoInlining ensures the method appears in stack traces.
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public async Task DummyTestInitializeMethodAsync() => await TestInitializeMethodBodyAsync(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public async Task DummyTestCleanupMethodAsync() => await TestCleanupMethodBodyAsync(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public void DummyTestMethod() => TestMethodBody(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
             DummyAsyncTestMethodBody();
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public void DummySimpleArgumentsMethod(string str1, string str2) => TestMethodBody(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public void DummyOptionalArgumentsMethod(string str1, string? str2 = null, string? str3 = null) => TestMethodBody(this);
 
+#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+#endif
         public void DummyParamsArgumentMethod(int i, params string[] args) => TestMethodBody(this);
     }
 
