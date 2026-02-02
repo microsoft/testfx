@@ -33,12 +33,12 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     /// <inheritdoc cref="Resources.TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes" />
-    public static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes = TestClassShouldHaveTestMethodRule
+    public static readonly DiagnosticDescriptor TestClassShouldHaveTestMethodRuleBaseClassHasAssemblyAttributes = TestClassShouldHaveTestMethodRule
         .WithMessage(new LocalizableResourceString(nameof(Resources.TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes), Resources.ResourceManager, typeof(Resources)));
 
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(TestClassShouldHaveTestMethodRule, TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes);
+        = ImmutableArray.Create(TestClassShouldHaveTestMethodRule, TestClassShouldHaveTestMethodRuleBaseClassHasAssemblyAttributes);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -137,7 +137,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         // Non-static class that inherits assembly attributes from base class - suggest making it static
         if (!classSymbol.IsStatic && hasAssemblyAttributeInBaseClass && baseClassWithAssemblyAttribute is not null)
         {
-            context.ReportDiagnostic(classSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule_BaseClassHasAssemblyAttributes, classSymbol.Name, baseClassWithAssemblyAttribute.Name));
+            context.ReportDiagnostic(classSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRuleBaseClassHasAssemblyAttributes, classSymbol.Name, baseClassWithAssemblyAttribute.Name));
 
             return;
         }
