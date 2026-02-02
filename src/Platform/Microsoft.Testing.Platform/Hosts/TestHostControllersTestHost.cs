@@ -371,7 +371,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
         ITestHostProcessLifetimeHandler[] lifetimeHandlers = _testHostsInformation.LifetimeHandlers;
 
-        List<object> alreadyDisposed = new(lifetimeHandlers.Length + variableProviders.Length);
+        List<object> alreadyDisposed = [with(lifetimeHandlers.Length + variableProviders.Length)];
 
         foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {

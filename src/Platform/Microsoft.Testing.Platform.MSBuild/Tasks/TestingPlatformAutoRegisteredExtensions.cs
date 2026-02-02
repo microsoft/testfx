@@ -138,7 +138,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
     private static ITaskItem[] Reorder(ITaskItem[] items)
     {
-        List<ITaskItem> result = new(items.Length);
+        List<ITaskItem> result = [with(items.Length)];
         int wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index = -1;
         for (int i = 0; i < items.Length; i++)
         {
