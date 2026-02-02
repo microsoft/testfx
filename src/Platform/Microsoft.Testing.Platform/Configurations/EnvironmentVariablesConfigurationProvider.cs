@@ -17,7 +17,7 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
 
     private readonly string _normalizedPrefix;
 
-    private readonly Dictionary<string, string?> _data = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _data = [with(StringComparer.OrdinalIgnoreCase)];
 
     private readonly IEnvironment _environmentVariables;
 

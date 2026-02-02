@@ -34,7 +34,7 @@ internal class AssemblyUtility
         {
             if (field == null)
             {
-                field = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                field = [with(StringComparer.OrdinalIgnoreCase)];
                 foreach (CultureInfo? info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
                     field.Add(info.Name);
