@@ -3,14 +3,12 @@
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class ExecutableInfo(string filePath, IEnumerable<string> arguments, string workspace)
+internal sealed class ExecutableInfo(string filePath, IEnumerable<string> arguments)
 {
     public string FilePath { get; } = filePath;
 
     public IEnumerable<string> Arguments { get; } = arguments;
 
-    public string Workspace { get; } = workspace;
-
     public override string ToString()
-        => $"Process: {FilePath}, Arguments: {string.Join(' ', Arguments)}, Workspace: {Workspace}";
+        => $"Process: {FilePath}, Arguments: {string.Join(' ', Arguments)}";
 }
