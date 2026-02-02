@@ -10,27 +10,11 @@ public sealed class TestHost
 {
     private readonly string _testHostModuleName;
 
-    [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing runtime bug")]
-    private static int s_maxOutstandingExecutions = Environment.ProcessorCount;
-    private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
-
     private TestHost(string testHostFullName, string testHostModuleName)
     {
         FullName = testHostFullName;
         DirectoryName = Path.GetDirectoryName(testHostFullName)!;
         _testHostModuleName = testHostModuleName;
-    }
-
-    public static int MaxOutstandingExecutions
-    {
-        get => s_maxOutstandingExecutions;
-
-        set
-        {
-            s_maxOutstandingExecutions = value;
-            s_maxOutstandingExecutions_semaphore.Dispose();
-            s_maxOutstandingExecutions_semaphore = new SemaphoreSlim(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
-        }
     }
 
     public string FullName { get; }
@@ -43,68 +27,60 @@ public sealed class TestHost
         bool disableTelemetry = true,
         CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingExecutions_semaphore.WaitAsync(cancellationToken);
-        try
+        if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
         {
-            if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
+            throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
+        }
+
+        environmentVariables ??= [];
+
+        if (disableTelemetry)
+        {
+            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+        }
+
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            // Skip all unwanted environment variables.
+            string? key = entry.Key.ToString();
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
+                continue;
             }
 
-            environmentVariables ??= [];
+            // We use TryAdd to let tests "overwrite" existing environment variables.
+            // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
+            // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
+            // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
+            environmentVariables.TryAdd(key!, entry!.Value!.ToString()!);
+        }
 
-            if (disableTelemetry)
-            {
-                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-            }
+        // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid
+        // computer configuration having impact on our tests.
+        environmentVariables.Add("DOTNET_ROOT", $"{RootFinder.Find()}/.dotnet");
 
-            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-            {
-                // Skip all unwanted environment variables.
-                string? key = entry.Key.ToString();
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+        string finalArguments = command ?? string.Empty;
+
+        IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
+        return await Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(delay)
+            .ExecuteAsync(
+                async ct =>
                 {
-                    continue;
-                }
-
-                // We use TryAdd to let tests "overwrite" existing environment variables.
-                // Consider that the given dictionary has "TESTINGPLATFORM_UI_LANGUAGE" as a key.
-                // And also Environment.GetEnvironmentVariables() is returning TESTINGPLATFORM_UI_LANGUAGE.
-                // In that case, we do a "TryAdd" which effectively means the value from the original dictionary wins.
-                environmentVariables.TryAdd(key!, entry!.Value!.ToString()!);
-            }
-
-            // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid
-            // computer configuration having impact on our tests.
-            environmentVariables.Add("DOTNET_ROOT", $"{RootFinder.Find()}/.dotnet");
-
-            string finalArguments = command ?? string.Empty;
-
-            IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
-            return await Policy
-                .Handle<Exception>()
-                .WaitAndRetryAsync(delay)
-                .ExecuteAsync(
-                    async ct =>
-                    {
-                        CommandLine commandLine = new();
-                        // Disable ANSI rendering so tests have easier time parsing the output.
-                        // Disable progress so tests don't mix progress with overall progress, and with test process output.
-                        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                            $"{FullName} --no-ansi --no-progress {finalArguments}",
-                            environmentVariables: environmentVariables,
-                            workingDirectory: null,
-                            cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
-                            cancellationToken: ct);
-                        string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
-                        return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
-                    },
-                    cancellationToken);
-        }
-        finally
-        {
-            s_maxOutstandingExecutions_semaphore.Release();
-        }
+                    CommandLine commandLine = new();
+                    // Disable ANSI rendering so tests have easier time parsing the output.
+                    // Disable progress so tests don't mix progress with overall progress, and with test process output.
+                    int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+                        $"{FullName} --no-ansi --no-progress {finalArguments}",
+                        environmentVariables: environmentVariables,
+                        workingDirectory: null,
+                        cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+                        cancellationToken: ct);
+                    string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
+                    return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
+                },
+                cancellationToken);
     }
 
     public static TestHost LocateFrom(string rootFolder, string testHostModuleNameWithoutExtension)

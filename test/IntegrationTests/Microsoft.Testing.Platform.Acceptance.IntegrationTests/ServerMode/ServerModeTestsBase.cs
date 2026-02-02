@@ -54,7 +54,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase<TFixture> : Acce
             EnvironmentVariables = environmentVariables,
         };
 
-        IProcessHandle processHandler = ProcessFactory.Start(processConfig, cleanDefaultEnvironmentVariableIfCustomAreProvided: false);
+        (IProcessHandle processHandler, _) = ProcessFactory.Start(processConfig, cleanDefaultEnvironmentVariableIfCustomAreProvided: false);
 
         TcpClient? tcpClient;
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(60));
