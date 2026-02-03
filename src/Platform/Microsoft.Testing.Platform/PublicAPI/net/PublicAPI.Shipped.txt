@@ -1,2 +1,1 @@
 #nullable enable
-Microsoft.Testing.Platform.Builder.TestApplication.DisposeAsync() -> System.Threading.Tasks.ValueTask
