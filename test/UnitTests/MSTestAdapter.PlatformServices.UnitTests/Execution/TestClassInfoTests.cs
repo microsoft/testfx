@@ -335,10 +335,8 @@ public class TestClassInfoTests : TestContainer
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.");
-#if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>", StringComparison.Ordinal).Should().BeTrue();
-#endif
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
     }
@@ -355,10 +353,8 @@ public class TestClassInfoTests : TestContainer
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
-#if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.Contains(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>", StringComparison.Ordinal).Should().BeTrue();
-#endif
         exception.InnerException.Should().BeOfType<AssertFailedException>();
     }
 
@@ -374,10 +370,8 @@ public class TestClassInfoTests : TestContainer
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
-#if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.Contains(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>", StringComparison.Ordinal).Should().BeTrue();
-#endif
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
     }
 
@@ -391,10 +385,8 @@ public class TestClassInfoTests : TestContainer
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.");
-#if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
     "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal).Should().BeTrue();
-#endif
     }
 
     public void RunClassInitializeShouldThrowForAlreadyExecutedTestClassInitWithException()
@@ -431,10 +423,8 @@ public class TestClassInfoTests : TestContainer
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be("Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.InvalidOperationException: I fail..");
-#if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal).Should().BeTrue();
-#endif
         exception.InnerException.Should().BeOfType<InvalidOperationException>();
     }
 
@@ -494,11 +484,9 @@ public class TestClassInfoTests : TestContainer
         classCleanupException.Should().NotBeNull();
         classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal).Should().BeTrue();
         classCleanupException.Message.Contains("Error Message: Assert.Fail failed. Test Failure.").Should().BeTrue();
-#if DEBUG
         classCleanupException.Message.Should().Contain(
             $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>",
             $"Value: {classCleanupException.Message}");
-#endif
     }
 
     public async Task RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails()
@@ -517,11 +505,9 @@ public class TestClassInfoTests : TestContainer
         classCleanupException.Should().NotBeNull();
         classCleanupException.Message.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal).Should().BeTrue();
         classCleanupException.Message.Contains("Error Message: Assert.Inconclusive failed. Test Inconclusive.").Should().BeTrue();
-#if DEBUG
         classCleanupException.Message.Should().Contain(
             $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>",
             $"Value: {classCleanupException.Message}");
-#endif
     }
 
     public async Task RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
