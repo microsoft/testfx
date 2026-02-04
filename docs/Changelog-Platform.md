@@ -56,6 +56,9 @@ See full log [of v4.0.2...v4.1.0](https://github.com/microsoft/testfx/compare/v4
 * Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.1.0)
 * Microsoft.Testing.Extensions.VSTestBridge: [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.1.0)
 * Microsoft.Testing.Extensions.AzureDevOpsReport [2.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.1.0)
+* Microsoft.Testing.Platform.AI: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI/1.0.0-alpha.26103.11)
+* Microsoft.Testing.Extensions.AzureFoundry: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry/1.0.0-alpha.26103.11)
+* Microsoft.Testing.Extensions.OpenTelemetry: [1.0.0-alpha.26103.11](https://www.nuget.org/packages/Microsoft.Testing.Extensions.OpenTelemetry/1.0.0-alpha.26103.11)
 
 ## <a name="2.0.2" />[2.0.2] - 2025-11-11
 
