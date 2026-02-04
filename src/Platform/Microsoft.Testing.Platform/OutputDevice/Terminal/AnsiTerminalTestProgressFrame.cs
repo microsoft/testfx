@@ -211,7 +211,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
 
         int i = 0;
-        RenderedLines = new List<RenderedProgressItem>(progress.Length * 2);
+        RenderedLines = [with(progress.Length * 2)];
         List<object> progresses = GenerateLinesToRender(progress);
 
         foreach (object item in progresses)

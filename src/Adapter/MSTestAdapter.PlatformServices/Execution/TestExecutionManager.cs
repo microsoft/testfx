@@ -529,7 +529,7 @@ internal class TestExecutionManager
     {
         if (tcmProperties is null)
         {
-            return new Dictionary<string, object?>(sourceLevelParameters!);
+            return [with(sourceLevelParameters!)];
         }
 
         // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters

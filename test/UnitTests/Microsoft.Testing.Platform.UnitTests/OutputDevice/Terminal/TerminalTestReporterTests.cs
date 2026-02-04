@@ -90,9 +90,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
-        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
-        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
         string standardOutput = "Hello!";
@@ -189,9 +186,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
-        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
-        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
         string standardOutput = "Hello!";
@@ -287,7 +281,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
         string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
@@ -397,9 +390,6 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
-        string folderNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work" : "/mnt/work";
-        string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
-        string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
         string standardOutput = "Hello!";
