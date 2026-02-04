@@ -1,15 +1,1 @@
 #nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.AddProperty(string! propertyName, string! propertyValue) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.ClearDiagnosticMessages() -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.Context.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext!
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.DisplayMessage(Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel messageLevel, string! message) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.GetDiagnosticMessages() -> string?
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.GetResultFiles() -> System.Collections.Generic.IList<string!>?
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDataConnection(object? dbConnection) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDataRow(object? dataRow) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetDisplayName(string? displayName) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetException(System.Exception? exception) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetOutcome(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome outcome) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.SetTestData(object?[]? data) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext.TryGetPropertyValue(string! propertyName, out object? propertyValue) -> bool
