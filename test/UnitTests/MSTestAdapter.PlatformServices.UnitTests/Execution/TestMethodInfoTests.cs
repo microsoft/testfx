@@ -1485,53 +1485,33 @@ public class TestMethodInfoTests : TestContainer
             }
         }
 
-        // On .NET Framework, the JIT aggressively inlines small methods in Release mode,
-        // which removes stack frames. NoInlining ensures the method appears in stack traces.
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public async Task DummyTestInitializeMethodAsync() => await TestInitializeMethodBodyAsync(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public async Task DummyTestCleanupMethodAsync() => await TestCleanupMethodBodyAsync(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public void DummyTestMethod() => TestMethodBody(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
             DummyAsyncTestMethodBody();
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public void DummySimpleArgumentsMethod(string str1, string str2) => TestMethodBody(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public void DummyOptionalArgumentsMethod(string str1, string? str2 = null, string? str3 = null) => TestMethodBody(this);
 
-#if NETFRAMEWORK
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public void DummyParamsArgumentMethod(int i, params string[] args) => TestMethodBody(this);
     }
 
