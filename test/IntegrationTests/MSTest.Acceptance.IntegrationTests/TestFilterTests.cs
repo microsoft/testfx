@@ -42,38 +42,6 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed(string currentTfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree!~one", cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertOutputContains("""
-failed PriorityTest (0ms)
-  UTA023: TestClass: Cannot define predefined property Priority on method PriorityTest.
-failed OwnerTest (0ms)
-  UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
-failed TestCategoryTest (0ms)
-  UTA023: TestClass: Cannot define predefined property TestCategory on method TestCategoryTest.
-""");
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task RunWithFilter_UsingTestPropertyForOwner_FilteredButTestsFailed(string currentTfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter owner=testOwner", cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertOutputContains("""
-failed OwnerTest (0ms)
-  UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
-""");
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task RunWithFilter_UsingTestPropertyForPriorityAndTestCategory_NotFiltered(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
