@@ -791,18 +791,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     internal void WriteErrorMessage(string text, int? padding)
-    {
-        TestProgressState asm = GetOrAddAssemblyRun();
-        asm.AddError(text);
-        WriteMessage(text, TerminalColor.DarkRed, padding);
-    }
+        => WriteMessage(text, TerminalColor.DarkRed, padding);
 
     internal void WriteWarningMessage(string text, int? padding)
-    {
-        TestProgressState asm = GetOrAddAssemblyRun();
-        asm.AddWarning(text);
-        WriteMessage(text, TerminalColor.DarkYellow, padding);
-    }
+        => WriteMessage(text, TerminalColor.DarkYellow, padding);
 
     internal void WriteErrorMessage(Exception exception)
         => WriteErrorMessage(exception.ToString(), padding: null);
