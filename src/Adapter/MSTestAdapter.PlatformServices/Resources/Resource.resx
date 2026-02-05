@@ -380,14 +380,8 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_ErrorNonPublicTestClass" xml:space="preserve">
     <value>UTA001: TestClass attribute defined on non-public class {0}</value>
   </data>
-  <data name="UTA_ErrorPredefinedTestProperty" xml:space="preserve">
-    <value>UTA023: {0}: Cannot define predefined property {2} on method {1}.</value>
-  </data>
   <data name="UTA_ErrorTestClassIsGenericNonAbstract" xml:space="preserve">
     <value>TestClass attribute defined on generic non-abstract class {0}</value>
-  </data>
-  <data name="UTA_ErrorTestPropertyNullOrEmpty" xml:space="preserve">
-    <value>UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.</value>
   </data>
   <data name="UTA_ExecuteThrewException" xml:space="preserve">
     <value>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.

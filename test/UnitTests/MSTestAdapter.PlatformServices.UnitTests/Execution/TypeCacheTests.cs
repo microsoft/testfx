@@ -1016,70 +1016,6 @@ public class TypeCacheTests : TestContainer
         (customProperty.Value as string).Should().Be("Me");
     }
 
-    public void GetTestMethodInfoShouldReportWarningIfCustomPropertyHasSameNameAsPredefinedProperties()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithTestCategoryAsCustomProperty")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name,
-            "TestCategory");
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomOwnerPropertyIsDefined()
-    {
-        // Test that [TestProperty("Owner", "value")] is still blocked
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithOwnerAsCustomProperty")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name,
-            "Owner");
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPriorityPropertyIsDefined()
-    {
-        // Test that [TestProperty("Priority", "value")] is still blocked
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithPriorityAsCustomProperty")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name,
-            "Priority");
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
     public void GetTestMethodInfoShouldAllowActualOwnerAttribute()
     {
         // Test that the actual OwnerAttribute is allowed
@@ -1092,8 +1028,7 @@ public class TypeCacheTests : TestContainer
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
 
         testMethodInfo.Should().NotBeNull();
-        // Owner should be allowed - no NotRunnableReason should be set
-        string.IsNullOrEmpty(testMethodInfo.NotRunnableReason).Should().BeTrue();
+
         // The Owner property should be added to the test context
         testContext.TryGetPropertyValue("Owner", out object? ownerValue).Should().BeTrue();
         ownerValue?.ToString().Should().Be("TestOwner");
@@ -1111,53 +1046,10 @@ public class TypeCacheTests : TestContainer
         TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
 
         testMethodInfo.Should().NotBeNull();
-        // Priority should be allowed - no NotRunnableReason should be set
-        string.IsNullOrEmpty(testMethodInfo.NotRunnableReason).Should().BeTrue();
+
         // The Priority property should be added to the test context
         testContext.TryGetPropertyValue("Priority", out object? priorityValue).Should().BeTrue();
         priorityValue?.ToString().Should().Be("1");
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsEmpty()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithEmptyCustomPropertyName")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name);
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
-    }
-
-    public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsNull()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
-            methodInfo.DeclaringType!.FullName!,
-            methodInfo.Name);
-        testMethodInfo.NotRunnableReason.Should().Be(expectedMessage);
     }
 
     public void GetTestMethodInfoShouldNotAddDuplicateTestPropertiesToTestContext()

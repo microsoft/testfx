@@ -299,22 +299,6 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        // If test cannot be executed, then bail out.
-        if (!testMethodInfo.IsRunnable)
-        {
-            {
-                notRunnableResult =
-                [
-                    new TestResult
-                    {
-                        Outcome = UnitTestOutcome.NotRunnable,
-                        IgnoreReason = testMethodInfo.NotRunnableReason,
-                    },
-                ];
-                return false;
-            }
-        }
-
         bool shouldIgnoreClass = testMethodInfo.Parent.ClassType.IsIgnored(out string? ignoreMessageOnClass);
         bool shouldIgnoreMethod = testMethodInfo.MethodInfo.IsIgnored(out string? ignoreMessageOnMethod);
 
