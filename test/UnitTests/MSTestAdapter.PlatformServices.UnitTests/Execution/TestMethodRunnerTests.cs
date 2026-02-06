@@ -244,17 +244,6 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
 
-        int dummyIntData = 2;
-        string dummyStringData = "DummyString";
-        DataRowAttribute dataRowAttribute = new(
-            dummyIntData,
-            dummyStringData);
-
-        var attributes = new Attribute[] { dataRowAttribute };
-
-        // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>())).Returns(attributes);
-
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
         results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
     }
