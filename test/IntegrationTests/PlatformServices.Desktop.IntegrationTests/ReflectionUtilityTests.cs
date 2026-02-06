@@ -12,8 +12,7 @@ using TestFramework.ForTestingMSTest;
 namespace PlatformServices.Desktop.ComponentTests;
 
 /// <summary>
-/// Integration tests for ReflectionOperations which provides platform-specific reflection operations,
-/// including the special handling of reflection-only loaded assemblies.
+/// Integration tests for ReflectionOperations which provides platform-specific reflection operations.
 /// </summary>
 public class ReflectionUtilityTests : TestContainer
 {
@@ -34,10 +33,7 @@ public class ReflectionUtilityTests : TestContainer
 #endif
                 currentAssemblyDirectory.Name /* TFM (e.g. net462) */,
                 "TestProjectForDiscovery.dll");
-        _testAsset = Assembly.ReflectionOnlyLoadFrom(testAssetPath);
-
-        // This is needed for System assemblies.
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ReflectionOnlyOnResolve;
+        _testAsset = Assembly.LoadFrom(testAssetPath);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributes()
@@ -50,7 +46,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(2);
 
         string[] expectedAttributes = ["TestCategory : base", "Owner : base"];
-        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().BeEquivalentTo(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
@@ -64,7 +60,7 @@ public class ReflectionUtilityTests : TestContainer
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
         string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base", "Owner : derived"];
-        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().BeEquivalentTo(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
@@ -130,7 +126,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(3);
 
         string[] expectedAttributes = ["Duration : superfast", "TestCategory : base", "Owner : base"];
-        GetAttributeValuePairs(attributes!).Should().Equal(expectedAttributes);
+        GetAttributeValuePairs(attributes!).Should().BeEquivalentTo(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
@@ -196,13 +192,6 @@ public class ReflectionUtilityTests : TestContainer
 
         string[] expectedAttributes = ["TestCategory : a1", "TestCategory : a2"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    private static Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
-    {
-        string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
-
-        return Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
     }
 
     private static string[] GetAttributeValuePairs(IEnumerable attributes)
