@@ -78,8 +78,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
             .OfType<DiscoverInternalsAttribute>()
             .Any();
 
-        var assemblyUnfoldingStrategyAttribute = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceUnfoldingStrategyAttribute))
-            .OfType<TestDataSourceUnfoldingStrategyAttribute>()
+        var assemblyUnfoldingStrategyAttribute = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
+            .OfType<TestDataSourceOptionsAttribute>()
             .FirstOrDefault();
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = assemblyUnfoldingStrategyAttribute?.UnfoldingStrategy switch
         {

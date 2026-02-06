@@ -137,7 +137,7 @@ internal class TypeEnumerator
         var testElement = new UnitTestElement(testMethod)
         {
             TestCategory = _reflectionOperation.GetTestCategories(method, _type),
-            DoNotParallelize = _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(testMethod)
+            DoNotParallelize = _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(method)
                 || IsAttributeDefined<DoNotParallelizeAttribute>(_type),
             Priority = _reflectionOperation.GetFirstAttributeOrDefault<PriorityAttribute>(method)?.Priority,
 #if !WINDOWS_UWP && !WIN_UI
