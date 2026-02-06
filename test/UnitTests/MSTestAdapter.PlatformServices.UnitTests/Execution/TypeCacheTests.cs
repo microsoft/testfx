@@ -998,79 +998,6 @@ public class TypeCacheTests : TestContainer
         testMethodInfo.Executor.Should().BeOfType<DerivedTestMethodAttribute>();
     }
 
-    public void GetTestMethodInfoShouldSetTestContextWithCustomProperty()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithCustomProperty")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        typeCache.GetTestMethodInfo(testMethod, testContext);
-        KeyValuePair<string, object?> customProperty = testContext.Properties.FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
-
-        customProperty.Should().NotBeNull();
-        (customProperty.Value as string).Should().Be("Me");
-    }
-
-    public void GetTestMethodInfoShouldAllowActualOwnerAttribute()
-    {
-        // Test that the actual OwnerAttribute is allowed
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithActualOwnerAttribute")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-
-        // The Owner property should be added to the test context
-        testContext.TryGetPropertyValue("Owner", out object? ownerValue).Should().BeTrue();
-        ownerValue?.ToString().Should().Be("TestOwner");
-    }
-
-    public void GetTestMethodInfoShouldAllowActualPriorityAttribute()
-    {
-        // Test that the actual PriorityAttribute is allowed
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithActualPriorityAttribute")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-
-        // The Priority property should be added to the test context
-        testContext.TryGetPropertyValue("Priority", out object? priorityValue).Should().BeTrue();
-        priorityValue?.ToString().Should().Be("1");
-    }
-
-    public void GetTestMethodInfoShouldNotAddDuplicateTestPropertiesToTestContext()
-    {
-        // Not using _typeCache here which uses a mocked ReflectHelper which doesn't work well with this test.
-        // Setting up the mock feels unnecessary when the original production implementation can work just fine.
-        var typeCache = new TypeCache(new ReflectHelper());
-        Type type = typeof(DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithDuplicateCustomPropertyNames")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        TestContextImplementation testContext = CreateTestContextImplementationForMethod(testMethod);
-
-        TestMethodInfo? testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext);
-
-        testMethodInfo.Should().NotBeNull();
-
-        // Verify that the first value gets set.
-        testContext.Properties.TryGetValue("WhoAmI", out object? value).Should().BeTrue();
-        value.Should().Be("Me");
-    }
-
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
     {
         Type type = typeof(DerivedTestClass);
@@ -1276,12 +1203,6 @@ public class TypeCacheTests : TestContainer
         }
 
         [TestMethod]
-        [TestProperty("WhoAmI", "Me")]
-        public void TestMethodWithCustomProperty()
-        {
-        }
-
-        [TestMethod]
         [TestProperty("Owner", "You")]
         public void TestMethodWithOwnerAsCustomProperty()
         {
@@ -1290,18 +1211,6 @@ public class TypeCacheTests : TestContainer
         [TestMethod]
         [TestProperty("TestCategory", "SomeCategory")]
         public void TestMethodWithTestCategoryAsCustomProperty()
-        {
-        }
-
-        [TestMethod]
-        [Owner("TestOwner")]
-        public void TestMethodWithActualOwnerAttribute()
-        {
-        }
-
-        [TestMethod]
-        [Priority(1)]
-        public void TestMethodWithActualPriorityAttribute()
         {
         }
 

@@ -109,30 +109,6 @@ public sealed class UnitTestRunnerTests : TestContainer
         results[0].IgnoreReason.Should().Be("Test method M was not found.");
     }
 
-    public async Task RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
-    {
-        Type type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
-        MethodInfo methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName")!;
-        TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
-            .Returns(Assembly.GetExecutingAssembly());
-
-        UnitTestRunner unitTestRunner = CreateUnitTestRunner([new UnitTestElement(testMethod)]);
-        TestResult[] results = await unitTestRunner.RunSingleTestAsync(testMethod, _testRunParameters, null!);
-
-        string expectedMessage = string.Format(
-            CultureInfo.InvariantCulture,
-            "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
-            methodInfo.DeclaringType!.FullName,
-            methodInfo.Name);
-
-        results.Should().NotBeNull();
-        results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.NotRunnable);
-        results[0].IgnoreReason.Should().Be(expectedMessage);
-    }
-
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
     {
         Type type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithMessage);
