@@ -687,7 +687,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodBase? methodBase = null;
+        MethodInfo? testMethodInfo = null;
         try
         {
             // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
@@ -696,22 +696,10 @@ internal sealed class TypeCache : MarshalByRefObject
             // In addition, it also happens when deployment items are used and app domain is disabled.
             // We explicitly set it to null in this case because the original MethodInfo calculated during discovery cannot be used because
             // it points to the type loaded from the assembly in bin instead of from deployment directory.
-            methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+            testMethodInfo = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
         {
-        }
-
-        MethodInfo? testMethodInfo = null;
-        if (methodBase is MethodInfo mi)
-        {
-            testMethodInfo = mi;
-        }
-        else if (methodBase != null)
-        {
-            Type[] parameters = [.. methodBase.GetParameters().Select(i => i.ParameterType)];
-            // TODO: Should we pass true for includeNonPublic?
-            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters, includeNonPublic: true);
         }
 
         return testMethodInfo is null

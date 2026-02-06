@@ -112,7 +112,7 @@ internal static class ManagedNameHelper
     /// More information about <paramref name="managedTypeName"/> and <paramref name="managedMethodName"/> can be found in
     /// <see href="https://github.com/microsoft/vstest/blob/main/docs/RFCs/0017-Managed-TestCase-Properties.md">the RFC</see>.
     /// </remarks>
-    public static MethodBase GetMethod(Assembly assembly, string managedTypeName, string managedMethodName)
+    public static MethodInfo GetMethod(Assembly assembly, string managedTypeName, string managedMethodName)
     {
         Type type = assembly.GetType(managedTypeName, throwOnError: false, ignoreCase: false)
             ?? throw new InvalidManagedNameException();
