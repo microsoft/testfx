@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -13,18 +13,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class TestMethodValidator
 {
-    private readonly ReflectHelper _reflectHelper;
+    private readonly IReflectionOperations _reflectionOperation;
     private readonly bool _discoverInternals;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
     /// </summary>
-    /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
+    /// <param name="reflectionOperation">An instance to reflection helper for type information.</param>
     /// <param name="discoverInternals">True to discover methods which are declared internal in addition to methods
     /// which are declared public.</param>
-    internal TestMethodValidator(ReflectHelper reflectHelper, bool discoverInternals)
+    internal TestMethodValidator(IReflectionOperations reflectionOperation, bool discoverInternals)
     {
-        _reflectHelper = reflectHelper;
+        _reflectionOperation = reflectionOperation;
         _discoverInternals = discoverInternals;
     }
 
@@ -44,7 +44,7 @@ internal class TestMethodValidator
         // but the difference is quite small, and we don't expect a huge amount of non-test methods in the assembly.
         //
         // Also skip all methods coming from object, because they cannot be tests.
-        if (testMethodInfo.DeclaringType == typeof(object) || !_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo))
+        if (testMethodInfo.DeclaringType == typeof(object) || !_reflectionOperation.IsAttributeDefined<TestMethodAttribute>(testMethodInfo))
         {
             return false;
         }
@@ -55,7 +55,7 @@ internal class TestMethodValidator
         // Todo: Decide whether parameter count matters.
         bool isValidTestMethod = isAccessible &&
                                  testMethodInfo is { IsAbstract: false, IsStatic: false } &&
-                                 testMethodInfo.IsValidReturnType(_reflectHelper);
+                                 testMethodInfo.IsValidReturnType(_reflectionOperation);
 
         if (!isValidTestMethod)
         {

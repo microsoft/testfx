@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -18,21 +18,21 @@ internal class TypeEnumerator
     private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
-    private readonly ReflectHelper _reflectHelper;
+    private readonly IReflectionOperations _reflectionOperation;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
     /// </summary>
     /// <param name="type"> The reflected type. </param>
     /// <param name="assemblyFilePath"> The name of the assembly being reflected. </param>
-    /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
+    /// <param name="reflectionOperation"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
+    internal TypeEnumerator(Type type, string assemblyFilePath, IReflectionOperations reflectionOperation, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
-        _reflectHelper = reflectHelper;
+        _reflectionOperation = reflectionOperation;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
     }
@@ -69,7 +69,7 @@ internal class TypeEnumerator
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
         {
-            bool isMethodDeclaredInTestTypeAssembly = _reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, _type);
+            bool isMethodDeclaredInTestTypeAssembly = _reflectionOperation.IsMethodDeclaredInSameAssemblyAsType(method, _type);
             bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
 
             if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
@@ -136,19 +136,19 @@ internal class TypeEnumerator
 
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = _reflectHelper.GetTestCategories(method, _type),
-            DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
-            Priority = _reflectHelper.GetPriority(method),
+            TestCategory = _reflectionOperation.GetTestCategories(method, _type),
+            DoNotParallelize = _reflectionOperation.IsDoNotParallelizeSet(method, _type),
+            Priority = _reflectionOperation.GetPriority(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
-            Traits = [.. _reflectHelper.GetTestPropertiesAsTraits(method)],
+            Traits = [.. _reflectionOperation.GetTestPropertiesAsTraits(method)],
         };
 
-        Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
+        Attribute[] attributes = _reflectionOperation.GetCustomAttributesCached(method);
         TestMethodAttribute? testMethodAttribute = null;
 
-        // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
+        // Backward looping for backcompat. This used to be calls to _reflectionOperation.GetFirstAttributeOrDefault
         // So, to make sure the first attribute always wins, we loop from end to start.
         for (int i = attributes.Length - 1; i >= 0; i--)
         {

@@ -4,9 +4,10 @@
 #if NETFRAMEWORK
 using AwesomeAssertions;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -24,7 +25,7 @@ public class DesktopTestDeploymentTests : TestContainer
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly Mock<FileUtility> _mockFileUtility;
 
 #pragma warning disable IDE0052 // Remove unread private members
@@ -33,7 +34,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public DesktopTestDeploymentTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>();
+        _mockReflectionOperations = new Mock<IReflectionOperations>();
         _mockFileUtility = new Mock<FileUtility>();
         _warnings = [];
 
@@ -129,7 +130,7 @@ public class DesktopTestDeploymentTests : TestContainer
             deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        _mockReflectHelper.Setup(
+        _mockReflectionOperations.Setup(
             ru => ru.GetAttributes<DeploymentItemAttribute>(attributeProvider)).Returns(deploymentItemAttributes);
     }
 
@@ -165,7 +166,7 @@ public class DesktopTestDeploymentTests : TestContainer
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(testRunDirectories.RootDeploymentDirectory);
 
-        var deploymentItemUtility = new DeploymentItemUtility(_mockReflectHelper.Object);
+        var deploymentItemUtility = new DeploymentItemUtility(_mockReflectionOperations.Object);
 
         return new TestDeployment(
             deploymentItemUtility,

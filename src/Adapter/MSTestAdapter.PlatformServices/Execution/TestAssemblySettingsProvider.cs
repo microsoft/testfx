@@ -3,8 +3,8 @@
 
 using System.Security;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -34,7 +34,8 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         // Load the source.
         Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source);
 
-        ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
+        var reflectionOperations = (ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations;
+        ParallelizeAttribute? parallelizeAttribute = reflectionOperations.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)
         {
@@ -47,7 +48,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
+        testAssemblySettings.CanParallelizeAssembly = !reflectionOperations.IsDoNotParallelizeSet(testAssembly);
 
         return testAssemblySettings;
     }

@@ -5,7 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -19,15 +19,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TestPropertyAttributeTests : TestContainer
 {
     private readonly TypeCache _typeCache;
+    private readonly ReflectionOperations _reflectionOperations;
 
     public TestPropertyAttributeTests()
     {
-        _typeCache = new TypeCache(new ReflectHelper());
+        _reflectionOperations = new ReflectionOperations();
+        _typeCache = new TypeCache(_reflectionOperations);
         var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         testablePlatformServiceProvider.MockFileOperations.Setup(x => x.LoadAssembly(It.IsAny<string>())).Returns(GetType().Assembly);
         PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
-        ReflectHelper.Instance.ClearCache();
+        _reflectionOperations.ClearCache();
     }
 
     protected override void Dispose(bool disposing)
@@ -68,7 +70,7 @@ public class TestPropertyAttributeTests : TestContainer
         testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value3).Should().BeTrue();
         value3.Should().Be("DummyTestClassBaseValue2");
 
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
+        TestPlatform.ObjectModel.Trait[] traits = [.. _reflectionOperations.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(3);
         traits[0].Name.Should().Be("TestMethodKeyFromBase");
         traits[0].Value.Should().Be("TestMethodValueFromBase");
@@ -107,7 +109,7 @@ public class TestPropertyAttributeTests : TestContainer
         testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6).Should().BeTrue();
         value6.Should().Be("DummyTestClassBaseValue2");
 
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
+        TestPlatform.ObjectModel.Trait[] traits = [.. _reflectionOperations.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod1Key");
         traits[0].Value.Should().Be("DerivedMethod1Value");
@@ -152,7 +154,7 @@ public class TestPropertyAttributeTests : TestContainer
         testContext.TryGetPropertyValue("DummyTestClassBaseKey2", out object? value6).Should().BeTrue();
         value6.Should().Be("DummyTestClassBaseValue2");
 
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.Instance.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
+        TestPlatform.ObjectModel.Trait[] traits = [.. _reflectionOperations.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod2Key");
         traits[0].Value.Should().Be("DerivedMethod2Value");

@@ -5,7 +5,8 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -18,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
 public partial class TypeEnumeratorTests : TestContainer
 {
-    private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly Mock<TestMethodValidator> _mockTestMethodValidator;
     private readonly Mock<TypeValidator> _mockTypeValidator;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
@@ -28,13 +29,13 @@ public partial class TypeEnumeratorTests : TestContainer
 
     public TypeEnumeratorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>
-        {
-            CallBase = true,
-        };
+        _mockReflectionOperations = new Mock<IReflectionOperations>();
+        _mockReflectionOperations.Setup(r => r.GetTestCategories(It.IsAny<MemberInfo>(), It.IsAny<Type>())).Returns(Array.Empty<string>());
+        _mockReflectionOperations.Setup(r => r.GetTestPropertiesAsTraits(It.IsAny<MemberInfo>())).Returns(Array.Empty<Trait>());
+        _mockReflectionOperations.Setup(r => r.GetCustomAttributesCached(It.IsAny<MemberInfo>())).Returns(Array.Empty<Attribute>());
 
-        _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectHelper.Object);
-        _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _mockReflectHelper.Object, false);
+        _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectionOperations.Object);
+        _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _mockReflectionOperations.Object, false);
         _warnings = [];
         _mockMessageLogger = new Mock<IMessageLogger>();
 
@@ -492,7 +493,7 @@ public partial class TypeEnumeratorTests : TestContainer
             .Returns(isValidTestClass);
         _mockTestMethodValidator.Setup(
             tmv => tmv.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>())).Returns(isValidTestMethod);
-        _mockReflectHelper.Setup(
+        _mockReflectionOperations.Setup(
             rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameAssembly);
     }
 
@@ -500,7 +501,7 @@ public partial class TypeEnumeratorTests : TestContainer
         => new(
             type,
             assemblyName,
-            _mockReflectHelper.Object,
+            _mockReflectionOperations.Object,
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object);
 

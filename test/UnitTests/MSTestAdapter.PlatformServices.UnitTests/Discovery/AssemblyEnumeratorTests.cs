@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
@@ -7,7 +7,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -322,13 +322,13 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 {
     internal TestableAssemblyEnumerator()
     {
-        var reflectHelper = new Mock<ReflectHelper>();
-        var typeValidator = new Mock<TypeValidator>(reflectHelper.Object);
-        var testMethodValidator = new Mock<TestMethodValidator>(reflectHelper.Object, false);
+        var reflectionOperations = new Mock<ReflectionOperations>();
+        var typeValidator = new Mock<TypeValidator>(reflectionOperations.Object);
+        var testMethodValidator = new Mock<TestMethodValidator>(reflectionOperations.Object, false);
         MockTypeEnumerator = new Mock<TypeEnumerator>(
             typeof(DummyTestClass),
             "DummyAssembly",
-            reflectHelper.Object,
+            reflectionOperations.Object,
             typeValidator.Object,
             testMethodValidator.Object);
     }

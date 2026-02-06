@@ -5,8 +5,8 @@ using System.Runtime.Serialization;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
@@ -21,18 +21,20 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
-    private static readonly ReflectHelper ReflectHelper = ReflectHelper.Instance;
+    private readonly ReflectionOperations _reflectionOperations;
 
     /// <summary>
     /// Type cache.
     /// </summary>
-    private readonly TypeCache _typeCache = new(ReflectHelper);
+    private readonly TypeCache _typeCache;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
     /// </summary>
     public AssemblyEnumerator()
     {
+        _reflectionOperations = (ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations;
+        _typeCache = new TypeCache(_reflectionOperations);
     }
 
     /// <summary>
@@ -40,10 +42,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="settings">The settings for the session.</param>
     /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
-    public AssemblyEnumerator(MSTestSettings settings) =>
+    public AssemblyEnumerator(MSTestSettings settings)
+        : this()
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
-        MSTestSettings.PopulateSettings(settings);
+        => MSTestSettings.PopulateSettings(settings);
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -71,16 +74,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
-        bool discoverInternals = ReflectHelper.GetDiscoverInternalsAttribute(assembly) != null;
+        bool discoverInternals = _reflectionOperations.GetDiscoverInternalsAttribute(assembly) != null;
 
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = _reflectionOperations.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
         {
             // When strategy is auto we want to unfold
             TestDataSourceUnfoldingStrategy.Auto => TestDataSourceUnfoldingStrategy.Unfold,
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
-            null => ReflectHelper.GetTestDataSourceDiscoveryOption(assembly) switch
+            null => _reflectionOperations.GetTestDataSourceDiscoveryOption(assembly) switch
             {
                 TestDataSourceDiscoveryOption.DuringExecution => TestDataSourceUnfoldingStrategy.Fold,
                 _ => TestDataSourceUnfoldingStrategy.Unfold,
@@ -142,10 +145,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>a TypeEnumerator instance.</returns>
     internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
     {
-        var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
-        var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
+        var typeValidator = new TypeValidator(_reflectionOperations, discoverInternals);
+        var testMethodValidator = new TestMethodValidator(_reflectionOperations, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
+        return new TypeEnumerator(type, assemblyFileName, _reflectionOperations, typeValidator, testMethodValidator);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
@@ -221,7 +224,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource> testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
+        IEnumerable<ITestDataSource> testDataSources = ((ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations).GetAttributes<Attribute>(testMethodInfo.MethodInfo).OfType<ITestDataSource>();
 
         // We need to use a temporary list to avoid adding tests to the main list if we fail to expand any data source.
         List<UnitTestElement> tempListOfTests = [];

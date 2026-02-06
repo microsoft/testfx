@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,7 +27,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
-    private readonly ReflectHelper _reflectionHelper;
+    private readonly IReflectionOperations _reflectionHelper;
 
     /// <summary>
     /// Assembly info cache.
@@ -44,15 +45,15 @@ internal sealed class TypeCache : MarshalByRefObject
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
     internal TypeCache()
-        : this(ReflectHelper.Instance)
+        : this(PlatformServiceProvider.Instance.ReflectionOperations)
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
-    /// <param name="reflectionHelper"> An instance to the <see cref="ReflectHelper"/> object. </param>
-    internal TypeCache(ReflectHelper reflectionHelper) => _reflectionHelper = reflectionHelper;
+    /// <param name="reflectionHelper"> An instance to the <see cref="IReflectionOperations"/> object. </param>
+    internal TypeCache(IReflectionOperations reflectionHelper) => _reflectionHelper = reflectionHelper;
 
     /// <summary>
     /// Gets Class Info cache which has cleanup methods to execute.
@@ -256,7 +257,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
+        TestClassAttribute? testClassAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -389,7 +390,7 @@ internal sealed class TypeCache : MarshalByRefObject
                             // We want to avoid loading types early as much as we can.
                             bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
                                 methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
-                                methodInfo.IsValidReturnType();
+                                methodInfo.IsValidReturnType(@this._reflectionHelper);
 
                             if (isValid && isGlobalTestInitialize)
                             {
@@ -426,7 +427,7 @@ internal sealed class TypeCache : MarshalByRefObject
             return false;
         }
 
-        if (!methodInfo.HasCorrectClassOrAssemblyInitializeSignature())
+        if (!methodInfo.HasCorrectClassOrAssemblyInitializeSignature(_reflectionHelper))
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyInitializeMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
@@ -454,7 +455,7 @@ internal sealed class TypeCache : MarshalByRefObject
             return false;
         }
 
-        if (!methodInfo.HasCorrectClassOrAssemblyCleanupSignature())
+        if (!methodInfo.HasCorrectClassOrAssemblyCleanupSignature(_reflectionHelper))
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
@@ -571,7 +572,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
-            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature(_reflectionHelper))
             {
                 instanceMethods.Add(methodInfo.Name);
             }
@@ -579,7 +580,7 @@ internal sealed class TypeCache : MarshalByRefObject
             return;
         }
 
-        if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+        if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature(_reflectionHelper))
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
@@ -715,7 +716,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         return testMethodInfo is null
-            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
+            || !testMethodInfo.HasCorrectTestMethodSignature(true, PlatformServiceProvider.Instance.ReflectionOperations, discoverInternals)
             ? null
             : testMethodInfo;
     }
