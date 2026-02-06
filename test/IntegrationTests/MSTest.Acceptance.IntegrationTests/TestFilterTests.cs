@@ -68,9 +68,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
         testHostResult.AssertOutputContains("Running test: CategoryBOnly");
         testHostResult.AssertOutputContains("Running test: CategoryAAndB");
-        // PriorityTest, OwnerTest, and TestCategoryTest are reported as failing.
-        // See the test UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         testHostResult = await testHost.ExecuteAsync("--settings CategoryA.runsettings --filter TestCategory~CategoryA", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains("Running test: CategoryAOnly");
