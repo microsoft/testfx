@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 /// <summary>
@@ -93,43 +91,4 @@ internal interface IReflectionOperations
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <returns>Attributes defined.</returns>
     Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider);
-
-    /// <summary>
-    /// Returns true when the method is declared in the assembly where the type is declared.
-    /// </summary>
-    /// <param name="method">The method to check for.</param>
-    /// <param name="type">The type declared in the assembly to check.</param>
-    /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
-    bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type);
-
-    /// <summary>
-    /// Get categories applied to the test method.
-    /// </summary>
-    /// <param name="categoryAttributeProvider">The member to inspect.</param>
-    /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
-    /// <returns>Categories defined.</returns>
-    string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType);
-
-    /// <summary>
-    /// Get the parallelization behavior for a test method.
-    /// </summary>
-    /// <param name="testMethod">Test method.</param>
-    /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
-    /// <returns>True if test method should not run in parallel.</returns>
-    bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType);
-
-    /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="priorityAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    int? GetPriority(MemberInfo priorityAttributeProvider);
-
-    /// <summary>
-    /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
-    /// </summary>
-    /// <param name="testPropertyProvider">The member to inspect.</param>
-    /// <returns>List of traits.</returns>
-    Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider);
 }

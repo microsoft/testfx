@@ -35,7 +35,9 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
         Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source);
 
         var reflectionOperations = (ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations;
-        ParallelizeAttribute? parallelizeAttribute = reflectionOperations.GetParallelizeAttribute(testAssembly);
+        ParallelizeAttribute? parallelizeAttribute = reflectionOperations.GetCustomAttributes(testAssembly, typeof(ParallelizeAttribute))
+            .OfType<ParallelizeAttribute>()
+            .FirstOrDefault();
 
         if (parallelizeAttribute != null)
         {
@@ -48,7 +50,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !reflectionOperations.IsDoNotParallelizeSet(testAssembly);
+        testAssemblySettings.CanParallelizeAssembly = !reflectionOperations.GetCustomAttributes(testAssembly, typeof(DoNotParallelizeAttribute)).Length != 0;
 
         return testAssemblySettings;
     }

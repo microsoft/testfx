@@ -69,7 +69,7 @@ internal class TypeEnumerator
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
         {
-            bool isMethodDeclaredInTestTypeAssembly = _reflectionOperation.IsMethodDeclaredInSameAssemblyAsType(method, _type);
+            bool isMethodDeclaredInTestTypeAssembly = method.DeclaringType!.Assembly.Equals(_type.Assembly); // TODO: Investigate if we rely on NRE;
             bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
 
             if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
@@ -137,8 +137,9 @@ internal class TypeEnumerator
         var testElement = new UnitTestElement(testMethod)
         {
             TestCategory = _reflectionOperation.GetTestCategories(method, _type),
-            DoNotParallelize = _reflectionOperation.IsDoNotParallelizeSet(method, _type),
-            Priority = _reflectionOperation.GetPriority(method),
+            DoNotParallelize = _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(testMethod)
+                || IsAttributeDefined<DoNotParallelizeAttribute>(_type),
+            Priority = _reflectionOperation.GetFirstAttributeOrDefault<PriorityAttribute>(method)?.Priority,
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif

@@ -74,16 +74,21 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
         Type[] types = GetTypes(assembly);
-        bool discoverInternals = _reflectionOperations.GetDiscoverInternalsAttribute(assembly) != null;
+        bool discoverInternals = _reflectionOperations.GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
+            .OfType<DiscoverInternalsAttribute>()
+            .Any();
 
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = _reflectionOperations.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
+        var assemblyUnfoldingStrategyAttribute = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceUnfoldingStrategyAttribute))
+            .OfType<TestDataSourceUnfoldingStrategyAttribute>()
+            .FirstOrDefault();
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = assemblyUnfoldingStrategyAttribute?.UnfoldingStrategy switch
         {
             // When strategy is auto we want to unfold
             TestDataSourceUnfoldingStrategy.Auto => TestDataSourceUnfoldingStrategy.Unfold,
             // When strategy is set, let's use it
             { } value => value,
             // When the attribute is not set, let's look at the legacy attribute
-            null => _reflectionOperations.GetTestDataSourceDiscoveryOption(assembly) switch
+            null => _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute)).OfType<TestDataSourceDiscoveryAttribute>().FirstOrDefault()?.DiscoveryOption switch
             {
                 TestDataSourceDiscoveryOption.DuringExecution => TestDataSourceUnfoldingStrategy.Fold,
                 _ => TestDataSourceUnfoldingStrategy.Unfold,

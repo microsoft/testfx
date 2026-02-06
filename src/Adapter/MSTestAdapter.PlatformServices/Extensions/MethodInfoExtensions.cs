@@ -95,8 +95,8 @@ internal static class MethodInfoExtensions
     /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method, IReflectionOperations reflectionOperation)
-        => ReflectionOperations.MatchReturnType(method, typeof(Task))
-        || (ReflectionOperations.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectionOperation) == null)
+        => method.ReturnType.Equals(typeof(Task))
+        || (method.ReturnType.Equals(typeof(void)) && method.GetAsyncTypeName(reflectionOperation) == null)
         // Keep this the last check, as it avoids loading System.Threading.Tasks.Extensions unnecessarily.
         || method.IsValueTask();
 
@@ -106,7 +106,7 @@ internal static class MethodInfoExtensions
     // Even when invokeResult is null or Task.
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool IsValueTask(this MethodInfo method)
-        => ReflectionOperations.MatchReturnType(method, typeof(ValueTask));
+        => method.ReturnType.Equals(typeof(ValueTask));
 
     /// <summary>
     /// For async methods compiler generates different type and method.

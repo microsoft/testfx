@@ -30,8 +30,6 @@ public partial class TypeEnumeratorTests : TestContainer
     public TypeEnumeratorTests()
     {
         _mockReflectionOperations = new Mock<IReflectionOperations>();
-        _mockReflectionOperations.Setup(r => r.GetTestCategories(It.IsAny<MemberInfo>(), It.IsAny<Type>())).Returns(Array.Empty<string>());
-        _mockReflectionOperations.Setup(r => r.GetTestPropertiesAsTraits(It.IsAny<MemberInfo>())).Returns(Array.Empty<Trait>());
         _mockReflectionOperations.Setup(r => r.GetCustomAttributesCached(It.IsAny<MemberInfo>())).Returns(Array.Empty<Attribute>());
 
         _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectionOperations.Object);

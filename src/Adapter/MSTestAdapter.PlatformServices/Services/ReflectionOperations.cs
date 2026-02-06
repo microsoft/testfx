@@ -5,7 +5,6 @@ using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -193,162 +192,6 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     }
 
     /// <summary>
-    /// Match return type of method.
-    /// </summary>
-    /// <param name="method">The method to inspect.</param>
-    /// <param name="returnType">The return type to match.</param>
-    /// <returns>True if there is a match.</returns>
-    internal static bool MatchReturnType(MethodInfo method, Type returnType)
-    {
-        Ensure.NotNull(method);
-        Ensure.NotNull(returnType);
-        return method.ReturnType.Equals(returnType);
-    }
-
-    /// <summary>
-    /// Gets the parallelization level set on an assembly.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    /// <returns> The parallelization level if set. -1 otherwise. </returns>
-    internal ParallelizeAttribute? GetParallelizeAttribute(Assembly assembly)
-        => GetCustomAttributes(assembly, typeof(ParallelizeAttribute))
-            .OfType<ParallelizeAttribute>()
-            .FirstOrDefault();
-
-    /// <summary>
-    /// Gets discover internals assembly level attribute.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    internal DiscoverInternalsAttribute? GetDiscoverInternalsAttribute(Assembly assembly)
-        => GetCustomAttributes(assembly, typeof(DiscoverInternalsAttribute))
-            .OfType<DiscoverInternalsAttribute>()
-            .FirstOrDefault();
-
-    /// <summary>
-    /// Gets TestDataSourceDiscovery assembly level attribute.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    internal TestDataSourceDiscoveryOption? GetTestDataSourceDiscoveryOption(Assembly assembly)
-        => GetCustomAttributes(assembly, typeof(TestDataSourceDiscoveryAttribute))
-            .OfType<TestDataSourceDiscoveryAttribute>()
-            .FirstOrDefault()?.DiscoveryOption;
-
-    /// <summary>
-    /// Gets TestDataSourceOptions assembly level attribute.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    /// <returns> The TestDataSourceOptionsAttribute if set. Null otherwise. </returns>
-    internal TestDataSourceOptionsAttribute? GetTestDataSourceOptions(Assembly assembly)
-        => GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
-            .OfType<TestDataSourceOptionsAttribute>()
-            .FirstOrDefault();
-
-    /// <summary>
-    /// Get the parallelization behavior for a test assembly.
-    /// </summary>
-    /// <param name="assembly">The test assembly.</param>
-    /// <returns>True if test assembly should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(Assembly assembly)
-        => GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
-            .Length != 0;
-
-    /// <summary>
-    /// Returns true when the method is declared in the assembly where the type is declared.
-    /// </summary>
-    /// <param name="method">The method to check for.</param>
-    /// <param name="type">The type declared in the assembly to check.</param>
-    /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
-    public bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.Assembly.Equals(type.Assembly); // TODO: Investigate if we rely on NRE
-
-    /// <summary>
-    /// Get categories applied to the test method.
-    /// </summary>
-    /// <param name="categoryAttributeProvider">The member to inspect.</param>
-    /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
-    /// <returns>Categories defined.</returns>
-    public string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
-    {
-        IEnumerable<TestCategoryBaseAttribute> methodCategories = GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider);
-        IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType);
-        IEnumerable<TestCategoryBaseAttribute> assemblyCategories = GetAttributes<TestCategoryBaseAttribute>(owningType.Assembly);
-
-        return [.. methodCategories.Concat(typeCategories).Concat(assemblyCategories).SelectMany(c => c.TestCategories)];
-    }
-
-    /// <summary>
-    /// Get the parallelization behavior for a test method.
-    /// </summary>
-    /// <param name="testMethod">Test method.</param>
-    /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
-    /// <returns>True if test method should not run in parallel.</returns>
-    public bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-        => IsAttributeDefined<DoNotParallelizeAttribute>(testMethod)
-        || IsAttributeDefined<DoNotParallelizeAttribute>(owningType);
-
-    /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="priorityAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    public int? GetPriority(MemberInfo priorityAttributeProvider) =>
-        GetFirstAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider)?.Priority;
-
-    /// <summary>
-    /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
-    /// </summary>
-    /// <param name="testPropertyProvider">The member to inspect.</param>
-    /// <returns>List of traits.</returns>
-    public Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
-    {
-        Attribute[] attributesFromMethod = GetCustomAttributesCached(testPropertyProvider);
-        Attribute[] attributesFromClass = testPropertyProvider.ReflectedType is { } testClass ? GetCustomAttributesCached(testClass) : [];
-        int countTestPropertyAttribute = 0;
-        foreach (Attribute attribute in attributesFromMethod)
-        {
-            if (attribute is TestPropertyAttribute)
-            {
-                countTestPropertyAttribute++;
-            }
-        }
-
-        foreach (Attribute attribute in attributesFromClass)
-        {
-            if (attribute is TestPropertyAttribute)
-            {
-                countTestPropertyAttribute++;
-            }
-        }
-
-        if (countTestPropertyAttribute == 0)
-        {
-            // This is the common case that we optimize for. This method used to be an iterator (uses yield return) which is allocating unnecessarily in common cases.
-            return [];
-        }
-
-        var traits = new Trait[countTestPropertyAttribute];
-        int index = 0;
-        foreach (Attribute attribute in attributesFromMethod)
-        {
-            if (attribute is TestPropertyAttribute testProperty)
-            {
-                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
-            }
-        }
-
-        foreach (Attribute attribute in attributesFromClass)
-        {
-            if (attribute is TestPropertyAttribute testProperty)
-            {
-                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
-            }
-        }
-
-        return traits;
-    }
-
-    /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
     /// </summary>
     /// <typeparam name="TAttributeType">The attribute type.</typeparam>
@@ -367,29 +210,6 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
             if (attribute is TAttributeType attributeAsAttributeType)
             {
                 yield return attributeAsAttributeType;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Get attribute defined on a method which is of given type of subtype of given type.
-    /// </summary>
-    /// <typeparam name="TAttributeType">The attribute type.</typeparam>
-    /// <typeparam name="TState">The type of state to be passed to Action.</typeparam>
-    /// <param name="attributeProvider">The member to inspect.</param>
-    /// <param name="action">The action to perform.</param>
-    /// <param name="state">The state to pass to action.</param>
-    internal void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
-        where TAttributeType : Attribute
-    {
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, "ReflectionOperations.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttributeType attributeAsAttributeType)
-            {
-                action(attributeAsAttributeType, state);
             }
         }
     }
