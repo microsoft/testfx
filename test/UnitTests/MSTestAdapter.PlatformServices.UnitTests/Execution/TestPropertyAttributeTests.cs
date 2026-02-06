@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -43,12 +42,6 @@ public class TestPropertyAttributeTests : TestContainer
     }
 
     #region GetTestMethodInfo tests
-
-    private static TestContextImplementation CreateTestContextImplementationForMethod(TestMethod testMethod)
-        => new(testMethod, null, new Dictionary<string, object?>(), null, null);
-
-    private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName, string? displayName)
-        => new(className, methodName, null, methodName, className, assemblyName, displayName, null);
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {

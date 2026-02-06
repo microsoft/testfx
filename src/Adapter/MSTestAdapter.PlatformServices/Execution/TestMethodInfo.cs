@@ -67,16 +67,6 @@ internal class TestMethodInfo : ITestMethod
     public bool IsTimeoutSet => TimeoutInfo.Timeout != TimeoutWhenNotSet;
 
     /// <summary>
-    /// Gets or sets the reason why the test is not runnable.
-    /// </summary>
-    public string? NotRunnableReason { get; internal set; }
-
-    /// <summary>
-    /// Gets a value indicating whether test is runnable.
-    /// </summary>
-    public bool IsRunnable => StringEx.IsNullOrEmpty(NotRunnableReason);
-
-    /// <summary>
     /// Gets the parameter types of the test method.
     /// </summary>
     public ParameterInfo[] ParameterTypes => MethodInfo.GetParameters();

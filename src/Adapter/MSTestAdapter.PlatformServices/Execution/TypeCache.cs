@@ -20,11 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal sealed class TypeCache : MarshalByRefObject
 {
     /// <summary>
-    /// Predefined test Attribute names.
-    /// </summary>
-    private static readonly string[] PredefinedNames = ["Priority", "TestCategory", "Owner"];
-
-    /// <summary>
     /// Helper for reflection API's.
     /// </summary>
     private readonly IReflectionOperations _reflectionHelper;
@@ -645,11 +640,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
-        var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testContext);
-
-        SetCustomProperties(testMethodInfo, testContext);
-
-        return testMethodInfo;
+        return new TestMethodInfo(methodInfo, testClassInfo, testContext);
     }
 
     private DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)
@@ -688,7 +679,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodBase? methodBase = null;
+        MethodInfo? testMethodInfo = null;
         try
         {
             // testMethod.MethodInfo can be null if 'TestMethod' instance crossed app domain boundaries.
@@ -697,114 +688,15 @@ internal sealed class TypeCache : MarshalByRefObject
             // In addition, it also happens when deployment items are used and app domain is disabled.
             // We explicitly set it to null in this case because the original MethodInfo calculated during discovery cannot be used because
             // it points to the type loaded from the assembly in bin instead of from deployment directory.
-            methodBase = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+            testMethodInfo = testMethod.MethodInfo ?? ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
         }
         catch (InvalidManagedNameException)
         {
-        }
-
-        MethodInfo? testMethodInfo = null;
-        if (methodBase is MethodInfo mi)
-        {
-            testMethodInfo = mi;
-        }
-        else if (methodBase != null)
-        {
-            Type[] parameters = [.. methodBase.GetParameters().Select(i => i.ParameterType)];
-            // TODO: Should we pass true for includeNonPublic?
-            testMethodInfo = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethod(methodBase.DeclaringType!, methodBase.Name, parameters, includeNonPublic: true);
         }
 
         return testMethodInfo is null
             || !testMethodInfo.HasCorrectTestMethodSignature(true, PlatformServiceProvider.Instance.ReflectionOperations, discoverInternals)
             ? null
             : testMethodInfo;
-    }
-
-    /// <summary>
-    /// Set custom properties.
-    /// </summary>
-    /// <param name="testMethodInfo"> The test Method Info. </param>
-    /// <param name="testContext"> The test Context. </param>
-    private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
-    {
-        DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
-        DebugEx.Assert(testMethodInfo.MethodInfo != null, "testMethodInfo.TestMethod is Null");
-
-        // Avoid calling GetAttributes<T> to prevent iterator state machine allocations.
-        _ = ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.MethodInfo), testMethodInfo, testContext) &&
-            ValidateAttributes(_reflectionHelper.GetCustomAttributesCached(testMethodInfo.Parent.ClassType), testMethodInfo, testContext);
-
-        static bool ValidateAttributes(Attribute[] attributes, TestMethodInfo testMethodInfo, ITestContext testContext)
-        {
-            foreach (Attribute attribute in attributes)
-            {
-                if (attribute is not TestPropertyAttribute testPropertyAttribute)
-                {
-                    continue;
-                }
-
-                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, testPropertyAttribute.Name, testPropertyAttribute.Value, isPredefinedAttribute: attribute is OwnerAttribute or PriorityAttribute))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// Validates If a Custom test property is valid and then adds it to the TestContext property list.
-    /// </summary>
-    /// <param name="testMethodInfo"> The test method info. </param>
-    /// <param name="testContext"> The test context. </param>
-    /// <param name="propertyName"> The property name. </param>
-    /// <param name="propertyValue"> The property value. </param>
-    /// <param name="isPredefinedAttribute"> If the property originates from a predefined attribute. </param>
-    /// <returns> True if its a valid Test Property. </returns>
-    private static bool ValidateAndAssignTestProperty(
-        TestMethodInfo testMethodInfo,
-        ITestContext testContext,
-        string propertyName,
-        string propertyValue,
-        bool isPredefinedAttribute)
-    {
-        if (!isPredefinedAttribute && PredefinedNames.Any(predefinedProp => predefinedProp == propertyName))
-        {
-            testMethodInfo.NotRunnableReason = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ErrorPredefinedTestProperty,
-                testMethodInfo.MethodInfo.DeclaringType!.FullName,
-                testMethodInfo.MethodInfo.Name,
-                propertyName);
-
-            return false;
-        }
-
-        if (StringEx.IsNullOrEmpty(propertyName))
-        {
-            testMethodInfo.NotRunnableReason = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_ErrorTestPropertyNullOrEmpty,
-                testMethodInfo.MethodInfo.DeclaringType!.FullName,
-                testMethodInfo.MethodInfo.Name);
-
-            return false;
-        }
-
-        if (testContext.TryGetPropertyValue(propertyName, out object? existingValue))
-        {
-            // Do not add to the test context because it would conflict with an already existing value.
-            // We were at one point reporting a warning here. However with extensibility centered around TestProperty where
-            // users can have multiple WorkItemAttributes(say) we cannot throw a warning here. Users would have multiple of these attributes
-            // so that it shows up in reporting rather than seeing them in TestContext properties.
-        }
-        else
-        {
-            testContext.AddProperty(propertyName, propertyValue);
-        }
-
-        return true;
     }
 }

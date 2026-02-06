@@ -1390,12 +1390,6 @@ public class TypeCacheTests : TestContainer
         }
 
         [TestMethod]
-        [TestProperty("WhoAmI", "Me")]
-        public void TestMethodWithCustomProperty()
-        {
-        }
-
-        [TestMethod]
         [TestProperty("Owner", "You")]
         public void TestMethodWithOwnerAsCustomProperty()
         {
@@ -1404,18 +1398,6 @@ public class TypeCacheTests : TestContainer
         [TestMethod]
         [TestProperty("TestCategory", "SomeCategory")]
         public void TestMethodWithTestCategoryAsCustomProperty()
-        {
-        }
-
-        [TestMethod]
-        [Owner("TestOwner")]
-        public void TestMethodWithActualOwnerAttribute()
-        {
-        }
-
-        [TestMethod]
-        [Priority(1)]
-        public void TestMethodWithActualPriorityAttribute()
         {
         }
 
