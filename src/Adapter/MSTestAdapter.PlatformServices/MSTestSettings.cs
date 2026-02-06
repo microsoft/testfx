@@ -65,7 +65,7 @@ internal sealed class MSTestSettings
         TestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
-        LaunchDebuggerOnFailure = false;
+        LaunchDebuggerOnAssertionFailure = DebuggerLaunchMode.Disabled;
     }
 
     /// <summary>
@@ -187,9 +187,9 @@ internal sealed class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether to launch the debugger when an assertion fails.
+    /// Gets a value specifying when to launch the debugger on assertion failure.
     /// </summary>
-    internal bool LaunchDebuggerOnFailure { get; private set; }
+    internal DebuggerLaunchMode LaunchDebuggerOnAssertionFailure { get; private set; }
 
     /// <summary>
     /// Populate settings based on existing settings object.
@@ -216,7 +216,7 @@ internal sealed class MSTestSettings
         CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
-        CurrentSettings.LaunchDebuggerOnFailure = settings.LaunchDebuggerOnFailure;
+        CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
     }
 
 #if !WINDOWS_UWP
@@ -663,16 +663,21 @@ internal sealed class MSTestSettings
                             break;
                         }
 
-                    case "LAUNCHDEBUGGERONFAILURE":
+                    case "LAUNCHDEBUGGERONASSERTIONFAILURE":
                         {
                             string value = reader.ReadInnerXml();
+                            // Support backward compatibility with boolean values
                             if (bool.TryParse(value, out result))
                             {
-                                settings.LaunchDebuggerOnFailure = result;
+                                settings.LaunchDebuggerOnAssertionFailure = result ? DebuggerLaunchMode.Enabled : DebuggerLaunchMode.Disabled;
+                            }
+                            else if (TryParseEnum(value, out DebuggerLaunchMode mode))
+                            {
+                                settings.LaunchDebuggerOnAssertionFailure = mode;
                             }
                             else
                             {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "LaunchDebuggerOnFailure"));
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "LaunchDebuggerOnAssertionFailure"));
                             }
 
                             break;
@@ -805,6 +810,28 @@ internal sealed class MSTestSettings
         }
     }
 
+    private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        // Support backward compatibility with boolean values
+        if (bool.TryParse(value, out bool boolResult))
+        {
+            setSetting(boolResult ? DebuggerLaunchMode.Enabled : DebuggerLaunchMode.Disabled);
+        }
+        else if (TryParseEnum(value, out DebuggerLaunchMode mode))
+        {
+            setSetting(mode);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
     private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -856,7 +883,7 @@ internal sealed class MSTestSettings
         //      "mapNotRunnableToFailed" : true/false
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
-        //      "launchDebuggerOnFailure" : true/false
+        //      "launchDebuggerOnAssertionFailure" : "disabled"/"enabled"/"enabledExcludingCI" (or true/false for backward compatibility)
         //  }
         //  ... remaining settings
         // }
@@ -871,7 +898,7 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
-        ParseBooleanSetting(configuration, "execution:launchDebuggerOnFailure", logger, value => settings.LaunchDebuggerOnFailure = value);
+        ParseDebuggerLaunchModeSetting(configuration, "execution:launchDebuggerOnAssertionFailure", logger, value => settings.LaunchDebuggerOnAssertionFailure = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);

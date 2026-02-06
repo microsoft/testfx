@@ -48,7 +48,7 @@ internal class TestExecutionManager
     /// Initializes a new instance of the <see cref="TestExecutionManager"/> class.
     /// </summary>
     public TestExecutionManager()
-        : this(new EnvironmentWrapper())
+        : this(EnvironmentWrapper.Instance)
     {
     }
 

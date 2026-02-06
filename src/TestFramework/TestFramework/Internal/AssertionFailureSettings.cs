@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal static class AssertionFailureSettings
 {
     /// <summary>
-    /// Gets or sets a value indicating whether to launch the debugger when an assertion fails.
+    /// Gets or sets a value specifying when to launch the debugger on assertion failure.
     /// </summary>
-    public static bool LaunchDebuggerOnFailure { get; set; }
+    public static DebuggerLaunchMode LaunchDebuggerOnAssertionFailure { get; set; }
 }

@@ -49,7 +49,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         MSTestSettings.PopulateSettings(settings);
 
         // Bridge the adapter setting to the TestFramework for assertion failure behavior.
-        AssertionFailureSettings.LaunchDebuggerOnFailure = MSTestSettings.CurrentSettings.LaunchDebuggerOnFailure;
+        AssertionFailureSettings.LaunchDebuggerOnAssertionFailure = MSTestSettings.CurrentSettings.LaunchDebuggerOnAssertionFailure;
 
         Logger.OnLogMessage += message => TestContextImplementation.CurrentTestContext?.WriteConsoleOut(message);
         if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
