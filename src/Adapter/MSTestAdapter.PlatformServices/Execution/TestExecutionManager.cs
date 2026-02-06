@@ -486,7 +486,7 @@ internal class TestExecutionManager
 
             // Run single test passing test context properties to it.
             IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
-            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
+            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters, unitTestElement);
 
             TestTools.UnitTesting.TestResult[] unitTestResult;
             if (usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
@@ -522,24 +522,31 @@ internal class TestExecutionManager
     /// </summary>
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
+    /// <param name="unitTestElement">The unit test element to get properties from.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
         IDictionary<TestProperty, object?>? tcmProperties,
-        IDictionary<string, object> sourceLevelParameters)
+        IDictionary<string, object> sourceLevelParameters,
+        UnitTestElement unitTestElement)
     {
-        if (tcmProperties is null)
+        // If we only have sourceLevelParameters, we create a new dictionary with just those.
+        if (tcmProperties is null &&
+            unitTestElement.Traits is null or { Length: 0 } &&
+            unitTestElement.TestCategory is null or { Length: 0 })
         {
             return [with(sourceLevelParameters!)];
         }
 
-        // This dictionary will have *at least* 8 entries. Those are the sourceLevelParameters
-        // which were originally calculated from TestDeployment.GetDeploymentInformation.
-        var testContextProperties = new Dictionary<string, object?>(capacity: 8);
+        // To avoid any resizes and additional overhead, we calculate the capacity beforehand.
+        var testContextProperties = new Dictionary<string, object?>(capacity: sourceLevelParameters.Count + (tcmProperties?.Count ?? 0) + (unitTestElement.Traits?.Length ?? 0) + (unitTestElement.TestCategory?.Length ?? 0));
 
         // Add tcm properties.
-        foreach ((TestProperty key, object? value) in tcmProperties)
+        if (tcmProperties is not null)
         {
-            testContextProperties[key.Id] = value;
+            foreach ((TestProperty key, object? value) in tcmProperties)
+            {
+                testContextProperties[key.Id] = value;
+            }
         }
 
         // Add source level parameters.
@@ -548,7 +555,52 @@ internal class TestExecutionManager
             testContextProperties[key] = value;
         }
 
+        if (unitTestElement.Traits is { Length: > 0 })
+        {
+            foreach (Trait trait in unitTestElement.Traits)
+            {
+                ValidateAndAssignTestProperty(testContextProperties, trait.Name, trait.Value);
+            }
+        }
+
+        if (unitTestElement.TestCategory is { Length: > 0 })
+        {
+            foreach (string category in unitTestElement.TestCategory)
+            {
+                ValidateAndAssignTestProperty(testContextProperties, category, string.Empty);
+            }
+        }
+
         return testContextProperties;
+    }
+
+    /// <summary>
+    /// Validates If a Custom test property is valid and then adds it to the TestContext property list.
+    /// </summary>
+    /// <param name="testContextProperties"> The test context properties. </param>
+    /// <param name="propertyName"> The property name. </param>
+    /// <param name="propertyValue"> The property value. </param>
+    private static void ValidateAndAssignTestProperty(
+        Dictionary<string, object?> testContextProperties,
+        string propertyName,
+        string propertyValue)
+    {
+        if (StringEx.IsNullOrEmpty(propertyName))
+        {
+            return;
+        }
+
+        if (testContextProperties.ContainsKey(propertyName))
+        {
+            // Do not add to the test context because it would conflict with an already existing value.
+            // We were at one point reporting a warning here. However with extensibility centered around TestProperty where
+            // users can have multiple WorkItemAttributes(say) we cannot throw a warning here. Users would have multiple of these attributes
+            // so that it shows up in reporting rather than seeing them in TestContext properties.
+        }
+        else
+        {
+            testContextProperties.Add(propertyName, propertyValue);
+        }
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
