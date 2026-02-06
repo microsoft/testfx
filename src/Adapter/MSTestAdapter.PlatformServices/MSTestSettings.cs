@@ -666,12 +666,7 @@ internal sealed class MSTestSettings
                     case "LAUNCHDEBUGGERONASSERTIONFAILURE":
                         {
                             string value = reader.ReadInnerXml();
-                            // Support backward compatibility with boolean values
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.LaunchDebuggerOnAssertionFailure = result ? DebuggerLaunchMode.Enabled : DebuggerLaunchMode.Disabled;
-                            }
-                            else if (TryParseEnum(value, out DebuggerLaunchMode mode))
+                            if (TryParseEnum(value, out DebuggerLaunchMode mode))
                             {
                                 settings.LaunchDebuggerOnAssertionFailure = mode;
                             }
@@ -817,12 +812,7 @@ internal sealed class MSTestSettings
             return;
         }
 
-        // Support backward compatibility with boolean values
-        if (bool.TryParse(value, out bool boolResult))
-        {
-            setSetting(boolResult ? DebuggerLaunchMode.Enabled : DebuggerLaunchMode.Disabled);
-        }
-        else if (TryParseEnum(value, out DebuggerLaunchMode mode))
+        if (TryParseEnum(value, out DebuggerLaunchMode mode))
         {
             setSetting(mode);
         }
