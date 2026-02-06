@@ -25,15 +25,11 @@ public abstract class TestContext
     /// it returns <see langword="null"/>.
     /// </remarks>
     [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
-    public static TestContext? Current => CurrentContext.Value;
-
-    /// <summary>
-    /// Sets the current <see cref="TestContext"/> for the async context.
-    /// </summary>
-    /// <param name="testContext">The test context to set, or <see langword="null"/> to clear.</param>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static void SetCurrentContext(TestContext? testContext)
-        => CurrentContext.Value = testContext;
+    public static TestContext? Current
+    {
+        get => CurrentContext.Value;
+        internal set => CurrentContext.Value = value;
+    }
 
     internal static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
     internal static readonly string TestNameLabel = nameof(TestName);
