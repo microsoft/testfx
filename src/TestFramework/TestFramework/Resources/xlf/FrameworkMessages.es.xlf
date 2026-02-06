@@ -458,6 +458,11 @@ Real: {2}</target>
         <target state="translated">CollectionAssert.ReferenceEquals no se debe usar para las aserciones. Use los métodos CollectionAssert o las sobrecargas Assert.AreSame &amp; en su lugar.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope:</source>
+        <target state="new">{0} assertion(s) failed within the assert scope:</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

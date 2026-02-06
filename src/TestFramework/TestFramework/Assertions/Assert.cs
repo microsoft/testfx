@@ -37,8 +37,19 @@ public sealed partial class Assert
     [DoesNotReturn]
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+    {
+        var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+        AssertScope? scope = AssertScope.Current;
+        if (scope is not null)
+        {
+            scope.AddError(assertionFailedException);
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return.
+            return;
+#pragma warning restore CS8763 // A method marked [DoesNotReturn] should not return.
+        }
+
+        throw assertionFailedException;
+    }
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.

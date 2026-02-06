@@ -458,6 +458,11 @@ Rzeczywiste: {2}</target>
         <target state="translated">Element Assert.ReferenceEquals nie powinien być używany dla asercji. Zamiast tego użyj metod CollectionAssert lub Assert.AreSame oraz ich przeciążeń.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope:</source>
+        <target state="new">{0} assertion(s) failed within the assert scope:</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
