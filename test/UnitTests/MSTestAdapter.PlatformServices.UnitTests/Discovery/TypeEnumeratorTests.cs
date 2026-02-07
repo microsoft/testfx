@@ -491,8 +491,6 @@ public partial class TypeEnumeratorTests : TestContainer
             .Returns(isValidTestClass);
         _mockTestMethodValidator.Setup(
             tmv => tmv.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>())).Returns(isValidTestMethod);
-        _mockReflectionOperations.Setup(
-            rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameAssembly);
     }
 
     private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
