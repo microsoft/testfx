@@ -50,7 +50,7 @@ internal sealed class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !reflectionOperations.GetCustomAttributes(testAssembly, typeof(DoNotParallelizeAttribute)).Length != 0;
+        testAssemblySettings.CanParallelizeAssembly = reflectionOperations.GetCustomAttributes(testAssembly, typeof(DoNotParallelizeAttribute)).Length == 0;
 
         return testAssemblySettings;
     }

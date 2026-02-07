@@ -138,7 +138,7 @@ internal class TypeEnumerator
         {
             TestCategory = _reflectionOperation.GetTestCategories(method, _type),
             DoNotParallelize = _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(method)
-                || IsAttributeDefined<DoNotParallelizeAttribute>(_type),
+                || _reflectionOperation.IsAttributeDefined<DoNotParallelizeAttribute>(_type),
             Priority = _reflectionOperation.GetFirstAttributeOrDefault<PriorityAttribute>(method)?.Priority,
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
