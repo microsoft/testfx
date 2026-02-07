@@ -5,8 +5,8 @@ using System.Runtime.Serialization;
 using System.Security;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
@@ -70,7 +70,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
-        var tests = new List<UnitTestElement>();
+        List<UnitTestElement> tests = [];
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
@@ -79,7 +79,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             .OfType<DiscoverInternalsAttribute>()
             .Any();
 
-        var assemblyUnfoldingStrategyAttribute = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
+        TestDataSourceOptionsAttribute? assemblyUnfoldingStrategyAttribute = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestDataSourceOptionsAttribute))
             .OfType<TestDataSourceOptionsAttribute>()
             .FirstOrDefault();
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = assemblyUnfoldingStrategyAttribute?.UnfoldingStrategy switch
@@ -165,7 +165,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy)
     {
         string? typeFullName = null;
-        var tests = new List<UnitTestElement>();
+        List<UnitTestElement> tests = [];
 
         try
         {
