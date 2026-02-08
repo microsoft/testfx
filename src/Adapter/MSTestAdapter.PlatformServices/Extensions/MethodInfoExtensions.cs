@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -14,8 +15,9 @@ internal static class MethodInfoExtensions
     /// Verifies that the class initialize has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
+    /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <returns>True if the method has the right Assembly/Class initialize signature.</returns>
-    internal static bool HasCorrectClassOrAssemblyInitializeSignature(this MethodInfo method)
+    internal static bool HasCorrectClassOrAssemblyInitializeSignature(this MethodInfo method, IReflectionOperations reflectionOperation)
     {
         DebugEx.Assert(method != null, "method should not be null.");
 
@@ -25,22 +27,23 @@ internal static class MethodInfoExtensions
             method is { IsStatic: true, IsPublic: true } &&
             (parameters.Length == 1) &&
             parameters[0].ParameterType == typeof(TestContext) &&
-            method.IsValidReturnType();
+            method.IsValidReturnType(reflectionOperation);
     }
 
     /// <summary>
     /// Verifies that the class cleanup has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
+    /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <returns>True if the method has the right Assembly/Class cleanup signature.</returns>
-    internal static bool HasCorrectClassOrAssemblyCleanupSignature(this MethodInfo method)
+    internal static bool HasCorrectClassOrAssemblyCleanupSignature(this MethodInfo method, IReflectionOperations reflectionOperation)
     {
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
             method is { IsStatic: true, IsPublic: true } &&
             HasCorrectClassOrAssemblyCleanupParameters(method) &&
-            method.IsValidReturnType();
+            method.IsValidReturnType(reflectionOperation);
     }
 
     private static bool HasCorrectClassOrAssemblyCleanupParameters(MethodInfo method)
@@ -53,15 +56,16 @@ internal static class MethodInfoExtensions
     /// Verifies that the test Initialize/cleanup has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
+    /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <returns>True if the method has the right test init/cleanup signature.</returns>
-    internal static bool HasCorrectTestInitializeOrCleanupSignature(this MethodInfo method)
+    internal static bool HasCorrectTestInitializeOrCleanupSignature(this MethodInfo method, IReflectionOperations reflectionOperation)
     {
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
             method is { IsStatic: false, IsPublic: true } &&
             (method.GetParameters().Length == 0) &&
-            method.IsValidReturnType();
+            method.IsValidReturnType(reflectionOperation);
     }
 
     /// <summary>
@@ -69,10 +73,11 @@ internal static class MethodInfoExtensions
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <param name="ignoreParameterLength">Indicates whether parameter length is to be ignored.</param>
+    /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <param name="discoverInternals">True if internal test classes and test methods should be discovered in
     /// addition to public test classes and methods.</param>
     /// <returns>True if the method has the right test method signature.</returns>
-    internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength, bool discoverInternals = false)
+    internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength, IReflectionOperations reflectionOperation, bool discoverInternals = false)
     {
         DebugEx.Assert(method != null, "method should not be null.");
 
@@ -80,18 +85,18 @@ internal static class MethodInfoExtensions
             method is { IsAbstract: false, IsStatic: false } &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
-            method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
+            method.IsValidReturnType(reflectionOperation); // Match return type Task for async methods only. Else return type void.
     }
 
     /// <summary>
     /// Check is return type is void for non async and Task for async methods.
     /// </summary>
     /// <param name="method">The method to verify.</param>
-    /// <param name="reflectHelper">The reflection service to use.</param>
+    /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <returns>True if the method has a void/task return type..</returns>
-    internal static bool IsValidReturnType(this MethodInfo method, ReflectHelper? reflectHelper = null)
-        => ReflectHelper.MatchReturnType(method, typeof(Task))
-        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null)
+    internal static bool IsValidReturnType(this MethodInfo method, IReflectionOperations reflectionOperation)
+        => method.ReturnType.Equals(typeof(Task))
+        || (method.ReturnType.Equals(typeof(void)) && method.GetAsyncTypeName(reflectionOperation) == null)
         // Keep this the last check, as it avoids loading System.Threading.Tasks.Extensions unnecessarily.
         || method.IsValueTask();
 
@@ -101,18 +106,18 @@ internal static class MethodInfoExtensions
     // Even when invokeResult is null or Task.
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static bool IsValueTask(this MethodInfo method)
-        => ReflectHelper.MatchReturnType(method, typeof(ValueTask));
+        => method.ReturnType.Equals(typeof(ValueTask));
 
     /// <summary>
     /// For async methods compiler generates different type and method.
     /// Gets the compiler generated type name for given async test method.
     /// </summary>
     /// <param name="method">The method to verify.</param>
-    /// <param name="reflectHelper">The reflection service to use.</param>
+    /// <param name="reflectionOperation">The reflection service to use.</param>
     /// <returns>Compiler generated type name for given async test method..</returns>
-    internal static string? GetAsyncTypeName(this MethodInfo method, ReflectHelper? reflectHelper = null)
+    internal static string? GetAsyncTypeName(this MethodInfo method, IReflectionOperations reflectionOperation)
     {
-        AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method);
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = reflectionOperation.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method);
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 

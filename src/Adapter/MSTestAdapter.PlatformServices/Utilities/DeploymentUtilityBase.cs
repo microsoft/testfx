@@ -25,7 +25,7 @@ internal abstract class DeploymentUtilityBase
     protected const string DeploymentFolderPrefix = "Deploy";
 
     public DeploymentUtilityBase()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new AssemblyUtility(), new FileUtility())
+        : this(new DeploymentItemUtility((ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations), new AssemblyUtility(), new FileUtility())
     {
     }
 

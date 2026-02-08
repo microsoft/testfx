@@ -4,7 +4,8 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using Moq;
 
@@ -15,7 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class TestMethodValidatorTests : TestContainer
 {
     private readonly TestMethodValidator _testMethodValidator;
-    private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly List<string> _warnings;
 
     private readonly Mock<MethodInfo> _mockMethodInfo;
@@ -23,8 +24,8 @@ public class TestMethodValidatorTests : TestContainer
 
     public TestMethodValidatorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>();
-        _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, discoverInternals: false);
+        _mockReflectionOperations = new Mock<IReflectionOperations>();
+        _testMethodValidator = new TestMethodValidator(_mockReflectionOperations.Object, discoverInternals: false);
         _warnings = [];
 
         _mockMethodInfo = new Mock<MethodInfo>();
@@ -33,7 +34,7 @@ public class TestMethodValidatorTests : TestContainer
 
     public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
     {
-        _mockReflectHelper.Setup(
+        _mockReflectionOperations.Setup(
             rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>())).Returns(false);
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings).Should().BeFalse();
     }
@@ -56,7 +57,7 @@ public class TestMethodValidatorTests : TestContainer
     {
         SetupTestMethod();
 
-        _mockReflectHelper
+        _mockReflectionOperations
             .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(_mockMethodInfo.Object))
             .Returns(default(AsyncStateMachineAttribute?));
 
@@ -114,8 +115,8 @@ public class TestMethodValidatorTests : TestContainer
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public)!;
-        _mockReflectHelper.Setup(_mockReflectHelper => _mockReflectHelper.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
-            .CallBase();
+        _mockReflectionOperations.Setup(_mockReflectionOperations => _mockReflectionOperations.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns((ICustomAttributeProvider p) => ((MemberInfo)p).GetCustomAttribute<AsyncStateMachineAttribute>(inherit: true));
 
         _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
     }
@@ -169,7 +170,7 @@ public class TestMethodValidatorTests : TestContainer
             "InternalTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-        var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
+        var testMethodValidator = new TestMethodValidator(_mockReflectionOperations.Object, true);
 
         testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeTrue();
     }
@@ -181,7 +182,7 @@ public class TestMethodValidatorTests : TestContainer
             "PrivateTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-        var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
+        var testMethodValidator = new TestMethodValidator(_mockReflectionOperations.Object, true);
 
         testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
     }
@@ -189,7 +190,7 @@ public class TestMethodValidatorTests : TestContainer
     #endregion
 
     private void SetupTestMethod()
-        => _mockReflectHelper.Setup(
+        => _mockReflectionOperations.Setup(
             rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>())).Returns(true);
 }
 

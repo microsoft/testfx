@@ -6,6 +6,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -24,7 +25,7 @@ public class TestDeploymentTests : TestContainer
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly Mock<FileUtility> _mockFileUtility;
 
 #pragma warning disable IDE0044 // Add readonly modifier
@@ -33,7 +34,7 @@ public class TestDeploymentTests : TestContainer
 
     public TestDeploymentTests()
     {
-        _mockReflectionUtility = new Mock<ReflectionUtility>();
+        _mockReflectionOperations = new Mock<IReflectionOperations>();
         _mockFileUtility = new Mock<FileUtility>();
         _warnings = [];
 
@@ -52,7 +53,7 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentItemsReturnsDeploymentItems()
     {
         // Arrange.
-        var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionUtility.Object), null!, null!);
+        var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionOperations.Object), null!, null!);
 
         // setup mocks
         KeyValuePair<string, string>[] methodLevelDeploymentItems =
@@ -181,7 +182,7 @@ public class TestDeploymentTests : TestContainer
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -204,7 +205,7 @@ public class TestDeploymentTests : TestContainer
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -227,7 +228,7 @@ public class TestDeploymentTests : TestContainer
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "path/to/asm.dll");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -257,7 +258,7 @@ public class TestDeploymentTests : TestContainer
         ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            new DeploymentItemUtility(_mockReflectionOperations.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
@@ -361,7 +362,7 @@ public class TestDeploymentTests : TestContainer
 
     #region private methods
 
-    private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
+    private void SetupDeploymentItems(ICustomAttributeProvider attributeProvider, KeyValuePair<string, string>[] deploymentItems)
     {
         var deploymentItemAttributes = new List<DeploymentItemAttribute>();
 
@@ -370,11 +371,8 @@ public class TestDeploymentTests : TestContainer
             deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        _mockReflectionUtility.Setup(
-            ru =>
-            ru.GetCustomAttributes(
-                memberInfo,
-                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
+        _mockReflectionOperations.Setup(
+            ru => ru.GetAttributes<DeploymentItemAttribute>(attributeProvider)).Returns(deploymentItemAttributes);
     }
 
     private static TestCase GetTestCase(string source)
@@ -418,7 +416,7 @@ public class TestDeploymentTests : TestContainer
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(testRunDirectories.RootDeploymentDirectory);
 
-        var deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
+        var deploymentItemUtility = new DeploymentItemUtility(_mockReflectionOperations.Object);
 
         return new TestDeployment(
             deploymentItemUtility,

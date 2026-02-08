@@ -34,7 +34,7 @@ internal sealed class TestDeployment : ITestDeployment
     /// Initializes a new instance of the <see cref="TestDeployment"/> class.
     /// </summary>
     public TestDeployment()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new DeploymentUtility(), new FileUtility())
+        : this(new DeploymentItemUtility((ReflectionOperations)PlatformServiceProvider.Instance.ReflectionOperations), new DeploymentUtility(), new FileUtility())
     {
     }
 

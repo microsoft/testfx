@@ -109,7 +109,7 @@ internal class TestMethodInfo : ITestMethod
     /// </summary>
     /// <returns>An array of the attributes.</returns>
     public Attribute[]? GetAllAttributes()
-        => [.. ReflectHelper.Instance.GetAttributes<Attribute>(MethodInfo)];
+        => [.. PlatformServiceProvider.Instance.ReflectionOperations.GetAttributes<Attribute>(MethodInfo)];
 
     /// <summary>
     /// Gets all attributes of the test method.
@@ -118,7 +118,7 @@ internal class TestMethodInfo : ITestMethod
     /// <returns>An array of the attributes.</returns>
     public TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute
-        => [.. ReflectHelper.Instance.GetAttributes<TAttributeType>(MethodInfo)];
+        => [.. PlatformServiceProvider.Instance.ReflectionOperations.GetAttributes<TAttributeType>(MethodInfo)];
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -253,7 +253,7 @@ internal class TestMethodInfo : ITestMethod
     private TimeoutInfo GetTestTimeout()
     {
         DebugEx.Assert(MethodInfo != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo);
+        TimeoutAttribute? timeoutAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo);
         if (timeoutAttribute is null)
         {
             return TimeoutInfo.FromTestTimeoutSettings();
@@ -276,7 +276,7 @@ internal class TestMethodInfo : ITestMethod
     {
         // Get the derived TestMethod attribute from reflection.
         // It should be non-null as it was already validated by IsValidTestMethod.
-        TestMethodAttribute testMethodAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
+        TestMethodAttribute testMethodAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetSingleAttributeOrDefault<TestMethodAttribute>(MethodInfo)!;
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
@@ -292,7 +292,7 @@ internal class TestMethodInfo : ITestMethod
     /// </returns>
     private RetryBaseAttribute? GetRetryAttribute()
     {
-        IEnumerable<RetryBaseAttribute> attributes = ReflectHelper.Instance.GetAttributes<RetryBaseAttribute>(MethodInfo);
+        IEnumerable<RetryBaseAttribute> attributes = PlatformServiceProvider.Instance.ReflectionOperations.GetAttributes<RetryBaseAttribute>(MethodInfo);
         using IEnumerator<RetryBaseAttribute> enumerator = attributes.GetEnumerator();
         if (!enumerator.MoveNext())
         {
