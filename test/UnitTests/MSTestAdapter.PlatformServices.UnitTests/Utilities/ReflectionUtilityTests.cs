@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using TestFramework.ForTestingMSTest;
@@ -30,7 +31,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -43,7 +44,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
@@ -57,7 +58,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -70,7 +71,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
