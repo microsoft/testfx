@@ -1,1 +1,2 @@
 #nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestContext?

@@ -67,6 +67,18 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TestContext_Current_ReturnsCorrectInstance(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName~TestContextCurrent", cancellationToken: TestContext.CancellationToken);
+
+        // Assert
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestTestContext";
@@ -112,6 +124,7 @@ using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
 #endif
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -450,6 +463,85 @@ public class TestContextTestPropertyImpl : TestContextTestPropertyBase
     {
     }
 }
+
+#pragma warning disable MSTESTEXP // TestContext.Current is experimental
+[TestClass]
+public class TestContextCurrentAllLifecycle
+    : IDisposable
+#if NET
+    , IAsyncDisposable
+#endif
+{
+    public TestContext TestContext { get; set; }
+
+    [AssemblyInitialize]
+    public static async Task AssemblyInit(TestContext context)
+    {
+        await Task.Yield();
+        Assert.AreSame(context, TestContext.Current);
+    }
+
+    [ClassInitialize]
+    public static async Task ClassInit(TestContext context)
+    {
+        await Task.Yield();
+        Assert.AreSame(context, TestContext.Current);
+    }
+
+    public TestContextCurrentAllLifecycle(TestContext testContext)
+    {
+        Assert.AreSame(testContext, TestContext.Current);
+    }
+
+    [TestInitialize]
+    public async Task TestInit()
+    {
+        await Task.Yield();
+        Assert.AreSame(TestContext, TestContext.Current);
+    }
+
+    [TestMethod]
+    public async Task TestMethod()
+    {
+        await Task.Yield();
+        Assert.AreSame(TestContext, TestContext.Current);
+    }
+
+    [TestCleanup]
+    public async Task TestCleanup()
+    {
+        await Task.Yield();
+        Assert.AreSame(TestContext, TestContext.Current);
+    }
+
+    public void Dispose()
+    {
+        Assert.AreSame(TestContext, TestContext.Current);
+    }
+
+#if NET
+    public async ValueTask DisposeAsync()
+    {
+        await Task.Yield();
+        Assert.AreSame(TestContext, TestContext.Current);
+    }
+#endif
+
+    [ClassCleanup]
+    public static async Task ClassCleanup(TestContext context)
+    {
+        await Task.Yield();
+        Assert.AreSame(context, TestContext.Current);
+    }
+
+    [AssemblyCleanup]
+    public static async Task AssemblyCleanup(TestContext context)
+    {
+        await Task.Yield();
+        Assert.AreSame(context, TestContext.Current);
+    }
+}
+#pragma warning restore MSTESTEXP // TestContext.Current is experimental
 """;
     }
 
