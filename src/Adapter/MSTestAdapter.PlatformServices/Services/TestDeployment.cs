@@ -4,6 +4,7 @@
 #if !WINDOWS_UWP && !WIN_UI
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -34,7 +35,7 @@ internal sealed class TestDeployment : ITestDeployment
     /// Initializes a new instance of the <see cref="TestDeployment"/> class.
     /// </summary>
     public TestDeployment()
-        : this(new DeploymentItemUtility(new ReflectionUtility()), new DeploymentUtility(), new FileUtility())
+        : this(new DeploymentItemUtility(ReflectHelper.Instance), new DeploymentUtility(), new FileUtility())
     {
     }
 
