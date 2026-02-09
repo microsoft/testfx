@@ -578,10 +578,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-    "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
     }
 
     public async Task TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
@@ -648,10 +646,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Message.Should().Be(errorMessage);
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<AssertFailedException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
     }
 
     public async Task TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
@@ -685,9 +681,37 @@ public class TestMethodInfoTests : TestContainer
         exception.Message.Should().Be(errorMessage);
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
+    }
+
+    public async Task TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult()
+    {
+        // Arrange.
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestConstructorMethodBody = () => UTF.Assert.Inconclusive("dummyInconclusiveMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
+
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
+        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        exception.InnerException.Should().BeOfType<UTF.AssertInconclusiveException>();
 #if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
 #endif
     }
 
@@ -834,11 +858,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
-
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
@@ -864,10 +885,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
     }
 
     public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
@@ -893,10 +912,8 @@ public class TestMethodInfoTests : TestContainer
         exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<AssertFailedException>();
-#if DEBUG
-        exception.StackTraceInformation!.ErrorStackTrace.Contains(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
-#endif
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
     }
 
     public async Task TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
@@ -937,10 +954,8 @@ public class TestMethodInfoTests : TestContainer
 
         result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
         exception.Should().NotBeNull();
-#if DEBUG
         ((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()").Should().BeTrue();
         ((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()").Should().BeTrue();
-#endif
     }
 
     public async Task TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()

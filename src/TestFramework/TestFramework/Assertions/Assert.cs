@@ -37,8 +37,30 @@ public sealed partial class Assert
     [DoesNotReturn]
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
+    {
+        if (ShouldLaunchDebugger())
+        {
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+            else
+            {
+                Debugger.Launch();
+            }
+        }
+
+        throw new AssertFailedException(
             string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+    }
+
+    private static bool ShouldLaunchDebugger()
+        => AssertionFailureSettings.LaunchDebuggerOnAssertionFailure switch
+        {
+            DebuggerLaunchMode.Enabled => true,
+            DebuggerLaunchMode.EnabledExcludingCI => !CIEnvironmentDetector.Instance.IsCIEnvironment(),
+            _ => false,
+        };
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.

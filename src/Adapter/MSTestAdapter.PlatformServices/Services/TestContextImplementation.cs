@@ -104,11 +104,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is null && testMethod is null)
         {
-            _properties = new Dictionary<string, object?>(properties);
+            _properties = [with(properties)];
         }
         else
         {
-            _properties = new Dictionary<string, object?>(properties.Count + 2);
+            _properties = [with(properties.Count + 2)];
             foreach (KeyValuePair<string, object?> kvp in properties)
             {
                 _properties[kvp.Key] = kvp.Value;

@@ -123,7 +123,7 @@ public class TempDirectory : IDisposable
     /// </summary>
     public string[] CopyFile(params string[] filePaths)
     {
-        List<string> paths = new(filePaths.Length);
+        List<string> paths = [with(filePaths.Length)];
         foreach (string filePath in filePaths)
         {
             string destination = System.IO.Path.Combine(Path, System.IO.Path.GetFileName(filePath));
