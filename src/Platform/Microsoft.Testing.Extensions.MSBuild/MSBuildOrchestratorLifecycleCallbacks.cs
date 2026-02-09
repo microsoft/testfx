@@ -63,5 +63,5 @@ internal sealed class MSBuildOrchestratorLifetime : ITestHostOrchestratorApplica
             cancellationToken).ConfigureAwait(false);
     }
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
 }

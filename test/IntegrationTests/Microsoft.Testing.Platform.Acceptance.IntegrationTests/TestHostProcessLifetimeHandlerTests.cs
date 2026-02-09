@@ -84,13 +84,13 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
         return Task.FromResult(true);
     }
 
-    public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         System.IO.File.WriteAllText("OnTestHostProcessExitedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
         return Task.CompletedTask;
     }
 
-    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         System.IO.File.WriteAllText("OnTestHostProcessStartedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
         return Task.CompletedTask;

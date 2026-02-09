@@ -66,7 +66,7 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName));
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation)
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
     public void Dispose() => Client?.Dispose();
