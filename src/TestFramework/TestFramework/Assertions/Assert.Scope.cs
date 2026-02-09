@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -25,5 +27,6 @@ public sealed partial class Assert
     /// // AssertFailedException is thrown here with all collected failures.
     /// </code>
     /// </example>
+    [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
     public static IDisposable Scope() => new AssertScope();
 }

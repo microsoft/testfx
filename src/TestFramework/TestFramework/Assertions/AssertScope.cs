@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -11,13 +13,16 @@ internal sealed class AssertScope : IDisposable
 {
     private static readonly AsyncLocal<AssertScope?> CurrentScope = new();
 
-    private readonly List<AssertFailedException> _errors = [];
-    private readonly AssertScope? _previousScope;
+    private readonly ConcurrentQueue<AssertFailedException> _errors = new();
     private bool _disposed;
 
     internal AssertScope()
     {
-        _previousScope = CurrentScope.Value;
+        if (CurrentScope.Value is not null)
+        {
+            throw new InvalidOperationException(FrameworkMessages.AssertScopeNestedNotAllowed);
+        }
+
         CurrentScope.Value = this;
     }
 
@@ -30,7 +35,11 @@ internal sealed class AssertScope : IDisposable
     /// Adds an assertion failure message to the current scope.
     /// </summary>
     /// <param name="error">The assertion failure message.</param>
-    internal void AddError(AssertFailedException error) => _errors.Add(error);
+    internal void AddError(AssertFailedException error)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _errors.Enqueue(error);
+    }
 
     /// <inheritdoc/>
     public void Dispose()
@@ -41,7 +50,12 @@ internal sealed class AssertScope : IDisposable
         }
 
         _disposed = true;
-        CurrentScope.Value = _previousScope;
+        CurrentScope.Value = null;
+
+        if (_errors.Count == 1 && _errors.TryDequeue(out AssertFailedException? singleError))
+        {
+            throw singleError;
+        }
 
         if (_errors.Count > 0)
         {
