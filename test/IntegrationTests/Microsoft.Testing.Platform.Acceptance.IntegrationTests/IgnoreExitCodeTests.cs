@@ -100,8 +100,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         string assetPath = generator.TargetAssetPath;
         string globalPackagesPath = AcceptanceFixture.NuGetGlobalPackagesFolder.Path;
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath, cancellationToken: TestContext.CancellationToken);
-        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"restore {assetPath} -r {RID}", globalPackagesPath, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"build {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath, cancellationToken: TestContext.CancellationToken);
         var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
         TestHostResult hostResult = await host.ExecuteAsync(
             command: commandLine,
