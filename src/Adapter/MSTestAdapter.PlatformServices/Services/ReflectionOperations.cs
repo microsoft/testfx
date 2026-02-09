@@ -24,7 +24,7 @@ internal sealed class ReflectionOperations : IReflectionOperations
     [return: NotNullIfNotNull(nameof(memberInfo))]
     public object[]? GetCustomAttributes(MemberInfo memberInfo)
 #if NETFRAMEWORK
-         => [.. ReflectionUtility.GetCustomAttributes(memberInfo)];
+         => [.. ReflectionOperationsNetFrameworkAttributeHelpers.GetCustomAttributes(memberInfo)];
 #else
     {
         object[] attributes = memberInfo.GetCustomAttributes(typeof(Attribute), inherit: true);
@@ -46,7 +46,7 @@ internal sealed class ReflectionOperations : IReflectionOperations
     /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
     public object[] GetCustomAttributes(Assembly assembly, Type type) =>
 #if NETFRAMEWORK
-        ReflectionUtility.GetCustomAttributes(assembly, type).ToArray();
+        ReflectionOperationsNetFrameworkAttributeHelpers.GetCustomAttributes(assembly, type).ToArray();
 #else
         assembly.GetCustomAttributes(type, inherit: true);
 #endif
