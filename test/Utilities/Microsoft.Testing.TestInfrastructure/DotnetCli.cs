@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Polly;
-using Polly.Contrib.WaitAndRetry;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -108,18 +107,7 @@ public static class DotnetCli
                 args += extraArgs;
             }
 
-            if (DoNotRetry)
-            {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
-            }
-            else
-            {
-                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
-                return await Policy
-                    .Handle<Exception>()
-                    .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async ct => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, ct), cancellationToken);
-            }
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
         }
         finally
         {
