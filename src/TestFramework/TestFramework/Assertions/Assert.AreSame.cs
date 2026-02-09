@@ -184,7 +184,6 @@ public sealed partial class Assert
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
         => !object.ReferenceEquals(expected, actual);
 
-    [DoesNotReturn]
     private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
     {
         string finalMessage = userMessage;
@@ -196,7 +195,7 @@ public sealed partial class Assert
                 userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreSame", finalMessage);
+        ReportSoftAssertFailure("Assert.AreSame", finalMessage);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
@@ -247,7 +246,6 @@ public sealed partial class Assert
     private static bool IsAreNotSameFailing<T>(T? notExpected, T? actual)
         => object.ReferenceEquals(notExpected, actual);
 
-    [DoesNotReturn]
     private static void ThrowAssertAreNotSameFailed(string userMessage)
-        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
+        => ReportSoftAssertFailure("Assert.AreNotSame", userMessage);
 }

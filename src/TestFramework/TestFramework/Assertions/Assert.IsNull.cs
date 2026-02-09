@@ -159,7 +159,7 @@ public sealed partial class Assert
     private static bool IsNullFailing(object? value) => value is not null;
 
     private static void ThrowAssertIsNullFailed(string? message)
-        => ThrowAssertFailed("Assert.IsNull", message);
+        => ReportSoftAssertFailure("Assert.IsNull", message);
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -199,5 +199,5 @@ public sealed partial class Assert
 
     [DoesNotReturn]
     private static void ThrowAssertIsNotNullFailed(string? message)
-        => ThrowAssertFailed("Assert.IsNotNull", message);
+        => ReportHardAssertFailure("Assert.IsNotNull", message);
 }

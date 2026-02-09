@@ -122,7 +122,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.Contains", finalMessage);
+            Assert.ReportSoftAssertFailure("StringAssert.Contains", finalMessage);
         }
     }
 
@@ -219,7 +219,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.StartsWith", finalMessage);
+            Assert.ReportSoftAssertFailure("StringAssert.StartsWith", finalMessage);
         }
     }
 
@@ -316,7 +316,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.EndsWith", finalMessage);
+            Assert.ReportSoftAssertFailure("StringAssert.EndsWith", finalMessage);
         }
     }
 
@@ -371,7 +371,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.Matches", finalMessage);
+            Assert.ReportSoftAssertFailure("StringAssert.Matches", finalMessage);
         }
     }
 
@@ -422,7 +422,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.DoesNotMatch", finalMessage);
+            Assert.ReportSoftAssertFailure("StringAssert.DoesNotMatch", finalMessage);
         }
     }
 

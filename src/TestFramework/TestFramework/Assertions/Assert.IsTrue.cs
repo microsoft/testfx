@@ -124,7 +124,7 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="IsTrue(bool?, string, string)"/>
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
+    public static void IsTrue(bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsTrueInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion(conditionExpression);
 
@@ -146,7 +146,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
+    public static void IsTrue(bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
         if (IsTrueFailing(condition))
         {
@@ -158,11 +158,11 @@ public sealed partial class Assert
         => condition is false or null;
 
     private static void ThrowAssertIsTrueFailed(string? message)
-        => ThrowAssertFailed("Assert.IsTrue", message);
+        => ReportSoftAssertFailure("Assert.IsTrue", message);
 
     /// <inheritdoc cref="IsFalse(bool?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
+    public static void IsFalse(bool? condition, [InterpolatedStringHandlerArgument(nameof(condition))] ref AssertIsFalseInterpolatedStringHandler message, [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
         => message.ComputeAssertion(conditionExpression);
 
@@ -184,7 +184,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
+    public static void IsFalse(bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
         if (IsFalseFailing(condition))
         {
@@ -195,7 +195,6 @@ public sealed partial class Assert
     private static bool IsFalseFailing(bool? condition)
         => condition is true or null;
 
-    [DoesNotReturn]
     private static void ThrowAssertIsFalseFailed(string userMessage)
-        => ThrowAssertFailed("Assert.IsFalse", userMessage);
+        => ReportSoftAssertFailure("Assert.IsFalse", userMessage);
 }

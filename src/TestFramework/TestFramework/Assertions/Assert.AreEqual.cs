@@ -642,7 +642,6 @@ public sealed partial class Assert
             new string('-', adjustedCaretPosition) + "^");
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
     {
         string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
@@ -662,10 +661,9 @@ public sealed partial class Assert
                     userMessage,
                     ReplaceNulls(expected),
                     ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ReportSoftAssertFailure("Assert.AreEqual", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed<T>(T expected, T actual, T delta, string userMessage)
         where T : struct, IConvertible
     {
@@ -676,10 +674,9 @@ public sealed partial class Assert
             expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
             actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
             delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ReportSoftAssertFailure("Assert.AreEqual", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
     {
         string finalMessage;
@@ -700,7 +697,7 @@ public sealed partial class Assert
             finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ReportSoftAssertFailure("Assert.AreEqual", finalMessage);
     }
 
     /// <summary>
@@ -1218,7 +1215,6 @@ public sealed partial class Assert
         return Math.Abs(notExpected - actual) <= delta;
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string userMessage)
     where T : struct, IConvertible
     {
@@ -1229,7 +1225,7 @@ public sealed partial class Assert
             notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
             actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
             delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        ReportSoftAssertFailure("Assert.AreNotEqual", finalMessage);
     }
 
     /// <summary>
@@ -1428,7 +1424,6 @@ public sealed partial class Assert
     private static bool AreNotEqualFailing<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer)
         => (comparer ?? EqualityComparer<T>.Default).Equals(notExpected!, actual!);
 
-    [DoesNotReturn]
     private static void ThrowAssertAreNotEqualFailed(object? notExpected, object? actual, string userMessage)
     {
         string finalMessage = string.Format(
@@ -1437,7 +1432,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(notExpected),
             ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        ReportSoftAssertFailure("Assert.AreNotEqual", finalMessage);
     }
 }
 

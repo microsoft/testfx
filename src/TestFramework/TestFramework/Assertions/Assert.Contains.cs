@@ -478,7 +478,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            ThrowAssertFailed("Assert.Contains", finalMessage);
+            ReportSoftAssertFailure("Assert.Contains", finalMessage);
         }
     }
 
@@ -717,7 +717,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
-            ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+            ReportSoftAssertFailure("Assert.DoesNotContain", finalMessage);
         }
     }
 
@@ -758,7 +758,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
-            ThrowAssertFailed("IsInRange", finalMessage);
+            ReportSoftAssertFailure("IsInRange", finalMessage);
         }
     }
 
@@ -772,7 +772,7 @@ public sealed partial class Assert
             FrameworkMessages.ContainsSingleMatchFailMsg,
             userMessage,
             actualCount);
-        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+        ReportHardAssertFailure("Assert.ContainsSingle", finalMessage);
     }
 
     [DoesNotReturn]
@@ -783,46 +783,42 @@ public sealed partial class Assert
             FrameworkMessages.ContainsSingleFailMsg,
             userMessage,
             actualCount);
-        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+        ReportHardAssertFailure("Assert.ContainsSingle", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertContainsItemFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsItemFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.Contains", finalMessage);
+        ReportSoftAssertFailure("Assert.Contains", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertContainsPredicateFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsPredicateFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.Contains", finalMessage);
+        ReportSoftAssertFailure("Assert.Contains", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertDoesNotContainItemFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainItemFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+        ReportSoftAssertFailure("Assert.DoesNotContain", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertDoesNotContainPredicateFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainPredicateFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+        ReportSoftAssertFailure("Assert.DoesNotContain", finalMessage);
     }
 }

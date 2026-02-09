@@ -58,14 +58,15 @@ internal sealed class AssertScope : IDisposable
 
         if (_errors.Count == 1 && _errors.TryDequeue(out AssertFailedException? singleError))
         {
-            throw singleError;
+            Assert.ReportHardAssertFailure(singleError);
         }
 
         if (!_errors.IsEmpty)
         {
-            throw new AssertFailedException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, _errors.Count),
-                new AggregateException(_errors));
+            Assert.ReportHardAssertFailure(
+                new AssertFailedException(
+                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, _errors.Count),
+                    new AggregateException(_errors)));
         }
     }
 }
