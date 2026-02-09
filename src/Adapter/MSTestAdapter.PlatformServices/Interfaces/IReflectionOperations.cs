@@ -91,4 +91,12 @@ internal interface IReflectionOperations
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <returns>Attributes defined.</returns>
     Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider);
+
+    /// <summary>
+    /// Checks whether the declaring type of the method is declared in the same assembly as the given type.
+    /// </summary>
+    /// <param name="method">The method to check.</param>
+    /// <param name="type">The type whose assembly to compare against.</param>
+    /// <returns>True if the method's declaring type is in the same assembly as <paramref name="type"/>.</returns>
+    bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type);
 }

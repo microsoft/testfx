@@ -69,7 +69,7 @@ internal class TypeEnumerator
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
         {
-            bool isMethodDeclaredInTestTypeAssembly = method.DeclaringType!.Assembly.Equals(_type.Assembly); // TODO: Investigate if we rely on NRE;
+            bool isMethodDeclaredInTestTypeAssembly = _reflectionOperation.IsMethodDeclaredInSameAssemblyAsType(method, _type);
             bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
 
             if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)

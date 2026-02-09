@@ -1276,6 +1276,12 @@ public class TypeCacheTests : TestContainer
 
         [TestMethod]
         [TestProperty("WhoAmI", "Me")]
+        public void TestMethodWithCustomProperty()
+        {
+        }
+
+        [TestMethod]
+        [TestProperty("WhoAmI", "Me")]
         [TestProperty("WhoAmI", "Me2")]
         public void TestMethodWithDuplicateCustomPropertyNames()
         {

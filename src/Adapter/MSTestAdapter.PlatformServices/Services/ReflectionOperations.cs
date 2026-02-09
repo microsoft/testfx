@@ -279,6 +279,10 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
         }
     }
 
+    /// <inheritdoc />
+    public bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
+        => method.DeclaringType!.Assembly.Equals(type.Assembly);
+
     internal /* for tests */ void ClearCache()
         // Tests manipulate the platform reflection provider, and we end up caching different attributes than the class / method actually has.
         => _attributeCache.Clear();

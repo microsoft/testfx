@@ -17,6 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\MSTestAdapter.PlatformServices.UnitTests\TestableImplementations\MockableReflectionOperations.cs" Link="MockableReflectionOperations.cs" />
     <Compile Include="..\MSTestAdapter.PlatformServices.UnitTests\TestableImplementations\TestablePlatformServiceProvider.cs" Link="TestablePlatformServiceProvider.cs" />
     <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>

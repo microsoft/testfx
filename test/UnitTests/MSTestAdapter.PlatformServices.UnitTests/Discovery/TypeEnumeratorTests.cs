@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public partial class TypeEnumeratorTests : TestContainer
 {
     private readonly Mock<IReflectionOperations> _mockReflectionOperations;
+    private readonly IReflectionOperations _wrappedReflectionOperations;
     private readonly Mock<TestMethodValidator> _mockTestMethodValidator;
     private readonly Mock<TypeValidator> _mockTypeValidator;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
@@ -30,10 +31,12 @@ public partial class TypeEnumeratorTests : TestContainer
     public TypeEnumeratorTests()
     {
         _mockReflectionOperations = new Mock<IReflectionOperations>();
-        _mockReflectionOperations.Setup(r => r.GetCustomAttributesCached(It.IsAny<MemberInfo>())).Returns(Array.Empty<Attribute>());
+        _mockReflectionOperations.Setup(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>()))
+            .Returns<MemberInfo>(mi => mi.GetCustomAttributes(true));
+        _wrappedReflectionOperations = MockableReflectionOperations.Create(_mockReflectionOperations);
 
-        _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectionOperations.Object);
-        _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _mockReflectionOperations.Object, false);
+        _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _wrappedReflectionOperations);
+        _mockTestMethodValidator = new Mock<TestMethodValidator>(MockBehavior.Default, _wrappedReflectionOperations, false);
         _warnings = [];
         _mockMessageLogger = new Mock<IMessageLogger>();
 
@@ -491,13 +494,15 @@ public partial class TypeEnumeratorTests : TestContainer
             .Returns(isValidTestClass);
         _mockTestMethodValidator.Setup(
             tmv => tmv.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>())).Returns(isValidTestMethod);
+        _mockReflectionOperations.Setup(ro => ro.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>()))
+            .Returns(isMethodFromSameAssembly);
     }
 
     private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
         => new(
             type,
             assemblyName,
-            _mockReflectionOperations.Object,
+            _wrappedReflectionOperations,
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object);
 

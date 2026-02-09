@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -638,6 +639,15 @@ internal sealed class TypeCache : MarshalByRefObject
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
+
+        // Populate the test context with test properties from [TestProperty] attributes.
+        foreach (Trait trait in _reflectionOperations.GetTestPropertiesAsTraits(methodInfo))
+        {
+            if (!testContext.TryGetPropertyValue(trait.Name, out _))
+            {
+                testContext.AddProperty(trait.Name, trait.Value);
+            }
+        }
 
         return new TestMethodInfo(methodInfo, testClassInfo, testContext);
     }
