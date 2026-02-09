@@ -68,7 +68,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
             VSSolution solution = CreateTestAsset();
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: cancellationToken);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {solution.SolutionFile} -c Release", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: cancellationToken);
             result.AssertExitCodeIs(0);
 
             TestHost = TestHost.LocateFrom(solution.Projects.Skip(1).Single().FolderPath, TestProjectName, TargetFramework);

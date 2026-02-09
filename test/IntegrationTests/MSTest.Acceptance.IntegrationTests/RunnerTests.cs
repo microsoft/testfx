@@ -28,10 +28,10 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+            $"restore {generator.TargetAssetPath} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         compilationResult = await DotnetCli.RunAsync(
-            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
+            $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         Build binLog = Serialization.Read(compilationResult.BinlogPath);
@@ -68,9 +68,9 @@ return await app.RunAsync();
 <GenerateTestingPlatformEntryPoint>False</GenerateTestingPlatformEntryPoint>
 <LangVersion>preview</LangVersion>
 """));
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"restore {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         await DotnetCli.RunAsync(
-            $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
+            $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
@@ -90,18 +90,18 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"restore {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         if (TargetFrameworks.NetFramework.Any(x => x == tfm))
         {
             // Running under .NET Framework, which doesn't generate an empty entry point.
-            Exception ex = await Assert.ThrowsAsync<Exception>(async () => await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken));
+            Exception ex = await Assert.ThrowsAsync<Exception>(async () => await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken));
             Assert.Contains("Program does not contain a static 'Main' method suitable for an entry point", ex.Message);
             return;
         }
 
         // Running on .NET (Core), building should succeed and we should run empty entry point.
-        await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
@@ -122,8 +122,8 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$OutputType$", string.Empty)
                 .PatchCodeWithReplace("$Extra$", string.Empty));
 
-        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        await DotnetCli.RunAsync($"restore {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         Build binLog = Serialization.Read(result.BinlogPath);
         Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());

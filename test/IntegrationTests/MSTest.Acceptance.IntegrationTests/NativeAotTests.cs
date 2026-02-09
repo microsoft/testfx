@@ -101,12 +101,12 @@ public class UnitTest1
                     addPublicFeeds: true);
 
                 await DotnetCli.RunAsync(
-                    $"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+                    $"restore {generator.TargetAssetPath} -r {RID}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     retryCount: 0,
                     cancellationToken: TestContext.CancellationToken);
                 DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}",
+                    $"publish {generator.TargetAssetPath} -r {RID}",
                     AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
                     retryCount: 0,
                     cancellationToken: TestContext.CancellationToken);
