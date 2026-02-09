@@ -146,41 +146,39 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     // We use crash dump, not supported in NetFramework at the moment
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_MoveFiles_Succeeds(string tfm)
-        => await RetryHelper.RetryAsync(
-            async () =>
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --crashdump --retry-failed-tests 1 --results-directory {resultDirectory}",
+            new()
             {
-                var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-                string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
-                TestHostResult testHostResult = await testHost.ExecuteAsync(
-                    $"--report-trx --crashdump --retry-failed-tests 1 --results-directory {resultDirectory}",
-                    new()
-                    {
                         { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
                         { "RESULTDIR", resultDirectory },
                         { "CRASH", "1" },
-                    },
-                    cancellationToken: TestContext.CancellationToken);
+            },
+            cancellationToken: TestContext.CancellationToken);
 
-                testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
-                string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
+        string[] entries = [.. Directory.GetFiles(resultDirectory, "*.*", SearchOption.AllDirectories).Where(x => !x.Contains("Retries", StringComparison.OrdinalIgnoreCase))];
 
-                // 1 trx file
-                Assert.ContainsSingle(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase), entries);
+        // 1 trx file
+        Assert.ContainsSingle(x => x.EndsWith("trx", StringComparison.OrdinalIgnoreCase), entries);
 
-                // Number of dmp files seems to differ locally and in CI
-                int dumpFilesCount = entries.Count(x => x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase));
+        // Number of dmp files seems to differ locally and in CI
+        int dumpFilesCount = entries.Count(x => x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase));
 
-                if (dumpFilesCount == 2)
-                {
-                    // Dump file inside the trx structure
-                    Assert.ContainsSingle(x => x.Contains($"{Path.DirectorySeparatorChar}In{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) && x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase), entries);
-                }
-                else if (dumpFilesCount is 0 or > 2)
-                {
-                    Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
-                }
-            }, 3, TimeSpan.FromSeconds(5));
+        if (dumpFilesCount == 2)
+        {
+            // Dump file inside the trx structure
+            Assert.ContainsSingle(x => x.Contains($"{Path.DirectorySeparatorChar}In{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) && x.EndsWith("dmp", StringComparison.OrdinalIgnoreCase), entries);
+        }
+        else if (dumpFilesCount is 0 or > 2)
+        {
+            Assert.Fail($"Expected 1 or 2 dump files, but found {dumpFilesCount}");
+        }
+    }
 
     [TestMethod]
     public async Task RetryFailedTests_PassingFromFirstTime_UsingTestTarget_MoveFiles_Succeeds()

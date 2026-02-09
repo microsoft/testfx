@@ -82,42 +82,37 @@ public class UnitTest1
 """;
 
     [TestMethod]
+    // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
     [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task NativeAotTests_WillRunWithExitCodeZero()
-        // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
-        // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
-        // or sometimes doesn't fail but the native code generation is not done.
-        // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                using TestAsset generator = await TestAsset.GenerateAssetAsync(
-                    "NativeAotTests",
-                    SourceCode
-                    .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
-                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
-                    addPublicFeeds: true);
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "NativeAotTests",
+            SourceCode
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
+            addPublicFeeds: true);
 
-                await DotnetCli.RunAsync(
-                    $"restore {generator.TargetAssetPath} -r {RID}",
-                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    retryCount: 0,
-                    cancellationToken: TestContext.CancellationToken);
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish {generator.TargetAssetPath} -r {RID}",
-                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    retryCount: 0,
-                    cancellationToken: TestContext.CancellationToken);
-                compilationResult.AssertOutputContains("Generating native code");
+        await DotnetCli.RunAsync(
+            $"restore {generator.TargetAssetPath} -r {RID}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 0,
+            cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -r {RID}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 0,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
 
-                var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
-                TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-                result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
-                result.AssertExitCodeIs(0);
-            }, times: 15, every: TimeSpan.FromSeconds(5));
+        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
+        result.AssertExitCodeIs(0);
+    }
 
     public TestContext TestContext { get; set; }
 }
