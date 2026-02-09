@@ -12,7 +12,7 @@ public static class AcceptanceFixture
     public static void AssemblyInitialize(TestContext context)
     {
         NuGetGlobalPackagesFolder = new(".packages");
-        Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1")
+        Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
     }
 
     [AssemblyCleanup]
