@@ -48,6 +48,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
+        // Bridge the adapter setting to the TestFramework for assertion failure behavior.
+        AssertionFailureSettings.LaunchDebuggerOnAssertionFailure = MSTestSettings.CurrentSettings.LaunchDebuggerOnAssertionFailure;
+
         Logger.OnLogMessage += message => TestContextImplementation.CurrentTestContext?.WriteConsoleOut(message);
         if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
         {
