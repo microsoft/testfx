@@ -11,9 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class ReflectionUtility
 {
-    internal virtual IReadOnlyList<object> GetCustomAttributes(MemberInfo memberInfo, Type? type)
-        => GetCustomAttributesCore(memberInfo, type);
-
     /// <summary>
     /// Gets all the custom attributes adorned on a member.
     /// </summary>
@@ -29,7 +26,7 @@ internal class ReflectionUtility
     /// <param name="type">Type of attribute to retrieve.</param>
     /// <returns>All attributes of give type on member.</returns>
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
-    internal static IReadOnlyList<object> GetCustomAttributesCore(MemberInfo memberInfo, Type? type)
+    private static IReadOnlyList<object> GetCustomAttributesCore(MemberInfo memberInfo, Type? type)
 #pragma warning restore CA1859
     {
 #if NETFRAMEWORK
