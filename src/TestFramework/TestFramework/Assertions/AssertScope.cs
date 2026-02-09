@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -37,7 +35,13 @@ internal sealed class AssertScope : IDisposable
     /// <param name="error">The assertion failure message.</param>
     internal void AddError(AssertFailedException error)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+#pragma warning disable CA1513 // Use ObjectDisposedException throw helper
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(AssertScope));
+        }
+#pragma warning restore CA1513 // Use ObjectDisposedException throw helper
+
         _errors.Enqueue(error);
     }
 
@@ -57,7 +61,7 @@ internal sealed class AssertScope : IDisposable
             throw singleError;
         }
 
-        if (_errors.Count > 0)
+        if (!_errors.IsEmpty)
         {
             throw new AssertFailedException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, _errors.Count),
