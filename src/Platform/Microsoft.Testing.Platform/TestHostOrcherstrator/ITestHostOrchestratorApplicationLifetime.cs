@@ -16,7 +16,7 @@ internal interface ITestHostOrchestratorApplicationLifetime : ITestHostOrchestra
     /// Executes after the orchestrator runs.
     /// </summary>
     /// <param name="exitCode">The exit code of the orchestrator.</param>
-    /// <param name="cancellation">The cancellation token.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AfterRunAsync(int exitCode, CancellationToken cancellation);
+    Task AfterRunAsync(int exitCode, CancellationToken cancellationToken);
 }

@@ -51,8 +51,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
             => _builder.ToString();
     }
 
-    private static readonly AsyncLocal<TestContextImplementation?> CurrentTestContextAsyncLocal = new();
-
     /// <summary>
     /// Properties.
     /// </summary>
@@ -130,8 +128,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         _messageLogger = messageLogger;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
-
-    internal static TestContextImplementation? CurrentTestContext => CurrentTestContextAsyncLocal.Value;
 
     #region TestContext impl
 
@@ -327,10 +323,10 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     internal readonly struct ScopedTestContextSetter : IDisposable
     {
         internal ScopedTestContextSetter(TestContextImplementation? testContext)
-            => CurrentTestContextAsyncLocal.Value = testContext;
+            => TestContext.Current = testContext;
 
         public void Dispose()
-            => CurrentTestContextAsyncLocal.Value = null;
+            => TestContext.Current = null;
     }
 
     internal static ScopedTestContextSetter SetCurrentTestContext(TestContextImplementation? testContext)
