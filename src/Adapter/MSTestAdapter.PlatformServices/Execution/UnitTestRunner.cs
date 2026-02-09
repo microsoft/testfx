@@ -48,7 +48,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
 
-        Logger.OnLogMessage += message => TestContextImplementation.CurrentTestContext?.WriteConsoleOut(message);
+        Logger.OnLogMessage += message => (TestContext.Current as TestContextImplementation)?.WriteConsoleOut(message);
         if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
         {
             Console.SetOut(new ConsoleOutRouter(Console.Out));
