@@ -48,7 +48,7 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
 
     public async Task BeforeRunAsync(CancellationToken cancellationToken)
     {

@@ -199,9 +199,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => throw new NotImplementedException();
 
@@ -232,9 +232,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task UpdateAsync(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
     }
@@ -255,9 +255,9 @@ public sealed class TestApplicationBuilderTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
     private sealed class TestHostEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider

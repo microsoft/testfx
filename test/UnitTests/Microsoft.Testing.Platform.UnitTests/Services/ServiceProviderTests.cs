@@ -237,9 +237,9 @@ public sealed class ServiceProviderTests
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
     private sealed class TestHostEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
@@ -303,7 +303,7 @@ public sealed class ServiceProviderTests
 
         public string Description => throw new NotImplementedException();
 
-        public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => throw new NotImplementedException();
+        public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task BeforeRunAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
 
