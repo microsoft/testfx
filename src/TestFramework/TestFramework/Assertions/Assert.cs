@@ -38,6 +38,18 @@ public sealed partial class Assert
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
     {
+        if (ShouldLaunchDebugger())
+        {
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+            else
+            {
+                Debugger.Launch();
+            }
+        }
+
         var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
         AssertScope? scope = AssertScope.Current;
         if (scope is not null)
@@ -50,6 +62,14 @@ public sealed partial class Assert
 
         throw assertionFailedException;
     }
+
+    private static bool ShouldLaunchDebugger()
+        => AssertionFailureSettings.LaunchDebuggerOnAssertionFailure switch
+        {
+            DebuggerLaunchMode.Enabled => true,
+            DebuggerLaunchMode.EnabledExcludingCI => !CIEnvironmentDetector.Instance.IsCIEnvironment(),
+            _ => false,
+        };
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.

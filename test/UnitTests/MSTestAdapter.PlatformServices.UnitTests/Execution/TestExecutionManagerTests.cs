@@ -63,7 +63,7 @@ public class TestExecutionManagerTests : TestContainer
         _mockTestSourceHandler = new Mock<ITestSourceHandler>();
 
         _testExecutionManager = new TestExecutionManager(
-            new EnvironmentWrapper(),
+            EnvironmentWrapper.Instance,
             task =>
             {
                 _enqueuedParallelTestsCount++;

@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using TestFramework.ForTestingMSTest;
@@ -16,10 +17,10 @@ public class ReflectionUtilityTests : TestContainer
     {
         Assembly asm = typeof(DummyTestClass).Assembly;
 
-        List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        object[] attributes = new ReflectionOperations().GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         attributes.Should().NotBeNull();
-        attributes.Count.Should().Be(2);
+        attributes.Length.Should().Be(2);
 
         string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
         expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)).Should().BeTrue();
@@ -30,7 +31,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
@@ -43,7 +44,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(methodInfo);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(methodInfo);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
@@ -57,7 +58,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyBaseTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
@@ -70,59 +71,7 @@ public class ReflectionUtilityTests : TestContainer
     {
         Type type = typeof(DummyTestClass);
 
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributes(type);
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
-
-        string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetSpecificCustomAttributesShouldReturnAllAttributes()
-    {
-        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1")!;
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
-
-        string[] expectedAttributes = ["DummyA : base"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
-    {
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1")!;
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(methodInfo, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(2);
-
-        string[] expectedAttributes = ["DummyA : derived", "DummyA : base"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
-    {
-        Type type = typeof(DummyBaseTestClass);
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(DummyAAttribute));
-
-        attributes.Should().NotBeNull();
-        attributes.Should().HaveCount(1);
-
-        string[] expectedAttributes = ["DummyA : ba"];
-        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
-    }
-
-    public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
-    {
-        Type type = typeof(DummyTestClass);
-
-        IReadOnlyList<object> attributes = ReflectionUtility.GetCustomAttributesCore(type, typeof(DummyAAttribute));
+        IReadOnlyList<object> attributes = new ReflectionOperations().GetCustomAttributes(type);
 
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);

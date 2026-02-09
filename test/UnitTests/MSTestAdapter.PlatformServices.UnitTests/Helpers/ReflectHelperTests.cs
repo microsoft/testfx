@@ -187,9 +187,6 @@ public class ReflectHelperTests : TestContainer
         // Validate that reflection APIs are not called again.
         rh.IsAttributeDefined<TestMethodAttribute>(memberInfo).Should().BeTrue();
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo), Times.Once);
-
-        // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>()), Times.Never);
     }
 
     public void HasAttributeDerivedFromShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
@@ -237,24 +234,16 @@ public class ReflectHelperTests : TestContainer
         // Validate that reflection APIs are not called again.
         rh.IsAttributeDefined<TestMethodAttribute>(memberInfo).Should().BeTrue();
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo), Times.Once);
-
-        // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
-        _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>()), Times.Never);
     }
 
     public void HasAttributeDerivedFromShouldReturnFalseQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object)).
             Returns((object[])null!);
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestMethodAttribute))).
-            Returns(attributes);
 
         rh.IsAttributeDefined<TestMethodAttribute>(mockMemberInfo.Object).Should().BeFalse();
     }
