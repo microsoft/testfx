@@ -337,7 +337,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (_isServerMode || testSessionContext.CancellationToken.IsCancellationRequested)
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_isServerMode)
         {
             return Task.CompletedTask;
         }
@@ -398,8 +400,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
-
-        if (_isServerMode || cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_isServerMode)
         {
             return Task.CompletedTask;
         }

@@ -104,10 +104,7 @@ internal sealed class TrxReportGenerator :
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
-        {
-            return Task.CompletedTask;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         try
         {
@@ -168,10 +165,7 @@ internal sealed class TrxReportGenerator :
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {
@@ -198,7 +192,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
         }
 
         ITrxReportCapability? trxCapability = _testFrameworkCapabilities.GetCapability<ITrxReportCapability>();
-        if (_isEnabled && trxCapability is not null && trxCapability.IsSupported)
+        if (trxCapability is not null && trxCapability.IsSupported)
         {
             _adapterSupportTrxCapability = true;
             trxCapability.Enable();
@@ -210,10 +204,7 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        if (!_isEnabled || cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         try
         {

@@ -83,11 +83,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     {
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-
-        if (!await IsEnabledAsync().ConfigureAwait(false) || cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         try
         {
@@ -139,8 +135,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested
-            || value is not TestNodeUpdateMessage nodeChangedMessage)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (value is not TestNodeUpdateMessage nodeChangedMessage)
         {
             return;
         }

@@ -233,10 +233,8 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (testSessionContext.CancellationToken.IsCancellationRequested)
-        {
-            return Task.CompletedTask;
-        }
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
+        cancellationToken.ThrowIfCancellationRequested();
 
         // We implement IDataConsumerService and IOutputDisplayService.
         // So the engine is calling us before as IDataConsumerService and after as IOutputDisplayService.
