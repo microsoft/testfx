@@ -55,8 +55,8 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested
-            || testHostProcessInformation.HasExitedGracefully
+        cancellationToken.ThrowIfCancellationRequested();
+        if (testHostProcessInformation.HasExitedGracefully
             || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
         {
             return;

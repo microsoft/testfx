@@ -148,10 +148,7 @@ internal sealed class TrxProcessLifetimeHandler :
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         Dictionary<IExtension, List<SessionFileArtifact>> artifacts = [];
 
