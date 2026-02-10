@@ -10,7 +10,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
-    private const string AssetName = "Abort";
+    private const string AssetName = "AbortMSTestAsset";
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
