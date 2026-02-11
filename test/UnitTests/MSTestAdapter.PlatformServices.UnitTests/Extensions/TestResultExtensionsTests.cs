@@ -157,20 +157,17 @@ public class TestResultExtensionsTests : TestContainer
     {
         var executionId = Guid.NewGuid();
         var parentExecId = Guid.NewGuid();
-        int innerResultsCount = 5;
 
         var result = new TestResult
         {
             ExecutionId = executionId,
             ParentExecId = parentExecId,
-            InnerResultsCount = innerResultsCount,
         };
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         ((Guid)convertedResult.GetPropertyValue(EngineConstants.ExecutionIdProperty)!).Should().Be(executionId);
         ((Guid)convertedResult.GetPropertyValue(EngineConstants.ParentExecIdProperty)!).Should().Be(parentExecId);
-        ((int)convertedResult.GetPropertyValue(EngineConstants.InnerResultsCountProperty)!).Should().Be(innerResultsCount);
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
