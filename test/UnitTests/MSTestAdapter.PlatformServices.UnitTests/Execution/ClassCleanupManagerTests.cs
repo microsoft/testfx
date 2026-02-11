@@ -4,8 +4,8 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using Moq;
 
@@ -17,7 +17,6 @@ public class ClassCleanupManagerTests : TestContainer
 {
     public void AssemblyCleanupRunsAfterAllTestsFinishEvenIfWeScheduleTheSameTestMultipleTime()
     {
-        ReflectHelper reflectHelper = Mock.Of<ReflectHelper>();
         MethodInfo classCleanupMethodInfo = typeof(FakeTestClass).GetMethod(nameof(FakeTestClass.FakeClassCleanupMethod), BindingFlags.Instance | BindingFlags.NonPublic)!;
         // Full class name must agree between unitTestElement.TestMethod.FullClassName and testMethod.FullClassName;
         string fullClassName = typeof(FakeTestClass).FullName!;

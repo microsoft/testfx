@@ -7,8 +7,9 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -322,13 +323,14 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 {
     internal TestableAssemblyEnumerator()
     {
-        var reflectHelper = new Mock<ReflectHelper>();
-        var typeValidator = new Mock<TypeValidator>(reflectHelper.Object);
-        var testMethodValidator = new Mock<TestMethodValidator>(reflectHelper.Object, false);
+        var mockReflectionOperations = new Mock<IReflectionOperations>();
+        IReflectionOperations wrappedReflectionOperations = MockableReflectionOperations.Create(mockReflectionOperations);
+        var typeValidator = new Mock<TypeValidator>(wrappedReflectionOperations);
+        var testMethodValidator = new Mock<TestMethodValidator>(wrappedReflectionOperations, false);
         MockTypeEnumerator = new Mock<TypeEnumerator>(
             typeof(DummyTestClass),
             "DummyAssembly",
-            reflectHelper.Object,
+            wrappedReflectionOperations,
             typeValidator.Object,
             testMethodValidator.Object);
     }

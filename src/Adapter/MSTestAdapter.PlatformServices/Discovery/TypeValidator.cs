@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -15,27 +15,27 @@ internal class TypeValidator
     // Setting this to a string representation instead of a typeof(TestContext).FullName
     // since the later would require a load of the Test Framework extension assembly at this point.
     private const string TestContextFullName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
-    private readonly ReflectHelper _reflectHelper;
+    private readonly IReflectionOperations _reflectionOperation;
     private readonly bool _discoverInternals;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeValidator"/> class.
     /// </summary>
-    /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
-    internal TypeValidator(ReflectHelper reflectHelper)
-        : this(reflectHelper, false)
+    /// <param name="reflectionOperation">An instance to reflection helper for type information.</param>
+    internal TypeValidator(IReflectionOperations reflectionOperation)
+        : this(reflectionOperation, false)
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeValidator"/> class.
     /// </summary>
-    /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
+    /// <param name="reflectionOperation">An instance to reflection helper for type information.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
-    internal TypeValidator(ReflectHelper reflectHelper, bool discoverInternals)
+    internal TypeValidator(IReflectionOperations reflectionOperation, bool discoverInternals)
     {
-        _reflectHelper = reflectHelper;
+        _reflectionOperation = reflectionOperation;
         _discoverInternals = discoverInternals;
     }
 
@@ -52,7 +52,7 @@ internal class TypeValidator
         // gives us a better performance.
         // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
         // but the difference is quite small, and we don't expect a huge amount of non-test classes in the assembly.
-        if (!type.IsClass || !_reflectHelper.IsAttributeDefined<TestClassAttribute>(type))
+        if (!type.IsClass || !_reflectionOperation.IsAttributeDefined<TestClassAttribute>(type))
         {
             return false;
         }

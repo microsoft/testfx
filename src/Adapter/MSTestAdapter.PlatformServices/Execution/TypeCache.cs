@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -21,7 +22,7 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
-    private readonly ReflectHelper _reflectionHelper;
+    private readonly IReflectionOperations _reflectionOperations;
 
     /// <summary>
     /// Assembly info cache.
@@ -39,15 +40,15 @@ internal sealed class TypeCache : MarshalByRefObject
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
     internal TypeCache()
-        : this(ReflectHelper.Instance)
+        : this(PlatformServiceProvider.Instance.ReflectionOperations)
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
-    /// <param name="reflectionHelper"> An instance to the <see cref="ReflectHelper"/> object. </param>
-    internal TypeCache(ReflectHelper reflectionHelper) => _reflectionHelper = reflectionHelper;
+    /// <param name="reflectionOperations"> An instance to the <see cref="IReflectionOperations"/> object. </param>
+    internal TypeCache(IReflectionOperations reflectionOperations) => _reflectionOperations = reflectionOperations;
 
     /// <summary>
     /// Gets Class Info cache which has cleanup methods to execute.
@@ -251,7 +252,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
+        TestClassAttribute? testClassAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -303,7 +304,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
     private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
     {
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo);
+        TimeoutAttribute? timeoutAttribute = _reflectionOperations.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo);
         if (timeoutAttribute != null)
         {
             if (!timeoutAttribute.HasCorrectTimeout)
@@ -340,7 +341,7 @@ internal sealed class TypeCache : MarshalByRefObject
                     try
                     {
                         // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
+                        if (!@this._reflectionOperations.IsAttributeDefined<TestClassAttribute>(t))
                         {
                             continue;
                         }
@@ -373,8 +374,8 @@ internal sealed class TypeCache : MarshalByRefObject
                             assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = @this.TryGetTimeoutInfo(methodInfo, FixtureKind.AssemblyCleanup);
                         }
 
-                        bool isGlobalTestInitialize = @this._reflectionHelper.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
-                        bool isGlobalTestCleanup = @this._reflectionHelper.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
+                        bool isGlobalTestInitialize = @this._reflectionOperations.IsAttributeDefined<GlobalTestInitializeAttribute>(methodInfo);
+                        bool isGlobalTestCleanup = @this._reflectionOperations.IsAttributeDefined<GlobalTestCleanupAttribute>(methodInfo);
 
                         if (isGlobalTestInitialize || isGlobalTestCleanup)
                         {
@@ -384,7 +385,7 @@ internal sealed class TypeCache : MarshalByRefObject
                             // We want to avoid loading types early as much as we can.
                             bool isValid = methodInfo is { IsSpecialName: false, IsPublic: true, IsStatic: true, IsGenericMethod: false, DeclaringType.IsGenericType: false, DeclaringType.IsPublic: true } &&
                                 methodInfo.GetParameters() is { } parameters && parameters.Length == 1 && parameters[0].ParameterType == typeof(TestContext) &&
-                                methodInfo.IsValidReturnType();
+                                methodInfo.IsValidReturnType(@this._reflectionOperations);
 
                             if (isValid && isGlobalTestInitialize)
                             {
@@ -416,12 +417,12 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo))
+        if (!_reflectionOperations.IsAttributeDefined<TInitializeAttribute>(methodInfo))
         {
             return false;
         }
 
-        if (!methodInfo.HasCorrectClassOrAssemblyInitializeSignature())
+        if (!methodInfo.HasCorrectClassOrAssemblyInitializeSignature(_reflectionOperations))
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyInitializeMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
@@ -444,12 +445,12 @@ internal sealed class TypeCache : MarshalByRefObject
         // {
         //    return false;
         // }
-        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo))
+        if (!_reflectionOperations.IsAttributeDefined<TCleanupAttribute>(methodInfo))
         {
             return false;
         }
 
-        if (!methodInfo.HasCorrectClassOrAssemblyCleanupSignature())
+        if (!methodInfo.HasCorrectClassOrAssemblyCleanupSignature(_reflectionOperations))
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
@@ -512,7 +513,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo)?
+                if (_reflectionOperations.GetFirstAttributeOrDefault<ClassInitializeAttribute>(methodInfo)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -534,7 +535,7 @@ internal sealed class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo)?
+                if (_reflectionOperations.GetFirstAttributeOrDefault<ClassCleanupAttribute>(methodInfo)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -561,12 +562,12 @@ internal sealed class TypeCache : MarshalByRefObject
         bool isBase,
         HashSet<string>? instanceMethods)
     {
-        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo);
-        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo);
+        bool hasTestInitialize = _reflectionOperations.IsAttributeDefined<TestInitializeAttribute>(methodInfo);
+        bool hasTestCleanup = _reflectionOperations.IsAttributeDefined<TestCleanupAttribute>(methodInfo);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
-            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+            if (instanceMethods is not null && methodInfo.HasCorrectTestInitializeOrCleanupSignature(_reflectionOperations))
             {
                 instanceMethods.Add(methodInfo.Name);
             }
@@ -574,7 +575,7 @@ internal sealed class TypeCache : MarshalByRefObject
             return;
         }
 
-        if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature())
+        if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature(_reflectionOperations))
         {
             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
@@ -639,6 +640,15 @@ internal sealed class TypeCache : MarshalByRefObject
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
+        // Populate the test context with test properties from [TestProperty] attributes.
+        foreach (Trait trait in _reflectionOperations.GetTestPropertiesAsTraits(methodInfo))
+        {
+            if (!testContext.TryGetPropertyValue(trait.Name, out _))
+            {
+                testContext.AddProperty(trait.Name, trait.Value);
+            }
+        }
+
         return new TestMethodInfo(methodInfo, testClassInfo, testContext);
     }
 
@@ -694,7 +704,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         return testMethodInfo is null
-            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
+            || !testMethodInfo.HasCorrectTestMethodSignature(true, PlatformServiceProvider.Instance.ReflectionOperations, discoverInternals)
             ? null
             : testMethodInfo;
     }

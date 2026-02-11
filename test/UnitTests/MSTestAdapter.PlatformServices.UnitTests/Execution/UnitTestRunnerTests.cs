@@ -5,8 +5,9 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -278,16 +279,16 @@ public sealed class UnitTestRunnerTests : TestContainer
 
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
-        var mockReflectHelper = new Mock<ReflectHelper>();
+        var mockReflectionOperations = new Mock<IReflectionOperations>();
 
         Type type = typeof(DummyTestClassWithInitializeMethods);
         MethodInfo methodInfo = type.GetMethod("TestMethod")!;
         TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
-        var unitTestRunner = new UnitTestRunner(new MSTestSettings(), [new UnitTestElement(testMethod)], mockReflectHelper.Object);
+        var unitTestRunner = new UnitTestRunner(new MSTestSettings(), [new UnitTestElement(testMethod)], mockReflectionOperations.Object);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());
-        mockReflectHelper.Setup(
+        mockReflectionOperations.Setup(
             rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!))
             .Returns(true);
 
@@ -349,7 +350,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         public static Action ClassInitializeMethodBody { get; set; } = null!;
 
-        // The reflectHelper instance would set the AssemblyInitialize attribute here before running any tests.
+        // The reflectionOperations instance would set the AssemblyInitialize attribute here before running any tests.
         // Setting an attribute causes conflicts with other tests.
         public static void AssemblyInitialize(TestContext tc) => AssemblyInitializeMethodBody.Invoke();
 

@@ -35,6 +35,8 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public Mock<IReflectionOperations> MockReflectionOperations { get; set; } = null!;
 
+    private MockableReflectionOperations? _reflectionOperationsWrapper;
+
     #endregion
 
     public IFileOperations FileOperations => MockFileOperations.Object;
@@ -54,7 +56,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     public IReflectionOperations ReflectionOperations
     {
         get => MockReflectionOperations != null
-            ? MockReflectionOperations.Object
+            ? (_reflectionOperationsWrapper ?? MockReflectionOperations.Object)
             : field ??= new ReflectionOperations();
         private set;
     }
@@ -74,5 +76,15 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) => MockTestSourceHost.Object;
 
-    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations>();
+    public void SetupMockReflectionOperations()
+    {
+        MockReflectionOperations = new Mock<IReflectionOperations>();
+        _reflectionOperationsWrapper = MockableReflectionOperations.Create(MockReflectionOperations);
+    }
+
+    public void SetupMockReflectionOperations(Mock<IReflectionOperations> mock)
+    {
+        MockReflectionOperations = mock;
+        _reflectionOperationsWrapper = MockableReflectionOperations.Create(mock);
+    }
 }

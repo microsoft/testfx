@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -200,7 +199,7 @@ internal sealed class TestMethodRunner
     private async Task<bool> TryExecuteFoldedDataDrivenTestsAsync(List<TestResult> results)
     {
         bool hasTestDataSource = false;
-        foreach (Attribute attribute in ReflectHelper.Instance.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
+        foreach (Attribute attribute in PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
         {
             if (attribute is not UTF.ITestDataSource testDataSource)
             {
