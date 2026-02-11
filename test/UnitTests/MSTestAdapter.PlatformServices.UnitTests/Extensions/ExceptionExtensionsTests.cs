@@ -9,8 +9,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resourc
 
 using TestFramework.ForTestingMSTest;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace MSTestAdapter.PlatformServices.UnitTests.Extensions;
 
 public class ExceptionExtensionsTests : TestContainer
@@ -136,18 +134,18 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
     {
         var exception = new AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
-        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out _);
+        exception.TryGetUnitTestAssertException(out UnitTestOutcome outcome, out string? exceptionMessage, out _);
 
-        outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exceptionMessage.Should().Be("Dummy Message");
     }
 
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
     {
         var exception = new AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
-        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string? exceptionMessage, out _);
+        exception.TryGetUnitTestAssertException(out UnitTestOutcome outcome, out string? exceptionMessage, out _);
 
-        outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        outcome.Should().Be(UnitTestOutcome.Failed);
         exceptionMessage.Should().Be("Dummy Message");
     }
     #endregion

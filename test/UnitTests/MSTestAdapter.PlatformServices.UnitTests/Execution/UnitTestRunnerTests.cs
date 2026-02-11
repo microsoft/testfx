@@ -14,8 +14,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public sealed class UnitTestRunnerTests : TestContainer
@@ -105,7 +103,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.NotFound);
+        results[0].Outcome.Should().Be(UnitTestOutcome.NotFound);
         results[0].IgnoreReason.Should().Be("Test method M was not found.");
     }
 
@@ -123,7 +121,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be("IgnoreTestClassMessage");
     }
 
@@ -141,7 +139,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be(string.Empty);
     }
 
@@ -159,7 +157,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be("IgnoreTestMessage");
     }
 
@@ -177,7 +175,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be(string.Empty);
     }
 
@@ -195,7 +193,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be("IgnoreTestClassMessage");
     }
 
@@ -213,7 +211,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Ignored);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Ignored);
         results[0].IgnoreReason.Should().Be("IgnoreTestMessage");
     }
 
@@ -236,7 +234,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Error);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Error);
         results[0].IgnoreReason.Should().Be(expectedMessage);
     }
 
@@ -254,7 +252,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
         results[0].IgnoreReason.Should().BeNull();
     }
 
@@ -273,7 +271,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         results.Should().NotBeNull();
         results.Length.Should().Be(1);
-        results[0].Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
@@ -338,7 +336,7 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         [TestMethod]
 #pragma warning disable RS0030 // Do not use banned APIs
-        public void TestMethodToTestInProgress() => Assert.AreEqual(UTF.UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
+        public void TestMethodToTestInProgress() => Assert.AreEqual(UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
 #pragma warning restore RS0030 // Do not use banned APIs
     }
 

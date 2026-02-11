@@ -13,7 +13,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -109,7 +108,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UTF.UnitTestOutcome.InProgress);
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -129,7 +128,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                 TestResult assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
 
-                if (assemblyInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
+                if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
                 {
                     result = [assemblyInitializeResult];
                 }
@@ -139,7 +138,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
                     TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
-                    if (classInitializeResult.Outcome != UTF.UnitTestOutcome.Passed)
+                    if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
                         result = [classInitializeResult];
                     }
@@ -253,7 +252,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 #pragma warning disable IDE0056 // Use index operator
                     TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UTF.UnitTestOutcome.Error;
+                    lastResult.Outcome = UnitTestOutcome.Error;
                     lastResult.TestFailureException = ex;
                     return;
                 }
