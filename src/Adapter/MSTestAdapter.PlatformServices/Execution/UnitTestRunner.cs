@@ -165,7 +165,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 if (testMethodInfo is not null)
                 {
-                    await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
+                    TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup).ConfigureAwait(false);
+                    if (cleanupResult is not null)
+                    {
+                        result = [.. result, cleanupResult];
+                    }
                 }
 
                 // Mark the class as complete when all class cleanups are complete. When all classes are complete we progress to running assembly cleanup.

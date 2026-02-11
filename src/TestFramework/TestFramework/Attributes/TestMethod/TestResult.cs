@@ -135,6 +135,8 @@ public class TestResult
     /// </summary>
     public IList<string>? ResultFiles { get; set; }
 
+    internal bool IsClassCleanupFailureResult { get; set; }
+
     internal static TestResult CreateIgnoredResult(string? ignoreReason)
         => new()
         {

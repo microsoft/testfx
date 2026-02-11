@@ -207,19 +207,23 @@ internal class TestExecutionManager
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
 
-    internal void SendTestResults(TestCase test, TestTools.UnitTesting.TestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
+    internal void SendTestResults(
+        TestCase test,
+        TestTools.UnitTesting.TestResult[] unitTestResults,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-            if (test == null)
-            {
-                continue;
-            }
-
-            var testResult = unitTestResult.ToTestResult(test, startTime, endTime, _environment.MachineName, MSTestSettings.CurrentSettings);
+            var testResult = unitTestResult.ToTestResult(
+                test,
+                startTime,
+                endTime,
+                _environment.MachineName,
+                MSTestSettings.CurrentSettings);
 
             testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
