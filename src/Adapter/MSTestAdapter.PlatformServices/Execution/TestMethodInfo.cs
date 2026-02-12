@@ -14,9 +14,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFUnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
@@ -433,7 +430,7 @@ internal class TestMethodInfo : ITestMethod
                             await tcs.Task.ConfigureAwait(false);
                         }
 
-                        result.Outcome = UTF.UnitTestOutcome.Passed;
+                        result.Outcome = UnitTestOutcome.Passed;
                     }
                 }
             }
@@ -443,9 +440,9 @@ internal class TestMethodInfo : ITestMethod
 
                 if (realException.IsOperationCanceledExceptionFromToken(TestContext!.Context.CancellationTokenSource.Token))
                 {
-                    result.Outcome = UTF.UnitTestOutcome.Timeout;
+                    result.Outcome = UnitTestOutcome.Timeout;
                     result.TestFailureException = new TestFailedException(
-                        UTFUnitTestOutcome.Timeout,
+                        UnitTestOutcome.Timeout,
                         timeoutTokenSource?.Token.IsCancellationRequested == true
                             ? string.Format(
                                 CultureInfo.InvariantCulture,
@@ -464,11 +461,11 @@ internal class TestMethodInfo : ITestMethod
                     result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
                 }
 
-                if (result.Outcome != UTF.UnitTestOutcome.Passed)
+                if (result.Outcome != UnitTestOutcome.Passed)
                 {
                     result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
-                        ? UTF.UnitTestOutcome.Inconclusive
-                        : UTF.UnitTestOutcome.Failed;
+                        ? UnitTestOutcome.Inconclusive
+                        : UnitTestOutcome.Failed;
                 }
             }
         }
@@ -530,7 +527,7 @@ internal class TestMethodInfo : ITestMethod
         if (ex is TargetInvocationException && ex.InnerException == null)
         {
             errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
-            return new TestFailedException(UTFUnitTestOutcome.Error, errorMessage);
+            return new TestFailedException(UnitTestOutcome.Error, errorMessage);
         }
 
         if (ex is TestFailedException testFailedException)
@@ -550,11 +547,11 @@ internal class TestMethodInfo : ITestMethod
             && missingMethodException.StackTrace.Substring(0, lineReturnIndex).Contains($"{className}.{methodName}"))
 #pragma warning restore IDE0057 // Use range operator
         {
-            return new TestFailedException(UTFUnitTestOutcome.NotFound, missingMethodException.Message, missingMethodException);
+            return new TestFailedException(UnitTestOutcome.NotFound, missingMethodException.Message, missingMethodException);
         }
 
         // Get the real exception thrown by the test method
-        if (realException.TryGetUnitTestAssertException(out UTFUnitTestOutcome outcome, out string? exceptionMessage, out StackTraceInformation? exceptionStackTraceInfo))
+        if (realException.TryGetUnitTestAssertException(out UnitTestOutcome outcome, out string? exceptionMessage, out StackTraceInformation? exceptionStackTraceInfo))
         {
             return new TestFailedException(outcome, exceptionMessage, exceptionStackTraceInfo, realException);
         }
@@ -589,7 +586,7 @@ internal class TestMethodInfo : ITestMethod
             stackTrace = realException.GetStackTraceInformation();
         }
 
-        return new TestFailedException(UTFUnitTestOutcome.Failed, errorMessage, stackTrace, realException);
+        return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
     }
 
     /// <summary>
@@ -670,7 +667,7 @@ internal class TestMethodInfo : ITestMethod
         }
 
         Exception realException = testCleanupException.GetRealException();
-        UTFUnitTestOutcome outcomeFromRealException = realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+        UnitTestOutcome outcomeFromRealException = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
         result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
 
         realException = testCleanupMethod != null
@@ -772,8 +769,8 @@ internal class TestMethodInfo : ITestMethod
         StackTraceInformation? stackTrace = realException.GetStackTraceInformation();
 
         result.Outcome = realException is AssertInconclusiveException
-            ? UTF.UnitTestOutcome.Inconclusive
-            : UTF.UnitTestOutcome.Failed;
+            ? UnitTestOutcome.Inconclusive
+            : UnitTestOutcome.Failed;
         result.TestFailureException = new TestFailedException(
             result.Outcome,
             errorMessage,
@@ -982,9 +979,9 @@ internal class TestMethodInfo : ITestMethod
                 TestClassName,
                 realException.GetFormattedExceptionMessage());
 
-            result.Outcome = UTF.UnitTestOutcome.Failed;
+            result.Outcome = UnitTestOutcome.Failed;
             StackTraceInformation? stackTraceInfo = realException.GetStackTraceInformation();
-            result.TestFailureException = new TestFailedException(UTFUnitTestOutcome.Failed, errorMessage, stackTraceInfo);
+            result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo);
         }
 
         return false;
@@ -1021,9 +1018,9 @@ internal class TestMethodInfo : ITestMethod
                 {
                     return new()
                     {
-                        Outcome = UTF.UnitTestOutcome.Timeout,
+                        Outcome = UnitTestOutcome.Timeout,
                         TestFailureException = new TestFailedException(
-                            UTFUnitTestOutcome.Timeout,
+                            UnitTestOutcome.Timeout,
                             string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)),
                     };
                 }
@@ -1038,9 +1035,9 @@ internal class TestMethodInfo : ITestMethod
                     // instances are not well defined so we have to handle the exception entirely.
                     return new()
                     {
-                        Outcome = UTF.UnitTestOutcome.Timeout,
+                        Outcome = UnitTestOutcome.Timeout,
                         TestFailureException = new TestFailedException(
-                            UTFUnitTestOutcome.Timeout,
+                            UnitTestOutcome.Timeout,
                             timeoutTokenSource.Token.IsCancellationRequested
                                 ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)
                                 : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName)),
@@ -1080,7 +1077,7 @@ internal class TestMethodInfo : ITestMethod
             await TestContext.Context.CancellationTokenSource.CancelAsync().ConfigureAwait(false);
         }
 
-        TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UTFUnitTestOutcome.Timeout, errorMessage) };
+        TestResult timeoutResult = new() { Outcome = UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
 
         // TODO: execution context propagation here may still not be accurate.
         // if test init was successfully executed by ExecuteAsyncAction, but then the test itself timed out or cancelled,

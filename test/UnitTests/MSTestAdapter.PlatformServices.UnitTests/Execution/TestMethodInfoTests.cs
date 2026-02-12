@@ -15,8 +15,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 /// <summary>
@@ -97,7 +95,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await method.InvokeAsync(null);
 
         methodCalled.Should().BeTrue();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeAsyncShouldHandleThrowAssertInconclusive()
@@ -116,7 +114,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
     public async Task TestMethodInfoInvokeAsyncShouldHandleAssertInconclusive()
@@ -137,7 +135,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
     public async Task TestMethodInfoInvokeShouldHandleThrowAssertInconclusive()
@@ -156,7 +154,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
     public async Task TestMethodInfoInvokeShouldHandleAssertInconclusive()
@@ -177,7 +175,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
     public async Task TestMethodInfoInvokeShouldReportTestContextMessages()
@@ -246,7 +244,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await method.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
         result.TestFailureException.Should().BeOfType<TestFailedException>();
         result.TestFailureException.InnerException.Should().BeOfType<MissingMethodException>();
     }
@@ -263,7 +261,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
         await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         ctorCallCount.Should().Be(2);
     }
 
@@ -273,7 +271,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public async Task TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrows()
@@ -307,7 +305,7 @@ public class TestMethodInfoTests : TestContainer
             typeof(DummyTestClassWithParameterizedCtor).FullName,
             "System.Reflection.TargetParameterCountException: Parameter count mismatch.");
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
         result.TestFailureException!.Message.Should().Be(errorMessage);
     }
 
@@ -373,7 +371,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     #endregion
@@ -395,7 +393,7 @@ public class TestMethodInfoTests : TestContainer
         async Task RunMethod() => result = await method.InvokeAsync(null);
 
         await RunMethod();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestContextDoesNotHaveASetter()
@@ -413,7 +411,7 @@ public class TestMethodInfoTests : TestContainer
         async Task RunMethod() => result = await method.InvokeAsync(null);
 
         await RunMethod();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldSetTestContextForTestClassInstance()
@@ -432,7 +430,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public async Task TestMethodInfoInvokeShouldSetErrorMessageIfSetTestContextThrows()
@@ -476,7 +474,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         _testContextImplementation.Equals(testContext).Should().BeTrue();
     }
 
@@ -493,7 +491,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         testInitializeCalled.Should().BeTrue();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldCallAsyncTestInitializeAndWaitForCompletion()
@@ -505,7 +503,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         testInitializeCalled.Should().BeTrue();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
@@ -526,7 +524,7 @@ public class TestMethodInfoTests : TestContainer
                                         "baseTestInitializeCalled2",
                                         "classTestInitializeCalled",
                                     };
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
     }
 
@@ -536,7 +534,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestInitializeForBaseClassIsNull()
@@ -545,7 +543,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult()
@@ -570,12 +568,12 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         // Assert.
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Message.Should().Be(errorMessage);
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
@@ -597,11 +595,11 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         // Assert.
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<Exception>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
 
@@ -639,12 +637,12 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         // Assert.
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Message.Should().Be(errorMessage);
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<AssertFailedException>();
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
@@ -674,12 +672,12 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         // Assert.
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Message.Should().Be(errorMessage);
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
@@ -689,7 +687,7 @@ public class TestMethodInfoTests : TestContainer
     {
         // Arrange.
 #pragma warning disable RS0030 // Do not use banned APIs
-        DummyTestClass.TestConstructorMethodBody = () => UTF.Assert.Inconclusive("dummyInconclusiveMessage");
+        DummyTestClass.TestConstructorMethodBody = () => Assert.Inconclusive("dummyInconclusiveMessage");
 #pragma warning restore RS0030 // Do not use banned APIs
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
@@ -702,13 +700,13 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         // Assert.
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
-        exception.InnerException.Should().BeOfType<UTF.AssertInconclusiveException>();
+        exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
 #if DEBUG
         exception.StackTraceInformation!.ErrorStackTrace.Contains(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
@@ -734,11 +732,11 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
         // Assert.
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.InnerException.Should().BeOfType<Exception>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
 
@@ -764,7 +762,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         cleanupMethodCalled.Should().BeTrue();
     }
 
@@ -776,7 +774,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         cleanupMethodCalled.Should().BeTrue();
     }
 
@@ -786,7 +784,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClasses()
@@ -806,7 +804,7 @@ public class TestMethodInfoTests : TestContainer
                                         "baseTestCleanupCalled1",
                                         "baseTestCleanupCalled2",
                                     };
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
     }
 
@@ -832,7 +830,7 @@ public class TestMethodInfoTests : TestContainer
                                         "baseTestCleanupCalled5",
                                     };
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
         expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
     }
 
@@ -850,11 +848,11 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<ArgumentException>();
         exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
@@ -878,11 +876,11 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
@@ -905,11 +903,11 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
 
         var exception = result.TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
-        exception.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Message.Should().Be(expectedErrorMessage);
         exception.InnerException.Should().BeOfType<AssertFailedException>();
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
@@ -937,7 +935,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestCleanupMethod!.Name,
             "System.NotImplementedException: dummyErrorMessage");
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Should().NotBeNull();
         exception.InnerExceptions[0].Message.Contains(errorMessage).Should().BeTrue();
         exception.InnerExceptions[1].Message.Contains(cleanupError).Should().BeTrue();
@@ -952,7 +950,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
         var exception = result.TestFailureException as AggregateException;
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Should().NotBeNull();
         ((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()").Should().BeTrue();
         ((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()").Should().BeTrue();
@@ -966,7 +964,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
         var exception = result.TestFailureException as TestFailedException;
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exception.Should().NotBeNull();
         exception.Message.Contains("Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException").Should().BeTrue();
     }
@@ -979,7 +977,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public async Task TestMethodInfoInvokeShouldCallDisposeForDisposableTestClass()
@@ -1078,7 +1076,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         testCleanupMethodCalled.Should().BeTrue();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestInitializeMethodThrows()
@@ -1092,7 +1090,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         testCleanupMethodCalled.Should().BeTrue();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestCleanupIfTestClassInstanceIsNotNull()
@@ -1106,7 +1104,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
         testCleanupMethodCalled.Should().BeFalse();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Failed);
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
     public async Task TestMethodInfoInvokeShouldNotCallTestCleanupIfClassSetContextThrows()
@@ -1130,14 +1128,14 @@ public class TestMethodInfoTests : TestContainer
             Executor = _testMethodAttribute,
         };
         TestResult result = await testMethodInfo.InvokeAsync(null);
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
         result.TestFailureException!.Message.Should().Be(message);
     }
 
     public async Task TestMethodInfoInvokeShouldSetTestOutcomeBeforeTestCleanup()
     {
-        UTF.UnitTestOutcome testOutcome = UTF.UnitTestOutcome.Unknown;
+        UnitTestOutcome testOutcome = UnitTestOutcome.Unknown;
         DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
         DummyTestClass.TestCleanupMethodBody = c =>
         {
@@ -1155,7 +1153,7 @@ public class TestMethodInfoTests : TestContainer
 
         TestResult result = await testMethodInfo.InvokeAsync(null);
 
-        testOutcome.Should().Be(UTF.UnitTestOutcome.Inconclusive);
+        testOutcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
     #endregion
@@ -1185,7 +1183,7 @@ public class TestMethodInfoTests : TestContainer
                                         "testCleanup",
                                     };
         expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     #endregion
@@ -1212,7 +1210,7 @@ public class TestMethodInfoTests : TestContainer
 
             TestResult result = await method.InvokeAsync(null);
 
-            result.Outcome.Should().Be(UTF.UnitTestOutcome.Timeout);
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
             result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal).Should().BeTrue();
         });
     }
@@ -1226,7 +1224,7 @@ public class TestMethodInfoTests : TestContainer
             Executor = _testMethodAttribute,
         };
         TestResult result = await method.InvokeAsync(null);
-        result.Outcome.Should().Be(UTF.UnitTestOutcome.Passed);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task TestMethodInfoInvokeShouldCancelTokenSourceOnTimeout()
@@ -1247,7 +1245,7 @@ public class TestMethodInfoTests : TestContainer
             };
             TestResult result = await method.InvokeAsync(null);
 
-            result.Outcome.Should().Be(UTF.UnitTestOutcome.Timeout);
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
             result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal).Should().BeTrue();
             _testContextImplementation.CancellationTokenSource.IsCancellationRequested.Should().BeTrue("Not canceled..");
         });
@@ -1281,7 +1279,7 @@ public class TestMethodInfoTests : TestContainer
             };
             TestResult result = await method.InvokeAsync(null);
 
-            result.Outcome.Should().Be(UTF.UnitTestOutcome.Timeout);
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
             result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' was canceled", StringComparison.Ordinal).Should().BeTrue();
             _testContextImplementation.CancellationTokenSource.IsCancellationRequested.Should().BeTrue("Not canceled..");
         });
