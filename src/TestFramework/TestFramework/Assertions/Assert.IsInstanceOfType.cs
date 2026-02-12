@@ -372,7 +372,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
@@ -382,9 +382,11 @@ public sealed partial class Assert
 
     /// <inheritdoc cref="IsNotInstanceOfType(object?, Type?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
-    public static void IsNotInstanceOfType(object? value, Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, [InterpolatedStringHandlerArgument(nameof(value), nameof(wrongType))] ref AssertIsNotInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
         => message.ComputeAssertion(valueExpression);
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong generic
