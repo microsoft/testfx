@@ -13,8 +13,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
