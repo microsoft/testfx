@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -661,7 +661,7 @@ public sealed partial class Assert
                     userMessage,
                     ReplaceNulls(expected),
                     ReplaceNulls(actual));
-        ReportSoftAssertFailure("Assert.AreEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     private static void ThrowAssertAreEqualFailed<T>(T expected, T actual, T delta, string userMessage)
@@ -674,7 +674,7 @@ public sealed partial class Assert
             expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
             actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
             delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ReportSoftAssertFailure("Assert.AreEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
@@ -697,7 +697,7 @@ public sealed partial class Assert
             finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
         }
 
-        ReportSoftAssertFailure("Assert.AreEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     /// <summary>
@@ -1225,7 +1225,7 @@ public sealed partial class Assert
             notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
             actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
             delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ReportSoftAssertFailure("Assert.AreNotEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
     }
 
     /// <summary>
@@ -1432,7 +1432,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(notExpected),
             ReplaceNulls(actual));
-        ReportSoftAssertFailure("Assert.AreNotEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
     }
 }
 

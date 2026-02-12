@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -195,7 +195,7 @@ public sealed partial class Assert
                 userMessage);
         }
 
-        ReportSoftAssertFailure("Assert.AreSame", finalMessage);
+        ThrowAssertFailed("Assert.AreSame", finalMessage);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
@@ -247,5 +247,5 @@ public sealed partial class Assert
         => object.ReferenceEquals(notExpected, actual);
 
     private static void ThrowAssertAreNotSameFailed(string userMessage)
-        => ReportSoftAssertFailure("Assert.AreNotSame", userMessage);
+        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
 }

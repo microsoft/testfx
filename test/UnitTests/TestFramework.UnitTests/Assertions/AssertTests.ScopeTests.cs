@@ -122,7 +122,7 @@ public partial class AssertTests
             .WithMessage("Assert.Fail failed. first failure");
     }
 
-    public void Scope_AssertIsNotNull_IsHardFailure()
+    public void Scope_AssertIsNotNull_IsSoftFailure()
     {
         object? value = null;
         Action action = () =>
@@ -130,16 +130,22 @@ public partial class AssertTests
             using (Assert.Scope())
             {
                 Assert.IsNotNull(value);
-                Assert.IsTrue(true); // should not be reached
+                Assert.AreEqual(1, 2);
             }
         };
 
-        // Assert.IsNotNull is a hard assertion — it throws immediately, even within a scope.
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotNull failed. 'value' expression: 'value'.");
+        // Assert.IsNotNull is a soft assertion — failure is collected within a scope.
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be("Assert.IsNotNull failed. 'value' expression: 'value'.");
+        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
-    public void Scope_AssertIsInstanceOfType_IsHardFailure()
+    public void Scope_AssertIsInstanceOfType_IsSoftFailure()
     {
         object value = "hello";
         Action action = () =>
@@ -147,16 +153,22 @@ public partial class AssertTests
             using (Assert.Scope())
             {
                 Assert.IsInstanceOfType(value, typeof(int));
-                Assert.IsTrue(true); // should not be reached
+                Assert.AreEqual(1, 2);
             }
         };
 
-        // Assert.IsInstanceOfType is a hard assertion — it throws immediately, even within a scope.
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'value'. Expected type:<System.Int32>. Actual type:<System.String>.");
+        // Assert.IsInstanceOfType is a soft assertion — failure is collected within a scope.
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be("Assert.IsInstanceOfType failed. 'value' expression: 'value'. Expected type:<System.Int32>. Actual type:<System.String>.");
+        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
-    public void Scope_AssertIsExactInstanceOfType_IsHardFailure()
+    public void Scope_AssertIsExactInstanceOfType_IsSoftFailure()
     {
         object value = "hello";
         Action action = () =>
@@ -164,16 +176,22 @@ public partial class AssertTests
             using (Assert.Scope())
             {
                 Assert.IsExactInstanceOfType(value, typeof(object));
-                Assert.IsTrue(true); // should not be reached
+                Assert.AreEqual(1, 2);
             }
         };
 
-        // Assert.IsExactInstanceOfType is a hard assertion — it throws immediately, even within a scope.
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'value'. Expected exact type:<System.Object>. Actual type:<System.String>.");
+        // Assert.IsExactInstanceOfType is a soft assertion — failure is collected within a scope.
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be("Assert.IsExactInstanceOfType failed. 'value' expression: 'value'. Expected exact type:<System.Object>. Actual type:<System.String>.");
+        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 
-    public void Scope_AssertContainsSingle_IsHardFailure()
+    public void Scope_AssertContainsSingle_IsSoftFailure()
     {
         int[] items = [1, 2, 3];
         Action action = () =>
@@ -181,12 +199,18 @@ public partial class AssertTests
             using (Assert.Scope())
             {
                 Assert.ContainsSingle(items);
-                Assert.IsTrue(true); // should not be reached
+                Assert.AreEqual(1, 2);
             }
         };
 
-        // Assert.ContainsSingle is a hard assertion — it throws immediately, even within a scope.
-        action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'items'.");
+        // Assert.ContainsSingle is a soft assertion — failure is collected within a scope.
+        AggregateException innerException = action.Should().Throw<AssertFailedException>()
+            .WithMessage("2 assertion(s) failed within the assert scope.")
+            .WithInnerException<AggregateException>()
+            .Which;
+
+        innerException.InnerExceptions.Should().HaveCount(2);
+        innerException.InnerExceptions[0].Message.Should().Be("Assert.ContainsSingle failed. Expected collection to contain exactly one element but found 3 element(s). 'collection' expression: 'items'.");
+        innerException.InnerExceptions[1].Message.Should().Contain("Assert.AreEqual failed.");
     }
 }

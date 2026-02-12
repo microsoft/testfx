@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,5 +22,8 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail(string message = "")
-        => ReportHardAssertFailure("Assert.Fail", BuildUserMessage(message));
+    {
+        LaunchDebuggerIfNeeded();
+        throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Fail", BuildUserMessage(message)));
+    }
 }

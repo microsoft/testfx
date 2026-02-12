@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -79,7 +79,7 @@ public sealed class CollectionAssert
             }
         }
 
-        Assert.ReportSoftAssertFailure("CollectionAssert.Contains", Assert.BuildUserMessage(message));
+        Assert.ThrowAssertFailed("CollectionAssert.Contains", Assert.BuildUserMessage(message));
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ public sealed class CollectionAssert
         {
             if (object.Equals(current, element))
             {
-                Assert.ReportSoftAssertFailure("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message));
+                Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message));
             }
         }
     }
@@ -165,7 +165,7 @@ public sealed class CollectionAssert
         {
             if (current == null)
             {
-                Assert.ReportSoftAssertFailure("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message));
+                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message));
             }
         }
     }
@@ -226,7 +226,7 @@ public sealed class CollectionAssert
                         userMessage,
                         FrameworkMessages.Common_NullInMessages);
 
-                    Assert.ReportSoftAssertFailure("CollectionAssert.AllItemsAreUnique", finalMessage);
+                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
                 }
             }
             else
@@ -240,7 +240,7 @@ public sealed class CollectionAssert
                         userMessage,
                         Assert.ReplaceNulls(current));
 
-                    Assert.ReportSoftAssertFailure("CollectionAssert.AllItemsAreUnique", finalMessage);
+                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
                 }
             }
         }
@@ -303,11 +303,11 @@ public sealed class CollectionAssert
             string userMessage = Assert.BuildUserMessage(message);
             if (string.IsNullOrEmpty(userMessage))
             {
-                Assert.ReportSoftAssertFailure("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
             }
             else
             {
-                Assert.ReportSoftAssertFailure("CollectionAssert.IsSubsetOf", $"{returnedSubsetValueMessage} {userMessage}");
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", $"{returnedSubsetValueMessage} {userMessage}");
             }
         }
     }
@@ -357,7 +357,7 @@ public sealed class CollectionAssert
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (isSubsetValue.Item1)
         {
-            Assert.ReportSoftAssertFailure("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message));
+            Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message));
         }
     }
 
@@ -476,7 +476,7 @@ public sealed class CollectionAssert
         // Check whether one is null while the other is not.
         if (expected == null != (actual == null))
         {
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message));
+            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message));
         }
 
         // If the references are the same or both collections are null, they are equivalent.
@@ -500,7 +500,7 @@ public sealed class CollectionAssert
                 userMessage,
                 expectedCollectionCount,
                 actualCollectionCount);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreEquivalent", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", finalMessage);
         }
 
         // If both collections are empty, they are equivalent.
@@ -520,7 +520,7 @@ public sealed class CollectionAssert
                 expectedCount.ToString(CultureInfo.CurrentCulture.NumberFormat),
                 Assert.ReplaceNulls(mismatchedElement),
                 actualCount.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreEquivalent", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", finalMessage);
         }
 
         // All the elements and counts matched.
@@ -654,7 +654,7 @@ public sealed class CollectionAssert
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.BothCollectionsSameReference,
                 userMessage);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreNotEquivalent", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
         }
 
         DebugEx.Assert(actual is not null, "actual is not null here");
@@ -674,7 +674,7 @@ public sealed class CollectionAssert
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.BothCollectionsEmpty,
                 userMessage);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreNotEquivalent", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
         }
 
         // Search for a mismatched element.
@@ -685,7 +685,7 @@ public sealed class CollectionAssert
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.BothSameElements,
                 userMessage);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreNotEquivalent", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
         }
     }
 
@@ -755,7 +755,7 @@ public sealed class CollectionAssert
                     i,
                     expectedType.ToString(),
                     element.GetType().ToString());
-                Assert.ReportSoftAssertFailure("CollectionAssert.AllItemsAreInstancesOfType", finalMessage);
+                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", finalMessage);
             }
 
             i++;
@@ -816,7 +816,7 @@ public sealed class CollectionAssert
         if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreEqual", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
         }
     }
 
@@ -870,7 +870,7 @@ public sealed class CollectionAssert
         if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreNotEqual", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
         }
     }
 
@@ -928,7 +928,7 @@ public sealed class CollectionAssert
         if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreEqual", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
         }
     }
 
@@ -986,7 +986,7 @@ public sealed class CollectionAssert
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
         {
             string finalMessage = ConstructFinalMessage(reason, message);
-            Assert.ReportSoftAssertFailure("CollectionAssert.AreNotEqual", finalMessage);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
         }
     }
 

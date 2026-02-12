@@ -7,11 +7,11 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
 {
-    #region ReportSoftAssertFailure tests
+    #region ThrowAssertFailed tests
     // See https://github.com/dotnet/sdk/issues/25373
-    public void ReportSoftAssertFailureDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
+    public void ThrowAssertFailedDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
     {
-        Action action = () => Assert.ReportSoftAssertFailure("name", "{");
+        Action action = () => Assert.ThrowAssertFailed("name", "{");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("*name failed. {*");
     }

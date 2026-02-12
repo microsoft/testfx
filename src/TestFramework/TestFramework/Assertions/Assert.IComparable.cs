@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -306,7 +306,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ReportSoftAssertFailure("Assert.IsGreaterThan", finalMessage);
+        ThrowAssertFailed("Assert.IsGreaterThan", finalMessage);
     }
 
     private static void ThrowAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string userMessage)
@@ -317,7 +317,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ReportSoftAssertFailure("Assert.IsGreaterThanOrEqualTo", finalMessage);
+        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
     }
 
     private static void ThrowAssertIsLessThanFailed<T>(T upperBound, T value, string userMessage)
@@ -328,7 +328,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ReportSoftAssertFailure("Assert.IsLessThan", finalMessage);
+        ThrowAssertFailed("Assert.IsLessThan", finalMessage);
     }
 
     private static void ThrowAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string userMessage)
@@ -339,7 +339,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ReportSoftAssertFailure("Assert.IsLessThanOrEqualTo", finalMessage);
+        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
     }
 
     private static void ThrowAssertIsPositiveFailed<T>(T value, string userMessage)
@@ -349,7 +349,7 @@ public sealed partial class Assert
             FrameworkMessages.IsPositiveFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ReportSoftAssertFailure("Assert.IsPositive", finalMessage);
+        ThrowAssertFailed("Assert.IsPositive", finalMessage);
     }
 
     private static void ThrowAssertIsNegativeFailed<T>(T value, string userMessage)
@@ -359,6 +359,6 @@ public sealed partial class Assert
             FrameworkMessages.IsNegativeFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ReportSoftAssertFailure("Assert.IsNegative", finalMessage);
+        ThrowAssertFailed("Assert.IsNegative", finalMessage);
     }
 }

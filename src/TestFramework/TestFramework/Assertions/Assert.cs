@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,42 +26,8 @@ public sealed partial class Assert
     public static Assert That { get; } = new();
 
     /// <summary>
-    /// Reports a hard assertion failure. This always throws immediately, even within an <see cref="AssertScope"/>,
-    /// and triggers the debugger if configured. Use for assertions whose annotations change the
-    /// type of a variable (e.g., <c>[NotNull]</c>) where continuing execution would cause downstream errors,
-    /// and for precondition violations (e.g., a required parameter is <see langword="null"/>).
-    /// </summary>
-    /// <param name="assertionName">
-    /// name of the assertion throwing an exception.
-    /// </param>
-    /// <param name="message">
-    /// The assertion failure message.
-    /// </param>
-    [DoesNotReturn]
-    [StackTraceHidden]
-    internal static void ReportHardAssertFailure(string assertionName, string? message)
-        => ReportHardAssertFailure(new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message)));
-
-    /// <summary>
-    /// Reports a hard assertion failure using a pre-built exception. This always throws immediately,
-    /// even within an <see cref="AssertScope"/>, and triggers the debugger if configured.
-    /// </summary>
-    /// <param name="exception">
-    /// The assertion failure exception to throw.
-    /// </param>
-    [DoesNotReturn]
-    [StackTraceHidden]
-    internal static void ReportHardAssertFailure(AssertFailedException exception)
-    {
-        LaunchDebuggerIfNeeded();
-        throw exception;
-    }
-
-    /// <summary>
-    /// Reports a soft assertion failure. Within an <see cref="AssertScope"/>, the failure is collected
+    /// Reports an assertion failure. Within an <see cref="AssertScope"/>, the failure is collected
     /// and execution continues. Outside a scope, the failure is thrown immediately.
-    /// Does not trigger the debugger — the debugger is triggered when the scope is disposed
-    /// and the collected failures are reported.
     /// </summary>
     /// <param name="assertionName">
     /// name of the assertion throwing an exception.
@@ -70,7 +36,7 @@ public sealed partial class Assert
     /// The assertion failure message.
     /// </param>
     [StackTraceHidden]
-    internal static void ReportSoftAssertFailure(string assertionName, string? message)
+    internal static void ThrowAssertFailed(string assertionName, string? message)
     {
         var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
         AssertScope? scope = AssertScope.Current;
@@ -84,7 +50,7 @@ public sealed partial class Assert
     }
 
     [StackTraceHidden]
-    private static void LaunchDebuggerIfNeeded()
+    internal static void LaunchDebuggerIfNeeded()
     {
         if (ShouldLaunchDebugger())
         {
@@ -232,7 +198,8 @@ public sealed partial class Assert
         if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
-            ReportHardAssertFailure(assertionName, finalMessage);
+            LaunchDebuggerIfNeeded();
+            throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, finalMessage));
         }
     }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -287,6 +287,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not exactly the type
     /// of <paramref name="value"/>.
     /// </exception>
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     public static void IsExactInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsExactInstanceOfTypeFailing(value, expectedType))
@@ -294,12 +295,13 @@ public sealed partial class Assert
             ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <inheritdoc cref="IsExactInstanceOfType(object?, Type?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsExactInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, [InterpolatedStringHandlerArgument(nameof(value), nameof(expectedType))] ref AssertIsExactInstanceOfTypeInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
         => message.ComputeAssertion(valueExpression);
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
@@ -308,17 +310,19 @@ public sealed partial class Assert
     /// type and throws an exception if the generic type does not match exactly.
     /// </summary>
     /// <typeparam name="T">The expected exact type of <paramref name="value"/>.</typeparam>
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     public static T IsExactInstanceOfType<T>([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         IsExactInstanceOfType(value, typeof(T), message, valueExpression);
         return (T)value;
     }
+#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <inheritdoc cref="IsExactInstanceOfType{T}(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static T IsExactInstanceOfType<T>([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     {
         message.ComputeAssertion(valueExpression);
         return (T)value!;
@@ -328,7 +332,6 @@ public sealed partial class Assert
     private static bool IsExactInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
         => expectedType is null || value is null || value.GetType() != expectedType;
 
-    [DoesNotReturn]
     private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
         string finalMessage = userMessage;
@@ -342,7 +345,7 @@ public sealed partial class Assert
                 value.GetType().ToString());
         }
 
-        ReportHardAssertFailure("Assert.IsExactInstanceOfType", finalMessage);
+        ThrowAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
     }
 
     /// <summary>
@@ -415,6 +418,6 @@ public sealed partial class Assert
                 value!.GetType().ToString());
         }
 
-        ReportSoftAssertFailure("Assert.IsNotExactInstanceOfType", finalMessage);
+        ThrowAssertFailed("Assert.IsNotExactInstanceOfType", finalMessage);
     }
 }

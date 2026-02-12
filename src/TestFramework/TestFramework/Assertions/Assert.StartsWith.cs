@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,7 +78,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForExpectedPrefixExpressionAndValueExpression(message, expectedPrefixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, expectedPrefix, userMessage);
-            ReportSoftAssertFailure("Assert.StartsWith", finalMessage);
+            ThrowAssertFailed("Assert.StartsWith", finalMessage);
         }
     }
 
@@ -150,7 +150,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(message, notExpectedPrefixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, notExpectedPrefix, userMessage);
-            ReportSoftAssertFailure("Assert.DoesNotStartWith", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
         }
     }
 }

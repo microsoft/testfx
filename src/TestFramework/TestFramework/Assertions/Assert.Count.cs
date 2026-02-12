@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -341,7 +341,7 @@ public sealed partial class Assert
             userMessage,
             expectedCount,
             actualCount);
-        ReportSoftAssertFailure($"Assert.{assertionName}", finalMessage);
+        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
     }
 
     private static void ThrowAssertIsNotEmptyFailed(string userMessage)
@@ -350,6 +350,6 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.IsNotEmptyFailMsg,
             userMessage);
-        ReportSoftAssertFailure("Assert.IsNotEmpty", finalMessage);
+        ThrowAssertFailed("Assert.IsNotEmpty", finalMessage);
     }
 }

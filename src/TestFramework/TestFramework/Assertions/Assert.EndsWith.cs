@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,7 +78,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForExpectedSuffixExpressionAndValueExpression(message, expectedSuffixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, expectedSuffix, userMessage);
-            ReportSoftAssertFailure("Assert.EndsWith", finalMessage);
+            ThrowAssertFailed("Assert.EndsWith", finalMessage);
         }
     }
 
@@ -152,7 +152,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(message, notExpectedSuffixExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotEndWithFail, value, notExpectedSuffix, userMessage);
-            ReportSoftAssertFailure("Assert.DoesNotEndWith", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
         }
     }
 }

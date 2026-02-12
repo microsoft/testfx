@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -538,7 +538,7 @@ public sealed partial class Assert
                             userMessage,
                             typeof(TException),
                             ex.GetType());
-                        ReportSoftAssertFailure("Assert." + assertMethodName, finalMessage);
+                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
 
@@ -550,7 +550,7 @@ public sealed partial class Assert
                     FrameworkMessages.NoExceptionThrown,
                     userMessage,
                     typeof(TException));
-                ReportSoftAssertFailure("Assert." + assertMethodName, finalMessage);
+                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
             }, null);
     }
 
@@ -578,7 +578,7 @@ public sealed partial class Assert
                             userMessage,
                             typeof(TException),
                             ex.GetType());
-                        ReportSoftAssertFailure("Assert." + assertMethodName, finalMessage);
+                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
 
@@ -590,7 +590,7 @@ public sealed partial class Assert
                     FrameworkMessages.NoExceptionThrown,
                     userMessage,
                     typeof(TException));
-                ReportSoftAssertFailure("Assert." + assertMethodName, finalMessage);
+                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
             }, null);
     }
 

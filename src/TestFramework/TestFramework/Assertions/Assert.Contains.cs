@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -173,8 +173,11 @@ public sealed partial class Assert
             ThrowAssertSingleMatchFailed(actualCount, userMessage);
         }
 
-        // Unreachable code but compiler cannot work it out
+        // Within an AssertScope, execution continues past the failure — return default(T) as a placeholder.
+        // Callers should not depend on this value; the assertion failure will be reported when the scope disposes.
+#pragma warning disable CS8603 // Possible null reference return. - Soft assertion: postcondition not enforced in scoped mode.
         return default;
+#pragma warning restore CS8603 // Possible null reference return.
     }
 
     /// <summary>
@@ -478,7 +481,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            ReportSoftAssertFailure("Assert.Contains", finalMessage);
+            ThrowAssertFailed("Assert.Contains", finalMessage);
         }
     }
 
@@ -717,7 +720,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
-            ReportSoftAssertFailure("Assert.DoesNotContain", finalMessage);
+            ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
         }
     }
 
@@ -758,13 +761,12 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
-            ReportSoftAssertFailure("IsInRange", finalMessage);
+            ThrowAssertFailed("IsInRange", finalMessage);
         }
     }
 
     #endregion // IsInRange
 
-    [DoesNotReturn]
     private static void ThrowAssertSingleMatchFailed(int actualCount, string userMessage)
     {
         string finalMessage = string.Format(
@@ -772,10 +774,9 @@ public sealed partial class Assert
             FrameworkMessages.ContainsSingleMatchFailMsg,
             userMessage,
             actualCount);
-        ReportHardAssertFailure("Assert.ContainsSingle", finalMessage);
+        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
     }
 
-    [DoesNotReturn]
     private static void ThrowAssertContainsSingleFailed(int actualCount, string userMessage)
     {
         string finalMessage = string.Format(
@@ -783,7 +784,7 @@ public sealed partial class Assert
             FrameworkMessages.ContainsSingleFailMsg,
             userMessage,
             actualCount);
-        ReportHardAssertFailure("Assert.ContainsSingle", finalMessage);
+        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
     }
 
     private static void ThrowAssertContainsItemFailed(string userMessage)
@@ -792,7 +793,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsItemFailMsg,
             userMessage);
-        ReportSoftAssertFailure("Assert.Contains", finalMessage);
+        ThrowAssertFailed("Assert.Contains", finalMessage);
     }
 
     private static void ThrowAssertContainsPredicateFailed(string userMessage)
@@ -801,7 +802,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsPredicateFailMsg,
             userMessage);
-        ReportSoftAssertFailure("Assert.Contains", finalMessage);
+        ThrowAssertFailed("Assert.Contains", finalMessage);
     }
 
     private static void ThrowAssertDoesNotContainItemFailed(string userMessage)
@@ -810,7 +811,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainItemFailMsg,
             userMessage);
-        ReportSoftAssertFailure("Assert.DoesNotContain", finalMessage);
+        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
     }
 
     private static void ThrowAssertDoesNotContainPredicateFailed(string userMessage)
@@ -819,6 +820,6 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainPredicateFailMsg,
             userMessage);
-        ReportSoftAssertFailure("Assert.DoesNotContain", finalMessage);
+        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
     }
 }
