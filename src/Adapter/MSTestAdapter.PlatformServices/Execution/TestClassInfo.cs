@@ -9,8 +9,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTFUnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
@@ -297,7 +295,7 @@ internal sealed class TestClassInfo
         // Fail the current test if it was a failure.
         Exception realException = ClassInitializationException.GetRealException();
 
-        UTFUnitTestOutcome outcome = realException is AssertInconclusiveException ? UTFUnitTestOutcome.Inconclusive : UTFUnitTestOutcome.Failed;
+        UnitTestOutcome outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         string exceptionMessage = realException.TryGetMessage();
@@ -349,7 +347,7 @@ internal sealed class TestClassInfo
         if (ClassInitializeMethod is null && BaseClassInitMethods.Count == 0)
         {
             IsClassInitializeExecuted = true;
-            return _classInitializeResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed };
+            return _classInitializeResult = new() { Outcome = UnitTestOutcome.Passed };
         }
 
         // At this point, maybe class initialize was executed by another thread such
@@ -381,7 +379,7 @@ internal sealed class TestClassInfo
             {
                 var result = new TestResult
                 {
-                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Error,
+                    Outcome = UnitTestOutcome.Error,
                     IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
                 };
 
@@ -407,8 +405,8 @@ internal sealed class TestClassInfo
 
                     return new TestResult
                     {
-                        TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                        Outcome = UTFUnitTestOutcome.Error,
+                        TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                        Outcome = UnitTestOutcome.Error,
                     };
                 }
             }
@@ -436,7 +434,7 @@ internal sealed class TestClassInfo
         {
             var result = new TestResult
             {
-                Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed,
+                Outcome = UnitTestOutcome.Passed,
             };
 
             try
@@ -452,8 +450,8 @@ internal sealed class TestClassInfo
             {
                 result = new TestResult
                 {
-                    TestFailureException = new TestFailedException(UTFUnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                    Outcome = UTFUnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    Outcome = UnitTestOutcome.Error,
                 };
             }
             finally
@@ -604,7 +602,7 @@ internal sealed class TestClassInfo
         StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         var testFailedException = new TestFailedException(
-            UTFUnitTestOutcome.Failed,
+            UnitTestOutcome.Failed,
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ClassCleanupMethodWasUnsuccesful,
@@ -678,7 +676,7 @@ internal sealed class TestClassInfo
 #pragma warning disable IDE0056 // Use index operator
                     TestResult lastResult = results[results.Length - 1];
 #pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = TestTools.UnitTesting.UnitTestOutcome.Error;
+                    lastResult.Outcome = UnitTestOutcome.Error;
                     lastResult.TestFailureException = ex;
                 }
             }

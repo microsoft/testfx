@@ -45,7 +45,6 @@ internal static class TestResultExtensions
 
         testResult.SetPropertyValue(EngineConstants.ExecutionIdProperty, frameworkTestResult.ExecutionId);
         testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
-        testResult.SetPropertyValue(EngineConstants.InnerResultsCountProperty, frameworkTestResult.InnerResultsCount);
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {

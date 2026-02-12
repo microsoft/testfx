@@ -110,6 +110,7 @@ public class TestResult
     /// <summary>
     /// Gets or sets the inner results count of the result.
     /// </summary>
+    [Obsolete("This API is unused and has no effect.", error: true)]
     public int InnerResultsCount { get; set; }
 
     /// <summary>
@@ -126,6 +127,7 @@ public class TestResult
     /// <summary>
     /// Gets or sets the return value of the test method. (Currently null always).
     /// </summary>
+    [Obsolete("This API is unused and has no effect.", error: true)]
     public object? ReturnValue { get; set; }
 
     /// <summary>

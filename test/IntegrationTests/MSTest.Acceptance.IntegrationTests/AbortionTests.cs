@@ -10,7 +10,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
-    private const string AssetName = "Abort";
+    private const string AssetName = "AbortMSTestAsset";
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
@@ -39,7 +39,7 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
-#file Abort.csproj
+#file AbortMSTestAsset.csproj
 <Project Sdk="Microsoft.NET.Sdk">
    <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>

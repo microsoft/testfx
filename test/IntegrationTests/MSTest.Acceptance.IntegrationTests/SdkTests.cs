@@ -291,44 +291,35 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task NativeAot_Smoke_Test_Windows()
-        // The native AOT publication is pretty flaky and is often failing on CI with "fatal error LNK1136: invalid or corrupt file",
-        // or sometimes doesn't fail but the native code generation is not done.
-        // Retrying the restore/publish on fresh asset seems to be more effective than retrying on the same asset.
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    return;
-                }
-
-                using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
-                    AssetName,
-                    SingleTestSourceCode
-                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
-                    .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
-                    .PatchCodeWithReplace("$ExtraProperties$", """
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
                 """),
-                    addPublicFeeds: true);
+            addPublicFeeds: true);
 
-                DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-                    $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
-                    AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-                    // We prefer to use the outer retry mechanism as we need some extra checks
-                    retryCount: 0, cancellationToken: TestContext.CancellationToken);
-                compilationResult.AssertOutputContains("Generating native code");
-                compilationResult.AssertOutputDoesNotContain("warning");
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            // We prefer to use the outer retry mechanism as we need some extra checks
+            retryCount: 0, cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
+        compilationResult.AssertOutputDoesNotContain("warning");
 
-                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
-                TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
-                testHostResult.AssertExitCodeIs(ExitCodes.Success);
-                testHostResult.AssertOutputContainsSummary(0, 1, 0);
-            }, times: 15, every: TimeSpan.FromSeconds(5));
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+    }
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
