@@ -334,6 +334,7 @@ public sealed partial class Assert
     private static bool IsInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
         => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
 
+    [DoesNotReturn]
     private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
         string finalMessage = userMessage;
@@ -347,7 +348,7 @@ public sealed partial class Assert
                 value.GetType().ToString());
         }
 
-        ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
+        ReportAssertFailed("Assert.IsInstanceOfType", finalMessage);
     }
 
     /// <summary>
@@ -409,6 +410,7 @@ public sealed partial class Assert
             // Null is not an instance of any type.
             (value is not null && wrongType.IsInstanceOfType(value));
 
+    [DoesNotReturn]
     private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
     {
         string finalMessage = userMessage;
@@ -422,6 +424,6 @@ public sealed partial class Assert
                 value!.GetType().ToString());
         }
 
-        ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
+        ReportAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
     }
 }

@@ -538,7 +538,7 @@ public sealed partial class Assert
                             userMessage,
                             typeof(TException),
                             ex.GetType());
-                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                        ReportAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
 
@@ -550,7 +550,7 @@ public sealed partial class Assert
                     FrameworkMessages.NoExceptionThrown,
                     userMessage,
                     typeof(TException));
-                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                ReportAssertFailed("Assert." + assertMethodName, finalMessage);
             }, null);
     }
 
@@ -578,7 +578,7 @@ public sealed partial class Assert
                             userMessage,
                             typeof(TException),
                             ex.GetType());
-                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                        ReportAssertFailed("Assert." + assertMethodName, finalMessage);
                     }, ex);
         }
 
@@ -590,7 +590,7 @@ public sealed partial class Assert
                     FrameworkMessages.NoExceptionThrown,
                     userMessage,
                     typeof(TException));
-                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                ReportAssertFailed("Assert." + assertMethodName, finalMessage);
             }, null);
     }
 

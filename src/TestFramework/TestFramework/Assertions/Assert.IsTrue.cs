@@ -158,7 +158,7 @@ public sealed partial class Assert
         => condition is false or null;
 
     private static void ThrowAssertIsTrueFailed(string? message)
-        => ThrowAssertFailed("Assert.IsTrue", message);
+        => ReportAssertFailed("Assert.IsTrue", message);
 
     /// <inheritdoc cref="IsFalse(bool?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -195,6 +195,7 @@ public sealed partial class Assert
     private static bool IsFalseFailing(bool? condition)
         => condition is true or null;
 
+    [DoesNotReturn]
     private static void ThrowAssertIsFalseFailed(string userMessage)
-        => ThrowAssertFailed("Assert.IsFalse", userMessage);
+        => ReportAssertFailed("Assert.IsFalse", userMessage);
 }

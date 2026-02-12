@@ -333,6 +333,7 @@ public sealed partial class Assert
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
         => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
 
+    [DoesNotReturn]
     private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
     {
         string finalMessage = string.Format(
@@ -341,15 +342,16 @@ public sealed partial class Assert
             userMessage,
             expectedCount,
             actualCount);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
+        ReportAssertFailed($"Assert.{assertionName}", finalMessage);
     }
 
+    [DoesNotReturn]
     private static void ThrowAssertIsNotEmptyFailed(string userMessage)
     {
         string finalMessage = string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.IsNotEmptyFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.IsNotEmpty", finalMessage);
+        ReportAssertFailed("Assert.IsNotEmpty", finalMessage);
     }
 }

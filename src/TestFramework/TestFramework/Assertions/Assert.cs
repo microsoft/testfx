@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,18 +35,35 @@ public sealed partial class Assert
     /// <param name="message">
     /// The assertion failure message.
     /// </param>
+    /// <param name="forceThrow">
+    /// When <see langword="true"/>, the exception is always thrown, even within an <see cref="AssertScope"/>.
+    /// </param>
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
+    [DoesNotReturn]
     [StackTraceHidden]
-    internal static void ThrowAssertFailed(string assertionName, string? message)
+    internal static void ReportAssertFailed(string assertionName, string? message, bool forceThrow = false)
     {
         var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
-        AssertScope? scope = AssertScope.Current;
-        if (scope is not null)
+        if (!forceThrow)
         {
-            scope.AddError(assertionFailedException);
-            return;
+            AssertScope? scope = AssertScope.Current;
+            if (scope is not null)
+            {
+                scope.AddError(assertionFailedException);
+                return;
+            }
         }
 
-        throw assertionFailedException;
+        ThrowAssertFailed(assertionFailedException);
+    }
+#pragma warning restore CS8763 // A method marked [DoesNotReturn] should not return
+
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed(AssertFailedException exception)
+    {
+        LaunchDebuggerIfNeeded();
+        throw exception;
     }
 
     [StackTraceHidden]

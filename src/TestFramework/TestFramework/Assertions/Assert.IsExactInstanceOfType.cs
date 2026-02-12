@@ -332,6 +332,7 @@ public sealed partial class Assert
     private static bool IsExactInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
         => expectedType is null || value is null || value.GetType() != expectedType;
 
+    [DoesNotReturn]
     private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
         string finalMessage = userMessage;
@@ -345,7 +346,7 @@ public sealed partial class Assert
                 value.GetType().ToString());
         }
 
-        ThrowAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
+        ReportAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
     }
 
     /// <summary>
@@ -405,6 +406,7 @@ public sealed partial class Assert
             // Null is not an instance of any type.
             (value is not null && value.GetType() == wrongType);
 
+    [DoesNotReturn]
     private static void ThrowAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
     {
         string finalMessage = userMessage;
@@ -418,6 +420,6 @@ public sealed partial class Assert
                 value!.GetType().ToString());
         }
 
-        ThrowAssertFailed("Assert.IsNotExactInstanceOfType", finalMessage);
+        ReportAssertFailed("Assert.IsNotExactInstanceOfType", finalMessage);
     }
 }

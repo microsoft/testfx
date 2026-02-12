@@ -46,7 +46,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.MatchesRegex", finalMessage);
+            ReportAssertFailed("Assert.MatchesRegex", finalMessage);
         }
     }
 
@@ -122,7 +122,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
+            ReportAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
         }
     }
 

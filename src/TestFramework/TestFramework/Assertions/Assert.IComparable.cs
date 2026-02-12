@@ -298,6 +298,7 @@ public sealed partial class Assert
 
     #endregion // IsNegative
 
+    [DoesNotReturn]
     private static void ThrowAssertIsGreaterThanFailed<T>(T lowerBound, T value, string userMessage)
     {
         string finalMessage = string.Format(
@@ -306,9 +307,10 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThan", finalMessage);
+        ReportAssertFailed("Assert.IsGreaterThan", finalMessage);
     }
 
+    [DoesNotReturn]
     private static void ThrowAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string userMessage)
     {
         string finalMessage = string.Format(
@@ -317,9 +319,10 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
+        ReportAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
     }
 
+    [DoesNotReturn]
     private static void ThrowAssertIsLessThanFailed<T>(T upperBound, T value, string userMessage)
     {
         string finalMessage = string.Format(
@@ -328,9 +331,10 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThan", finalMessage);
+        ReportAssertFailed("Assert.IsLessThan", finalMessage);
     }
 
+    [DoesNotReturn]
     private static void ThrowAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string userMessage)
     {
         string finalMessage = string.Format(
@@ -339,9 +343,10 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
+        ReportAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
     }
 
+    [DoesNotReturn]
     private static void ThrowAssertIsPositiveFailed<T>(T value, string userMessage)
     {
         string finalMessage = string.Format(
@@ -349,9 +354,10 @@ public sealed partial class Assert
             FrameworkMessages.IsPositiveFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsPositive", finalMessage);
+        ReportAssertFailed("Assert.IsPositive", finalMessage);
     }
 
+    [DoesNotReturn]
     private static void ThrowAssertIsNegativeFailed<T>(T value, string userMessage)
     {
         string finalMessage = string.Format(
@@ -359,6 +365,6 @@ public sealed partial class Assert
             FrameworkMessages.IsNegativeFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsNegative", finalMessage);
+        ReportAssertFailed("Assert.IsNegative", finalMessage);
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -58,16 +58,14 @@ internal sealed class AssertScope : IDisposable
 
         if (_errors.Count == 1 && _errors.TryDequeue(out AssertFailedException? singleError))
         {
-            Assert.LaunchDebuggerIfNeeded();
-            throw singleError;
+            Assert.ThrowAssertFailed(singleError);
         }
 
         if (!_errors.IsEmpty)
         {
-            Assert.LaunchDebuggerIfNeeded();
-            throw new AssertFailedException(
+            Assert.ThrowAssertFailed(new AssertFailedException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, _errors.Count),
-                new AggregateException(_errors));
+                new AggregateException(_errors)));
         }
     }
 }
