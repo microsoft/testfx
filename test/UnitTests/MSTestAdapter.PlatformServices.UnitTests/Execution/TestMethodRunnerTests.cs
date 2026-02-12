@@ -43,7 +43,7 @@ public class TestMethodRunnerTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), null, null);
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
-        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
+        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testMethodAttribute);
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };
@@ -158,7 +158,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public async Task RunTestMethodForMultipleResultsReturnMultipleResults()
     {
-        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, new TestMethodWithFailingAndPassingResultsAttribute());
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), new TestMethodWithFailingAndPassingResultsAttribute());
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -433,14 +433,11 @@ public class TestMethodRunnerTests : TestContainer
     {
         public TimeoutInfo TimeoutInfo { get; }
 
-        public ITestContext TestContext { get; }
-
         public TestMethodAttribute TestMethodAttribute { get; }
 
-        public TestMethodOptions(TimeoutInfo timeoutInfo, ITestContext testContextImplementation, TestMethodAttribute testMethodAttribute)
+        public TestMethodOptions(TimeoutInfo timeoutInfo, TestMethodAttribute testMethodAttribute)
         {
             TimeoutInfo = timeoutInfo;
-            TestContext = testContextImplementation;
             TestMethodAttribute = testMethodAttribute;
         }
     }
@@ -450,7 +447,7 @@ public class TestMethodRunnerTests : TestContainer
         private readonly Func<TestResult> _invokeTest;
 
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions.TestContext)
+            : base(testMethod, parent)
         {
             TimeoutInfo = testMethodOptions.TimeoutInfo;
             Executor = testMethodOptions.TestMethodAttribute;

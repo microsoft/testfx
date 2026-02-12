@@ -404,7 +404,7 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        using (TestContextImplementation.SetCurrentTestContext(_testMethodInfo.TestContext as TestContextImplementation))
+                        using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
                         {
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
