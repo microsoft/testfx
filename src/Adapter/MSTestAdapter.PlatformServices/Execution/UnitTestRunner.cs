@@ -109,9 +109,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
             // Get the testMethod
-            TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
-                testMethod,
-                testContextForTestExecution);
+            TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
             TestResult[] result;
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out TestResult[]? notRunnableResult))

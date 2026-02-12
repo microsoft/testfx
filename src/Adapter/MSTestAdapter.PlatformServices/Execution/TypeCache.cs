@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -75,10 +74,9 @@ internal sealed class TypeCache : MarshalByRefObject
     /// Get the test method info corresponding to the parameter test Element.
     /// </summary>
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext)
+    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod)
     {
         Ensure.NotNull(testMethod);
-        Ensure.NotNull(testContext);
 
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
@@ -91,7 +89,7 @@ internal sealed class TypeCache : MarshalByRefObject
         }
 
         // Get the testMethod
-        return ResolveTestMethodInfo(testMethod, testClassInfo, testContext);
+        return ResolveTestMethodInfo(testMethod, testClassInfo);
     }
 
     /// <summary>
@@ -632,14 +630,14 @@ internal sealed class TypeCache : MarshalByRefObject
     /// <returns>
     /// The TestMethodInfo for the given test method. Null if the test method could not be found.
     /// </returns>
-    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext)
+    private TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo)
     {
         DebugEx.Assert(testMethod != null, "testMethod is Null");
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
-        return new TestMethodInfo(methodInfo, testClassInfo, testContext);
+        return new TestMethodInfo(methodInfo, testClassInfo);
     }
 
     private DiscoveryTestMethodInfo ResolveTestMethodInfoForDiscovery(TestMethod testMethod, TestClassInfo testClassInfo)

@@ -487,7 +487,7 @@ internal sealed class TestClassInfo
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                using (TestContextImplementation.SetCurrentTestContext(testContext))
                 {
                     Task? task = methodInfo.GetInvokeResultAsync(null, testContext);
                     if (task is not null)
@@ -710,7 +710,7 @@ internal sealed class TestClassInfo
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                using (TestContextImplementation.SetCurrentTestContext(testContext))
                 {
                     Task? task = methodInfo.GetParameters().Length == 0
                         ? methodInfo.GetInvokeResultAsync(null)
