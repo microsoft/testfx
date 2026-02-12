@@ -25,25 +25,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <TestAdapterContent Include="$(MSBuildThisFileDirectory)MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' != 'true' ">
-      <Link>MSTest.TestAdapter.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>False</Visible>
-    </TestAdapterContent>
-    <TestAdapterContent Include="$(_TestAdapterPlatformServicesRoot)MSTestAdapter.PlatformServices.dll">
-      <Link>MSTestAdapter.PlatformServices.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>False</Visible>
-    </TestAdapterContent>
-  </ItemGroup>
-
-  <ItemGroup>
-    <!--
-      Including `@(TestAdapterContent)` in the `None` ItemGroup to get the `CopyToOutputDirectory` behavior be default,
-      package consumers can opt-out of this behavior by removing `@(TestAdapterContent)` from the `None` ItemGroup
-      (i.e. `<None Remove="@(TestAdapterContent)" />`)
-      -->
-    <None Include="@(TestAdapterContent)" />
+    <Reference Include="MSTest.TestAdapter">
+      <HintPath>$(_TestAdapterPlatformServicesRoot)MSTest.TestAdapter.dll</HintPath>
+    </Reference>
+    <Reference Include="MSTestAdapter.PlatformServices">
+      <HintPath>$(_TestAdapterPlatformServicesRoot)MSTestAdapter.PlatformServices.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -55,9 +42,7 @@
     <!-- https://github.com/dotnet/msbuild/issues/9698#issuecomment-1945763467 -->
     <When Condition=" '$(EnableMSTestRunner)' == 'true' ">
       <ItemGroup>
-        <Reference Include="MSTest.TestAdapter">
-          <HintPath>$(_TestAdapterPlatformServicesRoot)MSTest.TestAdapter.dll</HintPath>
-        </Reference>
+        
       </ItemGroup>
     </When>
   </Choose>
