@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -173,11 +173,8 @@ public sealed partial class Assert
             ThrowAssertSingleMatchFailed(actualCount, userMessage);
         }
 
-        // Within an AssertScope, execution continues past the failure — return default(T) as a placeholder.
-        // Callers should not depend on this value; the assertion failure will be reported when the scope disposes.
-#pragma warning disable CS8603 // Possible null reference return. - Soft assertion: postcondition not enforced in scoped mode.
+        // Unreachable code but compiler cannot work it out
         return default;
-#pragma warning restore CS8603 // Possible null reference return.
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -287,7 +287,6 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not exactly the type
     /// of <paramref name="value"/>.
     /// </exception>
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     public static void IsExactInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsExactInstanceOfTypeFailing(value, expectedType))
@@ -295,7 +294,6 @@ public sealed partial class Assert
             ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
-#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <inheritdoc cref="IsExactInstanceOfType(object?, Type?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -310,13 +308,11 @@ public sealed partial class Assert
     /// type and throws an exception if the generic type does not match exactly.
     /// </summary>
     /// <typeparam name="T">The expected exact type of <paramref name="value"/>.</typeparam>
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     public static T IsExactInstanceOfType<T>([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         IsExactInstanceOfType(value, typeof(T), message, valueExpression);
         return (T)value;
     }
-#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     /// <inheritdoc cref="IsExactInstanceOfType{T}(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -187,7 +187,6 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     public static void IsNotNull([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
         if (IsNotNullFailing(value))
@@ -195,7 +194,6 @@ public sealed partial class Assert
             ThrowAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
-#pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
