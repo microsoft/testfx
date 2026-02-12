@@ -37,16 +37,6 @@
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
   </ItemGroup>
 
-  <Choose>
-    <!-- Avoid false warning about missing reference (msbuild bug) -->
-    <!-- https://github.com/dotnet/msbuild/issues/9698#issuecomment-1945763467 -->
-    <When Condition=" '$(EnableMSTestRunner)' == 'true' ">
-      <ItemGroup>
-        
-      </ItemGroup>
-    </When>
-  </Choose>
-
   <Target Name="GetMSTestV2CultureHierarchy">
     <!--
       Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient
