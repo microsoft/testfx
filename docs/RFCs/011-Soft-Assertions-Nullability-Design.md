@@ -1,8 +1,8 @@
 # RFC 011 - Soft Assertions and Nullability Annotation Design
 
 - [x] Approved in principle
-- [ ] Under discussion
-- [ ] Implementation
+- [x] Under discussion
+- [x] Implementation
 - [ ] Shipped
 
 ## Summary
@@ -10,8 +10,6 @@
 `Assert.Scope()` introduces soft assertions — assertion failures are collected and reported together when the scope is disposed, rather than throwing immediately. This fundamentally conflicts with C# nullability annotations (`[DoesNotReturn]`, `[DoesNotReturnIf]`, `[NotNull]`) that rely on the assumption that assertion failure always means throwing an exception. This RFC documents the problem, the options considered, and the chosen design.
 
 ## Motivation
-
-### The soft-assertion goal
 
 Today, every MSTest assertion throws `AssertFailedException` on failure. With `Assert.Scope()`, we want to allow multiple assertion failures to be collected and reported at once:
 
@@ -25,9 +23,11 @@ using (Assert.Scope())
 // Dispose() throws AggregateException-like AssertFailedException with all 3 failures
 ```
 
-### The nullability problem
+## Technical challenges
 
-Before soft assertions, `ThrowAssertFailed` was annotated with `[DoesNotReturn]`, which let the compiler prove post-condition contracts. For example:
+Soft assertions create a fundamental tension with C# nullability annotations and, more broadly, with all assertion postconditions.
+
+Before soft assertions, `ReportAssertFailed` was annotated with `[DoesNotReturn]`, which let the compiler prove post-condition contracts. For example:
 
 ```csharp
 public static void IsNotNull([NotNull] object? value, ...)
@@ -40,13 +40,25 @@ public static void IsNotNull([NotNull] object? value, ...)
 }
 ```
 
-To support soft assertions, `ThrowAssertFailed` was changed so it no longer always throws — within a scope, it adds the failure to a queue and *returns*. This means:
+To support soft assertions, `ReportAssertFailed` was changed so it no longer always throws — within a scope, it adds the failure to a queue and *returns*. This means:
 
 1. `[DoesNotReturn]` can no longer be applied to the general failure path.
 2. `[DoesNotReturnIf(false)]` on `IsTrue` / `[DoesNotReturnIf(true)]` on `IsFalse` become lies — the method can return even when the condition is not met.
 3. `[NotNull]` on parameters like `IsNotNull(object? value)` becomes a lie — the method can return even when `value` is null.
 
 If we lie about these annotations, **downstream code after the assertion will get wrong nullability analysis**, potentially causing `NullReferenceException` at runtime with no compiler warning.
+
+After discussion with the Roslyn team, a key insight emerged: **this is a general problem with postconditions, not specific to nullability**. `Assert.Scope()` means assertions are no longer enforcing *any* postconditions. Consider:
+
+```csharp
+using (Assert.Scope())
+{
+    Assert.AreEqual("blah", item.Prop);
+    MyTestHelper(item.Prop); // may explode if Prop doesn't have expected form
+}
+```
+
+`Assert.AreEqual` in scoped mode already does not enforce its postcondition (that the values are equal). Code after the assertion may use `item.Prop` assuming it has a particular value, and that assumption may be wrong. The nullability case (`IsNotNull` not guaranteeing non-null) is conceptually identical — it's just another postcondition that isn't enforced within a scope.
 
 ## Options Considered
 
@@ -59,16 +71,7 @@ Remove `[DoesNotReturn]`, `[DoesNotReturnIf]`, and `[NotNull]` from all assertio
 
 **Verdict:** Rejected. Too disruptive for all users, including those who never use `Assert.Scope()`.
 
-### Option 2: Keep all annotations, suppress all warnings
-
-Keep `[DoesNotReturn]`, `[DoesNotReturnIf]`, `[NotNull]` on everything, blanket-suppress CS8777/CS8763.
-
-**Pros:** No user-facing changes. Code compiles cleanly.
-**Cons:** The annotations are lies inside a scope. `Assert.IsNotNull(obj)` inside a scope won't throw, meaning `obj` could still be null on the next line, but the compiler thinks it's non-null. This trades a visible assertion failure for a hidden `NullReferenceException`.
-
-**Verdict:** Rejected. Lying about type-narrowing annotations (`[NotNull]`) is actively dangerous — it causes runtime crashes.
-
-### Option 3: Pragmatic tier split (chosen)
+### Option 2: Pragmatic tier split
 
 Categorize assertions into tiers based on whether their post-conditions narrow types, and handle each tier differently.
 
@@ -87,76 +90,68 @@ Categorize assertions into tiers based on whether their post-conditions narrow t
 
 **Tier 3 — Soft, no annotation impact:** All other assertions that don't carry type-narrowing annotations. These become fully soft within a scope.
 
-- `AreEqual`, `AreNotEqual`, `AreSame`, `AreNotSame`
-- `Inconclusive`
-- `Contains`, `DoesNotContain`
-- `IsNull`, `IsNotInstanceOfType`, `IsNotExactInstanceOfType`
-- `StartsWith`, `EndsWith`, `Matches`, `DoesNotMatch`
-- `IsGreaterThan`, `IsLessThan`, etc.
-- `ThrowsException`, `ThrowsExactException`
-- All `StringAssert.*` and `CollectionAssert.*` methods
+**Pros:** Type-narrowing contracts are always truthful. Soft assertions work for the vast majority of assertions.
+**Cons:** `IsNotNull` / `IsInstanceOfType` / `IsExactInstanceOfType` won't participate in soft assertion collection — they still throw immediately within a scope. This significantly reduces the value of `Assert.Scope()` for common test patterns like null-checking multiple properties. Users lose `[DoesNotReturnIf]` narrowing on `IsTrue`/`IsFalse` even outside scopes.
 
-**Pros:** Type-narrowing contracts are always truthful. Soft assertions work for the vast majority of assertions. The few assertions that must remain hard are exactly the ones where continuing would cause crashes.
-**Cons:** `IsNotNull` / `IsInstanceOfType` / `IsExactInstanceOfType` won't participate in soft assertion collection — they still throw immediately within a scope.
+**Verdict:** Rejected. Carving out exceptions makes the scoping feature less useful, and the safety benefit is questionable given that *all* postconditions (not just nullability ones) are already unenforced in scoped mode.
 
-**Verdict:** Chosen. This is the only option that is both honest to the compiler and safe at runtime.
+### Option 3: Keep all annotations, suppress compiler warnings (chosen)
 
-### Option 3a: Sub-exception for precondition failures
+Keep `[DoesNotReturn]`, `[DoesNotReturnIf]`, `[NotNull]` on all assertion methods. Make all assertions soft within a scope (except `Assert.Fail()` and `CheckParameterNotNull`). Suppress `#pragma warning disable CS8777` / `CS8763` where the compiler objects.
 
-A variant considered was introducing `internal AssertPreconditionFailedException : AssertFailedException` to distinguish hard failures from soft ones, enabling different handling in the adapter pipeline.
+This is the approach recommended by the Roslyn team: leave all nullable attributes on, but do not actually ensure any of the postconditions when in `Assert.Scope()` context. This is consistent with what we are already doing for all postconditions unrelated to nullability — `Assert.AreEqual` doesn't guarantee equality in scoped mode, `Assert.IsTrue` doesn't guarantee the condition was true, and so on. The nullability annotations are no different.
 
-**Verdict:** Rejected. The existing adapter pipeline checks `is AssertFailedException` in multiple places (`ExceptionExtensions.TryGetUnitTestAssertException`, `TestClassInfo`, `TestMethodInfo`, etc.). A sub-exception would still match these checks. Adding a new exception type adds complexity without clear benefit, and risks breaking extensibility points that pattern-match on `AssertFailedException`.
+**Pros:**
 
-## Chosen Design: Two Internal Methods
+- **No user-facing annotation changes.** Users outside `Assert.Scope()` get the exact same experience — `Assert.IsNotNull(obj); obj.Method()` has no nullable warning, `Assert.IsTrue(b)` narrows `bool?` to `bool`. Zero regression.
+- **All assertions participate in soft collection.** `IsNotNull`, `IsInstanceOfType`, `IsExactInstanceOfType`, `ContainsSingle`, `IsTrue`, `IsFalse` are all soft within a scope. This maximizes the value of `Assert.Scope()`.
+- **Consistent mental model.** The rule is simple: within `Assert.Scope()`, assertion failures are collected and postconditions are not enforced. This applies uniformly to all assertions (except `Assert.Fail()`), whether the postcondition is about nullability, type narrowing, equality, or anything else.
 
-### `ReportHardAssertFailure`
+**Cons:**
 
-```csharp
-[DoesNotReturn]
-[StackTraceHidden]
-internal static void ReportHardAssertFailure(string assertionName, string? message)
-```
+- **The annotations are lies inside a scope.** `Assert.IsNotNull(obj)` inside a scope won't throw when `obj` is null, meaning `obj` could still be null on the next line, but the compiler thinks it's non-null. This can cause `NullReferenceException` at runtime with no compiler warning.
+- **Requires `#pragma warning disable` to suppress CS8777/CS8763.** The compiler correctly identifies that our implementation doesn't fulfill the annotation promises in all code paths.
 
-- **Always throws**, even within an `AssertScope`.
-- Carries `[DoesNotReturn]` — compiler can trust post-conditions.
-- **Launches the debugger** if configured (`DebuggerLaunchMode.Enabled` / `EnabledExcludingCI`).
-- Used by: Tier 1 assertions (`IsNotNull`, `IsInstanceOfType`, `IsExactInstanceOfType`, `Fail`, `ContainsSingle`), `CheckParameterNotNull`, `AssertScope.Dispose()`.
+The runtime risk is acceptable for the same reason that non-nullability postconditions being unenforced is acceptable: the assertion *will* be reported as failed when the scope disposes. The user will see the failure. If downstream code crashes due to a violated postcondition (whether it's a `NullReferenceException` from a null value, or some other error from an unexpected value), that crash is a secondary symptom of the already-reported assertion failure — not a silent, hidden bug.
 
-### `ReportSoftAssertFailure`
+Users who need a postcondition to be enforced for subsequent code to work correctly can use `Assert.Fail()` (which always throws) or restructure their test to not depend on the postcondition after the assertion within a scope.
+
+**Verdict:** Chosen. This approach gives the best user experience both inside and outside `Assert.Scope()`, and is consistent with how all other postconditions already behave in scoped mode.
+
+## Detailed Design
+
+This section describes the implementation of Option 3 (keep all annotations, suppress compiler warnings), which centers on a single `ReportAssertFailed` method that switches behavior based on whether an `AssertScope` is active.
+
+### `ReportAssertFailed`
 
 ```csharp
 [StackTraceHidden]
-internal static void ReportSoftAssertFailure(string assertionName, string? message)
+internal static void ReportAssertFailed(string assertionName, string? message)
 ```
 
 - Within an `AssertScope`: adds failure to the scope's queue and **returns**.
 - Outside a scope: **throws** `AssertFailedException` (preserves existing behavior).
-- **No `[DoesNotReturn]`** — compiler knows the method can return.
-- **Does not launch the debugger** — the debugger is triggered later when `AssertScope.Dispose()` calls `ReportHardAssertFailure`.
-- Used by: Tier 2 and Tier 3 assertions.
 
 ### `AssertScope.Dispose()`
 
 When an `AssertScope` is disposed and it contains collected failures:
 
-- **Single failure:** Calls `ReportHardAssertFailure(singleError)` — this throws the original `AssertFailedException` and triggers the debugger.
-- **Multiple failures:** Calls `ReportHardAssertFailure(new AssertFailedException(combinedMessage, new AggregateException(allErrors)))` — wraps all collected failures into an `AggregateException` as the inner exception.
+- **Single failure:** Throws the original `AssertFailedException` and triggers the debugger.
+- **Multiple failures:** Throws a new `AssertFailedException` wrapping all collected failures into an `AggregateException` as the inner exception.
 
 This design ensures the debugger breaks at the point where the scope is disposed, giving the developer visibility into all collected failures.
 
-### `CheckParameterNotNull`
+### Nullable annotations: kept but unenforced in scoped mode
 
-The internal helper `CheckParameterNotNull` validates that assertion *parameters* (not the values under test) are non-null. For example, validating that a `Type` argument passed to `IsInstanceOfType` is not null.
+All nullable annotations (`[NotNull]`, `[DoesNotReturnIf]`) are kept on their respective assertion methods. Within a scope, these postconditions are not enforced — the method may return without the postcondition being true. Compiler warnings (CS8777, CS8763) arising from this are suppressed with `#pragma warning disable`.
 
-This uses `ReportHardAssertFailure` because:
+This is the same approach the Roslyn team recommended. As Rikki from the Roslyn team noted:
 
-1. A null parameter is a test authoring bug, not a test value failure.
-2. It would be confusing to silently collect a "your parameter was null" error alongside real assertion results.
-3. It preserves the existing behavior of throwing `AssertFailedException` (not `ArgumentNullException`), which avoids breaking the adapter pipeline that maps exception types to test outcomes.
+> It feels like this is an issue with postconditions in general... Assert.Scoped() means assertions are no longer enforcing postconditions. [...] I would honestly start by just trying leaving all the nullable attributes on, but not actually ensuring any of the postconditions, when in Assert.Scoped() context. Since that is essentially what you are doing already with all postconditions unrelated to nullability. See how that works in practice, and, if the usability feels bad, you could consider introducing certain assertions that throw regardless of whether you're in scoped context or not.
 
 ### `Assert.Fail()` — hard by design
 
-`Assert.Fail()` is a Tier 1 hard assertion. It calls `ReportHardAssertFailure` and always throws, even within a scope. This is the correct choice for two reasons:
+`Assert.Fail()` is the only assertion that always throws, even within a scope. It inlines its throw logic (bypassing `ReportAssertFailed`) for two reasons:
 
 1. **Semantics:** `Fail()` means "this test has unconditionally failed." There is no meaningful scenario where you'd want to collect a `Fail()` and keep executing — the developer explicitly declared the test a failure.
 2. **Public API contract:** `Assert.Fail()` is annotated `[DoesNotReturn]`, and users rely on this for control flow:
@@ -176,31 +171,56 @@ Making `Fail()` hard keeps the `[DoesNotReturn]` annotation truthful with no pra
 
 ### No `Assert.Scope()` — no change
 
-Users who don't use `Assert.Scope()` experience **zero behavioral change**. All assertions throw exactly as before. The only user-visible annotation change is the removal of `[DoesNotReturnIf]` from `IsTrue`/`IsFalse`, which means the compiler will no longer narrow `bool?` to `bool` after these calls (a minor regression affecting a niche pattern).
+Users who don't use `Assert.Scope()` experience **zero behavioral change**. All assertions throw exactly as before. All nullable annotations remain in place. There is no regression.
 
 ### Within `Assert.Scope()`
 
-| Assertion | Behavior |
-| --------- | -------- |
-| `IsNotNull`, `IsInstanceOfType`, `IsExactInstanceOfType` | Always throws immediately (hard). These assertions narrow types and cannot safely be deferred. |
-| `Assert.Fail()` | Always throws immediately (hard). Semantically means unconditional failure — no reason to defer. |
-| `Assert.ContainsSingle()` | Always throws immediately (hard). Returns the matched element — returning `default` in soft mode would give callers a bogus value. |
-| `IsTrue`, `IsFalse` | Soft. Failures collected. `[DoesNotReturnIf]` removed. |
-| All other assertions | Soft. Failures collected. |
+All assertions participate in soft failure collection, with the following exceptions:
+
+- **`Assert.Fail()`** is the only assertion API that does not respect soft failure mode. It always throws immediately, even within a scope, because it semantically means "this test has unconditionally failed" — there is no reason to defer.
+- **Null precondition checks** inside Assert APIs (e.g., validating that a `Type` argument passed to `IsInstanceOfType` is not null) also throw directly rather than collecting. These are internal parameter validation checks (`CheckParameterNotNull`), not assertions on the value under test. Note that `Assert.IsNotNull` / `Assert.IsNull` are *not* precondition checks — they are assertions on test values and participate in soft collection normally.
+
+### Dealing with postcondition-dependent code in scoped mode
+
+When using `Assert.Scope()`, code after an assertion should not depend on the assertion's postcondition. This applies to all postconditions, whether nullability-related or not:
+
+```csharp
+using (Assert.Scope())
+{
+    Assert.IsNotNull(item);
+    // item might still be null here — the assertion failure was collected, not thrown.
+    // If you need item to be non-null for the rest of the test, use Assert.Fail()
+    // or restructure the test.
+
+    Assert.AreEqual("blah", item.Prop);
+    MyTestHelper(item.Prop);
+    // item.Prop might not be "blah" — same issue, different postcondition.
+}
+```
+
+If a test helper depends on a postcondition being true, the user has several options:
+
+1. **Use `Assert.Fail()` for critical preconditions** — it always throws, even in scoped mode.
+2. **Restructure the test** to not depend on postconditions within the scope.
+3. **Accept the secondary failure** — the primary assertion failure will be reported, and any downstream crash is a secondary symptom.
+
+This is simply part of the adoption/onboarding cost of using `Assert.Scope()`. The scoping feature trades strict postcondition enforcement for the ability to see multiple failures at once.
 
 ## Design Decisions
 
-### `IsTrue` / `IsFalse` are Tier 2 (soft, annotations removed)
+### Why lying to the compiler is acceptable
 
-`IsTrue` had `[DoesNotReturnIf(false)]` and `IsFalse` had `[DoesNotReturnIf(true)]`. These annotations let the compiler narrow `bool?` to `bool` after the call. By making these assertions soft, we had to remove the annotations — the compiler can no longer assume the condition held.
+The decision to keep annotations that are not enforced in scoped mode is justified by:
 
-This was deemed acceptable because:
+1. **Consistency.** All assertion postconditions are already unenforced in scoped mode. Making nullability postconditions the exception adds complexity without meaningful safety improvement.
+2. **User experience.** Removing annotations would regress the experience for all users, including those who never use `Assert.Scope()`.
+3. **Practicality.** The Roslyn team confirmed this approach is reasonable. Tests that use `Assert.Scope()` are inherently opting into a mode where postconditions are deferred, and users should expect that downstream code may encounter unexpected state.
+4. **Observable failures.** The violated postcondition doesn't cause silent bugs — the assertion failure *is* reported when the scope disposes. Any secondary crash is additional evidence of the already-reported failure.
+5. **Experimental API.** The `Assert.Scope()` API is currently marked as experimental, which allows us to gather concrete usages and feedback from users before committing to a stable release. Real-world usage patterns will inform whether any adjustments to the annotation strategy or scoping behavior are needed, and we can iterate on the design without breaking stable API contracts.
 
-- The narrowing only affects `bool?` → `bool`, not reference types. The risk of a downstream `NullReferenceException` does not apply.
-- The pattern of using `Assert.IsTrue` to narrow a nullable boolean is niche. Most callers pass a plain `bool`.
-- Keeping these as hard assertions would significantly reduce the value of `Assert.Scope()`, since `IsTrue`/`IsFalse` are among the most commonly used assertions.
+### Why nested scopes are not supported
 
-This decision can be reconsidered if the annotation loss proves more impactful than expected.
+Nested `Assert.Scope()` calls are currently not allowed. We do not see a compelling usage scenario that justifies the added complexity of defining nested scope semantics (e.g., should inner scope failures propagate to the parent scope or throw immediately?). This decision can be revisited based on customer feedback if concrete use cases emerge.
 
 ## Future Improvements
 
@@ -217,29 +237,7 @@ using (Assert.Scope())
 }
 ```
 
-The exact shape of this API is not yet designed.
-
-### Nested scopes
-
-Currently, `AssertScope` uses `AsyncLocal<AssertScope?>` and supports a single active scope. Nested scopes could allow finer-grained grouping of assertion failures:
-
-```csharp
-using (Assert.Scope())
-{
-    Assert.AreEqual(1, actual.X);
-
-    using (Assert.Scope())
-    {
-        Assert.AreEqual(2, actual.Y);
-        Assert.AreEqual(3, actual.Z);
-    }
-    // Inner scope disposes here — should inner failures propagate to outer scope or throw?
-
-    Assert.AreEqual(4, actual.W);
-}
-```
-
-The semantics of inner scope disposal (propagate to parent vs. throw immediately) need to be defined.
+The exact shape of this API is not yet designed. As the Roslyn team suggested, users may want certain assertions to always throw so they can enforce postconditions that subsequent code depends on, even within a scope. This would be part of the natural evolution of the feature based on real-world usage feedback.
 
 ### Extensibility for custom assertion authors
 
@@ -260,4 +258,4 @@ public static class MyCustomAssertions
 }
 ```
 
-This would require promoting some form of the `ReportSoftAssertFailure` / `ReportHardAssertFailure` API from `internal` to `public`, with careful API design to avoid exposing implementation details.
+This would require promoting `ReportAssertFailed` (or a new public variant) from `internal` to `public`, with careful API design to avoid exposing implementation details.
