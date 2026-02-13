@@ -135,6 +135,10 @@ public class TestResult
     /// </summary>
     public IList<string>? ResultFiles { get; set; }
 
+    // UnitTestElement is not part of TestFramework, so we don't have strong typing here and we use object instead.
+    // The value of this property should either be null, or be of type UnitTestElement.
+    internal object? AssociatedUnitTestElement { get; set; }
+
     internal static TestResult CreateIgnoredResult(string? ignoreReason)
         => new()
         {
