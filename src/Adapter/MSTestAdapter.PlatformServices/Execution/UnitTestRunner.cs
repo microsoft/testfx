@@ -27,6 +27,9 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     // So we only add to this dictionary if the class has a class cleanup.
     private readonly ConcurrentDictionary<string, UnitTestElement> _lastRunnableTestByClass = new();
 
+    // Used to attach assembly cleanup failures to the right test.
+    private UnitTestElement? _lastRunnableTestInWholeAssembly;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
     /// </summary>
@@ -139,6 +142,8 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                         _lastRunnableTestByClass[testMethod.FullClassName] = unitTestElement;
                     }
 
+                    _lastRunnableTestInWholeAssembly = unitTestElement;
+
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
                     TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
@@ -200,7 +205,17 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
+                TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache).ConfigureAwait(false);
+                if (assemblyCleanupResult is not null)
+                {
+                    if (notRunnableResult is not null)
+                    {
+                        // Current test is ignored, and we have an assembly cleanup failure. We need to attach to the right test.
+                        assemblyCleanupResult.AssociatedUnitTestElement = _lastRunnableTestInWholeAssembly;
+                    }
+
+                    result = [.. result, assemblyCleanupResult];
+                }
             }
 
             return result;
@@ -256,40 +271,29 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static async Task RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
+    private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache)
     {
-        try
+        IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+        foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
-            IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
-            foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
-            {
-                TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
+            TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
-                if (results.Length > 0 && ex is not null)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                    return;
-                }
-            }
-        }
-        finally
-        {
-            if (results.Length > 0)
+            if (ex is not null)
             {
-#pragma warning disable IDE0056 // Use index operator
-                TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
                 var testContextImpl = testContext as TestContextImplementation;
-                lastResult.LogOutput += testContextImpl?.GetOut();
-                lastResult.LogError += testContextImpl?.GetErr();
-                lastResult.DebugTrace += testContextImpl?.GetTrace();
-                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                return new TestResult()
+                {
+                    Outcome = UnitTestOutcome.Failed,
+                    TestFailureException = ex,
+                    LogOutput = testContextImpl?.GetOut(),
+                    LogError = testContextImpl?.GetErr(),
+                    DebugTrace = testContextImpl?.GetTrace(),
+                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
+                };
             }
         }
+
+        return null;
     }
 
     /// <summary>
