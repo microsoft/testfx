@@ -23,6 +23,10 @@ internal sealed class UnitTestRunner : MarshalByRefObject
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
 
+    // Only needed to attach class cleanup failures to the right test.
+    // So we only add to this dictionary if the class has a class cleanup.
+    private readonly ConcurrentDictionary<string, UnitTestElement> _lastRunnableTestByClass = new();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
     /// </summary>
@@ -82,22 +86,22 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
-    // If we removed AppDomains in v4, we should use the async method and remove this one.
-    internal TestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
-        => RunSingleTestAsync(testMethod, testContextProperties, messageLogger).GetAwaiter().GetResult();
+    internal TestResult[] RunSingleTest(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+        => RunSingleTestAsync(unitTestElement, testContextProperties, messageLogger).GetAwaiter().GetResult();
 
     /// <summary>
     /// Runs a single test.
     /// </summary>
-    /// <param name="testMethod"> The test Method. </param>
+    /// <param name="unitTestElement"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
-    internal async Task<TestResult[]> RunSingleTestAsync(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+    internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
     {
-        Ensure.NotNull(testMethod);
+        Ensure.NotNull(unitTestElement);
         Ensure.NotNull(testContextProperties);
 
+        TestMethod testMethod = unitTestElement.TestMethod;
         ITestContext? testContextForTestExecution = null;
         ITestContext? testContextForAssemblyInit = null;
         ITestContext? testContextForClassInit = null;
@@ -130,6 +134,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 }
                 else
                 {
+                    if (testMethodInfo.Parent.HasExecutableCleanupMethod)
+                    {
+                        _lastRunnableTestByClass[testMethod.FullClassName] = unitTestElement;
+                    }
+
                     testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
 
                     TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
@@ -168,6 +177,15 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                     TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup).ConfigureAwait(false);
                     if (cleanupResult is not null)
                     {
+                        if (notRunnableResult is not null)
+                        {
+                            // Current test is ignored, and we have a class cleanup failure. We need to attach to the right test.
+                            if (_lastRunnableTestByClass.TryGetValue(testMethod.FullClassName, out UnitTestElement? lastRunnableUnitTest))
+                            {
+                                cleanupResult.AssociatedUnitTestElement = lastRunnableUnitTest;
+                            }
+                        }
+
                         result = [.. result, cleanupResult];
                     }
                 }

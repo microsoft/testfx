@@ -684,8 +684,6 @@ internal sealed class TestClassInfo
                     LogError = testContextImpl?.GetErr(),
                     DebugTrace = testContextImpl?.GetTrace(),
                     TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
-                    // TODO: For class cleanup failures, find a way to report on the last un-ignored test, instead of the last test.
-                    IsClassCleanupFailureResult = true,
                 };
             }
 
