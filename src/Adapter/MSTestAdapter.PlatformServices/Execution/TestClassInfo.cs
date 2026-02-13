@@ -617,7 +617,7 @@ internal sealed class TestClassInfo
         return testFailedException;
     }
 
-    internal async Task<TestResult?> RunClassCleanupAsync(ITestContext testContext)
+    internal async Task<TestResult?> RunClassCleanupAsync(ITestContext testContext, TestResult[] results)
     {
         if (!HasExecutableCleanupMethod || IsClassCleanupExecuted)
         {
@@ -672,9 +672,9 @@ internal sealed class TestClassInfo
         async Task<TestResult?> DoRunAsync()
         {
             TestFailedException? ex = await ExecuteClassCleanupAsync(testContext.Context).ConfigureAwait(false);
+            var testContextImpl = testContext as TestContextImplementation;
             if (ex is not null)
             {
-                var testContextImpl = testContext as TestContextImplementation;
                 return new TestResult()
                 {
                     Outcome = UnitTestOutcome.Failed,
@@ -685,6 +685,15 @@ internal sealed class TestClassInfo
                     DebugTrace = testContextImpl?.GetTrace(),
                     TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
+            }
+
+            if (results.Length > 0)
+            {
+                TestResult lastResult = results[results.Length - 1];
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
 
             return null;

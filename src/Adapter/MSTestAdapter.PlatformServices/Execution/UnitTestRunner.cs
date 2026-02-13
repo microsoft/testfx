@@ -179,7 +179,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
             {
                 if (testMethodInfo is not null)
                 {
-                    TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup).ConfigureAwait(false);
+                    TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
                     if (cleanupResult is not null)
                     {
                         if (notRunnableResult is not null)
@@ -205,7 +205,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                 _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
-                TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache).ConfigureAwait(false);
+                TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)
                 {
                     if (notRunnableResult is not null)
@@ -271,16 +271,16 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         return result;
     }
 
-    private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache)
+    private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
             TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
+            var testContextImpl = testContext as TestContextImplementation;
             if (ex is not null)
             {
-                var testContextImpl = testContext as TestContextImplementation;
                 return new TestResult()
                 {
                     Outcome = UnitTestOutcome.Failed,
@@ -290,6 +290,15 @@ internal sealed class UnitTestRunner : MarshalByRefObject
                     DebugTrace = testContextImpl?.GetTrace(),
                     TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
+            }
+
+            if (results.Length > 0)
+            {
+                TestResult lastResult = results[results.Length - 1];
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
         }
 
