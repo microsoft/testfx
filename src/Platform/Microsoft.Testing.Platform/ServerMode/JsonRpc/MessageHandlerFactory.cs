@@ -51,6 +51,11 @@ internal sealed partial class ServerModeManager
 #else
             await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
 #endif
+            // ConnectAsync with a CancellationToken registers a callback that closes the socket.
+            // If the connect completes at the OS level at the same instant the token fires,
+            // ConnectAsync can return successfully while the socket is already closed,
+            // causing GetStream() to throw InvalidOperationException ("non-connected sockets").
+            cancellationToken.ThrowIfCancellationRequested();
             NetworkStream stream = client.GetStream();
             return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
         }

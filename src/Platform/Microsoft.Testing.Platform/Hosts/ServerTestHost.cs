@@ -143,13 +143,19 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
             (_messageHandler as IDisposable)?.Dispose();
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-        {
-        }
-        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.OperationAborted && cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when
+            // When the cancellation token fires during TCP connect or message handling, several
+            // exception types can surface depending on the exact timing:
+            (cancellationToken.IsCancellationRequested
+            // the standard cancellation path.
+            && (ex is OperationCanceledException
+                // the TcpClient/stream was disposed while an async operation was in flight.
+                or ObjectDisposedException
+                // ConnectAsync completed at the OS level at the same instant the cancellation callback closed the socket,
+                // leaving it in a non-connected state when GetStream() is called.
+                or InvalidOperationException
+                // the socket was closed by the cancellation callback.
+                or SocketException { SocketErrorCode: SocketError.OperationAborted }))
         {
         }
         finally
