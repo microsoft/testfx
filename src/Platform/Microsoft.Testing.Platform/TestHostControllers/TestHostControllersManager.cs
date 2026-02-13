@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -108,13 +107,6 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     internal async Task<TestHostControllerConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
-        // For now the test host working directory and the current working directory are the same.
-        // In future we could move the test host in a different directory for instance in case of
-        // the need to rewrite binary files. If we don't move files are locked by ourself.
-        var aggregatedConfiguration = (AggregatedConfiguration)serviceProvider.GetConfiguration();
-        string? currentWorkingDirectory = aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
-
         List<(ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int RegistrationOrder)> environmentVariableProviders = [];
         foreach (Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory in _environmentVariableProviderFactories)
         {

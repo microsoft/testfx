@@ -21,7 +21,7 @@ public sealed class TestApplicationBuilderTests
     public TestApplicationBuilderTests()
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        AggregatedConfiguration configuration = new([], testApplicationModuleInfo, new SystemFileSystem(), new(null, [], []));
+        AggregatedConfiguration configuration = new([], testApplicationModuleInfo, new SystemFileSystem(), new SystemEnvironment(), new(null, [], []));
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);
