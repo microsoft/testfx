@@ -102,11 +102,6 @@ internal static class TestResultExtensions
             testResult.Attachments.Add(attachmentSet);
         }
 
-        if (frameworkTestResult.DatarowIndex >= 0)
-        {
-            testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, testCase.DisplayName, frameworkTestResult.DatarowIndex);
-        }
-
         return testResult;
     }
 }

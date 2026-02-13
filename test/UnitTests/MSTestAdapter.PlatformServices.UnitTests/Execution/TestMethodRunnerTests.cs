@@ -246,7 +246,7 @@ public class TestMethodRunnerTests : TestContainer
         results[0].Outcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
-    public async Task RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
+    public async Task RunTestMethodShouldSetDisplayNameForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals(nameof(DummyTestClass.DummyDataSourceTestMethod), StringComparison.Ordinal));
         object[] attributes = methodInfo.GetCustomAttributes(inherit: false);
@@ -261,10 +261,10 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
-        // check for datarowIndex
-        results[0].DatarowIndex.Should().Be(0);
-        results[1].DatarowIndex.Should().Be(1);
-        results[2].DatarowIndex.Should().Be(2);
+        results.Should().HaveCount(3);
+        results[0].DisplayName.Should().Be("dummyTestName (Data Row 0)");
+        results[1].DisplayName.Should().Be("dummyTestName (Data Row 1)");
+        results[2].DisplayName.Should().Be("dummyTestName (Data Row 2)");
     }
 
     public async Task RunTestMethodShouldRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
@@ -288,10 +288,10 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
-        // check for datarowIndex as only DataSource Tests are Run
-        results[0].DatarowIndex.Should().Be(0);
-        results[1].DatarowIndex.Should().Be(1);
-        results[2].DatarowIndex.Should().Be(2);
+        results.Should().HaveCount(3);
+        results[0].DisplayName.Should().Be("dummyTestName (Data Row 0)");
+        results[1].DisplayName.Should().Be("dummyTestName (Data Row 1)");
+        results[2].DisplayName.Should().Be("dummyTestName (Data Row 2)");
     }
 
     public async Task RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()

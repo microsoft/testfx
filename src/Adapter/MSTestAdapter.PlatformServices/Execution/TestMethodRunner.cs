@@ -384,7 +384,6 @@ internal sealed class TestMethodRunner
         foreach (TestResult testResult in testResults)
         {
             testResult.DisplayName = displayName;
-            testResult.DatarowIndex = rowIndex;
             testResult.Duration = stopwatch.Elapsed;
         }
 
