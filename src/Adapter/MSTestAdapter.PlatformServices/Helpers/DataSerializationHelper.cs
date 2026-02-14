@@ -21,7 +21,7 @@ internal static class DataSerializationHelper
 #if NETFRAMEWORK
         DataContractSurrogate = SerializationSurrogateProvider.Instance,
 #endif
-        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly)],
+        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly), typeof(SurrogatedSystemType)],
     };
 
     /// <summary>
@@ -50,7 +50,22 @@ internal static class DataSerializationHelper
                 continue;
             }
 
-            Type type = data[i]!.GetType();
+            object valueToSerialize = data[i]!;
+            Type type = valueToSerialize.GetType();
+
+            if (valueToSerialize is Type serializableType)
+            {
+                string assemblyQualifiedName = serializableType.AssemblyQualifiedName
+                    ?? throw new SerializationException($"Cannot serialize '{serializableType}' because it does not have an assembly-qualified name.");
+
+                valueToSerialize = new SurrogatedSystemType
+                {
+                    AssemblyQualifiedName = assemblyQualifiedName,
+                };
+
+                type = typeof(SurrogatedSystemType);
+            }
+
             string? typeName = type.AssemblyQualifiedName;
 
             serializedData[typeIndex] = typeName;
@@ -66,7 +81,7 @@ internal static class DataSerializationHelper
             // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
 #pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
-            serializer.WriteObject(memoryStream, data[i]);
+            serializer.WriteObject(memoryStream, valueToSerialize);
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             byte[] serializerData = memoryStream.ToArray();
@@ -163,6 +178,13 @@ internal static class DataSerializationHelper
         public long Ticks { get; set; }
     }
 
+    [DataContract]
+    private sealed class SurrogatedSystemType
+    {
+        [DataMember]
+        public string AssemblyQualifiedName { get; set; } = null!;
+    }
+
     private sealed class SerializationSurrogateProvider
 #if NETFRAMEWORK
         : IDataContractSurrogate
@@ -201,6 +223,11 @@ internal static class DataSerializationHelper
                 return new TimeOnly(surrogatedTimeOnly.Ticks);
             }
 #endif
+            if (obj is SurrogatedSystemType surrogatedSystemType)
+            {
+                return PlatformServiceProvider.Instance.ReflectionOperations.GetType(surrogatedSystemType.AssemblyQualifiedName)
+                    ?? throw new SerializationException($"Cannot deserialize type '{surrogatedSystemType.AssemblyQualifiedName}'.");
+            }
 
             return obj;
         }

@@ -81,4 +81,33 @@ public class DataSerializationHelperTests : TestContainer
         actual[0]!.Equals(source).Should().BeTrue();
     }
 #endif
+
+    public void DataSerializerShouldRoundTripSystemType()
+    {
+        Type[] source = [typeof(Console), typeof(DataSerializationHelperTests), typeof(DataSerializationHelper)];
+
+        foreach (Type type in source)
+        {
+            object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([type]));
+
+            actual!.Length.Should().Be(1);
+            actual[0].Should().BeAssignableTo<Type>();
+            ((Type)actual[0]!).Should().Be(type);
+        }
+    }
+
+    public void DataSerializerShouldRoundTripMixedPayloadIncludingSystemType()
+    {
+        object?[] source = [typeof(string), 42, "hello", null, new DateTime(638450000000000000)];
+
+        object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize(source));
+
+        actual.Should().NotBeNull();
+        actual!.Length.Should().Be(source.Length);
+        actual[0].Should().Be(typeof(string));
+        actual[1].Should().Be(42);
+        actual[2].Should().Be("hello");
+        actual[3].Should().BeNull();
+        actual[4].Should().Be(source[4]);
+    }
 }
