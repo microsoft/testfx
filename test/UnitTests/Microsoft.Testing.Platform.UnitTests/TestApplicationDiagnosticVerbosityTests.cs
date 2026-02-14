@@ -6,7 +6,6 @@ using Microsoft.Testing.Platform.Logging;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-[UnsupportedOSPlatform("browser")]
 public sealed class TestApplicationDiagnosticVerbosityTests
 {
     [TestMethod]
@@ -26,4 +25,8 @@ public sealed class TestApplicationDiagnosticVerbosityTests
         Assert.IsFalse(hasValue);
         Assert.AreEqual(LogLevel.None, parsedLogLevel);
     }
+
+    [TestMethod]
+    public void TryParseDiagnosticVerbosity_WhenInvalidValue_ThrowsNotSupportedException()
+        => Assert.ThrowsExactly<NotSupportedException>(() => _ = TestApplication.TryParseDiagnosticVerbosity("invalid", out _));
 }
