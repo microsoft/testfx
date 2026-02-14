@@ -310,22 +310,13 @@ internal sealed class AzureDevOpsReporter :
 
     private static string FormatMessage(string? testDisplayName, string? targetFrameworkMoniker, string message)
     {
-        if (RoslynString.IsNullOrEmpty(targetFrameworkMoniker) && RoslynString.IsNullOrEmpty(testDisplayName))
+        return (RoslynString.IsNullOrEmpty(targetFrameworkMoniker), RoslynString.IsNullOrEmpty(testDisplayName)) switch
         {
-            return message;
-        }
-
-        if (RoslynString.IsNullOrEmpty(targetFrameworkMoniker))
-        {
-            return $"[{testDisplayName}] {message}";
-        }
-
-        if (RoslynString.IsNullOrEmpty(testDisplayName))
-        {
-            return $"[{targetFrameworkMoniker}] {message}";
-        }
-
-        return $"[{targetFrameworkMoniker}] [{testDisplayName}] {message}";
+            (true, true) => message,
+            (true, false) => $"[{testDisplayName}] {message}",
+            (false, true) => $"[{targetFrameworkMoniker}] {message}",
+            _ => $"[{targetFrameworkMoniker}] [{testDisplayName}] {message}",
+        };
     }
 
     private static string? TryGetTargetFrameworkMoniker()
