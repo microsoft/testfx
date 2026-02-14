@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed record FileLoggerInformation(bool SyncronousWrite, FileInfo LogFile, LogLevel LogLevel) : IFileLoggerInformation
+internal sealed record FileLoggerInformation(bool SynchronousWrite, FileInfo LogFile, LogLevel LogLevel) : IFileLoggerInformation
 {
-    public bool SyncronousWrite { get; init; } = SyncronousWrite;
+    public bool SynchronousWrite { get; init; } = SynchronousWrite;
 
     public FileInfo LogFile { get; init; } = LogFile;
 

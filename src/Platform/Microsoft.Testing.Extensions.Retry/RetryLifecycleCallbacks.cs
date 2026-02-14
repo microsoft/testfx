@@ -12,16 +12,10 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
-using Polyfills;
-
 namespace Microsoft.Testing.Extensions.Policy;
 
-internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbacks,
-#if NETCOREAPP
-    IAsyncDisposable
-#else
-    IDisposable
-#endif
+[UnsupportedOSPlatform("browser")]
+internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -53,7 +47,7 @@ internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbac
 
         ILogger<RetryLifecycleCallbacks> logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryLifecycleCallbacks>();
 
-        Guard.NotNull(pipeName);
+        Ensure.NotNull(pipeName);
         ArgumentGuard.Ensure(pipeName.Length == 1, nameof(pipeName), "Pipe name expected");
         logger.LogDebug($"Connecting to pipe '{pipeName[0]}'");
 
@@ -63,27 +57,17 @@ internal sealed class RetryLifecycleCallbacks : ITestApplicationLifecycleCallbac
         Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         Client.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
         Client.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
-        await Client.ConnectAsync(cancellationToken);
+        await Client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-        GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken);
+        GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken).ConfigureAwait(false);
         FailedTestsIDToRetry = result.FailedTestIds;
     }
 
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName));
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation)
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
-#if NETCOREAPP
-    public async ValueTask DisposeAsync()
-    {
-        if (Client is not null)
-        {
-            await Client.DisposeAsync();
-        }
-    }
-#else
     public void Dispose() => Client?.Dispose();
-#endif
 }

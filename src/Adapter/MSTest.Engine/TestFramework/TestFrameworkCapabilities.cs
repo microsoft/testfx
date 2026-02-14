@@ -18,7 +18,7 @@ internal sealed class TestFrameworkCapabilities : ITestFrameworkCapabilities
     }
 
     public IReadOnlyCollection<ITestFrameworkCapability> Capabilities
-        => new[] { new TestFrameworkCapabilitiesSet(_testNodesBuilders), _bannerMessageOwnerCapability };
+        => [new TestFrameworkCapabilitiesSet(_testNodesBuilders), _bannerMessageOwnerCapability];
 }
 
 internal sealed class TestFrameworkCapabilitiesSet :
@@ -39,7 +39,7 @@ internal sealed class TestFrameworkCapabilitiesSet :
 
     public bool IsTrxReportCapabilitySupported { get; }
 
-    bool ITestNodesTreeFilterTestFrameworkCapability.IsSupported { get; } = true;
+    bool ITestNodesTreeFilterTestFrameworkCapability.IsSupported => true;
 
     bool ITrxReportCapability.IsSupported => IsTrxReportCapabilitySupported;
 

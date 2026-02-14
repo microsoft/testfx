@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -11,18 +12,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Contains the discovery logic for this adapter.
 /// </summary>
-[DefaultExecutorUri(Constants.ExecutorUriString)]
+[DefaultExecutorUri(MSTestAdapter.PlatformServices.EngineConstants.ExecutorUriString)]
 [FileExtension(".xap")]
 [FileExtension(".appx")]
 [FileExtension(".dll")]
 [FileExtension(".exe")]
-#if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestDiscoverer : ITestDiscoverer
+internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
+    private readonly ITestSourceHandler _testSourceHandler;
+
+    public MSTestDiscoverer()
+        : this(new TestSourceHandler())
+    {
+    }
+
+    internal /* for testing purposes */ MSTestDiscoverer(ITestSourceHandler testSourceHandler)
+        => _testSourceHandler = testSourceHandler;
+
     /// <summary>
     /// Discovers the tests available from the provided source. Not supported for .xap source.
     /// </summary>
@@ -32,17 +38,18 @@ public class MSTestDiscoverer : ITestDiscoverer
     /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
     [System.Security.SecurityCritical]
     [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
-    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) => DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
+    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
+        => DiscoverTests(sources, discoveryContext, logger, discoverySink, null);
 
-    internal static void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
+    internal void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration)
     {
-        Guard.NotNull(sources);
-        Guard.NotNull(logger);
-        Guard.NotNull(discoverySink);
+        Ensure.NotNull(sources);
+        Ensure.NotNull(logger);
+        Ensure.NotNull(discoverySink);
 
-        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration))
+        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, configuration, _testSourceHandler))
         {
-            new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext);
+            new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, logger, discoverySink, discoveryContext);
         }
     }
 }

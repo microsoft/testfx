@@ -1,17 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#pragma warning disable CS0618 // Type or member is obsolete
 namespace Microsoft.Testing.Platform.Extensions.Messages.UnitTests;
 
 [TestClass]
 public sealed class TestNodePropertiesTests
 {
-    [TestMethod]
-    public void KeyValuePairStringProperty_ToStringIsCorrect()
-        => Assert.AreEqual(
-            "KeyValuePairStringProperty { Key = key, Value = value }",
-            new KeyValuePairStringProperty("key", "value").ToString());
-
     [TestMethod]
     public void DiscoveredTestNodeStateProperty_ToStringIsCorrect()
         => Assert.AreEqual(
@@ -81,7 +76,7 @@ public sealed class TestNodePropertiesTests
     [TestMethod]
     public void FailedTestNodeStateProperty_WhenExceptionAndNoExplanation_ToStringIsCorrect()
         => Assert.AreEqual(
-            "FailedTestNodeStateProperty { Explanation = some message, Exception = System.Exception: some message }",
+            "FailedTestNodeStateProperty { Explanation = , Exception = System.Exception: some message }",
             new FailedTestNodeStateProperty(new Exception("some message")).ToString());
 
     [TestMethod]
@@ -105,7 +100,7 @@ public sealed class TestNodePropertiesTests
     [TestMethod]
     public void ErrorTestNodeStateProperty_WhenExceptionAndNoExplanation_ToStringIsCorrect()
         => Assert.AreEqual(
-            "ErrorTestNodeStateProperty { Explanation = some message, Exception = System.Exception: some message }",
+            "ErrorTestNodeStateProperty { Explanation = , Exception = System.Exception: some message }",
             new ErrorTestNodeStateProperty(new Exception("some message")).ToString());
 
     [TestMethod]
@@ -129,7 +124,7 @@ public sealed class TestNodePropertiesTests
     [TestMethod]
     public void TimeoutTestNodeStateProperty_WhenExceptionAndNoExplanation_ToStringIsCorrect()
         => Assert.AreEqual(
-            "TimeoutTestNodeStateProperty { Explanation = some message, Exception = System.Exception: some message, Timeout =  }",
+            "TimeoutTestNodeStateProperty { Explanation = , Exception = System.Exception: some message, Timeout =  }",
             new TimeoutTestNodeStateProperty(new Exception("some message")).ToString());
 
     [TestMethod]
@@ -153,7 +148,7 @@ public sealed class TestNodePropertiesTests
     [TestMethod]
     public void CancelledTestNodeStateProperty_WhenExceptionAndNoExplanation_ToStringIsCorrect()
         => Assert.AreEqual(
-            "CancelledTestNodeStateProperty { Explanation = some message, Exception = System.Exception: some message }",
+            "CancelledTestNodeStateProperty { Explanation = , Exception = System.Exception: some message }",
             new CancelledTestNodeStateProperty(new Exception("some message")).ToString());
 
     [TestMethod]
@@ -205,7 +200,7 @@ public sealed class TestNodePropertiesTests
     [TestMethod]
     public void TestMethodIdentifierProperty_ToStringIsCorrect()
         => Assert.AreEqual(
-            "TestMethodIdentifierProperty { AssemblyFullName = assembly, Namespace = namespace, TypeName = type, MethodName = method, ParameterTypeFullNames = [string], ReturnTypeFullName = bool }",
+            "TestMethodIdentifierProperty { AssemblyFullName = assembly, Namespace = namespace, TypeName = type, MethodName = method, MethodArity = 0, ParameterTypeFullNames = [string], ReturnTypeFullName = bool }",
             new TestMethodIdentifierProperty("assembly", "namespace", "type", "method", 0, ["string"], "bool").ToString());
 
     [TestMethod]

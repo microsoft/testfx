@@ -6,10 +6,14 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
+
 #if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 using MSTest.Acceptance.IntegrationTests.Messages.V100;
 #endif
+
+using Microsoft.Extensions.AI;
+using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,7 +30,7 @@ public class Program
         {
 #if NETCOREAPP
             // To attach to the children
-            Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
+            // Microsoft.Testing.TestInfrastructure.DebuggerUtility.AttachCurrentProcessToParentVSProcess();
 #endif
 
             ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
@@ -34,8 +38,11 @@ public class Program
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
+            // Add Chat client provider
+            // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
+
             // Test a custom local test framework
-            // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyAdapter());
+            // testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, s) => new DummyAdapter(s));
 
             // Custom test host controller extension
             // testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(s => new OutOfProc(s.GetMessageBus()));
@@ -45,6 +52,19 @@ public class Program
 
             // Enable Telemetry
             // testApplicationBuilder.AddAppInsightsTelemetryProvider();
+
+            // Enable OTel
+            // testApplicationBuilder.AddOpenTelemetryProvider(
+            //     tracing =>
+            //     {
+            //         tracing.AddTestingPlatformInstrumentation();
+            //         tracing.AddOtlpExporter();
+            //     },
+            //     metrics =>
+            //     {
+            //         metrics.AddTestingPlatformInstrumentation();
+            //         metrics.AddOtlpExporter();
+            //     });
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
             return await testApplication.RunAsync();
         }
@@ -57,7 +77,7 @@ public class Program
             using TestingPlatformClient client = await TestingPlatformClientFactory.StartAsServerAndConnectToTheClientAsync(Environment.ProcessPath!);
 
             await client.InitializeAsync();
-            List<TestNodeUpdate> testNodeUpdates = new();
+            List<TestNodeUpdate> testNodeUpdates = [];
             ResponseListener discoveryResponse = await client.DiscoverTestsAsync(Guid.NewGuid(), node =>
             {
                 testNodeUpdates.AddRange(node);
@@ -65,7 +85,7 @@ public class Program
             });
             await discoveryResponse.WaitCompletionAsync();
 
-            ResponseListener runRequest = await client.RunTestsAsync(Guid.NewGuid(), testNodeUpdates.Select(x => x.Node).ToArray(), _ => Task.CompletedTask);
+            ResponseListener runRequest = await client.RunTestsAsync(Guid.NewGuid(), [.. testNodeUpdates.Select(x => x.Node)], _ => Task.CompletedTask);
             await runRequest.WaitCompletionAsync();
 
             await client.ExitAsync();
@@ -78,6 +98,10 @@ public class Program
 
 internal sealed class DummyAdapter : ITestFramework, IDataProducer
 {
+    private readonly IServiceProvider _serviceProvider;
+
+    public DummyAdapter(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
+
     public string Uid => nameof(DummyAdapter);
 
     public string Version => string.Empty;
@@ -86,7 +110,7 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
 
     public string Description => string.Empty;
 
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
 
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 
@@ -96,6 +120,12 @@ internal sealed class DummyAdapter : ITestFramework, IDataProducer
     {
         try
         {
+            IChatClient? chatClient = await _serviceProvider.GetChatClientAsync(context.CancellationToken);
+            if (chatClient != null)
+            {
+                ChatResponse response = await chatClient.GetResponseAsync(chatMessage: "Hello, world!", cancellationToken: context.CancellationToken);
+            }
+
             MyService.DoSomething();
         }
         catch (Exception e)
@@ -161,9 +191,9 @@ public sealed class OutOfProc : ITestHostProcessLifetimeHandler, IDataProducer
     public OutOfProc(IMessageBus messageBus)
         => _messageBus = messageBus;
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
         => await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(@"C:\sampleFile"), "Sample", "sample description"));
 
-    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
         => Task.CompletedTask;
 }

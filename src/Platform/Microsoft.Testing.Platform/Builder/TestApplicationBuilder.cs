@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
+using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -11,7 +12,6 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -30,7 +30,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly TestApplicationOptions _testApplicationOptions;
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
     private readonly TestHostBuilder _testHostBuilder;
-    private ITestHost? _testHost;
+    private IHost? _host;
     private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkFactory;
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
 
@@ -47,18 +47,15 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         _unhandledExceptionsHandler = unhandledExceptionsHandler;
     }
 
+    public IChatClientManager ChatClientManager => _testHostBuilder.ChatClientManager;
+
     public ITestHostManager TestHost => _testHostBuilder.TestHost;
 
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
-    internal IServerModeManager ServerMode => _testHostBuilder.ServerMode;
-
     internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
-
-    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
-    internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
 
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
@@ -68,24 +65,21 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
-    [Obsolete("Remove in v2. Avoid breaking change with the rename of the property. See https://github.com/microsoft/testfx/issues/5015", error: true)]
-    internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
-
     internal IToolsManager Tools => _testHostBuilder.Tools;
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
-        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory)
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> frameworkFactory)
     {
-        Guard.NotNull(adapterFactory);
-        Guard.NotNull(capabilitiesFactory);
+        Ensure.NotNull(frameworkFactory);
+        Ensure.NotNull(capabilitiesFactory);
 
         if (_testFrameworkFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage);
         }
 
-        _testFrameworkFactory = adapterFactory;
+        _testFrameworkFactory = frameworkFactory;
 
         if (_testFrameworkCapabilitiesFactory is not null)
         {
@@ -107,13 +101,13 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderTestFrameworkNotRegistered);
         }
 
-        if (_testHost is not null)
+        if (_host is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _testHost = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart);
+        _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
 
-        return new TestApplication(_testHost);
+        return new TestApplication(_host);
     }
 }

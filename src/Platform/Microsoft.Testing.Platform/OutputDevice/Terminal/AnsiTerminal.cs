@@ -16,8 +16,8 @@ internal sealed class AnsiTerminal : ITerminal
     /// File extensions that we will link to directly, all other files
     /// are linked to their directory, to avoid opening dlls, or executables.
     /// </summary>
-    private static readonly string[] KnownFileExtensions = new string[]
-    {
+    private static readonly string[] KnownFileExtensions =
+    [
         // code files
         ".cs",
         ".vb",
@@ -33,8 +33,8 @@ internal sealed class AnsiTerminal : ITerminal
         ".nunit",
         ".trx",
         ".xml",
-        ".xunit",
-    };
+        ".xunit"
+    ];
 
     private readonly IConsole _console;
     private readonly string? _baseDirectory;
@@ -43,10 +43,10 @@ internal sealed class AnsiTerminal : ITerminal
     private bool _isBatching;
     private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
 
-    public AnsiTerminal(IConsole console, string? baseDirectory)
+    public AnsiTerminal(IConsole console)
     {
         _console = console;
-        _baseDirectory = baseDirectory ?? Directory.GetCurrentDirectory();
+        _baseDirectory = Directory.GetCurrentDirectory();
 
         // Output ansi code to get spinner on top of a terminal, to indicate in-progress task.
         // https://github.com/dotnet/msbuild/issues/8958: iTerm2 treats ;9 code to post a notification instead, so disable progress reporting on Mac.
@@ -54,14 +54,14 @@ internal sealed class AnsiTerminal : ITerminal
     }
 
     public int Width
-#pragma warning disable CA1416 // Validate platform compatibility
-        => _console.IsOutputRedirected ? int.MaxValue : _console.BufferWidth;
-#pragma warning restore CA1416 // Validate platform compatibility
+        => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+            ? int.MaxValue
+            : _console.BufferWidth;
 
     public int Height
-#pragma warning disable CA1416 // Validate platform compatibility
-        => _console.IsOutputRedirected ? int.MaxValue : _console.BufferHeight;
-#pragma warning restore CA1416 // Validate platform compatibility
+        => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
+            ? int.MaxValue
+            : _console.BufferHeight;
 
     public void Append(char value)
     {

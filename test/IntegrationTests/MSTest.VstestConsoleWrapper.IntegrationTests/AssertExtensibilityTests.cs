@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class AssertExtensibilityTests : CLITestBase
 {
     private const string TestAssetName = "FxExtensibilityTestProject";
 
+    [TestMethod]
     public void ExecuteAssertExtensibilityTests()
     {
         InvokeVsTestForExecution([TestAssetName]);

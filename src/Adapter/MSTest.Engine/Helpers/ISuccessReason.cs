@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Framework;
 
-internal interface ISuccessReason : IReason
-{
-}
+internal interface ISuccessReason : IReason;

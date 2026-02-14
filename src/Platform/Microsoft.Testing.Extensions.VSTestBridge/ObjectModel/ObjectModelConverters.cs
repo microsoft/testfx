@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
@@ -22,48 +21,28 @@ internal static class ObjectModelConverters
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
 
-    private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-        id: "TestCase.ManagedType",
-        label: "TestCase.ManagedType",
-        valueType: typeof(string),
-        owner: typeof(TestCase));
-
-    private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-        id: "TestCase.ManagedMethod",
-        label: "TestCase.ManagedMethod",
-        valueType: typeof(string),
-        owner: typeof(TestCase));
-
-    private static readonly TestProperty TestCategoryProperty = TestProperty.Register(
-        id: "MSTestDiscoverer.TestCategory",
-        label: "TestCategory",
-        valueType: typeof(string[]),
-        owner: typeof(TestCase));
-
-    private static readonly TestProperty TraitsProperty = TestProperty.Register(
-        id: "TestObject.Traits",
-        label: "Traits",
-        valueType: typeof(KeyValuePair<string, string>[]),
-        owner: typeof(TestObject));
+    private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
     /// Converts a VSTest <see cref="TestCase"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestCase testCase, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo, string? displayNameFromTestResult = null)
+    public static TestNode ToTestNode(
+        this TestCase testCase,
+        bool isTrxEnabled,
+        bool useFullyQualifiedNameAsUid,
+        Action<TestNode, TestCase> addAdditionalProperties,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo,
+        string? displayNameFromTestResult = null)
     {
-        string testNodeUid = testCase.Id.ToString();
+        string testNodeUid = useFullyQualifiedNameAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
 
         TestNode testNode = new()
         {
             Uid = new TestNodeUid(testNodeUid),
             DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
-
-        // This will be false for Expecto and NUnit currently, as they don't provide ManagedType/ManagedMethod.
-        if (TryGetMethodIdentifierProperty(testCase, out TestMethodIdentifierProperty? methodIdentifierProperty))
-        {
-            testNode.Properties.Add(methodIdentifierProperty);
-        }
 
         CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
 
@@ -74,35 +53,44 @@ internal static class ObjectModelConverters
 
         if (testCase.CodeFilePath is not null)
         {
-            testNode.Properties.Add(new TestFileLocationProperty(testCase.CodeFilePath, new(new(testCase.LineNumber, -1), new(testCase.LineNumber, -1))));
+            var position = new LinePosition(testCase.LineNumber, -1);
+            testNode.Properties.Add(
+                new TestFileLocationProperty(testCase.CodeFilePath, lineSpan: new(position, position)));
         }
 
+        addAdditionalProperties(testNode, testCase);
         return testNode;
     }
 
     private static void CopyCategoryAndTraits(TestObject testCaseOrResult, TestNode testNode, bool isTrxEnabled)
     {
-        // TPv2 is doing some special handling for MSTest... we should probably do the same.
-        // See https://github.com/microsoft/vstest/blob/main/src/Microsoft.TestPlatform.Extensions.TrxLogger/Utility/Converter.cs#L66-L70
-        if (testCaseOrResult.GetPropertyValue<string[]>(TestCategoryProperty, defaultValue: null) is string[] mstestCategories)
+        foreach (KeyValuePair<TestProperty, object?> property in testCaseOrResult.GetProperties())
         {
-            if (isTrxEnabled)
+#pragma warning disable CS0618 // Type or member is obsolete
+            if ((property.Key.Attributes & TestPropertyAttributes.Trait) == 0)
+#pragma warning restore CS0618 // Type or member is obsolete
             {
-                testNode.Properties.Add(new TrxCategoriesProperty(mstestCategories));
+                continue;
             }
 
-            foreach (string category in mstestCategories)
+            if (property.Value is string[] categories)
             {
-                testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
-            }
-        }
+                if (isTrxEnabled)
+                {
+                    testNode.Properties.Add(new TrxCategoriesProperty(categories));
+                }
 
-        if (testCaseOrResult.GetPropertyValue<KeyValuePair<string, string>[]>(TraitsProperty, defaultValue: null) is KeyValuePair<string, string>[] traits &&
-            traits.Length > 0)
-        {
-            foreach (KeyValuePair<string, string> trait in traits)
+                foreach (string category in categories)
+                {
+                    testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
+                }
+            }
+            else if (property.Value is KeyValuePair<string, string>[] traits)
             {
-                testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
+                foreach (KeyValuePair<string, string> trait in traits)
+                {
+                    testNode.Properties.Add(new TestMetadataProperty(trait.Key, trait.Value));
+                }
             }
         }
     }
@@ -135,9 +123,16 @@ internal static class ObjectModelConverters
     /// <summary>
     /// Converts a VSTest <see cref="TestResult"/> to a Microsoft Testing Platform <see cref="TestNode"/>.
     /// </summary>
-    public static TestNode ToTestNode(this TestResult testResult, bool isTrxEnabled, INamedFeatureCapability? namedFeatureCapability, ICommandLineOptions commandLineOptions, IClientInfo clientInfo)
+    public static TestNode ToTestNode(
+        this TestResult testResult,
+        bool isTrxEnabled,
+        bool useFullyQualifiedNameAsUid,
+        Action<TestNode, TestCase> addAdditionalProperties,
+        INamedFeatureCapability? namedFeatureCapability,
+        ICommandLineOptions commandLineOptions,
+        IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, addAdditionalProperties, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 
@@ -145,8 +140,14 @@ internal static class ObjectModelConverters
 
         if (isTrxEnabled)
         {
-            testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
+            {
+                testNode.Properties.Add(new TrxExceptionProperty(testResult.ErrorMessage, testResult.ErrorStackTrace));
+            }
 
+            // TODO: Consider retrieving TestMethodIdentifierProperty first (which could have been added through addAdditionalProperties.
+            // VSTest's TestCase.FQN is very non-standard.
+            // We should avoid using it if we can.
             if (TryParseFullyQualifiedType(testResult.TestCase.FullyQualifiedName, out string? fullyQualifiedType))
             {
                 testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedType));
@@ -156,45 +157,34 @@ internal static class ObjectModelConverters
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
 
-            testNode.Properties.Add(new TrxMessagesProperty(testResult.Messages
+            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
                 .Select(msg =>
                     msg.Category switch
                     {
-                        string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
                         string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
                         string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => new TrxMessage(msg.Text),
-                    })
-                .ToArray()));
+                        _ => throw new UnreachableException(),
+                    })]));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
 
-        var standardErrorMessages = new List<string>();
-        var standardOutputMessages = new List<string>();
+        List<string>? standardErrorMessages = null;
+        List<string>? standardOutputMessages = null;
         bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
         foreach (TestResultMessage testResultMessage in testResult.Messages)
         {
             if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
-                if (addVSTestProviderProperties)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardError", message));
-                }
-
-                standardErrorMessages.Add(message);
+                (standardErrorMessages ??= []).Add(message);
             }
 
             if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
             {
                 string message = testResultMessage.Text ?? string.Empty;
-                if (addVSTestProviderProperties)
-                {
-                    testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.StandardOutput", message));
-                }
-
-                standardOutputMessages.Add(message);
+                (standardOutputMessages ??= []).Add(message);
             }
         }
 
@@ -206,12 +196,12 @@ internal static class ObjectModelConverters
             }
         }
 
-        if (standardErrorMessages.Count > 0)
+        if (standardErrorMessages is { Count: > 0 })
         {
             testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
-        if (standardOutputMessages.Count > 0)
+        if (standardOutputMessages is { Count: > 0 })
         {
             testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }
@@ -248,15 +238,8 @@ internal static class ObjectModelConverters
         }
     }
 
-    internal static void FixUpTestCase(this TestCase testCase, string? testAssemblyPath = null)
+    internal static void FixUpTestCase(this TestCase testCase)
     {
-        // To help framework authors using code generator, we replace the Source property of the test case with the
-        // test assembly path.
-        if (RoslynString.IsNullOrEmpty(testCase.Source) && !RoslynString.IsNullOrEmpty(testAssemblyPath))
-        {
-            testCase.Source = testAssemblyPath;
-        }
-
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
         if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))
@@ -264,42 +247,7 @@ internal static class ObjectModelConverters
             testCase.SetPropertyValue(OriginalExecutorUriProperty, testCase.ExecutorUri);
         }
 
-        testCase.ExecutorUri = new(Constants.ExecutorUri);
-    }
-
-    private static bool TryGetMethodIdentifierProperty(TestCase testCase, [NotNullWhen(true)] out TestMethodIdentifierProperty? methodIdentifierProperty)
-    {
-        string? managedType = testCase.GetPropertyValue<string>(ManagedTypeProperty, defaultValue: null);
-        string? managedMethod = testCase.GetPropertyValue<string>(ManagedMethodProperty, defaultValue: null);
-        // NOTE: ManagedMethod, in case of MSTest, will have the parameter types.
-        // So, we prefer using it to display the parameter types in Test Explorer.
-        if (RoslynString.IsNullOrEmpty(managedType) || RoslynString.IsNullOrEmpty(managedMethod))
-        {
-            methodIdentifierProperty = null;
-            return false;
-        }
-
-        methodIdentifierProperty = GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(managedType, managedMethod);
-        return true;
-    }
-
-    private static TestMethodIdentifierProperty GetMethodIdentifierPropertyFromManagedTypeAndManagedMethod(
-        string managedType,
-        string managedMethod)
-    {
-        ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
-
-        parameterTypes ??= [];
-
-        ManagedNameParser.ParseManagedTypeName(managedType, out string @namespace, out string typeName);
-
-        // In the context of the VSTestBridge where we only have access to VSTest object model, we cannot determine ReturnTypeFullName.
-        // For now, we lose this bit of information.
-        // If really needed in the future, we can introduce a VSTest property to hold this info.
-        // But the eventual goal should be to stop using the VSTestBridge altogether.
-        // TODO: For AssemblyFullName, can we use Assembly.GetEntryAssembly().FullName?
-        // Or alternatively, does VSTest object model expose the assembly full name somewhere?
-        return new TestMethodIdentifierProperty(AssemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, ReturnTypeFullName: string.Empty);
+        testCase.ExecutorUri = ExecutorUri;
     }
 
     private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)

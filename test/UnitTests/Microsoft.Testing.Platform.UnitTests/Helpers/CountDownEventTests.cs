@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class CountDownEventTests
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task CountDownEvent_WaitAsync_Succeeded()
     {
@@ -15,11 +17,11 @@ public sealed class CountDownEventTests
         Task<bool> waiter1 = Task.Run(() => countdownEvent.WaitAsync(CancellationToken.None));
         Task<bool> waiter2 = Task.Run(() => countdownEvent.WaitAsync(CancellationToken.None));
 
-        await Task.Delay(500);
+        await Task.Delay(500, TestContext.CancellationToken);
         countdownEvent.Signal();
-        await Task.Delay(500);
+        await Task.Delay(500, TestContext.CancellationToken);
         countdownEvent.Signal();
-        await Task.Delay(500);
+        await Task.Delay(500, TestContext.CancellationToken);
         countdownEvent.Signal();
 
         await waiter1.TimeoutAfterAsync(TimeSpan.FromSeconds(30));

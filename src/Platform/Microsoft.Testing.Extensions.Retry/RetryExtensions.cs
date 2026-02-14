@@ -19,17 +19,23 @@ public static class RetryExtensions
     /// Adds the retry provider to the test application.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
+    [UnsupportedOSPlatform("browser")]
     public static void AddRetryProvider(this ITestApplicationBuilder builder)
     {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(ExtensionResources.RetryExtensionNotSupportedOnBrowserErrorMessage);
+        }
+
         builder.CommandLine.AddProvider(() => new RetryCommandLineOptionsProvider());
 
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider
+        builder.TestHost.AddTestHostApplicationLifetime(serviceProvider
             => new RetryLifecycleCallbacks(serviceProvider));
 
         CompositeExtensionFactory<RetryDataConsumer> compositeExtensionFactory
             = new(serviceProvider => new RetryDataConsumer(serviceProvider));
         builder.TestHost.AddDataConsumer(compositeExtensionFactory);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
 
         if (builder is not TestApplicationBuilder testApplicationBuilder)
         {

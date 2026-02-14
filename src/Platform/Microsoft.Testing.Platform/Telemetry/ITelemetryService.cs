@@ -13,5 +13,5 @@ internal interface ITelemetryCollector
     /// <summary>
     /// Logs a telemetry event.
     /// </summary>
-    Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap);
+    Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap, CancellationToken cancellationToken);
 }

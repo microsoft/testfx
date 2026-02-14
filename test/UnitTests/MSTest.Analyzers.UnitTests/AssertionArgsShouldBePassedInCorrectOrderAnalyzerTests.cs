@@ -46,17 +46,12 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreEqual(s, "", "some message")|];
                     [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    [|Assert.AreEqual(s, "", "some message", 1, "input")|];
-                    [|Assert.AreEqual(s, "", EqualityComparer<string>.Default, "some message", 1, "input")|];
 
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default)|];
                     [|Assert.AreNotEqual(s, "", "some message")|];
                     [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message")|];
-                    [|Assert.AreNotEqual(s, "", "some message", 1, "input")|];
-                    [|Assert.AreNotEqual(s, "", EqualityComparer<string>.Default, "some message", 1, "input")|];
 
                     [|Assert.AreSame(s, "", "some message")|];
-                    [|Assert.AreSame(s, "", "some message", 1, "input")|];
                 }
 
                 [TestMethod]
@@ -65,7 +60,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     string s = "";
                     bool b = true;
                     int i = 42;
-            
+
                     Assert.AreEqual("", s);
                     Assert.AreEqual(true, b);
                     Assert.AreEqual(1, i);
@@ -73,7 +68,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreNotEqual("", s);
                     Assert.AreNotEqual(true, b);
                     Assert.AreNotEqual(1, i);
-            
+
                     Assert.AreSame("", s);
                     Assert.AreSame(true, b);
                     Assert.AreSame(1, i);
@@ -118,17 +113,12 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreEqual("", s, EqualityComparer<string>.Default);
                     Assert.AreEqual("", s, "some message");
                     Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message");
-                    Assert.AreEqual("", s, "some message", 1, "input");
-                    Assert.AreEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
 
                     Assert.AreNotEqual("", s, EqualityComparer<string>.Default);
                     Assert.AreNotEqual("", s, "some message");
                     Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message");
-                    Assert.AreNotEqual("", s, "some message", 1, "input");
-                    Assert.AreNotEqual("", s, EqualityComparer<string>.Default, "some message", 1, "input");
 
                     Assert.AreSame("", s, "some message");
-                    Assert.AreSame("", s, "some message", 1, "input");
                 }
 
                 [TestMethod]
@@ -137,7 +127,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     string s = "";
                     bool b = true;
                     int i = 42;
-            
+
                     Assert.AreEqual("", s);
                     Assert.AreEqual(true, b);
                     Assert.AreEqual(1, i);
@@ -145,7 +135,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreNotEqual("", s);
                     Assert.AreNotEqual(true, b);
                     Assert.AreNotEqual(1, i);
-            
+
                     Assert.AreSame("", s);
                     Assert.AreSame(true, b);
                     Assert.AreSame(1, i);
@@ -268,7 +258,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     string s = "";
                     bool b = true;
                     int i = 42;
-            
+
                     Assert.AreEqual(message: "message", actual: s, expected: "");
                     Assert.AreEqual(actual: b, expected: true);
                     Assert.AreEqual(actual: i, expected: 1);
@@ -276,7 +266,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreNotEqual(actual: s, notExpected: "");
                     Assert.AreNotEqual(actual: b, notExpected: true);
                     Assert.AreNotEqual(actual: i, notExpected: 1);
-            
+
                     Assert.AreSame(actual: s, expected: "");
                     Assert.AreSame(actual: b, expected: true);
                     Assert.AreSame(actual: i, expected: 1);
@@ -307,15 +297,15 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreEqual(message: "message", actual: s, expected: "");
                     Assert.AreEqual(actual: b, expected: true);
                     Assert.AreEqual(actual: i, expected: 1);
-            
+
                     Assert.AreNotEqual(actual: s, notExpected: "");
                     Assert.AreNotEqual(actual: b, notExpected: true);
                     Assert.AreNotEqual(actual: i, notExpected: 1);
-            
+
                     Assert.AreSame(actual: s, expected: "");
                     Assert.AreSame(actual: b, expected: true);
                     Assert.AreSame(actual: i, expected: 1);
-            
+
                     Assert.AreNotSame(actual: s, notExpected: "");
                     Assert.AreNotSame(actual: b, notExpected: true);
                     Assert.AreNotSame(actual: i, notExpected: 1);
@@ -330,7 +320,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     string s = "";
                     bool b = true;
                     int i = 42;
-            
+
                     Assert.AreEqual(message: "message", actual: s, expected: "");
                     Assert.AreEqual(actual: b, expected: true);
                     Assert.AreEqual(actual: i, expected: 1);
@@ -338,7 +328,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreNotEqual(actual: s, notExpected: "");
                     Assert.AreNotEqual(actual: b, notExpected: true);
                     Assert.AreNotEqual(actual: i, notExpected: 1);
-            
+
                     Assert.AreSame(actual: s, expected: "");
                     Assert.AreSame(actual: b, expected: true);
                     Assert.AreSame(actual: i, expected: 1);
@@ -406,22 +396,22 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     const string localConstString = "";
                     int i = 42;
                     const int localConstInt = 42;
-            
+
                     Assert.AreEqual(constString, s);
                     Assert.AreEqual(localConstString, s);
                     Assert.AreEqual(constInt, i);
                     Assert.AreEqual(localConstInt, i);
-            
+
                     Assert.AreNotEqual(constString, s);
                     Assert.AreNotEqual(localConstString, s);
                     Assert.AreNotEqual(constInt, i);
                     Assert.AreNotEqual(localConstInt, i);
-            
+
                     Assert.AreSame(constString, s);
                     Assert.AreSame(localConstString, s);
                     Assert.AreSame(constInt, i);
                     Assert.AreSame(localConstInt, i);
-            
+
                     Assert.AreNotSame(constString, s);
                     Assert.AreNotSame(localConstString, s);
                     Assert.AreNotSame(constInt, i);
@@ -475,22 +465,22 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     const string localConstString = "";
                     int i = 42;
                     const int localConstInt = 42;
-            
+
                     Assert.AreEqual(constString, s);
                     Assert.AreEqual(localConstString, s);
                     Assert.AreEqual(constInt, i);
                     Assert.AreEqual(localConstInt, i);
-            
+
                     Assert.AreNotEqual(constString, s);
                     Assert.AreNotEqual(localConstString, s);
                     Assert.AreNotEqual(constInt, i);
                     Assert.AreNotEqual(localConstInt, i);
-            
+
                     Assert.AreSame(constString, s);
                     Assert.AreSame(localConstString, s);
                     Assert.AreSame(constInt, i);
                     Assert.AreSame(localConstInt, i);
-            
+
                     Assert.AreNotSame(constString, s);
                     Assert.AreNotSame(localConstString, s);
                     Assert.AreNotSame(constInt, i);
@@ -524,7 +514,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                 {
                     string s = "";
                     int i = 42;
-            
+
                     Assert.AreEqual(fieldString, s);
                     Assert.AreEqual(PropertyString, s);
                     Assert.AreEqual(fieldInt, i);
@@ -542,7 +532,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreNotEqual(s, PropertyString);
                     Assert.AreNotEqual(i, fieldInt);
                     Assert.AreNotEqual(i, PropertyInt);
-            
+
                     Assert.AreSame(fieldString, s);
                     Assert.AreSame(PropertyString, s);
                     Assert.AreSame(fieldInt, i);
@@ -551,7 +541,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     Assert.AreSame(s, PropertyString);
                     Assert.AreSame(i, fieldInt);
                     Assert.AreSame(i, PropertyInt);
-            
+
                     Assert.AreNotSame(fieldString, s);
                     Assert.AreNotSame(PropertyString, s);
                     Assert.AreNotSame(fieldInt, i);
@@ -590,7 +580,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     object o = 42;
                     object actualObject = 42;
                     object expectedObject = 42;
-            
+
                     [|Assert.AreEqual(actualString, s)|];
                     [|Assert.AreEqual(s, expectedString)|];
                     [|Assert.AreEqual(actualString, expectedString)|];
@@ -637,28 +627,28 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     object o = 42;
                     object actualObject = 42;
                     object expectedObject = 42;
-            
+
                     Assert.AreEqual(expectedString, s);
                     Assert.AreEqual(s, actualString);
                     Assert.AreEqual(expectedString, actualString);
                     Assert.AreEqual(expectedObject, o);
                     Assert.AreEqual(o, actualObject);
                     Assert.AreEqual(expectedObject, actualObject);
-            
+
                     Assert.AreNotEqual(expectedString, s);
                     Assert.AreNotEqual(s, actualString);
                     Assert.AreNotEqual(expectedString, actualString);
                     Assert.AreNotEqual(expectedObject, o);
                     Assert.AreNotEqual(o, actualObject);
                     Assert.AreNotEqual(expectedObject, actualObject);
-            
+
                     Assert.AreSame(expectedString, s);
                     Assert.AreSame(s, actualString);
                     Assert.AreSame(expectedString, actualString);
                     Assert.AreSame(expectedObject, o);
                     Assert.AreSame(o, actualObject);
                     Assert.AreSame(expectedObject, actualObject);
-            
+
                     Assert.AreNotSame(expectedString, s);
                     Assert.AreNotSame(s, actualString);
                     Assert.AreNotSame(expectedString, actualString);
@@ -687,7 +677,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     object o = 42;
                     object actualObject = 42;
                     object expectedObject = 42;
-            
+
                     Assert.AreEqual(s, actualString);
                     Assert.AreEqual(expectedString, s);
                     Assert.AreEqual(expectedString, actualString);
@@ -734,28 +724,28 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                     object o = 42;
                     object actualObject = 42;
                     object expectedObject = 42;
-            
+
                     Assert.AreEqual(expectedString, s);
                     Assert.AreEqual(s, actualString);
                     Assert.AreEqual(expectedString, actualString);
                     Assert.AreEqual(expectedObject, o);
                     Assert.AreEqual(o, actualObject);
                     Assert.AreEqual(expectedObject, actualObject);
-            
+
                     Assert.AreNotEqual(expectedString, s);
                     Assert.AreNotEqual(s, actualString);
                     Assert.AreNotEqual(expectedString, actualString);
                     Assert.AreNotEqual(expectedObject, o);
                     Assert.AreNotEqual(o, actualObject);
                     Assert.AreNotEqual(expectedObject, actualObject);
-            
+
                     Assert.AreSame(expectedString, s);
                     Assert.AreSame(s, actualString);
                     Assert.AreSame(expectedString, actualString);
                     Assert.AreSame(expectedObject, o);
                     Assert.AreSame(o, actualObject);
                     Assert.AreSame(expectedObject, actualObject);
-            
+
                     Assert.AreNotSame(expectedString, s);
                     Assert.AreNotSame(s, actualString);
                     Assert.AreNotSame(expectedString, actualString);
@@ -785,22 +775,22 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
                 {
                     string s = "";
                     int i = 42;
-            
+
                     Assert.AreEqual(GetString(), s);
                     Assert.AreEqual(s, GetString());
                     Assert.AreEqual(GetInt(), i);
                     Assert.AreEqual(i, GetInt());
-            
+
                     Assert.AreNotEqual(GetString(), s);
                     Assert.AreNotEqual(s, GetString());
                     Assert.AreNotEqual(GetInt(), i);
                     Assert.AreNotEqual(i, GetInt());
-            
+
                     Assert.AreSame(GetString(), s);
                     Assert.AreSame(s, GetString());
                     Assert.AreSame(GetInt(), i);
                     Assert.AreSame(i, GetInt());
-            
+
                     Assert.AreNotSame(GetString(), s);
                     Assert.AreNotSame(s, GetString());
                     Assert.AreNotSame(GetInt(), i);
@@ -815,5 +805,230 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(
             code,
             code);
+    }
+
+    [TestMethod]
+    public async Task LiteralWithExpectedNamedProperty_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public class TestObject
+                {
+                    public string ExpectedValue { get; set; } = "";
+                    public int expectedCount { get; set; } = 0;
+                    public bool _expectedFlag { get; set; } = false;
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    var obj = new TestObject();
+
+                    // These should NOT be flagged - comparing literals to properties with "expected" names is correct
+                    Assert.AreEqual("value1", obj.ExpectedValue);
+                    Assert.AreEqual(42, obj.expectedCount);
+                    Assert.AreEqual(true, obj._expectedFlag);
+                    Assert.AreEqual<object>(obj._expectedFlag, obj._expectedFlag);
+                    Assert.AreEqual<object>(obj.ExpectedValue, obj._expectedFlag);
+
+                    Assert.AreNotEqual("value2", obj.ExpectedValue);
+                    Assert.AreNotEqual(24, obj.expectedCount);
+                    Assert.AreNotEqual(false, obj._expectedFlag);
+
+                    Assert.AreSame("value3", obj.ExpectedValue);
+                    Assert.AreNotSame("value4", obj.ExpectedValue);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ConstantWithExpectedNamedProperty_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private const string EXPECTED_CONSTANT = "test";
+
+                public class TestObject
+                {
+                    public string ExpectedValue { get; set; } = "";
+                    public string expectedResult { get; set; } = "";
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    var obj = new TestObject();
+
+                    // These should NOT be flagged - comparing constants to properties with "expected" names is correct
+                    Assert.AreEqual(EXPECTED_CONSTANT, obj.ExpectedValue);
+                    Assert.AreNotEqual(EXPECTED_CONSTANT, obj.expectedResult);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task TypeOfExpressions()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.IO;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These should be flagged - typeof() expressions should be treated as constants
+                    [|Assert.AreEqual(actualType, typeof(string))|];
+                    [|Assert.AreEqual(exception.GetType(), typeof(IOException))|];
+                    [|Assert.AreNotEqual(actualType, typeof(int))|];
+                    [|Assert.AreSame(actualType, typeof(string))|];
+                    [|Assert.AreNotSame(actualType, typeof(int))|];
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These are correct - typeof() expressions as expected values
+                    Assert.AreEqual(typeof(string), actualType);
+                    Assert.AreEqual(typeof(IOException), exception.GetType());
+                    Assert.AreNotEqual(typeof(int), actualType);
+                    Assert.AreSame(typeof(string), actualType);
+                    Assert.AreNotSame(typeof(int), actualType);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+            using System.IO;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These should be flagged - typeof() expressions should be treated as constants
+                    Assert.AreEqual(typeof(string), actualType);
+                    Assert.AreEqual(typeof(IOException), exception.GetType());
+                    Assert.AreNotEqual(typeof(int), actualType);
+                    Assert.AreSame(typeof(string), actualType);
+                    Assert.AreNotSame(typeof(int), actualType);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    Type actualType = typeof(string);
+                    Exception exception = new IOException();
+
+                    // These are correct - typeof() expressions as expected values
+                    Assert.AreEqual(typeof(string), actualType);
+                    Assert.AreEqual(typeof(IOException), exception.GetType());
+                    Assert.AreNotEqual(typeof(int), actualType);
+                    Assert.AreSame(typeof(string), actualType);
+                    Assert.AreNotSame(typeof(int), actualType);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task TypeOfExpressionsAndConstants_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void Compliant()
+                {
+                    // When both are typeof() expressions, don't flag
+                    Assert.AreEqual(typeof(string), typeof(string));
+                    Assert.AreEqual(typeof(int), typeof(int));
+                    Assert.AreNotEqual(typeof(string), typeof(int));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingLiterals_MultiLineWithDifferentIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    string s = "";
+
+                    [|Assert.AreEqual(
+                        s,
+                        "",
+                        "values should match")|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    string s = "";
+
+                    Assert.AreEqual(
+                        "", s, "values should match");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            fixedCode);
     }
 }

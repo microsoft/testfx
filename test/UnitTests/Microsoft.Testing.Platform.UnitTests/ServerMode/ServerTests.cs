@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class ServerTests
 {
     public ServerTests()
@@ -30,26 +31,25 @@ public sealed class ServerTests
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
 
     [TestMethod]
-    public async Task ServerCanBeStartedAndAborted_TcpIp() => await RetryHelper.RetryAsync(
-                async () =>
-                {
-                    using var server = TcpServer.Create();
+    public async Task ServerCanBeStartedAndAborted_TcpIp()
+    {
+        using var server = TcpServer.Create();
 
-                    TestApplicationHooks testApplicationHooks = new();
-                    string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
-                    ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-                    builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
-                    builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
-                    var testApplication = (TestApplication)await builder.BuildAsync();
-                    testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-                    Task<int> serverTask = testApplication.RunAsync();
+        TestApplicationHooks testApplicationHooks = new();
+        string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = testApplication.RunAsync();
 
-                    await testApplicationHooks.WaitForBeforeRunAsync();
-                    ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
+        await testApplicationHooks.WaitForBeforeRunAsync();
+        ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
 
-                    stopService.Cancel();
-                    Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
-                }, 3, TimeSpan.FromSeconds(10));
+        stopService.Cancel();
+        Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
+    }
 
     [TestMethod]
     public async Task ServerCanInitialize()
@@ -59,7 +59,7 @@ public sealed class ServerTests
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         TestApplicationHooks testApplicationHooks = new();
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
+        builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
@@ -252,7 +252,7 @@ public sealed class ServerTests
         await writer.FlushAsync();
     }
 
-    private sealed class TestApplicationHooks : ITestApplicationLifecycleCallbacks, IDisposable
+    private sealed class TestApplicationHooks : ITestHostApplicationLifetime, IDisposable
     {
         private readonly SemaphoreSlim _waitForBeforeRunAsync = new(0, 1);
 

@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class DataExtensibilityTests : CLITestBase
 {
     private const string TestAssetName = "FxExtensibilityTestProject";
 
+    [TestMethod]
     public void ExecuteTestDataSourceExtensibilityTests()
     {
         InvokeVsTestForExecution([TestAssetName]);
@@ -16,6 +18,7 @@ public class DataExtensibilityTests : CLITestBase
         ValidateFailedTestsContain(false, "FxExtensibilityTestProject.TestDataSourceExTests.CustomEmptyTestDataSourceTestMethod");
     }
 
+    [TestMethod]
     public void ExecuteDynamicDataExtensibilityTests()
     {
         InvokeVsTestForExecution([TestAssetName]);
@@ -41,6 +44,7 @@ public class DataExtensibilityTests : CLITestBase
             "FxExtensibilityTestProject.DynamicDataExMoreTests.DynamicEmptyDataTestMethod6");
     }
 
+    [TestMethod]
     public void ExecuteCustomTestExtensibilityTests()
     {
         InvokeVsTestForExecution([TestAssetName]);
@@ -60,6 +64,7 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 3");
     }
 
+    [TestMethod]
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");

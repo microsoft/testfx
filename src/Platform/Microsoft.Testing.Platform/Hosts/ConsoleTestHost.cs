@@ -20,7 +20,7 @@ internal sealed class ConsoleTestHost(
     Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
     TestFrameworkManager testFrameworkManager,
     TestHostManager testHostManager)
-    : CommonTestHost(serviceProvider)
+    : CommonHost(serviceProvider)
 {
     private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", AppVersion.DefaultSemVer);
     private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", AppVersion.DefaultSemVer);
@@ -34,12 +34,10 @@ internal sealed class ConsoleTestHost(
 
     protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
-    protected override async Task<int> InternalRunAsync()
+    protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
     {
         var consoleRunStarted = Stopwatch.StartNew();
         DateTimeOffset consoleRunStart = _clock.UtcNow;
-
-        CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
         // Add the ClientInfo service to the service provider
@@ -50,28 +48,32 @@ internal sealed class ConsoleTestHost(
             ?? new ConsoleTestExecutionFilterFactory(ServiceProvider.GetCommandLineOptions());
 
         // Use user provided filter factory or create console default one.
-        ITestFrameworkInvoker testAdapterInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
+        ITestFrameworkInvoker testFrameworkInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
             ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
-        ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
-        ITestFramework testFramework = await _buildTestFrameworkAsync(new(
-            ServiceProvider,
-            new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
-            testAdapterInvoker,
-            testExecutionFilterFactory,
-            ServiceProvider.GetPlatformOutputDevice(),
-            [],
-            _testFrameworkManager,
-            _testHostManager,
-            new MessageBusProxy(),
-            ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-            false));
+        ServiceProvider.TryAddService(new Services.TestSessionContext(cancellationToken));
+        ITestFramework testFramework;
+        using (ServiceProvider.GetPlatformOTelService()?.StartActivity("CreateTestFramework"))
+        {
+            testFramework = await _buildTestFrameworkAsync(new(
+                ServiceProvider,
+                new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
+                testFrameworkInvoker,
+                testExecutionFilterFactory,
+                ServiceProvider.GetPlatformOutputDevice(),
+                [],
+                _testFrameworkManager,
+                _testHostManager,
+                new MessageBusProxy(),
+                ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
+                false)).ConfigureAwait(false);
+        }
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         Statistics? statistics = null;
         string? extensionInformation = null;
-        await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'");
+        await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionUid}'").ConfigureAwait(false);
         int exitCode;
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
@@ -86,7 +88,7 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
-                ClientInfoHost);
+                ClientInfoHost).ConfigureAwait(false);
             requestExecuteStop = _clock.UtcNow;
 
             // Get the exit code service to be able to set the exit code
@@ -94,25 +96,25 @@ internal sealed class ConsoleTestHost(
             statistics = testApplicationResult.GetStatistics();
             exitCode = testApplicationResult.GetProcessExitCode();
 
-            await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionId}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}");
+            await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionUid}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}").ConfigureAwait(false);
 
             // We collect info about the extensions before the dispose to avoid possible issue with cleanup.
             if (telemetryInformation.IsEnabled)
             {
-                extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider);
+                extensionInformation = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(ServiceProvider).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException oc) when (oc.CancellationToken == abortRun)
+        catch (OperationCanceledException oc) when (oc.CancellationToken == cancellationToken)
         {
             requestExecuteStop ??= _clock.UtcNow;
 
             exitCode = ExitCodes.TestSessionAborted;
-            await _logger.LogInformationAsync("Test session canceled.");
+            await _logger.LogInformationAsync("Test session canceled.").ConfigureAwait(false);
         }
         finally
         {
             // Cleanup all services
-            await DisposeServiceProviderAsync(ServiceProvider);
+            await DisposeServiceProviderAsync(ServiceProvider).ConfigureAwait(false);
         }
 
         if (telemetryInformation.IsEnabled)
@@ -126,7 +128,7 @@ internal sealed class ConsoleTestHost(
                 { TelemetryProperties.RequestProperties.AdapterLoadStop, adapterLoadStop },
                 { TelemetryProperties.RequestProperties.RequestExecuteStart, requestExecuteStart },
                 { TelemetryProperties.RequestProperties.RequestExecuteStop, requestExecuteStop },
-                { TelemetryProperties.HostProperties.ExitCodePropertyName, abortRun.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode.ToString(CultureInfo.InvariantCulture) },
+                { TelemetryProperties.HostProperties.ExitCodePropertyName, cancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode.ToString(CultureInfo.InvariantCulture) },
             };
 
             if (statistics is not null)
@@ -140,7 +142,7 @@ internal sealed class ConsoleTestHost(
                 metrics.Add(TelemetryProperties.HostProperties.ExtensionsPropertyName, extensionInformation);
             }
 
-            await telemetry.LogEventAsync(TelemetryEvents.ConsoleTestHostExitEventName, metrics);
+            await telemetry.LogEventAsync(TelemetryEvents.ConsoleTestHostExitEventName, metrics, cancellationToken).ConfigureAwait(false);
         }
 
         return exitCode;

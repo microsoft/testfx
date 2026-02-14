@@ -26,18 +26,18 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
 
     public int ExitCode => _process.ExitCode;
 
-    public async Task<int> WaitForExitAsync()
+    public async Task<int> WaitForExitAsync(CancellationToken cancellationToken = default)
     {
         if (_disposed)
         {
             return _exitCode;
         }
 
-        await _process.WaitForExitAsync();
+        await _process.WaitForExitAsync(cancellationToken);
         return _process.ExitCode;
     }
 
-    public async Task<int> StopAsync()
+    public async Task<int> StopAsync(CancellationToken cancellationToken = default)
     {
         if (_disposed)
         {
@@ -45,7 +45,7 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
         }
 
         KillSafe(_process);
-        return await WaitForExitAsync();
+        return await WaitForExitAsync(cancellationToken);
     }
 
     public void Kill()

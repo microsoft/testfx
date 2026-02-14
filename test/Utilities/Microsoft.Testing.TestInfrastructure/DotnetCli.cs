@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Polly;
-using Polly.Contrib.WaitAndRetry;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -54,17 +53,17 @@ public static class DotnetCli
         Dictionary<string, string?>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int timeoutInSeconds = 60,
         int retryCount = 5,
         bool disableCodeCoverage = true,
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
-        [CallerMemberName] string callerMemberName = "")
+        [CallerMemberName] string callerMemberName = "",
+        CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingCommands_semaphore.WaitAsync();
+        await s_maxOutstandingCommands_semaphore.WaitAsync(cancellationToken);
         try
         {
-            environmentVariables ??= new Dictionary<string, string?>();
+            environmentVariables ??= [];
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.
@@ -97,7 +96,7 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            string extraArgs = warnAsError ? " /warnaserror" : string.Empty;
+            string extraArgs = warnAsError ? " -p:MSBuildTreatWarningsAsErrors=true" : string.Empty;
             extraArgs += suppressPreviewDotNetMessage ? " -p:SuppressNETCoreSdkPreviewMessage=true" : string.Empty;
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {
@@ -108,18 +107,7 @@ public static class DotnetCli
                 args += extraArgs;
             }
 
-            if (DoNotRetry)
-            {
-                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName);
-            }
-            else
-            {
-                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount, factor: 1.5);
-                return await Policy
-                    .Handle<Exception>()
-                    .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, callerMemberName));
-            }
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
         }
         finally
         {
@@ -131,13 +119,13 @@ public static class DotnetCli
         => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
 
     // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
             .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
-            .ExecuteAsync(async () => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero, binlogBaseFileName));
+            .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero, string binlogBaseFileName)
+    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
@@ -161,7 +149,7 @@ public static class DotnetCli
         }
 
         using DotnetMuxer dotnet = new(environmentVariables);
-        int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
+        int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, cancellationToken);
 
         if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))
         {

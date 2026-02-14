@@ -14,7 +14,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     public async Task ClassCleanup_Inheritance_WhenClassIsSkipped()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter ClassName!~TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -29,7 +29,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     public async Task WhenAllTestsAreIgnored_AssemblyInitializeAndCleanupAreSkipped()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithAssemblyInitialize", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -42,7 +42,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
     public async Task WhenSpecificDataSourceIsIgnoredViaIgnoreMessageProperty()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --filter TestClassWithDataSourcesUsingIgnoreMessage", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -233,32 +233,32 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
     public TestClassWithDataSourcesUsingIgnoreMessage(TestContext testContext)
         => _testContext = testContext;
 
-    [TestMethod] // 1 skipped, 2 pass
-    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This data row is ignored")]
-    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)] // 1 skipped, 2 pass
+    [DataRow(0)]
+    [DataRow(1, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2)]
     public void TestMethod1(int i)
     {
     }
 
-    [TestMethod] // 1 skipped (folded), 3 pass
-    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
-    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold, IgnoreMessage = "This source is ignored")]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)] // 1 skipped (folded), 3 pass
+    [DynamicData("Data1")]
+    [DynamicData("Data2", IgnoreMessage = "This source is ignored")]
     public void TestMethod2(int i)
     {
     }
 
-    [TestMethod] // 1 skipped, 2 pass
-    [DataRow(0, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DataRow(1, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This data row is ignored")]
-    [DataRow(2, UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)] // 1 skipped, 2 pass
+    [DataRow(0)]
+    [DataRow(1, IgnoreMessage = "This data row is ignored")]
+    [DataRow(2)]
     public void TestMethod3(int i)
     {
     }
 
-    [TestMethod] // 3 skipped (unfolded), 3 pass
-    [DynamicData("Data1", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
-    [DynamicData("Data2", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold, IgnoreMessage = "This source is ignored")]
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)] // 3 skipped (unfolded), 3 pass
+    [DynamicData("Data1")]
+    [DynamicData("Data2", IgnoreMessage = "This source is ignored")]
     public void TestMethod4(int i)
     {
     }
@@ -297,4 +297,6 @@ public class TestClassWithDataSourcesUsingIgnoreMessage
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -32,7 +32,7 @@ public sealed class AppInsightsProviderTests
         Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
         testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
 
-        List<string> events = new();
+        List<string> events = [];
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
         .Callback((string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics) =>
@@ -57,13 +57,13 @@ public sealed class AppInsightsProviderTests
             "sessionId");
 
         // Fire the consume loop
-        _ = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>());
+        _ = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
 
         // Wait for the consume loop
         loopInitialized.WaitOne();
 
         // Fire the consume loop
-        _ = appInsightsProvider.LogEventAsync("Sample2", new Dictionary<string, object>());
+        _ = appInsightsProvider.LogEventAsync("Sample2", new Dictionary<string, object>(), CancellationToken.None);
 
         // Cancel the platform token
         cancellationTokenSource.Cancel();
@@ -133,7 +133,7 @@ public sealed class AppInsightsProviderTests
             "sessionId");
 
         // Fire the consume loop
-        _ = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>());
+        _ = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
 
         // Wait for the consume loop
         loopInitialized.WaitOne();
@@ -142,7 +142,7 @@ public sealed class AppInsightsProviderTests
         cancellationTokenSource.Dispose();
 
         // Fire the second loop that will timeout
-        Task logTask = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>());
+        Task logTask = appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
 #if NETCOREAPP
         ValueTask valueTask = appInsightsProvider.DisposeAsync();
         while (!valueTask.IsCompleted)

@@ -12,5 +12,5 @@ internal sealed class ExecutableInfo(string filePath, IEnumerable<string> argume
     public string Workspace { get; } = workspace;
 
     public override string ToString()
-        => $"Process: {FilePath}, Arguments: {string.Join(" ", Arguments)}, Workspace: {Workspace}";
+        => $"Process: {FilePath}, Arguments: {string.Join(' ', Arguments)}, Workspace: {Workspace}";
 }

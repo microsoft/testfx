@@ -14,17 +14,13 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     private const string CooperativeTimeoutAssetName = "CooperativeTimeoutSTATestMethodProject";
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestMethod_OnWindows_OnLifeCycleTestClass_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -40,43 +36,13 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     }
 
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task DerivedSTATestMethod_OnWindows_OnTestClassWithClassCleanupEndOfAssembly(string currentTfm)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
-
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Constructor");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestMethod1");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestCleanup");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Dispose");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassCleanup");
-        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
-    }
-
-    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestMethod_OnWindows_OnTestClassWithMultipleTests_MethodsAreOnExpectedApartmentState(string currentTfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
@@ -95,17 +61,13 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestMethod_OnWindows_OnLifeCycleTestClass_WithTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TimeoutTargetAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -121,43 +83,13 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     }
 
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task DerivedSTATestMethod_OnWindows_WithTimeout_OnTestClassWithClassCleanupEndOfAssembly(string currentTfm)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        var testHost = TestHost.LocateFrom(AssetFixture.TimeoutTargetAssetPath, TimeoutAssetName, currentTfm);
-        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
-
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Constructor");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestMethod1");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestCleanup");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Dispose");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassCleanup");
-        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
-    }
-
-    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestMethod_OnWindows_OnTestClassWithMultipleTests_WithTimeout_MethodsAreOnExpectedApartmentState(string currentTfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TimeoutTargetAssetPath, TimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
@@ -176,17 +108,13 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestMethod_OnWindows_OnLifeCycleTestClass_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutTargetAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClass", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
@@ -202,43 +130,13 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     }
 
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task DerivedSTATestMethod_OnWindows_WithCooperativeTimeout_OnTestClassWithClassCleanupEndOfAssembly(string currentTfm)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
-        var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutTargetAssetPath, CooperativeTimeoutAssetName, currentTfm);
-        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithClassCleanupEndOfAssembly");
-
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
-        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Constructor");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestInitialize");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestMethod1");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.TestCleanup");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.Dispose");
-        testHostResult.AssertOutputContains("TestClassWithClassCleanupEndOfAssembly.ClassCleanup");
-        testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
-    }
-
-    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task STATestMethod_OnWindows_OnTestClassWithMultipleTests_WithCooperativeTimeout_MethodsAreOnExpectedApartmentState(string currentTfm)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.CooperativeTimeoutTargetAssetPath, CooperativeTimeoutAssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
@@ -359,7 +257,7 @@ public class LifeCycleTestClass : IDisposable
         ThreadAssert.AssertApartmentStateIsMTA();
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)$TimeoutAttribute$]
+    [ClassCleanup$TimeoutAttribute$]
     public static void ClassCleanup()
     {
         Console.WriteLine("LifeCycleTestClass.ClassCleanup");
@@ -396,57 +294,6 @@ public class LifeCycleTestClass : IDisposable
 
 public class DerivedSTATestMethodAttribute : STATestMethodAttribute
 {
-}
-
-[TestClass]
-public class TestClassWithClassCleanupEndOfAssembly : IDisposable
-{
-    public TestClassWithClassCleanupEndOfAssembly()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.Constructor");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    [ClassInitialize$TimeoutAttribute$]
-    public static void ClassInitialize(TestContext context)
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.ClassInitialize");
-        ThreadAssert.AssertApartmentStateIsMTA();
-    }
-
-    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)$TimeoutAttribute$]
-    public static void ClassCleanup()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.ClassCleanup");
-        ThreadAssert.AssertApartmentStateIsMTA();
-    }
-
-    [TestInitialize$TimeoutAttribute$]
-    public void TestInitialize()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestInitialize");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    [TestCleanup$TimeoutAttribute$]
-    public void TestCleanup()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestCleanup");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    [DerivedSTATestMethod$TimeoutAttribute$]
-    public void TestMethod1()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.TestMethod1");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
-
-    public void Dispose()
-    {
-        Console.WriteLine("TestClassWithClassCleanupEndOfAssembly.Dispose");
-        ThreadAssert.AssertApartmentStateIsSTA();
-    }
 }
 
 [TestClass]
@@ -512,4 +359,6 @@ public static class ThreadAssert
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

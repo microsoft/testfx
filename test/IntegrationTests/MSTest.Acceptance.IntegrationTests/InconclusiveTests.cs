@@ -14,6 +14,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
     {
         AssemblyInitialize,
         ClassInitialize,
+        Constructor,
         TestInitialize,
         TestMethod,
         TestCleanup,
@@ -22,6 +23,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
     }
 
     [TestMethod]
+    [DataRow(Lifecycle.Constructor)]
     [DataRow(Lifecycle.AssemblyInitialize)]
     [DataRow(Lifecycle.ClassInitialize)]
     [DataRow(Lifecycle.TestInitialize)]
@@ -37,12 +39,13 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
             environmentVariables: new Dictionary<string, string?>
             {
                 [$"{inconclusiveStep}Inconclusive"] = "1",
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         if (inconclusiveStep >= Lifecycle.ClassCleanup)
         {
             testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-            testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
+            testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
         }
         else
         {
@@ -51,6 +54,15 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         }
 
         testHostResult.AssertOutputContains("AssemblyInitialize called");
+
+        if (inconclusiveStep >= Lifecycle.Constructor)
+        {
+            testHostResult.AssertOutputContains("Constructor called");
+        }
+        else
+        {
+            testHostResult.AssertOutputDoesNotContain("Constructor called");
+        }
 
         if (inconclusiveStep >= Lifecycle.ClassInitialize)
         {
@@ -85,7 +97,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         }
         else
         {
-            testHostResult.AssertOutputDoesNotContain("TestInitialize called");
+            testHostResult.AssertOutputDoesNotContain("TestCleanup called");
         }
 
         if (inconclusiveStep >= Lifecycle.ClassInitialize)
@@ -97,14 +109,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
             testHostResult.AssertOutputDoesNotContain("ClassCleanup called");
         }
 
-        if (inconclusiveStep is Lifecycle.AssemblyCleanup or <= Lifecycle.TestCleanup)
-        {
-            testHostResult.AssertOutputContains("AssemblyCleanup called");
-        }
-        else
-        {
-            testHostResult.AssertOutputDoesNotContain("AssemblyCleanup called");
-        }
+        testHostResult.AssertOutputContains("AssemblyCleanup called");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
@@ -160,6 +165,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
+    public UnitTest1()
+    {
+        Console.WriteLine("Constructor called");
+        if (Environment.GetEnvironmentVariable("ConstructorInconclusive") == "1")
+        {
+            Assert.Inconclusive();
+        }
+    }
+
     [AssemblyInitialize]
     public static void AsmInitialize(TestContext _)
     {
@@ -232,4 +246,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

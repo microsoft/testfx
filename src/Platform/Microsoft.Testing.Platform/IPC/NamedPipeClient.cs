@@ -3,11 +3,12 @@
 
 #if NETCOREAPP
 using System.Buffers;
-
-using Microsoft.Testing.Platform.Helpers;
 #endif
 
 using System.IO.Pipes;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.Testing.Platform.Helpers;
 
 #if NET
 using Microsoft.Testing.Platform.Resources;
@@ -15,23 +16,37 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-#pragma warning disable CA1416 // Validate platform compatibility
+[Embedded]
+[UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeClient : NamedPipeBase, IClient
 {
+    private const PipeOptions CurrentUserPipeOptions = PipeOptions.None
+#if NET
+        | PipeOptions.CurrentUserOnly
+#endif
+        ;
+
     private readonly NamedPipeClientStream _namedPipeClientStream;
     private readonly SemaphoreSlim _lock = new(1, 1);
 
     private readonly MemoryStream _serializationBuffer = new();
     private readonly MemoryStream _messageBuffer = new();
     private readonly byte[] _readBuffer = new byte[250000];
+    private readonly IEnvironment _environment;
 
     private bool _disposed;
 
     public NamedPipeClient(string name)
+        : this(name, new SystemEnvironment())
     {
-        Guard.NotNull(name);
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut);
+    }
+
+    public NamedPipeClient(string name, IEnvironment environment)
+    {
+        Ensure.NotNull(name);
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, CurrentUserPipeOptions);
         PipeName = name;
+        _environment = environment;
     }
 
     public string PipeName { get; }
@@ -39,13 +54,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
     public bool IsConnected => _namedPipeClientStream.IsConnected;
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
-        => await _namedPipeClientStream.ConnectAsync(cancellationToken);
+        => await _namedPipeClientStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
     public async Task<TResponse> RequestReplyAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
        where TRequest : IRequest
        where TResponse : IResponse
     {
-        await _lock.WaitAsync(cancellationToken);
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             INamedPipeSerializer requestNamedPipeSerializer = GetSerializer(typeof(TRequest));
@@ -70,14 +85,14 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             try
             {
                 ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
-                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
+                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
             finally
             {
                 ArrayPool<byte>.Shared.Return(bytes);
             }
 #else
-            await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken);
+            await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
 #endif
 
             // Write the serializer id
@@ -86,23 +101,23 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             try
             {
                 ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
-                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
+                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
             finally
             {
                 ArrayPool<byte>.Shared.Return(bytes);
             }
 #else
-            await _messageBuffer.WriteAsync(BitConverter.GetBytes(requestNamedPipeSerializer.Id), 0, sizeof(int), cancellationToken);
+            await _messageBuffer.WriteAsync(BitConverter.GetBytes(requestNamedPipeSerializer.Id), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
 #endif
 
             try
             {
                 // Write the message
 #if NETCOREAPP
-                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken);
+                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken).ConfigureAwait(false);
 #else
-                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken);
+                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
             }
             finally
@@ -115,11 +130,11 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             try
             {
 #if NETCOREAPP
-                await _namedPipeClientStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken);
+                await _namedPipeClientStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
 #else
-                await _namedPipeClientStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken);
+                await _namedPipeClientStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
-                await _namedPipeClientStream.FlushAsync(cancellationToken);
+                await _namedPipeClientStream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     _namedPipeClientStream.WaitForPipeDrain();
@@ -139,10 +154,21 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             {
                 int currentReadIndex = 0;
 #if NETCOREAPP
-                int currentReadBytes = await _namedPipeClientStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken);
+                int currentReadBytes = await _namedPipeClientStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
 #else
-                int currentReadBytes = await _namedPipeClientStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken);
+                int currentReadBytes = await _namedPipeClientStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
 #endif
+
+                if (currentReadBytes == 0)
+                {
+                    // We are reading a message response.
+                    // If we cannot get a response, there is no way we can recover and continue executing.
+                    // This can happen if the other processes gets killed or crashes while while it's sending the response.
+                    // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
+                    // In that case, we want the MTP process to also die.
+                    // Exit code 1 indicates abnormal termination due to IPC connection loss.
+                    _environment.Exit(ExitCodes.GenericFailure);
+                }
 
                 // Reset the current chunk size
                 int missingBytesToReadOfCurrentChunk = currentReadBytes;
@@ -161,9 +187,9 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                 {
                     // We need to read the rest of the message
 #if NETCOREAPP
-                    await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken);
+                    await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken).ConfigureAwait(false);
 #else
-                    await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken);
+                    await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
 #endif
                     missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
                 }
@@ -215,6 +241,11 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
     }
 
 #if NETCOREAPP
+    [Obsolete("All owned fields are disposed synchronously. Introduction of DisposeAsync here is unnecessary complexity.")]
+    // NOTE: While NamedPipeClient is internal API, it's breaking to change it as it's consumed via IVT by MTP extensions.
+    // If we removed DisposeAsync in newer MTP version, but an old MTP extension is used with newer MTP version, we will get MissingMethodException.
+    // It might be more safe to obsolete for now, and potentially remove after few versions are released when most users will
+    // already be on those newer versions, and the risk of break is reduced.
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -223,9 +254,9 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
         }
 
         _lock.Dispose();
-        await _serializationBuffer.DisposeAsync();
-        await _messageBuffer.DisposeAsync();
-        await _namedPipeClientStream.DisposeAsync();
+        await _serializationBuffer.DisposeAsync().ConfigureAwait(false);
+        await _messageBuffer.DisposeAsync().ConfigureAwait(false);
+        await _namedPipeClientStream.DisposeAsync().ConfigureAwait(false);
         _disposed = true;
     }
 #endif

@@ -287,4 +287,65 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("Derived"));
     }
+
+    [TestMethod]
+    public async Task WhenStaticTestClassWithGlobalTestInitialize_DoesNotHaveTestMethod_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalTestInitialize(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenStaticTestClassWithGlobalTestCleanup_DoesNotHaveTestMethod_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyTestClass
+            {
+                [GlobalTestCleanup]
+                public static void GlobalTestCleanup(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenNonStaticTestClassWithGlobalTestInitialize_DoesNotHaveTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class {|#0:MyTestClass|}
+            {
+                [GlobalTestInitialize]
+                public static void GlobalTestInitialize(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
 }

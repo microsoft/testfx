@@ -14,7 +14,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_WhenCultureIsNotSet_TestMethodFails(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.InitToTestProjectPath, TestAssetFixture.InitToTestProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 2, passed: 0, skipped: 0);
     }
 
@@ -46,7 +46,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_CurrentCultureFlowsBetweenMethods(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -57,7 +57,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -68,7 +68,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -79,7 +79,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsProjectPath, TestAssetFixture.CultureFlowsProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -89,7 +89,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     public async Task ThreadingContext_Inheritance_CurrentCultureFlowsBetweenMethods(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -100,7 +100,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -111,7 +111,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta-timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -122,7 +122,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
     {
         var testHost = TestHost.LocateFrom(AssetFixture.CultureFlowsInheritanceProjectPath, TestAssetFixture.CultureFlowsInheritanceProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "timeout.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
@@ -393,7 +393,7 @@ public class UnitTest1
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -430,24 +430,33 @@ public class ExpectedCultures
 
 public class BaseClassWithInheritance
 {
-    private static TestContext _testContext;
+    private protected static string _testName;
+
+    public TestContext TestContext
+    {
+        get => field;
+        set
+        {
+            field = value;
+            _testName ??= value.TestName;
+        }
+    }
 
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassInitialize(TestContext testContext)
     {
-        if (_testContext is not null)
+        if (_testName is not null)
         {
-            throw new InvalidOperationException($"Was expected to be running tests sequentially but '{_testContext.ManagedMethod}' is still running when we received '{testContext.ManagedMethod}'");
+            throw new InvalidOperationException($"Was expected to be running tests sequentially but '{_testName}' is still running.");
         }
 
-        _testContext = testContext;
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.BaseClassInitCulture);
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassCleanup()
     {
-        switch (_testContext.ManagedMethod)
+        switch (_testName)
         {
             case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod":
             case "DerivedClassIntermediateClassWithoutInheritanceBaseClassWithInheritanceTestMethod2":
@@ -460,10 +469,10 @@ public class BaseClassWithInheritance
                 break;
 
             default:
-                throw new NotSupportedException($"Unsupported method name '{_testContext.ManagedMethod}'");
+                throw new NotSupportedException($"Unsupported method name '{_testName}'");
         }
 
-        _testContext = null;
+        _testName = null;
     }
 }
 
@@ -491,7 +500,7 @@ public class IntermediateClassWithInheritanceBaseClassWithInheritance : BaseClas
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.IntermediateClassInitCulture);
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup()
     {
         Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
@@ -508,7 +517,7 @@ public class IntermediateClassWithInheritanceBaseClassWithoutInheritance : BaseC
         CultureInfo.CurrentCulture = new CultureInfo(ExpectedCultures.IntermediateClassInitCulture);
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup()
     {
         Assert.AreEqual(ExpectedCultures.IntermediateClassInitCulture, CultureInfo.CurrentCulture.Name);
@@ -633,7 +642,7 @@ public class BaseClassWithTestInitCleanup
     [TestCleanup]
     public void BaseTestCleanup()
     {
-        switch (TestContext.ManagedMethod)
+        switch (TestContext.TestName)
         {
             case "DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod":
             case "DerivedClassIntermediateClassWithTestInitCleanupBaseClassWithTestInitCleanupTestMethod2":
@@ -646,7 +655,7 @@ public class BaseClassWithTestInitCleanup
                 break;
 
             default:
-                throw new NotSupportedException($"Unsupported method name '{TestContext.ManagedMethod}'");
+                throw new NotSupportedException($"Unsupported method name '{TestContext.TestName}'");
         }
     }
 }
@@ -797,4 +806,6 @@ public class DerivedClassIntermediateClassWithoutTestInitCleanupBaseClassWithout
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

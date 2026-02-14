@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -17,10 +18,11 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     public bool AllowTestAdapterFrameworkRegistration { get; set; }
 
+#pragma warning disable CS0618 // Type or member is obsolete
     private static Type[] InternalOnlyExtensions =>
     [
         // TestHost
-        typeof(ITestApplicationLifecycleCallbacks),
+        typeof(ITestHostApplicationLifetime),
         typeof(IDataConsumer),
         typeof(ITestSessionLifetimeHandler),
 
@@ -28,6 +30,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         typeof(ITestHostEnvironmentVariableProvider),
         typeof(ITestHostProcessLifetimeHandler)
     ];
+#pragma warning restore CS0618 // Type or member is obsolete
 
     public void AddService(object service, bool throwIfSameInstanceExit = true)
     {

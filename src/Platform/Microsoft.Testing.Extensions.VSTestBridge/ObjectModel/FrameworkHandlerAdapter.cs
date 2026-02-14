@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -35,7 +33,6 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     private readonly CancellationToken _cancellationToken;
     private readonly bool _isTrxEnabled;
     private readonly MessageLoggerAdapter _comboMessageLogger;
-    private readonly string _testAssemblyPath;
     private readonly INamedFeatureCapability? _namedFeatureCapability;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IClientInfo _clientInfo;
@@ -61,16 +58,12 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         }
         else if (testAssemblyPaths.Length > 1)
         {
-            _testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string testAssemblyPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
-            if (!testAssemblyPaths.Contains(_testAssemblyPath))
+            if (!testAssemblyPaths.Contains(testAssemblyPath))
             {
                 throw new ArgumentException("None of the test assemblies are the test application.");
             }
-        }
-        else
-        {
-            _testAssemblyPath = testAssemblyPaths[0];
         }
 
         _namedFeatureCapability = namedFeatureCapability;
@@ -83,7 +76,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         _session = session;
         _cancellationToken = cancellationToken;
         _isTrxEnabled = isTrxEnabled;
-        _comboMessageLogger = new MessageLoggerAdapter(loggerFactory, outputDevice, adapterExtensionBase, frameworkHandle);
+        _comboMessageLogger = new MessageLoggerAdapter(loggerFactory, outputDevice, adapterExtensionBase, frameworkHandle, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -121,7 +114,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        testCase.FixUpTestCase(_testAssemblyPath);
+        testCase.FixUpTestCase();
 
         // Forward call to VSTest
         _frameworkHandle?.RecordEnd(testCase, outcome);
@@ -134,13 +127,13 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        testResult.TestCase.FixUpTestCase(_testAssemblyPath);
+        testResult.TestCase.FixUpTestCase();
 
         // Forward call to VSTest
         _frameworkHandle?.RecordResult(testResult);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testResult.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = testResult.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _adapterExtensionBase.AddAdditionalProperties, _namedFeatureCapability, _commandLineOptions, _clientInfo);
 
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
@@ -153,13 +146,13 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
 
         _cancellationToken.ThrowIfCancellationRequested();
 
-        testCase.FixUpTestCase(_testAssemblyPath);
+        testCase.FixUpTestCase();
 
         // Forward call to VSTest
         _frameworkHandle?.RecordStart(testCase);
 
         // Publish node state change to Microsoft Testing Platform
-        var testNode = testCase.ToTestNode(_isTrxEnabled, _namedFeatureCapability, _commandLineOptions, _clientInfo);
+        var testNode = testCase.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _adapterExtensionBase.AddAdditionalProperties, _namedFeatureCapability, _commandLineOptions, _clientInfo);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
 
@@ -182,7 +175,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
                 }
 
                 var fileArtifact = new SessionFileArtifact(_session.SessionUid, new(attachment.Uri.LocalPath), attachmentSet.DisplayName, attachment.Description);
-                await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact);
+                await _messageBus.PublishAsync(_adapterExtensionBase, fileArtifact).ConfigureAwait(false);
             }
         }
     }

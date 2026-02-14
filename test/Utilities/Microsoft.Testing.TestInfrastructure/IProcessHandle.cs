@@ -19,9 +19,9 @@ public interface IProcessHandle
 
     void Kill();
 
-    Task<int> StopAsync();
+    Task<int> StopAsync(CancellationToken cancellationToken = default);
 
-    Task<int> WaitForExitAsync();
+    Task<int> WaitForExitAsync(CancellationToken cancellationToken = default);
 
     Task WriteInputAsync(string input);
 }

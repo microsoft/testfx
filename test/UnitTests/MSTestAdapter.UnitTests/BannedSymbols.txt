@@ -1,0 +1,3 @@
+T:Microsoft.VisualStudio.TestTools.UnitTesting.Assert; Use AwesomeAssertions for testing in this project.
+T:Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert; Use AwesomeAssertions for testing in this project.
+T:Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert; Use AwesomeAssertions for testing in this project.

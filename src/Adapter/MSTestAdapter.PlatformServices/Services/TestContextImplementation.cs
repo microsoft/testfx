@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 #endif
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,23 +20,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
-public class TestContextImplementation : TestContext, ITestContext
+internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
-    /// <summary>
-    /// List of result files associated with the test.
-    /// </summary>
-    private readonly List<string> _testResultFiles;
+    internal sealed class SynchronizedStringBuilder
+    {
+        private readonly StringBuilder _builder = new();
 
-    /// <summary>
-    /// Writer on which the messages given by the user should be written.
-    /// </summary>
-    private readonly StringWriter _stringWriter;
-    private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(char value)
+            => _builder.Append(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(string? value)
+            => _builder.Append(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Append(char[] buffer, int index, int count)
+            => _builder.Append(buffer, index, count);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void AppendLine(string? value)
+            => _builder.AppendLine(value);
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        internal void Clear()
+            => _builder.Clear();
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public override string ToString()
+            => _builder.ToString();
+    }
 
     /// <summary>
     /// Properties.
@@ -43,10 +57,17 @@ public class TestContextImplementation : TestContext, ITestContext
     private readonly Dictionary<string, object?> _properties;
     private readonly IMessageLogger? _messageLogger;
 
+    private CancellationTokenRegistration? _cancellationTokenRegistration;
+
     /// <summary>
-    /// Specifies whether the writer is disposed or not.
+    /// List of result files associated with the test.
     /// </summary>
-    private bool _stringWriterDisposed;
+    private List<string>? _testResultFiles;
+
+    private SynchronizedStringBuilder? _stdOutStringBuilder;
+    private SynchronizedStringBuilder? _stdErrStringBuilder;
+    private SynchronizedStringBuilder? _traceStringBuilder;
+    private SynchronizedStringBuilder? _testContextMessageStringBuilder;
 
     /// <summary>
     /// Unit test outcome.
@@ -65,47 +86,47 @@ public class TestContextImplementation : TestContext, ITestContext
     private DataRow? _dataRow;
 #endif
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
-    /// </summary>
-    /// <param name="testMethod">The test method.</param>
-    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
-    /// <param name="properties">Properties/configuration passed in.</param>
-    /// <param name="messageLogger">The message logger to use.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IMessageLogger messageLogger)
-        : this(testMethod, stringWriter, properties)
-        => _messageLogger = messageLogger;
+    private static readonly Action<object?> CancelDelegate = static state => ((TestContextImplementation)state!).Context.CancellationTokenSource.Cancel();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
     /// <param name="testMethod">The test method.</param>
-    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
+    /// <param name="testClassFullName">The test class full name.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod? testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    /// <param name="messageLogger">The message logger to use.</param>
+    /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
 
-#if NETFRAMEWORK
-        DebugEx.Assert(stringWriter != null, "StringWriter is not null");
-#endif
-
-        _stringWriter = stringWriter;
-
-        // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
-        _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
-        _properties = testMethod is null
-            ? new Dictionary<string, object?>(properties)
-            : new Dictionary<string, object?>(properties)
+        testClassFullName ??= testMethod?.FullClassName;
+        if (testClassFullName is null && testMethod is null)
+        {
+            _properties = [with(properties)];
+        }
+        else
+        {
+            _properties = [with(properties.Count + 2)];
+            foreach (KeyValuePair<string, object?> kvp in properties)
             {
-                [FullyQualifiedTestClassNameLabel] = testMethod.FullClassName,
-                [ManagedTypeLabel] = testMethod.ManagedTypeName,
-                [ManagedMethodLabel] = testMethod.ManagedMethodName,
-                [TestNameLabel] = testMethod.Name,
-            };
+                _properties[kvp.Key] = kvp.Value;
+            }
 
-        _testResultFiles = [];
+            if (testClassFullName is not null)
+            {
+                _properties.Add(FullyQualifiedTestClassNameLabel, testClassFullName);
+            }
+
+            if (testMethod is not null)
+            {
+                _properties.Add(TestNameLabel, testMethod.Name);
+            }
+        }
+
+        _messageLogger = messageLogger;
+        _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
     #region TestContext impl
@@ -122,38 +143,7 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => _properties;
-
-#if !WINDOWS_UWP && !WIN_UI
-    /// <inheritdoc/>
-    public override string? TestRunDirectory => base.TestRunDirectory;
-
-    /// <inheritdoc/>
-    public override string? DeploymentDirectory => base.DeploymentDirectory;
-
-    /// <inheritdoc/>
-    public override string? ResultsDirectory => base.ResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestRunResultsDirectory => base.TestRunResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string? TestResultsDirectory => base.TestResultsDirectory;
-
-    /// <inheritdoc/>
-    public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
-
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    public override string ManagedType => base.ManagedType!;
-
-    /// <inheritdoc/>
-    public override string ManagedMethod => base.ManagedMethod!;
-#endif
-
-    /// <inheritdoc/>
-    public override string TestName => base.TestName!;
-#endif
+    public override IDictionary<string, object?> Properties => _properties;
 
     /// <summary>
     /// Gets the inner test context object.
@@ -168,7 +158,7 @@ public class TestContextImplementation : TestContext, ITestContext
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
-        _testResultFiles.Add(Path.GetFullPath(fileName));
+        (_testResultFiles ??= []).Add(Path.GetFullPath(fileName));
     }
 
     /// <summary>
@@ -178,20 +168,8 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string? msg = message?.Replace("\0", "\\0");
-            _stringWriter.Write(msg);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string? msg = message?.Replace("\0", "\\0");
+        GetTestContextMessagesStringBuilder().Append(msg);
     }
 
     /// <summary>
@@ -202,20 +180,8 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _stringWriter.Write(message);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        GetTestContextMessagesStringBuilder().Append(message);
     }
 
     /// <summary>
@@ -225,20 +191,8 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string? msg = message?.Replace("\0", "\\0");
-            _stringWriter.WriteLine(msg);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string? msg = message?.Replace("\0", "\\0");
+        GetTestContextMessagesStringBuilder().AppendLine(msg);
     }
 
     /// <summary>
@@ -249,20 +203,8 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        if (_stringWriterDisposed)
-        {
-            return;
-        }
-
-        try
-        {
-            string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _stringWriter.WriteLine(message);
-        }
-        catch (ObjectDisposedException)
-        {
-            _stringWriterDisposed = true;
-        }
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        GetTestContextMessagesStringBuilder().AppendLine(message);
     }
 
     /// <summary>
@@ -336,7 +278,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-        if (_testResultFiles.Count == 0)
+        if (_testResultFiles is null || _testResultFiles.Count == 0)
         {
             return null;
         }
@@ -354,13 +296,13 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
     public string? GetDiagnosticMessages()
-        => _stringWriter.ToString();
+        => _testContextMessageStringBuilder?.ToString();
 
     /// <summary>
     /// Clears the previous testContext writeline messages.
     /// </summary>
     public void ClearDiagnosticMessages()
-        => _threadSafeStringWriter?.ToStringAndClear();
+        => _testContextMessageStringBuilder?.Clear();
 
     /// <inheritdoc/>
     public void SetDisplayName(string? displayName)
@@ -370,4 +312,80 @@ public class TestContextImplementation : TestContext, ITestContext
     public override void DisplayMessage(MessageLevel messageLevel, string message)
         => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
     #endregion
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        _cancellationTokenRegistration?.Dispose();
+        _cancellationTokenRegistration = null;
+    }
+
+    internal readonly struct ScopedTestContextSetter : IDisposable
+    {
+        internal ScopedTestContextSetter(TestContext? testContext)
+            => TestContext.Current = testContext;
+
+        public void Dispose()
+            => TestContext.Current = null;
+    }
+
+    internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
+        => new(testContext);
+
+    internal void WriteConsoleOut(char value)
+        => GetOutStringBuilder().Append(value);
+
+    internal void WriteConsoleOut(string? value)
+        => GetOutStringBuilder().Append(value);
+
+    internal void WriteConsoleOut(char[] buffer, int index, int count)
+        => GetOutStringBuilder().Append(buffer, index, count);
+
+    internal void WriteConsoleErr(char value)
+        => GetErrStringBuilder().Append(value);
+
+    internal void WriteConsoleErr(string? value)
+        => GetErrStringBuilder().Append(value);
+
+    internal void WriteConsoleErr(char[] buffer, int index, int count)
+        => GetErrStringBuilder().Append(buffer, index, count);
+
+    internal void WriteTrace(char value)
+        => GetTraceStringBuilder().Append(value);
+
+    internal void WriteTrace(string? value)
+        => GetTraceStringBuilder().Append(value);
+
+    private SynchronizedStringBuilder GetOutStringBuilder()
+    {
+        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new SynchronizedStringBuilder(), null)!;
+        return _stdOutStringBuilder;
+    }
+
+    private SynchronizedStringBuilder GetErrStringBuilder()
+    {
+        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new SynchronizedStringBuilder(), null)!;
+        return _stdErrStringBuilder;
+    }
+
+    private SynchronizedStringBuilder GetTraceStringBuilder()
+    {
+        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new SynchronizedStringBuilder(), null)!;
+        return _traceStringBuilder;
+    }
+
+    private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
+    {
+        _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
+        return _testContextMessageStringBuilder;
+    }
+
+    internal string? GetOut()
+        => _stdOutStringBuilder?.ToString();
+
+    internal string? GetErr()
+        => _stdErrStringBuilder?.ToString();
+
+    internal string? GetTrace()
+        => _traceStringBuilder?.ToString();
 }

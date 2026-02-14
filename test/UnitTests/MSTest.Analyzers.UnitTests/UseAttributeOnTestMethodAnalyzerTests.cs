@@ -16,21 +16,10 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     [
         (UseAttributeOnTestMethodAnalyzer.OwnerRule, """Owner("owner")"""),
         (UseAttributeOnTestMethodAnalyzer.PriorityRule, "Priority(1)"),
+        (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
         (UseAttributeOnTestMethodAnalyzer.TestPropertyRule, """TestProperty("name", "value")"""),
         (UseAttributeOnTestMethodAnalyzer.WorkItemRule, "WorkItem(100)"),
-        (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
-        (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "ExpectedException(null)"),
-        (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "MyExpectedException"),
-        (UseAttributeOnTestMethodAnalyzer.CssIterationRule, "CssIteration(null)"),
-        (UseAttributeOnTestMethodAnalyzer.CssProjectStructureRule, "CssProjectStructure(null)")
     ];
-
-    private const string MyExpectedExceptionAttributeDeclaration = """
-        public class MyExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
-        {
-            protected override void Verify(System.Exception exception) { }
-        }
-        """;
 
     internal static IEnumerable<(DiagnosticDescriptor Rule, string AttributeUsageExample)> GetAttributeUsageExampleAndRuleTuples()
         => RuleUsageExamples.Select(tuple => (tuple.Rule, tuple.AttributeUsageExample));
@@ -54,8 +43,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {{MyExpectedExceptionAttributeDeclaration}}
-
             [TestClass]
             public class MyTestClass
             {
@@ -77,8 +64,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            {{MyExpectedExceptionAttributeDeclaration}}
-
             [TestClass]
             public class MyTestClass
             {
@@ -91,8 +76,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         string fixedCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass
@@ -118,8 +101,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     {
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass
@@ -134,8 +115,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
 
         string fixedCode = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass
@@ -149,7 +128,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, new[] { VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1) }, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, [VerifyCS.Diagnostic(rule1).WithLocation(0), VerifyCS.Diagnostic(rule2).WithLocation(1)], fixedCode);
     }
 
     [DynamicData(nameof(GetAttributeUsageExamples), DynamicDataSourceType.Method)]
@@ -159,8 +138,6 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
         string code = $$"""
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
-            {{MyExpectedExceptionAttributeDeclaration}}
 
             [TestClass]
             public class MyTestClass
@@ -179,5 +156,50 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodWithMultiLineBody_PreservesIndentation()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:Owner("owner")|}]
+                public void TestMethod()
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [Owner("owner")]
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var result = SomeMethod(
+                        1,
+                        2,
+                        3);
+                }
+
+                private int SomeMethod(int a, int b, int c) => a + b + c;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.OwnerRule).WithLocation(0), fixedCode);
     }
 }

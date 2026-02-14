@@ -6,10 +6,11 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
@@ -21,13 +22,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         _environment = environment;
     }
 
-    public Type[] DataTypesConsumed => new[]
-    {
+    public Type[] DataTypesConsumed =>
+    [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
         typeof(FileArtifact),
-        typeof(TestRequestExecutionTimeInfo),
-    };
+        typeof(TestRequestExecutionTimeInfo)
+    ];
 
     public string Uid => nameof(DotnetTestDataConsumer);
 
@@ -56,26 +57,42 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
+                        TestFileLocationProperty? testFileLocationProperty = null;
+                        TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
+                        TestMetadataProperty[] traits = [];
+                        if (_dotnetTestConnection.IsIDE)
+                        {
+                            testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
+                            testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+                            traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
+                        }
+
                         DiscoveredTestMessages discoveredTestMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
-                            new[]
-                            {
+                            [
                                 new DiscoveredTestMessage(
                                     testNodeUpdateMessage.TestNode.Uid.Value,
-                                    testNodeUpdateMessage.TestNode.DisplayName),
-                            });
+                                    testNodeUpdateMessage.TestNode.DisplayName,
+                                    testFileLocationProperty?.FilePath,
+                                    testFileLocationProperty?.LineSpan.Start.Line,
+                                    testMethodIdentifierProperty?.Namespace,
+                                    testMethodIdentifierProperty?.TypeName,
+                                    testMethodIdentifierProperty?.MethodName,
+                                    testMethodIdentifierProperty?.ParameterTypeFullNames,
+                                    traits)
+                            ]);
 
-                        await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages);
+                        await _dotnetTestConnection.SendMessageAsync(discoveredTestMessages).ConfigureAwait(false);
                         break;
 
                     case TestStates.Passed:
                     case TestStates.Skipped:
+                    case TestStates.InProgress when _dotnetTestConnection.IsIDE:
                         TestResultMessages testResultMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
-                            new[]
-                            {
+                            [
                                 new SuccessfulTestResultMessage(
                                    testNodeUpdateMessage.TestNode.Uid.Value,
                                    testNodeUpdateMessage.TestNode.DisplayName,
@@ -84,11 +101,11 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Reason ?? string.Empty,
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
-                                   testNodeUpdateMessage.SessionUid.Value),
-                            },
-                            Array.Empty<FailedTestResultMessage>());
+                                   testNodeUpdateMessage.SessionUid.Value)
+                            ],
+                            []);
 
-                        await _dotnetTestConnection.SendMessageAsync(testResultMessages);
+                        await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
                         break;
 
                     case TestStates.Failed:
@@ -98,9 +115,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         testResultMessages = new(
                             ExecutionId,
                             DotnetTestConnection.InstanceId,
-                            Array.Empty<SuccessfulTestResultMessage>(),
-                            new[]
-                            {
+                            [],
+                            [
                                 new FailedTestResultMessage(
                                    testNodeUpdateMessage.TestNode.Uid.Value,
                                    testNodeUpdateMessage.TestNode.DisplayName,
@@ -110,10 +126,10 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Exceptions,
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
-                                   testNodeUpdateMessage.SessionUid.Value),
-                            });
+                                   testNodeUpdateMessage.SessionUid.Value)
+                            ]);
 
-                        await _dotnetTestConnection.SendMessageAsync(testResultMessages);
+                        await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
                         break;
                 }
 
@@ -122,18 +138,17 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     FileArtifactMessages testFileArtifactMessages = new(
                         ExecutionId,
                         DotnetTestConnection.InstanceId,
-                        new[]
-                        {
-                        new FileArtifactMessage(
-                            artifact.FileInfo.FullName,
-                            artifact.DisplayName,
-                            artifact.Description ?? string.Empty,
-                            testNodeUpdateMessage.TestNode.Uid.Value,
-                            testNodeUpdateMessage.TestNode.DisplayName,
-                            testNodeUpdateMessage.SessionUid.Value),
-                        });
+                        [
+                            new FileArtifactMessage(
+                                artifact.FileInfo.FullName,
+                                artifact.DisplayName,
+                                artifact.Description ?? string.Empty,
+                                testNodeUpdateMessage.TestNode.Uid.Value,
+                                testNodeUpdateMessage.TestNode.DisplayName,
+                                testNodeUpdateMessage.SessionUid.Value)
+                        ]);
 
-                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages);
+                    await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
                 }
 
                 break;
@@ -142,36 +157,34 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 var fileArtifactMessages = new FileArtifactMessages(
                     ExecutionId,
                     DotnetTestConnection.InstanceId,
-                    new[]
-                    {
+                    [
                         new FileArtifactMessage(
                             sessionFileArtifact.FileInfo.FullName,
                             sessionFileArtifact.DisplayName,
                             sessionFileArtifact.Description ?? string.Empty,
                             string.Empty,
                             string.Empty,
-                            sessionFileArtifact.SessionUid.Value),
-                    });
+                            sessionFileArtifact.SessionUid.Value)
+                    ]);
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
 
             case FileArtifact fileArtifact:
                 fileArtifactMessages = new(
                     ExecutionId,
                     DotnetTestConnection.InstanceId,
-                    new[]
-                    {
+                    [
                         new FileArtifactMessage(
                             fileArtifact.FileInfo.FullName,
                             fileArtifact.DisplayName,
                             fileArtifact.Description ?? string.Empty,
                             string.Empty,
                             string.Empty,
-                            string.Empty),
-                    });
+                            string.Empty)
+                    ]);
 
-                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages);
+                await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
         }
     }
@@ -229,11 +242,17 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
                 break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+#pragma warning restore CS0618 // Type or member is obsolete
                 state = TestStates.Cancelled;
                 duration = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
+                break;
+
+            case InProgressTestNodeStateProperty:
+                state = TestStates.InProgress;
                 break;
         }
 
@@ -262,27 +281,27 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         RoslynDebug.Assert(_dotnetTestConnection is not null);
 
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
-            sessionUid.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
-        await _dotnetTestConnection.SendMessageAsync(sessionStartEvent);
+        await _dotnetTestConnection.SendMessageAsync(sessionStartEvent).ConfigureAwait(false);
     }
 
-    public async Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         RoslynDebug.Assert(_dotnetTestConnection is not null);
 
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
-            sessionUid.Value,
+            testSessionContext.SessionUid.Value,
             ExecutionId);
 
-        await _dotnetTestConnection.SendMessageAsync(sessionEndEvent);
+        await _dotnetTestConnection.SendMessageAsync(sessionEndEvent).ConfigureAwait(false);
     }
 }

@@ -23,25 +23,7 @@ public sealed partial class Assert
     /// Users could then use a syntax similar to the default assertions which in this case is "Assert.That.IsOfType&lt;Dog&gt;(animal);"
     /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
-    public static Assert That { get; } = new Assert();
-
-    /// <summary>
-    /// Replaces null characters ('\0') with "\\0".
-    /// </summary>
-    /// <param name="input">
-    /// The string to search.
-    /// </param>
-    /// <returns>
-    /// The converted string with null characters replaced by "\\0".
-    /// </returns>
-    /// <remarks>
-    /// This is only public and still present to preserve compatibility with the V1 framework.
-    /// </remarks>
-    [return: NotNullIfNotNull(nameof(input))]
-    public static string? ReplaceNullChars(string? input)
-        => StringEx.IsNullOrEmpty(input)
-            ? input
-            : input.Replace("\0", "\\0");
+    public static Assert That { get; } = new();
 
     /// <summary>
     /// Helper function that creates and throws an AssertionFailedException.
@@ -53,9 +35,32 @@ public sealed partial class Assert
     /// The assertion failure message.
     /// </param>
     [DoesNotReturn]
+    [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-        => throw new AssertFailedException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
+    {
+        if (ShouldLaunchDebugger())
+        {
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
+            else
+            {
+                Debugger.Launch();
+            }
+        }
+
+        throw new AssertFailedException(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+    }
+
+    private static bool ShouldLaunchDebugger()
+        => AssertionFailureSettings.LaunchDebuggerOnAssertionFailure switch
+        {
+            DebuggerLaunchMode.Enabled => true,
+            DebuggerLaunchMode.EnabledExcludingCI => !CIEnvironmentDetector.Instance.IsCIEnvironment(),
+            _ => false,
+        };
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
@@ -63,20 +68,107 @@ public sealed partial class Assert
     /// <param name="format">
     /// A composite format string.
     /// </param>
-    /// <param name="parameters">
-    /// An object array that contains zero or more objects to format.
-    /// </param>
     /// <returns>
     /// The formatted string based on format and parameters.
     /// </returns>
-    internal static string BuildUserMessage(string? format, params object?[]? parameters)
-        => format is null
-            ? ReplaceNulls(format)
-            : format.Length == 0
-                ? string.Empty
-                : parameters == null || parameters.Length == 0
-                    ? ReplaceNulls(format)
-                    : string.Format(CultureInfo.CurrentCulture, ReplaceNulls(format), parameters);
+    internal static string BuildUserMessage(string? format)
+        => format ?? string.Empty;
+
+    private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
+    {
+        string userMessage = BuildUserMessage(format);
+        if (string.IsNullOrEmpty(callerArgExpression))
+        {
+            return userMessage;
+        }
+
+        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
+        return string.IsNullOrEmpty(userMessage)
+            ? callerArgMessagePart
+            : $"{callerArgMessagePart} {userMessage}";
+    }
+
+    private static string BuildUserMessageForTwoExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2)
+    {
+        string userMessage = BuildUserMessage(format);
+        if (string.IsNullOrEmpty(callerArgExpression1) || string.IsNullOrEmpty(callerArgExpression2))
+        {
+            return userMessage;
+        }
+
+        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, parameterName1, callerArgExpression1, parameterName2, callerArgExpression2);
+        return string.IsNullOrEmpty(userMessage)
+            ? callerArgMessagePart
+            : $"{callerArgMessagePart} {userMessage}";
+    }
+
+    private static string BuildUserMessageForThreeExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2, string callerArgExpression3, string parameterName3)
+    {
+        string userMessage = BuildUserMessage(format);
+        if (string.IsNullOrEmpty(callerArgExpression1) || string.IsNullOrEmpty(callerArgExpression2) || string.IsNullOrEmpty(callerArgExpression3))
+        {
+            return userMessage;
+        }
+
+        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionThreeParametersMessage, parameterName1, callerArgExpression1, parameterName2, callerArgExpression2, parameterName3, callerArgExpression3);
+        return string.IsNullOrEmpty(userMessage)
+            ? callerArgMessagePart
+            : $"{callerArgMessagePart} {userMessage}";
+    }
+
+    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
+        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
+
+    private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
+        => BuildUserMessageForSingleExpression(format, valueExpression, "value");
+
+    private static string BuildUserMessageForActionExpression(string? format, string actionExpression)
+        => BuildUserMessageForSingleExpression(format, actionExpression, "action");
+
+    private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
+        => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
+
+    private static string BuildUserMessageForSubstringExpressionAndValueExpression(string? format, string substringExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, substringExpression, "substring", valueExpression, "value");
+
+    private static string BuildUserMessageForExpectedSuffixExpressionAndValueExpression(string? format, string expectedSuffixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedSuffixExpression, "expectedSuffix", valueExpression, "value");
+
+    private static string BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(string? format, string notExpectedSuffixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedSuffixExpression, "notExpectedSuffix", valueExpression, "value");
+
+    private static string BuildUserMessageForExpectedPrefixExpressionAndValueExpression(string? format, string expectedPrefixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedPrefixExpression, "expectedPrefix", valueExpression, "value");
+
+    private static string BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(string? format, string notExpectedPrefixExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedPrefixExpression, "notExpectedPrefix", valueExpression, "value");
+
+    private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
+
+    private static string BuildUserMessageForLowerBoundExpressionAndValueExpression(string? format, string lowerBoundExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, lowerBoundExpression, "lowerBound", valueExpression, "value");
+
+    private static string BuildUserMessageForUpperBoundExpressionAndValueExpression(string? format, string upperBoundExpression, string valueExpression)
+        => BuildUserMessageForTwoExpressions(format, upperBoundExpression, "upperBound", valueExpression, "value");
+
+    private static string BuildUserMessageForExpectedExpressionAndCollectionExpression(string? format, string expectedExpression, string collectionExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", collectionExpression, "collection");
+
+    private static string BuildUserMessageForNotExpectedExpressionAndCollectionExpression(string? format, string notExpectedExpression, string collectionExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", collectionExpression, "collection");
+
+    private static string BuildUserMessageForPredicateExpressionAndCollectionExpression(string? format, string predicateExpression, string collectionExpression)
+        => BuildUserMessageForTwoExpressions(format, predicateExpression, "predicate", collectionExpression, "collection");
+
+    private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
+        => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
+
+    private static string BuildUserMessageForNotExpectedExpressionAndActualExpression(string? format, string notExpectedExpression, string actualExpression)
+        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", actualExpression, "actual");
+
+    private static string BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(string? format, string minValueExpression, string maxValueExpression, string valueExpression)
+        => BuildUserMessageForThreeExpressions(format, minValueExpression, "minValue", maxValueExpression, "maxValue", valueExpression, "value");
 
     /// <summary>
     /// Checks the parameter for valid conditions.
@@ -90,73 +182,70 @@ public sealed partial class Assert
     /// <param name="parameterName">
     /// parameter name.
     /// </param>
-    /// <param name="message">
-    /// message for the invalid parameter exception.
-    /// </param>
-    /// <param name="parameters">
-    /// The parameters.
-    /// </param>
-    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName,
-        [StringSyntax(StringSyntaxAttribute.CompositeFormat)] string? message, params object?[]? parameters)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
         if (param == null)
         {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, userMessage);
+            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
             ThrowAssertFailed(assertionName, finalMessage);
         }
     }
 
-    /// <summary>
-    /// Safely converts an object to a string, handling null values and null characters.
-    /// Null values are converted to "(null)". Null characters are converted to "\\0".
-    /// </summary>
-    /// <param name="input">
-    /// The object to convert to a string.
-    /// </param>
-    /// <returns>
-    /// The converted string.
-    /// </returns>
-    [SuppressMessage("ReSharper", "RedundantToStringCall", Justification = "We are ensuring ToString() isn't overloaded in a way to misbehave")]
-    [return: NotNull]
     internal static string ReplaceNulls(object? input)
-    {
-        // Use the localized "(null)" string for null values.
-        if (input == null)
-        {
-            return FrameworkMessages.Common_NullInMessages.ToString();
-        }
-
-        // Convert it to a string.
-        string? inputString = input.ToString();
-
-        // Make sure the class didn't override ToString and return null.
-        return inputString == null ? FrameworkMessages.Common_ObjectString.ToString() : ReplaceNullChars(inputString);
-    }
+        => input?.ToString() ?? string.Empty;
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
         => string.Compare(expected, actual, ignoreCase, culture);
 #pragma warning restore CA1309 // Use ordinal string comparison
 
-    #region EqualsAssertion
+    #region DoNotUse
 
     /// <summary>
     /// Static equals overloads are used for comparing instances of two types for reference
     /// equality. This method should <b>not</b> be used for comparison of two instances for
-    /// equality. This object will <b>always</b> throw with Assert.Fail. Please use
-    /// Assert.AreEqual and associated overloads in your unit tests.
+    /// equality. Please use Assert.AreEqual and associated overloads in your unit tests.
     /// </summary>
     /// <param name="objA"> Object A. </param>
     /// <param name="objB"> Object B. </param>
-    /// <returns> False, always. </returns>
+    /// <returns> Never returns. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-#pragma warning disable IDE0060 // Remove unused parameter
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertEquals,
+#if DEBUG
+        error: false)]
+#else
+        error: true)]
+#endif
+    [DoesNotReturn]
     public static new bool Equals(object? objA, object? objB)
-#pragma warning restore IDE0060 // Remove unused parameter
     {
         Fail(FrameworkMessages.DoNotUseAssertEquals);
         return false;
     }
+
+    /// <summary>
+    /// Static ReferenceEquals overloads are used for comparing instances of two types for reference
+    /// equality. This method should <b>not</b> be used for comparison of two instances for
+    /// reference equality. Please use Assert.AreSame and associated overloads in your unit tests.
+    /// </summary>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
+    /// <returns> Never returns. </returns>
+    [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+    [Obsolete(
+        FrameworkConstants.DoNotUseAssertReferenceEquals,
+#if DEBUG
+        error: false)]
+#else
+        error: true)]
+#endif
+    [DoesNotReturn]
+    public static new bool ReferenceEquals(object? objA, object? objB)
+    {
+        Fail(FrameworkMessages.DoNotUseAssertReferenceEquals);
+        return false;
+    }
+
     #endregion
 }

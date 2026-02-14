@@ -64,7 +64,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
         Dictionary<string, List<ISymbol>> membersByName = GetBaseMembers(namedTypeSymbol);
         foreach (ISymbol member in namedTypeSymbol.GetMembers())
         {
-            foreach (ISymbol baseMember in membersByName.GetValueOrDefault(member.Name, new List<ISymbol>()))
+            foreach (ISymbol baseMember in membersByName.GetValueOrDefault(member.Name, []))
             {
                 // Check if the member is shadowing a base class member
                 if (IsMemberShadowing(member, baseMember))
@@ -77,7 +77,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
 
     private static Dictionary<string, List<ISymbol>> GetBaseMembers(INamedTypeSymbol namedTypeSymbol)
     {
-        Dictionary<string, List<ISymbol>> membersByName = new();
+        Dictionary<string, List<ISymbol>> membersByName = [];
         INamedTypeSymbol? currentType = namedTypeSymbol.BaseType;
         while (currentType is not null)
         {
@@ -91,7 +91,7 @@ public sealed class DoNotUseShadowingAnalyzer : DiagnosticAnalyzer
 
                 if (!membersByName.TryGetValue(member.Name, out List<ISymbol>? members))
                 {
-                    members = new List<ISymbol>();
+                    members = [];
                     membersByName[member.Name] = members;
                 }
 

@@ -15,6 +15,7 @@ public interface IOutputDevice
     /// </summary>
     /// <param name="producer">The data producer.</param>
     /// <param name="data">The output data.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data);
+    Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken);
 }

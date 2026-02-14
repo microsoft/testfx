@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+[TestClass]
 public class TestProjectFSharpTests : CLITestBase
 {
     private const string TestAssetName = "FSharpTestProject";
 
+    [TestMethod]
     public void ExecuteCustomTestExtensibilityTests()
     {
         InvokeVsTestForExecution([TestAssetName], targetFramework: "net472");

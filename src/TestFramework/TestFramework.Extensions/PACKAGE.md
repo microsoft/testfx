@@ -7,8 +7,7 @@ This package includes the libraries for writing tests with MSTest. To ensure dis
 Supported platforms:
 
 - .NET 4.6.2+
-- .NET Core 3.1+
-- .NET 6.0+
+- .NET 8.0+ (WinUI)
 - .NET 6.0 Windows.18362+
 - UWP 10.0.16299
 - UWP 10.0.17763 with .NET 9

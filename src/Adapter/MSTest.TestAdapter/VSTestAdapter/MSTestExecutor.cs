@@ -2,23 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
 /// Contains the execution logic for this adapter.
 /// </summary>
-[ExtensionUri(Constants.ExecutorUriString)]
-#if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestExecutor : ITestExecutor
+[ExtensionUri(EngineConstants.ExecutorUriString)]
+internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
 
@@ -43,9 +42,34 @@ public class MSTestExecutor : ITestExecutor
     }
 
     /// <summary>
-    /// Gets or sets the ms test execution manager.
+    /// Gets the ms test execution manager.
     /// </summary>
-    public TestExecutionManager TestExecutionManager { get; protected set; }
+    internal TestExecutionManager TestExecutionManager { get; }
+
+#pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    [ModuleInitializer]
+#pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    internal static void MSTestModuleInitializer()
+    {
+        SetPlatformLogger();
+        EnsureAdapterAndFrameworkVersions();
+    }
+
+    private static void SetPlatformLogger()
+        // We set the logger to the VSTest EqtTrace logger as soon as possible via ModuleInitializer.
+        // If MTP is used, this will get replaced later.
+        => PlatformServiceProvider.Instance.AdapterTraceLogger = EqtTraceLogger.Instance;
+
+    private static void EnsureAdapterAndFrameworkVersions()
+    {
+        string? adapterVersion = typeof(MSTestExecutor).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        string? frameworkVersion = typeof(TestMethodAttribute).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (adapterVersion is not null && frameworkVersion is not null
+            && adapterVersion != frameworkVersion)
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.VersionMismatchBetweenAdapterAndFramework, adapterVersion, frameworkVersion));
+        }
+    }
 
     /// <summary>
     /// Runs the tests.
@@ -73,30 +97,40 @@ public class MSTestExecutor : ITestExecutor
 
     internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
-        Guard.NotNull(frameworkHandle);
-        Guard.NotNullOrEmpty(tests);
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
+        }
 
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration))
+        Ensure.NotNull(frameworkHandle);
+        Ensure.NotNullOrEmpty(tests);
+
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
             return;
         }
 
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken));
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
     {
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
-        Guard.NotNull(frameworkHandle);
-        Guard.NotNullOrEmpty(sources);
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration))
+        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from sources.");
+        }
+
+        Ensure.NotNull(frameworkHandle);
+        Ensure.NotNullOrEmpty(sources);
+
+        TestSourceHandler testSourceHandler = new();
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
         {
             return;
         }
 
-        sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testRunToken));
+        sources = testSourceHandler.GetTestSources(sources);
+        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -126,7 +160,7 @@ public class MSTestExecutor : ITestExecutor
             try
             {
                 var threadTask = Task.Run(entryPointThread.Join, _cancellationToken);
-                await threadTask;
+                await threadTask.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -142,7 +176,7 @@ public class MSTestExecutor : ITestExecutor
                 frameworkHandle.SendMessage(TestMessageLevel.Warning, Resource.STAIsOnlySupportedOnWindowsWarning);
             }
 
-            await DoRunTestsAsync();
+            await DoRunTestsAsync().ConfigureAwait(false);
         }
 
         // Local functions
@@ -152,8 +186,8 @@ public class MSTestExecutor : ITestExecutor
             {
                 try
                 {
-                    _testRunCancellationToken = new TestRunCancellationToken();
-                    await runTestsAction(_testRunCancellationToken);
+                    _testRunCancellationToken = new TestRunCancellationToken(_cancellationToken);
+                    await runTestsAction(_testRunCancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {

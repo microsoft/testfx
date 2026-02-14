@@ -6,24 +6,9 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
-    /// Gets path to which all other paths in output should be relative.
-    /// </summary>
-    public string? BaseDirectory { get; init; }
-
-    /// <summary>
     /// Gets a value indicating whether we should show passed tests.
     /// </summary>
     public Func<bool> ShowPassedTests { get; init; } = () => true;
-
-    /// <summary>
-    /// Gets a value indicating whether we should show information about which assembly is the source of the data on screen. Turn this off when running directly from an exe to reduce noise, because the path will always be the same.
-    /// </summary>
-    public bool ShowAssembly { get; init; }
-
-    /// <summary>
-    /// Gets a value indicating whether we should show information about which assembly started or completed. Turn this off when running directly from an exe to reduce noise, because the path will always be the same.
-    /// </summary>
-    public bool ShowAssemblyStartAndComplete { get; init; }
 
     /// <summary>
     /// Gets minimum amount of tests to run.
@@ -31,7 +16,8 @@ internal sealed class TerminalTestReporterOptions
     public int MinimumExpectedTests { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can. When ANSI is not allowed we update it every 3 seconds.
+    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
+    /// When ANSI is not allowed we never have progress.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean
     /// and then cache that value.
     /// </summary>
@@ -43,12 +29,32 @@ internal sealed class TerminalTestReporterOptions
     public bool ShowActiveTests { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should use ANSI escape codes or disable them. When true the capabilities of the console are autodetected.
+    /// Gets a value indicating the ANSI mode.
     /// </summary>
-    public bool UseAnsi { get; init; }
+    public AnsiMode AnsiMode { get; init; }
+}
+
+internal enum AnsiMode
+{
+    /// <summary>
+    /// Disable ANSI escape codes.
+    /// </summary>
+    NoAnsi,
 
     /// <summary>
-    /// Gets a value indicating whether we should force ANSI escape codes. When true the ANSI is used without auto-detecting capabilities of the console. This is needed only for testing.
+    /// Use simplified ANSI renderer, which colors output, but does not move cursor.
+    /// This is used in compatible CI environments.
     /// </summary>
-    internal /* for testing */ bool? ForceAnsi { get; init; }
+    SimpleAnsi,
+
+    /// <summary>
+    /// Enable ANSI escape codes, including cursor movement, when the capabilities of the console allow it.
+    /// </summary>
+    AnsiIfPossible,
+
+    /// <summary>
+    /// Force ANSI escape codes, regardless of the capabilities of the console.
+    /// This is needed only for testing.
+    /// </summary>
+    ForceAnsi,
 }

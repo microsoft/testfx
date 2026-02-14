@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -84,8 +84,8 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void DisposeShouldUnloadChildAppDomain()
     {
-        string testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSource, null, null);
+        string testSourceHandler = GetTestAssemblyPath("DesktopTestProjectx86Debug");
+        _testSourceHost = new TestSourceHost(testSourceHandler, null, null);
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created

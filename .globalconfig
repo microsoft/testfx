@@ -1,0 +1,10 @@
+is_global = true
+
+# RS0016: Only enable if API files are present
+# This should NOT be in .editorconfig.
+# .editorconfig is a per-file (syntax tree) concept.
+# The public API analyzer will attempt to get the options for the **first tree**.
+# The first tree could be a file outside of our repo (e.g, a source-only package like Polyfill)
+# By having this option here in .globalconfig, we ensure it's picked up correctly regardless of what the first tree is.
+# See comments in https://github.com/microsoft/testfx/pull/6230 for clarification.
+dotnet_public_api_analyzer.require_api_files = true

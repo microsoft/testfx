@@ -16,13 +16,13 @@ public sealed class JsonTests
 
     public JsonTests()
     {
-        Dictionary<Type, JsonSerializer> serializers = new();
-        Dictionary<Type, JsonDeserializer> deserializers = new();
+        Dictionary<Type, JsonSerializer> serializers = [];
+        Dictionary<Type, JsonDeserializer> deserializers = [];
 
         foreach (Type serializableType in SerializerUtilities.SerializerTypes)
         {
             serializers[serializableType] = new JsonObjectSerializer<object>(
-                o => SerializerUtilities.Serialize(serializableType, o).Select(kvp => (kvp.Key, kvp.Value)).ToArray());
+                o => [.. SerializerUtilities.Serialize(serializableType, o).Select(kvp => (kvp.Key, kvp.Value))]);
         }
 
         foreach (Type deserializableType in SerializerUtilities.DeserializerTypes)

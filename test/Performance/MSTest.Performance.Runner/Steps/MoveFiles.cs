@@ -10,7 +10,7 @@ internal class MoveFiles : IStep<Files, Files>
     private readonly DirectoryInfo _finalFolder;
     private readonly Matcher _matcher = new();
 
-    public string Description => "Move files";
+    public string Description => "MoveFile files";
 
     public MoveFiles(string filter, string finalFolder)
     {

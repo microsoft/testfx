@@ -5,10 +5,12 @@ using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
 
+[TestClass]
 public class DataRowTests : CLITestBase
 {
     private const string TestAssetName = "DataRowTestProject";
 
+    [TestMethod]
     public async Task ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
@@ -28,6 +30,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethod (\"DerivedString2\")");
     }
 
+    [TestMethod]
     public async Task ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
@@ -44,6 +47,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethod (\"DerivedString2\")");
     }
 
+    [TestMethod]
     public async Task DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
@@ -61,6 +65,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString2\",\"DerivedOptionalString3\")");
     }
 
+    [TestMethod]
     public async Task DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
@@ -79,6 +84,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\",\"DerivedParamsArg3\")");
     }
 
+    [TestMethod]
     public async Task DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
@@ -96,6 +102,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 
+    [TestMethod]
     public async Task DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
@@ -112,6 +119,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestDouble (10.02,20.02)");
     }
 
+    [TestMethod]
     public async Task DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
@@ -127,6 +135,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMixed (10,10,10,10,10,10,10,\"10\")");
     }
 
+    [TestMethod]
     public async Task DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
@@ -145,6 +154,7 @@ public class DataRowTests : CLITestBase
             "DataRowEnums (Gamma)");
     }
 
+    [TestMethod]
     public async Task DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
@@ -166,6 +176,7 @@ public class DataRowTests : CLITestBase
             "DataRowNonSerializable (DataRowTestProject.DataRowTests_DerivedClass)");
     }
 
+    [TestMethod]
     public async Task ExecuteDataRowTests_Enums()
     {
         // Arrange
@@ -241,6 +252,7 @@ public class DataRowTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
+    [TestMethod]
     public async Task ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
@@ -259,6 +271,7 @@ public class DataRowTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
+    [TestMethod]
     public async Task ExecuteDataRowTests_Regular()
     {
         // Arrange
@@ -320,6 +333,7 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 
+    [TestMethod]
     public async Task GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
         // Arrange
@@ -334,6 +348,7 @@ public class DataRowTests : CLITestBase
             "Overridden DisplayName");
     }
 
+    [TestMethod]
     public async Task ParameterizedTestsWithTestMethodSettingDisplayName_DataIsPrefixWithDisplayName()
     {
         // Arrange

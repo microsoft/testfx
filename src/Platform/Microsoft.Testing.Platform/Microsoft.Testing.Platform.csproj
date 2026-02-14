@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,9 +38,10 @@ This package provides the core platform and the .NET implementation of the proto
 
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.OpenTelemetry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureFoundry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Experimental" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HotReload" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.MSBuild" Key="$(VsPublicKey)" />
@@ -52,6 +54,7 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.AI" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.TestInfrastructure" Key="$(VsPublicKey)" />
@@ -65,17 +68,11 @@ This package provides the core platform and the .NET implementation of the proto
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <!-- Framework specific API -->
-    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
-    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/net/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
     <AdditionalFiles Include="PublicAPI/net/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\PlatformResources.resx" GenerateSource="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -88,26 +85,9 @@ This package provides the core platform and the .NET implementation of the proto
     <SupportedPlatform Include="wasi" />
   </ItemGroup>
 
-  <!-- Version templating -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
-  <Target Name="GeneratePlatformVersionSourceFile" AfterTargets="PrepareForBuild">
-    <PropertyGroup>
-      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
-    </PropertyGroup>
-    <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/PlatformVersion.cs.template" Destination="$(IntermediateOutputPath)/PlatformVersion.cs" />
-    </ItemGroup>
-    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
-      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
-    </GenerateFileFromTemplate>
-
-    <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)/PlatformVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <!-- NuGet package layout -->
   <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->

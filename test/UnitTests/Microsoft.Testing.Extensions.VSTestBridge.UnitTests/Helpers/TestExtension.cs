@@ -5,13 +5,13 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.Helpers;
 
 internal sealed class TestExtension : IExtension
 {
-    public string Uid { get; } = "Uid";
+    public string Uid => "Uid";
 
-    public string Version { get; } = "Version";
+    public string Version => "Version";
 
-    public string DisplayName { get; } = "DisplayName";
+    public string DisplayName => "DisplayName";
 
-    public string Description { get; } = "Description";
+    public string Description => "Description";
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }

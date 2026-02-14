@@ -6,6 +6,4 @@ namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests;
 /// <summary>
 /// Empty test base, because TestInfrastructure project depends on Testing.Framework, and we cannot use that.
 /// </summary>
-public abstract class TestBase
-{
-}
+public abstract class TestBase;

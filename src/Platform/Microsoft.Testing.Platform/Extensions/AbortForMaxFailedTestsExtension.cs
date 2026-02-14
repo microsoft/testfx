@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Resources;
@@ -41,13 +40,13 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(AbortForMaxFailedTestsExtension);
+    public string Uid => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = nameof(AbortForMaxFailedTestsExtension);
+    public string DisplayName => nameof(AbortForMaxFailedTestsExtension);
 
     /// <inheritdoc />
     public string Description { get; } = PlatformResources.AbortForMaxFailedTestsDescription;
@@ -74,8 +73,8 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
-            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken);
-            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken);
+            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
     }
 }

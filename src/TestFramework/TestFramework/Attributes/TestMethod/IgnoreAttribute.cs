@@ -30,13 +30,8 @@ public sealed class IgnoreAttribute : ConditionBaseAttribute
         : base(ConditionMode.Include)
         => IgnoreMessage = message;
 
-    /// <summary>
-    /// Gets the ignore message indicating the reason for ignoring the test method or test class.
-    /// </summary>
-    public override string? IgnoreMessage { get; }
-
     /// <inheritdoc />
-    public override bool ShouldRun => false;
+    public override bool IsConditionMet => false;
 
     /// <inheritdoc />
     public override string GroupName => "Ignore";

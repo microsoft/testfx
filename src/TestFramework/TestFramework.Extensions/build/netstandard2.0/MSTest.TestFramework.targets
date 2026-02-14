@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\buildTransitive\netstandard2.0\MSTest.TestFramework.targets" />
+</Project>

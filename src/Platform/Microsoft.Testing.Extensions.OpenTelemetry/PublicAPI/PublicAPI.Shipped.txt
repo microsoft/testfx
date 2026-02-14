@@ -1,0 +1,5 @@
+#nullable enable
+[TPEXP]Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions
+[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddOpenTelemetryProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<OpenTelemetry.Trace.TracerProviderBuilder!>? withTracing = null, System.Action<OpenTelemetry.Metrics.MeterProviderBuilder!>? withMetrics = null) -> void
+[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformInstrumentation(this OpenTelemetry.Metrics.MeterProviderBuilder! builder) -> OpenTelemetry.Metrics.MeterProviderBuilder!
+[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformInstrumentation(this OpenTelemetry.Trace.TracerProviderBuilder! builder) -> OpenTelemetry.Trace.TracerProviderBuilder!

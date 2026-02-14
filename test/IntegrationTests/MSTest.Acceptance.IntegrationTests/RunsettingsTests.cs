@@ -36,7 +36,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
     public async Task UnsupportedRunSettingsEntriesAreFlagged(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -54,16 +54,19 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
     }
 
     [TestMethod]
-    [DynamicData(nameof(LocalizationTestCases), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(LocalizationTestCases))]
     public async Task UnsupportedRunSettingsEntriesAreFlagged_Localization(string? testingPlatformUILanguage, string? dotnetCLILanguage, string? vsLang, string? expectedLocale)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", environmentVariables: new()
-        {
-            ["TESTINGPLATFORM_UI_LANGUAGE"] = testingPlatformUILanguage,
-            ["DOTNET_CLI_UI_LANGUAGE"] = dotnetCLILanguage,
-            ["VSLANG"] = vsLang is null ? null : new CultureInfo(vsLang).LCID.ToString(CultureInfo.CurrentCulture),
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--settings my.runsettings",
+            environmentVariables: new()
+            {
+                ["TESTINGPLATFORM_UI_LANGUAGE"] = testingPlatformUILanguage,
+                ["DOTNET_CLI_UI_LANGUAGE"] = dotnetCLILanguage,
+                ["VSLANG"] = vsLang is null ? null : new CultureInfo(vsLang).LCID.ToString(CultureInfo.CurrentCulture),
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -263,4 +266,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

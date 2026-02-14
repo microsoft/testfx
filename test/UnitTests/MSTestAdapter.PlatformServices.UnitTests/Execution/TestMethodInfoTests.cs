@@ -1,0 +1,1668 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#if NETFRAMEWORK
+using System.Data;
+using System.Data.Common;
+#endif
+
+using AwesomeAssertions;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
+using Moq;
+
+using TestFramework.ForTestingMSTest;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
+/// <summary>
+/// The test method info tests.
+/// </summary>
+public class TestMethodInfoTests : TestContainer
+{
+    private sealed class MockResultFilesTestContext : TestContext, ITestContext
+    {
+        private readonly IList<string> _resultFiles;
+
+        public MockResultFilesTestContext(IList<string> resultFiles)
+            => _resultFiles = resultFiles;
+
+        public TestContext Context => this;
+
+        public override IDictionary<string, object?> Properties => new Dictionary<string, object?>();
+
+#if NETFRAMEWORK
+        public override DataRow? DataRow => null;
+
+        public override DbConnection? DataConnection => null;
+#endif
+
+        public void AddProperty(string propertyName, string propertyValue)
+        {
+        }
+
+        public override void AddResultFile(string fileName)
+        {
+        }
+
+        public void ClearDiagnosticMessages()
+        {
+        }
+
+        public override void DisplayMessage(MessageLevel messageLevel, string message)
+        {
+        }
+
+        public string? GetDiagnosticMessages()
+            => null;
+
+        public IList<string>? GetResultFiles()
+            => _resultFiles;
+
+        public void SetDataConnection(object? dbConnection)
+        {
+        }
+
+        public void SetDataRow(object? dataRow)
+        {
+        }
+
+        public void SetDisplayName(string? displayName)
+        {
+        }
+
+        public void SetException(Exception? exception)
+        {
+        }
+
+        public void SetOutcome(UnitTestOutcome outcome)
+        {
+        }
+
+        public void SetTestData(object?[]? data)
+        {
+        }
+
+        public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
+        {
+            propertyValue = null;
+            return false;
+        }
+
+        public override void Write(string? message)
+        {
+        }
+
+        public override void Write(string format, params object?[] args)
+        {
+        }
+
+        public override void WriteLine(string? message)
+        {
+        }
+
+        public override void WriteLine(string format, params object?[] args)
+        {
+        }
+    }
+
+    private readonly TestMethodInfo _testMethodInfo;
+
+    private readonly MethodInfo _methodInfo;
+
+    private readonly TestClassAttribute _classAttribute;
+
+    private readonly TestMethodAttribute _testMethodAttribute;
+
+    private readonly TestAssemblyInfo _testAssemblyInfo;
+
+    private readonly ConstructorInfo _constructorInfo;
+
+    private readonly TestContextImplementation _testContextImplementation;
+    private readonly IDisposable _scopedTestContextDisposable;
+    private readonly TestClassInfo _testClassInfo;
+
+    public TestMethodInfoTests()
+    {
+        _constructorInfo = typeof(DummyTestClass).GetConstructor([])!;
+        _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
+        _classAttribute = new TestClassAttribute();
+        _testMethodAttribute = new TestMethodAttribute();
+
+        _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
+        var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", displayName: null);
+        _testContextImplementation = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>(), null, null);
+        _scopedTestContextDisposable = TestContextImplementation.SetCurrentTestContext(_testContextImplementation);
+        _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
+
+        _testMethodInfo = new TestMethodInfo(
+            _methodInfo,
+            parent: _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Reset test hooks
+        DummyTestClass.TestConstructorMethodBody = () => { };
+        DummyTestClass.TestContextSetterBody = value => { };
+        DummyTestClass.TestInitializeMethodBody = value => { };
+        DummyTestClass.TestMethodBody = instance => { };
+        DummyTestClass.TestCleanupMethodBody = value => { };
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (!IsDisposed)
+        {
+            _scopedTestContextDisposable.Dispose();
+            base.Dispose(disposing);
+        }
+    }
+
+    public void SetArgumentsShouldSetArgumentsNeededForCurrentTestRun()
+    {
+        object[] arguments = [10, 20, 30];
+        _testMethodInfo.SetArguments(arguments);
+
+        _testMethodInfo.Arguments!.Length.Should().Be(3);
+        ((int?)_testMethodInfo.Arguments[0]).Should().Be(10);
+        ((int?)_testMethodInfo.Arguments[1]).Should().Be(20);
+        ((int?)_testMethodInfo.Arguments[2]).Should().Be(30);
+    }
+
+    #region TestMethod invoke scenarios
+
+    public async Task TestMethodInfoInvokeShouldWaitForAsyncTestMethodsToComplete()
+    {
+        bool methodCalled = false;
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => methodCalled = true);
+        MethodInfo asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
+
+        var method = new TestMethodInfo(asyncMethodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        methodCalled.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeAsyncShouldHandleThrowAssertInconclusive()
+    {
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => throw new AssertInconclusiveException());
+        MethodInfo asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
+
+        var method = new TestMethodInfo(
+            asyncMethodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+    }
+
+    public async Task TestMethodInfoInvokeAsyncShouldHandleAssertInconclusive()
+    {
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => Assert.Inconclusive());
+#pragma warning restore RS0030 // Do not use banned APIs
+        MethodInfo asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
+
+        var method = new TestMethodInfo(
+            asyncMethodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+    }
+
+    public async Task TestMethodInfoInvokeShouldHandleThrowAssertInconclusive()
+    {
+        DummyTestClass.TestMethodBody = d => throw new AssertInconclusiveException();
+        MethodInfo dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod")!;
+
+        var method = new TestMethodInfo(
+            dummyMethodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+    }
+
+    public async Task TestMethodInfoInvokeShouldHandleAssertInconclusive()
+    {
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestMethodBody = d => Assert.Inconclusive();
+#pragma warning restore RS0030 // Do not use banned APIs
+        MethodInfo dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod")!;
+
+        var method = new TestMethodInfo(
+            dummyMethodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+    }
+
+    public async Task TestMethodInfoInvokeShouldReportTestContextMessages()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("TestContext");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.TestContextMessages!.Contains("TestContext").Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldClearTestContextMessagesAfterReporting()
+    {
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("TestContext");
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.TestContextMessages!.Contains("TestContext").Should().BeTrue();
+
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("SeaShore");
+
+        result = await method.InvokeAsync(null);
+
+        result.TestContextMessages!.Contains("SeaShore").Should().BeTrue();
+    }
+
+    public async Task Invoke_WhenTestMethodThrowsMissingMethodException_TestOutcomeIsFailedAndExceptionIsPreserved()
+    {
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            var input = new
+            {
+                Field1 = "StringWith\0Null",
+                Field2 = "NormalString",
+            };
+
+            Activator.CreateInstance(input.GetType());
+        };
+
+        var method = new TestMethodInfo(
+            _methodInfo,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        result.TestFailureException.Should().BeOfType<TestFailedException>();
+        result.TestFailureException.InnerException.Should().BeOfType<MissingMethodException>();
+    }
+
+    #endregion
+
+    #region TestClass constructor setup
+
+    public async Task TestMethodInfoInvokeShouldCreateNewInstanceOfTestClassOnEveryCall()
+    {
+        int ctorCallCount = 0;
+        DummyTestClass.TestConstructorMethodBody = () => ctorCallCount++;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+        await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        ctorCallCount.Should().Be(2);
+    }
+
+    public async Task TestMethodInfoInvokeShouldMarkOutcomeFailedIfTestClassConstructorThrows()
+    {
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrows()
+    {
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_InstanceCreationError,
+            typeof(DummyTestClass).FullName,
+            "System.NotImplementedException: dummyExceptionMessage");
+        result.TestFailureException!.Message.Should().Be(errorMessage);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrowsWithoutInnerException()
+    {
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(_methodInfo, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await method.InvokeAsync(null);
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_InstanceCreationError,
+            typeof(DummyTestClassWithParameterizedCtor).FullName,
+            "System.Reflection.TargetParameterCountException: Parameter count mismatch.");
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        result.TestFailureException!.Message.Should().Be(errorMessage);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows()
+    {
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");
+
+        var exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException;
+
+        exception.Should().NotBeNull();
+        exception.StackTraceInformation.Should().NotBeNull();
+        exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__", StringComparison.Ordinal).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
+    {
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(_methodInfo, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        var exception = (await method.InvokeAsync(null)).TestFailureException as TestFailedException;
+
+        exception.Should().NotBeNull();
+        exception.StackTraceInformation.Should().NotBeNull();
+        // NOTE: On net8.0 and later, the first frame is System.Reflection.MethodBaseInvoker.ThrowTargetParameterCountException()
+        // So, we do a consistent Contains check to check that the stack trace is there.
+        exception.StackTraceInformation.ErrorStackTrace.Contains(
+            "   at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
+    {
+        var method = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        using (TestContextImplementation.SetCurrentTestContext(new MockResultFilesTestContext(["C:\\temp.txt"])))
+        {
+            TestResult result = await method.InvokeAsync(null);
+            result.ResultFiles!.Contains("C:\\temp.txt").Should().BeTrue();
+        }
+    }
+
+    public async Task TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContext_SetsItToTestContext()
+    {
+        ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(TestContext)])!;
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
+        var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    #endregion
+
+    #region TestClass.TestContext property setup
+
+    public async Task TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
+    {
+        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(_methodInfo, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+#pragma warning disable IDE0059 // Unnecessary assignment of a value - fp
+        TestResult result = null!;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
+        async Task RunMethod() => result = await method.InvokeAsync(null);
+
+        await RunMethod();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotThrowIfTestContextDoesNotHaveASetter()
+    {
+        var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(_methodInfo, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+#pragma warning disable IDE0059 // Unnecessary assignment of a value - fp
+        TestResult result = null!;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
+        async Task RunMethod() => result = await method.InvokeAsync(null);
+
+        await RunMethod();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetTestContextForTestClassInstance()
+    {
+        TestContext? testContext = null;
+        DummyTestClass.TestContextSetterBody = context => testContext = context as TestContext;
+
+        await _testMethodInfo.InvokeAsync(null);
+
+        _testContextImplementation.Equals(testContext).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldMarkOutcomeFailedIfSetTestContextThrows()
+    {
+        DummyTestClass.TestContextSetterBody = value => throw new NotImplementedException();
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetErrorMessageIfSetTestContextThrows()
+    {
+        DummyTestClass.TestContextSetterBody = value => throw new NotImplementedException("dummyExceptionMessage");
+
+        var exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException;
+
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_TestContextSetError,
+            typeof(DummyTestClass).FullName,
+            "System.NotImplementedException: dummyExceptionMessage");
+        exception.Should().NotBeNull();
+        exception?.Message.Should().Be(errorMessage);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()
+    {
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");
+
+        var exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException;
+
+        exception.Should().NotBeNull();
+        exception.StackTraceInformation.Should().NotBeNull();
+        exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContextAndTestContextProperty_InitializeBothTestContexts()
+    {
+        ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(TestContext)])!;
+        var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
+        var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+        TestContext? testContext = null;
+        DummyTestClass.TestContextSetterBody = context => testContext = context as TestContext;
+
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testContextImplementation.Equals(testContext).Should().BeTrue();
+    }
+
+    #endregion
+
+    #region TestInitialize method setup
+
+    public async Task TestMethodInfoInvokeShouldCallTestInitialize()
+    {
+        bool testInitializeCalled = false;
+        DummyTestClass.TestInitializeMethodBody = classInstance => testInitializeCalled = true;
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        testInitializeCalled.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallAsyncTestInitializeAndWaitForCompletion()
+    {
+        bool testInitializeCalled = false;
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => testInitializeCalled = true);
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        testInitializeCalled.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
+    {
+        var callOrder = new List<string>();
+        DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestInitializeCalled2");
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => callOrder.Add("baseAsyncTestInitializeCalled1"));
+        DummyTestClass.TestInitializeMethodBody = classInstance => callOrder.Add("classTestInitializeCalled");
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+        _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        var expectedCallOrder = new List<string>
+                                    {
+                                        "baseAsyncTestInitializeCalled1",
+                                        "baseTestInitializeCalled2",
+                                        "classTestInitializeCalled",
+                                    };
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotThrowIfTestInitializeIsNull()
+    {
+        _testClassInfo.TestInitializeMethod = null;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotThrowIfTestInitializeForBaseClassIsNull()
+    {
+        _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(null!);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult()
+    {
+        // Arrange.
+        DummyTestClass.TestInitializeMethodBody = classInstance => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_InitMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestInitializeMethod!.Name,
+            "System.ArgumentException: Some exception message ---> System.InvalidOperationException: Inner exception message");
+
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be(errorMessage);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.InnerException.Should().BeOfType<ArgumentException>();
+        exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
+    }
+
+    public async Task TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
+    {
+        // Arrange.
+        DummyTestClass.TestInitializeMethodBodyAsync = async classInstance => await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.InnerException.Should().BeOfType<Exception>();
+        exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
+
+        string expectedErrorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_InitMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestInitializeMethod!.Name,
+            "System.Exception: Outer ---> System.InvalidOperationException: Inner");
+        exception.Message.Should().Be(expectedErrorMessage);
+        exception.StackTraceInformation.Should().NotBeNull();
+    }
+
+    public async Task TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
+    {
+        // Arrange.
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestInitializeMethodBody = classInstance => Assert.Fail("dummyFailMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_InitMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestInitializeMethod!.Name,
+            "Assert.Fail failed. dummyFailMessage");
+
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be(errorMessage);
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.InnerException.Should().BeOfType<AssertFailedException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
+    }
+
+    public async Task TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
+    {
+        // Arrange.
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestInitializeMethodBody = classInstance => Assert.Inconclusive("dummyFailMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_InitMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestInitializeMethod!.Name,
+            "Assert.Inconclusive failed. dummyFailMessage");
+
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be(errorMessage);
+        exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestInitializeMethod");
+    }
+
+    public async Task TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult()
+    {
+        // Arrange.
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestConstructorMethodBody = () => Assert.Inconclusive("dummyInconclusiveMessage");
+#pragma warning restore RS0030 // Do not use banned APIs
+
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be("Assert.Inconclusive failed. dummyInconclusiveMessage");
+        exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
+#if DEBUG
+        exception.StackTraceInformation!.ErrorStackTrace.Contains(
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenConstructorThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal).Should().BeTrue();
+#endif
+    }
+
+    #endregion
+
+    #region TestCleanup method setup
+
+    public async Task TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException()
+    {
+        // Arrange.
+        DummyTestClass.TestCleanupMethodBodyAsync = async classInstance => await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethodAsync")!;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act.
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        // Assert.
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.InnerException.Should().BeOfType<Exception>();
+        exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
+
+        string errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
+            Resource.UTA_CleanupMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestCleanupMethod!.Name,
+            "System.Exception: Outer ---> System.InvalidOperationException: Inner");
+        exception.Message.Should().Be(errorMessage);
+
+        if (exception.StackTraceInformation is null)
+        {
+            throw new Exception("Expected stack trace not to be empty.");
+        }
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestCleanup()
+    {
+        bool cleanupMethodCalled = false;
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => cleanupMethodCalled = true);
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        cleanupMethodCalled.Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallAsyncTestCleanup()
+    {
+        bool cleanupMethodCalled = false;
+        DummyTestClass.TestCleanupMethodBody = classInstance => cleanupMethodCalled = true;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        cleanupMethodCalled.Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotThrowIfTestCleanupMethodIsNull()
+    {
+        _testClassInfo.TestCleanupMethod = null;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClasses()
+    {
+        var callOrder = new List<string>();
+        DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
+        DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        var expectedCallOrder = new List<string>
+                                    {
+                                        "classTestCleanupCalled",
+                                        "baseTestCleanupCalled1",
+                                        "baseTestCleanupCalled2",
+                                    };
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClassesAlways()
+    {
+        var callOrder = new List<string>();
+        DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
+        DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+
+        await _testMethodInfo.InvokeAsync(null);
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        var expectedCallOrder = new List<string>
+                                    {
+                                        "classTestCleanupCalled",
+                                        "baseTestCleanupCalled1",
+                                        "baseTestCleanupCalled2",
+                                        "classTestCleanupCalled",
+                                        "baseTestCleanupCalled4",
+                                        "baseTestCleanupCalled5",
+                                    };
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult()
+    {
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        string expectedErrorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_CleanupMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestCleanupMethod!.Name,
+            "System.ArgumentException: Some exception message ---> System.InvalidOperationException: Inner exception message");
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.Message.Should().Be(expectedErrorMessage);
+        exception.InnerException.Should().BeOfType<ArgumentException>();
+        exception.InnerException.InnerException.Should().BeOfType<InvalidOperationException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
+    }
+
+    public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
+    {
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestCleanupMethodBody = classInstance => Assert.Inconclusive("Test inconclusive");
+#pragma warning restore RS0030 // Do not use banned APIs
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        string expectedErrorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_CleanupMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestCleanupMethod.Name,
+            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test inconclusive");
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        exception.Message.Should().Be(expectedErrorMessage);
+        exception.InnerException.Should().BeOfType<AssertInconclusiveException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
+    }
+
+    public async Task TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
+    {
+#pragma warning disable RS0030 // Do not use banned APIs
+        DummyTestClass.TestCleanupMethodBody = classInstance => Assert.Fail("Test failed");
+#pragma warning restore RS0030 // Do not use banned APIs
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        string expectedErrorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_CleanupMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestCleanupMethod!.Name,
+            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failed");
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
+        exception.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.Message.Should().Be(expectedErrorMessage);
+        exception.InnerException.Should().BeOfType<AssertFailedException>();
+        exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
+            "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod");
+    }
+
+    public async Task TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
+    {
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new NotImplementedException("dummyErrorMessage");
+        DummyTestClass.TestMethodBody = classInstance => throw new NotImplementedException("dummyMethodError");
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+        var exception = result.TestFailureException as AggregateException;
+        string errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_TestMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testMethodInfo.TestMethodName,
+            "System.NotImplementedException: dummyMethodError");
+        string cleanupError = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_CleanupMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestCleanupMethod!.Name,
+            "System.NotImplementedException: dummyErrorMessage");
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.Should().NotBeNull();
+        exception.InnerExceptions[0].Message.Contains(errorMessage).Should().BeTrue();
+        exception.InnerExceptions[1].Message.Contains(cleanupError).Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldAppendStackTraceInformationIfBothTestMethodAndTestCleanupThrows()
+    {
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new NotImplementedException();
+        DummyTestClass.TestMethodBody = classInstance => throw new NotImplementedException("dummyMethodError");
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+        var exception = result.TestFailureException as AggregateException;
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        exception.Should().NotBeNull();
+        ((TestFailedException)exception.InnerExceptions[0]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()").Should().BeTrue();
+        ((TestFailedException)exception.InnerExceptions[1]).StackTraceInformation!.ErrorStackTrace.Contains("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()").Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()
+    {
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new AssertInconclusiveException();
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+        var exception = result.TestFailureException as TestFailedException;
+
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        exception.Should().NotBeNull();
+        exception.Message.Contains("Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException").Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetMoreImportantOutcomeIfTestCleanupIsInconclusiveButTestMethodFails()
+    {
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new AssertInconclusiveException();
+        DummyTestClass.TestMethodBody = classInstance => throw new Exception();
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallDisposeForDisposableTestClass()
+    {
+        bool disposeCalled = false;
+        DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod")!, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        await method.InvokeAsync(null);
+
+        disposeCalled.Should().BeTrue();
+    }
+
+#if NET6_0_OR_GREATER
+    public async Task TestMethodInfoInvoke_WhenTestClassIsAsyncDisposable_ShouldDisposeAsync()
+    {
+        // Arrange
+        bool asyncDisposeCalled = false;
+        DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructor([])!;
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod")!, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        await method.InvokeAsync(null);
+
+        // Assert
+        asyncDisposeCalled.Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvoke_WhenTestClassIsDisposableAndAsyncDisposable_ShouldCallAsyncDisposeThenDispose()
+    {
+        // Arrange
+        int order = 0;
+        int disposeCalledOrder = 0;
+        int disposeAsyncCalledOrder = 0;
+
+        DummyTestClassWithAsyncDisposableAndDisposable.DisposeMethodBody = () => disposeCalledOrder = ++order;
+        DummyTestClassWithAsyncDisposableAndDisposable.DisposeAsyncMethodBody = () => disposeAsyncCalledOrder = ++order;
+
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructor([])!;
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod")!, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        // Act
+        await method.InvokeAsync(null);
+
+        // Assert
+        disposeCalledOrder.Should().Be(2);
+        disposeAsyncCalledOrder.Should().Be(1);
+    }
+#endif
+
+    public async Task TestMethodInfoInvokeShouldCallDisposeForDisposableTestClassIfTestCleanupThrows()
+    {
+        bool disposeCalled = false;
+        DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
+        DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => throw new NotImplementedException();
+        ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo)
+        {
+            TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod")!,
+        };
+        var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod")!, testClass)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        await method.InvokeAsync(null);
+
+        disposeCalled.Should().BeTrue();
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestMethodThrows()
+    {
+        bool testCleanupMethodCalled = false;
+        DummyTestClass.TestMethodBody = classInstance => throw new NotImplementedException();
+        DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        testCleanupMethodCalled.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestInitializeMethodThrows()
+    {
+        bool testCleanupMethodCalled = false;
+        DummyTestClass.TestInitializeMethodBody = classInstance => throw new NotImplementedException();
+        DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        testCleanupMethodCalled.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCallTestCleanupIfTestClassInstanceIsNotNull()
+    {
+        bool testCleanupMethodCalled = false;
+
+        // Throwing in constructor to ensure classInstance is null in TestMethodInfo.Invoke
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
+        DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        testCleanupMethodCalled.Should().BeFalse();
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotCallTestCleanupIfClassSetContextThrows()
+    {
+        bool testCleanupCalled = false;
+        DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupCalled = true;
+        DummyTestClass.TestContextSetterBody = o => throw new NotImplementedException();
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        await _testMethodInfo.InvokeAsync(null);
+
+        testCleanupCalled.Should().BeFalse();
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
+    {
+        DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+        result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        string message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
+        result.TestFailureException!.Message.Should().Be(message);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetTestOutcomeBeforeTestCleanup()
+    {
+        UnitTestOutcome testOutcome = UnitTestOutcome.Unknown;
+        DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
+        DummyTestClass.TestCleanupMethodBody = c =>
+        {
+            if (DummyTestClass.GetTestContext() != null)
+            {
+                testOutcome = DummyTestClass.GetTestContext().CurrentTestOutcome;
+            }
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        TestResult result = await testMethodInfo.InvokeAsync(null);
+
+        testOutcome.Should().Be(UnitTestOutcome.Inconclusive);
+    }
+
+    #endregion
+
+    #region TestMethod invoke setup order
+
+    public async Task TestMethodInfoInvokeShouldInitializeClassInstanceTestInitializeAndTestCleanupInOrder()
+    {
+        var callOrder = new List<string>();
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
+
+        DummyTestClass.TestConstructorMethodBody = () => callOrder.Add("classCtor");
+        DummyTestClass.TestContextSetterBody = o => callOrder.Add("testContext");
+        DummyTestClass.TestInitializeMethodBody = classInstance => callOrder.Add("testInit");
+        DummyTestClass.TestMethodBody = classInstance => callOrder.Add("testMethodInfo");
+        DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("testCleanup");
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        var expectedCallOrder = new List<string>
+                                    {
+                                        "classCtor",
+                                        "testContext",
+                                        "testInit",
+                                        "testMethodInfo",
+                                        "testCleanup",
+                                    };
+        expectedCallOrder.SequenceEqual(callOrder).Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    #endregion
+
+    #region TestMethod timeout scenarios
+
+    public async Task TestMethodInfoInvokeShouldReturnTestFailureOnTimeout()
+    {
+        var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+
+        await RunWithTestablePlatformService(testablePlatformServiceProvider, async () =>
+        {
+            testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+
+            PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+            testablePlatformServiceProvider.MockThreadOperations.Setup(
+             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
+            var method = new TestMethodInfo(_methodInfo, _testClassInfo)
+            {
+                TimeoutInfo = TimeoutInfo.FromTimeout(1),
+                Executor = _testMethodAttribute,
+            };
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal).Should().BeTrue();
+        });
+    }
+
+    public async Task TestMethodInfoInvokeShouldReturnTestPassedOnCompletionWithinTimeout()
+    {
+        DummyTestClass.TestMethodBody = o => { /* do nothing */ };
+        var method = new TestMethodInfo(_methodInfo, _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+        TestResult result = await method.InvokeAsync(null);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+    }
+
+    public async Task TestMethodInfoInvokeShouldCancelTokenSourceOnTimeout()
+    {
+        var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        await RunWithTestablePlatformService(testablePlatformServiceProvider, async () =>
+        {
+            testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+            PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+            testablePlatformServiceProvider.MockThreadOperations.Setup(
+             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
+
+            var method = new TestMethodInfo(_methodInfo, _testClassInfo)
+            {
+                TimeoutInfo = TimeoutInfo.FromTimeout(1),
+                Executor = _testMethodAttribute,
+            };
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' timed out after 1ms", StringComparison.Ordinal).Should().BeTrue();
+            _testContextImplementation.CancellationTokenSource.IsCancellationRequested.Should().BeTrue("Not canceled..");
+        });
+    }
+
+    public async Task TestMethodInfoInvokeShouldFailOnTokenSourceCancellation()
+    {
+        var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        await RunWithTestablePlatformService(testablePlatformServiceProvider, async () =>
+        {
+            testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+            PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+            testablePlatformServiceProvider.MockThreadOperations.Setup(
+             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeout, CancellationToken cancelToken) =>
+             {
+                 try
+                 {
+                     Task.WaitAny([Task.Delay(100000, cancelToken)], cancelToken);
+                 }
+                 catch (OperationCanceledException)
+                 {
+                 }
+             });
+
+            _testContextImplementation.CancellationTokenSource.CancelAfter(100);
+            var method = new TestMethodInfo(_methodInfo, _testClassInfo)
+            {
+                TimeoutInfo = TimeoutInfo.FromTimeout(100000),
+                Executor = _testMethodAttribute,
+            };
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            result.TestFailureException!.Message.Equals("Test 'DummyTestMethod' was canceled", StringComparison.Ordinal).Should().BeTrue();
+            _testContextImplementation.CancellationTokenSource.IsCancellationRequested.Should().BeTrue("Not canceled..");
+        });
+    }
+
+    #endregion
+
+    public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooFewParameters()
+    {
+        MethodInfo simpleArgumentsMethod = typeof(DummyTestClass).GetMethod("DummySimpleArgumentsMethod")!;
+
+        var method = new TestMethodInfo(
+            simpleArgumentsMethod,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        object[] arguments = ["RequiredStr1"];
+        object[] expectedArguments = ["RequiredStr1"];
+        object?[] resolvedArguments = method.ResolveArguments(arguments);
+
+        resolvedArguments.Length.Should().Be(1);
+        expectedArguments.SequenceEqual(resolvedArguments).Should().BeTrue();
+    }
+
+    public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooManyParameters()
+    {
+        MethodInfo simpleArgumentsMethod = typeof(DummyTestClass).GetMethod("DummySimpleArgumentsMethod")!;
+
+        var method = new TestMethodInfo(
+            simpleArgumentsMethod,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        object?[] arguments = ["RequiredStr1", "RequiredStr2", "ExtraStr3"];
+        object?[] expectedArguments = ["RequiredStr1", "RequiredStr2", "ExtraStr3"];
+        object?[] resolvedArguments = method.ResolveArguments(arguments);
+
+        resolvedArguments.Length.Should().Be(3);
+        expectedArguments.SequenceEqual(resolvedArguments).Should().BeTrue();
+    }
+
+    public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithNoneProvided()
+    {
+        MethodInfo optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod")!;
+
+        var method = new TestMethodInfo(
+            optionalArgumentsMethod,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        object?[] arguments = ["RequiredStr1"];
+        object?[] expectedArguments = ["RequiredStr1", null, null];
+        object?[] resolvedArguments = method.ResolveArguments(arguments);
+
+        resolvedArguments.Length.Should().Be(3);
+        expectedArguments.SequenceEqual(resolvedArguments).Should().BeTrue();
+    }
+
+    public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithSomeProvided()
+    {
+        MethodInfo optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod")!;
+
+        var method = new TestMethodInfo(
+            optionalArgumentsMethod,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        object?[] arguments = ["RequiredStr1", "OptionalStr1"];
+        object?[] expectedArguments = ["RequiredStr1", "OptionalStr1", null];
+        object?[] resolvedArguments = method.ResolveArguments(arguments);
+
+        resolvedArguments.Length.Should().Be(3);
+        expectedArguments.SequenceEqual(resolvedArguments).Should().BeTrue();
+    }
+
+    public void ResolveArgumentsShouldReturnEmptyParamsWithNoneProvided()
+    {
+        MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
+
+        var method = new TestMethodInfo(
+            paramsArgumentMethod,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        object[] arguments = [1];
+        object[] expectedArguments = [1, Array.Empty<string>()];
+        object?[] resolvedArguments = method.ResolveArguments(arguments);
+
+        resolvedArguments.Length.Should().Be(2);
+        expectedArguments[0].Equals(resolvedArguments[0]).Should().BeTrue();
+        resolvedArguments[1].Should().BeOfType<string[]>();
+        ((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]!).Should().BeTrue();
+    }
+
+    public void ResolveArgumentsShouldReturnPopulatedParamsWithAllProvided()
+    {
+        MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
+
+        var method = new TestMethodInfo(
+            paramsArgumentMethod,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+            Executor = _testMethodAttribute,
+        };
+
+        object[] arguments = [1, "str1", "str2", "str3"];
+        object[] expectedArguments = [1, new string[] { "str1", "str2", "str3" }];
+        object?[] resolvedArguments = method.ResolveArguments(arguments);
+
+        resolvedArguments.Length.Should().Be(2);
+        expectedArguments[0].Equals(resolvedArguments[0]).Should().BeTrue();
+        resolvedArguments[1].Should().BeOfType<string[]>();
+        ((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]!).Should().BeTrue();
+    }
+
+    #region helper methods
+
+    private static async Task RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Func<Task> action)
+    {
+        try
+        {
+            testablePlatformServiceProvider.MockThreadOperations.
+                Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
+                Returns(true).
+                Callback((Action a, int timeout, CancellationToken token) => a.Invoke());
+
+            await action();
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = null;
+        }
+    }
+
+    #endregion
+
+    #region Test data
+    public class DummyTestClassBase
+    {
+        public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; } = null!;
+
+        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody(this);
+    }
+
+    public class DummyTestClass : DummyTestClassBase
+    {
+        private static TestContext s_tc = null!;
+
+        public DummyTestClass() => TestConstructorMethodBody();
+
+        public DummyTestClass(TestContext tc) => (tc is not null).Should().BeTrue();
+
+        public static Action TestConstructorMethodBody { get; set; } = null!;
+
+        public static Action<object> TestContextSetterBody { get; set; } = null!;
+
+        public static Func<DummyTestClass, Task> TestInitializeMethodBodyAsync { get; set; } = null!;
+
+        public static Action<DummyTestClass> TestInitializeMethodBody { get; set; } = null!;
+
+        public static Action<DummyTestClass> TestMethodBody { get; set; } = null!;
+
+        public static Action<DummyTestClass> TestCleanupMethodBody { get; set; } = null!;
+
+        public static Func<DummyTestClass, Task> TestCleanupMethodBodyAsync { get; set; } = null!;
+
+        public static Func<Task> DummyAsyncTestMethodBody { get; set; } = null!;
+
+        public static TestContext GetTestContext() => s_tc;
+
+        public TestContext TestContext
+        {
+            get => throw new NotImplementedException();
+
+            set
+            {
+                TestContextSetterBody(value);
+                s_tc = value;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public async Task DummyTestInitializeMethodAsync() => await TestInitializeMethodBodyAsync(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public async Task DummyTestCleanupMethodAsync() => await TestCleanupMethodBodyAsync(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DummyTestMethod() => TestMethodBody(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public Task DummyAsyncTestMethod() =>
+            // We use this method to validate async TestInitialize, TestCleanup, TestMethod
+            DummyAsyncTestMethodBody();
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DummySimpleArgumentsMethod(string str1, string str2) => TestMethodBody(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DummyOptionalArgumentsMethod(string str1, string? str2 = null, string? str3 = null) => TestMethodBody(this);
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public void DummyParamsArgumentMethod(int i, params string[] args) => TestMethodBody(this);
+    }
+
+    public class DummyTestClassWithParameterizedCtor
+    {
+        public DummyTestClassWithParameterizedCtor(int x)
+        {
+        }
+    }
+
+    public class DummyTestClassWithTestContextWithoutSetter
+    {
+        public TestContext TestContext => null!;
+    }
+
+    public class DummyTestClassWithDisposable : IDisposable
+    {
+        public static Action? DisposeMethodBody { get; set; }
+
+        public static Action<DummyTestClassWithDisposable>? DummyTestCleanupMethodBody { get; set; }
+
+        public void Dispose() => DisposeMethodBody!();
+
+        public void DummyTestMethod()
+        {
+        }
+
+        public void DummyTestCleanupMethod() => DummyTestCleanupMethodBody!(this);
+    }
+
+#if NET6_0_OR_GREATER
+    public class DummyTestClassWithAsyncDisposable : IAsyncDisposable
+    {
+        public static Action? DisposeAsyncMethodBody { get; set; }
+
+        public static Action<DummyTestClassWithDisposable>? DummyTestCleanupMethodBody { get; set; }
+
+        public void DummyTestMethod()
+        {
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncMethodBody!();
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    public class DummyTestClassWithAsyncDisposableAndDisposable : IAsyncDisposable, IDisposable
+    {
+        public static Action? DisposeMethodBody { get; set; }
+
+        public static Action? DisposeAsyncMethodBody { get; set; }
+
+        public static Action<DummyTestClassWithDisposable>? DummyTestCleanupMethodBody { get; set; }
+
+        public void DummyTestMethod()
+        {
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncMethodBody!();
+            return ValueTask.CompletedTask;
+        }
+
+        public void Dispose() => DisposeMethodBody!();
+    }
+#endif
+
+}
+#endregion

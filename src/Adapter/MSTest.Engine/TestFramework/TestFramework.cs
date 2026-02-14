@@ -23,8 +23,8 @@ internal sealed class TestFramework : IDisposable, ITestFramework
     private readonly TestingFrameworkExtension _extension;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private readonly TestFrameworkEngine _engine;
-    private readonly List<string> _sessionWarningMessages = new();
-    private readonly List<string> _sessionErrorMessages = new();
+    private readonly List<string> _sessionWarningMessages = [];
+    private readonly List<string> _sessionErrorMessages = [];
     private SessionUid? _sessionId;
 
     public TestFramework(TestFrameworkConfiguration testFrameworkConfiguration, ITestNodesBuilder[] testNodesBuilders, TestingFrameworkExtension extension,
@@ -47,7 +47,7 @@ internal sealed class TestFramework : IDisposable, ITestFramework
     public string Description => _extension.Description;
 
     /// <inheritdoc />
-    public async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync();
+    public async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync().ConfigureAwait(false);
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
     {
@@ -71,7 +71,7 @@ internal sealed class TestFramework : IDisposable, ITestFramework
         {
             // Ensure we have finished processing all requests.
             _incomingRequestCounter.Signal();
-            await _incomingRequestCounter.WaitAsync(context.CancellationToken);
+            await _incomingRequestCounter.WaitAsync(context.CancellationToken).ConfigureAwait(false);
 
             if (_sessionErrorMessages.Count > 0)
             {
@@ -121,7 +121,7 @@ internal sealed class TestFramework : IDisposable, ITestFramework
                 throw new InvalidOperationException($"Request type '{context.Request.GetType().FullName}' is not supported");
             }
 
-            Result result = await _engine.ExecuteRequestAsync(testExecutionRequest, context.MessageBus, context.CancellationToken);
+            Result result = await _engine.ExecuteRequestAsync(testExecutionRequest, context.MessageBus, context.CancellationToken).ConfigureAwait(false);
 
             foreach (IReason reason in result.Reasons)
             {

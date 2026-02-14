@@ -16,13 +16,13 @@ public sealed class InternalUnsafeAsyncActionTaskParameterizedTestNode<TData>
 
     public required Func<Task<IEnumerable<TData>>> GetArguments { get; init; }
 
-    Func<Task<IEnumerable>> ITaskParameterizedTestNode.GetArguments => async () => await GetArguments();
+    Func<Task<IEnumerable>> ITaskParameterizedTestNode.GetArguments => async () => await GetArguments().ConfigureAwait(false);
 
     async Task IParameterizedAsyncActionTestNode.InvokeAsync(ITestExecutionContext testExecutionContext, Func<Func<Task>, Task> safeInvoke)
     {
-        foreach (TData item in await GetArguments())
+        foreach (TData item in await GetArguments().ConfigureAwait(false))
         {
-            await safeInvoke(async () => await Body(testExecutionContext, item));
+            await safeInvoke(async () => await Body(testExecutionContext, item).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 

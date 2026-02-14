@@ -109,16 +109,12 @@ public class TestAsset : IDisposable
     {
         string publicFeedsFragment = addPublicFeeds
             ? """
-                    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-                    <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
+                <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
             """
             : string.Empty;
 
         string publicFeedsMapping = addPublicFeeds
             ? """
-            <packageSource key="nuget.org">
-                <package pattern="*" />
-            </packageSource>
             <packageSource key="test-tools">
                 <package pattern="*" />
             </packageSource>
@@ -137,6 +133,7 @@ public class TestAsset : IDisposable
         <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
         <!-- This feed is required for FSharp.Core until preview 1 or 2 is released -->
         <add key="dotnet10" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json" />
+        <add key="dotnet11" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json" />
     </packageSources>
     <config>
         <add key="globalPackagesFolder" value=".packages" />
@@ -156,6 +153,9 @@ public class TestAsset : IDisposable
             <package pattern="*" />
         </packageSource>
         <packageSource key="dotnet10">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="dotnet11">
             <package pattern="*" />
         </packageSource>
     </packageSourceMapping>

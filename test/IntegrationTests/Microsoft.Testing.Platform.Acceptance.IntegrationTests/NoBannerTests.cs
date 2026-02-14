@@ -14,7 +14,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
     public async Task UsingNoBanner_TheBannerDoesNotAppear(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
@@ -30,7 +30,8 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
             new Dictionary<string, string?>
             {
                 { "TESTINGPLATFORM_NOBANNER", "true" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
@@ -46,7 +47,8 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
             new Dictionary<string, string?>
             {
                 { "DOTNET_NOLOGO", "true" },
-            });
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
@@ -57,7 +59,7 @@ public class NoBannerTests : AcceptanceTestBase<NoBannerTests.TestAssetFixture>
     public async Task WithoutUsingNoBanner_TheBannerAppears(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputMatchesRegex(_bannerRegexMatchPattern);
@@ -132,4 +134,6 @@ public class DummyTestFramework : ITestFramework
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

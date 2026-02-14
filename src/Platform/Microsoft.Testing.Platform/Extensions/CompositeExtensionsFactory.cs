@@ -36,7 +36,7 @@ TestHost: IDataConsumer, ITestApplicationLifetime
     /// <param name="factory">The factory function that creates the extension with a service provider.</param>
     public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
     {
-        Guard.NotNull(factory);
+        Ensure.NotNull(factory);
         _factoryWithServiceProvider = factory;
     }
 
@@ -46,7 +46,7 @@ TestHost: IDataConsumer, ITestApplicationLifetime
     /// <param name="factory">The factory function that creates the extension.</param>
     public CompositeExtensionFactory(Func<TExtension> factory)
     {
-        Guard.NotNull(factory);
+        Ensure.NotNull(factory);
         _factory = factory;
     }
 

@@ -10,28 +10,26 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
 {
-    private const string AssetName = "Abort";
+    private const string AssetName = "AbortMSTestAsset";
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_CancellingTests(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
         // Windows API because this gesture is not easy xplat.
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         string fileCreationPath = Path.Combine(testHost.DirectoryName, "fileCreation");
         File.WriteAllText(fileCreationPath, string.Empty);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
-        {
-            ["FILE_DIRECTORY"] = fileCreationPath,
-        });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["FILE_DIRECTORY"] = fileCreationPath,
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
@@ -41,7 +39,7 @@ public sealed class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFi
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
-#file Abort.csproj
+#file AbortMSTestAsset.csproj
 <Project Sdk="Microsoft.NET.Sdk">
    <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
@@ -159,4 +157,6 @@ public class UnitTest1
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

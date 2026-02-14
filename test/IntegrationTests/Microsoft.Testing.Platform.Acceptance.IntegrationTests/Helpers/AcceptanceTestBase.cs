@@ -3,50 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-public abstract class AcceptanceTestBase<TFixture>
-    where TFixture : ITestAssetFixture, new()
+public abstract class AcceptanceTestBase
 {
     private const string NuGetPackageExtensionName = ".nupkg";
-
-    protected const string CurrentMSTestSourceCode = """
-#file MSTestProject.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <PlatformTarget>x64</PlatformTarget>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    $TargetFramework$
-    $OutputType$
-    $EnableMSTestRunner$
-    $Extra$
-    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-  </ItemGroup>
-
-</Project>
-
-#file UnitTest1.cs
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestClass]
-public class UnitTest1
-{
-    [TestMethod]
-    public void TestMethod1()
-    {
-    }
-}
-
-#file dotnet.config
-[dotnet.test.runner]
-name= "VSTest"
-""";
 
     static AcceptanceTestBase()
     {
@@ -57,8 +16,6 @@ name= "VSTest"
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine.");
     }
-
-    protected static TFixture AssetFixture { get; private set; } = default!;
 
     internal static string RID { get; }
         = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
@@ -77,18 +34,34 @@ name= "VSTest"
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
-    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
-    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
-    public static async Task ClassInitialize(TestContext testContext)
+    private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
-        AssetFixture = new();
-        await AssetFixture.InitializeAsync();
-    }
+        string[] matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
-    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
-    public static void ClassCleanup()
-        => AssetFixture.Dispose();
+        if (matches.Length > 1)
+        {
+            // For some packages the find pattern will match multiple packages, for example:
+            // Microsoft.Testing.Platform.1.0.0.nupkg
+            // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
+            // So we need to find a package that contains a number after the prefix.
+            // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
+            matches = [.. matches
+                // (full path, file name without prefix)
+                .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
+                // check if first character of file name without prefix is number
+                .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
+                // take the full path
+                .Select(tuple => tuple.path)];
+        }
+
+        if (matches.Length != 1)
+        {
+            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}', but found {matches.Length}: '{string.Join("', '", matches.Select(m => Path.GetFileName(m)))}'.");
+        }
+
+        string packageFullName = Path.GetFileName(matches[0]);
+        return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
+    }
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)> GetBuildMatrixTfmBuildVerbConfiguration()
     {
@@ -145,17 +118,23 @@ name= "VSTest"
     }
 
     // https://github.com/NuGet/NuGet.Client/blob/c5934bdcbc578eec1e2921f49e6a5d53481c5099/test/NuGet.Core.FuncTests/Msbuild.Integration.Test/MsbuildIntegrationTestFixture.cs#L65-L94
-    private protected static async Task<string> FindMsbuildWithVsWhereAsync()
+    private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
     {
         string vswherePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe");
+        string path = await RunAndGetSingleLineStandardOutputAsync(vswherePath, "-find MSBuild\\**\\Bin\\MSBuild.exe", cancellationToken);
+        return path;
+    }
+
+    private static async Task<string> RunAndGetSingleLineStandardOutputAsync(string vswherePath, string arg, CancellationToken cancellationToken)
+    {
         var commandLine = new TestInfrastructure.CommandLine();
-        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild -find MSBuild\\**\\Bin\\MSBuild.exe");
+        await commandLine.RunAsync($"\"{vswherePath}\" -latest -prerelease -requires Microsoft.Component.MSBuild {arg}", cancellationToken: cancellationToken);
 
         string? path = null;
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync()) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
             {
                 if (path != null)
                 {
@@ -168,34 +147,66 @@ name= "VSTest"
 
         return path!;
     }
+}
 
-    private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
+public abstract class AcceptanceTestBase<TFixture> : AcceptanceTestBase
+    where TFixture : ITestAssetFixture, new()
+{
+    protected const string CurrentMSTestSourceCode = """
+#file MSTestProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PlatformTarget>x64</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    $TargetFramework$
+    $OutputType$
+    $EnableMSTestRunner$
+    $Extra$
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void TestMethod1()
     {
-        string[] matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
-
-        if (matches.Length > 1)
-        {
-            // For some packages the find pattern will match multiple packages, for example:
-            // Microsoft.Testing.Platform.1.0.0.nupkg
-            // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
-            // So we need to find a package that contains a number after the prefix.
-            // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
-            matches = matches
-                // (full path, file name without prefix)
-                .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
-                // check if first character of file name without prefix is number
-                .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
-                // take the full path
-                .Select(tuple => tuple.path)
-                .ToArray();
-        }
-
-        if (matches.Length != 1)
-        {
-            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}', but found {matches.Length}: '{string.Join("', '", matches.Select(m => Path.GetFileName(m)))}'.");
-        }
-
-        string packageFullName = Path.GetFileName(matches[0]);
-        return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
+}
+
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
+""";
+
+    protected static TFixture AssetFixture { get; private set; } = default!;
+
+    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
+    public static async Task ClassInitialize(TestContext testContext)
+    {
+        AssetFixture = new();
+        await AssetFixture.InitializeAsync(testContext.CancellationToken);
+    }
+
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+    [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
+    public static void ClassCleanup()
+        => AssetFixture.Dispose();
 }

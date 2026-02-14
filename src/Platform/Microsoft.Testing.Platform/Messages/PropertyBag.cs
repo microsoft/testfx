@@ -35,7 +35,7 @@ public sealed partial class PropertyBag
     /// <param name="properties">The collection of properties.</param>
     public PropertyBag(params IProperty[] properties)
     {
-        Guard.NotNull(properties);
+        Ensure.NotNull(properties);
 
         if (properties.Length == 0)
         {
@@ -78,7 +78,7 @@ public sealed partial class PropertyBag
     /// <param name="properties">The collection of properties.</param>
     public PropertyBag(IEnumerable<IProperty> properties)
     {
-        Guard.NotNull(properties);
+        Ensure.NotNull(properties);
 
         foreach (IProperty property in properties)
         {
@@ -123,7 +123,7 @@ public sealed partial class PropertyBag
     /// <param name="property">The property to add.</param>
     public void Add(IProperty property)
     {
-        Guard.NotNull(property);
+        Ensure.NotNull(property);
 
         // Optimized access to the TestNodeStateProperty, it's one of the most used property.
         if (property is TestNodeStateProperty testNodeStateProperty)
@@ -203,7 +203,7 @@ public sealed partial class PropertyBag
             return default;
         }
 
-        TProperty property = enumerator.Current!;
+        TProperty property = enumerator.Current;
         return enumerator.MoveNext()
             ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
             : property;
@@ -230,7 +230,7 @@ public sealed partial class PropertyBag
             throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.");
         }
 
-        IEnumerable<TProperty> matchingValues = _property is null ? Array.Empty<TProperty>() : _property.OfType<TProperty>();
+        IEnumerable<TProperty> matchingValues = _property is null ? [] : _property.OfType<TProperty>();
 
         return !matchingValues.Any()
             ? throw new InvalidOperationException($"Could not find a property of type '{typeof(TProperty)}'.")
@@ -255,7 +255,7 @@ public sealed partial class PropertyBag
         // We don't want to allocate an array if we know that we're looking for a TestNodeStateProperty
         return typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty))
             ? []
-            : _property is null ? [] : _property.OfType<TProperty>().ToArray();
+            : _property is null ? [] : [.. _property.OfType<TProperty>()];
     }
 
     /// <summary>

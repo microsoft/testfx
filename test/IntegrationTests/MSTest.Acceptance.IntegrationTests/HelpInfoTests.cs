@@ -17,7 +17,7 @@ public class HelpInfoTests : AcceptanceTestBase<HelpInfoTests.TestAssetFixture>
     public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -28,23 +28,27 @@ Execute a .NET Test Application.
 Options:
     --config-file
         Specifies a testconfig.json file.
+    --debug
+        Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
         The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
-    --diagnostic-filelogger-synchronouswrite
-        Force the built-in file logger to write the log synchronously.
-        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
-        Note that this is slowing down the test execution.
+    --diagnostic-file-prefix
+        Prefix for the log file name that will replace '[log]_.'
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
-    --diagnostic-output-fileprefix
-        Prefix for the log file name that will replace '[log]_.'
+    --diagnostic-synchronous-write
+        Force the built-in file logger to write the log synchronously.
+        Useful for scenario where you don't want to lose any log (i.e. in case of crash).
+        Note that this is slowing down the test execution.
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
+    --filter-uid
+        Provides a list of test node UIDs to filter by.
     --help
         Show the command line help.
     --ignore-exit-code
@@ -89,7 +93,7 @@ Extension options:
     public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -162,4 +166,6 @@ public class TestClass
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

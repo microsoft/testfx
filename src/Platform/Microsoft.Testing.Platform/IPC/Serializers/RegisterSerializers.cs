@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
@@ -20,6 +21,7 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * HandshakeMessageSerializer: 9
 */
 
+[Embedded]
 internal static class RegisterSerializers
 {
     public static void RegisterAllSerializers(this NamedPipeBase namedPipeBase)

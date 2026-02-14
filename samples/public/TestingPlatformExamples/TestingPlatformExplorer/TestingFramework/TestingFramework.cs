@@ -112,10 +112,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
                             };
 
-                            TestMethodIdentifierProperty testMethodIdentifierProperty = new(test.DeclaringType!.Assembly!.FullName!,
+                            var testMethodIdentifierProperty = new TestMethodIdentifierProperty(test.DeclaringType!.Assembly!.FullName!,
                             test.DeclaringType!.Namespace!,
                             test.DeclaringType.Name!,
                             test.Name,
+                            test.GetGenericArguments().Length,
                             test.GetParameters().Select(x => x.ParameterType.FullName).ToArray()!,
                             test.ReturnType.FullName!);
 
@@ -137,11 +138,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                 {
                     try
                     {
-                        await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"TestingFramework version '{Version}' running tests with parallelism of {_dopValue}") { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green } });
+                        await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"TestingFramework version '{Version}' running tests with parallelism of {_dopValue}") { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green } }, context.CancellationToken);
 
                         StringBuilder reportBody = new();
                         MethodInfo[] tests = GetTestsMethodFromAssemblies();
-                        List<Task> results = new();
+                        var results = new List<Task>();
                         foreach (MethodInfo test in tests)
                         {
                             if (runTestExecutionRequest.Filter is TestNodeUidListFilter filter)

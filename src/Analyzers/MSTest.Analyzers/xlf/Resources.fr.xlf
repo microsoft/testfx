@@ -132,19 +132,14 @@ Le type doit être une classe
         <target state="translated">N’utilisez pas 'Assert.AreSame' ou 'Assert.AreNotSame' avec des types valeur</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
-        <source>Prefer 'Assert.ThrowsExactly' or 'Assert.ThrowsExactlyAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exception.</source>
-        <target state="translated">Préférez « Assert.ThrowsExactly » ou « Assert.ThrowsExactlyAsync » à « [ExpectedException] », car il garantit que seul l’appel attendu lève l’exception attendue. Les API d’assertion offrent également plus de flexibilité et vous permettent de déclarer des propriétés supplémentaires de l’exception.</target>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
+        <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
+        <target state="translated">Supprimez l’argument « DynamicDataSourceType » pour utiliser le comportement de détection automatique par défaut</target>
         <note />
       </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
-        <source>Prefer 'Assert.ThrowsExactly/ThrowsExactlyAsync' over '[ExpectedException]'</source>
-        <target state="translated">Préférez « Assert.ThrowsExactly/ThrowsExactlyAsync » à « [ExpectedException] »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
-        <source>Avoid '[ExpectedException]'</source>
-        <target state="translated">Éviter « [ExpectedException] »</target>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
+        <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
+        <target state="translated">Évitez de passer un type « DynamicDataSourceType » explicite et utilisez le comportement de détection automatique par défaut</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
@@ -277,8 +272,13 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">Le type d’argument DataRow doit correspondre au type de paramètre de la méthode. Des incompatibilités se produisent aux index :{0}</target>
+        <source>DataRow argument types do not match method parameter types. {0}</source>
+        <target state="translated">Les types d’argument DataRow ne correspondent pas aux types de paramètre de la méthode. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
+        <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
+        <target state="translated">Le paramètre « {0} » attend un type « {1} », mais la valeur fournie a un type « {2} »</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
@@ -299,6 +299,16 @@ Le type doit être une classe
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
         <target state="translated">DataRow doit être valide</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionFix">
+        <source>Use 'Assert.{0}' instead</source>
+        <target state="translated">Utiliser plutôt « Assert.{0} »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
+        <source>Use proper Assert methods for all negated assertions</source>
+        <target state="translated">Utiliser les méthodes Assert appropriées pour toutes les assertions négatives</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
@@ -402,9 +412,19 @@ Le type doit être une classe
         <target state="translated">'[DynamicData]' ne doit être défini que sur une méthode de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
+        <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
+        <target state="translated">Le membre « [DynamicData] » « {0}.{1} » est un champ, vous devez donc utiliser « DynamicDataSourceType.AutoDetect » ou « DynamicDataSourceType.Field » (la détection automatique est la valeur par défaut lorsqu’elle n’est pas spécifiée explicitement et est recommandée)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' membre ' {0}.{1}' est une méthode, vous devez donc utiliser 'DynamicDataSourceType.AutoDetect' ou 'DynamicDataSourceType.Method' (la détection automatique est la valeur par défaut quand elle n’est pas spécifiée explicitement et est recommandée)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
+        <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
+        <target state="translated">Le membre « [Données dynamiques] » « {0}.{1} » n’est pas une propriété, une méthode ou un champ. Seules les propriétés, les méthodes et les champs sont pris en charge.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
@@ -427,6 +447,81 @@ Le type doit être une classe
         <target state="translated">DynamicData doit être valide</target>
         <note />
       </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenDescription">
+        <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
+        <target state="translated">Lors de l’appel de méthodes asynchrones qui ont des surcharges acceptant un paramètre CancellationToken, préférez utiliser la surcharge avec TestContext.CancellationToken pour activer l’annulation collaborative et respecter les délais d’expiration des tests.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
+        <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
+        <target state="translated">Envisagez d’utiliser la surcharge qui accepte un CancellationToken et passe « TestContext.CancellationToken »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FlowTestContextCancellationTokenTitle">
+        <source>Flow TestContext.CancellationToken to async operations</source>
+        <target state="translated">Transmettez TestContext.CancellationToken aux opérations asynchrones</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
+        <source>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</source>
+        <target state="translated">Les méthodes marquées par « [GlobalTestInitialize] » ou « [GlobalTestCleanup] » doivent respecter le schéma suivant pour être valides :
+- elle ne peut pas être déclarée dans une classe générique
+– elle doit être « public »
+– elle doit être « static »
+– elle ne doit pas être « async void »
+– il ne doit pas s’agir d’une méthode spéciale (finaliseur, opérateur...).
+– elle ne doit pas être générique
+– il doit prendre un paramètre de type « TestContext »
+- le type de retour doit être « void », « Task » ou « ValueTask »
+
+Le type déclarant ces méthodes doit également respecter les règles suivantes :
+- le type doit être une classe
+- la classe doit être « public » 
+- la classe ne doit pas être « static »
+- la classe doit être marquée par « [TestClass] » (ou un attribut dérivé)
+- la classe ne doit pas être générique.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
+        <source>Global test fixture method '{0}' signature is invalid</source>
+        <target state="translated">La signature de la méthode « {0} » de la fixture de test globale est invalide</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
+        <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
+        <target state="translated">Les méthodes GlobalTestInitialize et GlobalTestCleanup doivent avoir une structure valide</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueDescription">
+        <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
+        <target state="translated">Les méthodes telles que Contains, StartsWith et EndsWith retournent des valeurs booléennes qui indiquent si la condition a été remplie. Ignorer ces valeurs de retour est certainement une erreur.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
+        <source>The return value of '{0}' should not be ignored</source>
+        <target state="translated">La valeur de retour « {0} » ne doit pas être ignorée</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IgnoreStringMethodReturnValueTitle">
+        <source>Do not ignore the return value of string methods</source>
+        <target state="translated">Ne négligez pas la valeur de retour des méthodes de chaîne</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Utilisez « Assert.Fail » à la place d’une assertion « Assert.{0} » toujours en échec</target>
@@ -435,6 +530,21 @@ Le type doit être une classe
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
         <target state="translated">Utilisez « Assert.Fail » à la place d’une assertion toujours en échec</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
+        <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
+        <target state="translated">« DataTestMethodAttribute » est obsolète et ne fournit aucune fonctionnalité supplémentaire par rapport à « TestMethodAttribute ». Utiliser « TestMethodAttribute » pour toutes les méthodes de test, y compris les tests paramétrés.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat">
+        <source>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</source>
+        <target state="translated">« DataTestMethod » est obsolète. Utilisez « TestMethod » à la place.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerTitle">
+        <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
+        <target state="translated">Préférer « TestMethod » à « DataTestMethod »</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -517,6 +627,16 @@ Le type doit être une classe
         <target state="translated">Les types publics doivent être des classes de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
+        <target state="translated">Utilisez « Assert.{0} » au lieu de « StringAssert.{1} »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StringAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'StringAssert'</source>
+        <target state="translated">Utilisez « Assert » au lieu de « StringAssert »</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
         <target state="translated">La classe de test « {0} » doit être valide</target>
@@ -527,24 +647,44 @@ Le type doit être une classe
         <target state="translated">La propriété « TestContext » doit être valide</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
+        <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
+        <target state="translated">La classe dérivée de TestMethodAttribute « {0} » doit ajouter les paramètres CallerFilePath et CallerLineNumber à son constructeur</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
+        <source>TestMethodAttribute derived class should propagate source information</source>
+        <target state="translated">La classe dérivée de TestMethodAttribute doit propager les informations source</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
+        <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
+        <target state="translated">Utilisez la propriété DisplayName au lieu de passer un argument de type chaîne à TestMethodAttribute</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
+        <source>TestMethodAttribute should set DisplayName correctly</source>
+        <target state="translated">TestMethodAttribute doit définir correctement DisplayName</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">La signature « {0} » de la méthode de test n’est pas valide</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassDescription">
-        <source>Without using  'ClassCleanupBehavior.EndOfClass', the '[ClassCleanup]' will by default be run at the end of the assembly and not at the end of the class.</source>
-        <target state="translated">Sans utiliser 'ClassCleanupBehavior.EndOfClass', '[ClassCleanup]' sera exécuté par défaut à la fin de l’assemblée et non à la fin de la classe.</target>
+      <trans-unit id="UseCancellationTokenPropertyDescription">
+        <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
+        <target state="translated">TestContext.CancellationToken offre un moyen plus direct d’accéder au jeton d’annulation par rapport à TestContext.CancellationTokenSource.Token.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassMessageFormat">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">Utilisez 'ClassCleanupBehavior.EndOfClass' avec '[ClassCleanup]'</target>
+      <trans-unit id="UseCancellationTokenPropertyMessageFormat">
+        <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
+        <target state="translated">Utilisez « TestContext.CancellationToken » au lieu de « TestContext.CancellationTokenSource.Token »</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseClassCleanupBehaviorEndOfClassTitle">
-        <source>Use 'ClassCleanupBehavior.EndOfClass' with the '[ClassCleanup]'</source>
-        <target state="translated">Utilisez 'ClassCleanupBehavior.EndOfClass' avec '[ClassCleanup]'</target>
+      <trans-unit id="UseCancellationTokenPropertyTitle">
+        <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
+        <target state="translated">Utilisez TestContext.CancellationToken au lieu de TestContext.CancellationTokenSource.Token</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
@@ -720,13 +860,13 @@ Le type doit être une classe
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
-        <source>Type contaning '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
+        <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
         <target state="translated">Le type contenant « [TestMethod] » doit être marqué avec « [TestClass] », sans quoi la méthode de test sera ignorée silencieusement.</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
-        <source>Class '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="translated">La classe « {0} » contient des méthodes de test et doit être marquée avec « [TestClass] »</target>
+        <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
+        <target state="translated">Le type « {0} » contient des méthodes de test et doit être marquée avec « [TestClass] »</target>
         <note />
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
@@ -742,6 +882,11 @@ Le type doit être une classe
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Les méthodes de test asynchrones ne nécessitent pas le suffixe 'Async'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnusedParameterSuppressorJustification">
+        <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
+        <target state="translated">Le paramètre TestContext est requis par MSTest pour les méthodes AssemblyInitialize et ClassInitialize</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
@@ -764,6 +909,21 @@ Le type doit être une classe
         <target state="translated">Utiliser 'ConditionBaseAttribute' sur les classes de test</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
+        <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
+        <target state="translated">L’utilisation de '[Timeout]' sans définir explicitement 'CooperativeCancellation = true' est déconseillée. Dans une future version, l’annulation coopérative deviendra le comportement par défaut. Définissez 'CooperativeCancellation = true' pour adopter le comportement recommandé et éviter les changements incompatibles.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
+        <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
+        <target state="translated">Utilisez 'CooperativeCancellation = true' avec '[Timeout]' pour activer le comportement d’annulation coopératif</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
+        <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
+        <target state="translated">Utiliser 'CooperativeCancellation = true' avec '[Timeout]'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">« [DeploymentItem] » ne peut être spécifié que sur une classe de test ou une méthode de test</target>
@@ -772,16 +932,6 @@ Le type doit être une classe
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
         <target state="translated">« [DeploymentItem] » ne peut être spécifié que sur une classe de test ou une méthode de test</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsMessageFormat">
-        <source>Use 'Assert.ThrowsExactly' instead of 'Assert.ThrowsException'</source>
-        <target state="translated">Utiliser 'Assert.ThrowsExactly' à la place de 'Assert.ThrowsException'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseNewerAssertThrowsTitle">
-        <source>Use newer methods to assert exceptions</source>
-        <target state="translated">Utiliser des méthodes plus nouvelles pour déclarer des exceptions</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
@@ -817,6 +967,126 @@ Le type doit être une classe
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method</source>
         <target state="translated">Utilisez l’attribut de nouvelle tentative sur la méthode de test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageTitle">
+        <source>TestContext property cannot be accessed in this context</source>
+        <target state="translated">Impossible d’accéder à la propriété TestContext dans ce contexte</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageMessageFormat">
+        <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
+        <target state="translated">Impossible d’accéder à la propriété TestContext « {0} » dans la méthode « {1} »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextPropertyUsageDescription">
+        <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
+        <target state="translated">Certaines propriétés TestContext sont disponibles uniquement pendant l’exécution du test et ne sont pas accessibles dans les méthodes d’initialisation d’assembly, d’initialisation de classe, de nettoyage de classe ou de nettoyage d’assembly.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
+        <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
+        <target state="translated">Les méthodes Assert.Throws ne doivent contenir qu’une seule instruction ou expression. Plusieurs instructions peuvent prêter à confusion : si la première instruction lève une exception, les instructions suivantes ne sont jamais exécutées ; si elle ne lève pas d'exception, elle doit être déplacée en dehors de Assert.Throws.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="translated">Assert.Throws ne doit contenir qu’une seule instruction</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
+        <source>Assert.Throws should contain only a single statement/expression</source>
+        <target state="translated">Assert.Throws ne doit contenir qu’une seule instruction</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksTitle">
+        <source>Do not use asserts in catch blocks</source>
+        <target state="translated">N’utilisez pas d’assertions dans les blocs catch</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
+        <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
+        <target state="translated">N’utilisez pas d’assertions dans les blocs catch, car elles peuvent ne pas faire échouer le test si aucune exception n’est levée</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidAssertsInCatchBlocksDescription">
+        <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block.</source>
+        <target state="translated">L’utilisation d’assertions dans les blocs catch pose problème, car le test réussit même si aucune exception n’est levée et que le bloc catch n’est jamais exécuté. Utilisez « Assert.Throws », « Assert.ThrowsExactly », « Assert.ThrowsAsync » ou « Assert.ThrowsExactlyAsync » pour vérifier qu’une exception est levée, puis effectuez des assertions supplémentaires sur l’exception capturée sans utiliser le bloc try-catch.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
+        <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
+        <target state="translated">Un assembly doit comporter soit l’attribut « [Parallelize] », soit l’attribut « [DoNotParallelize] », mais pas les deux. Le fait de disposer des deux attributs crée une configuration ambiguë. Lorsque les deux sont présents, « [DoNotParallelize] » est prioritaire et la parallélisation est désactivée.</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherMessageFormat">
+        <source>Assembly has both '[Parallelize]' and '[DoNotParallelize]' attributes which creates ambiguity</source>
+        <target state="translated">L’assembly a à la fois des attributs « [Parallelize] » et « [DoNotParallelize] » qui créent une ambiguïté</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle">
+        <source>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</source>
+        <target state="translated">N’utilisez pas les attributs « [Parallelize] » et « [DoNotParallelize] »</target>
+        <note>{Locked="[Parallelize]"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Utilisez l’attribut « [OSCondition] » au lieu des appels à « RuntimeInformation.IsOSPlatform » avec un retour anticipé ou « Assert.Inconclusive »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
+        <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
+        <target state="translated">Utilisez l’attribut « [OSCondition] » au lieu des appels à « RuntimeInformation.IsOSPlatform » avec un retour anticipé ou « Assert.Inconclusive »</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
+        <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
+        <target state="translated">Les méthodes de test qui utilisent « RuntimeInformation.IsOSPlatform » avec un retour anticipé ou « Assert.Inconclusive » doivent utiliser l’attribut « [OSCondition] » à la place. Cet attribut offre une manière plus déclarative et facile à identifier pour spécifier les exigences de test propres à un système d’exploitation.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeTitle">
+        <source>Avoid duplicate test method attributes</source>
+        <target state="translated">Éviter les attributs de méthode de test en double</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
+        <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
+        <target state="translated">La méthode de test « {0} » possède plusieurs attributs héritant de « TestMethodAttribute ». Un seul attribut de méthode de test doit être utilisé.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DuplicateTestMethodAttributeDescription">
+        <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
+        <target state="translated">Une méthode de test doit être marquée par un seul attribut qui est ou hérite de « TestMethodAttribute ». Lorsque plusieurs attributs de ce type sont présents, seul le premier retourné par la réflexion sera utilisé.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersTitle">
+        <source>Avoid using 'out' or 'ref' parameters in test methods</source>
+        <target state="translated">Évitez d’utiliser des paramètres « out » ou « ref » dans les méthodes de test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
+        <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
+        <target state="translated">La méthode de test « {0} » utilise des paramètres « out » ou « ref » dont le support sera supprimé dans une future version majeure</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidOutRefTestMethodParametersDescription">
+        <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
+        <target state="translated">Les paramètres « out » et « ref » n’ajoutent aucune valeur dans les méthodes de test et peuvent être remplacés en toute sécurité par des paramètres normaux.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidTitle">
+        <source>Test classes should have valid constructors</source>
+        <target state="translated">Les classes de test doivent avoir des constructeurs valides</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
+        <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
+        <target state="translated">La classe de test « {0} » ne dispose pas d’un constructeur valide. Les constructeurs valides sont « publics » et sans paramètre ou avec un paramètre de type « TestContext ».</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassConstructorShouldBeValidDescription">
+        <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
+        <target state="translated">Les classes de test doivent posséder un constructeur public, soit sans paramètre, soit acceptant un seul paramètre de type TestContext. Cela permet au framework de test d’instancier correctement la classe de test.</target>
         <note />
       </trans-unit>
     </body>

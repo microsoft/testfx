@@ -13,17 +13,13 @@ public class AssemblyResolverTests : AcceptanceTestBase<AssemblyResolverTests.Te
     private const string AssetName = "AssemblyResolverCrash";
 
     [TestMethod]
+    // This test is for .NET Framework only.
+    [OSCondition(OperatingSystems.Windows)]
     public async Task RunningTests_DoesNotHitResourceRecursionIssueAndDoesNotCrashTheRunner()
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            // This test is for .NET Framework only.
-            return;
-        }
-
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0]);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
@@ -101,4 +97,6 @@ namespace RecursiveResourceLookupCrash
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

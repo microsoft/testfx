@@ -7,16 +7,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Description of the test.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class DescriptionAttribute : Attribute
+public sealed class DescriptionAttribute : TestPropertyAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DescriptionAttribute"/> class to describe a test.
     /// </summary>
     /// <param name="description">The description.</param>
-    public DescriptionAttribute(string? description) => Description = description;
+    public DescriptionAttribute(string? description)
+        : base("Description", description ?? string.Empty)
+    {
+    }
 
     /// <summary>
     /// Gets the description of a test.
     /// </summary>
-    public string? Description { get; }
+    public string? Description => Value;
 }

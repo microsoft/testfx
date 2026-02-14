@@ -1,5 +1,0 @@
-#nullable enable
-MSTest.Internal.Analyzers.MSTestObsoleteTypesSuppressor
-MSTest.Internal.Analyzers.MSTestObsoleteTypesSuppressor.MSTestObsoleteTypesSuppressor() -> void
-override MSTest.Internal.Analyzers.MSTestObsoleteTypesSuppressor.ReportSuppressions(Microsoft.CodeAnalysis.Diagnostics.SuppressionAnalysisContext context) -> void
-override MSTest.Internal.Analyzers.MSTestObsoleteTypesSuppressor.SupportedSuppressions.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.SuppressionDescriptor!>

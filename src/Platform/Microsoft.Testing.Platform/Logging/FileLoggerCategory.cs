@@ -14,5 +14,5 @@ internal sealed class FileLoggerCategory(FileLogger fileLogger, string category)
         => _fileLogger.Log(logLevel, state, exception, formatter, _category);
 
     public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => await _fileLogger.LogAsync(logLevel, state, exception, formatter, _category);
+        => await _fileLogger.LogAsync(logLevel, state, exception, formatter, _category).ConfigureAwait(false);
 }

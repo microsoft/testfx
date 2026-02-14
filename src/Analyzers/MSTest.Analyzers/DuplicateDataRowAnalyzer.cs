@@ -126,6 +126,22 @@ public sealed class DuplicateDataRowAnalyzer : DiagnosticAnalyzer
                 return TypedConstantArrayComparer.Instance.Equals(typedConstant1.Values, typedConstant2.Values);
             }
 
+            if (typedConstant1.Kind == TypedConstantKind.Primitive)
+            {
+                // object.Equals(float.NegativeZero, 0.0f) will return true.
+                // But we don't want to consider it as "equal" as the test case can yield different results.
+                // Behavior difference between zero and negative zero can be observed via BitConverter or ToString.
+                if (typedConstant1.Value is float float1 && typedConstant2.Value is float float2)
+                {
+                    // BitConverter.SingleToInt32Bits isn't available on netstandard2.0, so we use BitConverter.GetBytes instead.
+                    return BitConverter.GetBytes(float1).SequenceEqual(BitConverter.GetBytes(float2));
+                }
+                else if (typedConstant1.Value is double double1 && typedConstant2.Value is double double2)
+                {
+                    return BitConverter.DoubleToInt64Bits(double1) == BitConverter.DoubleToInt64Bits(double2);
+                }
+            }
+
             // At this point, the type is matching and the kind is matching and is not array.
             return object.Equals(typedConstant1.Value, typedConstant2.Value);
         }

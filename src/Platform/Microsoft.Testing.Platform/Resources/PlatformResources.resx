@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BrowserPlatformNotSupportedOnOlderFrameworks" xml:space="preserve">
+    <value>Browser platform is only supported on .NET 7.0 or greater.</value>
+  </data>
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>
@@ -136,7 +139,7 @@
     <value>Extension of type '{0}' is not implementing the required '{1}' interface</value>
   </data>
   <data name="ExtensionWithSameUidAlreadyRegisteredErrorMessage" xml:space="preserve">
-    <value>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</value>
+    <value>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</value>
   </data>
   <data name="JsonConfigurationFileParserDuplicateKeyErrorMessage" xml:space="preserve">
     <value>A duplicate key '{0}' was found</value>
@@ -316,11 +319,11 @@
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{1}'</value>
   </data>
+  <data name="CommandLineOptionObsoleteWarning" xml:space="preserve">
+    <value>Warning: Option '--{0}' is obsolete. {1}</value>
+  </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
-  </data>
-  <data name="CommandLineParserUnexpectedNullArgument" xml:space="preserve">
-    <value>Unexpected null argument at index {0}</value>
   </data>
   <data name="CommandLineParserUnexpectedSingleQuoteInArgument" xml:space="preserve">
     <value>Unexpected single quote in argument: {0}</value>
@@ -444,12 +447,6 @@ The default is TestResults in the directory that contains the test application.<
   <data name="JsonRpcTcpServerToSingleClientDescription" xml:space="preserve">
     <value>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</value>
   </data>
-  <data name="StartingServer" xml:space="preserve">
-    <value>Starting server. Listening on port '{0}'</value>
-  </data>
-  <data name="UnknownCommunicationProtocolErrorMessage" xml:space="preserve">
-    <value>The communication protocol '{0}' is not supported</value>
-  </data>
   <data name="TelemetryNotice" xml:space="preserve">
     <value>Telemetry
 ---------
@@ -492,6 +489,9 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="PlatformCommandLineExitOnProcessExitInvalidDependentProcess" xml:space="preserve">
     <value>Invalid PID '{0}'
 {1}</value>
+  </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser" xml:space="preserve">
+    <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
   </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
@@ -556,12 +556,18 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="Total" xml:space="preserve">
     <value>Total</value>
   </data>
+  <data name="TotalLowercase" xml:space="preserve">
+    <value>total</value>
+  </data>
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
   </data>
   <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
     <value>Console is already in batching mode.</value>
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="DurationLowercase" xml:space="preserve">
+    <value>duration</value>
   </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>
@@ -712,5 +718,32 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="AbortForMaxFailedTestsCapabilityNotAvailable" xml:space="preserve">
     <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
+  </data>
+  <data name="PlatformCommandLineFilterUidOptionDescription" xml:space="preserve">
+    <value>Provides a list of test node UIDs to filter by.</value>
+  </data>
+  <data name="OnlyOneFilterSupported" xml:space="preserve">
+    <value>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</value>
+  </data>
+  <data name="PlatformCommandLineDebugAttachOptionDescription" xml:space="preserve">
+    <value>Allows to pause execution in order to attach to the process for debug purposes.</value>
+  </data>
+  <data name="SucceededLowercase" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
+  <data name="ChatClientProviderAlreadyRegistered" xml:space="preserve">
+    <value>A chat client provider has already been registered.</value>
+  </data>
+  <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
+    <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+  </data>
+  <data name="TestHostControllerProcessRestartNotSupportedOnWebAssembly" xml:space="preserve">
+    <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
+  </data>
+  <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Synchronous flush is not supported in browser environments.</value>
+  </data>
+  <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
+    <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
   </data>
 </root>

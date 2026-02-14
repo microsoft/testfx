@@ -8,8 +8,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Attribute to define in-line data for a test method.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfoldingCapability, ITestDataSourceIgnoreCapability
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnoreCapability
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -42,11 +42,6 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     public DataRowAttribute(params object?[]? data) => Data = data ?? [null];
 
     /// <summary>
-    /// Gets the test id generation strategy.
-    /// </summary>
-    protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
-
-    /// <summary>
     /// Gets data for calling test method.
     /// </summary>
     public object?[] Data { get; }
@@ -62,14 +57,11 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceUnfol
     public string? IgnoreMessage { get; set; }
 
     /// <inheritdoc />
-    public TestDataSourceUnfoldingStrategy UnfoldingStrategy { get; set; } = TestDataSourceUnfoldingStrategy.Auto;
-
-    /// <inheritdoc />
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => [Data];
 
     /// <inheritdoc />
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
-            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data, TestIdGenerationStrategy);
+            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
 }

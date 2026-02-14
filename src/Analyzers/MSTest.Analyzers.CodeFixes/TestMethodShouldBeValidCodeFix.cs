@@ -93,20 +93,26 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         SyntaxToken publicModifier = newMethodDeclaration.Modifiers.FirstOrDefault(m => m.IsKind(SyntaxKind.PublicKeyword));
         if (publicModifier == default)
         {
-            newMethodDeclaration = newMethodDeclaration.WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+            IEnumerable<SyntaxToken> modifiersWithoutAccessModifiers = newMethodDeclaration.Modifiers.Where(m =>
+                !m.IsKind(SyntaxKind.PrivateKeyword) &&
+                !m.IsKind(SyntaxKind.ProtectedKeyword) &&
+                !m.IsKind(SyntaxKind.InternalKeyword));
+
+            newMethodDeclaration = newMethodDeclaration.WithModifiers(
+                new SyntaxTokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .AddRange(modifiersWithoutAccessModifiers));
         }
 
         // Ensure the method returns void or Task/ValueTask.
         SemanticModel semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        Compilation compilation = semanticModel.Compilation;
         var wellKnownTypeProvider = WellKnownTypeProvider.GetOrCreate(semanticModel.Compilation);
         INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
         INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
 
         if (newMethodDeclaration.ReturnType != null &&
             !newMethodDeclaration.ReturnType.IsVoid() &&
-            (taskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
-            (valueTaskSymbol == null || !semanticModel.ClassifyConversion(newMethodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
+            (taskSymbol == null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
+            (valueTaskSymbol == null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
         {
             // Change return type to void and remove return statements
             newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
@@ -123,8 +129,8 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         bool asyncModifier = newMethodDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.AsyncKeyword));
         if (asyncModifier && newMethodDeclaration.ReturnType != null && newMethodDeclaration.ReturnType.IsVoid())
         {
-            // Change the return type to Task
-            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.ParseTypeName("Task "));
+            // Change the return type to Task. We have a space after Task to ensure we have a trailing trivia (space) after Task.
+            newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.IdentifierName("Task"));
         }
 
         // Apply changes.

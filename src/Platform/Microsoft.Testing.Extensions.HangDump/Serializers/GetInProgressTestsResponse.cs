@@ -18,7 +18,7 @@ internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INa
     public object Deserialize(Stream stream)
     {
         int readCount = ReadInt(stream);
-        List<(string, int)> tests = new(readCount);
+        List<(string, int)> tests = [with(readCount)];
         for (int i = 0; i < readCount; i++)
         {
             string testName = ReadString(stream);
@@ -26,7 +26,7 @@ internal sealed class GetInProgressTestsResponseSerializer : BaseSerializer, INa
             tests.Add((testName, unixTimeSeconds));
         }
 
-        return new GetInProgressTestsResponse(tests.ToArray());
+        return new GetInProgressTestsResponse([.. tests]);
     }
 
     public void Serialize(object objectToSerialize, Stream stream)

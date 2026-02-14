@@ -3,7 +3,7 @@
 
 using System.Collections.Immutable;
 
-using FluentAssertions;
+using AwesomeAssertions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -30,8 +30,7 @@ internal sealed class GeneratorTester
     public static GeneratorTester TestGraph { get; } =
         new(
             () => new TestNodesGenerator(),
-            new[]
-            {
+            [
                 // Microsoft.Testing.Platform dll
                 Assembly.GetAssembly(typeof(IProperty))!.Location,
 
@@ -45,28 +44,30 @@ internal sealed class GeneratorTester
                 Assembly.GetAssembly(typeof(TrxExceptionProperty))!.Location,
 
                 // MSTest.TestFramework  dll
-                Assembly.GetAssembly(typeof(TestClassAttribute))!.Location,
-            });
+                Assembly.GetAssembly(typeof(TestClassAttribute))!.Location
+            ]);
 
-    public static ImmutableArray<MetadataReference>? Net60MetadataReferences { get; set; }
+    public static ImmutableArray<MetadataReference>? Net80MetadataReferences { get; set; }
 
     public async Task<GeneratorCompilationResult> CompileAndExecuteAsync(string source, CancellationToken cancellationToken)
-        => await CompileAndExecuteAsync(new[] { source }, cancellationToken);
+        => await CompileAndExecuteAsync([source], cancellationToken);
 
     public async Task<GeneratorCompilationResult> CompileAndExecuteAsync(string[] sources, CancellationToken cancellationToken)
     {
         // Cache the resolution in local and try to fire the finalizers
         // In CI sometime we have a crash for http connection and the suspect is
         // this call below that connects to nuget.org
-        if (Net60MetadataReferences is null)
+        if (Net80MetadataReferences is null)
         {
             await Lock.WaitAsync(cancellationToken);
             try
             {
-                if (Net60MetadataReferences is null)
+                if (Net80MetadataReferences is null)
                 {
-                    Net60MetadataReferences =
-                        await ReferenceAssemblies.Net.Net60.ResolveAsync(LanguageNames.CSharp, cancellationToken);
+                    string nuGetConfigFilePath = Path.Combine(RootFinder.Find(), "NuGet.config");
+
+                    Net80MetadataReferences =
+                        await ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfigFilePath).ResolveAsync(LanguageNames.CSharp, cancellationToken);
 
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
@@ -79,10 +80,7 @@ internal sealed class GeneratorTester
             }
         }
 
-        MetadataReference[] metadataReferences =
-            Net60MetadataReferences.Value
-            .Concat(_additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc)))
-            .ToArray();
+        MetadataReference[] metadataReferences = [.. Net80MetadataReferences.Value, .. _additionalReferences.Select(loc => MetadataReference.CreateFromFile(loc))];
 
         var compilation = CSharpCompilation.Create(
             "TestAssembly",
@@ -92,7 +90,7 @@ internal sealed class GeneratorTester
 
         ISourceGenerator generator = _incrementalGeneratorFactory().AsSourceGenerator();
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
-           generators: new ISourceGenerator[] { generator });
+           generators: [generator]);
 
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation? outputCompilation,
             out ImmutableArray<Diagnostic> diagnostics, cancellationToken);

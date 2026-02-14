@@ -28,7 +28,7 @@ public class DebuggerUtility
             using var process = Process.GetProcessById(pid.Value);
             Trace($"Starting with pid '{pid}({process.ProcessName})', and vsPid '{vsPid}'", enabled: enableLog);
             Trace($"Using pid: {pid} to get parent VS.", enabled: enableLog);
-            Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
+            using Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
 
             if (vs != null)
             {
@@ -38,7 +38,7 @@ public class DebuggerUtility
             }
 
             Trace("Parent VS not found, finding the first VS that started.", enabled: enableLog);
-            Process? firstVsProcess = GetFirstVsProcess();
+            using Process? firstVsProcess = GetFirstVsProcess();
 
             if (firstVsProcess != null)
             {
@@ -149,7 +149,6 @@ public class DebuggerUtility
 
                 if (dn.StartsWith("!VisualStudio.DTE.", StringComparison.Ordinal) && dn.EndsWith(dteSuffix, StringComparison.Ordinal))
                 {
-                    object dbg, lps;
                     runningObjectTable.GetObject(moniker[0], out object dte);
 
                     // The COM object can be busy, we retry few times, hoping that it won't be busy next time.
@@ -157,8 +156,8 @@ public class DebuggerUtility
                     {
                         try
                         {
-                            dbg = dte.GetType().InvokeMember("Debugger", BindingFlags.GetProperty, null, dte, null, CultureInfo.InvariantCulture)!;
-                            lps = dbg.GetType().InvokeMember("LocalProcesses", BindingFlags.GetProperty, null, dbg, null, CultureInfo.InvariantCulture)!;
+                            object dbg = dte.GetType().InvokeMember("Debugger", BindingFlags.GetProperty, null, dte, null, CultureInfo.InvariantCulture)!;
+                            object lps = dbg.GetType().InvokeMember("LocalProcesses", BindingFlags.GetProperty, null, dbg, null, CultureInfo.InvariantCulture)!;
                             var lpn = (System.Collections.IEnumerator)lps.GetType().InvokeMember("GetEnumerator", BindingFlags.InvokeMethod, null, lps, null, CultureInfo.InvariantCulture)!;
 
                             while (lpn.MoveNext())

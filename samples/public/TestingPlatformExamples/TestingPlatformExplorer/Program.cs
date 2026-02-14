@@ -23,9 +23,9 @@ testApplicationBuilder.AddTestingFramework(() => new[] { Assembly.GetExecutingAs
 testApplicationBuilder.CommandLine.AddProvider(() => new TestingFrameworkCommandLineOptions());
 
 // In-process extensions
-testApplicationBuilder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider
+testApplicationBuilder.TestHost.AddTestHostApplicationLifetime(serviceProvider
     => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
-testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
+testApplicationBuilder.TestHost.AddTestSessionLifetimeHandler(serviceProvider
     => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
 testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
     => new DisplayDataConsumer(serviceProvider.GetOutputDevice()));
@@ -38,7 +38,7 @@ testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProv
 
 // In-process composite extension SessionLifeTimeHandler+DataConsumer
 CompositeExtensionFactory<DisplayCompositeExtensionFactorySample> compositeExtensionFactory = new(serviceProvider => new DisplayCompositeExtensionFactorySample(serviceProvider.GetOutputDevice()));
-testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+testApplicationBuilder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
 testApplicationBuilder.TestHost.AddDataConsumer(compositeExtensionFactory);
 
 // Register public extensions

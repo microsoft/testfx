@@ -3,15 +3,16 @@
 
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly IServiceProvider _serviceProvider;
@@ -46,14 +47,14 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(MSBuildConstants.MSBuildNodeOptionKey));
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         // We get the pipe from the MSBuildTestApplicationLifecycleCallbacks only if we're enabled.
         _msBuildTestApplicationLifecycleCallbacks = _serviceProvider.GetRequiredService<MSBuildTestApplicationLifecycleCallbacks>();
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         _sessionEnded = true;
         return Task.CompletedTask;
@@ -61,10 +62,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Avoid processing messages if the session has ended.
         if (_sessionEnded)
@@ -94,7 +92,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             actual: null,
                             testFileLocationProperty?.FilePath,
                             testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken);
+                            cancellationToken).ConfigureAwait(false);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
@@ -108,7 +106,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             actual: failedState.Exception?.Data["assert.actual"] as string,
                             testFileLocationProperty?.FilePath,
                             testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken);
+                            cancellationToken).ConfigureAwait(false);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
@@ -122,10 +120,12 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             actual: null,
                             testFileLocationProperty?.FilePath,
                             testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken);
+                            cancellationToken).ConfigureAwait(false);
                         break;
 
+#pragma warning disable CS0618 // Type or member is obsolete
                     case CancelledTestNodeStateProperty canceledState:
+#pragma warning restore CS0618 // Type or member is obsolete
                         await HandleFailuresAsync(
                             testNodeStateChanged.TestNode.DisplayName,
                             isCanceled: true,
@@ -136,7 +136,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                             actual: null,
                             testFileLocationProperty?.FilePath,
                             testFileLocationProperty?.LineSpan.Start.Line ?? 0,
-                            cancellationToken);
+                            cancellationToken).ConfigureAwait(false);
                         break;
 
                     case PassedTestNodeStateProperty:
@@ -153,7 +153,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                 break;
 
             case TestRequestExecutionTimeInfo testRequestExecutionTimeInfo:
-                await HandleSummaryAsync(testRequestExecutionTimeInfo, cancellationToken);
+                await HandleSummaryAsync(testRequestExecutionTimeInfo, cancellationToken).ConfigureAwait(false);
 
                 break;
         }
@@ -166,7 +166,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
         var failedTestInfoRequest = new FailedTestInfoRequest(testDisplayName, isCanceled, duration, errorMessage, errorStackTrace, expected, actual, codeFilePath, lineNumber);
-        await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<FailedTestInfoRequest, VoidResponse>(failedTestInfoRequest, cancellationToken);
+        await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<FailedTestInfoRequest, VoidResponse>(failedTestInfoRequest, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task HandleSummaryAsync(TestRequestExecutionTimeInfo timeInfo, CancellationToken cancellationToken)
@@ -176,7 +176,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
         var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration);
-        await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<RunSummaryInfoRequest, VoidResponse>(runSummaryInfoRequest, cancellationToken);
+        await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<RunSummaryInfoRequest, VoidResponse>(runSummaryInfoRequest, cancellationToken).ConfigureAwait(false);
     }
 
     private static string? ToHumanReadableDuration(double? durationInMs)

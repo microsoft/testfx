@@ -1,22 +1,27 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET
-using System.Buffers;
-#endif
 using System.IO.Pipes;
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-
-#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
-#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
+[Embedded]
+[UnsupportedOSPlatform("browser")]
 internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
+    private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
+#if NET
+        | PipeOptions.CurrentUserOnly
+#endif
+        ;
+
+    private static bool IsUnix => Path.DirectorySeparatorChar == '/';
+
     private readonly Func<IRequest, Task<IResponse>> _callback;
     private readonly IEnvironment _environment;
     private readonly NamedPipeServerStream _namedPipeServerStream;
@@ -26,6 +31,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     private readonly MemoryStream _serializationBuffer = new();
     private readonly MemoryStream _messageBuffer = new();
     private readonly byte[] _readBuffer = new byte[250000];
+#if NET
+    private readonly byte[] _sizeOfIntArray = new byte[sizeof(int)];
+#endif
     private Task? _loopTask;
     private bool _disposed;
 
@@ -36,7 +44,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         ILogger logger,
         ITask task,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
+        : this(GetPipeName(name, environment), callback, environment, logger, task, cancellationToken)
     {
     }
 
@@ -60,10 +68,8 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
     {
-        Guard.NotNull(pipeNameDescription);
-#pragma warning disable CA1416 // Validate platform compatibility
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-#pragma warning restore CA1416
+        Ensure.NotNull(pipeNameDescription);
+        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -77,18 +83,23 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
-        await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}");
-#pragma warning disable CA1416 // Validate platform compatibility
-        await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken);
-#pragma warning restore CA1416
+        // NOTE: _cancellationToken field is usually the "test session" cancellation token.
+        // And cancellationToken parameter may have hang mitigating timeout.
+        // The parameter should only be used for the call of WaitForConnectionAsync and Task.Run call.
+        // NOTE: The cancellation token passed to Task.Run will only have effect before the task is started by runtime.
+        // Once it starts, it won't be considered.
+        // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
+        // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
+        await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
+        await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
         WasConnected = true;
-        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}");
+        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
         _loopTask = _task.Run(
             async () =>
         {
             try
             {
-                await InternalLoopAsync(_cancellationToken);
+                await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
             {
@@ -96,7 +107,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (Exception ex)
             {
-                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex);
+                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
                 _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
             }
         }, cancellationToken);
@@ -116,11 +127,9 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             int currentReadIndex = 0;
 #if NET
-#pragma warning disable CA1416 // Validate platform compatibility
-            int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken);
-#pragma warning restore CA1416
+            int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
 #else
-            int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken);
+            int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken).ConfigureAwait(false);
 #endif
             if (currentReadBytes == 0)
             {
@@ -135,6 +144,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             if (currentMessageSize == 0)
             {
                 // We need to read the message size, first 4 bytes
+                if (currentReadBytes < sizeof(int))
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
                 missingBytesToReadOfCurrentChunk = currentReadBytes - sizeof(int);
                 missingBytesToReadOfWholeMessage = currentMessageSize;
@@ -145,11 +159,16 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             {
                 // We need to read the rest of the message
 #if NET
-                await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken);
+                await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken).ConfigureAwait(false);
 #else
-                await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken);
+                await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken).ConfigureAwait(false);
 #endif
                 missingBytesToReadOfWholeMessage -= missingBytesToReadOfCurrentChunk;
+            }
+
+            if (missingBytesToReadOfWholeMessage < 0)
+            {
+                throw ApplicationStateGuard.Unreachable();
             }
 
             // If we have read all the message, we can deserialize it
@@ -169,7 +188,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 var deserializedObject = (IRequest)requestNamedPipeSerializer.Deserialize(_messageBuffer);
 
                 // Call the callback
-                IResponse response = await _callback(deserializedObject);
+                IResponse response = await _callback(deserializedObject).ConfigureAwait(false);
 
                 // Write the message size
                 _messageBuffer.Position = 0;
@@ -189,58 +208,40 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
                 // Write the message size
 #if NET
-                byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
-                try
-                {
-                    ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
-
-                    await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(bytes);
-                }
+                byte[] bytes = _sizeOfIntArray;
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
+                await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
 #else
-                await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken);
+                await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
 #endif
 
                 // Write the serializer id
 #if NET
-                bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
-                try
-                {
-                    ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                bytes = _sizeOfIntArray;
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
-                    await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(bytes);
-                }
+                await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
 #else
-                await _messageBuffer.WriteAsync(BitConverter.GetBytes(responseNamedPipeSerializer.Id), 0, sizeof(int), cancellationToken);
+                await _messageBuffer.WriteAsync(BitConverter.GetBytes(responseNamedPipeSerializer.Id), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
 #endif
 
                 // Write the message
 #if NET
-                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken);
+                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken).ConfigureAwait(false);
 #else
-                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken);
+                await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
 
                 // Send the message
                 try
                 {
 #if NET
-#pragma warning disable CA1416 // Validate platform compatibility
-                    await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken);
-#pragma warning restore CA1416
+                    await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
 #else
-                    await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken);
+                    await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
-#pragma warning disable CA1416 // Validate platform compatibility
-                    await _namedPipeServerStream.FlushAsync(cancellationToken);
-#pragma warning restore CA1416
+                    await _namedPipeServerStream.FlushAsync(cancellationToken).ConfigureAwait(false);
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         _namedPipeServerStream.WaitForPipeDrain();
@@ -260,27 +261,29 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
     }
 
+    // For compatibility only.
+    // Old versions of MTP used to have this overload without IEnvironment.
+    // Extensions (e.g, TRX) calls into this overload.
+    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
+    // Without it, MissingMethodException will be thrown at runtime.
     public static PipeNameDescription GetPipeName(string name)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (!IsUnix)
         {
-            return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}", false);
+            return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}");
         }
 
-        string directoryId = Path.Combine(Path.GetTempPath(), name);
-        Directory.CreateDirectory(directoryId);
-        return new PipeNameDescription(
-            !Directory.Exists(directoryId)
-                ? throw new DirectoryNotFoundException(string.Format(
-                    CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                    $"Directory: {directoryId} doesn't exist.",
-#else
-                    PlatformResources.CouldNotFindDirectoryErrorMessage,
-#endif
-                    directoryId))
-                : Path.Combine(directoryId, ".p"), true);
+        // Similar to https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42
+        return new PipeNameDescription(Path.Combine("/tmp", name));
     }
+
+    // For compatibility only.
+    // Old versions of MTP used to have this overload without IEnvironment.
+    // Extensions (e.g, TRX) calls into this overload.
+    // If core MTP is updated, but old version of TRX is still used, it will try to call this overload at runtime.
+    // Without it, MissingMethodException will be thrown at runtime.
+    public static PipeNameDescription GetPipeName(string name, IEnvironment _)
+        => GetPipeName(name);
 
     public void Dispose()
     {
@@ -295,22 +298,17 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // This is unexpected and we throw an exception.
             ApplicationStateGuard.Ensure(_loopTask is not null);
 
-            // To close gracefully we need to ensure that the client closed the stream line 103.
+            // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                    "'{0}' didn't exit as expected",
-#else
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-#endif
                     nameof(InternalLoopAsync)));
             }
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }
@@ -331,8 +329,8 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
             try
             {
-                // To close gracefully we need to ensure that the client closed the stream line 103.
-                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken);
+                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
+                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
@@ -341,7 +339,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         }
 
         _namedPipeServerStream.Dispose();
-        PipeName.Dispose();
 
         _disposed = true;
     }

@@ -52,20 +52,6 @@ public interface ITestMethod
     /// Result of test method invocation.
     /// </returns>
     /// <remarks>
-    /// This call handles asynchronous test methods in a blocking way.
-    /// </remarks>
-    TestResult Invoke(object[]? arguments);
-
-    /// <summary>
-    /// Invokes the test method.
-    /// </summary>
-    /// <param name="arguments">
-    /// Arguments to pass to test method. (E.g. For data driven).
-    /// </param>
-    /// <returns>
-    /// Result of test method invocation.
-    /// </returns>
-    /// <remarks>
     /// This call handles asynchronous test methods as well.
     /// </remarks>
     Task<TestResult> InvokeAsync(object[]? arguments);
@@ -73,24 +59,18 @@ public interface ITestMethod
     /// <summary>
     /// Get all attributes of the test method.
     /// </summary>
-    /// <param name="inherit">
-    /// Whether attribute defined in parent class is valid.
-    /// </param>
     /// <returns>
     /// All attributes.
     /// </returns>
-    Attribute[]? GetAllAttributes(bool inherit);
+    Attribute[]? GetAllAttributes();
 
     /// <summary>
     /// Get attribute of specific type.
     /// </summary>
     /// <typeparam name="TAttributeType"> System.Attribute type. </typeparam>
-    /// <param name="inherit">
-    /// Whether attribute defined in parent class is valid.
-    /// </param>
     /// <returns>
     /// The attributes of the specified type.
     /// </returns>
-    TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
+    TAttributeType[] GetAttributes<TAttributeType>()
         where TAttributeType : Attribute;
 }

@@ -64,7 +64,7 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
         await _service.ConsumeAsync(producer, testNode, CancellationToken.None).ConfigureAwait(false);
 
         List<Artifact> actual = _service.Artifacts;
-        Assert.AreEqual(0, actual.Count);
+        Assert.IsEmpty(actual);
     }
 
     [TestMethod]

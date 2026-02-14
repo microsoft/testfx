@@ -3,8 +3,6 @@
   <PropertyGroup>
     <!-- C# Source generators have to target netstandard -->
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <!-- Generates a package at build -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!-- Do not include the generator as a lib dependency -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>NU5128</NoWarn>
@@ -33,8 +31,6 @@ This package provides the C# source generators for MSTest test framework.]]>
 
   <ItemGroup>
     <AdditionalFiles Include="BannedSymbols.txt" />
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,7 +39,7 @@ This package provides the C# source generators for MSTest test framework.]]>
 
   <ItemGroup>
     <!-- Roslyn C# - so that we can implement the code generator -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" />
     <!-- Analyzers to help write analyzers/generators -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
   </ItemGroup>

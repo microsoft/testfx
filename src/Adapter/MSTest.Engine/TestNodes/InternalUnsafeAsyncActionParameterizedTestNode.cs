@@ -22,7 +22,7 @@ public sealed class InternalUnsafeAsyncActionParameterizedTestNode<TData>
     {
         foreach (TData item in GetArguments())
         {
-            await safeInvoke(async () => await Body(testExecutionContext, item));
+            await safeInvoke(async () => await Body(testExecutionContext, item).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 

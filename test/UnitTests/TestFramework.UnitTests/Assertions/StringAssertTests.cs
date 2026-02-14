@@ -1,46 +1,52 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 
 public class StringAssertTests : TestContainer
 {
-    public void ThatShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.That is not null);
+    public void InstanceShouldReturnAnInstanceOfStringAssert() => StringAssert.That.Should().NotBeNull();
 
-    public void ThatShouldCacheStringAssertInstance() => Verify(StringAssert.That == StringAssert.That);
+    public void InstanceShouldCacheStringAssertInstance() => StringAssert.That.Should().BeSameAs(StringAssert.That);
 
     public void StringAssertContains()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        Exception ex = VerifyThrows(() => StringAssert.Contains(actual, notInString));
-        Verify(ex.Message.Contains("StringAssert.Contains failed"));
+        Action action = () => StringAssert.Contains(actual, notInString);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("StringAssert.Contains failed");
     }
 
     public void StringAssertStartsWith()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        Exception ex = VerifyThrows(() => StringAssert.StartsWith(actual, notInString));
-        Verify(ex.Message.Contains("StringAssert.StartsWith failed"));
+        Action action = () => StringAssert.StartsWith(actual, notInString);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("StringAssert.StartsWith failed");
     }
 
     public void StringAssertEndsWith()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        Exception ex = VerifyThrows(() => StringAssert.EndsWith(actual, notInString));
-        Verify(ex.Message.Contains("StringAssert.EndsWith failed"));
+        Action action = () => StringAssert.EndsWith(actual, notInString);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("StringAssert.EndsWith failed");
     }
 
     public void StringAssertDoesNotMatch()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         Regex doesMatch = new("quick brown fox");
-        Exception ex = VerifyThrows(() => StringAssert.DoesNotMatch(actual, doesMatch));
-        Verify(ex.Message.Contains("StringAssert.DoesNotMatch failed"));
+        Action action = () => StringAssert.DoesNotMatch(actual, doesMatch);
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("StringAssert.DoesNotMatch failed");
     }
 
     public void StringAssertContainsIgnoreCase_DoesNotThrow()
@@ -67,23 +73,17 @@ public class StringAssertTests : TestContainer
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatException()
     {
-        Exception ex = VerifyThrows(() => StringAssert.Contains(":-{", "x"));
-        Verify(ex.Message.Contains("StringAssert.Contains failed"));
+        Action action = () => StringAssert.Contains(":-{", "x");
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("StringAssert.Contains failed");
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatExceptionWithArguments()
     {
-        Exception ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message {0}", "arg"));
-        Verify(ex.Message.Contains("StringAssert.Contains failed"));
-    }
-
-    // See https://github.com/dotnet/sdk/issues/25373
-    [SuppressMessage("Usage", "CA2241:Provide correct arguments to formatting methods", Justification = "We want to test invalid format")]
-    public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
-    {
-        Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
-        Verify(ex is FormatException);
+        Action action = () => StringAssert.Contains("{", "x", "message");
+        action.Should().Throw<Exception>()
+            .And.Message.Should().Contain("StringAssert.Contains failed");
     }
 
     public void StringAssertContainsNullabilitiesPostConditions()
@@ -117,25 +117,7 @@ public class StringAssertTests : TestContainer
     {
         string? value = GetValue();
         string? substring = GetMatchingStartsWithString();
-        StringAssert.Contains(value, substring, "message", StringComparison.OrdinalIgnoreCase);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertContainsMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.Contains(value, substring, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertContainsMessageStringComparisonParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.Contains(value, substring, "message format {0} {1}", StringComparison.OrdinalIgnoreCase, 1, 2);
+        StringAssert.Contains(value, substring, StringComparison.OrdinalIgnoreCase, "message");
         value.ToString(); // no warning
         substring.ToString(); // no warning
     }
@@ -171,25 +153,7 @@ public class StringAssertTests : TestContainer
     {
         string? value = GetValue();
         string? substring = GetMatchingStartsWithString();
-        StringAssert.StartsWith(value, substring, "message", StringComparison.OrdinalIgnoreCase);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertStartsWithMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.StartsWith(value, substring, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertStartsWithMessageStringComparisonParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingStartsWithString();
-        StringAssert.StartsWith(value, substring, "message format {0} {1}", StringComparison.OrdinalIgnoreCase, 1, 2);
+        StringAssert.StartsWith(value, substring, StringComparison.OrdinalIgnoreCase, "message");
         value.ToString(); // no warning
         substring.ToString(); // no warning
     }
@@ -225,25 +189,7 @@ public class StringAssertTests : TestContainer
     {
         string? value = GetValue();
         string? substring = GetMatchingEndsWithString();
-        StringAssert.EndsWith(value, substring, "message", StringComparison.OrdinalIgnoreCase);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertEndsWithMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingEndsWithString();
-        StringAssert.EndsWith(value, substring, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        substring.ToString(); // no warning
-    }
-
-    public void StringAssertEndsWithMessageStringComparisonParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        string? substring = GetMatchingEndsWithString();
-        StringAssert.EndsWith(value, substring, "message format {0} {1}", StringComparison.OrdinalIgnoreCase, 1, 2);
+        StringAssert.EndsWith(value, substring, StringComparison.OrdinalIgnoreCase, "message");
         value.ToString(); // no warning
         substring.ToString(); // no warning
     }
@@ -266,15 +212,6 @@ public class StringAssertTests : TestContainer
         pattern.ToString(); // no warning
     }
 
-    public void StringAssertMatchesMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        Regex? pattern = GetMatchingPattern();
-        StringAssert.Matches(value, pattern, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        pattern.ToString(); // no warning
-    }
-
     public void StringAssertDoesNotMatchNullabilitiesPostConditions()
     {
         string? value = GetValue();
@@ -293,15 +230,6 @@ public class StringAssertTests : TestContainer
         pattern.ToString(); // no warning
     }
 
-    public void StringAssertDoesNotMatchMessageParametersNullabilitiesPostConditions()
-    {
-        string? value = GetValue();
-        Regex? pattern = GetNonMatchingPattern();
-        StringAssert.DoesNotMatch(value, pattern, "message format {0} {1}", 1, 2);
-        value.ToString(); // no warning
-        pattern.ToString(); // no warning
-    }
-
     private string? GetValue() => "some value";
 
     private string? GetMatchingStartsWithString() => "some";
@@ -311,4 +239,27 @@ public class StringAssertTests : TestContainer
     private Regex? GetMatchingPattern() => new("some*");
 
     private Regex? GetNonMatchingPattern() => new("something");
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Action action = () => StringAssert.Equals("test", "test");
+#pragma warning restore CS0618 // Type or member is obsolete
+        action.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("StringAssert.Equals should not be used for Assertions");
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Action action = () => StringAssert.ReferenceEquals(obj, obj);
+#pragma warning restore CS0618 // Type or member is obsolete
+        action.Should().Throw<AssertFailedException>()
+            .And.Message.Should().Contain("StringAssert.ReferenceEquals should not be used for Assertions");
+    }
+#endif
+    #endregion
 }

@@ -40,6 +40,11 @@ Moving last attempt asset files to the default result directory
         <target state="translated">Перемещение файла "{0}" в "{1}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Расширение повторных попыток не поддерживается на браузерной платформе. Из-за ограничений платформы невозможно выполнить повторные попытки тестов в браузере.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Не удалось запустить процесс "{0}".</target>
@@ -81,8 +86,8 @@ Moving last attempt asset files to the default result directory
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Включить повтор неудачных тестов</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">Повторить неудачные тесты указанное количество раз</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">

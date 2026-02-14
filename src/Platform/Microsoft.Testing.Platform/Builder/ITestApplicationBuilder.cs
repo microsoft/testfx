@@ -47,11 +47,11 @@ public interface ITestApplicationBuilder
     /// Registers a test framework with the application builder.
     /// </summary>
     /// <param name="capabilitiesFactory">The factory method for creating test framework capabilities.</param>
-    /// <param name="adapterFactory">The factory method for creating a test framework adapter.</param>
+    /// <param name="frameworkFactory">The factory method for creating a test framework adapter.</param>
     /// <returns>The updated test application builder.</returns>
     ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
-        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory);
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> frameworkFactory);
 
     /// <summary>
     /// Builds the test application asynchronously.

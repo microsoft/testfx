@@ -18,14 +18,11 @@ namespace Microsoft.Testing.Extensions.Telemetry;
 /// Allows to log telemetry events via AppInsights.
 /// </summary>
 internal sealed partial class AppInsightsProvider :
-    ITelemetryCollector
-#pragma warning disable SA1001 // Commas should be spaced correctly
+    ITelemetryCollector,
 #if NETCOREAPP
-    , IAsyncDisposable
-#else
-    , IDisposable
+    IAsyncDisposable,
 #endif
-#pragma warning restore SA1001 // Commas should be spaced correctly
+    IDisposable
 {
     // Note: We're currently using the same environment variable as dotnet CLI.
     public static readonly string SessionIdEnvVar = "TESTINGPLATFORM_APPINSIGHTS_SESSIONID";
@@ -108,7 +105,7 @@ internal sealed partial class AppInsightsProvider :
 #else
         // Keep the custom thread to avoid to waste one from thread pool.
         // We have some await but we should stay on the custom thread if not for special cases like trace log or exception.
-        _payloads = new();
+        _payloads = [];
         _telemetryTask = _task.RunLongRunning(IngestLoopAsync, "Telemetry AppInsightsProvider", _testApplicationCancellationTokenSource.CancellationToken);
 #endif
 
@@ -131,7 +128,7 @@ internal sealed partial class AppInsightsProvider :
         {
             _client = null;
 
-            await _logger.LogErrorAsync("Failed to initialize telemetry client", e);
+            await _logger.LogErrorAsync("Failed to initialize telemetry client", e).ConfigureAwait(false);
             return;
         }
 
@@ -140,9 +137,9 @@ internal sealed partial class AppInsightsProvider :
         try
         {
 #if NETCOREAPP
-            while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token))
+            while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
             {
-                (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync();
+                (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync().ConfigureAwait(false);
 #else
             foreach ((string eventName, IDictionary<string, object> paramsMap) in _payloads.GetConsumingEnumerable(_flushTimeoutOrStop.Token))
             {
@@ -205,7 +202,7 @@ internal sealed partial class AppInsightsProvider :
                         builder.AppendLine(CultureInfo.InvariantCulture, $"    {key}: {value.ToString("f", CultureInfo.InvariantCulture)}");
                     }
 
-                    await _logger.LogTraceAsync(builder.ToString());
+                    await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(false);
                 }
 
                 try
@@ -219,7 +216,7 @@ internal sealed partial class AppInsightsProvider :
                     // We could do better back-pressure.
                     if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (lastLoggedError.Value - _clock.UtcNow).TotalSeconds > 3))
                     {
-                        await _logger.LogErrorAsync("Error during telemetry report.", ex);
+                        await _logger.LogErrorAsync("Error during telemetry report.", ex).ConfigureAwait(false);
                         lastLoggedError = _clock.UtcNow;
                     }
                 }
@@ -260,10 +257,10 @@ internal sealed partial class AppInsightsProvider :
     }
 
 #if NET7_0_OR_GREATER
-    [System.Text.RegularExpressions.GeneratedRegex("[a-f0-9]{64}")]
-    private static partial System.Text.RegularExpressions.Regex GetValidHashPattern();
+    [GeneratedRegex("[a-f0-9]{64}")]
+    private static partial Regex GetValidHashPattern();
 #else
-    private static System.Text.RegularExpressions.Regex GetValidHashPattern()
+    private static Regex GetValidHashPattern()
         => new("[a-f0-9]{64}");
 #endif
 #endif
@@ -272,21 +269,24 @@ internal sealed partial class AppInsightsProvider :
 #if NETCOREAPP
         async
 #endif
-        Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
+        Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap, CancellationToken cancellationToken)
     {
 #if NETCOREAPP
-        await _payloads.Writer.WriteAsync((eventName, paramsMap));
+        await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(false);
 #else
-        _payloads.Add((eventName, paramsMap));
+        _payloads.Add((eventName, paramsMap), cancellationToken);
         return Task.CompletedTask;
 #endif
     }
 
-#if !NETCOREAPP
     // Adding dispose on graceful shutdown per https://github.com/microsoft/ApplicationInsights-dotnet/issues/1152#issuecomment-518742922
     public void Dispose()
     {
+#if NETCOREAPP
+        _payloads.Writer.Complete();
+#else
         _payloads.CompleteAdding();
+#endif
         if (!_isDisposed)
         {
             if (_telemetryTask is null)
@@ -304,7 +304,6 @@ internal sealed partial class AppInsightsProvider :
             _isDisposed = true;
         }
     }
-#endif
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
@@ -320,12 +319,12 @@ internal sealed partial class AppInsightsProvider :
             int flushForSeconds = 3;
             try
             {
-                await _telemetryTask.TimeoutAfterAsync(TimeSpan.FromSeconds(flushForSeconds));
+                await _telemetryTask.TimeoutAfterAsync(TimeSpan.FromSeconds(flushForSeconds)).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
-                await _flushTimeoutOrStop.CancelAsync();
-                await _logger.LogWarningAsync($"Telemetry task didn't flush after '{flushForSeconds}', some payload could be lost");
+                await _flushTimeoutOrStop.CancelAsync().ConfigureAwait(false);
+                await _logger.LogWarningAsync($"Telemetry task didn't flush after '{flushForSeconds}', some payload could be lost").ConfigureAwait(false);
             }
 
             _isDisposed = true;

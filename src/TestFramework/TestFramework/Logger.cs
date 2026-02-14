@@ -33,8 +33,8 @@ public class Logger
             return;
         }
 
-        Guard.NotNull(format);
-        Guard.NotNull(args);
+        Ensure.NotNull(format);
+        Ensure.NotNull(args);
 
         string message = args.Length == 0
             ? format
@@ -46,7 +46,7 @@ public class Logger
         {
             try
             {
-                invoker.GetMethodInfo()!.Invoke(invoker.Target, parameters);
+                invoker.GetMethodInfo().Invoke(invoker.Target, parameters);
             }
             catch (Exception)
             {

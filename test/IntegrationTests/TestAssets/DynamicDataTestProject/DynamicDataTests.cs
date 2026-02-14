@@ -253,14 +253,14 @@ public class DynamicDataTests : DynamicDataTestsBase
 
     private static IEnumerable<object[]> StringAndInt32()
     {
-        yield return new object[] { "1", 1 };
-        yield return new object[] { "2", 1 };
+        yield return ["1", 1];
+        yield return ["2", 1];
     }
 
     private static IEnumerable<object[]> Int32AndString()
     {
-        yield return new object[] { 1, "0" };
-        yield return new object[] { 2, "2" };
+        yield return [1, "0"];
+        yield return [2, "2"];
     }
 
     private static IEnumerable<int> SimpleCollection
@@ -272,4 +272,21 @@ public class DynamicDataTests : DynamicDataTestsBase
             yield return 4;
         }
     }
+
+    // Test field support - static field for dynamic data
+    private static readonly IEnumerable<object[]> FieldTestData = new[]
+    {
+        ["field", 5],
+        new object[] { "test", 4 },
+    };
+
+    [DataTestMethod]
+    [DynamicData(nameof(FieldTestData), DynamicDataSourceType.Field)]
+    public void DynamicDataTest_SourceFieldExplicit(string text, int expectedLength)
+        => Assert.AreEqual(expectedLength, text.Length);
+
+    [DataTestMethod]
+    [DynamicData(nameof(FieldTestData))] // AutoDetect should find the field
+    public void DynamicDataTest_SourceFieldAutoDetect(string text, int expectedLength)
+        => Assert.AreEqual(expectedLength, text.Length);
 }

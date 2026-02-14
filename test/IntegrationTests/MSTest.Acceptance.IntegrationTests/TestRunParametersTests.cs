@@ -14,7 +14,7 @@ public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParameter
     public async Task TestRunParameters_WhenProvidingMultipleArgumentsToTheOption(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 MyParameter3=MyValue3");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 MyParameter3=MyValue3", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -26,7 +26,7 @@ public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParameter
     public async Task TestRunParameters_WhenProvidingMultipleMultipleTimesTheOptionAndArgument(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 --test-parameter MyParameter3=MyValue3");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 --test-parameter MyParameter3=MyValue3", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(0);
@@ -97,4 +97,6 @@ public class UnitTest1
 }
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -8,12 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
 /// </summary>
-#if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
-#endif
-public class MSTestSettingsProvider : ISettingsProvider
+internal sealed class MSTestSettingsProvider : ISettingsProvider
 {
 #if !WINDOWS_UWP
     /// <summary>
@@ -37,9 +32,16 @@ public class MSTestSettingsProvider : ISettingsProvider
     internal static void Load(IConfiguration configuration)
     {
 #if !WINDOWS_UWP
-#pragma warning disable IDE0022 // Use expression body for method
         var settings = MSTestAdapterSettings.ToSettings(configuration);
-#pragma warning restore IDE0022 // Use expression body for method
+        if (!ReferenceEquals(settings, Settings))
+        {
+            // NOTE: ToSettings mutates the Settings property and just returns it.
+            // This invariant is important to preserve, because we load from from runsettings through the XmlReader overload below.
+            // Then we read via IConfiguration.
+            // So this path should be unreachable.
+            // In v4 when we will make this class internal, we can start changing the API to clean this up.
+            throw ApplicationStateGuard.Unreachable();
+        }
 #endif
     }
 
@@ -50,8 +52,17 @@ public class MSTestSettingsProvider : ISettingsProvider
     public void Load(XmlReader reader)
     {
 #if !WINDOWS_UWP
-        Guard.NotNull(reader);
-        Settings = MSTestAdapterSettings.ToSettings(reader);
+        Ensure.NotNull(reader);
+        var settings = MSTestAdapterSettings.ToSettings(reader);
+        if (!ReferenceEquals(settings, Settings))
+        {
+            // NOTE: ToSettings mutates the Settings property and just returns it.
+            // This invariant is important to preserve, because we load from from runsettings through the XmlReader overload below.
+            // Then we read via IConfiguration.
+            // So this path should be unreachable.
+            // In v4 when we will make this class internal, we can start changing the API to clean this up.
+            throw ApplicationStateGuard.Unreachable();
+        }
 #endif
     }
 
@@ -61,7 +72,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <param name="source">The source.</param>
     /// <returns>A collection of properties.</returns>
     public IDictionary<string, object> GetProperties(string? source)
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
         => TestDeployment.GetDeploymentInformation(source);
 #else
         => new Dictionary<string, object>();

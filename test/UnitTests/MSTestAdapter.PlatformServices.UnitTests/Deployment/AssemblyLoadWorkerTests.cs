@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if NETFRAMEWORK
+using AwesomeAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
@@ -34,7 +36,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         // Assert.
         string utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-        Verify(dependentAssemblies.Contains(utfAssembly));
+        dependentAssemblies.Should().Contain(utfAssembly);
     }
 
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkReferencedInADependency()
@@ -93,7 +95,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         // Assert.
         string utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-        Verify(dependentAssemblies.Contains(utfAssembly));
+        dependentAssemblies.Should().Contain(utfAssembly);
     }
 
     #region Testable Implementations

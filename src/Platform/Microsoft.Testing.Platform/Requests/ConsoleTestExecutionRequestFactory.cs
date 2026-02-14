@@ -15,7 +15,7 @@ internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions com
 
     public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {
-        (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync();
+        (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync().ConfigureAwait(false);
         if (!created)
         {
             throw new InvalidOperationException(PlatformResources.CannotCreateTestExecutionFilterErrorMessage);

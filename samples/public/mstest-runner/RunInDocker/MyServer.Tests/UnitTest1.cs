@@ -10,7 +10,7 @@ namespace MyServer.Tests;
 [TestClass]
 public class ServerManager
 {
-    public static Process? ServerProcess;
+    private static Process? ServerProcess;
 
     [AssemblyInitialize]
     public static async Task StartServer(TestContext _)

@@ -5,25 +5,22 @@ using System.Collections.Immutable;
 
 using DiscoveryAndExecutionTests.Utilities;
 
-using FluentAssertions;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
-using TestFramework.ForTestingMSTest;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
 
-public partial class CLITestBase : TestContainer
+public abstract partial class CLITestBase
 {
     internal static ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string? testCaseFilter = null)
     {
-        var unitTestDiscoverer = new UnitTestDiscoverer();
+        var unitTestDiscoverer = new UnitTestDiscoverer(new TestSourceHandler());
         var logger = new InternalLogger();
         var sink = new InternalSink();
 
@@ -54,7 +51,7 @@ public partial class CLITestBase : TestContainer
     {
         private readonly List<TestCase> _testCases = [];
 
-        public ImmutableArray<TestCase> DiscoveredTests => _testCases.ToImmutableArray();
+        public ImmutableArray<TestCase> DiscoveredTests => [.. _testCases];
 
         public void SendTestCase(TestCase discoveredTest) => _testCases.Add(discoveredTest);
     }
@@ -92,24 +89,24 @@ public partial class CLITestBase : TestContainer
         private readonly List<string> _messageList = [];
         private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
 
-        private ConcurrentBag<TestResult> _activeResults = new();
+        private ConcurrentBag<TestResult> _activeResults = [];
 
         public bool EnableShutdownAfterTestRun { get; set; }
 
-        public void RecordStart(TestCase testCase) => _activeResults = _testResults.GetOrAdd(testCase, _ => new());
+        public void RecordStart(TestCase testCase) => _activeResults = _testResults.GetOrAdd(testCase, _ => []);
 
         public void RecordEnd(TestCase testCase, TestOutcome outcome) => _activeResults = _testResults[testCase];
 
         public void RecordResult(TestResult testResult)
         {
-            testResult.Should().NotBeNull();
+            Assert.IsNotNull(testResult, "Test result should not be null.");
             _activeResults.Add(testResult);
         }
 
         public ImmutableArray<TestResult> GetFlattenedTestResults()
         {
             var allTestResults = _testResults.SelectMany(i => i.Value).ToImmutableArray();
-            allTestResults.Should().NotContainNulls();
+            CollectionAssert.AllItemsAreNotNull(allTestResults, "All test results should be non-null.");
 
             return allTestResults;
         }

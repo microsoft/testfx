@@ -1,21 +1,26 @@
-# Branch(es) that trigger(s) build(s) on PR
-pr:
+trigger:
   branches:
     include:
     - main
     - rel/*
+
+# Branch(es) that trigger(s) build(s) on PR
+pr:
+  branches:
+    include:
+    - "*"
   paths:
     exclude:
       - .github/*
       - .devcontainer/*
       - docs/*
-      - .markdownlint.json
+      - .markdownlint-cli2.jsonc
       - .markdownlintignore
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.md
       - README.md
       - SECURITY.md
-      - src/**/*.xlf
+      - azure-pipelines-official.yml
 
 parameters:
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
@@ -53,7 +58,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals windows.vs2022preview.amd64.open
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
         strategy:
           matrix:
             Release:
@@ -76,7 +81,15 @@ stages:
             filePath: ./eng/install-procdump.ps1
             failOnStderr: true
             showWarnings: true
-
+        - task: PowerShell@2
+          displayName: 'Enable local dumps'
+          inputs:
+            targetType: 'inline'
+            script: |
+              New-Item -Path $(Build.SourcesDirectory)\artifacts\CrashDumps -ItemType Directory -Force
+              Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
+              New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
         - task: PowerShell@2
           displayName: 'Install Access Database Engine'
           inputs:
@@ -88,31 +101,38 @@ stages:
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
+            /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
           name: Build
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: $(Build.SourcesDirectory)/.dotnet/dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_Windows_$(_BuildConfig)
-            condition: failed()
+              ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            condition: always()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -131,18 +151,53 @@ stages:
             condition: always()
 
           # Upload code coverage to codecov.io
-          - script: $(Build.SourcesDirectory)/.dotnet/dotnet msbuild -restore
+          - script: dotnet msbuild -restore
               eng/CodeCoverage.proj
               /p:Configuration=$(_BuildConfig)
               /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
             displayName: Upload coverage to codecov.io
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
 
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish local dumps'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/CrashDumps'
+              ArtifactName: TestResults_Windows_$(_BuildConfig)
+            condition: failed()
+
+      - job: WindowsSamples
+        timeoutInMinutes: 30
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            Debug:
+              _BuildConfig: Debug
+        steps:
+        - task: PowerShell@2
+          displayName: 'Install Windows SDK'
+          inputs:
+            targetType: filePath
+            filePath: './eng/install-windows-sdk.ps1'
+            failOnStderr: true
+            showWarnings: true
+
+        - task: PowerShell@2
+          displayName: 'Build Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
+            failOnStderr: false
+
       - job: Linux
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals build.ubuntu.2004.amd64.open
+          demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         strategy:
           matrix:
             Release:
@@ -154,29 +209,36 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Test=false
+            /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: $(Build.SourcesDirectory)/.dotnet/dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_Linux_$(_BuildConfig)
-            condition: failed()
+              ArtifactName: TestResults_Linux_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            condition: always()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'
@@ -211,29 +273,36 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             /p:Test=false
+            /p:Publish=false
             /p:NonWindowsBuild=true
             /p:FastAcceptanceTest=true
           displayName: Build
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish NuGet packages'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/Shipping'
+            ArtifactName: '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)'
+          condition: always()
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: $(Build.SourcesDirectory)/.dotnet/dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\TestStep.binlog
+          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_MacOs_$(_BuildConfig)
-            condition: failed()
+              ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
+            condition: always()
 
           - task: CopyFiles@2
             displayName: 'Copy binlogs'

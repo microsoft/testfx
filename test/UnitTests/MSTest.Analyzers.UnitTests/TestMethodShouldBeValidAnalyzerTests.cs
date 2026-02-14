@@ -38,12 +38,18 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
     {
         string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
 
             [TestClass]
             public class MyTestClass
             {
                 [TestMethod]
-                {{accessibility}} void [|MyTestMethod|]()
+                {{accessibility}} void [|MyTestMethod1|]()
+                {
+                }
+
+                [TestMethod]
+                {{accessibility}} async Task [|MyTestMethod2|]()
                 {
                 }
             }
@@ -52,12 +58,18 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
         string fixedCode =
             """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
 
             [TestClass]
             public class MyTestClass
             {
                 [TestMethod]
-                public void MyTestMethod()
+                public void MyTestMethod1()
+                {
+                }
+
+                [TestMethod]
+                public async Task MyTestMethod2()
                 {
                 }
             }
@@ -247,6 +259,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+#if NET
     [TestMethod]
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
     {
@@ -346,6 +359,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+#endif
 
     [TestMethod]
     public async Task WhenTestMethodIsAsyncVoid_Diagnostic()

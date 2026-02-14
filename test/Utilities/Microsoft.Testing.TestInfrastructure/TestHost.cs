@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Polly;
-using Polly.Contrib.WaitAndRetry;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class TestHost
@@ -41,9 +38,9 @@ public sealed class TestHost
         string? command = null,
         Dictionary<string, string?>? environmentVariables = null,
         bool disableTelemetry = true,
-        int timeoutSeconds = 60)
+        CancellationToken cancellationToken = default)
     {
-        await s_maxOutstandingExecutions_semaphore.WaitAsync();
+        await s_maxOutstandingExecutions_semaphore.WaitAsync(cancellationToken);
         try
         {
             if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
@@ -51,7 +48,7 @@ public sealed class TestHost
                 throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
             }
 
-            environmentVariables ??= new Dictionary<string, string?>();
+            environmentVariables ??= [];
 
             if (disableTelemetry)
             {
@@ -80,22 +77,17 @@ public sealed class TestHost
 
             string finalArguments = command ?? string.Empty;
 
-            IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
-            return await Policy
-                .Handle<Exception>()
-                .WaitAndRetryAsync(delay)
-                .ExecuteAsync(async () =>
-                {
-                    CommandLine commandLine = new();
-                    int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                        $"{FullName} {finalArguments}",
-                        environmentVariables: environmentVariables,
-                        workingDirectory: null,
-                        cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
-                        timeoutInSeconds: timeoutSeconds);
-                    string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
-                    return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
-                });
+            CommandLine commandLine = new();
+            // Disable ANSI rendering so tests have easier time parsing the output.
+            // Disable progress so tests don't mix progress with overall progress, and with test process output.
+            int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+                $"{FullName} --no-ansi --no-progress {finalArguments}",
+                environmentVariables: environmentVariables,
+                workingDirectory: null,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+                cancellationToken: cancellationToken);
+            string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
+            return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
         }
         finally
         {

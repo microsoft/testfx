@@ -6,16 +6,25 @@ using Microsoft.Win32;
 
 namespace Microsoft.Testing.Platform.MSBuild.Tasks;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetMuxerLocator
 {
+    // Mach-O magic numbers from https://en.wikipedia.org/wiki/Mach-O
+    private const uint MachOMagic32BigEndian = 0xfeedface;    // 32-bit big-endian
+    private const uint MachOMagic64BigEndian = 0xfeedfacf;    // 64-bit big-endian
+    private const uint MachOMagic32LittleEndian = 0xcefaedfe; // 32-bit little-endian
+    private const uint MachOMagic64LittleEndian = 0xcffaedfe; // 64-bit little-endian
+    private const uint MachOMagicFatBigEndian = 0xcafebabe;   // Multi-architecture big-endian
+
     private readonly string _muxerName;
-    private readonly Process _currentProcess;
     private readonly Action<string> _resolutionLog;
+    private readonly string _currentProcessFileName;
 
     internal DotnetMuxerLocator(Action<string> resolutionLog)
     {
         _muxerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
-        _currentProcess = Process.GetCurrentProcess();
+        using var currentProcess = Process.GetCurrentProcess();
+        _currentProcessFileName = currentProcess.MainModule!.FileName!;
         _resolutionLog = resolutionLog;
     }
 
@@ -52,15 +61,14 @@ internal sealed class DotnetMuxerLocator
         // If current process is the same as the target architecture we return the current process filename.
         if (GetCurrentProcessArchitecture() == targetArchitecture)
         {
-            string currentProcessFileName = _currentProcess.MainModule!.FileName!;
-            if (Path.GetFileName(currentProcessFileName) == _muxerName)
+            if (Path.GetFileName(_currentProcessFileName) == _muxerName)
             {
-                muxerPath = currentProcessFileName;
+                muxerPath = _currentProcessFileName;
                 _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{targetArchitecture}', and the current process is a muxer, using that: '{muxerPath}'");
                 return true;
             }
 
-            _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{targetArchitecture}', but the current process is not a muxer: '{currentProcessFileName}'");
+            _resolutionLog($"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{targetArchitecture}', but the current process is not a muxer: '{_currentProcessFileName}'");
         }
 
         // We used similar approach as the runtime resolver.
@@ -287,9 +295,7 @@ internal sealed class DotnetMuxerLocator
 
         try
         {
-            using Stream stream = new FileStream(installLocation, FileMode.Open, FileAccess.Read);
-            using StreamReader streamReader = new(stream);
-            string content = streamReader.ReadToEnd().Trim();
+            string content = File.ReadAllText(installLocation).Trim();
             _resolutionLog($"DotnetHostHelper: '{installLocation}' content '{content}'");
             string path = Path.Combine(content, _muxerName);
             _resolutionLog($"DotnetHostHelper: Muxer resolved using '{installLocation}' in '{path}'");
@@ -411,6 +417,14 @@ internal sealed class DotnetMuxerLocator
 #pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
 
             uint magic = BitConverter.ToUInt32(magicBytes, 0);
+
+            // Validate magic bytes to ensure this is a valid Mach-O binary
+            if (magic is not (MachOMagic32BigEndian or MachOMagic64BigEndian or MachOMagic32LittleEndian or MachOMagic64LittleEndian or MachOMagicFatBigEndian))
+            {
+                _resolutionLog($"DotnetHostHelper.GetMuxerArchitectureByMachoOnMac: Invalid Mach-O magic bytes: 0x{magic:X8}");
+                return null;
+            }
+
             uint cpuInfo = BitConverter.ToUInt32(cpuInfoBytes, 0);
             PlatformArchitecture? architecture = (MacOsCpuType)cpuInfo switch
             {

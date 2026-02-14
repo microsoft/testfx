@@ -13,15 +13,18 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
+[UnsupportedOSPlatform("browser")]
 internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDataProducer
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IFileSystem _fileSystem;
 
     public RetryOrchestrator(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
+        _fileSystem = _serviceProvider.GetFileSystem();
     }
 
     public string Uid => nameof(RetryOrchestrator);
@@ -35,21 +38,21 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName));
 
-    private static string CreateRetriesDirectory(string resultDirectory)
+    private string CreateRetriesDirectory(string resultDirectory)
     {
         Exception? lastException = null;
         // Quite arbitrary. Keep trying to create the directory for 10 times.
         for (int i = 0; i < 10; i++)
         {
             string retryRootFolder = Path.Combine(resultDirectory, "Retries", RandomId.Next());
-            if (Directory.Exists(retryRootFolder))
+            if (_fileSystem.ExistDirectory(retryRootFolder))
             {
                 continue;
             }
 
             try
             {
-                Directory.CreateDirectory(retryRootFolder);
+                _fileSystem.CreateDirectory(retryRootFolder);
                 return retryRootFolder;
             }
             catch (IOException ex)
@@ -66,17 +69,20 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         throw new IOException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailedToCreateRetryDirectoryBecauseOfCollision, resultDirectory));
     }
 
-    public async Task<int> OrchestrateTestHostExecutionAsync()
+    public async Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
     {
         if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey))
         {
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInServerModeErrorMessage);
         }
 
-        if (IsHotReloadEnabled(_serviceProvider.GetEnvironment()))
+        IEnvironment environment = _serviceProvider.GetEnvironment();
+        if (IsHotReloadEnabled(environment))
         {
             throw new InvalidOperationException(ExtensionResources.RetryFailedTestsNotSupportedInHotReloadErrorMessage);
         }
+
+        environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID, Guid.NewGuid().ToString("N"));
 
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryOrchestrator>();
         IConfiguration configuration = _serviceProvider.GetConfiguration();
@@ -93,8 +99,8 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         int userMaxRetryCount = int.Parse(cmdRetries[0], CultureInfo.InvariantCulture);
 
         // Find out the retry args index inside the arguments to after cleanup the command line when we restart
-        List<int> indexToCleanup = new();
-        string[] executableArguments = executableInfo.Arguments.ToArray();
+        List<int> indexToCleanup = [];
+        string[] executableArguments = [.. executableInfo.Arguments];
         int argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, executableArguments);
         if (argIndex < 0)
         {
@@ -128,12 +134,12 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         // Override the result directory with the attempt one
         string resultDirectory = configuration.GetTestResultDirectory();
 
-        List<int> exitCodes = new();
+        List<int> exitCodes = [];
         IOutputDevice outputDevice = _serviceProvider.GetOutputDevice();
         IFileSystem fileSystem = _serviceProvider.GetFileSystem();
 
         int attemptCount = 0;
-        List<string> finalArguments = new();
+        List<string> finalArguments = [];
         string[]? lastListOfFailedId = null;
         string? currentTryResultFolder = null;
         bool thresholdPolicyKickedIn = false;
@@ -160,29 +166,34 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             finalArguments.Add(currentTryResultFolder);
 
             // Prepare the pipeserver
-            using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? Array.Empty<string>(), logger);
+            using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
-            // Prepare the process start
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = executableInfo.FilePath,
-#if !NETCOREAPP
-                UseShellExecute = false,
-#endif
-            };
-
-            foreach (string argument in finalArguments)
-            {
-#if !NETCOREAPP
-                processStartInfo.Arguments += argument + " ";
+#if NET8_0_OR_GREATER
+            // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
+            // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
+            List<string> arguments = finalArguments;
 #else
-                processStartInfo.ArgumentList.Add(argument);
-#endif
+            // Current target framework (.NET Framework and .NET Standard 2.0) only supports arguments as a single string.
+            // In this case, escaping is essential. For example, one of the arguments could already contain spaces.
+            // PasteArguments is borrowed from dotnet/runtime.
+            var builder = new StringBuilder();
+            foreach (string arg in finalArguments)
+            {
+                PasteArguments.AppendArgument(builder, arg);
             }
 
-            await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}");
+            string arguments = builder.ToString();
+#endif
+
+            // Prepare the process start
+            ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments)
+            {
+                UseShellExecute = false,
+            };
+
+            await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
             IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
                 ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
 
@@ -195,42 +206,42 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
             };
 
             using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, _serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
             using (var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token))
             {
-                await logger.LogDebugAsync("Wait connection from the test host process");
+                await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
                 try
                 {
 #if NETCOREAPP
-                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token);
+                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).ConfigureAwait(false);
 #else
-                    // We don't know why but if the cancellation is called quickly in line 171 for netfx we stuck sometime here, like if
+                    // We don't know why but if the cancellation is called quickly in `testHostProcess.Exited`: `processExitedCancellationToken.Cancel();` for netfx we stuck sometime here, like if
                     // the token we pass to the named pipe is not "correctly" verified inside the pipe implementation self.
                     // We fallback with our custom agnostic cancellation mechanism in that case.
                     // We see it happen only in .NET FX and not in .NET Core so for now we don't do it for core.
-                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token);
+                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token).ConfigureAwait(false);
 #endif
                 }
                 catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
                 {
-                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)));
+                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                     return ExitCodes.GenericFailure;
                 }
             }
 
-            await testHostProcess.WaitForExitAsync();
+            await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
 
             exitCodes.Add(testHostProcess.ExitCode);
             if (testHostProcess.ExitCode != ExitCodes.Success)
             {
                 if (testHostProcess.ExitCode != ExitCodes.AtLeastOneTestFailed)
                 {
-                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode)));
+                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                     retryInterrupted = true;
                     break;
                 }
 
-                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1)));
+                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
 
                 // Check thresholds
                 if (attemptCount == 1)
@@ -269,7 +280,7 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                                 explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedUID!.Count));
                             }
 
-                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString()));
+                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
                             break;
                         }
                     }
@@ -288,20 +299,20 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
         {
             if (exitCodes[^1] != ExitCodes.Success)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)));
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.Green } });
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }, cancellationToken).ConfigureAwait(false);
             }
         }
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 
-        string[] filesToMove = Directory.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
+        string[] filesToMove = _fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
         if (filesToMove.Length > 0)
         {
-            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles));
+            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles), cancellationToken).ConfigureAwait(false);
 
             // Move last attempt assets
             foreach (string file in filesToMove)
@@ -309,14 +320,14 @@ internal sealed class RetryOrchestrator : ITestHostOrchestrator, IOutputDeviceDa
                 string finalFileLocation = file.Replace(currentTryResultFolder, resultDirectory);
 
                 // Create the directory if missing
-                Directory.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
+                fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)));
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)), cancellationToken).ConfigureAwait(false);
 #if NETCOREAPP
-                File.Move(file, finalFileLocation, overwrite: true);
+                fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
 #else
-                File.Copy(file, finalFileLocation, overwrite: true);
-                File.Delete(file);
+                fileSystem.CopyFile(file, finalFileLocation, overwrite: true);
+                fileSystem.DeleteFile(file);
 #endif
             }
         }

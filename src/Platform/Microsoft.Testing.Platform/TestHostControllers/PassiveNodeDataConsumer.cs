@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode;
 
@@ -46,14 +46,14 @@ internal sealed class PassiveNodeDataConsumer : IDataConsumer, IDisposable
             case SessionFileArtifact sessionFileArtifact:
                 {
                     RunTestAttachment runTestAttachment = new(sessionFileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, sessionFileArtifact.DisplayName, sessionFileArtifact.Description);
-                    await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
+                    await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken).ConfigureAwait(false);
                     break;
                 }
 
             case FileArtifact fileArtifact:
                 {
                     RunTestAttachment runTestAttachment = new(fileArtifact.FileInfo.FullName, dataProducer.Uid, FileType, fileArtifact.DisplayName, fileArtifact.Description);
-                    await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken);
+                    await _passiveNode.SendAttachmentsAsync(new TestsAttachments([runTestAttachment]), cancellationToken).ConfigureAwait(false);
                     break;
                 }
 

@@ -58,11 +58,11 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
         string? instanceId = null;
         List<FileArtifactMessage>? fileArtifactMessages = null;
 
-        ushort fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadUShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
-            int fieldId = ReadShort(stream);
+            int fieldId = ReadUShort(stream);
             int fieldSize = ReadInt(stream);
 
             switch (fieldId)
@@ -98,11 +98,11 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
         {
             string? fullPath = null, displayName = null, description = null, testUid = null, testDisplayName = null, sessionUid = null;
 
-            int fieldCount = ReadShort(stream);
+            int fieldCount = ReadUShort(stream);
 
             for (int j = 0; j < fieldCount; j++)
             {
-                int fieldId = ReadShort(stream);
+                int fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -149,7 +149,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
 
         var fileArtifactMessages = (FileArtifactMessages)objectToSerialize;
 
-        WriteShort(stream, GetFieldCount(fileArtifactMessages));
+        WriteUShort(stream, GetFieldCount(fileArtifactMessages));
 
         WriteField(stream, FileArtifactMessagesFieldsId.ExecutionId, fileArtifactMessages.ExecutionId);
         WriteField(stream, FileArtifactMessagesFieldsId.InstanceId, fileArtifactMessages.InstanceId);
@@ -163,7 +163,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
             return;
         }
 
-        WriteShort(stream, FileArtifactMessagesFieldsId.FileArtifactMessageList);
+        WriteUShort(stream, FileArtifactMessagesFieldsId.FileArtifactMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -173,7 +173,7 @@ internal sealed class FileArtifactMessagesSerializer : BaseSerializer, INamedPip
         WriteInt(stream, fileArtifactMessageList.Length);
         foreach (FileArtifactMessage fileArtifactMessage in fileArtifactMessageList)
         {
-            WriteShort(stream, GetFieldCount(fileArtifactMessage));
+            WriteUShort(stream, GetFieldCount(fileArtifactMessage));
 
             WriteField(stream, FileArtifactMessageFieldsId.FullPath, fileArtifactMessage.FullPath);
             WriteField(stream, FileArtifactMessageFieldsId.DisplayName, fileArtifactMessage.DisplayName);

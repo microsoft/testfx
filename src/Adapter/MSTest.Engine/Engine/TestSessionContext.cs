@@ -27,5 +27,5 @@ internal sealed class TestSessionContext : ITestSessionContext
     public IConfiguration Configuration { get; }
 
     public async Task AddTestAttachmentAsync(FileInfo file, string displayName, string? description = null)
-        => await _publishDataAsync(new SessionFileArtifact(_sessionUid, file, displayName, description));
+        => await _publishDataAsync(new SessionFileArtifact(_sessionUid, file, displayName, description)).ConfigureAwait(false);
 }

@@ -6,7 +6,6 @@ using Microsoft.Testing.Extensions;
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
-[assembly: ClassCleanupExecution(ClassCleanupBehavior.EndOfClass)]
 
 #if NETCOREAPP
 Console.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
@@ -35,6 +34,6 @@ builder.AddAzureDevOpsProvider();
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
     = new(_ => new SlowestTestsConsumer());
 builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
-builder.TestHost.AddTestSessionLifetimeHandle(slowestTestCompositeServiceFactory);
+builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

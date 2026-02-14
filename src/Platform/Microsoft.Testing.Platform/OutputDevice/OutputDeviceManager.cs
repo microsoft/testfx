@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Logging;
+#if !NET7_0_OR_GREATER
+using Microsoft.Testing.Platform.Resources;
+#endif
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -13,7 +16,7 @@ internal sealed class PlatformOutputDeviceManager
 
     public void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> platformOutputDeviceFactory)
     {
-        Guard.NotNull(platformOutputDeviceFactory);
+        Ensure.NotNull(platformOutputDeviceFactory);
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
@@ -26,7 +29,7 @@ internal sealed class PlatformOutputDeviceManager
             : _platformOutputDeviceFactory(serviceProvider);
 
         // If the externally provided output device is not enabled, we opt-in the default terminal output device.
-        if (_platformOutputDeviceFactory is not null && !await nonServerOutputDevice.IsEnabledAsync())
+        if (_platformOutputDeviceFactory is not null && !await nonServerOutputDevice.IsEnabledAsync().ConfigureAwait(false))
         {
             nonServerOutputDevice = GetDefaultTerminalOutputDevice(serviceProvider);
         }
@@ -41,26 +44,49 @@ internal sealed class PlatformOutputDeviceManager
     }
 
     public static IPlatformOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")) || RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI"))
-            ? new BrowserOutputDevice(
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+#if NET7_0_OR_GREATER
+            return new BrowserOutputDevice(
                 serviceProvider.GetConsole(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetAsyncMonitorFactory().Create(),
                 serviceProvider.GetRuntimeFeature(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetPlatformInformation(),
-                serviceProvider.GetRequiredService<IStopPoliciesService>())
-            : new TerminalOutputDevice(
-                serviceProvider.GetConsole(),
-                serviceProvider.GetTestApplicationModuleInfo(),
-                serviceProvider.GetTestHostControllerInfo(),
-                serviceProvider.GetAsyncMonitorFactory().Create(),
-                serviceProvider.GetRuntimeFeature(),
-                serviceProvider.GetEnvironment(),
-                serviceProvider.GetPlatformInformation(),
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetFileLoggerInformation(),
-                serviceProvider.GetLoggerFactory(),
-                serviceProvider.GetClock(),
                 serviceProvider.GetRequiredService<IStopPoliciesService>());
+#else
+            throw new PlatformNotSupportedException(PlatformResources.BrowserPlatformNotSupportedOnOlderFrameworks);
+#endif
+        }
+
+        if (OperatingSystem.IsWasi())
+        {
+            return new WasiOutputDevice(
+                serviceProvider.GetConsole(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetAsyncMonitorFactory().Create(),
+                serviceProvider.GetRuntimeFeature(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetPlatformInformation(),
+                serviceProvider.GetRequiredService<IStopPoliciesService>());
+        }
+
+        // Default to terminal output device for other platforms.
+        return new TerminalOutputDevice(
+            serviceProvider.GetConsole(),
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetTestHostControllerInfo(),
+            serviceProvider.GetAsyncMonitorFactory().Create(),
+            serviceProvider.GetRuntimeFeature(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetPlatformInformation(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetFileLoggerInformation(),
+            serviceProvider.GetLoggerFactory(),
+            serviceProvider.GetClock(),
+            serviceProvider.GetRequiredService<IStopPoliciesService>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource());
+    }
 }

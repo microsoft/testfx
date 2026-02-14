@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Framework;
 
-internal interface IActionableTestNode
-{
-}
+internal interface IActionableTestNode;

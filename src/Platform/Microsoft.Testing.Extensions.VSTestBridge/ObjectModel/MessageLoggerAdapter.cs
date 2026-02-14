@@ -22,14 +22,20 @@ internal sealed class MessageLoggerAdapter : IMessageLogger, IOutputDeviceDataPr
     private readonly ILogger<MessageLoggerAdapter> _logger;
     private readonly IOutputDevice _outputDevice;
     private readonly IExtension _extension;
+    private readonly CancellationToken _cancellationToken;
 
-    public MessageLoggerAdapter(ILoggerFactory loggerFactory, IOutputDevice outputDevice, IExtension extension,
-        IMessageLogger? messageLogger = null)
+    public MessageLoggerAdapter(
+        ILoggerFactory loggerFactory,
+        IOutputDevice outputDevice,
+        IExtension extension,
+        IMessageLogger? messageLogger,
+        CancellationToken cancellationToken)
     {
         _outputDevice = outputDevice;
         _extension = extension;
         _messageLogger = messageLogger;
         _logger = loggerFactory.CreateLogger<MessageLoggerAdapter>();
+        _cancellationToken = cancellationToken;
     }
 
     string IExtension.Uid => _extension.Uid;
@@ -49,15 +55,15 @@ internal sealed class MessageLoggerAdapter : IMessageLogger, IOutputDeviceDataPr
         {
             case TestMessageLevel.Informational:
                 _logger.LogInformation(message);
-                _outputDevice.DisplayAsync(this, new TextOutputDeviceData(message)).Await();
+                _outputDevice.DisplayAsync(this, new TextOutputDeviceData(message), _cancellationToken).Await();
                 break;
             case TestMessageLevel.Warning:
                 _logger.LogWarning(message);
-                _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message)).Await();
+                _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), _cancellationToken).Await();
                 break;
             case TestMessageLevel.Error:
                 _logger.LogError(message);
-                _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(message)).Await();
+                _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(message), _cancellationToken).Await();
                 break;
             default:
                 throw new NotSupportedException($"Unsupported logging level '{testMessageLevel}'.");

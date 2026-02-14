@@ -15,7 +15,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
     public async Task CanUseLongTuplesAndValueTuplesForAllFrameworks(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=CanUseLongTuplesAndValueTuplesForAllFrameworks --settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=CanUseLongTuplesAndValueTuplesForAllFrameworks --settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -41,7 +41,7 @@ public sealed class TupleDynamicDataTests : AcceptanceTestBase<TupleDynamicDataT
     public async Task TupleSupportDoesNotBreakObjectArraySupport(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=TupleSupportDoesNotBreakObjectArraySupport --settings my.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ClassName=TupleSupportDoesNotBreakObjectArraySupport --settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -201,4 +201,6 @@ public class TupleSupportDoesNotBreakObjectArraySupport
 </RunSettings>
 """;
     }
+
+    public TestContext TestContext { get; set; }
 }

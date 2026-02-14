@@ -19,14 +19,28 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
             CSharpSourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        compilationResult = await DotnetCli.RunAsync(
+            $"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
-        SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
+
+        IEnumerable<SL.Target> generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint");
+
+        // Working around MSBuild regression: waiting for fix https://github.com/dotnet/msbuild/pull/12431
+        // After we insert a new SDK version that ships with a working MSBuild, the IsEmpty assert will fail.
+        // Then, remove the IsEmpty line, and bring back the code in #if false.
+        Assert.IsEmpty(generateTestingPlatformEntryPointTargets);
+#if false
+        SL.Target generateTestingPlatformEntryPoint = generateTestingPlatformEntryPointTargets.Single();
         Assert.AreEqual("Target \"_GenerateTestingPlatformEntryPoint\" skipped, due to false condition; ( '$(GenerateTestingPlatformEntryPoint)' == 'true' ) was evaluated as ( 'False' == 'true' ).", ((SL.Message)generateTestingPlatformEntryPoint.Children[0]).Text);
+#endif
+
         SL.Target includeGenerateTestingPlatformEntryPointIntoCompilation = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_IncludeGenerateTestingPlatformEntryPointIntoCompilation");
         Assert.IsEmpty(includeGenerateTestingPlatformEntryPointIntoCompilation.Children);
-        Assert.AreNotEqual(0, compilationResult.ExitCode);
+        compilationResult.AssertExitCodeIsNot(0);
     }
 
     [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
@@ -119,35 +133,47 @@ module MicrosoftTestingPlatformEntryPoint =
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
-        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
-        SL.Target generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateTestingPlatformEntryPoint");
-        SL.Task testingPlatformEntryPoint = generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
-        SL.Message generatedSource = testingPlatformEntryPoint.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("Entrypoint source:"));
-        Assert.AreEqual(expectedEntryPoint.ReplaceLineEndings(), generatedSource.Text.ReplaceLineEndings());
+        SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();
+        Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target");
+        SL.Task[] testingPlatformEntryPointTasks = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask").ToArray();
+        Assert.HasCount(1, testingPlatformEntryPointTasks, "Expected exactly one TestingPlatformEntryPointTask task");
+        SL.Message[] generatedSourceMessages = testingPlatformEntryPointTasks[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Entrypoint source:")).ToArray();
+        Assert.HasCount(1, generatedSourceMessages, "Expected exactly one message containing 'Entrypoint source:'");
+        Assert.AreEqual(expectedEntryPoint.ReplaceLineEndings(), generatedSourceMessages[0].Text.ReplaceLineEndings());
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
+        Assert.Contains("Passed!", testHostResult.StandardOutput);
 
-        SL.Target coreCompile = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "CoreCompile" && t.Children.Count > 0);
-        SL.Task csc = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).Single();
-        SL.Parameter sources = csc.FindChildrenRecursive<SL.Parameter>(t => t.Name == "Sources").Single();
+        SL.Target[] coreCompileTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "CoreCompile" && t.Children.Count > 0).ToArray();
+        Assert.HasCount(1, coreCompileTargets, "Expected exactly one CoreCompile target with children");
+        SL.Target coreCompile = coreCompileTargets[0];
+        SL.Task[] cscTasks = coreCompile.FindChildrenRecursive<SL.Task>(t => t.Name == cscProcessName).ToArray();
+        Assert.HasCount(1, cscTasks, $"Expected exactly one {cscProcessName} task");
+        SL.Task csc = cscTasks[0];
+        SL.Parameter[] sourcesParameters = csc.FindChildrenRecursive<SL.Parameter>(t => t.Name == "Sources").ToArray();
+        Assert.HasCount(1, sourcesParameters, "Expected exactly one Sources parameter");
+        SL.Parameter sources = sourcesParameters[0];
         string? sourceFilePathInObj = sources.FindChildrenRecursive<SL.Item>(i => i.Text.EndsWith($"MicrosoftTestingPlatformEntryPoint.{languageFileExtension}", StringComparison.OrdinalIgnoreCase)).SingleOrDefault()?.Text;
         Assert.IsNotNull(sourceFilePathInObj);
 
         File.Delete(buildResult.BinlogPath!);
-        buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -nodeReuse:false {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         binLog = SL.Serialization.Read(buildResult.BinlogPath!);
-        generateTestingPlatformEntryPoint = binLog.FindChildrenRecursive<SL.Target>(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).Single();
-        Assert.IsNotNull(generateTestingPlatformEntryPoint.FindChildrenRecursive<SL.Message>(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).Single());
+        generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).ToArray();
+        Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target with children on rebuild");
+        SL.Message[] skipMessages = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).ToArray();
+        Assert.HasCount(1, skipMessages, "Expected exactly one skip message for up-to-date check");
+        Assert.IsNotNull(skipMessages[0]);
 
         testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
-        testHostResult = await testHost.ExecuteAsync();
+        testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed!"));
+        Assert.Contains("Passed!", testHostResult.StandardOutput);
     }
 
     private const string CSharpSourceCode = """
@@ -453,4 +479,6 @@ module DummyTestFrameworkRegistration2 =
     let AddExtensions (_, _) = ()
 
 """;
+
+    public TestContext TestContext { get; set; }
 }

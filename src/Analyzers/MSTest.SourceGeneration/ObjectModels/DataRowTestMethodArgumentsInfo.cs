@@ -14,7 +14,7 @@ internal sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
     private readonly ImmutableArray<ImmutableArray<string>> _argumentsRows;
     private readonly TestMethodParametersInfo _parametersInfo;
 
-    public bool IsTestArgumentsEntryReturnType { get; } = true;
+    public bool IsTestArgumentsEntryReturnType => true;
 
     public string? GeneratorMethodFullName { get; }
 
@@ -43,7 +43,7 @@ internal sealed class DataRowTestMethodArgumentsInfo : ITestMethodArgumentsInfo
                 string argumentsEntry = arguments.Length > 1
                     ? "(" + string.Join(", ", arguments) + ")"
                     : arguments[0];
-                string argumentsUid = GetArgumentsUid(_parametersInfo.Parameters.Select(x => x.Name).ToArray(), arguments);
+                string argumentsUid = GetArgumentsUid([.. _parametersInfo.Parameters.Select(x => x.Name)], arguments);
                 nodeBuilder.AppendLine($"new {TestMethodInfo.TestArgumentsEntryTypeName}<{_parametersInfo.ParametersTuple}>({argumentsEntry}, \"{argumentsUid}\"),");
             }
         }

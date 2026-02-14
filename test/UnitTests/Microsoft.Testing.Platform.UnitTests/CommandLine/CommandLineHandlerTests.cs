@@ -38,8 +38,68 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Invalid command line arguments:");
-        StringAssert.Contains(result.ErrorMessage, "Unexpected argument 'a'");
+        Assert.Contains("Invalid command line arguments:", result.ErrorMessage);
+        Assert.Contains("Unexpected argument 'a'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ValidArgumentWithColonFollowedByValidArgumentWithoutColon_ReturnsTrue()
+    {
+        string[] args = ["--results-directory", "TestResults", "--timeout:60m", "--ignore-exit-code", "8"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        Assert.IsEmpty(parseResult.Errors);
+        Assert.IsFalse(parseResult.HasError);
+
+        Assert.HasCount(3, parseResult.Options);
+
+        Assert.AreEqual("results-directory", parseResult.Options[0].Name);
+        string resultsDirectory = Assert.ContainsSingle(parseResult.Options[0].Arguments);
+        Assert.AreEqual("TestResults", resultsDirectory);
+
+        Assert.AreEqual("timeout", parseResult.Options[1].Name);
+        string timeout = Assert.ContainsSingle(parseResult.Options[1].Arguments);
+        Assert.AreEqual("60m", timeout);
+
+        Assert.AreEqual("ignore-exit-code", parseResult.Options[2].Name);
+        string ignoreExitCode = Assert.ContainsSingle(parseResult.Options[2].Arguments);
+        Assert.AreEqual("8", ignoreExitCode);
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsNull(result.ErrorMessage);
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ValidArgumentWithColonValueIsShort_ReturnsTrue()
+    {
+        string[] args = ["--results-directory", "TestResults", "--ignore-exit-code:8", "--timeout", "60m"];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        Assert.IsEmpty(parseResult.Errors);
+        Assert.IsFalse(parseResult.HasError);
+
+        Assert.HasCount(3, parseResult.Options);
+
+        Assert.AreEqual("results-directory", parseResult.Options[0].Name);
+        string resultsDirectory = Assert.ContainsSingle(parseResult.Options[0].Arguments);
+        Assert.AreEqual("TestResults", resultsDirectory);
+
+        Assert.AreEqual("ignore-exit-code", parseResult.Options[1].Name);
+        string ignoreExitCode = Assert.ContainsSingle(parseResult.Options[1].Arguments);
+        Assert.AreEqual("8", ignoreExitCode);
+
+        Assert.AreEqual("timeout", parseResult.Options[2].Name);
+        string timeout = Assert.ContainsSingle(parseResult.Options[2].Arguments);
+        Assert.AreEqual("60m", timeout);
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsNull(result.ErrorMessage);
+        Assert.IsTrue(result.IsValid);
     }
 
     [TestMethod]
@@ -75,7 +135,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        StringAssert.Contains(result.ErrorMessage, "Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'");
+        Assert.Contains("Option '--userOption' is declared by multiple extensions: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -116,7 +176,7 @@ public sealed class CommandLineHandlerTests
     public async Task ParseAndValidateAsync_InvalidArgumentArity_ReturnsFalse()
     {
         // Arrange
-        string[] args = ["--help arg"];
+        string[] args = ["--help", "arg"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         // Act
@@ -240,8 +300,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -258,8 +318,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -276,8 +336,8 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsTrue(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -307,11 +367,11 @@ public sealed class CommandLineHandlerTests
         string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
-        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
-            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
+        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data, CancellationToken _) =>
             {
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Invalid command line arguments:"));
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Unexpected argument"));
+                Assert.Contains("Invalid command line arguments:", ((TextOutputDeviceData)data).Text);
+                Assert.Contains("Unexpected argument", ((TextOutputDeviceData)data).Text);
             });
 
         CommandLineHandler commandLineHandler = new(parseResult, _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders,
@@ -329,16 +389,16 @@ public sealed class CommandLineHandlerTests
     {
         public const string HelpOption = "help";
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -357,16 +417,16 @@ public sealed class CommandLineHandlerTests
     {
         public const string Option = "option";
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -387,16 +447,16 @@ public sealed class CommandLineHandlerTests
 
         public ExtensionCommandLineProviderMockInvalidConfiguration(string optionName = "option") => _option = optionName;
 
-        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+        public string Uid => nameof(PlatformCommandLineProvider);
 
         /// <inheritdoc />
-        public string Version { get; } = AppVersion.DefaultSemVer;
+        public string Version => AppVersion.DefaultSemVer;
 
         /// <inheritdoc />
-        public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+        public string DisplayName => "Microsoft Testing Platform command line provider";
 
         /// <inheritdoc />
-        public string Description { get; } = "Built-in command line provider";
+        public string Description => "Built-in command line provider";
 
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);

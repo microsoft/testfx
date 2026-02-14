@@ -24,6 +24,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 /// <summary>
 /// Task that invokes the Testing Platform.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
 public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
@@ -32,7 +33,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     private readonly IFileSystem _fileSystem;
     private readonly PipeNameDescription _pipeNameDescription;
     private readonly CancellationTokenSource _waitForConnections = new();
-    private readonly List<NamedPipeServer> _connections = new();
+    private readonly List<NamedPipeServer> _connections = [];
     private readonly StringBuilder _output = new();
     private readonly Lock _initLock = new();
     private readonly Architecture _currentProcessArchitecture = RuntimeInformation.ProcessArchitecture;
@@ -54,7 +55,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             Debugger.Launch();
         }
 
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
     }
 
     internal InvokeTestingPlatformTask(IFileSystem fileSystem) => _fileSystem = fileSystem;
@@ -207,7 +208,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
 
             Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
-            PlatformArchitecture targetArchitecture = EnumPolyfill.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+            PlatformArchitecture targetArchitecture = Enum.Parse<PlatformArchitecture>(TestArchitecture.ItemSpec, ignoreCase: true);
             StringBuilder resolutionLog = new();
             DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
             if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))
@@ -241,7 +242,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
     }
 
     private bool IsCurrentProcessArchitectureCompatible() =>
-        _currentProcessArchitecture == EnumPolyfill.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+        _currentProcessArchitecture == Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 
     private string? TryGetRunCommand()
     {
@@ -291,9 +292,9 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         // If we are not "dotnet.exe" and not "mono", then we are given an executable from user and we are running on Windows.
         builder.AppendSwitchIfNotNull($"--{MSBuildConstants.MSBuildNodeOptionKey} ", _pipeNameDescription.Name);
 
-        if (!string.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
+        if (!RoslynString.IsNullOrEmpty(TestingPlatformCommandLineArguments?.ItemSpec))
         {
-            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments!.ItemSpec} ");
+            builder.AppendTextUnquoted($" {TestingPlatformCommandLineArguments.ItemSpec} ");
         }
 
         if (VSTestCLIRunSettings?.Length > 0)
@@ -352,7 +353,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                     pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                     pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
                     pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token);
+                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token).ConfigureAwait(false);
                     _connections.Add(pipeServer);
                     Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
                 }
@@ -433,6 +434,10 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private Task<IResponse> HandleRequestAsync(IRequest request)
     {
+        // For the case, of orchestrator (e.g, Retry), we can get ModuleInfoRequest from the orchestrator itself.
+        // If there is no orchestrator or the orchestrator didn't send ModuleInfoRequest, we will get it from the first test host.
+        // For the case of retry, the request is different between the orchestrator and the test host.
+        // More specifically, the results directory is different (orchestrator points to original, while test host points to the specific retry results directory).
         if (request is ModuleInfoRequest moduleInfo)
         {
             if (_moduleInfo is null)

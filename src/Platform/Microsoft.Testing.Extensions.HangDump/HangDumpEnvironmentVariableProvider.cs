@@ -28,15 +28,14 @@ internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironment
 
     public string Description => ExtensionResources.HangDumpExtensionDescription;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName) &&
-        !_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey));
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName));
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
         environmentVariables.SetVariable(
             new(_hangDumpConfiguration.PipeNameKey, _hangDumpConfiguration.PipeNameValue, false, true));
         environmentVariables.SetVariable(
-            new(HangDumpConfiguration.MutexNameSuffix, _hangDumpConfiguration.MutexSuffix, false, true));
+            new(HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable, _hangDumpConfiguration.NamedPipeSuffix, false, true));
         return Task.CompletedTask;
     }
 
@@ -56,18 +55,18 @@ internal sealed class HangDumpEnvironmentVariableProvider : ITestHostEnvironment
                     string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, _hangDumpConfiguration.PipeNameKey, envVar.Value, _hangDumpConfiguration.PipeNameKey)));
         }
 
-        if (!environmentVariables.TryGetVariable(HangDumpConfiguration.MutexNameSuffix, out envVar))
+        if (!environmentVariables.TryGetVariable(HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable, out envVar))
         {
             return Task.FromResult(
                 ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, HangDumpConfiguration.MutexNameSuffix)));
+                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage, HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable)));
         }
 
-        if (envVar.Value != _hangDumpConfiguration.MutexSuffix)
+        if (envVar.Value != _hangDumpConfiguration.NamedPipeSuffix)
         {
             return Task.FromResult(
                 ValidationResult.Invalid(
-                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, HangDumpConfiguration.MutexNameSuffix, envVar.Value, _hangDumpConfiguration.MutexSuffix)));
+                    string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage, HangDumpConfiguration.NamedPipeNameSuffixEnvironmentVariable, envVar.Value, _hangDumpConfiguration.NamedPipeSuffix)));
         }
 
         // No problem found

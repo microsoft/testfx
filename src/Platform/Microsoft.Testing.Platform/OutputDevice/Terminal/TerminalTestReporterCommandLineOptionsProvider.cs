@@ -18,10 +18,10 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : ICommandL
     public const string OutputOptionDetailedArgument = "detailed";
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(TerminalTestReporterCommandLineOptionsProvider);
+    public string Uid => nameof(TerminalTestReporterCommandLineOptionsProvider);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.TerminalTestReporterDisplayName;

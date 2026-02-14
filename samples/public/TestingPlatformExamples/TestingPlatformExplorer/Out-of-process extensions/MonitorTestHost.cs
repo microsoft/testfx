@@ -30,17 +30,17 @@ internal sealed class MonitorTestHost : ITestHostProcessLifetimeHandler, IOutput
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("BeforeTestHostProcessStartAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-        });
+        }, cancellationToken);
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"OnTestHostProcessExitedAsync, test host exited with exit code {testHostProcessInformation.ExitCode}")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-        });
+        }, cancellationToken);
 
-    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
         => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"OnTestHostProcessStartedAsync, test host started with PID {testHostProcessInformation.PID}")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
-        });
+        }, cancellationToken);
 }

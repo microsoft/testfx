@@ -10,6 +10,66 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class AnalyzersTests : AcceptanceTestBase<NopAssetFixture>
 {
     [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task MSTEST0001(bool isMTP, bool isAdapterReferenced)
+    {
+        string code = $$"""
+#file TestForMSTEST0001.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFrameworks$</TargetFramework>
+    <RunAnalyzers>true</RunAnalyzers>
+    <MSTestAnalysisMode>all</MSTestAnalysisMode>
+
+    {{(isMTP ? """
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+    """ : string.Empty)}}
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    {{(isAdapterReferenced ? "<PackageReference Include=\"MSTest.TestAdapter\" Version=\"$MSTestVersion$\" />" : string.Empty)}}
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+}
+""".PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+    .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion);
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync("TestForMSTEST0001", code);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        if (isAdapterReferenced)
+        {
+            result.AssertOutputContains("warning MSTEST0001");
+        }
+        else
+        {
+            result.AssertOutputDoesNotContain("warning MSTEST0001");
+        }
+    }
+
+    [TestMethod]
     public async Task AnalyzersShouldBeEnabledWhenUsingMetapackage()
     {
         string code = """
@@ -51,7 +111,11 @@ public class UnitTest1
     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("AnalyzersMetapackage", code);
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
         result.AssertOutputContains("MSTEST0014");
     }
 
@@ -87,7 +151,11 @@ public class UnitTest1
     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("AnalyzersTestFrameworkPackage", code);
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
         result.AssertOutputContains("MSTEST0014");
     }
 
@@ -126,21 +194,26 @@ public class UnitTest1
     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("Analyzers", code);
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, environmentVariables: new()
-        {
-            ["DOTNET_CLI_UI_LANGUAGE"] = "it-IT",
-            ["PreferredUILang"] = "it-IT",
-            ["VSLang"] = "1040",
-        }, warnAsError: false);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build {testAsset.TargetAssetPath}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            environmentVariables: new()
+            {
+                ["DOTNET_CLI_UI_LANGUAGE"] = "it-IT",
+                ["PreferredUILang"] = "it-IT",
+                ["VSLang"] = "1040",
+            },
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
         result.AssertOutputContains("DataRow deve essere impostato solo su un metodo di test");
     }
 
     [TestMethod]
-    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0017", "MSTEST0021" })]
-    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0017", "MSTEST0021" })]
-    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0017", "MSTEST0021" })]
-    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0017" }, new[] { "MSTEST0004", "MSTEST0021" })]
-    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0017" }, new[] { "MSTEST0021" })]
+    [DataRow("None", new string[0], new[] { "MSTEST0003", "MSTEST0004", "MSTEST0014", "MSTEST0016", "MSTEST0021" })]
+    [DataRow("", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0016", "MSTEST0021" })]
+    [DataRow("Default", new[] { "warning MSTEST0003", "warning MSTEST0014" }, new[] { "MSTEST0004", "MSTEST0016", "MSTEST0021" })]
+    [DataRow("Recommended", new[] { "error MSTEST0003", "warning MSTEST0014", "warning MSTEST0016" }, new[] { "MSTEST0004", "MSTEST0021" })]
+    [DataRow("All", new[] { "error MSTEST0003", "warning MSTEST0004", "warning MSTEST0014", "warning MSTEST0016" }, new[] { "MSTEST0021" })]
     public async Task VerifyMSTestAnalysisModeForDifferentAnalyzers(string analysisMode, string[] contains, string[] doesNotContain)
     {
         string code = """
@@ -177,7 +250,6 @@ public class UnitTest1
     [DataRow(0)]
     public void TestMethod2(int x)
     {
-        Assert.AreEqual(x, 0);
     }
 }
 
@@ -192,6 +264,11 @@ public class UnitTest3
     public void MyTestCleanup()
     {
     }
+}
+
+[TestClass]
+public sealed class MyEmptyTestClass // generates MSTEST0016
+{
 }
 
 [TestClass]
@@ -210,7 +287,7 @@ public class UnitTest4
         // MSTEST0003 is TestMethodShouldBeValidAnalyzer, which is escalated to error in Recommended and All.
         // MSTEST0004 is PublicTypeShouldBeTestClassAnalyzer. Info and not enabled by default.
         // MSTEST0014 is DataRowShouldBeValidAnalyzer. Warn and enabled by default.
-        // MSTEST0017 is AssertionArgsShouldBePassedInCorrectOrder. Info and enabled by default.
+        // MSTEST0016 is TestClassShouldHaveTestMethodAnalyzer. Info and enabled by default.
         // MSTEST0021 is PreferDisposeOverTestCleanupAnalyzer, which is disabled even in All mode.
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(VerifyMSTestAnalysisModeForDifferentAnalyzers), code);
         await AssertAnalysisModeAsync(analysisMode, contains, doesNotContain, testAsset.TargetAssetPath);
@@ -233,12 +310,14 @@ public class UnitTest4
 
         foreach (string containsElement in contains)
         {
-            StringAssert.Contains(output, containsElement, $"Expected to find '{containsElement}' for analysisMode {mode}");
+            Assert.Contains(containsElement, output, $"Expected to find '{containsElement}' for analysisMode {mode}");
         }
 
         foreach (string doesNotContainElement in doesNotContain)
         {
-            Assert.IsFalse(output.Contains(doesNotContainElement), $"Expected to not find '{doesNotContainElement}' for analysisMode {mode}");
+            Assert.DoesNotContain(doesNotContainElement, output, $"Expected to not find '{doesNotContainElement}' for analysisMode {mode}");
         }
     }
+
+    public TestContext TestContext { get; set; }
 }

@@ -15,10 +15,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TimeoutOptionKey = "timeout";
     public const string InfoOptionKey = "info";
     public const string DiagnosticOptionKey = "diagnostic";
-    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-output-fileprefix";
+    public const string DiagnosticOutputFilePrefixOptionKey = "diagnostic-file-prefix";
     public const string DiagnosticOutputDirectoryOptionKey = "diagnostic-output-directory";
     public const string DiagnosticVerbosityOptionKey = "diagnostic-verbosity";
-    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-filelogger-synchronouswrite";
+    public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-synchronous-write";
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
@@ -28,6 +28,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
+    public const string FilterUidOptionKey = "filter-uid";
+    public const string DebugAttachOptionKey = "debug";
 
     public const string ServerOptionKey = "server";
     public const string ClientPortOptionKey = "client-port";
@@ -57,6 +59,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ConfigFileOptionKey, PlatformResources.PlatformCommandLineConfigFileOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(FilterUidOptionKey, PlatformResources.PlatformCommandLineFilterUidOptionDescription, ArgumentArity.OneOrMore, false, isBuiltIn: true),
+        new(DebugAttachOptionKey, PlatformResources.PlatformCommandLineDebugAttachOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
 
         // Hidden options
         new(HelpOptionQuestionMark, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -70,10 +74,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(PlatformCommandLineProvider);
+    public string Uid => nameof(PlatformCommandLineProvider);
 
     /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
+    public string Version => AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
     public string DisplayName { get; } = PlatformResources.PlatformCommandLineProviderDisplayName;
@@ -111,7 +115,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         {
             string arg = arguments[0];
             int size = arg.Length;
-            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], out float _))
+            if ((char.ToLowerInvariant(arg[size - 1]) != 'h' && char.ToLowerInvariant(arg[size - 1]) != 'm' && char.ToLowerInvariant(arg[size - 1]) != 's') || !float.TryParse(arg[..(size - 1)], NumberStyles.Float, CultureInfo.InvariantCulture, out float _))
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineTimeoutArgumentErrorMessage);
             }
@@ -143,7 +147,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public static int GetMinimumExpectedTests(ICommandLineOptions commandLineOptions)
     {
         bool hasMinimumExpectedTestsOptionKey = commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? minimumExpectedTests);
-        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? Array.Empty<string>()).Result.IsValid)
+        if (!hasMinimumExpectedTestsOptionKey || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests ?? []).Result.IsValid)
         {
             return 0;
         }
@@ -179,8 +183,21 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
+        if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))
+        {
+            if (OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.SyncFlushNotSupportedInBrowserErrorMessage);
+            }
+        }
+
         if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
+            if (OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
+            }
+
             _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
             ApplicationStateGuard.Ensure(pid is not null);
             RoslynDebug.Assert(pid.Length == 1);
@@ -189,9 +206,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             {
                 // We let the api to do the validity check before to go down the subscription path.
                 // If we don't fail here but we fail below means that the parent process is not there anymore and we can take it as exited.
-#pragma warning disable CA1416 // Validate platform compatibility
                 _ = Process.GetProcessById(parentProcessPid);
-#pragma warning restore CA1416
             }
             catch (ArgumentException ex)
             {

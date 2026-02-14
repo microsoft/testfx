@@ -13,9 +13,9 @@ public class UnitTest1
 {
     [TestMethod]
     public void TestMethod1()
-    {
-        Assert.AreEqual(0, 0);
-    }
+#pragma warning disable MSTEST0032 // Assertion condition is always true
+        => Assert.AreEqual(0, 0);
+#pragma warning restore MSTEST0032 // Assertion condition is always true
 
     // Use the UITestMethod attribute for tests that need to run on the UI thread.
     [UITestMethod]

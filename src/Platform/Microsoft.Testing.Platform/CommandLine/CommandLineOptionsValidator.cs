@@ -3,7 +3,9 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
@@ -59,13 +61,37 @@ internal static class CommandLineOptionsValidator
             return result5;
         }
 
-        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, providerAndOptionByOptionName) is { IsValid: false } result6)
+        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
         {
             return result6;
         }
 
         // Last validation step
-        return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions);
+        return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
+    }
+
+    public static async Task CheckForObsoleteOptionsAsync(
+        CommandLineParseResult commandLineParseResult,
+        IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
+        IEnumerable<ICommandLineOptionsProvider> extensionCommandLineOptionsProviders,
+        IOutputDevice outputDevice,
+        IOutputDeviceDataProducer outputDeviceDataProducer,
+        CancellationToken cancellationToken)
+    {
+        var allOptions = systemCommandLineOptionsProviders
+            .Union(extensionCommandLineOptionsProviders)
+            .SelectMany(provider => provider.GetCommandLineOptions())
+            .Where(option => option.ObsolescenceMessage is not null)
+            .ToDictionary(option => option.Name);
+
+        foreach (CommandLineParseOption optionRecord in commandLineParseResult.Options)
+        {
+            if (allOptions.TryGetValue(optionRecord.Name, out CommandLineOption? option))
+            {
+                string warningMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionObsoleteWarning, optionRecord.Name, option.ObsolescenceMessage);
+                await outputDevice.DisplayAsync(outputDeviceDataProducer, new WarningMessageOutputDeviceData(warningMessage), cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(
@@ -268,7 +294,7 @@ internal static class CommandLineOptionsValidator
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Name];
-            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
@@ -286,8 +312,8 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>>.KeyCollection systemProviders,
         ICommandLineOptions commandLineOptions)
     {
-        StringBuilder? stringBuilder = await ValidateConfigurationAsync(systemProviders, commandLineOptions, null);
-        stringBuilder = await ValidateConfigurationAsync(extensionsProviders, commandLineOptions, stringBuilder);
+        StringBuilder? stringBuilder = await ValidateConfigurationAsync(systemProviders, commandLineOptions, null).ConfigureAwait(false);
+        stringBuilder = await ValidateConfigurationAsync(extensionsProviders, commandLineOptions, stringBuilder).ConfigureAwait(false);
 
         return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
@@ -301,7 +327,7 @@ internal static class CommandLineOptionsValidator
     {
         foreach (ICommandLineOptionsProvider commandLineOptionsProvider in providers)
         {
-            ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
+            ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();

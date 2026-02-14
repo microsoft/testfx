@@ -10,7 +10,7 @@ internal static class DiagnosticIds
     public const string TestMethodShouldBeValidRuleId = "MSTEST0003";
     public const string PublicTypeShouldBeTestClassRuleId = "MSTEST0004";
     public const string TestContextShouldBeValidRuleId = "MSTEST0005";
-    public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006";
+    // public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseAttributeOnTestMethodRuleId = "MSTEST0007";
     public const string TestInitializeShouldBeValidRuleId = "MSTEST0008";
     public const string TestCleanupShouldBeValidRuleId = "MSTEST0009";
@@ -38,7 +38,7 @@ internal static class DiagnosticIds
     public const string DoNotUseSystemDescriptionAttributeRuleId = "MSTEST0031";
     public const string ReviewAlwaysTrueAssertConditionAnalyzerRuleId = "MSTEST0032";
     public const string NonNullableReferenceNotInitializedSuppressorRuleId = "MSTEST0033";
-    public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034";
+    // public const string UseClassCleanupBehaviorEndOfClassRuleId = "MSTEST0034"; - // Don't remove this commented out line, and don't reuse this ID.
     public const string UseDeploymentItemWithTestMethodOrTestClassRuleId = "MSTEST0035";
     public const string DoNotUseShadowingRuleId = "MSTEST0036";
     public const string UseProperAssertMethodsRuleId = "MSTEST0037";
@@ -48,4 +48,24 @@ internal static class DiagnosticIds
     public const string UseConditionBaseWithTestClassRuleId = "MSTEST0041";
     public const string DuplicateDataRowRuleId = "MSTEST0042";
     public const string UseRetryWithTestMethodRuleId = "MSTEST0043";
+    public const string PreferTestMethodOverDataTestMethodRuleId = "MSTEST0044";
+    public const string UseCooperativeCancellationForTimeoutRuleId = "MSTEST0045";
+    public const string StringAssertToAssertRuleId = "MSTEST0046";
+    public const string UnusedParameterSuppressorRuleId = "MSTEST0047";
+    public const string TestContextPropertyUsageRuleId = "MSTEST0048";
+    public const string FlowTestContextCancellationTokenRuleId = "MSTEST0049";
+    public const string GlobalTestFixtureShouldBeValidRuleId = "MSTEST0050";
+    public const string AssertThrowsShouldContainSingleStatementRuleId = "MSTEST0051";
+    public const string AvoidExplicitDynamicDataSourceTypeRuleId = "MSTEST0052";
+    // public const string AvoidAssertFormatParametersRuleId = "MSTEST0053"; - // Don't remove this commented out line, and don't reuse this ID.
+    public const string UseCancellationTokenPropertyRuleId = "MSTEST0054";
+    public const string IgnoreStringMethodReturnValueRuleId = "MSTEST0055";
+    public const string TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId = "MSTEST0056";
+    public const string TestMethodAttributeShouldPropagateSourceInformationRuleId = "MSTEST0057";
+    public const string AvoidAssertsInCatchBlocksRuleId = "MSTEST0058";
+    public const string DoNotUseParallelizeAndDoNotParallelizeTogetherRuleId = "MSTEST0059";
+    public const string DuplicateTestMethodAttributeRuleId = "MSTEST0060";
+    public const string UseOSConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0061";
+    public const string AvoidOutRefTestMethodParametersRuleId = "MSTEST0062";
+    public const string TestClassConstructorShouldBeValidRuleId = "MSTEST0063";
 }

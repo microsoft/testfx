@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Extensions.TestReports.Resources;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
@@ -47,16 +47,39 @@ public static class TrxReportExtensions
                 serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
 
-        builder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider =>
-            new TrxTestApplicationLifecycleCallbacks(
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetEnvironment()));
+#if NETCOREAPP
+        if (!OperatingSystem.IsBrowser())
+#else
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")))
+#endif
+        {
+            NonBrowserRegistrations(builder);
+        }
+
         builder.TestHost.AddDataConsumer(compositeTestSessionTrxService);
-        builder.TestHost.AddTestSessionLifetimeHandle(compositeTestSessionTrxService);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeTestSessionTrxService);
 
         builder.CommandLine.AddProvider(() => commandLine);
 
-        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        ToolTrxCompareFactory toolTrxCompareFactory = new();
+        TrxCompareToolCommandLine createTrxCompareToolCommandLine = toolTrxCompareFactory.CreateTrxCompareToolCommandLine();
+        builder.CommandLine.AddProvider(() => createTrxCompareToolCommandLine);
+
+        testApplicationBuilder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetOutputDevice(),
+            serviceProvider.GetRequiredService<ITask>()));
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    private static void NonBrowserRegistrations(ITestApplicationBuilder builder)
+    {
+        builder.TestHost.AddTestHostApplicationLifetime(serviceProvider =>
+            new TrxTestApplicationLifecycleCallbacks(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment()));
+
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), new SystemEnvironment());
         var compositeLifeTimeHandler =
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
@@ -81,14 +104,5 @@ public static class TrxReportExtensions
             serviceProvider.GetLoggerFactory().CreateLogger<TrxEnvironmentVariableProvider>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
             return new TrxEnvironmentVariableProvider(serviceProvider.GetCommandLineOptions(), pipeNameDescription.Name);
         });
-
-        ToolTrxCompareFactory toolTrxCompareFactory = new();
-        TrxCompareToolCommandLine createTrxCompareToolCommandLine = toolTrxCompareFactory.CreateTrxCompareToolCommandLine();
-        builder.CommandLine.AddProvider(() => createTrxCompareToolCommandLine);
-
-        testApplicationBuilder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
-            serviceProvider.GetCommandLineOptions(),
-            serviceProvider.GetOutputDevice(),
-            serviceProvider.GetRequiredService<ITask>()));
     }
 }

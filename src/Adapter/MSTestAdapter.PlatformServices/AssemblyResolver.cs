@@ -8,7 +8,7 @@ using System.Security;
 using System.Security.Permissions;
 #endif
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -18,24 +18,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The idea is that Unit Test Adapter creates App Domain for running tests and sets AppBase to tests dir.
 /// Since we don't want to put our assemblies to GAC and they are not in tests dir, we use custom way to resolve them.
 /// </summary>
-#if NETFRAMEWORK
-#if NET6_0_OR_GREATER
-[Obsolete(Constants.PublicTypeObsoleteMessage, DiagnosticId = "MSTESTOBS")]
-#else
-[Obsolete(Constants.PublicTypeObsoleteMessage)]
+#pragma warning disable CA1852 // Seal internal types - This class is inherited in tests on .NET Framework.
+internal
+#if !NETFRAMEWORK
+    sealed
 #endif
-public
-#else
-internal sealed
-#endif
-class AssemblyResolver :
+    class AssemblyResolver :
 #if NETFRAMEWORK
         MarshalByRefObject,
 #endif
     IDisposable
 {
     /// <summary>
-    /// The assembly name of the dll containing logger APIs(EqtTrace) from the TestPlatform.
+    /// The assembly name of the dll containing logger APIs(PlatformServiceProvider.Instance.AdapterTraceLogger) from the TestPlatform.
     /// </summary>
     /// <remarks>
     /// The reason we have this is because the AssemblyResolver itself logs information during resolution.
@@ -44,7 +39,7 @@ class AssemblyResolver :
     private const string LoggerAssemblyNameLegacy = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
 
     /// <summary>
-    /// The assembly name of the dll containing logger APIs(EqtTrace) from the TestPlatform.
+    /// The assembly name of the dll containing logger APIs(PlatformServiceProvider.Instance.AdapterTraceLogger) from the TestPlatform.
     /// </summary>
     /// <remarks>
     /// The reason we have this is because the AssemblyResolver itself logs information during resolution.
@@ -104,7 +99,7 @@ class AssemblyResolver :
     /// </remarks>
     public AssemblyResolver(IList<string> directories)
     {
-        Guard.NotNullOrEmpty(directories);
+        Ensure.NotNullOrEmpty(directories);
 
         _searchDirectories = [.. directories];
         _directoryList = new Queue<RecursiveDirectoryPath>();
@@ -304,7 +299,6 @@ class AssemblyResolver :
 #else
     private static
 #endif
-
     // This whole class is not used in source generator mode.
 #pragma warning disable IL2026 // Members attributed with RequiresUnreferencedCode may break when trimming
     Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
@@ -333,7 +327,7 @@ class AssemblyResolver :
 #endif
     Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
-        if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
+        if (searchDirectorypaths.Count == 0)
         {
             return null;
         }
@@ -352,9 +346,9 @@ class AssemblyResolver :
                 name,
                 () =>
                 {
-                    if (EqtTrace.IsInfoEnabled)
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                     {
-                        EqtTrace.Info(
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
                             "MSTest.AssemblyResolver.OnResolve: Failed to create assemblyName '{0}'. Reason: {1} ",
                             name,
                             ex);
@@ -377,9 +371,9 @@ class AssemblyResolver :
                 name,
                 () =>
                 {
-                    if (EqtTrace.IsVerboseEnabled)
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsVerboseEnabled)
                     {
-                        EqtTrace.Verbose("MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'", requestedName.Name, dir);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Verbose("MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'", requestedName.Name, dir);
                     }
                 });
 
@@ -399,16 +393,16 @@ class AssemblyResolver :
                             name,
                             () =>
                             {
-                                if (EqtTrace.IsInfoEnabled)
+                                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                                 {
-                                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
+                                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
                                 }
                             });
                         _resolvedAssemblies[name] = null;
                         return null;
                     }
 
-                    s_currentlyLoading ??= new List<string>();
+                    s_currentlyLoading ??= [];
                     s_currentlyLoading.Add(assemblyPath); // Push
                     isPushed = true;
                 }
@@ -507,9 +501,9 @@ class AssemblyResolver :
             args.Name,
             () =>
             {
-                if (EqtTrace.IsInfoEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                 {
-                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'", args.Name);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'", args.Name);
                 }
             });
 
@@ -519,9 +513,9 @@ class AssemblyResolver :
             assemblyNameToLoad,
             () =>
             {
-                if (EqtTrace.IsInfoEnabled)
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                 {
-                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'", assemblyNameToLoad);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'", assemblyNameToLoad);
                 }
             });
 
@@ -571,9 +565,9 @@ class AssemblyResolver :
                         assemblyNameToLoad,
                         () =>
                         {
-                            if (EqtTrace.IsWarningEnabled)
+                            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                             {
-                                EqtTrace.Warning(
+                                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
                                 "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
                                 currentNode.DirectoryPath);
                             }
@@ -598,10 +592,7 @@ class AssemblyResolver :
 
                     assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
 
-                    if (assembly != null)
-                    {
-                        _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
-                    }
+                    _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
 
                     return assembly;
                 }
@@ -613,10 +604,7 @@ class AssemblyResolver :
 
                 assembly = Assembly.Load(assemblyNameToLoad);
 
-                if (assembly != null)
-                {
-                    _resolvedAssemblies[assemblyNameToLoad] = assembly;
-                }
+                _resolvedAssemblies[assemblyNameToLoad] = assembly;
 
                 return assembly;
             }
@@ -626,9 +614,9 @@ class AssemblyResolver :
                     args.Name,
                     () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
                         }
                     });
             }
@@ -655,9 +643,9 @@ class AssemblyResolver :
                 assemblyName,
                 () =>
                 {
-                    if (EqtTrace.IsInfoEnabled)
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                     {
-                        EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved '{0}'", assemblyName);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Resolved '{0}'", assemblyName);
                     }
                 });
             return true;
@@ -668,8 +656,8 @@ class AssemblyResolver :
 
     /// <summary>
     /// Call logger APIs safely. We do not want a stackoverflow when objectmodel assembly itself
-    /// is being resolved and an EqtTrace message prompts the load of the same dll again.
-    /// CLR does not trigger a load when the EqtTrace messages are in a lambda expression. Leaving it that way
+    /// is being resolved and an PlatformServiceProvider.Instance.AdapterTraceLogger message prompts the load of the same dll again.
+    /// CLR does not trigger a load when the PlatformServiceProvider.Instance.AdapterTraceLogger messages are in a lambda expression. Leaving it that way
     /// to preserve readability instead of creating wrapper functions.
     /// </summary>
     /// <param name="assemblyName">The assembly being resolved.</param>
@@ -731,9 +719,9 @@ class AssemblyResolver :
                 assemblyName,
                 () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'", assemblyName);
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'", assemblyName);
                         }
                     });
 
@@ -745,9 +733,9 @@ class AssemblyResolver :
                 assemblyName,
                 () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
                         }
                     });
 
@@ -763,9 +751,9 @@ class AssemblyResolver :
                 assemblyName,
                 () =>
                     {
-                        if (EqtTrace.IsInfoEnabled)
+                        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                         {
-                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
+                            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
                         }
                     });
         }

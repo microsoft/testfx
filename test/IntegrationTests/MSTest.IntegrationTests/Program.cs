@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Extensions;
 
-using TestFramework.ForTestingMSTest;
+[assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel, Workers = 0)]
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 
@@ -16,7 +16,7 @@ builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddRetryProvider();
 builder.AddAzureDevOpsProvider();
 
-builder.AddInternalTestFramework();
+builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
 ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

@@ -32,7 +32,7 @@ internal static class SyntaxExtensions
             { " ", "·" },
         };
 
-        var regex = new Regex(string.Join("|", map.Keys));
+        var regex = new Regex(string.Join('|', map.Keys));
         return regex.Replace(text, m => map[m.Value]);
     }
 

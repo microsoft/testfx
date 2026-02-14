@@ -38,7 +38,7 @@ public sealed class TrxReportGeneratorCommandLineTests
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [filename]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(isTrxFile ? TestReports.Resources.ExtensionResources.TrxReportFileNameShouldNotContainPath : TestReports.Resources.ExtensionResources.TrxReportFileNameExtensionIsNotTrx, validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(isTrxFile ? TrxReport.Resources.ExtensionResources.TrxReportFileNameShouldNotContainPath : TrxReport.Resources.ExtensionResources.TrxReportFileNameExtensionIsNotTrx, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]
@@ -93,6 +93,6 @@ public sealed class TrxReportGeneratorCommandLineTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(isDiscoverTestsSet ? TestReports.Resources.ExtensionResources.TrxReportIsNotValidForDiscovery : TestReports.Resources.ExtensionResources.TrxReportFileNameRequiresTrxReport, validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(isDiscoverTestsSet ? TrxReport.Resources.ExtensionResources.TrxReportIsNotValidForDiscovery : TrxReport.Resources.ExtensionResources.TrxReportFileNameRequiresTrxReport, validateOptionsResult.ErrorMessage);
     }
 }

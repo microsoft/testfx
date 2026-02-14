@@ -1,14 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
-    <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
 
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
-    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework</AssemblyName>
-    <DefineConstants>TRACE</DefineConstants>
+    <AssemblyName>MSTest.TestFramework</AssemblyName>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+
+    <!-- TestFramework.Extensions.csproj is what we actually package as "MSTest.TestFramework". -->
+    <!-- Without changing PackageId here, NuGet will view this as a circular reference -->
+    <PackageId>NotPublishable</PackageId>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,27 +37,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resources\FrameworkMessages.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>FrameworkMessages.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Update="Resources\FrameworkMessages.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Polyfills" />
+    <Using Include="$(RootNamespace).Resources" />
   </ItemGroup>
 
 </Project>

@@ -86,7 +86,7 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
                 MethodDeclarationSyntax newTestInitialize;
                 if (existingTestInitialize.Body != null)
                 {
-                    BlockSyntax newTestInitializeBody = existingTestInitialize.Body.AddStatements(constructorStatements ?? Array.Empty<StatementSyntax>());
+                    BlockSyntax newTestInitializeBody = existingTestInitialize.Body.AddStatements(constructorStatements ?? []);
                     newTestInitialize = existingTestInitialize.WithBody(newTestInitializeBody);
                 }
                 else

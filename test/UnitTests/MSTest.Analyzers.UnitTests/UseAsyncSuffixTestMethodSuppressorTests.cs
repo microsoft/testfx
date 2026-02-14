@@ -28,7 +28,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
             public class SomeClass
             {
                 [TestMethod]
-                public async Task [|TestMethod|]() { }
+                public async Task {|#0:TestMethod|}() { }
             }
 
             """;
@@ -37,11 +37,13 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
         }.RunAsync();
 
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(true) },
         }.RunAsync();
     }
 
@@ -58,7 +60,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
             public class SomeClass
             {
                 [DataTestMethod, DataRow(0)]
-                public async Task [|TestMethod|](int arg) { }
+                public async Task {|#0:TestMethod|}(int arg) { }
             }
 
             """;
@@ -66,11 +68,13 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         await new VerifyCS.Test
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(false) },
         }.RunAsync();
 
         await new TestWithSuppressor
         {
             TestState = { Sources = { code } },
+            ExpectedDiagnostics = { VerifyCS.Diagnostic(WarnForMissingAsyncSuffix.Rule).WithLocation(0).WithIsSuppressed(true) },
         }.RunAsync();
     }
 
@@ -107,7 +111,7 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests
         [SuppressMessage("MicrosoftCodeAnalysisDesign", "RS1017:DiagnosticId for analyzers must be a non-null constant.", Justification = "For suppression test only.")]
         public static readonly DiagnosticDescriptor Rule = new(UseAsyncSuffixTestMethodSuppressor.Rule.SuppressedDiagnosticId, "Title", "Message", "Category", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
 
         public override void Initialize(AnalysisContext context)
         {

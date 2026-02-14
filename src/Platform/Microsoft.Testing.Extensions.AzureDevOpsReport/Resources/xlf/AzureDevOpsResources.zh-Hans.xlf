@@ -30,7 +30,7 @@
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
         <target state="translated">要用于所报告事件的严重性。选项为: error (默认)和 warning。</target>
-        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+        <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
     </body>
   </file>

@@ -4,7 +4,7 @@ This document contains all the required information to build, test, and consume 
 
 ## Prerequisites
 
-To build and test all functionalities of MSTest, we recommend installing [Visual Studio 2022](https://visualstudio.microsoft.com/) with the following workloads:
+To build and test all functionalities of MSTest, we recommend installing [Visual Studio 2026](https://visualstudio.microsoft.com/) with the following workloads:
 
 - `.NET desktop development`
 - `Universal Windows Platform development`
@@ -120,15 +120,15 @@ artifacts
 
 with
 
-| directory         | description |
-|-------------------|-------------|
-| bin               | Build output of each project. |
-| obj               | Intermediate directory for each project. |
-| packages          | NuGet packages produced by all projects in the repo. |
-| SymStore          | Storage for converted Windows PDBs |
-| log               | Build binary log and other logs. |
-| tmp               | Temp files generated during build. |
-| toolset           | Files generated during toolset restore. |
+| directory         | description                                            |
+|-------------------|--------------------------------------------------------|
+| bin               | Build output of each project.                          |
+| obj               | Intermediate directory for each project.               |
+| packages          | NuGet packages produced by all projects in the repo.   |
+| SymStore          | Storage for converted Windows PDBs                     |
+| log               | Build binary log and other logs.                       |
+| tmp               | Temp files generated during build.                     |
+| toolset           | Files generated during toolset restore.                |
 
 ## Testing
 
@@ -166,3 +166,7 @@ Note that `-test` allows to run the unit tests and `-integrationTest` allows to 
 If you are working with Visual Studio, we recommend opening it through the `open-vs.cmd` script at the repo root. This script will set all the required environment variables required so that Visual Studio picks up the locally downloaded version of the .NET SDK. If you prefer to use your machine-wide configuration, you can open Visual Studio directly.
 
 Inside Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
+
+## Visual Studio version requirement
+
+If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher. Opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.

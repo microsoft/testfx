@@ -16,7 +16,7 @@ public static class ConfigurationExtensions
     public static string GetTestResultDirectory(this IConfiguration configuration)
     {
         string? resultDirectory = configuration[PlatformConfigurationConstants.PlatformResultDirectory];
-        return Guard.NotNull(resultDirectory);
+        return Ensure.NotNull(resultDirectory);
     }
 
     /// <summary>
@@ -27,19 +27,6 @@ public static class ConfigurationExtensions
     public static string GetCurrentWorkingDirectory(this IConfiguration configuration)
     {
         string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        return Guard.NotNull(workingDirectory);
-    }
-
-    /// <summary>
-    /// Gets the test host working directory from the configuration.
-    /// </summary>
-    /// <param name="configuration">The configuration.</param>
-    /// <returns>The test host working directory.</returns>
-    [Obsolete("This API is obsolete and will be removed in v2. Use GetCurrentWorkingDirectory instead.", error: true)]
-    // TODO: This is only used in unit tests. Should that be removed (maybe in v2)?
-    public static string GetTestHostWorkingDirectory(this IConfiguration configuration)
-    {
-        string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory];
-        return Guard.NotNull(workingDirectory);
+        return Ensure.NotNull(workingDirectory);
     }
 }

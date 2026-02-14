@@ -177,4 +177,116 @@ public sealed class DuplicateDataRowAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenZeroAndNegativeZero_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(0.0d)]
+                [DataRow(-0.0d)]
+                public static void TestMethod1(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(0.0f)]
+                [DataRow(-0.0f)]
+                public static void TestMethod2(float x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenZeroIsDuplicated_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(0.0d)]
+                [[|DataRow(0d)|]]
+                public static void TestMethod1(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(0.0d)]
+                [[|DataRow(0.0d)|]]
+                public static void TestMethod2(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(0.0f)]
+                [[|DataRow(0f)|]]
+                public static void TestMethod3(float x)
+                {
+                }
+            
+                [TestMethod]
+                [DataRow(0.0f)]
+                [[|DataRow(0.0f)|]]
+                public static void TestMethod4(float x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenNegativeZeroIsDuplicated_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(-0.0d)]
+                [[|DataRow(-0d)|]]
+                public static void TestMethod1(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(-0.0d)]
+                [[|DataRow(-0.0d)|]]
+                public static void TestMethod2(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(-0.0f)]
+                [[|DataRow(-0f)|]]
+                public static void TestMethod3(float x)
+                {
+                }
+            
+                [TestMethod]
+                [DataRow(-0.0f)]
+                [[|DataRow(-0.0f)|]]
+                public static void TestMethod4(float x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

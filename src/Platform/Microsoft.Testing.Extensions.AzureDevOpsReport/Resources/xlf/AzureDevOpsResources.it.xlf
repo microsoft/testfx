@@ -29,8 +29,8 @@
       </trans-unit>
       <trans-unit id="SeverityOptionDescription">
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
-        <target state="translated">Gravità da utilizzare per l'evento segnalato. Le opzioni sono: errore (impostazione predefinita) e avviso.</target>
-        <note>Do not translated 'error' or 'warning' those are literal values.</note>
+        <target state="translated">Gravità da usare per l'evento segnalato. Le opzioni sono: error (impostazione predefinita) e warning.</target>
+        <note>{Locked="error"}{Locked="warning"}</note>
       </trans-unit>
     </body>
   </file>

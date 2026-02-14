@@ -1,41 +1,49 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using AwesomeAssertions;
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests
 {
-    #region That tests
-    public void ThatShouldReturnAnInstanceOfAssert() => Verify(Assert.That is not null);
+    #region Instance tests
+    public void InstanceShouldReturnAnInstanceOfAssert() => Assert.That.Should().NotBeNull();
 
-    public void ThatShouldCacheAssertInstance() => Verify(ReferenceEquals(Assert.That, Assert.That));
-    #endregion
-
-    #region ReplaceNullChars tests
-    public void ReplaceNullCharsShouldReturnStringIfNullOrEmpty()
-    {
-        Verify(Assert.ReplaceNullChars(null) == null);
-        Verify(Assert.ReplaceNullChars(string.Empty) == string.Empty);
-    }
-
-    public void ReplaceNullCharsShouldReplaceNullCharsInAString() => Verify(Assert.ReplaceNullChars("The quick brown fox \0 jumped over the la\0zy dog\0") == "The quick brown fox \\0 jumped over the la\\0zy dog\\0");
+    public void InstanceShouldCacheAssertInstance() => Assert.That.Should().BeSameAs(Assert.That);
     #endregion
 
     #region BuildUserMessage tests
 
     // See https://github.com/dotnet/sdk/issues/25373
-    public void BuildUserMessageThrowsWhenMessageContainsInvalidStringFormatComposite()
-    {
-        Exception ex = VerifyThrows(() => Assert.BuildUserMessage("{", "arg"));
-        Verify(ex is FormatException);
-    }
-
-    // See https://github.com/dotnet/sdk/issues/25373
     public void BuildUserMessageDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
     {
         string message = Assert.BuildUserMessage("{");
-        Verify(message == "{");
+        message.Should().Be("{");
     }
+    #endregion
+
+    #region Obsolete methods tests
+#if DEBUG
+    public void ObsoleteEqualsMethodThrowsAssertFailedException()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        Action act = () => Assert.Equals("test", "test");
+#pragma warning restore CS0618 // Type or member is obsolete
+        act.Should().Throw<AssertFailedException>()
+           .WithMessage("*Assert.Equals should not be used for Assertions*");
+    }
+
+    public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
+    {
+        object obj = new();
+#pragma warning disable CS0618 // Type or member is obsolete
+        Action act = () => Assert.ReferenceEquals(obj, obj);
+#pragma warning restore CS0618 // Type or member is obsolete
+        act.Should().Throw<AssertFailedException>()
+           .WithMessage("*Assert.ReferenceEquals should not be used for Assertions*");
+    }
+#endif
     #endregion
 
     private static Task<string> GetHelloStringAsync()

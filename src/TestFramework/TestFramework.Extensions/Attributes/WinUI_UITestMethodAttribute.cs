@@ -18,23 +18,10 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
     /// </summary>
-    public UITestMethodAttribute()
-        : base()
+    public UITestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+        : base(callerFilePath, callerLineNumber)
     {
     }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
-    /// </summary>
-    /// <param name="displayName">
-    /// Display Name for the test.
-    /// </param>
-    public UITestMethodAttribute(string displayName)
-        : base(displayName)
-    {
-    }
-
-    private protected override bool UseAsync => true;
 
     /// <summary>
     /// Gets or sets the <see cref="UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
@@ -42,10 +29,6 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// <see cref="UITestMethodAttribute"/> will try to use <c>Microsoft.UI.Xaml.Window.Current.DispatcherQueue</c> for the last resort, but that will only work on UWP.
     /// </summary>
     public static DispatcherQueue? DispatcherQueue { get; set; }
-
-    /// <inheritdoc />
-    public override TestResult[] Execute(ITestMethod testMethod)
-        => base.Execute(testMethod);
 
     /// <summary>
     /// Executes the test method on the UI Thread.
@@ -58,16 +41,16 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    internal override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+    public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.
-        DispatcherQueue dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
+        DispatcherQueue dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkExtensionsMessages.AsyncUITestMethodWithNoDispatcherQueue);
         if (dispatcher.HasThreadAccess)
         {
             try
             {
-                return [await testMethod.InvokeAsync(null)];
+                return [await testMethod.InvokeAsync(null).ConfigureAwait(false)];
             }
             catch (Exception e)
             {
@@ -82,7 +65,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                tcs.SetResult(await testMethod.InvokeAsync(null));
+                tcs.SetResult(await testMethod.InvokeAsync(null).ConfigureAwait(false));
             }
             catch (Exception e)
             {
@@ -94,7 +77,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         }
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-        return [await tcs.Task];
+        return [await tcs.Task.ConfigureAwait(false)];
     }
 
     private static Type? GetApplicationType(Assembly assembly)

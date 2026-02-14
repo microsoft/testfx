@@ -10,7 +10,7 @@ internal sealed class PerRequestTestSessionContext(CancellationToken rpcCancella
 {
     private readonly CancellationTokenSource _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcCancellationToken, testApplicationcancellationToken);
 
-    public SessionUid SessionId { get; } = new(Guid.NewGuid().ToString());
+    public SessionUid SessionUid { get; } = new(Guid.NewGuid().ToString());
 
     public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 

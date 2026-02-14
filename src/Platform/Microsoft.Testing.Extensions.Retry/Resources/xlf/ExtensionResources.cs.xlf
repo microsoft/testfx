@@ -40,6 +40,11 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
         <target state="translated">Soubor {0} se přesouvá do umístění {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
+        <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
+        <target state="translated">Rozšíření opakování se na platformě prohlížeče nepodporuje. Testy založené na prohlížeči se nedají opakovat kvůli omezením platformy.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
         <target state="translated">Nepovedlo se spustit proces {0}.</target>
@@ -81,8 +86,8 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Enable retry failed tests</source>
-        <target state="translated">Povolit opakování neúspěšných testů</target>
+        <source>Retry failed tests the given number of times</source>
+        <target state="translated">Zopakovat neúspěšné testy podle zadaného počtu opakování</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
