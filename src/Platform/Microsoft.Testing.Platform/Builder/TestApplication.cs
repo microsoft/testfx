@@ -301,7 +301,7 @@ public sealed class TestApplication : ITestApplication
         string? environmentLogLevel = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
         if (!RoslynString.IsNullOrEmpty(environmentLogLevel))
         {
-            if (!Enum.TryParse(environmentLogLevel, out LogLevel parsedLogLevel))
+            if (!Enum.TryParse(environmentLogLevel, ignoreCase: true, out LogLevel parsedLogLevel))
             {
                 throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
             }
