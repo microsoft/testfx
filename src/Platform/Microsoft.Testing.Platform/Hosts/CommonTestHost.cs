@@ -195,7 +195,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
     {
         // Display after session end
-        await outputDevice.DisplayAfterSessionEndRunAsync(sessionInfo.CancellationToken).ConfigureAwait(false);
+        await outputDevice.DisplayAfterSessionEndRunAsync(CancellationToken.None).ConfigureAwait(false);
 
         // We want to ensure that the output service is the last one to run
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
