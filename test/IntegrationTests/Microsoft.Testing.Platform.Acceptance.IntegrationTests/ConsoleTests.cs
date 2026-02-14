@@ -67,7 +67,7 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
             };
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--ignore-exit-code 8", environmentVariables);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--ignore-exit-code 8", environmentVariables, cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("ABCDEF123");
     }
