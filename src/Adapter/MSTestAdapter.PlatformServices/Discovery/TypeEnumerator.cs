@@ -64,6 +64,9 @@ internal class TypeEnumerator
         var foundTests = new HashSet<string>();
         var tests = new List<UnitTestElement>();
 
+        // Instead of asking reflect helper to query the type for every method we have, we ask once for the type.
+        bool classDisablesParallelization = _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(_type);
+
         // Test class is already valid. Verify methods.
         // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
@@ -81,7 +84,7 @@ internal class TypeEnumerator
             {
                 // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.ToString() ?? method.Name);
-                UnitTestElement testMethod = GetTestFromMethod(method, warnings);
+                UnitTestElement testMethod = GetTestFromMethod(method, classDisablesParallelization, warnings);
 
                 tests.Add(testMethod);
             }
@@ -121,9 +124,10 @@ internal class TypeEnumerator
     /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
     /// </summary>
     /// <param name="method">The reflected method.</param>
+    /// <param name="classDisablesParallelization">Whether the test class disables parallelization.</param>
     /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns> Returns a UnitTestElement.</returns>
-    internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
+    internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings)
     {
         // null if the current instance represents a generic type parameter.
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
@@ -134,11 +138,12 @@ internal class TypeEnumerator
             MethodInfo = method,
         };
 
+        // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
+        // information (like test categories, traits, deployment items) which is not optimal.
         var testElement = new UnitTestElement(testMethod)
         {
             TestCategory = _reflectHelper.GetTestCategories(method, _type),
-            DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
-            Priority = _reflectHelper.GetPriority(method),
+            DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
@@ -155,6 +160,10 @@ internal class TypeEnumerator
             if (attributes[i] is TestMethodAttribute tma)
             {
                 testMethodAttribute = tma;
+            }
+            else if (attributes[i] is PriorityAttribute priorityAttribute)
+            {
+                testElement.Priority = priorityAttribute.Priority;
             }
         }
 
