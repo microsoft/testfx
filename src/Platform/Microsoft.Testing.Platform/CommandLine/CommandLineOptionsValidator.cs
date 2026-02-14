@@ -127,40 +127,66 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
-        IEnumerable<string> allExtensionOptions = extensionOptionsByProvider.Values.SelectMany(x => x).Select(x => x.Name).Distinct();
-        IEnumerable<string> allSystemOptions = systemOptionsByProvider.Values.SelectMany(x => x).Select(x => x.Name).Distinct();
-
-        IEnumerable<string> invalidReservedOptions = allSystemOptions.Intersect(allExtensionOptions);
-        if (invalidReservedOptions.Any())
+        // Create a HashSet of all system option names for faster lookup
+        HashSet<string> systemOptionNames = new();
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
         {
-            var stringBuilder = new StringBuilder();
-            foreach (string reservedOption in invalidReservedOptions)
+            foreach (CommandLineOption option in provider.Value)
             {
-                IEnumerable<string> faultyProviderNames = extensionOptionsByProvider.Where(tuple => tuple.Value.Any(x => x.Name == reservedOption)).Select(tuple => tuple.Key.DisplayName);
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, reservedOption, string.Join("', '", faultyProviderNames)));
+                systemOptionNames.Add(option.Name);
             }
-
-            return ValidationResult.Invalid(stringBuilder.ToTrimmedString());
         }
 
-        return ValidationResult.Valid();
+        StringBuilder? stringBuilder = null;
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                if (systemOptionNames.Contains(option.Name))
+                {
+                    stringBuilder ??= new StringBuilder();
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, option.Name, provider.Key.DisplayName));
+                }
+            }
+        }
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
     }
 
     private static ValidationResult ValidateOptionsAreNotDuplicated(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
-        IEnumerable<string> duplications = extensionOptionsByProvider.Values.SelectMany(x => x)
-            .Select(x => x.Name)
-            .GroupBy(x => x)
-            .Where(x => x.Skip(1).Any())
-            .Select(x => x.Key);
-
-        StringBuilder? stringBuilder = null;
-        foreach (string duplicatedOption in duplications)
+        // Use a dictionary to track option names and their providers
+        Dictionary<string, List<ICommandLineOptionsProvider>> optionNameToProviders = new();
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
         {
-            IEnumerable<string> faultyProvidersDisplayNames = extensionOptionsByProvider.Where(tuple => tuple.Value.Any(x => x.Name == duplicatedOption)).Select(tuple => tuple.Key.DisplayName);
-            stringBuilder ??= new();
-            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsDeclaredByMultipleProviders, duplicatedOption, string.Join("', '", faultyProvidersDisplayNames)));
+            ICommandLineOptionsProvider provider = kvp.Key;
+            foreach (CommandLineOption option in kvp.Value)
+            {
+                string name = option.Name;
+                if (!optionNameToProviders.TryGetValue(name, out List<ICommandLineOptionsProvider>? providers))
+                {
+                    providers = new List<ICommandLineOptionsProvider>();
+                    optionNameToProviders[name] = providers;
+                }
+
+                providers.Add(provider);
+            }
+        }
+
+        // Check for duplications
+        StringBuilder? stringBuilder = null;
+        foreach (KeyValuePair<string, List<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
+        {
+            if (kvp.Value.Count > 1)
+            {
+                string duplicatedOption = kvp.Key;
+                stringBuilder ??= new();
+                IEnumerable<string> faultyProvidersDisplayNames = kvp.Value.Select(p => p.DisplayName);
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsDeclaredByMultipleProviders, duplicatedOption, string.Join("', '", faultyProvidersDisplayNames)));
+            }
         }
 
         return stringBuilder?.Length > 0
@@ -173,10 +199,28 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
+        // Create a HashSet of all valid option names for faster lookup
+        HashSet<string> validOptionNames = new();
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                validOptionNames.Add(option.Name);
+            }
+        }
+
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in systemOptionsByProvider)
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                validOptionNames.Add(option.Name);
+            }
+        }
+
         StringBuilder? stringBuilder = null;
         foreach (CommandLineParseOption optionRecord in parseResult.Options)
         {
-            if (!extensionOptionsByProvider.Union(systemOptionsByProvider).Any(tuple => tuple.Value.Any(x => x.Name == optionRecord.Name)))
+            if (!validOptionNames.Contains(optionRecord.Name))
             {
                 stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Name));
@@ -192,7 +236,7 @@ internal static class CommandLineOptionsValidator
         CommandLineParseResult parseResult,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
-        StringBuilder stringBuilder = new();
+        StringBuilder? stringBuilder = null;
         foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name))
         {
             // getting the arguments count for an option.
@@ -207,19 +251,22 @@ internal static class CommandLineOptionsValidator
 
             if (arity > option.Arity.Max && option.Arity.Max == 0)
             {
+                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, provider.DisplayName, provider.Uid));
             }
             else if (arity < option.Arity.Min)
             {
+                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtLeastArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Min));
             }
             else if (arity > option.Arity.Max)
             {
+                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtMostArguments, optionName, provider.DisplayName, provider.Uid, option.Arity.Max));
             }
         }
 
-        return stringBuilder.Length > 0
+        return stringBuilder?.Length > 0
             ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
             : ValidationResult.Valid();
     }
@@ -280,7 +327,23 @@ internal static class CommandLineOptionsValidator
     }
 
     private static string ToTrimmedString(this StringBuilder stringBuilder)
-#pragma warning disable RS0030 // Do not use banned APIs
-        => stringBuilder.ToString().TrimEnd(Environment.NewLine.ToCharArray());
-#pragma warning restore RS0030 // Do not use banned APIs
+    {
+        // Use a more efficient approach to trim without creating unnecessary intermediate strings
+        string result = stringBuilder.ToString();
+        int end = result.Length;
+
+        // Find the last non-whitespace char
+        while (end > 0)
+        {
+            char c = result[end - 1];
+            if (c is not ('\r' or '\n'))
+            {
+                break;
+            }
+
+            end--;
+        }
+
+        return end == result.Length ? result : result.Substring(0, end);
+    }
 }
