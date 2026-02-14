@@ -165,21 +165,11 @@ public class DataRowTests : CLITestBase
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = await RunTestsAsync(testCases);
 
         // Assert
-        Assert.IsTrue(testCases.Length is 1 or 3);
-        if (testCases.Length == 1)
-        {
-            VerifyE2E.TestsDiscovered(
-                testCases,
-                "DataRowNonSerializable");
-        }
-        else
-        {
-            VerifyE2E.TestsDiscovered(
-                testCases,
-                "DataRowNonSerializable (System.String)",
-                "DataRowNonSerializable (System.Int32)",
-                "DataRowNonSerializable (DataRowTestProject.DataRowTests_DerivedClass)");
-        }
+        VerifyE2E.TestsDiscovered(
+            testCases,
+            "DataRowNonSerializable (System.String)",
+            "DataRowNonSerializable (System.Int32)",
+            "DataRowNonSerializable (DataRowTestProject.DataRowTests_DerivedClass)");
 
         VerifyE2E.TestsPassed(
             testResults,

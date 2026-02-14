@@ -150,7 +150,7 @@ internal static class DataSerializationHelper
             // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
 #pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
-            _ => new DataContractJsonSerializer(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
+            _ => new DataContractJsonSerializer(GetSerializationType(assemblyQualifiedName), SerializerSettings));
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
 
@@ -163,6 +163,32 @@ internal static class DataSerializationHelper
 #pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(type, SerializerSettings));
+
+    private static Type GetSerializationType(string assemblyQualifiedName)
+    {
+        Type? serializedType = PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName);
+        if (serializedType is not null)
+        {
+            return serializedType;
+        }
+
+        if (assemblyQualifiedName.StartsWith(typeof(SurrogatedSystemType).FullName + ",", StringComparison.Ordinal))
+        {
+            return typeof(SurrogatedSystemType);
+        }
+
+        if (assemblyQualifiedName.StartsWith(typeof(SurrogatedDateOnly).FullName + ",", StringComparison.Ordinal))
+        {
+            return typeof(SurrogatedDateOnly);
+        }
+
+        if (assemblyQualifiedName.StartsWith(typeof(SurrogatedTimeOnly).FullName + ",", StringComparison.Ordinal))
+        {
+            return typeof(SurrogatedTimeOnly);
+        }
+
+        return typeof(object);
+    }
 
     [DataContract]
     private sealed class SurrogatedDateOnly
