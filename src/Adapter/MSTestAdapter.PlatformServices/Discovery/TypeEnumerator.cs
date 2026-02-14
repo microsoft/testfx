@@ -69,14 +69,6 @@ internal class TypeEnumerator
         // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeMethods(_type))
         {
-            bool isMethodDeclaredInTestTypeAssembly = _reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, _type);
-            bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
-
-            if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
-            {
-                continue;
-            }
-
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
                 // ToString() outputs method name and its signature. This is necessary for overloaded methods to be recognized as distinct tests.
