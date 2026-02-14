@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <summary>
 /// Specification for parallelization level for a test run.
 /// </summary>
-[AttributeUsage(AttributeTargets.Assembly)]
+[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class)]
 public class ParallelizeAttribute : Attribute
 {
     private const int DefaultParallelWorkers = 0;

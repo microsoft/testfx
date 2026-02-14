@@ -21,6 +21,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
 internal class TestExecutionManager
 {
+    private sealed class ParallelExecutionPlan
+    {
+        private ParallelExecutionPlan(bool isEnabled, int workers, ExecutionScope scope, ConcurrentQueue<IEnumerable<TestCase>> parallelQueue, IEnumerable<TestCase> serialTests)
+        {
+            IsEnabled = isEnabled;
+            Workers = workers;
+            Scope = scope;
+            ParallelQueue = parallelQueue;
+            SerialTests = serialTests;
+        }
+
+        public bool IsEnabled { get; }
+
+        public int Workers { get; }
+
+        public ExecutionScope Scope { get; }
+
+        public ConcurrentQueue<IEnumerable<TestCase>> ParallelQueue { get; }
+
+        public IEnumerable<TestCase> SerialTests { get; }
+
+        public static ParallelExecutionPlan Disabled(IEnumerable<TestCase> tests)
+            => new(isEnabled: false, workers: 0, scope: ExecutionScope.ClassLevel, parallelQueue: new ConcurrentQueue<IEnumerable<TestCase>>(), serialTests: tests);
+
+        public static ParallelExecutionPlan Enabled(int workers, ExecutionScope scope, ConcurrentQueue<IEnumerable<TestCase>> parallelQueue, IEnumerable<TestCase> serialTests)
+            => new(isEnabled: true, workers, scope, parallelQueue, serialTests);
+    }
+
     private sealed class RemotingMessageLogger : MarshalByRefObject, IMessageLogger
     {
         private readonly IMessageLogger _realMessageLogger;
@@ -356,83 +384,21 @@ internal class TestExecutionManager
             parallelScope = MSTestSettings.CurrentSettings.ParallelizationScope.Value;
         }
 
-        if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
+        ParallelExecutionPlan plan = BuildParallelExecutionPlan(testsToRun, sourceSettings, parallelWorkers, parallelScope);
+
+        if (plan.IsEnabled)
         {
             // Parallelization is enabled. Let's do further classification for sets.
             frameworkHandle.SendMessage(
                 TestMessageLevel.Informational,
-                string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
+                string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, plan.Workers, plan.Scope));
 
-            // Create test sets for execution, we can execute them in parallel based on parallel settings
-            // Parallel and not parallel sets.
-            IEnumerable<IGrouping<bool, TestCase>> testSets = testsToRun.GroupBy(t => t.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false));
-
-            IGrouping<bool, TestCase>? parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
-            IGrouping<bool, TestCase>? nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
-
-            if (parallelizableTestSet != null)
-            {
-                ConcurrentQueue<IEnumerable<TestCase>>? queue = null;
-
-                // Chunk the sets into further groups based on parallel level
-                switch (parallelScope)
-                {
-                    case ExecutionScope.MethodLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
-                        break;
-
-                    case ExecutionScope.ClassLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string));
-                        break;
-                }
-
-                var tasks = new List<Task>();
-
-                for (int i = 0; i < parallelWorkers; i++)
-                {
-                    _testRunCancellationToken?.ThrowIfCancellationRequested();
-
-                    tasks.Add(_taskFactory(async () =>
-                    {
-                        try
-                        {
-                            while (!queue!.IsEmpty)
-                            {
-                                _testRunCancellationToken?.ThrowIfCancellationRequested();
-
-                                if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
-                                {
-                                    await ExecuteTestsWithTestRunnerAsync(testSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
-                                }
-                            }
-                        }
-                        catch (OperationCanceledException) when (_testRunCancellationToken?.Canceled == true)
-                        {
-                        }
-                    }));
-                }
-
-                try
-                {
-                    await Task.WhenAll(tasks).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    string exceptionToString = ex.ToString();
-                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
-                    {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
-                    }
-
-                    frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
-                    throw;
-                }
-            }
+            await ExecuteParallelQueueAsync(plan.ParallelQueue, plan.Workers, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
 
             // Queue the non parallel set
-            if (nonParallelizableTestSet != null)
+            if (plan.SerialTests.Any())
             {
-                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                await ExecuteTestsWithTestRunnerAsync(plan.SerialTests, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
             }
         }
         else
@@ -519,6 +485,193 @@ internal class TestExecutionManager
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
         }
+    }
+
+    private async Task ExecuteParallelQueueAsync(
+        ConcurrentQueue<IEnumerable<TestCase>> queue,
+        int parallelWorkers,
+        ITestExecutionRecorder testExecutionRecorder,
+        string source,
+        IDictionary<string, object> sourceLevelParameters,
+        UnitTestRunner testRunner,
+        bool usesAppDomains)
+    {
+        if (queue.IsEmpty)
+        {
+            return;
+        }
+
+        List<Task> tasks = [];
+
+        for (int i = 0; i < parallelWorkers; i++)
+        {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+            tasks.Add(_taskFactory(async () =>
+            {
+                try
+                {
+                    while (!queue.IsEmpty)
+                    {
+                        _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+                        if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                        {
+                            await ExecuteTestsWithTestRunnerAsync(testSet, testExecutionRecorder, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) when (_testRunCancellationToken?.Canceled == true)
+                {
+                }
+            }));
+        }
+
+        try
+        {
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            string exceptionToString = ex.ToString();
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
+            }
+
+            testExecutionRecorder.SendMessage(TestMessageLevel.Error, exceptionToString);
+            throw;
+        }
+    }
+
+    private static ParallelExecutionPlan BuildParallelExecutionPlan(
+        TestCase[] testsToRun,
+        TestAssemblySettings sourceSettings,
+        int parallelWorkers,
+        ExecutionScope parallelScope)
+    {
+        if (MSTestSettings.CurrentSettings.DisableParallelization || !sourceSettings.CanParallelizeAssembly)
+        {
+            return ParallelExecutionPlan.Disabled(testsToRun);
+        }
+
+        bool hasGlobalParallelization = parallelWorkers > 0;
+
+        if (hasGlobalParallelization)
+        {
+            List<TestCase> parallelizableTests = [];
+            List<TestCase> serialTests = [];
+
+            foreach (TestCase testCase in testsToRun)
+            {
+                if (testCase.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false))
+                {
+                    serialTests.Add(testCase);
+                }
+                else
+                {
+                    parallelizableTests.Add(testCase);
+                }
+            }
+
+            ConcurrentQueue<IEnumerable<TestCase>> queue = BuildQueueForGlobalParallelization(parallelizableTests, parallelScope);
+
+            return queue.IsEmpty
+                ? ParallelExecutionPlan.Disabled(testsToRun)
+                : ParallelExecutionPlan.Enabled(parallelWorkers, parallelScope, queue, serialTests);
+        }
+
+        List<TestCase> classLevelParallelizableTests = [];
+        List<TestCase> classLevelSerialTests = [];
+        bool hasMethodLevelClassScope = false;
+
+        foreach (TestCase testCase in testsToRun)
+        {
+            bool isDoNotParallelize = testCase.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false);
+            bool isClassLevelParallelized = testCase.GetPropertyValue(EngineConstants.ParallelizeProperty, false);
+
+            if (!isDoNotParallelize && isClassLevelParallelized)
+            {
+                classLevelParallelizableTests.Add(testCase);
+
+                if (!hasMethodLevelClassScope &&
+                    (ExecutionScope)testCase.GetPropertyValue(EngineConstants.ParallelizeScopeProperty, (int)ExecutionScope.ClassLevel) == ExecutionScope.MethodLevel)
+                {
+                    hasMethodLevelClassScope = true;
+                }
+            }
+            else
+            {
+                classLevelSerialTests.Add(testCase);
+            }
+        }
+
+        if (classLevelParallelizableTests.Count == 0)
+        {
+            return ParallelExecutionPlan.Disabled(testsToRun);
+        }
+
+        int classParallelWorkers = classLevelParallelizableTests
+            .Select(t => t.GetPropertyValue(EngineConstants.ParallelizeWorkersProperty, 0))
+            .Where(w => w > 0)
+            .DefaultIfEmpty(Environment.ProcessorCount)
+            .Max();
+
+        if (classParallelWorkers <= 0)
+        {
+            return ParallelExecutionPlan.Disabled(testsToRun);
+        }
+
+        ExecutionScope classLevelScope = hasMethodLevelClassScope ? ExecutionScope.MethodLevel : ExecutionScope.ClassLevel;
+
+        ConcurrentQueue<IEnumerable<TestCase>> classLevelQueue = BuildQueueForClassLevelParallelization(classLevelParallelizableTests);
+
+        return classLevelQueue.IsEmpty
+            ? ParallelExecutionPlan.Disabled(testsToRun)
+            : ParallelExecutionPlan.Enabled(classParallelWorkers, classLevelScope, classLevelQueue, classLevelSerialTests);
+    }
+
+    private static ConcurrentQueue<IEnumerable<TestCase>> BuildQueueForGlobalParallelization(IEnumerable<TestCase> tests, ExecutionScope scope)
+        => scope switch
+        {
+            ExecutionScope.MethodLevel => new ConcurrentQueue<IEnumerable<TestCase>>(tests.Select(testCase => new[] { testCase })),
+            _ => new ConcurrentQueue<IEnumerable<TestCase>>(tests.GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string)),
+        };
+
+    private static ConcurrentQueue<IEnumerable<TestCase>> BuildQueueForClassLevelParallelization(IEnumerable<TestCase> tests)
+    {
+        List<IEnumerable<TestCase>> chunks = [];
+        foreach (IGrouping<string?, TestCase> classGroup in tests.GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string))
+        {
+            using IEnumerator<TestCase> enumerator = classGroup.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                continue;
+            }
+
+            TestCase firstTestCaseInClass = enumerator.Current;
+            var classScope = (ExecutionScope)firstTestCaseInClass.GetPropertyValue(EngineConstants.ParallelizeScopeProperty, (int)ExecutionScope.ClassLevel);
+            if (classScope == ExecutionScope.MethodLevel)
+            {
+                chunks.Add([firstTestCaseInClass]);
+                while (enumerator.MoveNext())
+                {
+                    chunks.Add([enumerator.Current]);
+                }
+            }
+            else
+            {
+                List<TestCase> classChunk = [firstTestCaseInClass];
+                while (enumerator.MoveNext())
+                {
+                    classChunk.Add(enumerator.Current);
+                }
+
+                chunks.Add(classChunk);
+            }
+        }
+
+        return new ConcurrentQueue<IEnumerable<TestCase>>(chunks);
     }
 
     /// <summary>

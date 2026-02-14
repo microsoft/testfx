@@ -72,6 +72,12 @@ internal static class EngineConstants
 
     internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscoverer.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+    internal static readonly TestProperty ParallelizeProperty = TestProperty.Register("MSTestDiscoverer.Parallelize", ParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty ParallelizeScopeProperty = TestProperty.Register("MSTestDiscoverer.ParallelizeScope", ParallelizeScopeLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+    internal static readonly TestProperty ParallelizeWorkersProperty = TestProperty.Register("MSTestDiscoverer.ParallelizeWorkers", ParallelizeWorkersLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+
     internal static readonly TestProperty ExecutionIdProperty = TestProperty.Register("ExecutionId", ExecutionIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
 
     internal static readonly TestProperty ParentExecIdProperty = TestProperty.Register("ParentExecId", ParentExecIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
@@ -134,6 +140,9 @@ internal static class EngineConstants
     private const string DeploymentItemsLabel = "DeploymentItems";
 #endif
     private const string DoNotParallelizeLabel = "DoNotParallelize";
+    private const string ParallelizeLabel = "Parallelize";
+    private const string ParallelizeScopeLabel = "ParallelizeScope";
+    private const string ParallelizeWorkersLabel = "ParallelizeWorkers";
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string WorkItemIdsLabel = "WorkItemIds";

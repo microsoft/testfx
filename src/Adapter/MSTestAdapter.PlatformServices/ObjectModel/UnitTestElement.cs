@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
@@ -59,6 +61,21 @@ internal sealed class UnitTestElement
     /// Gets or sets a value indicating whether this test method should not execute in parallel.
     /// </summary>
     public bool DoNotParallelize { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this test method belongs to a class that opted into parallelization.
+    /// </summary>
+    public bool Parallelize { get; set; }
+
+    /// <summary>
+    /// Gets or sets parallelization scope configured at class level.
+    /// </summary>
+    public ExecutionScope ParallelizationScope { get; set; }
+
+    /// <summary>
+    /// Gets or sets parallelization worker count configured at class level.
+    /// </summary>
+    public int ParallelizationWorkers { get; set; }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
@@ -161,6 +178,13 @@ internal sealed class UnitTestElement
         if (DoNotParallelize)
         {
             testCase.SetPropertyValue(EngineConstants.DoNotParallelizeProperty, DoNotParallelize);
+        }
+
+        if (Parallelize)
+        {
+            testCase.SetPropertyValue(EngineConstants.ParallelizeProperty, true);
+            testCase.SetPropertyValue(EngineConstants.ParallelizeScopeProperty, (int)ParallelizationScope);
+            testCase.SetPropertyValue(EngineConstants.ParallelizeWorkersProperty, ParallelizationWorkers);
         }
 
         if (UnfoldingStrategy != TestDataSourceUnfoldingStrategy.Auto)
