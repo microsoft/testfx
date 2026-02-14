@@ -299,13 +299,8 @@ public sealed class TestApplication : ITestApplication
 
         // Override the log level if the environment variable is set
         string? environmentLogLevel = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
-        if (!RoslynString.IsNullOrEmpty(environmentLogLevel))
+        if (TryParseDiagnosticVerbosity(environmentLogLevel, out LogLevel parsedLogLevel))
         {
-            if (!Enum.TryParse(environmentLogLevel, ignoreCase: true, out LogLevel parsedLogLevel))
-            {
-                throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
-            }
-
             logLevel = parsedLogLevel;
         }
 
@@ -376,4 +371,16 @@ public sealed class TestApplication : ITestApplication
                 new SystemFileStreamFactory()),
             synchronousWrite);
     }
+
+    internal /* for testing purposes */ static bool TryParseDiagnosticVerbosity(string? environmentLogLevel, out LogLevel parsedLogLevel)
+    {
+        parsedLogLevel = LogLevel.None;
+
+        return !RoslynString.IsNullOrEmpty(environmentLogLevel)
+            && (Enum.TryParse(environmentLogLevel, ignoreCase: true, out parsedLogLevel)
+                || ThrowInvalidDiagnosticVerbosity(environmentLogLevel));
+    }
+
+    private static bool ThrowInvalidDiagnosticVerbosity(string environmentLogLevel)
+        => throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
 }
