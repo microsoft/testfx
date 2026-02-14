@@ -27,6 +27,7 @@ internal sealed class AzureDevOpsReporter :
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
+    private readonly string? _targetFrameworkMoniker;
     private string _severity = "error";
 
     public AzureDevOpsReporter(
@@ -41,6 +42,7 @@ internal sealed class AzureDevOpsReporter :
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
+        _targetFrameworkMoniker = TryGetTargetFrameworkMoniker();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -144,7 +146,7 @@ internal sealed class AzureDevOpsReporter :
             _logger.LogTrace("Failure received.");
         }
 
-        string? line = GetErrorText(testDisplayName, explanation, exception, _severity, _fileSystem, _logger);
+        string? line = GetErrorText(testDisplayName, explanation, exception, _severity, _fileSystem, _logger, _targetFrameworkMoniker);
         if (line == null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -163,7 +165,7 @@ internal sealed class AzureDevOpsReporter :
         await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
-    internal static /* for testing */ string? GetErrorText(string? testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger)
+    internal static /* for testing */ string? GetErrorText(string? testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string? targetFrameworkMoniker = null)
     {
         if (exception == null || exception.StackTrace == null)
         {
@@ -286,9 +288,7 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string formattedMessage = RoslynString.IsNullOrEmpty(testDisplayName)
-                ? message
-                : $"[{testDisplayName}] {message}";
+            string formattedMessage = FormatMessage(testDisplayName, targetFrameworkMoniker, message);
 
             string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
@@ -306,6 +306,54 @@ internal sealed class AzureDevOpsReporter :
         }
 
         return null;
+    }
+
+    private static string FormatMessage(string? testDisplayName, string? targetFrameworkMoniker, string message)
+    {
+        if (RoslynString.IsNullOrEmpty(targetFrameworkMoniker) && RoslynString.IsNullOrEmpty(testDisplayName))
+        {
+            return message;
+        }
+
+        if (RoslynString.IsNullOrEmpty(targetFrameworkMoniker))
+        {
+            return $"[{testDisplayName}] {message}";
+        }
+
+        if (RoslynString.IsNullOrEmpty(testDisplayName))
+        {
+            return $"[{targetFrameworkMoniker}] {message}";
+        }
+
+        return $"[{targetFrameworkMoniker}] [{testDisplayName}] {message}";
+    }
+
+    private static string? TryGetTargetFrameworkMoniker()
+    {
+        string? frameworkName = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
+        if (RoslynString.IsNullOrEmpty(frameworkName))
+        {
+            return null;
+        }
+
+        try
+        {
+            var parsedFrameworkName = new FrameworkName(frameworkName);
+            string version = $"{parsedFrameworkName.Version.Major}.{parsedFrameworkName.Version.Minor}";
+
+            return parsedFrameworkName.Identifier switch
+            {
+                ".NETFramework" => $"net{parsedFrameworkName.Version.Major}{parsedFrameworkName.Version.Minor}{(parsedFrameworkName.Version.Build > 0 ? parsedFrameworkName.Version.Build.ToString(CultureInfo.InvariantCulture) : string.Empty)}",
+                ".NETCoreApp" => $"netcoreapp{version}",
+                ".NETStandard" => $"netstandard{version}",
+                ".NET" => $"net{version}",
+                _ => frameworkName,
+            };
+        }
+        catch (ArgumentException)
+        {
+            return frameworkName;
+        }
     }
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
