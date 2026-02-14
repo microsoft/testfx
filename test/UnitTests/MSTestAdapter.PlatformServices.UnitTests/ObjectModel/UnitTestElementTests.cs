@@ -135,6 +135,19 @@ public class UnitTestElementTests : TestContainer
         ((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!).Should().Equal(["2312", "22332"]);
     }
 
+    public void ToTestCaseShouldSetParallelizationPropertiesIfPresent()
+    {
+        _unitTestElement.Parallelize = true;
+        _unitTestElement.ParallelizationScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel;
+        _unitTestElement.ParallelizationWorkers = 4;
+
+        var testCase = _unitTestElement.ToTestCase();
+
+        testCase.GetPropertyValue(EngineConstants.ParallelizeProperty, false).Should().BeTrue();
+        testCase.GetPropertyValue(EngineConstants.ParallelizeScopeProperty, -1).Should().Be((int)Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel);
+        testCase.GetPropertyValue(EngineConstants.ParallelizeWorkersProperty, -1).Should().Be(4);
+    }
+
 #if !WINDOWS_UWP && !WIN_UI
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
     {

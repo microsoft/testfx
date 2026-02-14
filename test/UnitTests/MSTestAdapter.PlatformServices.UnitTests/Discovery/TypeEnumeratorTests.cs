@@ -263,6 +263,19 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.DoNotParallelize.Should().BeTrue();
     }
 
+    public void GetTestsShouldSetClassLevelParallelizationFromClassAttribute()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassWithParallelizeAttribute), "DummyAssemblyName");
+
+        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement>? tests = typeEnumerator.Enumerate(_warnings);
+
+        tests.Should().NotBeNull();
+        tests.Should().OnlyContain(t => t.Parallelize);
+        tests.Should().OnlyContain(t => t.ParallelizationScope == Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel);
+        tests.Should().OnlyContain(t => t.ParallelizationWorkers == 3);
+    }
+
     public void GetTestFromMethodShouldFillTraitsWithTestProperties()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
@@ -513,6 +526,14 @@ public class DummySecondHidingTestClass : DummyOverridingTestClass
     }
 
     public new void DerivedTestMethod()
+    {
+    }
+}
+
+[Parallelize(Workers = 3, Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel)]
+public class DummyTestClassWithParallelizeAttribute
+{
+    public void TestMethod1()
     {
     }
 }

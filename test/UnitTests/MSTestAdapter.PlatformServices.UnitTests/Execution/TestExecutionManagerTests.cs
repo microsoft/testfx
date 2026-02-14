@@ -699,6 +699,48 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    public async Task RunTestsForTestShouldRunOnlyClassLevelParallelizedClassesInParallelWhenNoGlobalParallelizationIsConfigured()
+    {
+        TestCase parallelizedClass1Test1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+        TestCase parallelizedClass1Test2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+        TestCase parallelizedClass2Test1 = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
+        TestCase parallelizedClass2Test2 = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod2");
+        TestCase serialClassTest1 = GetTestCase(typeof(DummyTestClassWithoutParallelizeAttribute), "TestMethod1");
+        TestCase serialClassTest2 = GetTestCase(typeof(DummyTestClassWithoutParallelizeAttribute), "TestMethod2");
+
+        foreach (TestCase testCase in new[] { parallelizedClass1Test1, parallelizedClass1Test2, parallelizedClass2Test1, parallelizedClass2Test2 })
+        {
+            testCase.SetPropertyValue(EngineConstants.ParallelizeProperty, true);
+            testCase.SetPropertyValue(EngineConstants.ParallelizeScopeProperty, (int)ExecutionScope.ClassLevel);
+            testCase.SetPropertyValue(EngineConstants.ParallelizeWorkersProperty, 2);
+        }
+
+        TestCase[] tests = [
+            parallelizedClass1Test1,
+            parallelizedClass1Test2,
+            parallelizedClass2Test1,
+            parallelizedClass2Test2,
+            serialClassTest1,
+            serialClassTest2,
+        ];
+
+        try
+        {
+            await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+            _enqueuedParallelTestsCount.Should().Be(2);
+            DummyTestClassForParallelize.ThreadIds.Count.Should().Be(1);
+            DummyTestClassForParallelize2.ThreadIds.Count.Should().Be(1);
+            DummyTestClassWithoutParallelizeAttribute.ThreadIds.Count.Should().Be(1);
+        }
+        finally
+        {
+            DummyTestClassForParallelize.Cleanup();
+            DummyTestClassForParallelize2.Cleanup();
+            DummyTestClassWithoutParallelizeAttribute.Cleanup();
+        }
+    }
+
     public async Task RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -960,6 +1002,20 @@ public class TestExecutionManagerTests : TestContainer
 
         [TestMethod]
         public void TestMethod1() => ThreadIds.Add(Environment.CurrentManagedThreadId);
+    }
+
+    [DummyTestClass]
+    private sealed class DummyTestClassWithoutParallelizeAttribute
+    {
+        public static HashSet<int> ThreadIds { get; } = [];
+
+        public static void Cleanup() => ThreadIds.Clear();
+
+        [TestMethod]
+        public void TestMethod1() => ThreadIds.Add(Environment.CurrentManagedThreadId);
+
+        [TestMethod]
+        public void TestMethod2() => ThreadIds.Add(Environment.CurrentManagedThreadId);
     }
 
     [DummyTestClass]
