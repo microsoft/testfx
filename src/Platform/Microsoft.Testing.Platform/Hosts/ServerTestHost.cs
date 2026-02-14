@@ -140,8 +140,6 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(cancellationToken).ConfigureAwait(false);
 
             await HandleMessagesAsync(cancellationToken).ConfigureAwait(false);
-
-            (_messageHandler as IDisposable)?.Dispose();
         }
         catch (Exception ex) when
             // When the cancellation token fires during TCP connect or message handling, several
@@ -160,6 +158,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         }
         finally
         {
+            (_messageHandler as IDisposable)?.Dispose();
+
             // Cleanup all services but special one because in the per-call mode we needed to keep them alive for reuse
             await DisposeServiceProviderAsync(ServiceProvider).ConfigureAwait(false);
         }

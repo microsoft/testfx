@@ -45,19 +45,33 @@ internal sealed partial class ServerModeManager
             await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
 
             TcpClient client = new();
+            bool shouldDisposeClient = true;
 
+            try
+            {
 #if NETCOREAPP
-            await client.ConnectAsync(host: _host, port: _port, cancellationToken).ConfigureAwait(false);
+                await client.ConnectAsync(host: _host, port: _port, cancellationToken).ConfigureAwait(false);
 #else
-            await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
+                await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
 #endif
-            // ConnectAsync with a CancellationToken registers a callback that closes the socket.
-            // If the connect completes at the OS level at the same instant the token fires,
-            // ConnectAsync can return successfully while the socket is already closed,
-            // causing GetStream() to throw InvalidOperationException ("non-connected sockets").
-            cancellationToken.ThrowIfCancellationRequested();
-            NetworkStream stream = client.GetStream();
-            return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
+                // On NETCOREAPP, the ConnectAsync overload that takes a CancellationToken
+                // registers a callback that closes the socket. In that case, if connect
+                // completes at the OS level at the same instant the token fires,
+                // ConnectAsync can return successfully while the socket is already closed,
+                // causing GetStream() to throw InvalidOperationException ("non-connected sockets").
+                cancellationToken.ThrowIfCancellationRequested();
+                NetworkStream stream = client.GetStream();
+                IMessageHandler messageHandler = new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
+                shouldDisposeClient = false;
+                return messageHandler;
+            }
+            finally
+            {
+                if (shouldDisposeClient)
+                {
+                    client.Dispose();
+                }
+            }
         }
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(false);
