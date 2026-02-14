@@ -534,6 +534,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
+        Compilation compilation,
         INamedTypeSymbol objectTypeSymbol,
         out SyntaxNode? leftExpression,
         out SyntaxNode? rightExpression)
@@ -553,6 +554,11 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 return ComparisonCheckStatus.Unknown;
             }
 
+            if (!CanUseTypesWithComparableAsserts(compilation, binaryOperation.LeftOperand.Type, binaryOperation.RightOperand.Type))
+            {
+                return ComparisonCheckStatus.Unknown;
+            }
+
             return binaryOperation.OperatorKind switch
             {
                 BinaryOperatorKind.GreaterThan => ComparisonCheckStatus.GreaterThan,
@@ -566,6 +572,28 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         leftExpression = null;
         rightExpression = null;
         return ComparisonCheckStatus.Unknown;
+    }
+
+    private static bool CanUseTypesWithComparableAsserts(Compilation compilation, ITypeSymbol? leftType, ITypeSymbol? rightType)
+        => leftType is not null
+            && rightType is not null
+            && (CanUseTypeWithComparableAsserts(compilation, leftType, leftType, rightType)
+                || CanUseTypeWithComparableAsserts(compilation, rightType, leftType, rightType));
+
+    private static bool CanUseTypeWithComparableAsserts(Compilation compilation, ITypeSymbol candidateType, ITypeSymbol leftType, ITypeSymbol rightType)
+        => ImplementsIComparableOfSelf(compilation, candidateType)
+            && compilation.ClassifyCommonConversion(leftType, candidateType) is { Exists: true, IsImplicit: true }
+            && compilation.ClassifyCommonConversion(rightType, candidateType) is { Exists: true, IsImplicit: true };
+
+    private static bool ImplementsIComparableOfSelf(Compilation compilation, ITypeSymbol type)
+    {
+        if (compilation.GetTypeByMetadataName("System.IComparable`1") is not INamedTypeSymbol iComparableOfT)
+        {
+            return false;
+        }
+
+        INamedTypeSymbol comparableOfSelf = iComparableOfT.Construct(type);
+        return type.AllInterfaces.Any(interfaceType => SymbolEqualityComparer.Default.Equals(interfaceType, comparableOfSelf));
     }
 
     private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
@@ -808,7 +836,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
 
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
-        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, context.Compilation, objectTypeSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
         {
             string properAssertMethod = (isTrueInvocation, comparisonStatus) switch
