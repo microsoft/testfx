@@ -223,13 +223,10 @@ internal static class DataSerializationHelper
                 return new TimeOnly(surrogatedTimeOnly.Ticks);
             }
 #endif
-            if (obj is SurrogatedSystemType surrogatedSystemType)
-            {
-                return PlatformServiceProvider.Instance.ReflectionOperations.GetType(surrogatedSystemType.AssemblyQualifiedName)
-                    ?? throw new SerializationException($"Cannot deserialize type '{surrogatedSystemType.AssemblyQualifiedName}'.");
-            }
-
-            return obj;
+            return obj is SurrogatedSystemType surrogatedSystemType
+                ? PlatformServiceProvider.Instance.ReflectionOperations.GetType(surrogatedSystemType.AssemblyQualifiedName)
+                    ?? throw new SerializationException($"Cannot deserialize type '{surrogatedSystemType.AssemblyQualifiedName}'.")
+                : obj;
         }
 
         public object GetObjectToSerialize(object obj, Type targetType)
