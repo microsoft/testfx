@@ -111,17 +111,30 @@ internal static class CommandLineOptionsValidator
             }
         }
 
-        StringBuilder? stringBuilder = null;
+        Dictionary<string, HashSet<ICommandLineOptionsProvider>> reservedOptionToProviders = new();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider)
         {
             foreach (CommandLineOption option in provider.Value)
             {
                 if (systemOptionNames.Contains(option.Name))
                 {
-                    stringBuilder ??= new StringBuilder();
-                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, option.Name, provider.Key.DisplayName));
+                    if (!reservedOptionToProviders.TryGetValue(option.Name, out HashSet<ICommandLineOptionsProvider>? providers))
+                    {
+                        providers = new HashSet<ICommandLineOptionsProvider>();
+                        reservedOptionToProviders[option.Name] = providers;
+                    }
+
+                    _ = providers.Add(provider.Key);
                 }
             }
+        }
+
+        StringBuilder? stringBuilder = null;
+        foreach (KeyValuePair<string, HashSet<ICommandLineOptionsProvider>> reservedOption in reservedOptionToProviders)
+        {
+            stringBuilder ??= new StringBuilder();
+            IEnumerable<string> providerDisplayNames = reservedOption.Value.Select(p => p.DisplayName);
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, reservedOption.Key, string.Join("', '", providerDisplayNames)));
         }
 
         return stringBuilder?.Length > 0
@@ -133,26 +146,26 @@ internal static class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {
         // Use a dictionary to track option names and their providers
-        Dictionary<string, List<ICommandLineOptionsProvider>> optionNameToProviders = new();
+        Dictionary<string, HashSet<ICommandLineOptionsProvider>> optionNameToProviders = new();
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider)
         {
             ICommandLineOptionsProvider provider = kvp.Key;
             foreach (CommandLineOption option in kvp.Value)
             {
                 string name = option.Name;
-                if (!optionNameToProviders.TryGetValue(name, out List<ICommandLineOptionsProvider>? providers))
+                if (!optionNameToProviders.TryGetValue(name, out HashSet<ICommandLineOptionsProvider>? providers))
                 {
-                    providers = new List<ICommandLineOptionsProvider>();
+                    providers = new HashSet<ICommandLineOptionsProvider>();
                     optionNameToProviders[name] = providers;
                 }
 
-                providers.Add(provider);
+                _ = providers.Add(provider);
             }
         }
 
         // Check for duplications
         StringBuilder? stringBuilder = null;
-        foreach (KeyValuePair<string, List<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
+        foreach (KeyValuePair<string, HashSet<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
         {
             if (kvp.Value.Count > 1)
             {

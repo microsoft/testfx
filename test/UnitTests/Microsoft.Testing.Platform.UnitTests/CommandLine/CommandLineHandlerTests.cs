@@ -79,6 +79,24 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_DuplicateOptionWithinSameProvider_DoesNotRepeatProviderInMessage()
+    {
+        string[] args = [];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
+            new ExtensionCommandLineProviderMockMultipleOptions("ProviderA", "userOption", "userOption"),
+            new ExtensionCommandLineProviderMockMultipleOptions("ProviderB", "userOption")
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("Option '--userOption' is declared by multiple extensions: 'ProviderA', 'ProviderB'", result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidOption_ReturnsFalse()
     {
         // Arrange
@@ -127,7 +145,24 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.AreEqual("Option '--help' is reserved and cannot be used by providers: 'help'", result.ErrorMessage);
+        Assert.AreEqual("Option '--help' is reserved and cannot be used by providers: 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ReservedOptionsWithinSameProvider_DoesNotRepeatProviderInMessage()
+    {
+        string[] args = [];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockMultipleOptions("ProviderA", "help", "help")
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
+            extensionCommandLineProvider, new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("Option '--help' is reserved and cannot be used by providers: 'ProviderA'", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -372,6 +407,34 @@ public sealed class CommandLineHandlerTests
         ];
 
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.InvalidTask("Invalid configuration errorMessage");
+
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+    }
+
+    private sealed class ExtensionCommandLineProviderMockMultipleOptions : ICommandLineOptionsProvider
+    {
+        private readonly string[] _options;
+
+        public ExtensionCommandLineProviderMockMultipleOptions(string displayName, params string[] options)
+        {
+            DisplayName = displayName;
+            _options = options;
+        }
+
+        public string Uid { get; } = nameof(PlatformCommandLineProvider);
+
+        public string Version { get; } = AppVersion.DefaultSemVer;
+
+        public string DisplayName { get; }
+
+        public string Description { get; } = "Built-in command line provider";
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+            _options.Select(option => new CommandLineOption(option, "Show command line option.", ArgumentArity.ZeroOrOne, false)).ToArray();
+
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }
