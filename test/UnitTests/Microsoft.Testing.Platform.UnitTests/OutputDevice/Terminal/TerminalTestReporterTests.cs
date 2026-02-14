@@ -429,11 +429,11 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
-              SkippedTest1␛[2147483640G(1m 31s)
-              InProgressTest1␛[2147483640G(1m 31s)
-              InProgressTest2␛[2147483643G(31s)
-              InProgressTest3␛[2147483644G(1s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
+              SkippedTest1␛[242G(1m 31s)
+              InProgressTest1␛[242G(1m 31s)
+              InProgressTest2␛[245G(31s)
+              InProgressTest3␛[246G(1s)
             ␛[7F
             ␛[J␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
             ␛[90m  Standard output
@@ -441,10 +441,10 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
             ␛[m
-            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[2147483640G(1m 31s)
-              InProgressTest1␛[2147483640G(1m 31s)
-              InProgressTest2␛[2147483643G(31s)
-              InProgressTest3␛[2147483644G(1s)
+            [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
+              InProgressTest1␛[242G(1m 31s)
+              InProgressTest2␛[245G(31s)
+              InProgressTest3␛[246G(1s)
             
             """;
 
@@ -495,7 +495,11 @@ public sealed class TerminalTestReporterTests
 
         public int BufferHeight => int.MaxValue;
 
-        public int BufferWidth => int.MinValue;
+        public int BufferWidth => int.MaxValue;
+
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth => int.MaxValue;
 
         public bool IsOutputRedirected => false;
 
@@ -798,5 +802,76 @@ public sealed class TerminalTestReporterTests
 
         // Assert - should contain information about 2 tests discovered
         Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+    }
+
+    [TestMethod]
+    public void SimpleTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new NonAnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_UsesWindowWidthNotBufferWidth()
+    {
+        // Arrange - Create a console where BufferWidth and WindowWidth are different
+        var console = new TestConsoleWithDifferentBufferAndWindowWidth
+        {
+            BufferWidth = 4096,
+            WindowWidth = 120,
+        };
+
+        var terminal = new AnsiTerminal(console);
+
+        // Assert - Width should use WindowWidth, not BufferWidth
+        Assert.AreEqual(120, terminal.Width);
+    }
+
+    internal class TestConsoleWithDifferentBufferAndWindowWidth : IConsole
+    {
+        public int BufferHeight { get; set; } = 300;
+
+        public int BufferWidth { get; set; } = 4096;
+
+        public int WindowHeight { get; set; } = 30;
+
+        public int WindowWidth { get; set; } = 120;
+
+        public bool IsOutputRedirected => false;
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value)
+        {
+        }
+
+        public void Write(char value)
+        {
+        }
+
+        public void WriteLine()
+        {
+        }
+
+        public void WriteLine(string? value)
+        {
+        }
     }
 }
