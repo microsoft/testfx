@@ -52,7 +52,6 @@ internal sealed class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
-        EnableBaseClassTestMethodsFromOtherAssemblies = true;
         TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
@@ -112,11 +111,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether or not test discovery warnings should be treated as errors.
     /// </summary>
     public bool TreatDiscoveryWarningsAsErrors { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
-    /// </summary>
-    public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
     /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.
@@ -205,7 +199,6 @@ internal sealed class MSTestSettings
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
-        CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
@@ -385,7 +378,6 @@ internal sealed class MSTestSettings
         //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
         //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
         //     <TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors>
-        //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
         //     <Parallelize>
         //        <Workers>4</Workers>
@@ -424,21 +416,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CaptureTraceOutput"));
-                            }
-
-                            break;
-                        }
-
-                    case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
                             }
 
                             break;
@@ -877,7 +854,6 @@ internal sealed class MSTestSettings
         //  }
         //  ... remaining settings
         // }
-        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
         ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
 
         ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
