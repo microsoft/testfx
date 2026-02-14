@@ -3,7 +3,16 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
-internal interface ITestHostOrchestrator : IExtension
+/// <summary>
+/// Represents an extension that orchestrates test host execution.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface ITestHostOrchestrator : IExtension
 {
+    /// <summary>
+    /// Orchestrates test host execution.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation that returns the test host exit code.</returns>
     Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken);
 }

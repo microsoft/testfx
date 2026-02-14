@@ -53,9 +53,10 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
-    public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
 
-    internal ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
+    public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
