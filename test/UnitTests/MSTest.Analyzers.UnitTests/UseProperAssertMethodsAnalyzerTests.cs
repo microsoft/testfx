@@ -3565,6 +3565,38 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertUsesNullableValueTypeComparisonThenNoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    TimeSpan? ts1 = TimeSpan.Zero;
+                    TimeSpan? ts2 = TimeSpan.FromSeconds(1);
+
+                    Assert.IsTrue(ts2 > ts1);
+                    Assert.IsTrue(ts2 >= ts1);
+                    Assert.IsTrue(ts1 < ts2);
+                    Assert.IsTrue(ts1 <= ts2);
+
+                    Assert.IsFalse(ts2 > ts1);
+                    Assert.IsFalse(ts2 >= ts1);
+                    Assert.IsFalse(ts1 < ts2);
+                    Assert.IsFalse(ts1 <= ts2);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     #endregion
 
     [TestMethod]
