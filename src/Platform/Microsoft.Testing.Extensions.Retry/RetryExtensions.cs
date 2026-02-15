@@ -5,7 +5,6 @@ using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.Policy.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Extensions;
@@ -37,13 +36,7 @@ public static class RetryExtensions
         builder.TestHost.AddDataConsumer(compositeExtensionFactory);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeExtensionFactory);
 
-        if (builder is not TestApplicationBuilder testApplicationBuilder)
-        {
-            throw new InvalidOperationException(ExtensionResources.RetryFailedTestsInvalidTestApplicationBuilderErrorMessage);
-        }
-
-        // Net yet exposed extension points
-        ((TestHostOrchestratorManager)testApplicationBuilder.TestHostOrchestrator)
+        builder.TestHostOrchestrator
             .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
         ((TestHostManager)builder.TestHost)
             .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(serviceProvider));

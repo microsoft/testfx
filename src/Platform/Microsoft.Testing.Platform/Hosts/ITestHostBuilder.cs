@@ -29,7 +29,7 @@ internal interface ITestHostBuilder
 
     ITestHostControllersManager TestHostControllers { get; }
 
-    ITestHostOrchestratorManager TestHostOrchestratorManager { get; }
+    IInternalTestHostOrchestratorManager TestHostOrchestratorManager { get; }
 
     ITelemetryManager Telemetry { get; }
 
