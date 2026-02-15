@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -662,7 +662,7 @@ public sealed partial class Assert
                     userMessage,
                     ReplaceNulls(expected),
                     ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ReportAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     [DoesNotReturn]
@@ -676,7 +676,7 @@ public sealed partial class Assert
             expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
             actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
             delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ReportAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     [DoesNotReturn]
@@ -700,7 +700,7 @@ public sealed partial class Assert
             finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ReportAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     /// <summary>
@@ -1229,7 +1229,7 @@ public sealed partial class Assert
             notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
             actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
             delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        ReportAssertFailed("Assert.AreNotEqual", finalMessage);
     }
 
     /// <summary>
@@ -1437,7 +1437,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(notExpected),
             ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        ReportAssertFailed("Assert.AreNotEqual", finalMessage);
     }
 }
 

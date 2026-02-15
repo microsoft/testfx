@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -307,7 +307,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThan", finalMessage);
+        ReportAssertFailed("Assert.IsGreaterThan", finalMessage);
     }
 
     [DoesNotReturn]
@@ -319,7 +319,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(lowerBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
+        ReportAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
     }
 
     [DoesNotReturn]
@@ -331,7 +331,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThan", finalMessage);
+        ReportAssertFailed("Assert.IsLessThan", finalMessage);
     }
 
     [DoesNotReturn]
@@ -343,7 +343,7 @@ public sealed partial class Assert
             userMessage,
             ReplaceNulls(upperBound),
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
+        ReportAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
     }
 
     [DoesNotReturn]
@@ -354,7 +354,7 @@ public sealed partial class Assert
             FrameworkMessages.IsPositiveFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsPositive", finalMessage);
+        ReportAssertFailed("Assert.IsPositive", finalMessage);
     }
 
     [DoesNotReturn]
@@ -365,6 +365,6 @@ public sealed partial class Assert
             FrameworkMessages.IsNegativeFailMsg,
             userMessage,
             ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsNegative", finalMessage);
+        ReportAssertFailed("Assert.IsNegative", finalMessage);
     }
 }

@@ -478,7 +478,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            ThrowAssertFailed("Assert.Contains", finalMessage);
+            ReportAssertFailed("Assert.Contains", finalMessage);
         }
     }
 
@@ -717,7 +717,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
-            ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+            ReportAssertFailed("Assert.DoesNotContain", finalMessage);
         }
     }
 
@@ -758,7 +758,7 @@ public sealed partial class Assert
         {
             string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
-            ThrowAssertFailed("IsInRange", finalMessage);
+            ReportAssertFailed("IsInRange", finalMessage);
         }
     }
 
@@ -772,7 +772,7 @@ public sealed partial class Assert
             FrameworkMessages.ContainsSingleMatchFailMsg,
             userMessage,
             actualCount);
-        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+        ReportAssertFailed("Assert.ContainsSingle", finalMessage);
     }
 
     [DoesNotReturn]
@@ -783,7 +783,7 @@ public sealed partial class Assert
             FrameworkMessages.ContainsSingleFailMsg,
             userMessage,
             actualCount);
-        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+        ReportAssertFailed("Assert.ContainsSingle", finalMessage);
     }
 
     [DoesNotReturn]
@@ -793,7 +793,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsItemFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.Contains", finalMessage);
+        ReportAssertFailed("Assert.Contains", finalMessage);
     }
 
     [DoesNotReturn]
@@ -803,7 +803,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.ContainsPredicateFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.Contains", finalMessage);
+        ReportAssertFailed("Assert.Contains", finalMessage);
     }
 
     [DoesNotReturn]
@@ -813,7 +813,7 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainItemFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+        ReportAssertFailed("Assert.DoesNotContain", finalMessage);
     }
 
     [DoesNotReturn]
@@ -823,6 +823,6 @@ public sealed partial class Assert
             CultureInfo.CurrentCulture,
             FrameworkMessages.DoesNotContainPredicateFailMsg,
             userMessage);
-        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+        ReportAssertFailed("Assert.DoesNotContain", finalMessage);
     }
 }

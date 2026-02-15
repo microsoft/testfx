@@ -159,13 +159,13 @@ public sealed partial class Assert
     private static bool IsNullFailing(object? value) => value is not null;
 
     private static void ThrowAssertIsNullFailed(string? message)
-        => ThrowAssertFailed("Assert.IsNull", message);
+        => ReportAssertFailed("Assert.IsNull", message);
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
     public static void IsNotNull([NotNull] object? value, [InterpolatedStringHandlerArgument(nameof(value))] ref AssertIsNotNullInterpolatedStringHandler message, [CallerArgumentExpression(nameof(value))] string valueExpression = "")
 #pragma warning restore IDE0060 // Remove unused parameter
-#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Not sure how to express the semantics to the compiler, but the implementation guarantees that.
+#pragma warning disable CS8777 // Parameter must have a non-null value when exiting. - Deliberately keeping [NotNull] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
         => message.ComputeAssertion(valueExpression);
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
@@ -199,5 +199,5 @@ public sealed partial class Assert
 
     [DoesNotReturn]
     private static void ThrowAssertIsNotNullFailed(string? message)
-        => ThrowAssertFailed("Assert.IsNotNull", message);
+        => ReportAssertFailed("Assert.IsNotNull", message);
 }

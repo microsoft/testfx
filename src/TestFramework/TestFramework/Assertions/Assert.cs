@@ -26,7 +26,8 @@ public sealed partial class Assert
     public static Assert That { get; } = new();
 
     /// <summary>
-    /// Helper function that creates and throws an AssertionFailedException.
+    /// Reports an assertion failure. Within an <see cref="AssertScope"/>, the failure is collected
+    /// and execution continues. Outside a scope, the failure is thrown immediately.
     /// </summary>
     /// <param name="assertionName">
     /// name of the assertion throwing an exception.
@@ -34,9 +35,39 @@ public sealed partial class Assert
     /// <param name="message">
     /// The assertion failure message.
     /// </param>
+    /// <param name="forceThrow">
+    /// When <see langword="true"/>, the exception is always thrown, even within an <see cref="AssertScope"/>.
+    /// </param>
+#pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     [DoesNotReturn]
     [StackTraceHidden]
-    internal static void ThrowAssertFailed(string assertionName, string? message)
+    internal static void ReportAssertFailed(string assertionName, string? message, bool forceThrow = false)
+    {
+        var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+        if (!forceThrow)
+        {
+            AssertScope? scope = AssertScope.Current;
+            if (scope is not null)
+            {
+                scope.AddError(assertionFailedException);
+                return;
+            }
+        }
+
+        ThrowAssertFailed(assertionFailedException);
+    }
+#pragma warning restore CS8763 // A method marked [DoesNotReturn] should not return
+
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed(AssertFailedException exception)
+    {
+        LaunchDebuggerIfNeeded();
+        throw exception;
+    }
+
+    [StackTraceHidden]
+    internal static void LaunchDebuggerIfNeeded()
     {
         if (ShouldLaunchDebugger())
         {
@@ -49,9 +80,6 @@ public sealed partial class Assert
                 Debugger.Launch();
             }
         }
-
-        throw new AssertFailedException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
     }
 
     private static bool ShouldLaunchDebugger()
@@ -184,10 +212,10 @@ public sealed partial class Assert
     /// </param>
     internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
-        if (param == null)
+        if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
-            ThrowAssertFailed(assertionName, finalMessage);
+            throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, finalMessage));
         }
     }
 
