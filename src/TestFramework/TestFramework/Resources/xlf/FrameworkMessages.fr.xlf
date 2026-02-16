@@ -228,8 +228,8 @@ Réel : {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
-        <source>{0} failed. {1}</source>
-        <target state="translated">Échec de {0}. {1}</target>
+        <source>{0} failed.</source>
+        <target state="translated">Échec de {0}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="HasCountFailMsg">

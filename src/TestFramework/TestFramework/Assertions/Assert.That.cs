@@ -41,12 +41,18 @@ public static partial class AssertExtensions
                 ?? throw new ArgumentNullException(nameof(conditionExpression));
             if (!string.IsNullOrWhiteSpace(message))
             {
+                sb.AppendLine();
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
             }
 
             string details = ExtractDetails(condition.Body);
             if (!string.IsNullOrWhiteSpace(details))
             {
+                if (sb.Length == 0)
+                {
+                    sb.AppendLine();
+                }
+
                 sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
                 sb.AppendLine(details);
             }

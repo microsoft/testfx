@@ -201,7 +201,7 @@ Actual: {2}</value>
     <value>String '{0}' does not end with string '{1}'. {2}</value>
   </data>
   <data name="AssertionFailed" xml:space="preserve">
-    <value>{0} failed. {1}</value>
+    <value>{0} failed.</value>
   </data>
   <data name="IsInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>

@@ -94,7 +94,17 @@ public sealed partial class Assert
     }
 
     private static AssertFailedException CreateAssertFailedException(string assertionName, string? message)
-        => new(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+        => new(FormatAssertionFailed(assertionName, message));
+
+    private static string FormatAssertionFailed(string assertionName, string? message)
+    {
+        string failedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName);
+        return string.IsNullOrWhiteSpace(message)
+            ? failedMessage
+            : message![0] is '\n' or '\r'
+                ? string.Concat(failedMessage, message)
+                : $"{failedMessage} {message}";
+    }
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
@@ -221,7 +231,7 @@ public sealed partial class Assert
         if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
-            throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, finalMessage));
+            throw CreateAssertFailedException(assertionName, finalMessage);
         }
     }
 
