@@ -345,13 +345,17 @@ public sealed partial class Assert
         {
             // Ensure proper punctuation before adding the NULL message
             string trimmedMessage = userMessage.TrimEnd();
-            if (!trimmedMessage.EndsWith('.') && !trimmedMessage.EndsWith('!') && !trimmedMessage.EndsWith('?'))
+            if (trimmedMessage.Length > 0 && (trimmedMessage[^1] == '.' || trimmedMessage[^1] == '!' || trimmedMessage[^1] == '?'))
+            {
+                finalMessage = $"{trimmedMessage} 'value' was NULL.";
+            }
+            else if (trimmedMessage.Length > 0)
             {
                 finalMessage = $"{trimmedMessage}. 'value' was NULL.";
             }
             else
             {
-                finalMessage = $"{trimmedMessage} 'value' was NULL.";
+                finalMessage = "'value' was NULL.";
             }
         }
 
