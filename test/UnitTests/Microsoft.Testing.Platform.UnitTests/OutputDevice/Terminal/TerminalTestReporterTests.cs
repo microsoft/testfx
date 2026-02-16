@@ -18,7 +18,7 @@ public sealed class TerminalTestReporterTests
 
         FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
 
-        Assert.AreEqual(3, flattenedExceptions.Length);
+        Assert.HasCount(3, flattenedExceptions);
         Assert.AreEqual("outer", flattenedExceptions[0].ErrorMessage);
         Assert.AreEqual("inner-1", flattenedExceptions[1].ErrorMessage);
         Assert.AreEqual("inner-2", flattenedExceptions[2].ErrorMessage);
@@ -34,7 +34,7 @@ public sealed class TerminalTestReporterTests
 
         FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
 
-        Assert.AreEqual(3, flattenedExceptions.Length);
+        Assert.HasCount(3, flattenedExceptions);
         Assert.AreEqual(typeof(AggregateException).FullName, flattenedExceptions[0].ErrorType);
         Assert.AreEqual("inner-1", flattenedExceptions[1].ErrorMessage);
         Assert.AreEqual("inner-2", flattenedExceptions[2].ErrorMessage);
