@@ -44,14 +44,10 @@ public sealed partial class Assert
     internal static void ReportAssertFailed(string assertionName, string? message, bool forceThrow = false)
     {
         var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
-        if (!forceThrow)
+        if (!forceThrow && AssertScope.Current is { } scope)
         {
-            AssertScope? scope = AssertScope.Current;
-            if (scope is not null)
-            {
-                scope.AddError(assertionFailedException);
-                return;
-            }
+            scope.AddError(assertionFailedException);
+            return;
         }
 
         ThrowAssertFailed(assertionFailedException);
