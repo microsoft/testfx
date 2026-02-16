@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.MSBuild;
@@ -32,7 +31,7 @@ public static class MSBuildExtensions
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions()));
 
-        ((IInternalTestHostOrchestratorManager)((TestApplicationBuilder)builder).TestHostOrchestrator).AddTestHostOrchestratorApplicationLifetime(
+        builder.TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
             serviceProvider => new MSBuildOrchestratorLifetime(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions()));

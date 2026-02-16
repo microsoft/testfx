@@ -60,11 +60,7 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
         <target state="translated">Ponów próbę testów zakończonych niepowodzeniem</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Ponawianie testów zakończonych niepowodzeniem działa tylko z konstruktorami typu „Microsoft.Testing.Platform.Builder.TestApplicationBuilder”</target>
-        <note />
-      </trans-unit>
+
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Wyłącz mechanizm ponawiania prób, jeśli procent testów zakończonych niepowodzeniem jest większy niż określona wartość</target>

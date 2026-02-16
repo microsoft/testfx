@@ -6,4 +6,5 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 /// <summary>
 /// Represents an extension for test host orchestrators.
 /// </summary>
-internal interface ITestHostOrchestratorExtension : IExtension;
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface ITestHostOrchestratorExtension : IExtension;

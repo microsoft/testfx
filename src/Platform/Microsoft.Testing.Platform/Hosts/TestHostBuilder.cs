@@ -55,7 +55,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public IToolsManager Tools { get; } = new ToolsManager();
 
-    public IInternalTestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
+    public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
 
     public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,
@@ -407,7 +407,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
-        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider).ConfigureAwait(false);
+        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await ((TestHostOrchestratorManager)TestHostOrchestratorManager).BuildAsync(serviceProvider).ConfigureAwait(false);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
