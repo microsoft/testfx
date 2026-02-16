@@ -12,6 +12,35 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class TerminalTestReporterTests
 {
     [TestMethod]
+    public void ExceptionFlattener_WhenNestedInnerExceptions_ShouldKeepAllMessagesInOrder()
+    {
+        var exception = new Exception("outer", new InvalidOperationException("inner-1", new ArgumentException("inner-2")));
+
+        FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
+
+        Assert.HasCount(3, flattenedExceptions);
+        Assert.AreEqual("outer", flattenedExceptions[0].ErrorMessage);
+        Assert.AreEqual("inner-1", flattenedExceptions[1].ErrorMessage);
+        Assert.AreEqual("inner-2", flattenedExceptions[2].ErrorMessage);
+    }
+
+    [TestMethod]
+    public void ExceptionFlattener_WhenAggregateException_ShouldKeepTopLevelThenFlattenedInnerExceptions()
+    {
+        var exception = new AggregateException(
+            "top",
+            new InvalidOperationException("inner-1"),
+            new ArgumentException("inner-2"));
+
+        FlatException[] flattenedExceptions = ExceptionFlattener.Flatten(null, exception);
+
+        Assert.HasCount(3, flattenedExceptions);
+        Assert.AreEqual(typeof(AggregateException).FullName, flattenedExceptions[0].ErrorType);
+        Assert.AreEqual("inner-1", flattenedExceptions[1].ErrorMessage);
+        Assert.AreEqual("inner-2", flattenedExceptions[2].ErrorMessage);
+    }
+
+    [TestMethod]
     public void AppendStackFrameFormatsStackTraceLineCorrectly()
     {
         var terminal = new StringBuilderTerminal();
@@ -253,7 +282,7 @@ public sealed class TerminalTestReporterTests
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -350,7 +379,7 @@ public sealed class TerminalTestReporterTests
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -445,7 +474,7 @@ public sealed class TerminalTestReporterTests
               InProgressTest1␛[2147483640G(1m 31s)
               InProgressTest2␛[2147483643G(31s)
               InProgressTest3␛[2147483644G(1s)
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
