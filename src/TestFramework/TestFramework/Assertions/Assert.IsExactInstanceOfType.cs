@@ -347,11 +347,11 @@ public sealed partial class Assert
             string trimmedMessage = userMessage.TrimEnd();
             if (!trimmedMessage.EndsWith('.') && !trimmedMessage.EndsWith('!') && !trimmedMessage.EndsWith('?'))
             {
-                finalMessage = $"{userMessage}. 'value' was NULL.";
+                finalMessage = $"{trimmedMessage}. 'value' was NULL.";
             }
             else
             {
-                finalMessage = $"{userMessage} 'value' was NULL.";
+                finalMessage = $"{trimmedMessage} 'value' was NULL.";
             }
         }
 
