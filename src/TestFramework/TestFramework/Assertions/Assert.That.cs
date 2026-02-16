@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
@@ -39,7 +39,6 @@ public static partial class AssertExtensions
             var sb = new StringBuilder();
             string expressionText = conditionExpression
                 ?? throw new ArgumentNullException(nameof(conditionExpression));
-            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
             if (!string.IsNullOrWhiteSpace(message))
             {
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
@@ -52,7 +51,7 @@ public static partial class AssertExtensions
                 sb.AppendLine(details);
             }
 
-            throw new AssertFailedException(sb.ToString().TrimEnd());
+            Assert.ReportAssertFailed($"Assert.That({expressionText})", sb.ToString().TrimEnd());
         }
     }
 

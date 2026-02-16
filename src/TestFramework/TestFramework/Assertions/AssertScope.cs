@@ -56,16 +56,19 @@ internal sealed class AssertScope : IDisposable
         _disposed = true;
         CurrentScope.Value = null;
 
+        // We throw the collected exceptions directly instead of going through assertion failure
+        // helpers (e.g. ThrowAssertFailed) because the debugger was already launched when each
+        // error was collected.
         if (_errors.Count == 1 && _errors.TryDequeue(out AssertFailedException? singleError))
         {
-            Assert.ThrowAssertFailed(singleError);
+            throw singleError;
         }
 
         if (!_errors.IsEmpty)
         {
-            Assert.ThrowAssertFailed(new AssertFailedException(
+            throw new AssertFailedException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, _errors.Count),
-                new AggregateException(_errors)));
+                new AggregateException(_errors));
         }
     }
 }

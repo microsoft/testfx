@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -37,7 +37,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNullFailed(_builder.ToString());
+                ReportAssertIsNullFailed(_builder.ToString());
             }
         }
 
@@ -91,7 +91,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotNullFailed(_builder.ToString());
+                ReportAssertIsNotNullFailed(_builder.ToString());
             }
         }
 
@@ -152,13 +152,13 @@ public sealed partial class Assert
     {
         if (IsNullFailing(value))
         {
-            ThrowAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
     private static bool IsNullFailing(object? value) => value is not null;
 
-    private static void ThrowAssertIsNullFailed(string? message)
+    private static void ReportAssertIsNullFailed(string? message)
         => ReportAssertFailed("Assert.IsNull", message);
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
@@ -191,13 +191,13 @@ public sealed partial class Assert
     {
         if (IsNotNullFailing(value))
         {
-            ThrowAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotNullFailed(string? message)
+    private static void ReportAssertIsNotNullFailed(string? message)
         => ReportAssertFailed("Assert.IsNotNull", message);
 }

@@ -37,7 +37,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
-                ThrowAssertIsTrueFailed(_builder.ToString());
+                ReportAssertIsTrueFailed(_builder.ToString());
             }
         }
 
@@ -89,7 +89,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
-                ThrowAssertIsFalseFailed(_builder.ToString());
+                ReportAssertIsFalseFailed(_builder.ToString());
             }
         }
 
@@ -150,14 +150,14 @@ public sealed partial class Assert
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
+            ReportAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
         }
     }
 
     private static bool IsTrueFailing(bool? condition)
         => condition is false or null;
 
-    private static void ThrowAssertIsTrueFailed(string? message)
+    private static void ReportAssertIsTrueFailed(string? message)
         => ReportAssertFailed("Assert.IsTrue", message);
 
     /// <inheritdoc cref="IsFalse(bool?, string, string)" />
@@ -188,7 +188,7 @@ public sealed partial class Assert
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
+            ReportAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
         }
     }
 
@@ -196,6 +196,6 @@ public sealed partial class Assert
         => condition is true or null;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsFalseFailed(string userMessage)
+    private static void ReportAssertIsFalseFailed(string userMessage)
         => ReportAssertFailed("Assert.IsFalse", userMessage);
 }

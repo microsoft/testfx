@@ -88,11 +88,6 @@
         <target state="translated">Dettagli:</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Assert.That({0}) non riuscito.</target>
-        <note>{0} is the user code expression</note>
-      </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
         <target state="translated">Messaggio: {0}</target>

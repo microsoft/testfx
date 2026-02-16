@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -39,7 +39,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
+                ReportAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
             }
         }
 
@@ -99,7 +99,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -161,7 +161,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
+                ReportAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
             }
         }
 
@@ -221,7 +221,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -292,7 +292,7 @@ public sealed partial class Assert
     {
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -331,7 +331,7 @@ public sealed partial class Assert
         => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
 
     [DoesNotReturn]
-    private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
+    private static void ReportAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
         string finalMessage = userMessage;
         if (expectedType is not null && value is not null)
@@ -376,7 +376,7 @@ public sealed partial class Assert
     {
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -409,7 +409,7 @@ public sealed partial class Assert
             (value is not null && wrongType.IsInstanceOfType(value));
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
+    private static void ReportAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
     {
         string finalMessage = userMessage;
         if (wrongType is not null)

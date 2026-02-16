@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -39,7 +39,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
+                ReportAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
             }
         }
 
@@ -99,7 +99,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -161,7 +161,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
+                ReportAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
             }
         }
 
@@ -221,7 +221,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ReportAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
         }
 
@@ -291,7 +291,7 @@ public sealed partial class Assert
     {
         if (IsExactInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -329,7 +329,7 @@ public sealed partial class Assert
         => expectedType is null || value is null || value.GetType() != expectedType;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
+    private static void ReportAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
     {
         string finalMessage = userMessage;
         if (expectedType is not null && value is not null)
@@ -373,7 +373,7 @@ public sealed partial class Assert
     {
         if (IsNotExactInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertIsNotExactInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
+            ReportAssertIsNotExactInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
         }
     }
 
@@ -405,7 +405,7 @@ public sealed partial class Assert
             (value is not null && value.GetType() == wrongType);
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
+    private static void ReportAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
     {
         string finalMessage = userMessage;
         if (wrongType is not null)

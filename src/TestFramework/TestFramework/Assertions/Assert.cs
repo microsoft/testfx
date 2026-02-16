@@ -26,6 +26,23 @@ public sealed partial class Assert
     public static Assert That { get; } = new();
 
     /// <summary>
+    /// Reports an assertion failure and always throws, even within an <see cref="AssertScope"/>.
+    /// </summary>
+    /// <param name="assertionName">
+    /// name of the assertion throwing an exception.
+    /// </param>
+    /// <param name="message">
+    /// The assertion failure message.
+    /// </param>
+    [DoesNotReturn]
+    [StackTraceHidden]
+    internal static void ThrowAssertFailed(string assertionName, string? message)
+    {
+        LaunchDebuggerIfNeeded();
+        throw CreateAssertFailedException(assertionName, message);
+    }
+
+    /// <summary>
     /// Reports an assertion failure. Within an <see cref="AssertScope"/>, the failure is collected
     /// and execution continues. Outside a scope, the failure is thrown immediately.
     /// </summary>
@@ -35,35 +52,24 @@ public sealed partial class Assert
     /// <param name="message">
     /// The assertion failure message.
     /// </param>
-    /// <param name="forceThrow">
-    /// When <see langword="true"/>, the exception is always thrown, even within an <see cref="AssertScope"/>.
-    /// </param>
 #pragma warning disable CS8763 // A method marked [DoesNotReturn] should not return - Deliberately keeping [DoesNotReturn] annotation while using soft assertions. Within an AssertScope, the postcondition is not enforced (same as all other assertion postconditions in scoped mode).
     [DoesNotReturn]
     [StackTraceHidden]
-    internal static void ReportAssertFailed(string assertionName, string? message, bool forceThrow = false)
+    internal static void ReportAssertFailed(string assertionName, string? message)
     {
-        var assertionFailedException = new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
-        if (!forceThrow && AssertScope.Current is { } scope)
+        LaunchDebuggerIfNeeded();
+        AssertFailedException assertionFailedException = CreateAssertFailedException(assertionName, message);
+        if (AssertScope.Current is { } scope)
         {
             scope.AddError(assertionFailedException);
             return;
         }
 
-        ThrowAssertFailed(assertionFailedException);
+        throw assertionFailedException;
     }
 #pragma warning restore CS8763 // A method marked [DoesNotReturn] should not return
 
-    [DoesNotReturn]
-    [StackTraceHidden]
-    internal static void ThrowAssertFailed(AssertFailedException exception)
-    {
-        LaunchDebuggerIfNeeded();
-        throw exception;
-    }
-
-    [StackTraceHidden]
-    internal static void LaunchDebuggerIfNeeded()
+    private static void LaunchDebuggerIfNeeded()
     {
         if (ShouldLaunchDebugger())
         {
@@ -76,15 +82,19 @@ public sealed partial class Assert
                 Debugger.Launch();
             }
         }
+
+        // Local functions
+        static bool ShouldLaunchDebugger()
+            => AssertionFailureSettings.LaunchDebuggerOnAssertionFailure switch
+            {
+                DebuggerLaunchMode.Enabled => true,
+                DebuggerLaunchMode.EnabledExcludingCI => !CIEnvironmentDetector.Instance.IsCIEnvironment(),
+                _ => false,
+            };
     }
 
-    private static bool ShouldLaunchDebugger()
-        => AssertionFailureSettings.LaunchDebuggerOnAssertionFailure switch
-        {
-            DebuggerLaunchMode.Enabled => true,
-            DebuggerLaunchMode.EnabledExcludingCI => !CIEnvironmentDetector.Instance.IsCIEnvironment(),
-            _ => false,
-        };
+    private static AssertFailedException CreateAssertFailedException(string assertionName, string? message)
+        => new(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
