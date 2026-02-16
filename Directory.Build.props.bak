@@ -1,0 +1,106 @@
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Project="$(RepositoryEngineeringDir)Analyzers.props" />
+
+  <PropertyGroup>
+    <IsSourceProject Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">true</IsSourceProject>
+
+    <!-- We use Resx generator from Arcade. Enabling the one from MSBuild.Sdk.Extras (enabled by default) breaks Arcade -->
+    <!-- So we should disable it. -->
+    <ExtrasEnableEmbeddedResourceCodeGenerator>false</ExtrasEnableEmbeddedResourceCodeGenerator>
+  </PropertyGroup>
+
+  <!-- Language configuration -->
+  <PropertyGroup>
+    <!-- default to allowing all language features -->
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+
+    <ReportAnalyzer>true</ReportAnalyzer>
+  </PropertyGroup>
+
+  <!-- The TFMs to build and test against. -->
+  <PropertyGroup>
+    <!-- The windows SDK version of UWP, Modern UWP and WinUI could be aligned -->
+    <UwpMinimum>uap10.0.16299</UwpMinimum>
+    <ModernUwpMinimum>net9.0-windows10.0.17763.0</ModernUwpMinimum>
+    <WinUiMinimum>net8.0-windows10.0.18362.0</WinUiMinimum>
+
+    <SupportedNetFrameworks>net8.0;net9.0</SupportedNetFrameworks>
+  </PropertyGroup>
+
+  <!-- Build config -->
+  <PropertyGroup>
+    <!-- Prevent warning about deprecated target frameworks -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <!-- PDB -->
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <!-- Needs to be part of the building of prod code -->
+    <MoqPublicKey>0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7</MoqPublicKey>
+
+    <!-- Experimental test API usages are allowed inside this solution -->
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- netfx and netstandard don't have nullability info so the IDE0370 warning should be suppressed -->
+    <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0' OR $(TargetFramework.StartsWith('net4')) OR '$(TargetFramework)' == '$(UwpMinimum)'">$(NoWarn);IDE0370</NoWarn>
+  </PropertyGroup>
+
+  <!-- Versioning -->
+  <PropertyGroup>
+    <MSTestEnginePreReleaseVersionLabel>alpha</MSTestEnginePreReleaseVersionLabel>
+
+    <!--
+      This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MSTestEngineVersionPrefix>2.0.0</MSTestEngineVersionPrefix>
+  </PropertyGroup>
+
+  <!-- Pack config -->
+  <PropertyGroup>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!-- Sign config -->
+  <PropertyGroup>
+    <StrongNameKeyId>Microsoft</StrongNameKeyId>
+  </PropertyGroup>
+
+  <!-- Test config -->
+  <PropertyGroup>
+    <!-- Needs to be setup globally so that arcade doesn't bring xUnit to playground and other test projects -->
+    <TestRunnerName>Microsoft.Testing.Platform</TestRunnerName>
+  </PropertyGroup>
+
+  <!-- Polyfill config -->
+  <PropertyGroup>
+    <PolyEnsure>true</PolyEnsure>
+    <!-- PolyGuard is temporary until the binary compat with VSTestBridge
+     https://github.com/microsoft/testfx/pull/7064#issuecomment-3623472023
+     https://github.com/microsoft/testfx/pull/6977 -->
+    <PolyGuard>true</PolyGuard>
+    <PolyStringInterpolation>true</PolyStringInterpolation>
+    <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Concurrent" />
+    <Using Include="System.Globalization" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Reflection" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Runtime.InteropServices" />
+    <Using Include="System.Runtime.Versioning" />
+    <Using Include="System.Text" />
+    <Using Include="System.Text.RegularExpressions" />
+    <Using Include="System.Xml" />
+    <Using Include="System.Xml.Linq" />
+    <Using Include="System.Xml.XPath" />
+  </ItemGroup>
+
+</Project>

@@ -341,6 +341,10 @@ public sealed partial class Assert
                 expectedType.ToString(),
                 value.GetType().ToString());
         }
+        else if (value is null)
+        {
+            finalMessage = $"{userMessage} 'value' was NULL.";
+        }
 
         ThrowAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
     }
