@@ -134,9 +134,10 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     {
         using IPlatformActivity? activity = ServiceProvider.GetPlatformOTelService()?.StartActivity("ServerTestHost");
 
+        await _logger.LogDebugAsync("Starting server mode").ConfigureAwait(false);
+
         try
         {
-            await _logger.LogDebugAsync("Starting server mode").ConfigureAwait(false);
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(cancellationToken).ConfigureAwait(false);
 
             await HandleMessagesAsync(cancellationToken).ConfigureAwait(false);
