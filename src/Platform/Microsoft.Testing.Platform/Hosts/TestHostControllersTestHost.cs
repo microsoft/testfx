@@ -161,12 +161,11 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 }
             }
 
-            AsynchronousMessageBus concreteMessageBusService = new(
+            var concreteMessageBusService = new AsynchronousMessageBus(
                 [.. dataConsumersBuilder],
                 ServiceProvider.GetTestApplicationCancellationTokenSource(),
                 ServiceProvider.GetTask(),
-                ServiceProvider.GetLoggerFactory(),
-                ServiceProvider.GetEnvironment());
+                ServiceProvider.GetLoggerFactory());
             await concreteMessageBusService.InitAsync().ConfigureAwait(false);
             ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 
