@@ -43,7 +43,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public ITestHostManager TestHost { get; } = new TestHostManager();
 
-    public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo);
+    public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo, environment);
 
     public ILoggingManager Logging { get; } = new LoggingManager();
 
@@ -480,11 +480,6 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // ======= TEST HOST MODE ======== //
         policiesService.ProcessRole = TestProcessRole.TestHost;
         await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHost, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-
-        // Setup the test host working folder.
-        // Out of the test host controller extension the current working directory is the test host working directory.
-        string? currentWorkingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
 
         testHostControllerInfo.IsCurrentProcessTestHostController = false;
 

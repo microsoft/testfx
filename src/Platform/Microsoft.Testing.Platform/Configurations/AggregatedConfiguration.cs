@@ -12,12 +12,14 @@ internal sealed class AggregatedConfiguration(
     IConfigurationProvider[] configurationProviders,
     ITestApplicationModuleInfo testApplicationModuleInfo,
     IFileSystem fileSystem,
+    IEnvironment environment,
     CommandLineParseResult commandLineParseResult) : IConfiguration
 {
     public const string DefaultTestResultFolderName = "TestResults";
     private readonly IConfigurationProvider[] _configurationProviders = configurationProviders;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly IFileSystem _fileSystem = fileSystem;
+    private readonly IEnvironment _environment = environment;
     private readonly CommandLineParseResult _commandLineParseResult = commandLineParseResult;
     private string? _resultsDirectory;
     private string? _currentWorkingDirectory;
@@ -94,7 +96,7 @@ internal sealed class AggregatedConfiguration(
         // If not specified by command line, then use the configuration providers.
         // And finally fallback to DefaultTestResultFolderName relative to the current working directory.
         return CalculateFromConfigurationProviders(PlatformConfigurationConstants.PlatformResultDirectory)
-            ?? Path.Combine(this[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]!, DefaultTestResultFolderName);
+            ?? Path.Combine(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY) ?? this[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]!, DefaultTestResultFolderName);
     }
 
     private string GetCurrentWorkingDirectoryCore()

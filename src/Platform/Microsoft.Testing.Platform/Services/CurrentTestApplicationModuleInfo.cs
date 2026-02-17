@@ -127,6 +127,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
             _ => commandLineArguments,
         };
 
-        return new(GetProcessPath(), arguments, GetCurrentTestApplicationDirectory());
+        return new ExecutableInfo(GetProcessPath(), arguments);
     }
 }
