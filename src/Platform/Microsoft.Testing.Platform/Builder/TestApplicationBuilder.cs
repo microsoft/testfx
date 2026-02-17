@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
@@ -16,6 +15,7 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Builder;
@@ -54,7 +54,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-    public ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestratorManager;
+    public ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestrator;
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
