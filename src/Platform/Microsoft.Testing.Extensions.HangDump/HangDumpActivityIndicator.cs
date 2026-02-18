@@ -35,7 +35,6 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private bool _exitSignalActivityIndicatorAsync;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
     private PipeNameDescription? _pipeNameDescription;
-    private bool _sessionEndCalled;
 
     public HangDumpActivityIndicator(
         ICommandLineOptions commandLineOptions,
@@ -183,36 +182,16 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     }
 
     public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
-    {
-        _sessionEndCalled = true;
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
 #if NETCOREAPP
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         _namedPipeClient?.Dispose();
-
-        // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
-        // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
-        // If we go do wait for the server we will hang.
-        if (_sessionEndCalled)
-        {
-            await DisposeHelper.DisposeAsync(_singleConnectionNamedPipeServer).ConfigureAwait(false);
-        }
+        return ValueTask.CompletedTask;
     }
 #endif
 
     public void Dispose()
-    {
-        _namedPipeClient?.Dispose();
-
-        // If the OnTestSessionFinishingAsync is not called means that something unhandled happened
-        // and we didn't correctly coordinate the shutdown with the HangDumpProcessLifetimeHandler.
-        // If we go do wait for the server we will hang.
-        if (_sessionEndCalled)
-        {
-            _singleConnectionNamedPipeServer?.Dispose();
-        }
-    }
+        => _namedPipeClient?.Dispose();
 }
