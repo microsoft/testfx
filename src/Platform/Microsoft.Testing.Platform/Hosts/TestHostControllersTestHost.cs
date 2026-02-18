@@ -32,6 +32,11 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
 
+    // This flag means that the testhost was able to correctly complete in the child process.
+    // But it doesn't mean we will exit successfully.
+    // For example, the test session might complete successfully but leaves a hanging foreground thread.
+    // In that case, hang dump might kick in and kill the hanging process.
+    private bool _testHostCompletedReceived;
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
@@ -406,6 +411,10 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         {
             switch (request)
             {
+                case TestHostCompletedRequest _:
+                    _testHostCompletedReceived = true;
+                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:
                     _testHostPID = testHostProcessPIDRequest.PID;
                     _waitForPid.Set();
