@@ -312,7 +312,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 throw ApplicationStateGuard.Unreachable();
             }
 
-            testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value, testHostProcess.ExitCode);
+            testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value, testHostProcess.ExitCode, _testHostCompletedReceived);
 
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {

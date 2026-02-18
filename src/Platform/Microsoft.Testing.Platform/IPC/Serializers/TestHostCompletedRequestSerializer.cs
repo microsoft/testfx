@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
@@ -12,9 +12,7 @@ internal sealed class TestHostCompletedRequestSerializer : BaseSerializer, IName
     public int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
-    {
-        return new TestHostCompletedRequest();
-    }
+        => new TestHostCompletedRequest();
 
     public void Serialize(object obj, Stream stream)
     {
