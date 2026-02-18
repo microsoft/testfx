@@ -36,6 +36,7 @@ When making change to resource files, you MUST:
 - Tests for MTP and MSTest analyzers MUST use MSTest.
 - Unit tests for MSTest MUST use the internal test framework defined in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest).
 - All assertions must be written using FluentAssertions style of assertion.
+- When running acceptance tests, you must first run `./build.sh -pack`
 
 ## Pull Request guidelines
 
