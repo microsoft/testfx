@@ -26,17 +26,17 @@ You MUST minimize adding public API surface area but any newly added public API 
 
 ## Localization Guidelines
 
-Anytime you add a new localization resource, you MUST:
+When making change to resource files, you MUST:
 
-- Add a corresponding entry in the localization resource file.
-- Add an entry in all `*.xlf` files related to the modified `.resx` file.
-- Do not modify existing entries in `*.xlf` files unless you are also modifying the corresponding `.resx` file.
+- Add a corresponding entry in the resource file (`.resx`).
+- NEVER manually modify `*.xlf` files. Instead, build the project to automatically generate the corresponding `*.xlf` files.
 
 ## Testing Guidelines
 
 - Tests for MTP and MSTest analyzers MUST use MSTest.
 - Unit tests for MSTest MUST use the internal test framework defined in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest).
 - All assertions must be written using FluentAssertions style of assertion.
+- When running acceptance tests, you must first run `./build.sh -pack`
 
 ## Pull Request guidelines
 
