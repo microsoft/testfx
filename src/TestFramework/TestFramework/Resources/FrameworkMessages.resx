@@ -162,8 +162,17 @@
   <data name="AreNotEqualDeltaFailMsg" xml:space="preserve">
     <value>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</value>
   </data>
+  <data name="AreSameExpectedIsNull" xml:space="preserve">
+    <value>Expected is &lt;null&gt;. {0}</value>
+  </data>
+  <data name="AreSameActualIsNull" xml:space="preserve">
+    <value>Actual is &lt;null&gt;. {0}</value>
+  </data>
   <data name="AreSameGivenValues" xml:space="preserve">
     <value>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</value>
+  </data>
+  <data name="AreNotSameBothNull" xml:space="preserve">
+    <value>Both values are &lt;null&gt;. {0}</value>
   </data>
   <data name="BothCollectionsEmpty" xml:space="preserve">
     <value>Both collections are empty. {0}</value>

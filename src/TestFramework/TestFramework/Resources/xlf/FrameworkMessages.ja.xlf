@@ -78,6 +78,21 @@
         <target state="translated">指定する値 &lt;{1}&gt; と実際の値 &lt;{2}&gt; との間には、&lt;{3}&gt; を超える差が必要です。{0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreNotSameBothNull">
+        <source>Both values are &lt;null&gt;. {0}</source>
+        <target state="new">Both values are &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameActualIsNull">
+        <source>Actual is &lt;null&gt;. {0}</source>
+        <target state="new">Actual is &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameExpectedIsNull">
+        <source>Expected is &lt;null&gt;. {0}</source>
+        <target state="new">Expected is &lt;null&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">AreSame() には値型を渡すことはできません。オブジェクトに変換された値が同じにはなりません。AreEqual() を使用することを検討してください。{0}</target>

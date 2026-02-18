@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -68,6 +68,48 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). 'expected' expression: '1', 'actual' expression: '1'. User-provided message System.Object");
     }
 
+    public void AreSame_ExpectedNull_ShouldFailWithNullMessage()
+    {
+        object? expected = null;
+        Action action = () => Assert.AreSame(expected, new object());
+        action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Expected is <null>. 'expected' expression: 'expected', 'actual' expression: 'new object()'.");
+    }
+
+    public void AreSame_ActualNull_ShouldFailWithNullMessage()
+    {
+        object? actual = null;
+        Action action = () => Assert.AreSame(new object(), actual);
+        action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Actual is <null>. 'expected' expression: 'new object()', 'actual' expression: 'actual'.");
+    }
+
+    public void AreSame_StringMessage_ExpectedNull_ShouldFailWithNullMessage()
+    {
+        object? expected = null;
+        Action action = () => Assert.AreSame(expected, new object(), "User-provided message");
+        action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Expected is <null>. 'expected' expression: 'expected', 'actual' expression: 'new object()'. User-provided message");
+    }
+
+    public void AreSame_StringMessage_ActualNull_ShouldFailWithNullMessage()
+    {
+        object? actual = null;
+        Action action = () => Assert.AreSame(new object(), actual, "User-provided message");
+        action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Actual is <null>. 'expected' expression: 'new object()', 'actual' expression: 'actual'. User-provided message");
+    }
+
+    public void AreSame_InterpolatedString_ExpectedNull_ShouldFailWithNullMessage()
+    {
+        object? expected = null;
+        Action action = () => Assert.AreSame(expected, new object(), $"User-provided message {new object().GetType()}");
+        action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Expected is <null>. 'expected' expression: 'expected', 'actual' expression: 'new object()'. User-provided message System.Object");
+    }
+
+    public void AreSame_InterpolatedString_ActualNull_ShouldFailWithNullMessage()
+    {
+        object? actual = null;
+        Action action = () => Assert.AreSame(new object(), actual, $"User-provided message {new object().GetType()}");
+        action.Should().Throw<Exception>().WithMessage("Assert.AreSame failed. Actual is <null>. 'expected' expression: 'new object()', 'actual' expression: 'actual'. User-provided message System.Object");
+    }
+
     public void AreNotSame_PassSameObject_ShouldFail()
     {
         object o = new();
@@ -99,5 +141,29 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.AreNotSame(o, o, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).WithMessage($"Assert.AreNotSame failed. 'notExpected' expression: 'o', 'actual' expression: 'o'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
         o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void AreNotSame_BothNull_ShouldFailWithNullMessage()
+    {
+        object? notExpected = null;
+        object? actual = null;
+        Action action = () => Assert.AreNotSame(notExpected, actual);
+        action.Should().Throw<Exception>().WithMessage("Assert.AreNotSame failed. Both values are <null>. 'notExpected' expression: 'notExpected', 'actual' expression: 'actual'.");
+    }
+
+    public void AreNotSame_StringMessage_BothNull_ShouldFailWithNullMessage()
+    {
+        object? notExpected = null;
+        object? actual = null;
+        Action action = () => Assert.AreNotSame(notExpected, actual, "User-provided message");
+        action.Should().Throw<Exception>().WithMessage("Assert.AreNotSame failed. Both values are <null>. 'notExpected' expression: 'notExpected', 'actual' expression: 'actual'. User-provided message");
+    }
+
+    public void AreNotSame_InterpolatedString_BothNull_ShouldFailWithNullMessage()
+    {
+        object? notExpected = null;
+        object? actual = null;
+        Action action = () => Assert.AreNotSame(notExpected, actual, $"User-provided message {new object().GetType()}");
+        action.Should().Throw<Exception>().WithMessage("Assert.AreNotSame failed. Both values are <null>. 'notExpected' expression: 'notExpected', 'actual' expression: 'actual'. User-provided message System.Object");
     }
 }
