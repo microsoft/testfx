@@ -55,7 +55,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public IToolsManager Tools { get; } = new ToolsManager();
 
-    public ITestHostOrchestratorManager TestHostOrchestrator { get; } = new TestHostOrchestratorManager();
+    public ITestHostOrchestratorManager TestHostOrchestrator { get; } = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
 
     public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,

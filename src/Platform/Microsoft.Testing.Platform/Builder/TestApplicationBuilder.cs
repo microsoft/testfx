@@ -54,7 +54,10 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-    public ITestHostOrchestratorManager TestHostOrchestrator => _testHostBuilder.TestHostOrchestrator;
+    ITestHostOrchestratorManager ITestApplicationBuilder.TestHostOrchestrator => _testHostBuilder.TestHostOrchestrator;
+
+    // Binary backward compatibility: old extensions access this property on the concrete class.
+    internal Extensions.TestHostOrchestrator.ITestHostOrchestratorManager TestHostOrchestrator => (Extensions.TestHostOrchestrator.ITestHostOrchestratorManager)_testHostBuilder.TestHostOrchestrator;
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
