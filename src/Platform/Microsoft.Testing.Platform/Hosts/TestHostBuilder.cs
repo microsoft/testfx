@@ -518,7 +518,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             IHost actualTestHost = testControllerConnection is not null
-                ? new TestHostControlledHost(testControllerConnection, serverTestHost, testApplicationCancellationTokenSource.CancellationToken)
+                ? new TestHostControlledHost(serverTestHost)
                 : serverTestHost;
 
             // Log Telemetry
@@ -565,7 +565,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             IHost actualTestHost = testControllerConnection is not null
-                ? new TestHostControlledHost(testControllerConnection, consoleHost, testApplicationCancellationTokenSource.CancellationToken)
+                ? new TestHostControlledHost(consoleHost)
                 : consoleHost;
 
             // Log Telemetry

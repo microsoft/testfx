@@ -32,8 +32,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
 
-    private bool _testHostGracefullyClosed;
-    private int? _testHostExitCode;
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
@@ -63,6 +61,8 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     protected override async Task<int> InternalRunAsync(CancellationToken cancellationToken)
     {
         int exitCode;
+        TestHostProcessInformation testHostProcessInformation;
+
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
         IEnvironment environment = ServiceProvider.GetEnvironment();
@@ -289,10 +289,12 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
                     // to block the execution of the test host should add an in-process extension like an 'ITestHostApplicationLifetime' and
                     // wait for a connection/signal to return.
-                    TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
+                    // This is partial information because we don't yet know the exit code, as we are just starting.
+                    // The full info contains the exit code and happens after WaitForExit.
+                    TestHostProcessInformation partialTestHostProcessInformation = new(_testHostPID.Value);
                     foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                     {
-                        await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
+                        await lifetimeHandler.OnTestHostProcessStartedAsync(partialTestHostProcessInformation, cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -300,21 +302,24 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
             }
 
+            if (_testHostPID is null)
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value, testHostProcess.ExitCode);
+
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
-                await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync testHostGracefullyClosed: {_testHostGracefullyClosed}").ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync: ExitCode: {testHostProcess.ExitCode}").ConfigureAwait(false);
                 var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
 
-                if (_testHostPID is not null)
+                foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
-                    TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
-                    foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
-                    {
-                        await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
+                    await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
 
-                        // OnTestHostProcess could produce information that needs to be handled by others.
-                        await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
-                    }
+                    // OnTestHostProcess could produce information that needs to be handled by others.
+                    await messageBusProxy.DrainDataAsync().ConfigureAwait(false);
                 }
 
                 // We disable after the drain because it's possible that the drain will produce more messages
@@ -331,12 +336,19 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             }
 
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
-            exitCode = _testHostExitCode ??
-                (cancellationToken.IsCancellationRequested
-                    ? ExitCodes.TestSessionAborted
-                    : (!_testHostGracefullyClosed ? ExitCodes.TestHostProcessExitedNonGracefully : throw ApplicationStateGuard.Unreachable()));
+            exitCode = testHostProcess.ExitCode;
+            if (exitCode == ExitCodes.Success && cancellationToken.IsCancellationRequested)
+            {
+                // In case of cancellation, only alter exit code if it was success.
+                // If there is another exit code indicating another failure, we prefer it over the cancellation.
+                exitCode = ExitCodes.TestSessionAborted;
+            }
+            else if (!testHostProcessInformation.HasExitedGracefully)
+            {
+                exitCode = ExitCodes.TestHostProcessExitedNonGracefully;
+            }
 
-            if (!_testHostGracefullyClosed && !cancellationToken.IsCancellationRequested)
+            if (!testHostProcessInformation.HasExitedGracefully && !cancellationToken.IsCancellationRequested)
             {
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)), cancellationToken).ConfigureAwait(false);
             }
@@ -358,7 +370,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 [TelemetryProperties.HostProperties.RunStart] = consoleRunStart,
                 [TelemetryProperties.HostProperties.RunStop] = consoleRunStop,
                 [TelemetryProperties.HostProperties.ExitCodePropertyName] = exitCode.ToString(CultureInfo.InvariantCulture),
-                [TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName] = _testHostGracefullyClosed.AsTelemetryBool(),
+                [TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName] = testHostProcessInformation.HasExitedGracefully.AsTelemetryBool(),
                 [TelemetryProperties.HostProperties.ExtensionsPropertyName] = extensionInformation,
             }, cancellationToken).ConfigureAwait(false);
         }
@@ -394,11 +406,6 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         {
             switch (request)
             {
-                case TestHostProcessExitRequest testHostProcessExitRequest:
-                    _testHostExitCode = testHostProcessExitRequest.ExitCode;
-                    _testHostGracefullyClosed = true;
-                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
-
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:
                     _testHostPID = testHostProcessPIDRequest.PID;
                     _waitForPid.Set();
