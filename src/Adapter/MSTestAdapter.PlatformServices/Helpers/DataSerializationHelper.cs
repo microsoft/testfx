@@ -168,13 +168,13 @@ internal static class DataSerializationHelper
     {
         Type? serializedType = PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName);
         return serializedType
-            ?? (assemblyQualifiedName.StartsWith(typeof(SurrogatedSystemType).FullName + ",", StringComparison.Ordinal)
-                ? typeof(SurrogatedSystemType)
-                : assemblyQualifiedName.StartsWith(typeof(SurrogatedDateOnly).FullName + ",", StringComparison.Ordinal)
-                    ? typeof(SurrogatedDateOnly)
-                    : assemblyQualifiedName.StartsWith(typeof(SurrogatedTimeOnly).FullName + ",", StringComparison.Ordinal)
-                        ? typeof(SurrogatedTimeOnly)
-                        : typeof(object));
+            ?? assemblyQualifiedName switch
+            {
+                var name when name.StartsWith(typeof(SurrogatedSystemType).FullName + ",", StringComparison.Ordinal) => typeof(SurrogatedSystemType),
+                var name when name.StartsWith(typeof(SurrogatedDateOnly).FullName + ",", StringComparison.Ordinal) => typeof(SurrogatedDateOnly),
+                var name when name.StartsWith(typeof(SurrogatedTimeOnly).FullName + ",", StringComparison.Ordinal) => typeof(SurrogatedTimeOnly),
+                _ => typeof(object),
+            };
     }
 
     [DataContract]
