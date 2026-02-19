@@ -19,7 +19,14 @@ public interface ITestHostProcessInformation
     int ExitCode { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the test host process has exited gracefully.
+    /// Gets a value indicating whether the test host app has exited gracefully.
     /// </summary>
+    /// <remarks>
+    /// This flag is based on a message that the TestApplication sends at its end.
+    /// The test host process might still crash or be killed after sending this message, in which
+    /// case this flag will be true but the process hasn't truly exited gracefully.
+    /// </remarks>
+    // TODO: As a follow-up, obsolete this property as error, and rename it to ReceivedTestHostCompletedEvent or TestHostCompletedEventReceived.
+    // Note that this is a public API
     bool HasExitedGracefully { get; }
 }

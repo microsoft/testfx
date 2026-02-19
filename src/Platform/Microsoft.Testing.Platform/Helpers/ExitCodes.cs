@@ -7,6 +7,10 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// We use positive exit codes for failure because POSIX/BASH exit codes are unsigned 8-bit integers.
 /// On POSIX systems the standard exit code is 0 for success and any number from 1 to 255 for anything else.
 /// </summary>
+// TODO: Consider changing this to an enum, and rename to 'ExitCode' to follow enum naming convention.
+// Being an enum makes it easier to do 'Enum.IsDefined' checks to validate if an exit code is a known MTP exit code.
+// Note: Changing this to enum is binary breaking for extensions that consume this via IVT :/
+// This should have been marked as Embedded and source-linked instead.
 internal static class ExitCodes
 {
     public const int Success = 0;
@@ -23,4 +27,8 @@ internal static class ExitCodes
     public const int DependentProcessExited = 11;
     public const int IncompatibleProtocolVersion = 12;
     public const int TestExecutionStoppedForMaxFailedTests = 13;
+
+    // IMPORTANT: Update this logic when adding/removing exit codes.
+    internal static bool IsKnownExitCode(int exitCode)
+        => exitCode is >= Success and <= TestExecutionStoppedForMaxFailedTests and not 6;
 }

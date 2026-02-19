@@ -41,6 +41,7 @@ internal sealed class CrashDumpCommandLineProvider : ICommandLineOptionsProvider
             }
         }
 
+        // TODO: Validate that the file name ends with '.dmp'?
         return ValidationResult.ValidTask;
     }
 

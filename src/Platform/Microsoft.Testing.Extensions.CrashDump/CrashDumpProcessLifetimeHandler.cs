@@ -56,27 +56,34 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (testHostProcessInformation.HasExitedGracefully
-            || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
+        if (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true")
         {
             return;
         }
 
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
+        // TODO: Crash dump supports more placeholders that we don't handle here.
+        // See "Dump name formatting" in:
+        // https://github.com/dotnet/runtime/blob/82742628310076fff22d7e7ee216a74384352056/docs/design/coreclr/botr/xplat-minidump-generation.md
+        string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
+        string[] dumpFiles = Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp");
+        if (dumpFiles.Length == 0)
+        {
+            // We don't have any dump files.
+            // So we return.
+            return;
+        }
+
         await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID)), cancellationToken).ConfigureAwait(false);
 
-        string expectedDumpFile = _netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern.Replace("%p", testHostProcessInformation.PID.ToString(CultureInfo.InvariantCulture));
-        if (File.Exists(expectedDumpFile))
-        {
-            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedDumpFile), CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-        }
-        else
+        if (!File.Exists(expectedDumpFile))
         {
             await _outputDisplay.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)), cancellationToken).ConfigureAwait(false);
-            foreach (string dumpFile in Directory.GetFiles(Path.GetDirectoryName(expectedDumpFile)!, "*.dmp"))
-            {
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
-            }
+        }
+
+        foreach (string dumpFile in dumpFiles)
+        {
+            await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), CrashDumpResources.CrashDumpDisplayName, CrashDumpResources.CrashDumpArtifactDescription)).ConfigureAwait(false);
         }
     }
 }

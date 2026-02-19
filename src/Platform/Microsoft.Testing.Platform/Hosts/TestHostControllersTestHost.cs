@@ -348,14 +348,10 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 // If there is another exit code indicating another failure, we prefer it over the cancellation.
                 exitCode = ExitCodes.TestSessionAborted;
             }
-            else if (!testHostProcessInformation.HasExitedGracefully)
-            {
-                exitCode = ExitCodes.TestHostProcessExitedNonGracefully;
-            }
-
-            if (!testHostProcessInformation.HasExitedGracefully && !cancellationToken.IsCancellationRequested)
+            else if (!testHostProcessInformation.HasExitedGracefully || !ExitCodes.IsKnownExitCode(exitCode))
             {
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
+                exitCode = ExitCodes.TestHostProcessExitedNonGracefully;
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
