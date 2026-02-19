@@ -68,15 +68,7 @@ public class Program
             //         metrics.AddOtlpExporter();
             //     });
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
-            int exitCode = await testApplication.RunAsync();
-            if (args.Length == 1 && args[0] == "--crashdump")
-            {
-                // TestHostController
-                return exitCode;
-            }
-
-            // TestHost
-            return 5;
+            return await testApplication.RunAsync();
         }
         else
         {
