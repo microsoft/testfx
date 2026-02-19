@@ -16,6 +16,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Testing.Extensions;
 
 namespace Playground;
 
@@ -37,6 +38,7 @@ public class Program
 
             // Test MSTest
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
+            testApplicationBuilder.AddCrashDumpProvider();
 
             // Add Chat client provider
             // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
@@ -66,7 +68,15 @@ public class Program
             //         metrics.AddOtlpExporter();
             //     });
             using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
-            return await testApplication.RunAsync();
+            int exitCode = await testApplication.RunAsync();
+            if (args.Length == 1 && args[0] == "--crashdump")
+            {
+                // TestHostController
+                return exitCode;
+            }
+
+            // TestHost
+            return 5;
         }
         else
         {

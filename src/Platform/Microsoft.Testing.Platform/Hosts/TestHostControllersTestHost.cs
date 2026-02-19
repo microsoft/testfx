@@ -37,6 +37,10 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     // For example, the test session might complete successfully but leaves a hanging foreground thread.
     // In that case, hang dump might kick in and kill the hanging process.
     private bool _testHostCompletedReceived;
+
+    // This is the exit code received from the test host process via IPC. It might not be the same as the actual exit code.
+    private int? _testHostExitCodeReceived;
+
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, PassiveNode? passiveNode, IEnvironment environment,
@@ -348,7 +352,8 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 // If there is another exit code indicating another failure, we prefer it over the cancellation.
                 exitCode = ExitCodes.TestSessionAborted;
             }
-            else if (!testHostProcessInformation.HasExitedGracefully || !ExitCodes.IsKnownExitCode(exitCode))
+            else if (!testHostProcessInformation.HasExitedGracefully ||
+                _testHostExitCodeReceived != testHostProcess.ExitCode)
             {
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 exitCode = ExitCodes.TestHostProcessExitedNonGracefully;
@@ -407,8 +412,9 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         {
             switch (request)
             {
-                case TestHostCompletedRequest _:
+                case TestHostCompletedRequest testHostCompletedRequest:
                     _testHostCompletedReceived = true;
+                    _testHostExitCodeReceived = testHostCompletedRequest.ExitCode;
                     return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:

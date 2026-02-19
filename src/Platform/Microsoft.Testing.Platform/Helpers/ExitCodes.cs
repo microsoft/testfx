@@ -27,8 +27,4 @@ internal static class ExitCodes
     public const int DependentProcessExited = 11;
     public const int IncompatibleProtocolVersion = 12;
     public const int TestExecutionStoppedForMaxFailedTests = 13;
-
-    // IMPORTANT: Update this logic when adding/removing exit codes.
-    internal static bool IsKnownExitCode(int exitCode)
-        => exitCode is >= Success and <= TestExecutionStoppedForMaxFailedTests and not 6;
 }

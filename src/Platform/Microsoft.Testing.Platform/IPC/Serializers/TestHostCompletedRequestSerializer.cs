@@ -12,9 +12,14 @@ internal sealed class TestHostCompletedRequestSerializer : BaseSerializer, IName
     public int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
 
     public object Deserialize(Stream stream)
-        => new TestHostCompletedRequest();
+    {
+        int exitCode = ReadInt(stream);
+        return new TestHostCompletedRequest(exitCode);
+    }
 
     public void Serialize(object obj, Stream stream)
     {
+        var testHostCompletedRequest = (TestHostCompletedRequest)obj;
+        WriteInt(stream, testHostCompletedRequest.ExitCode);
     }
 }
