@@ -359,7 +359,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 exitCode = ExitCodes.TestHostProcessExitedNonGracefully;
             }
 
-            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
+            await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
         }
         finally
