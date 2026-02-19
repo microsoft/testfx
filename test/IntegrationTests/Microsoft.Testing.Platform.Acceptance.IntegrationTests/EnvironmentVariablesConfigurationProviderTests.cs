@@ -103,10 +103,10 @@ public class Startup
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         var exitCode = await app.RunAsync();
         if (Environment.GetEnvironmentVariable("myVar") == "myValue" &&
-            Environment.GetEnvironmentVariable("MESS_UP_TESTHOST_EXIT_CODE") is { } exitCode)
+            Environment.GetEnvironmentVariable("MESS_UP_TESTHOST_EXIT_CODE") is { } messedUpExitCodeString)
         {
             // This is the TestHost, and the test requested to mess up exit code of test host.
-            return int.Parse(exitCode);
+            return int.Parse(messedUpExitCodeString);
         }
 
         return exitCode;
