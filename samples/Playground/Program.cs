@@ -13,10 +13,10 @@ using MSTest.Acceptance.IntegrationTests.Messages.V100;
 #endif
 
 using Microsoft.Extensions.AI;
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Testing.Extensions;
 
 namespace Playground;
 
