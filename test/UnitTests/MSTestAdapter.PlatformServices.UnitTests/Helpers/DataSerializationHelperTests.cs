@@ -91,8 +91,7 @@ public class DataSerializationHelperTests : TestContainer
             object?[]? actual = DataSerializationHelper.Deserialize(DataSerializationHelper.Serialize([type]));
 
             actual!.Length.Should().Be(1);
-            actual[0].Should().BeAssignableTo<Type>();
-            ((Type)actual[0]!).Should().Be(type);
+            actual[0].Should().Be(type);
         }
     }
 
