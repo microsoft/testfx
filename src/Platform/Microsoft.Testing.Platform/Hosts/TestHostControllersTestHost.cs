@@ -355,7 +355,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             if (!testHostProcessInformation.HasExitedGracefully && !cancellationToken.IsCancellationRequested)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)), cancellationToken).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}')' in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
