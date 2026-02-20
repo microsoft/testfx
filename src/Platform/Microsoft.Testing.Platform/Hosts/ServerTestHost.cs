@@ -150,10 +150,13 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
             && (ex is OperationCanceledException
                 // the TcpClient/stream was disposed while an async operation was in flight.
                 or ObjectDisposedException
-                // ConnectAsync completed at the OS level at the same instant the cancellation callback closed the socket,
-                // leaving it in a non-connected state when GetStream() is called.
+                // TOCTOU race in the runtime: ConnectAsync completed successfully at the OS level,
+                // but the cancellation callback (registered via CancellationToken.UnsafeRegister
+                // in SocketAsyncEventArgs.ProcessIOCPResult) called CancelIoEx, tearing down
+                // the socket's connected state before GetStream() could read it.
                 or InvalidOperationException
-                // the socket was closed by the cancellation callback.
+                // the pending overlapped I/O was cancelled by CancelIoEx (Windows) from the
+                // cancellation callback, completing with SocketError.OperationAborted.
                 or SocketException { SocketErrorCode: SocketError.OperationAborted }))
         {
         }
