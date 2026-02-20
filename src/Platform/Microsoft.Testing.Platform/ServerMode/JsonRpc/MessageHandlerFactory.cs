@@ -45,14 +45,42 @@ internal sealed partial class ServerModeManager
             await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
 
             TcpClient client = new();
+            bool shouldDisposeClient = true;
 
+            try
+            {
 #if NETCOREAPP
-            await client.ConnectAsync(host: _host, port: _port, cancellationToken).ConfigureAwait(false);
+                await client.ConnectAsync(host: _host, port: _port, cancellationToken).ConfigureAwait(false);
 #else
-            await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
+                await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
 #endif
-            NetworkStream stream = client.GetStream();
-            return new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
+                // On NETCOREAPP, the ConnectAsync overload accepting a CancellationToken
+                // delegates to SocketAsyncEventArgs, whose ProcessIOCPResult method
+                // (SocketAsyncEventArgs.Windows.cs) registers a cancellation callback via
+                // CancellationToken.UnsafeRegister. On Windows, the callback calls
+                // Interop.Kernel32.CancelIoEx to cancel the pending overlapped I/O;
+                // the completed I/O then surfaces as SocketError.OperationAborted.
+                //
+                // Because the registration happens *after* the OS call returns, there is
+                // a TOCTOU race: the connect can complete successfully at the OS level at
+                // the same instant the token fires. CancelIoEx finds no pending I/O to
+                // cancel, but the socket's internal state is already torn down, leaving
+                // it in a disconnected state. ConnectAsync then returns successfully
+                // while the socket is no longer usable, causing GetStream() to throw
+                // InvalidOperationException ("The operation is not allowed on non-connected sockets").
+                cancellationToken.ThrowIfCancellationRequested();
+                NetworkStream stream = client.GetStream();
+                IMessageHandler messageHandler = new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
+                shouldDisposeClient = false;
+                return messageHandler;
+            }
+            finally
+            {
+                if (shouldDisposeClient)
+                {
+                    client.Dispose();
+                }
+            }
         }
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(false);
