@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETFRAMEWORK || NET472_OR_GREATER
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Platform.Helpers;
-#endif
 using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -15,12 +13,6 @@ public sealed class AzureDevOpsTests
     [TestMethod]
     public void ReportsTheFirstExistingFileInStackTraceWithTheRightLineNumberAndEscaping()
     {
-#if NETFRAMEWORK && !NET472_OR_GREATER
-        // We rely on code file paths that are present in pdb for this project. We use portable PDBs, which don't report the code location for
-        // .NET Framework <4.7.2, so we won't get the path and the test will fail.
-        // https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
-        return;
-#else
         Exception error;
         try
         {
@@ -33,24 +25,17 @@ public sealed class AzureDevOpsTests
 
         // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
         var logger = new TextLogger();
-        string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger)?.TrimStart('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=27;columnnumber=1][MyTestDisplayName] this is an error%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
-#endif
+        string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=19;columnnumber=1][MyTestDisplayName] [net9.0] this is an error%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
 
     [TestMethod]
-    public void ReportsWithoutDisplayNameWhenNull()
+    public void ReportsTheFirstExistingFileInStackTraceWithTheRightLineNumberAndEscapingAndOverrideExceptionMessage()
     {
-#if NETFRAMEWORK && !NET472_OR_GREATER
-        // We rely on code file paths that are present in pdb for this project. We use portable PDBs, which don't report the code location for
-        // .NET Framework <4.7.2, so we won't get the path and the test will fail.
-        // https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
-        return;
-#else
         Exception error;
         try
         {
-            throw new Exception("this is an error");
+            throw new Exception("this is an error\nwith\rnewline");
         }
         catch (Exception ex)
         {
@@ -59,9 +44,8 @@ public sealed class AzureDevOpsTests
 
         // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
         var logger = new TextLogger();
-        string? text = AzureDevOpsReporter.GetErrorText(null, null, error, "severity", new SystemFileSystem(), logger)?.TrimStart('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=53;columnnumber=1]this is an error", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
-#endif
+        string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", "Some custom reason\nwith\rnewline", error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=38;columnnumber=1][MyTestDisplayName] [net9.0] Some custom reason%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
 
     private class TextLogger : ILogger
