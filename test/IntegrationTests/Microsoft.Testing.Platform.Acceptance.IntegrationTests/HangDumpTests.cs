@@ -158,7 +158,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
     }
 
     [TestMethod]
-    public async Task HangDump_WithBackgroundThreadAfterSessionFinish_CreateDump()
+    public async Task HangDump_WithForegroundThreadAfterSessionFinish_CreateDump()
     {
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
@@ -168,7 +168,7 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             {
                 { "SLEEPTIMEMS1", "4000" },
                 { "SLEEPTIMEMS2", "4000" },
-                { "SPAWN_BACKGROUND_THREAD", "true" },
+                { "SPAWN_FOREGROUND_THREAD", "true" },
             },
             cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
@@ -273,16 +273,16 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
 
-        // Spawn a background thread that continues running after the test session finishes
+        // Spawn a foreground thread that continues running after the test session finishes
         // to verify that hang dump triggers even after session end
-        if (Environment.GetEnvironmentVariable("SPAWN_BACKGROUND_THREAD") == "true")
+        if (Environment.GetEnvironmentVariable("SPAWN_FOREGROUND_THREAD") == "true")
         {
-            Thread backgroundThread = new Thread(() =>
+            Thread foregroundThread = new Thread(() =>
             {
                 Thread.Sleep(600000); // Sleep for 10 minutes to trigger hang dump
             });
-            backgroundThread.IsBackground = false; // Foreground thread to prevent process exit
-            backgroundThread.Start();
+            foregroundThread.IsBackground = false; // Foreground thread to prevent process exit
+            foregroundThread.Start();
         }
 
         context.Complete();
