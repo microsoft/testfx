@@ -17,7 +17,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithNoFailures", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("passed ScopeWithNoFailures");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [TestMethod]
@@ -83,7 +83,7 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter IndependentTest", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("passed IndependentTest");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
