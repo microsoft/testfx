@@ -330,16 +330,24 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    // TODO: Recognize 'null == something' (i.e, when null is the left operand)
     private static bool IsEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
-            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
-            rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
-            expressionUnderTest = binaryOperation.LeftOperand.Syntax;
-            typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
-            return true;
+            if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.LeftOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
+                return true;
+            }
+
+            if (binaryOperation.LeftOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.RightOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.RightOperand.WalkDownConversion().Type;
+                return true;
+            }
         }
 
         expressionUnderTest = null;
@@ -347,16 +355,24 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    // TODO: Recognize 'null != something' (i.e, when null is the left operand)
     private static bool IsNotEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
-            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
-            rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
-            expressionUnderTest = binaryOperation.LeftOperand.Syntax;
-            typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
-            return true;
+            if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.LeftOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
+                return true;
+            }
+
+            if (binaryOperation.LeftOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.RightOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.RightOperand.WalkDownConversion().Type;
+                return true;
+            }
         }
 
         expressionUnderTest = null;
