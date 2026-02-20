@@ -207,19 +207,23 @@ internal class TestExecutionManager
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
 
-    internal void SendTestResults(TestCase test, TestTools.UnitTesting.TestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
+    internal void SendTestResults(
+        TestCase test,
+        TestTools.UnitTesting.TestResult[] unitTestResults,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-            if (test == null)
-            {
-                continue;
-            }
-
-            var testResult = unitTestResult.ToTestResult(test, startTime, endTime, _environment.MachineName, MSTestSettings.CurrentSettings);
+            var testResult = unitTestResult.ToTestResult(
+                test,
+                startTime,
+                endTime,
+                _environment.MachineName,
+                MSTestSettings.CurrentSettings);
 
             testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
@@ -498,12 +502,12 @@ internal class TestExecutionManager
                 // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
                 // 1. A custom single threaded synchronization context that keeps us in STA.
                 // 2. Use ConfigureAwait(true).
-                unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger);
+                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, remotingMessageLogger);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
             }
             else
             {
-                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement.TestMethod, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
+                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
             }
 
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)

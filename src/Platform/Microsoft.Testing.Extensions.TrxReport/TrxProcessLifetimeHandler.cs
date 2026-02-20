@@ -165,6 +165,7 @@ internal sealed class TrxProcessLifetimeHandler :
         }
 
         // We create a trx with only files in case of test host process crash.
+        // TODO: Handle the case where we receive testhost complete, then a crash happens, if possible.
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,

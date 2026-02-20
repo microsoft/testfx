@@ -322,14 +322,14 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal readonly struct ScopedTestContextSetter : IDisposable
     {
-        internal ScopedTestContextSetter(TestContextImplementation? testContext)
+        internal ScopedTestContextSetter(TestContext? testContext)
             => TestContext.Current = testContext;
 
         public void Dispose()
             => TestContext.Current = null;
     }
 
-    internal static ScopedTestContextSetter SetCurrentTestContext(TestContextImplementation? testContext)
+    internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
         => new(testContext);
 
     internal void WriteConsoleOut(char value)

@@ -43,7 +43,7 @@ public class TestMethodRunnerTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod, null, new Dictionary<string, object?>(), null, null);
         _testClassInfo = GetTestClassInfo<DummyTestClass>();
 
-        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, _testMethodAttribute);
+        _testMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testMethodAttribute);
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };
@@ -158,7 +158,7 @@ public class TestMethodRunnerTests : TestContainer
 
     public async Task RunTestMethodForMultipleResultsReturnMultipleResults()
     {
-        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), _testContextImplementation, new TestMethodWithFailingAndPassingResultsAttribute());
+        var localTestMethodOptions = new TestMethodOptions(TimeoutInfo.FromTimeout(200), new TestMethodWithFailingAndPassingResultsAttribute());
 
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, localTestMethodOptions, null!);
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
@@ -246,7 +246,7 @@ public class TestMethodRunnerTests : TestContainer
         results[0].Outcome.Should().Be(UnitTestOutcome.Inconclusive);
     }
 
-    public async Task RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
+    public async Task RunTestMethodShouldSetDisplayNameForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals(nameof(DummyTestClass.DummyDataSourceTestMethod), StringComparison.Ordinal));
         object[] attributes = methodInfo.GetCustomAttributes(inherit: false);
@@ -261,10 +261,10 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
-        // check for datarowIndex
-        results[0].DatarowIndex.Should().Be(0);
-        results[1].DatarowIndex.Should().Be(1);
-        results[2].DatarowIndex.Should().Be(2);
+        results.Should().HaveCount(3);
+        results[0].DisplayName.Should().Be("dummyTestName (Data Row 0)");
+        results[1].DisplayName.Should().Be("dummyTestName (Data Row 1)");
+        results[2].DisplayName.Should().Be("dummyTestName (Data Row 2)");
     }
 
     public async Task RunTestMethodShouldRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
@@ -288,10 +288,10 @@ public class TestMethodRunnerTests : TestContainer
 
         TestResult[] results = await testMethodRunner.RunTestMethodAsync();
 
-        // check for datarowIndex as only DataSource Tests are Run
-        results[0].DatarowIndex.Should().Be(0);
-        results[1].DatarowIndex.Should().Be(1);
-        results[2].DatarowIndex.Should().Be(2);
+        results.Should().HaveCount(3);
+        results[0].DisplayName.Should().Be("dummyTestName (Data Row 0)");
+        results[1].DisplayName.Should().Be("dummyTestName (Data Row 1)");
+        results[2].DisplayName.Should().Be("dummyTestName (Data Row 2)");
     }
 
     public async Task RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
@@ -433,14 +433,11 @@ public class TestMethodRunnerTests : TestContainer
     {
         public TimeoutInfo TimeoutInfo { get; }
 
-        public ITestContext TestContext { get; }
-
         public TestMethodAttribute TestMethodAttribute { get; }
 
-        public TestMethodOptions(TimeoutInfo timeoutInfo, ITestContext testContextImplementation, TestMethodAttribute testMethodAttribute)
+        public TestMethodOptions(TimeoutInfo timeoutInfo, TestMethodAttribute testMethodAttribute)
         {
             TimeoutInfo = timeoutInfo;
-            TestContext = testContextImplementation;
             TestMethodAttribute = testMethodAttribute;
         }
     }
@@ -450,7 +447,7 @@ public class TestMethodRunnerTests : TestContainer
         private readonly Func<TestResult> _invokeTest;
 
         internal TestableTestMethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions.TestContext)
+            : base(testMethod, parent)
         {
             TimeoutInfo = testMethodOptions.TimeoutInfo;
             Executor = testMethodOptions.TestMethodAttribute;

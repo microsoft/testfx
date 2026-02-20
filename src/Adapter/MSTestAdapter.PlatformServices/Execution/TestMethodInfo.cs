@@ -37,17 +37,13 @@ internal class TestMethodInfo : ITestMethod
     private object? _hostContext;
 #endif
 
-    internal TestMethodInfo(
-        MethodInfo testMethod,
-        TestClassInfo parent,
-        ITestContext testContext)
+    internal TestMethodInfo(MethodInfo testMethod, TestClassInfo parent)
     {
         DebugEx.Assert(testMethod != null, "TestMethod should not be null");
         DebugEx.Assert(parent != null, "Parent should not be null");
 
         MethodInfo = testMethod;
         Parent = parent;
-        TestContext = testContext;
         RetryAttribute = GetRetryAttribute();
         TimeoutInfo = GetTestTimeout();
         Executor = GetTestMethodAttribute();
@@ -57,7 +53,7 @@ internal class TestMethodInfo : ITestMethod
 
     internal TestMethodAttribute Executor { get; /*For testing only*/set; }
 
-    internal ITestContext TestContext { get; }
+    internal static ITestContext TestContext => (ITestContext?)TestTools.UnitTesting.TestContext.Current ?? throw ApplicationStateGuard.Unreachable();
 
     /// <summary>
     /// Gets a value indicating whether timeout is set.

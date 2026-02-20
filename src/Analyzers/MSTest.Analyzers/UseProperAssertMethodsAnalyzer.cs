@@ -260,12 +260,13 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             INamedTypeSymbol objectTypeSymbol = context.Compilation.GetSpecialType(SpecialType.System_Object);
             context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqEnumerable, out INamedTypeSymbol? enumerableTypeSymbol);
+            INamedTypeSymbol? iComparableOfTSymbol = context.Compilation.GetTypeByMetadataName("System.IComparable`1");
 
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol), OperationKind.Invocation);
+            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
@@ -282,11 +283,11 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (targetMethod.Name)
         {
             case "IsTrue":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol, enumerableTypeSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol);
                 break;
 
             case "IsFalse":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol, enumerableTypeSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol);
                 break;
 
             case "AreEqual":
@@ -329,16 +330,24 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    // TODO: Recognize 'null == something' (i.e, when null is the left operand)
     private static bool IsEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals, RightOperand: { } rightOperand } binaryOperation &&
-            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
-            rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
-            expressionUnderTest = binaryOperation.LeftOperand.Syntax;
-            typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
-            return true;
+            if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.LeftOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
+                return true;
+            }
+
+            if (binaryOperation.LeftOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.RightOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.RightOperand.WalkDownConversion().Type;
+                return true;
+            }
         }
 
         expressionUnderTest = null;
@@ -346,16 +355,24 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    // TODO: Recognize 'null != something' (i.e, when null is the left operand)
     private static bool IsNotEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals, RightOperand: { } rightOperand } binaryOperation &&
-            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol) &&
-            rightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation &&
+            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
-            expressionUnderTest = binaryOperation.LeftOperand.Syntax;
-            typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
-            return true;
+            if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.LeftOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
+                return true;
+            }
+
+            if (binaryOperation.LeftOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
+            {
+                expressionUnderTest = binaryOperation.RightOperand.Syntax;
+                typeOfExpressionUnderTest = binaryOperation.RightOperand.WalkDownConversion().Type;
+                return true;
+            }
         }
 
         expressionUnderTest = null;
@@ -535,6 +552,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static ComparisonCheckStatus RecognizeComparisonCheck(
         IOperation operation,
         INamedTypeSymbol objectTypeSymbol,
+        INamedTypeSymbol? iComparableOfTSymbol,
         out SyntaxNode? leftExpression,
         out SyntaxNode? rightExpression)
     {
@@ -544,28 +562,34 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             leftExpression = binaryOperation.LeftOperand.Syntax;
             rightExpression = binaryOperation.RightOperand.Syntax;
 
-            if (binaryOperation.LeftOperand.Type?.TypeKind == TypeKind.Enum &&
-                binaryOperation.RightOperand.Type?.TypeKind == TypeKind.Enum)
-            {
-                // Enums cannot use Assert.IsX methods.
-                // See https://devdiv.visualstudio.com/DevDiv/_workitems/edit/2673221
-                // https://developercommunity.visualstudio.com/t/MSTEST0037-warning-when-comparing-two-en/11022121
-                return ComparisonCheckStatus.Unknown;
-            }
-
-            return binaryOperation.OperatorKind switch
-            {
-                BinaryOperatorKind.GreaterThan => ComparisonCheckStatus.GreaterThan,
-                BinaryOperatorKind.GreaterThanOrEqual => ComparisonCheckStatus.GreaterThanOrEqual,
-                BinaryOperatorKind.LessThan => ComparisonCheckStatus.LessThan,
-                BinaryOperatorKind.LessThanOrEqual => ComparisonCheckStatus.LessThanOrEqual,
-                _ => ComparisonCheckStatus.Unknown,
-            };
+            return CanUseTypesWithComparableAsserts(iComparableOfTSymbol, binaryOperation.LeftOperand.Type, binaryOperation.RightOperand.Type)
+                ? binaryOperation.OperatorKind switch
+                {
+                    BinaryOperatorKind.GreaterThan => ComparisonCheckStatus.GreaterThan,
+                    BinaryOperatorKind.GreaterThanOrEqual => ComparisonCheckStatus.GreaterThanOrEqual,
+                    BinaryOperatorKind.LessThan => ComparisonCheckStatus.LessThan,
+                    BinaryOperatorKind.LessThanOrEqual => ComparisonCheckStatus.LessThanOrEqual,
+                    _ => ComparisonCheckStatus.Unknown,
+                }
+                : ComparisonCheckStatus.Unknown;
         }
 
         leftExpression = null;
         rightExpression = null;
         return ComparisonCheckStatus.Unknown;
+    }
+
+    private static bool CanUseTypesWithComparableAsserts(INamedTypeSymbol? iComparableOfTSymbol, ITypeSymbol? leftType, ITypeSymbol? rightType)
+        => iComparableOfTSymbol is not null
+            && leftType is not null
+            && rightType is not null
+            && SymbolEqualityComparer.Default.Equals(leftType, rightType)
+            && ImplementsIComparableOfSelf(iComparableOfTSymbol, leftType);
+
+    private static bool ImplementsIComparableOfSelf(INamedTypeSymbol iComparableOfTSymbol, ITypeSymbol type)
+    {
+        INamedTypeSymbol comparableOfSelf = iComparableOfTSymbol.Construct(type);
+        return type.AllInterfaces.Any(interfaceType => SymbolEqualityComparer.Default.Equals(interfaceType, comparableOfSelf));
     }
 
     private static LinqPredicateCheckStatus RecognizeLinqPredicateCheck(
@@ -631,7 +655,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         return LinqPredicateCheckStatus.Unknown;
     }
 
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
@@ -808,7 +832,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
 
         // Check for comparison patterns: a > b, a >= b, a < b, a <= b
-        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
+        ComparisonCheckStatus comparisonStatus = RecognizeComparisonCheck(conditionArgument, objectTypeSymbol, iComparableOfTSymbol, out SyntaxNode? leftExpr, out SyntaxNode? rightExpr);
         if (comparisonStatus != ComparisonCheckStatus.Unknown)
         {
             string properAssertMethod = (isTrueInvocation, comparisonStatus) switch

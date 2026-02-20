@@ -1,6 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
+using System.Data;
+using System.Data.Common;
+#endif
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -22,6 +27,92 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 /// </summary>
 public class TestMethodInfoTests : TestContainer
 {
+    private sealed class MockResultFilesTestContext : TestContext, ITestContext
+    {
+        private readonly IList<string> _resultFiles;
+
+        public MockResultFilesTestContext(IList<string> resultFiles)
+            => _resultFiles = resultFiles;
+
+        public TestContext Context => this;
+
+        public override IDictionary<string, object?> Properties => new Dictionary<string, object?>();
+
+#if NETFRAMEWORK
+        public override DataRow? DataRow => null;
+
+        public override DbConnection? DataConnection => null;
+#endif
+
+        public void AddProperty(string propertyName, string propertyValue)
+        {
+        }
+
+        public override void AddResultFile(string fileName)
+        {
+        }
+
+        public void ClearDiagnosticMessages()
+        {
+        }
+
+        public override void DisplayMessage(MessageLevel messageLevel, string message)
+        {
+        }
+
+        public string? GetDiagnosticMessages()
+            => null;
+
+        public IList<string>? GetResultFiles()
+            => _resultFiles;
+
+        public void SetDataConnection(object? dbConnection)
+        {
+        }
+
+        public void SetDataRow(object? dataRow)
+        {
+        }
+
+        public void SetDisplayName(string? displayName)
+        {
+        }
+
+        public void SetException(Exception? exception)
+        {
+        }
+
+        public void SetOutcome(UnitTestOutcome outcome)
+        {
+        }
+
+        public void SetTestData(object?[]? data)
+        {
+        }
+
+        public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
+        {
+            propertyValue = null;
+            return false;
+        }
+
+        public override void Write(string? message)
+        {
+        }
+
+        public override void Write(string format, params object?[] args)
+        {
+        }
+
+        public override void WriteLine(string? message)
+        {
+        }
+
+        public override void WriteLine(string format, params object?[] args)
+        {
+        }
+    }
+
     private readonly TestMethodInfo _testMethodInfo;
 
     private readonly MethodInfo _methodInfo;
@@ -35,7 +126,7 @@ public class TestMethodInfoTests : TestContainer
     private readonly ConstructorInfo _constructorInfo;
 
     private readonly TestContextImplementation _testContextImplementation;
-
+    private readonly IDisposable _scopedTestContextDisposable;
     private readonly TestClassInfo _testClassInfo;
 
     public TestMethodInfoTests()
@@ -48,12 +139,12 @@ public class TestMethodInfoTests : TestContainer
         _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", displayName: null);
         _testContextImplementation = new TestContextImplementation(testMethod, null, new Dictionary<string, object?>(), null, null);
+        _scopedTestContextDisposable = TestContextImplementation.SetCurrentTestContext(_testContextImplementation);
         _testClassInfo = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
 
         _testMethodInfo = new TestMethodInfo(
             _methodInfo,
-            parent: _testClassInfo,
-            _testContextImplementation)
+            parent: _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -65,6 +156,15 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestInitializeMethodBody = value => { };
         DummyTestClass.TestMethodBody = instance => { };
         DummyTestClass.TestCleanupMethodBody = value => { };
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (!IsDisposed)
+        {
+            _scopedTestContextDisposable.Dispose();
+            base.Dispose(disposing);
+        }
     }
 
     public void SetArgumentsShouldSetArgumentsNeededForCurrentTestRun()
@@ -86,7 +186,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => methodCalled = true);
         MethodInfo asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!;
 
-        var method = new TestMethodInfo(asyncMethodInfo, _testClassInfo, _testContextImplementation)
+        var method = new TestMethodInfo(asyncMethodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -105,8 +205,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             asyncMethodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -126,8 +225,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             asyncMethodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -145,8 +243,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             dummyMethodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -166,8 +263,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             dummyMethodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -184,8 +280,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -202,8 +297,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -235,8 +329,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             _methodInfo,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -292,7 +385,7 @@ public class TestMethodInfoTests : TestContainer
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
         var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(_methodInfo, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(_methodInfo, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -325,7 +418,7 @@ public class TestMethodInfoTests : TestContainer
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
         var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(_methodInfo, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(_methodInfo, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -343,27 +436,24 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
     {
-        Mock<ITestContext> testContext = new();
-        testContext.Setup(tc => tc.GetResultFiles()).Returns(["C:\\temp.txt"]);
-        var mockInnerContext = new Mock<TestContext>();
-        testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
-        mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
-
-        var method = new TestMethodInfo(_methodInfo, _testClassInfo, testContext.Object)
+        var method = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
         };
 
-        TestResult result = await method.InvokeAsync(null);
-        result.ResultFiles!.Contains("C:\\temp.txt").Should().BeTrue();
+        using (TestContextImplementation.SetCurrentTestContext(new MockResultFilesTestContext(["C:\\temp.txt"])))
+        {
+            TestResult result = await method.InvokeAsync(null);
+            result.ResultFiles!.Contains("C:\\temp.txt").Should().BeTrue();
+        }
     }
 
     public async Task TestMethodInfoInvoke_WhenCtorHasOneParameterOfTypeTestContext_SetsItToTestContext()
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(TestContext)])!;
         var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
-        var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -381,7 +471,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
     {
         var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(_methodInfo, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(_methodInfo, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -399,7 +489,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestContextDoesNotHaveASetter()
     {
         var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(_methodInfo, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(_methodInfo, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -464,7 +554,7 @@ public class TestMethodInfoTests : TestContainer
     {
         ConstructorInfo ctorInfo = typeof(DummyTestClass).GetConstructor([typeof(TestContext)])!;
         var testClassInfo = new TestClassInfo(typeof(DummyTestClass), ctorInfo, false, _classAttribute, _testAssemblyInfo);
-        var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -558,7 +648,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod!.Name,
             "System.ArgumentException: Some exception message ---> System.InvalidOperationException: Inner exception message");
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -585,7 +675,7 @@ public class TestMethodInfoTests : TestContainer
         // Arrange.
         DummyTestClass.TestInitializeMethodBodyAsync = async classInstance => await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync")!;
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -627,7 +717,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod!.Name,
             "Assert.Fail failed. dummyFailMessage");
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -662,7 +752,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod!.Name,
             "Assert.Inconclusive failed. dummyFailMessage");
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -690,7 +780,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestConstructorMethodBody = () => Assert.Inconclusive("dummyInconclusiveMessage");
 #pragma warning restore RS0030 // Do not use banned APIs
 
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -722,7 +812,7 @@ public class TestMethodInfoTests : TestContainer
         // Arrange.
         DummyTestClass.TestCleanupMethodBodyAsync = async classInstance => await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethodAsync")!;
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -986,7 +1076,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod")!, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod")!, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1005,7 +1095,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod")!, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod")!, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1030,7 +1120,7 @@ public class TestMethodInfoTests : TestContainer
 
         ConstructorInfo ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructor([])!;
         var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, true, _classAttribute, _testAssemblyInfo);
-        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod")!, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod")!, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1055,7 +1145,7 @@ public class TestMethodInfoTests : TestContainer
         {
             TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod")!,
         };
-        var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod")!, testClass, _testContextImplementation)
+        var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod")!, testClass)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1122,7 +1212,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
     {
         DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1145,7 +1235,7 @@ public class TestMethodInfoTests : TestContainer
             }
         };
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
-        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1202,7 +1292,7 @@ public class TestMethodInfoTests : TestContainer
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
              to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
-            var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+            var method = new TestMethodInfo(_methodInfo, _testClassInfo)
             {
                 TimeoutInfo = TimeoutInfo.FromTimeout(1),
                 Executor = _testMethodAttribute,
@@ -1218,7 +1308,7 @@ public class TestMethodInfoTests : TestContainer
     public async Task TestMethodInfoInvokeShouldReturnTestPassedOnCompletionWithinTimeout()
     {
         DummyTestClass.TestMethodBody = o => { /* do nothing */ };
-        var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+        var method = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1238,7 +1328,7 @@ public class TestMethodInfoTests : TestContainer
             testablePlatformServiceProvider.MockThreadOperations.Setup(
              to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
 
-            var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+            var method = new TestMethodInfo(_methodInfo, _testClassInfo)
             {
                 TimeoutInfo = TimeoutInfo.FromTimeout(1),
                 Executor = _testMethodAttribute,
@@ -1272,7 +1362,7 @@ public class TestMethodInfoTests : TestContainer
              });
 
             _testContextImplementation.CancellationTokenSource.CancelAfter(100);
-            var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testContextImplementation)
+            var method = new TestMethodInfo(_methodInfo, _testClassInfo)
             {
                 TimeoutInfo = TimeoutInfo.FromTimeout(100000),
                 Executor = _testMethodAttribute,
@@ -1293,8 +1383,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             simpleArgumentsMethod,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1314,8 +1403,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             simpleArgumentsMethod,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1335,8 +1423,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             optionalArgumentsMethod,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1356,8 +1443,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             optionalArgumentsMethod,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1377,8 +1463,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             paramsArgumentMethod,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,
@@ -1400,8 +1485,7 @@ public class TestMethodInfoTests : TestContainer
 
         var method = new TestMethodInfo(
             paramsArgumentMethod,
-            _testClassInfo,
-            _testContextImplementation)
+            _testClassInfo)
         {
             TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
             Executor = _testMethodAttribute,

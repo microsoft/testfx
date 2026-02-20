@@ -487,7 +487,7 @@ internal sealed class TestClassInfo
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                using (TestContextImplementation.SetCurrentTestContext(testContext))
                 {
                     Task? task = methodInfo.GetInvokeResultAsync(null, testContext);
                     if (task is not null)
@@ -617,12 +617,12 @@ internal sealed class TestClassInfo
         return testFailedException;
     }
 
-    internal async Task RunClassCleanupAsync(ITestContext testContext, TestResult[] results)
+    internal async Task<TestResult?> RunClassCleanupAsync(ITestContext testContext, TestResult[] results)
     {
         if (!HasExecutableCleanupMethod || IsClassCleanupExecuted)
         {
             // DoRun will already do nothing for this condition. So, we gain a bit of performance.
-            return;
+            return null;
         }
 
         bool isSTATestClass = ClassAttribute is STATestClassAttribute;
@@ -631,7 +631,8 @@ internal sealed class TestClassInfo
             && isWindowsOS
             && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
         {
-            var entryPointThread = new Thread(() => DoRunAsync().GetAwaiter().GetResult())
+            TestResult? result = null;
+            var entryPointThread = new Thread(() => result = DoRunAsync().GetAwaiter().GetResult())
             {
                 Name = "MSTest STATestClass ClassCleanup",
             };
@@ -650,6 +651,8 @@ internal sealed class TestClassInfo
                     PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
                 }
             }
+
+            return result;
         }
         else
         {
@@ -662,38 +665,38 @@ internal sealed class TestClassInfo
                 }
             }
 
-            await DoRunAsync().ConfigureAwait(false);
+            return await DoRunAsync().ConfigureAwait(false);
         }
 
         // Local functions
-        async Task DoRunAsync()
+        async Task<TestResult?> DoRunAsync()
         {
-            try
+            TestFailedException? ex = await ExecuteClassCleanupAsync(testContext.Context).ConfigureAwait(false);
+            var testContextImpl = testContext as TestContextImplementation;
+            if (ex is not null)
             {
-                TestFailedException? ex = await ExecuteClassCleanupAsync(testContext.Context).ConfigureAwait(false);
-                if (ex is not null && results.Length > 0)
+                return new TestResult()
                 {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    lastResult.Outcome = UnitTestOutcome.Error;
-                    lastResult.TestFailureException = ex;
-                }
+                    Outcome = UnitTestOutcome.Failed,
+                    DisplayName = $"[{ClassType.FullName} ClassCleanup]",
+                    TestFailureException = ex,
+                    LogOutput = testContextImpl?.GetOut(),
+                    LogError = testContextImpl?.GetErr(),
+                    DebugTrace = testContextImpl?.GetTrace(),
+                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
+                };
             }
-            finally
+
+            if (results.Length > 0)
             {
-                if (results.Length > 0)
-                {
-#pragma warning disable IDE0056 // Use index operator
-                    TestResult lastResult = results[results.Length - 1];
-#pragma warning restore IDE0056 // Use index operator
-                    var testContextImpl = testContext as TestContextImplementation;
-                    lastResult.LogOutput += testContextImpl?.GetOut();
-                    lastResult.LogError += testContextImpl?.GetErr();
-                    lastResult.DebugTrace += testContextImpl?.GetTrace();
-                    lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
-                }
+                TestResult lastResult = results[results.Length - 1];
+                lastResult.LogOutput += testContextImpl?.GetOut();
+                lastResult.LogError += testContextImpl?.GetErr();
+                lastResult.DebugTrace += testContextImpl?.GetTrace();
+                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
             }
+
+            return null;
         }
     }
 
@@ -710,7 +713,7 @@ internal sealed class TestClassInfo
             {
                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                 // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                using (TestContextImplementation.SetCurrentTestContext(testContext))
                 {
                     Task? task = methodInfo.GetParameters().Length == 0
                         ? methodInfo.GetInvokeResultAsync(null)
