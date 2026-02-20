@@ -48,25 +48,6 @@ public sealed class AzureDevOpsTests
         Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=38;columnnumber=1][net9.0] this is an error", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
 
-    [TestMethod]
-    public void ReportsWithTargetFrameworkWhenDisplayNameIsNull()
-    {
-        Exception error;
-        try
-        {
-            throw new Exception("this is an error");
-        }
-        catch (Exception ex)
-        {
-            error = ex;
-        }
-
-        // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
-        var logger = new TextLogger();
-        string? text = AzureDevOpsReporter.GetErrorText(null, null, error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=57;columnnumber=1][net9.0] this is an error", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
-    }
-
     private class TextLogger : ILogger
     {
         public List<string> Logs { get; } = [];

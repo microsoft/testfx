@@ -165,7 +165,7 @@ internal sealed class AzureDevOpsReporter :
         await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
-    internal static /* for testing */ string? GetErrorText(string? testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
+    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
     {
         if (exception == null || exception.StackTrace == null)
         {
@@ -288,8 +288,7 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
             }
 
-            string formattedMessage = FormatMessage(testDisplayName, targetFrameworkMoniker, message);
-
+            string formattedMessage = $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
             string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
             if (logger.IsEnabled(LogLevel.Trace))
             {
@@ -307,11 +306,6 @@ internal sealed class AzureDevOpsReporter :
 
         return null;
     }
-
-    private static string FormatMessage(string? testDisplayName, string targetFrameworkMoniker, string message)
-        => RoslynString.IsNullOrEmpty(testDisplayName)
-            ? $"[{targetFrameworkMoniker}] {message}"
-            : $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
 
     private static string GetTargetFrameworkMoniker()
         => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
