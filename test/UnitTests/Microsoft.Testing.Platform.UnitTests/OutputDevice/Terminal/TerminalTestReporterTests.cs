@@ -480,6 +480,38 @@ public sealed class TerminalTestReporterTests
         Assert.AreEqual(expected, ShowEscape(output));
     }
 
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_WriteToTerminal_ShouldEraseProgressThenRenderProgress()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true);
+
+        var stopwatchFactory = new StopwatchFactory();
+        var progressState = new TestProgressState(1, "assembly.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false);
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        int slotIndex = progressAwareTerminal.AddWorker(progressState);
+        progressAwareTerminal.UpdateWorker(slotIndex);
+
+        progressAwareTerminal.WriteToTerminal(t => t.AppendLine("Slowest 10 tests"));
+        progressAwareTerminal.StopShowingProgress();
+
+        int writeStartIndex = terminal.Events.FindIndex(e => e == "StartUpdate");
+        Assert.IsGreaterThanOrEqualTo(0, writeStartIndex, "StartUpdate should be called before writing to terminal.");
+
+        int eraseIndex = terminal.Events.FindIndex(writeStartIndex + 1, e => e == "EraseProgress");
+        Assert.IsGreaterThan(writeStartIndex, eraseIndex, "EraseProgress should be called after StartUpdate.");
+
+        int writeIndex = terminal.Events.FindIndex(eraseIndex + 1, e => e == "AppendLine:Slowest 10 tests");
+        Assert.IsGreaterThan(eraseIndex, writeIndex, "User output should be written after erasing progress.");
+
+        int renderIndex = terminal.Events.FindIndex(writeIndex + 1, e => e == "RenderProgress");
+        Assert.IsGreaterThan(writeIndex, renderIndex, "Progress should be rendered after user output.");
+
+        int stopUpdateIndex = terminal.Events.FindIndex(renderIndex + 1, e => e == "StopUpdate");
+        Assert.IsGreaterThan(renderIndex, stopUpdateIndex, "StopUpdate should be called after rendering progress.");
+    }
+
     private static string? ShowEscape(string? text)
     {
         string visibleEsc = "\x241b";
@@ -603,6 +635,49 @@ public sealed class TerminalTestReporterTests
         public void StopBusyIndicator() => throw new NotImplementedException();
 
         public void StopUpdate() => throw new NotImplementedException();
+    }
+
+    private sealed class RecordingTerminal : ITerminal
+    {
+        public List<string> Events { get; } = [];
+
+        public int Width => int.MaxValue;
+
+        public int Height => int.MaxValue;
+
+        public void Append(char value) => Events.Add($"Append:{value}");
+
+        public void Append(string value) => Events.Add($"Append:{value}");
+
+        public void AppendLine() => Events.Add("AppendLine");
+
+        public void AppendLine(string value) => Events.Add($"AppendLine:{value}");
+
+        public void AppendLink(string path, int? lineNumber) => Events.Add("AppendLink");
+
+        public void EraseProgress() => Events.Add("EraseProgress");
+
+        public void HideCursor() => Events.Add("HideCursor");
+
+        public void MoveCursorUp(int lineCount) => Events.Add($"MoveCursorUp:{lineCount}");
+
+        public void RenderProgress(TestProgressState?[] progress) => Events.Add("RenderProgress");
+
+        public void ResetColor() => Events.Add("ResetColor");
+
+        public void SetColor(TerminalColor color) => Events.Add($"SetColor:{color}");
+
+        public void SetCursorHorizontal(int position) => Events.Add($"SetCursorHorizontal:{position}");
+
+        public void ShowCursor() => Events.Add("ShowCursor");
+
+        public void StartBusyIndicator() => Events.Add("StartBusyIndicator");
+
+        public void StartUpdate() => Events.Add("StartUpdate");
+
+        public void StopBusyIndicator() => Events.Add("StopBusyIndicator");
+
+        public void StopUpdate() => Events.Add("StopUpdate");
     }
 
     private class StackTraceException : Exception
