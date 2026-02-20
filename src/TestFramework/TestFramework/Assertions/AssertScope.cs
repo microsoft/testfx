@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -35,7 +37,7 @@ internal sealed class AssertScope : IDisposable
     /// <param name="error">The assertion failure message.</param>
     internal void AddError(AssertFailedException error)
     {
-#pragma warning disable CA1513 // Use ObjectDisposedException throw helper
+#pragma warning disable CA1513 // Use ObjectDisposedException throw helper - ThrowIf is not available on all target frameworks
         if (_disposed)
         {
             throw new ObjectDisposedException(nameof(AssertScope));
@@ -59,16 +61,22 @@ internal sealed class AssertScope : IDisposable
         // We throw the collected exceptions directly instead of going through assertion failure
         // helpers (e.g. ThrowAssertFailed) because the debugger was already launched when each
         // error was collected.
-        if (_errors.Count == 1 && _errors.TryDequeue(out AssertFailedException? singleError))
+        // Snapshot the ConcurrentQueue into an array to avoid multiple O(n) enumerations
+        // (ConcurrentQueue<T>.Count is O(n)) and to get a consistent view for branching,
+        // message formatting, and building the AggregateException.
+        AssertFailedException[] errorsSnapshot = _errors.ToArray();
+        if (errorsSnapshot.Length == 1)
         {
-            throw singleError;
+            // Use ExceptionDispatchInfo to preserve the original stack trace captured at the
+            // assertion call site, rather than resetting it to point at Dispose.
+            ExceptionDispatchInfo.Capture(errorsSnapshot[0]).Throw();
         }
 
-        if (!_errors.IsEmpty)
+        if (errorsSnapshot.Length > 0)
         {
             throw new AssertFailedException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, _errors.Count),
-                new AggregateException(_errors));
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertScopeFailure, errorsSnapshot.Length),
+                new AggregateException(errorsSnapshot));
         }
     }
 }

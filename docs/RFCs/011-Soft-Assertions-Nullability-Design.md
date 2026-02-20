@@ -27,7 +27,7 @@ using (Assert.Scope())
 
 Soft assertions create a fundamental tension with C# nullability annotations and, more broadly, with all assertion postconditions.
 
-Before soft assertions, `ReportAssertFailed` was annotated with `[DoesNotReturn]`, which let the compiler prove post-condition contracts. For example:
+Before soft assertions, the helper method responsible for reporting assertion failures (for example, `ThrowAssertFailed`) was annotated with `[DoesNotReturn]`, which let the compiler prove post-condition contracts. For example:
 
 ```csharp
 public static void IsNotNull([NotNull] object? value, ...)

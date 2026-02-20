@@ -27,8 +27,8 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithSingleFailure", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("failed ScopeWithSingleFailure");
-        testHostResult.AssertOutputContains("Assert.AreEqual failed. Expected:<1>. Actual:<2>.");
+        testHostResult.AssertOutputMatchesRegex(
+            """failed ScopeWithSingleFailure \(\d+ms\)[\s\S]+Assert\.AreEqual failed\. Expected:<1>\. Actual:<2>\.[\s\S]+at UnitTest1\.ScopeWithSingleFailure\(\)""");
     }
 
     [TestMethod]
@@ -38,8 +38,10 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithMultipleFailures", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("failed ScopeWithMultipleFailures");
-        testHostResult.AssertOutputContains("2 assertion(s) failed within the assert scope.");
+        // Validate the output includes the aggregate message and that inner exception stack traces
+        // point to the test method (assertion call site).
+        testHostResult.AssertOutputMatchesRegex(
+            """failed ScopeWithMultipleFailures \(\d+ms\)[\s\S]+2 assertion\(s\) failed within the assert scope\.[\s\S]+Assert\.AreEqual failed\. Expected:<1>\. Actual:<2>\.[\s\S]+at UnitTest1\.ScopeWithMultipleFailures\(\)[\s\S]+Assert\.IsTrue failed\.[\s\S]+at UnitTest1\.ScopeWithMultipleFailures\(\)""");
     }
 
     [TestMethod]
@@ -49,9 +51,10 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter AssertFailIsHardFailure", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("failed AssertFailIsHardFailure");
-        testHostResult.AssertOutputContains("Assert.Fail failed. hard failure");
-        // The second Assert.Fail should not be reached because Assert.Fail throws immediately.
+        // Assert.Fail is a hard assertion — it throws immediately, even within a scope.
+        // The second Assert.Fail should not be reached.
+        testHostResult.AssertOutputMatchesRegex(
+            """failed AssertFailIsHardFailure \(\d+ms\)[\s\S]+Assert\.Fail failed\. hard failure""");
         testHostResult.AssertOutputDoesNotContain("second failure");
     }
 
@@ -62,7 +65,8 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter SoftFailureFollowedByException", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("failed SoftFailureFollowedByException");
+        testHostResult.AssertOutputMatchesRegex(
+            """failed SoftFailureFollowedByException \(\d+ms\)[\s\S]+at UnitTest1\.SoftFailureFollowedByException\(\)""");
     }
 
     [TestMethod]
@@ -72,8 +76,8 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         TestHostResult testHostResult = await testHost.ExecuteAsync("--filter ScopeWithIsNotNullSoftFailure", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("failed ScopeWithIsNotNullSoftFailure");
-        testHostResult.AssertOutputContains("Assert.IsNotNull failed.");
+        testHostResult.AssertOutputMatchesRegex(
+            """failed ScopeWithIsNotNullSoftFailure \(\d+ms\)[\s\S]+Assert\.IsNotNull failed\.[\s\S]+at UnitTest1\.ScopeWithIsNotNullSoftFailure\(\)""");
     }
 
     [TestMethod]

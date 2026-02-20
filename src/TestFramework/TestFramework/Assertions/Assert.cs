@@ -61,6 +61,17 @@ public sealed partial class Assert
         AssertFailedException assertionFailedException = CreateAssertFailedException(assertionName, message);
         if (AssertScope.Current is { } scope)
         {
+            // Throw and catch to capture the stack trace at the point of failure,
+            // so the exception has a meaningful stack trace when reported from the scope.
+            try
+            {
+                throw assertionFailedException;
+            }
+            catch (AssertFailedException ex)
+            {
+                assertionFailedException = ex;
+            }
+
             scope.AddError(assertionFailedException);
             return;
         }
