@@ -6,7 +6,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -416,7 +415,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             // If the output file name is null and the exit code is invalid command line we create a default one.
             if (_outputFileName is null && ExitCode == ExitCodes.InvalidCommandLine)
             {
-                _outputFileName = Path.Combine(Path.GetDirectoryName(TargetPath.ItemSpec.Trim())!, AggregatedConfiguration.DefaultTestResultFolderName);
+                _outputFileName = Path.Combine(Path.GetDirectoryName(TargetPath.ItemSpec.Trim())!, "TestResults");
                 _fileSystem.CreateDirectory(_outputFileName);
                 _outputFileName = Path.Combine(_outputFileName, $"{Path.GetFileNameWithoutExtension(TargetPath.ItemSpec.Trim())}_{TargetFramework.ItemSpec}_{TestArchitecture.ItemSpec}.log");
                 Log.LogMessage(MessageImportance.Low, $"Invalid command line exit code and empty output file name, creating default one '{_outputFileName}'");
