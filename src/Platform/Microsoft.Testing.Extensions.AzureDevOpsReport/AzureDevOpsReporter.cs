@@ -27,7 +27,7 @@ internal sealed class AzureDevOpsReporter :
     private readonly ICommandLineOptions _commandLine;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
-    private readonly string? _targetFrameworkMoniker;
+    private readonly string _targetFrameworkMoniker;
     private string _severity = "error";
 
     public AzureDevOpsReporter(
@@ -42,7 +42,7 @@ internal sealed class AzureDevOpsReporter :
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = TryGetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = GetTargetFrameworkMoniker();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -165,7 +165,7 @@ internal sealed class AzureDevOpsReporter :
         await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
-    internal static /* for testing */ string? GetErrorText(string? testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string? targetFrameworkMoniker = null)
+    internal static /* for testing */ string? GetErrorText(string? testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
     {
         if (exception == null || exception.StackTrace == null)
         {
@@ -308,16 +308,12 @@ internal sealed class AzureDevOpsReporter :
         return null;
     }
 
-    private static string FormatMessage(string? testDisplayName, string? targetFrameworkMoniker, string message)
-        => (RoslynString.IsNullOrEmpty(testDisplayName), RoslynString.IsNullOrEmpty(targetFrameworkMoniker)) switch
-        {
-            (true, true) => message,
-            (true, false) => $"[{targetFrameworkMoniker}] {message}",
-            (false, true) => $"[{testDisplayName}] {message}",
-            _ => $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}",
-        };
+    private static string FormatMessage(string? testDisplayName, string targetFrameworkMoniker, string message)
+        => RoslynString.IsNullOrEmpty(testDisplayName)
+            ? $"[{targetFrameworkMoniker}] {message}"
+            : $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}";
 
-    private static string? TryGetTargetFrameworkMoniker()
+    private static string GetTargetFrameworkMoniker()
         => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
             ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 
