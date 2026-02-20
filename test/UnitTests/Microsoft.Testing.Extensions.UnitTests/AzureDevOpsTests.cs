@@ -45,7 +45,7 @@ public sealed class AzureDevOpsTests
         // Trim ##. If we keep it, then when the test fails, the assertion failure will get printed to screen and picked up incorrectly by AzDO, because it scans all output for the ##vso... pattern
         var logger = new TextLogger();
         string? text = AzureDevOpsReporter.GetErrorText("MyTestDisplayName", "Some custom reason\nwith\rnewline", error, "severity", new SystemFileSystem(), logger, "net9.0")?.TrimStart('#');
-        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=19;columnnumber=1][MyTestDisplayName] [net9.0] Some custom reason%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
+        Assert.AreEqual("vso[task.logissue type=severity;sourcepath=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureDevOpsTests.cs;linenumber=38;columnnumber=1][MyTestDisplayName] [net9.0] Some custom reason%0Awith%0Dnewline", text, $"\nLogs:\n{string.Join("\n", logger.Logs)}");
     }
 
     private class TextLogger : ILogger
