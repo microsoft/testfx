@@ -309,41 +309,17 @@ internal sealed class AzureDevOpsReporter :
     }
 
     private static string FormatMessage(string? testDisplayName, string? targetFrameworkMoniker, string message)
-        => (RoslynString.IsNullOrEmpty(targetFrameworkMoniker), RoslynString.IsNullOrEmpty(testDisplayName)) switch
+        => (RoslynString.IsNullOrEmpty(testDisplayName), RoslynString.IsNullOrEmpty(targetFrameworkMoniker)) switch
         {
             (true, true) => message,
-            (true, false) => $"[{testDisplayName}] {message}",
-            (false, true) => $"[{targetFrameworkMoniker}] {message}",
-            _ => $"[{targetFrameworkMoniker}] [{testDisplayName}] {message}",
+            (true, false) => $"[{targetFrameworkMoniker}] {message}",
+            (false, true) => $"[{testDisplayName}] {message}",
+            _ => $"[{testDisplayName}] [{targetFrameworkMoniker}] {message}",
         };
 
     private static string? TryGetTargetFrameworkMoniker()
-    {
-        string? frameworkName = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
-        if (RoslynString.IsNullOrEmpty(frameworkName))
-        {
-            return null;
-        }
-
-        try
-        {
-            var parsedFrameworkName = new FrameworkName(frameworkName);
-            string version = $"{parsedFrameworkName.Version.Major}.{parsedFrameworkName.Version.Minor}";
-
-            return parsedFrameworkName.Identifier switch
-            {
-                ".NETFramework" => $"net{parsedFrameworkName.Version.Major}{parsedFrameworkName.Version.Minor}{(parsedFrameworkName.Version.Build > 0 ? parsedFrameworkName.Version.Build.ToString(CultureInfo.InvariantCulture) : string.Empty)}",
-                ".NETCoreApp" => $"netcoreapp{version}",
-                ".NETStandard" => $"netstandard{version}",
-                ".NET" => $"net{version}",
-                _ => frameworkName,
-            };
-        }
-        catch (ArgumentException)
-        {
-            return frameworkName;
-        }
-    }
+        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
+            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {

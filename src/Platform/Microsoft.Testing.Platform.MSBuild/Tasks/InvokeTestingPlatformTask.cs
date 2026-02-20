@@ -13,7 +13,6 @@ using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.MSBuild.Tasks;
-using Microsoft.Testing.Platform.OutputDevice;
 
 using static Microsoft.Testing.Platform.MSBuild.Tasks.DotnetMuxerLocator;
 
