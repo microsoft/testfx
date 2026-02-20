@@ -60,7 +60,6 @@ Moving last attempt asset files to the default result directory
         <target state="translated">重试失败的测试</target>
         <note />
       </trans-unit>
-
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">如果失败的测试百分比大于指定值，则禁用重试机制</target>
