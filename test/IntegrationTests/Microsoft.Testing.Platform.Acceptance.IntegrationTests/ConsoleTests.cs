@@ -31,6 +31,30 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
     public async Task StartUpdateShouldNotBeInterruptedConsoleIsNotReplaced(string tfm)
         => await ConsoleTestsCoreAsync(tfm, null);
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    [Ignore("""
+        Documentation test for issue #3491 (see also #4425).
+        This intentionally enables progress output and allows cross-process writes.
+        The terminal reporter and controller/testhost outputs are not fully synchronized across processes,
+        so output can be interleaved or overwritten in a non-deterministic way.
+        Enable this once output ownership is centralized or cross-process synchronization is implemented.
+        """)]
+    public async Task ProgressAndControllerOutputAreNotFullySynchronizedAcrossProcesses(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        using var commandLine = new Microsoft.Testing.TestInfrastructure.CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{testHost.FullName}\" --ignore-exit-code 8",
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(ExitCodes.Success, exitCode);
+        Assert.Contains("Slowest 10 tests", commandLine.StandardOutput);
+    }
+
+    public TestContext TestContext { get; set; }
+
     private async Task ConsoleTestsCoreAsync(string tfm, string? environmentVariableToSet)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
@@ -43,7 +67,7 @@ public class ConsoleTests : AcceptanceTestBase<ConsoleTests.TestAssetFixture>
             };
         }
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--ignore-exit-code 8", environmentVariables);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--ignore-exit-code 8", environmentVariables, cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("ABCDEF123");
     }
