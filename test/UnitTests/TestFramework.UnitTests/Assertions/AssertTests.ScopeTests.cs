@@ -23,13 +23,9 @@ public partial class AssertTests
 
     public void Scope_SingleFailure_ThrowsOnDispose()
     {
-        Action action = () =>
-        {
-            using (Assert.Scope())
-            {
-                Assert.AreEqual(1, 2);
-            }
-        };
+        IDisposable scope = Assert.Scope();
+        Assert.AreEqual(1, 2);
+        Action action = () => scope.Dispose();
 
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.AreEqual failed. Expected:<1>. Actual:<2>. 'expected' expression: '1', 'actual' expression: '2'.");
