@@ -11,11 +11,7 @@ namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 {
-    // This is an arbitrary number of attempts to drain the message bus.
-    // The number of attempts is configurable via the environment variable TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS.
-    private const int DefaultDrainAttempt = 5;
     private readonly ITask _task;
-    private readonly IEnvironment _environment;
     private readonly ILogger<AsynchronousMessageBus> _logger;
     private readonly bool _isTraceLoggingEnabled;
     private readonly Dictionary<IDataConsumer, IAsyncConsumerDataProcessor> _consumerProcessor = [];
@@ -28,13 +24,11 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         IDataConsumer[] dataConsumers,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
         ITask task,
-        ILoggerFactory loggerFactory,
-        IEnvironment environment)
+        ILoggerFactory loggerFactory)
     {
         _dataConsumers = dataConsumers;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _task = task;
-        _environment = environment;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
@@ -127,51 +121,11 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     public override async Task DrainDataAsync()
     {
-        Dictionary<IAsyncConsumerDataProcessor, long> consumerToDrain = [];
-        bool anotherRound = true;
-        string? customAttempts = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS);
-        if (!int.TryParse(customAttempts, out int totalNumberOfDrainAttempt))
+        foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
         {
-            totalNumberOfDrainAttempt = DefaultDrainAttempt;
-        }
-
-        var stopwatch = Stopwatch.StartNew();
-        CancellationToken cancellationToken = _testApplicationCancellationTokenSource.CancellationToken;
-        while (anotherRound)
-        {
-            if (cancellationToken.IsCancellationRequested)
+            foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
             {
-                return;
-            }
-
-            if (totalNumberOfDrainAttempt == 0)
-            {
-                StringBuilder builder = new();
-                builder.Append(CultureInfo.InvariantCulture, $"Publisher/Consumer loop detected during the drain after {stopwatch.Elapsed}.\n{builder}");
-
-                foreach ((IAsyncConsumerDataProcessor key, long value) in consumerToDrain)
-                {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"Consumer '{key.DataConsumer}' payload received {value}.");
-                }
-
-                throw new InvalidOperationException(builder.ToString());
-            }
-
-            totalNumberOfDrainAttempt--;
-            anotherRound = false;
-            foreach (List<IAsyncConsumerDataProcessor> dataProcessors in _dataTypeConsumers.Values)
-            {
-                foreach (IAsyncConsumerDataProcessor asyncMultiProducerMultiConsumerDataProcessor in dataProcessors)
-                {
-                    consumerToDrain.TryAdd(asyncMultiProducerMultiConsumerDataProcessor, 0);
-
-                    long totalPayloadReceived = await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
-                    if (consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] != totalPayloadReceived)
-                    {
-                        consumerToDrain[asyncMultiProducerMultiConsumerDataProcessor] = totalPayloadReceived;
-                        anotherRound = true;
-                    }
-                }
+                await asyncMultiProducerMultiConsumerDataProcessor.DrainDataAsync().ConfigureAwait(false);
             }
         }
     }
