@@ -199,6 +199,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (_activityTimer is not null)
+        {
+#if NETCOREAPP
+            await _activityTimer.DisposeAsync().ConfigureAwait(false);
+#else
+            _activityTimer.Dispose();
+#endif
+        }
+
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
