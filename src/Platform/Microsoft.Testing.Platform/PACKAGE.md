@@ -1,6 +1,6 @@
 # Microsoft.Testing.Platform
 
-Microsoft.Testing.Platform is a lightweight and portable alternative to [VSTest](https://github.com/microsoft/vstest) for running tests in command line, in continuous integration (CI) pipelines, in Visual Studio Test Explorer, and in Visual Studio Code. The Microsoft.Testing.Platform is embedded directly in your test projects, and there is no dependency on `vstest.console` or `dotnet test` for running your tests.
+Microsoft.Testing.Platform is a lightweight and portable alternative to [VSTest](https://github.com/microsoft/vstest) for running tests in command line, in continuous integration (CI) pipelines, in Visual Studio Test Explorer, and in Visual Studio Code. Microsoft.Testing.Platform is embedded directly in your test projects, and there is no dependency on `vstest.console` or `dotnet test` for running your tests.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platform` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Platform) GitHub repository.
 
