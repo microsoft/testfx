@@ -5,6 +5,7 @@
     <!-- Packaged as part of Microsoft.Testing.Platform.MSBuild -->
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,10 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IEnvironment.cs" Link="Helpers\IEnvironment.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemEnvironment.cs" Link="Helpers\SystemEnvironment.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\ITask.cs" Link="Helpers\ITask.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemTask.cs" Link="Helpers\SystemTask.cs" />
   </ItemGroup>
 
   <ItemGroup>
