@@ -22,9 +22,11 @@ public sealed partial class Assert
     public readonly struct AssertIsTrueInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly bool? _condition;
 
         public AssertIsTrueInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
+            _condition = condition;
             shouldAppend = IsTrueFailing(condition);
             if (shouldAppend)
             {
@@ -36,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
-                ThrowAssertIsTrueFailed(_builder.ToString());
+                ThrowAssertIsTrueFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
 
@@ -74,9 +75,11 @@ public sealed partial class Assert
     public readonly struct AssertIsFalseInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly bool? _condition;
 
         public AssertIsFalseInterpolatedStringHandler(int literalLength, int formattedCount, bool? condition, out bool shouldAppend)
         {
+            _condition = condition;
             shouldAppend = IsFalseFailing(condition);
             if (shouldAppend)
             {
@@ -88,8 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
-                ThrowAssertIsFalseFailed(_builder.ToString());
+                ThrowAssertIsFalseFailed(_condition, _builder.ToString(), conditionExpression);
             }
         }
 
@@ -150,15 +152,21 @@ public sealed partial class Assert
     {
         if (IsTrueFailing(condition))
         {
-            ThrowAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
+            ThrowAssertIsTrueFailed(condition, message, conditionExpression);
         }
     }
 
     private static bool IsTrueFailing(bool? condition)
         => condition is false or null;
 
-    private static void ThrowAssertIsTrueFailed(string? message)
-        => ThrowAssertFailed("Assert.IsTrue", message);
+    [DoesNotReturn]
+    private static void ThrowAssertIsTrueFailed(bool? condition, string? userMessage, string conditionExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.IsTrueFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(condition), conditionExpression, condition);
+        ThrowAssertFailed("Assert.IsTrue", message);
+    }
 
     /// <inheritdoc cref="IsFalse(bool?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -188,7 +196,7 @@ public sealed partial class Assert
     {
         if (IsFalseFailing(condition))
         {
-            ThrowAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
+            ThrowAssertIsFalseFailed(condition, message, conditionExpression);
         }
     }
 
@@ -196,6 +204,11 @@ public sealed partial class Assert
         => condition is true or null;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsFalseFailed(string userMessage)
-        => ThrowAssertFailed("Assert.IsFalse", userMessage);
+    private static void ThrowAssertIsFalseFailed(bool? condition, string? userMessage, string conditionExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.IsFalseFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(condition), conditionExpression, condition);
+        ThrowAssertFailed("Assert.IsFalse", message);
+    }
 }
