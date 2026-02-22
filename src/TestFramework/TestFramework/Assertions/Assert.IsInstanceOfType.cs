@@ -38,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
+                ThrowAssertIsInstanceOfTypeFailed(_value, _expectedType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -98,8 +97,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ThrowAssertIsInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -160,8 +158,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
+                ThrowAssertIsNotInstanceOfTypeFailed(_value, _wrongType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -220,8 +217,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ThrowAssertIsNotInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -292,7 +288,7 @@ public sealed partial class Assert
     {
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
+            ThrowAssertIsInstanceOfTypeFailed(value, expectedType, message, valueExpression);
         }
     }
 
@@ -331,20 +327,22 @@ public sealed partial class Assert
         => expectedType == null || value == null || !expectedType.IsInstanceOfType(value);
 
     [DoesNotReturn]
-    private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
+    private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
         if (expectedType is not null && value is not null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsInstanceOfFailMsg,
-                userMessage,
-                expectedType.ToString(),
-                value.GetType().ToString());
+            message += Environment.NewLine + FrameworkMessages.IsInstanceOfTypeFailNew;
         }
 
-        ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
+        message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        if (expectedType is not null && value is not null)
+        {
+            message += Environment.NewLine + $"  expectedType: {expectedType}"
+                     + Environment.NewLine + $"  actualType: {value.GetType()}";
+        }
+
+        ThrowAssertFailed("Assert.IsInstanceOfType", message);
     }
 
     /// <summary>
@@ -376,7 +374,7 @@ public sealed partial class Assert
     {
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
+            ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, message, valueExpression);
         }
     }
 
@@ -409,19 +407,21 @@ public sealed partial class Assert
             (value is not null && wrongType.IsInstanceOfType(value));
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
+    private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
         if (wrongType is not null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsNotInstanceOfFailMsg,
-                userMessage,
-                wrongType.ToString(),
-                value!.GetType().ToString());
+            message += Environment.NewLine + FrameworkMessages.IsNotInstanceOfTypeFailNew;
         }
 
-        ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
+        message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        if (wrongType is not null)
+        {
+            message += Environment.NewLine + $"  wrongType: {wrongType}"
+                     + Environment.NewLine + $"  actualType: {value!.GetType()}";
+        }
+
+        ThrowAssertFailed("Assert.IsNotInstanceOfType", message);
     }
 }
