@@ -6,7 +6,13 @@
 	<!-- Cancel default license (MIT) and set license as packaged license file -->
 	<PackageLicenseExpression />
     <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
+  </ItemGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>

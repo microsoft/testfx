@@ -6,7 +6,10 @@ using System.IO.Pipes;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+
+#if !TESTING_PLATFORM_SOURCE_EMBEDDED
 using Microsoft.Testing.Platform.Resources;
+#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -209,7 +212,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the message size
 #if NET
                 byte[] bytes = _sizeOfIntArray;
+#if TESTING_PLATFORM_SOURCE_EMBEDDED
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), "Unexpected exception during byte conversion");
+#else
                 ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+#endif
                 ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
                 await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
 #else
@@ -219,7 +226,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the serializer id
 #if NET
                 bytes = _sizeOfIntArray;
+#if TESTING_PLATFORM_SOURCE_EMBEDDED
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), "Unexpected exception during byte conversion");
+#else
                 ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+#endif
 
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
 #else
@@ -303,7 +314,11 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
+#if TESTING_PLATFORM_SOURCE_EMBEDDED
+                    "'{0}' did not exit successfully",
+#else
                     PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+#endif
                     nameof(InternalLoopAsync)));
             }
         }
@@ -334,7 +349,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
+#if TESTING_PLATFORM_SOURCE_EMBEDDED
+                    "'{0}' did not exit successfully",
+#else
+                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+#endif
+                    nameof(InternalLoopAsync)));
             }
         }
 
