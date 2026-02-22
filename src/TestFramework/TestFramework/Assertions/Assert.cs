@@ -97,7 +97,7 @@ public sealed partial class Assert
     /// </param>
     internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
-        if (param == null)
+        if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
             ThrowAssertFailed(assertionName, finalMessage);
@@ -326,40 +326,65 @@ public sealed partial class Assert
             : $"{Environment.NewLine}  {paramName} ({TruncateExpression(expression)}): {preview}";
     }
 
+    /// <summary>
+    /// Formats a preview string for a collection, showing element values up to <paramref name="maxLength"/> characters.
+    /// <para>
+    /// Performance: We avoid enumerating the entire collection when the display is truncated.
+    /// For ICollection, we read .Count directly (O(1)) to get the total without full enumeration.
+    /// For non-ICollection enumerables (e.g. LINQ queries, infinite sequences), we stop
+    /// enumeration as soon as the display budget is exhausted and report "N+ elements" since
+    /// the true count is unknown. This prevents hangs on lazy/infinite sequences and avoids
+    /// O(n) enumeration cost when only a prefix is displayed.
+    /// </para>
+    /// </summary>
     private static string FormatCollectionPreview(IEnumerable collection, int maxLength = 256)
     {
+        // Perf: get count from ICollection (O(1)) to avoid full enumeration just for the count.
+        int? knownCount = collection is ICollection c ? c.Count : null;
+
         var elements = new List<string>();
-        int totalCount = 0;
+        int enumeratedCount = 0;
         int currentLength = 0;
         bool truncated = false;
 
-        foreach (object? item in collection)
+        // Perf: wrap in try-catch so that faulting enumerators (e.g. collection modified during
+        // iteration, or user-defined iterators that throw) don't bubble up from assertion formatting.
+        try
         {
-            totalCount++;
-            if (truncated)
+            foreach (object? item in collection)
             {
-                continue;
-            }
+                enumeratedCount++;
 
-            string formatted = item is IEnumerable innerCollection and not string
-                ? FormatCollectionPreview(innerCollection, maxLength: 50)
-                : FormatValue(item, maxLength: 50);
+                string formatted = item is IEnumerable innerCollection and not string
+                    ? FormatCollectionPreview(innerCollection, maxLength: 50)
+                    : FormatValue(item, maxLength: 50);
 
-            // Account for ", " separator between elements
-            int addedLength = elements.Count > 0
-                ? formatted.Length + 2
-                : formatted.Length;
+                // Account for ", " separator between elements
+                int addedLength = elements.Count > 0
+                    ? formatted.Length + 2
+                    : formatted.Length;
 
-            if (currentLength + addedLength > maxLength && elements.Count > 0)
-            {
-                truncated = true;
-            }
-            else
-            {
+                if (currentLength + addedLength > maxLength && elements.Count > 0)
+                {
+                    truncated = true;
+
+                    // Perf: stop enumeration immediately once the display budget is exceeded.
+                    // Without this break, we'd continue iterating potentially millions of
+                    // elements (or hang on infinite sequences) just to compute totalCount.
+                    break;
+                }
+
                 elements.Add(formatted);
                 currentLength += addedLength;
             }
         }
+        catch (Exception)
+        {
+            // If enumeration fails, report what we've collected so far
+            truncated = elements.Count > 0;
+        }
+
+        int totalCount = knownCount ?? enumeratedCount;
 
         string elementList = string.Join(", ", elements);
         if (truncated)
@@ -367,7 +392,13 @@ public sealed partial class Assert
             elementList += ", ...";
         }
 
-        return $"[{elementList}] ({totalCount} {(totalCount == 1 ? "element" : "elements")})";
+        // Perf: when truncated without ICollection, we don't know the real count (would require
+        // full enumeration). Show "N+ elements" to indicate the count is a lower bound.
+        string countText = truncated && knownCount is null
+            ? $"{enumeratedCount}+ elements"
+            : $"{totalCount} {(totalCount == 1 ? "element" : "elements")}";
+
+        return $"[{elementList}] ({countText})";
     }
 
     internal static string FormatParameterWithValue(string paramName, string expression, string formattedValue)

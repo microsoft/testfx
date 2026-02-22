@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+ï»¿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -177,9 +177,9 @@ public partial class AssertTests
 
     public void FormatCollectionPreview_WhenTotalStringLengthExceeds256_ShouldTruncate()
     {
-        // Each element is a 30-char string ? FormatValue wraps in quotes ? "aaa...aaa" = 32 chars
+        // Each element is a 30-char string -> FormatValue wraps in quotes -> "aaa...aaa" = 32 chars
         // With ", " separator: first = 32, subsequent = 34 each
-        // 32 + 6×34 = 236 = 256, 32 + 7×34 = 270 > 256
+        // 32 + 6*34 = 236 <= 256, 32 + 7*34 = 270 > 256
         // So 7 elements should display, then "...", with total count 20
         var collection = new List<string>();
         for (int i = 0; i < 20; i++)
@@ -230,10 +230,10 @@ public partial class AssertTests
 
     public void FormatCollectionPreview_WhenNestedCollectionIsLarge_ShouldTruncateInnerAt50()
     {
-        // Inner collection has many elements ? inner preview string budget is 50 chars
+        // Inner collection has many elements -> inner preview string budget is 50 chars
         // Elements 0-9 are 1 char each: "0" takes 1, subsequent take 3 (digit + ", ")
-        // 1 + 9×3 = 28 chars for 0-9. Then 10-99 are 2 char digits + 2 sep = 4 each
-        // 28 + 4n = 50 ? n = 5.5 ? 5 more (10-14). 28 + 5×4 = 48, next would be 52 > 50
+        // 1 + 9*3 = 28 chars for 0-9. Then 10-99 are 2 char digits + 2 sep = 4 each
+        // 28 + 4n = 50 -> n = 5.5 -> 5 more (10-14). 28 + 5*4 = 48, next would be 52 > 50
         // So inner preview shows: 0-14 (15 elements), then "..."
         var inner = new List<int>();
         for (int i = 0; i < 50; i++)
@@ -283,14 +283,12 @@ public partial class AssertTests
     #endregion
 }
 
-[TestClass]
-public sealed class ObjectWithNewlineToString
+internal sealed class ObjectWithNewlineToString
 {
     public override string ToString() => "line1\r\nline2\nline3";
 }
 
-[TestClass]
-public sealed class ObjectWithLongToString
+internal sealed class ObjectWithLongToString
 {
     public override string ToString() => new string('L', 300);
 }
