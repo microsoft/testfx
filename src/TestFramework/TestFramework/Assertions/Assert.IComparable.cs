@@ -49,8 +49,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
-        ThrowAssertIsGreaterThanFailed(lowerBound, value, userMessage);
+        ThrowAssertIsGreaterThanFailed(lowerBound, value, message, lowerBoundExpression, valueExpression);
     }
 
     #endregion // IsGreaterThan
@@ -94,8 +93,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForLowerBoundExpressionAndValueExpression(message, lowerBoundExpression, valueExpression);
-        ThrowAssertIsGreaterThanOrEqualToFailed(lowerBound, value, userMessage);
+        ThrowAssertIsGreaterThanOrEqualToFailed(lowerBound, value, message, lowerBoundExpression, valueExpression);
     }
 
     #endregion // IsGreaterThanOrEqualTo
@@ -139,8 +137,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
-        ThrowAssertIsLessThanFailed(upperBound, value, userMessage);
+        ThrowAssertIsLessThanFailed(upperBound, value, message, upperBoundExpression, valueExpression);
     }
 
     #endregion // IsLessThan
@@ -184,8 +181,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForUpperBoundExpressionAndValueExpression(message, upperBoundExpression, valueExpression);
-        ThrowAssertIsLessThanOrEqualToFailed(upperBound, value, userMessage);
+        ThrowAssertIsLessThanOrEqualToFailed(upperBound, value, message, upperBoundExpression, valueExpression);
     }
 
     #endregion // IsLessThanOrEqualTo
@@ -221,15 +217,13 @@ public sealed partial class Assert
         // Handle special case for floating point NaN values
         if (value is float.NaN)
         {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ThrowAssertIsPositiveFailed(value, userMessage);
+            ThrowAssertIsPositiveFailed(value, message, valueExpression);
             return;
         }
 
         if (value is double.NaN)
         {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ThrowAssertIsPositiveFailed(value, userMessage);
+            ThrowAssertIsPositiveFailed(value, message, valueExpression);
             return;
         }
 
@@ -238,8 +232,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
-        ThrowAssertIsPositiveFailed(value, userMessage2);
+        ThrowAssertIsPositiveFailed(value, message, valueExpression);
     }
 
     #endregion // IsPositive
@@ -275,15 +268,13 @@ public sealed partial class Assert
         // Handle special case for floating point NaN values
         if (value is float.NaN)
         {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ThrowAssertIsNegativeFailed(value, userMessage);
+            ThrowAssertIsNegativeFailed(value, message, valueExpression);
             return;
         }
 
         if (value is double.NaN)
         {
-            string userMessage = BuildUserMessageForValueExpression(message, valueExpression);
-            ThrowAssertIsNegativeFailed(value, userMessage);
+            ThrowAssertIsNegativeFailed(value, message, valueExpression);
             return;
         }
 
@@ -292,79 +283,66 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage2 = BuildUserMessageForValueExpression(message, valueExpression);
-        ThrowAssertIsNegativeFailed(value, userMessage2);
+        ThrowAssertIsNegativeFailed(value, message, valueExpression);
     }
 
     #endregion // IsNegative
 
     [DoesNotReturn]
-    private static void ThrowAssertIsGreaterThanFailed<T>(T lowerBound, T value, string userMessage)
+    private static void ThrowAssertIsGreaterThanFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsGreaterThanFailMsg,
-            userMessage,
-            ReplaceNulls(lowerBound),
-            ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThan", finalMessage);
+        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        msg += Environment.NewLine + FrameworkMessages.IsGreaterThanFailNew;
+        msg += Environment.NewLine + FormatParameter(nameof(lowerBound), lowerBoundExpression, lowerBound)
+             + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsGreaterThan", msg);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string userMessage)
+    private static void ThrowAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsGreaterThanOrEqualToFailMsg,
-            userMessage,
-            ReplaceNulls(lowerBound),
-            ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", finalMessage);
+        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        msg += Environment.NewLine + FrameworkMessages.IsGreaterThanOrEqualToFailNew;
+        msg += Environment.NewLine + FormatParameter(nameof(lowerBound), lowerBoundExpression, lowerBound)
+             + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsGreaterThanOrEqualTo", msg);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsLessThanFailed<T>(T upperBound, T value, string userMessage)
+    private static void ThrowAssertIsLessThanFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsLessThanFailMsg,
-            userMessage,
-            ReplaceNulls(upperBound),
-            ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThan", finalMessage);
+        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        msg += Environment.NewLine + FrameworkMessages.IsLessThanFailNew;
+        msg += Environment.NewLine + FormatParameter(nameof(upperBound), upperBoundExpression, upperBound)
+             + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsLessThan", msg);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string userMessage)
+    private static void ThrowAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsLessThanOrEqualToFailMsg,
-            userMessage,
-            ReplaceNulls(upperBound),
-            ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", finalMessage);
+        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        msg += Environment.NewLine + FrameworkMessages.IsLessThanOrEqualToFailNew;
+        msg += Environment.NewLine + FormatParameter(nameof(upperBound), upperBoundExpression, upperBound)
+             + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsLessThanOrEqualTo", msg);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsPositiveFailed<T>(T value, string userMessage)
+    private static void ThrowAssertIsPositiveFailed<T>(T value, string? userMessage, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsPositiveFailMsg,
-            userMessage,
-            ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsPositive", finalMessage);
+        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        msg += Environment.NewLine + FrameworkMessages.IsPositiveFailNew;
+        msg += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsPositive", msg);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNegativeFailed<T>(T value, string userMessage)
+    private static void ThrowAssertIsNegativeFailed<T>(T value, string? userMessage, string valueExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsNegativeFailMsg,
-            userMessage,
-            ReplaceNulls(value));
-        ThrowAssertFailed("Assert.IsNegative", finalMessage);
+        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        msg += Environment.NewLine + FrameworkMessages.IsNegativeFailNew;
+        msg += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsNegative", msg);
     }
 }
