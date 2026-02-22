@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -16,7 +16,11 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNull(new object());
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsNull failed. 'value' expression: 'new object()'.");
+            .WithMessage("""
+                Assert.IsNull failed.
+                Expected value to be null.
+                  value (new object()): <System.Object>
+                """);
     }
 
     public void IsNull_StringMessage_PassNull_ShouldPass()
@@ -26,7 +30,11 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNull(new object(), "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsNull failed. 'value' expression: 'new object()'. User-provided message");
+            .WithMessage("""
+                Assert.IsNull failed. User-provided message
+                Expected value to be null.
+                  value (new object()): <System.Object>
+                """);
     }
 
     public void IsNull_InterpolatedString_PassNull_ShouldPass()
@@ -42,7 +50,11 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsNull(new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsNull failed. 'value' expression: 'new object()'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage("""
+                Assert.IsNull failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Expected value to be null.
+                  value (new object()): <System.Object>
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -73,14 +85,22 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.IsNotNull(null);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsNotNull failed. 'value' expression: 'null'.");
+            .WithMessage("""
+                Assert.IsNotNull failed.
+                Expected a non-null value.
+                  value: (null)
+                """);
     }
 
     public void IsNotNull_StringMessage_PassNonNull_ShouldFail()
     {
         Action action = () => Assert.IsNotNull(null, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsNotNull failed. 'value' expression: 'null'. User-provided message");
+            .WithMessage("""
+                Assert.IsNotNull failed. User-provided message
+                Expected a non-null value.
+                  value: (null)
+                """);
     }
 
     public async Task IsNotNull_InterpolatedString_PassNonNull_ShouldFail()
@@ -89,7 +109,11 @@ public partial class AssertTests : TestContainer
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsNotNull(null, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"Assert.IsNotNull failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage("""
+                Assert.IsNotNull failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Expected a non-null value.
+                  value: (null)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 }

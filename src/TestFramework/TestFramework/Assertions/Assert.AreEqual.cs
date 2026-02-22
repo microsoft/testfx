@@ -48,8 +48,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreEqualFailed(_expected, _actual, _builder.ToString());
+                ThrowAssertAreEqualFailed(_expected, _actual, _builder.ToString(), expectedExpression, actualExpression);
             }
         }
 
@@ -115,8 +114,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreNotEqualFailed(_notExpected, _actual, _builder.ToString());
+                ThrowAssertAreNotEqualFailed(_notExpected, _actual, _builder.ToString(), notExpectedExpression, actualExpression);
             }
         }
 
@@ -159,7 +157,7 @@ public sealed partial class Assert
     public readonly struct AssertNonGenericAreEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
-        private readonly Action<string>? _failAction;
+        private readonly Action<string, string, string>? _failAction;
 
         public AssertNonGenericAreEqualInterpolatedStringHandler(int literalLength, int formattedCount, float expected, float actual, float delta, out bool shouldAppend)
         {
@@ -167,7 +165,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failAction = (userMessage, expectedExpr, actualExpr) => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpr, actualExpr);
             }
         }
 
@@ -177,7 +175,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failAction = (userMessage, expectedExpr, actualExpr) => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpr, actualExpr);
             }
         }
 
@@ -187,7 +185,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failAction = (userMessage, expectedExpr, actualExpr) => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpr, actualExpr);
             }
         }
 
@@ -197,7 +195,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+                _failAction = (userMessage, expectedExpr, actualExpr) => ThrowAssertAreEqualFailed(expected, actual, delta, userMessage, expectedExpr, actualExpr);
             }
         }
 
@@ -213,18 +211,12 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreEqualFailed(expected, actual, ignoreCase, culture, userMessage);
+                _failAction = (userMessage, expectedExpr, actualExpr) => ThrowAssertAreEqualFailed(expected, actual, ignoreCase, culture, userMessage, expectedExpr, actualExpr);
             }
         }
 
         internal void ComputeAssertion(string expectedExpression, string actualExpression)
-        {
-            if (_failAction is not null)
-            {
-                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
-                _failAction.Invoke(_builder!.ToString());
-            }
-        }
+            => _failAction?.Invoke(_builder!.ToString(), expectedExpression, actualExpression);
 
         public void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -265,7 +257,7 @@ public sealed partial class Assert
     public readonly struct AssertNonGenericAreNotEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
-        private readonly Action<string>? _failAction;
+        private readonly Action<string, string, string>? _failAction;
 
         public AssertNonGenericAreNotEqualInterpolatedStringHandler(int literalLength, int formattedCount, float notExpected, float actual, float delta, out bool shouldAppend)
         {
@@ -273,7 +265,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+                _failAction = (userMessage, notExpectedExpr, actualExpr) => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -283,7 +275,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+                _failAction = (userMessage, notExpectedExpr, actualExpr) => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -293,7 +285,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+                _failAction = (userMessage, notExpectedExpr, actualExpr) => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -303,7 +295,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+                _failAction = (userMessage, notExpectedExpr, actualExpr) => ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
@@ -319,18 +311,12 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
-                _failAction = userMessage => ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage);
+                _failAction = (userMessage, notExpectedExpr, actualExpr) => ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage, notExpectedExpr, actualExpr);
             }
         }
 
         internal void ComputeAssertion(string notExpectedExpression, string actualExpression)
-        {
-            if (_failAction is not null)
-            {
-                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                _failAction.Invoke(_builder!.ToString());
-            }
-        }
+            => _failAction?.Invoke(_builder!.ToString(), notExpectedExpression, actualExpression);
 
         public void AppendLiteral(string value) => _builder!.Append(value);
 
@@ -488,8 +474,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ThrowAssertAreEqualFailed(expected, actual, userMessage);
+        ThrowAssertAreEqualFailed(expected, actual, message, expectedExpression, actualExpression);
     }
 
     private static bool AreEqualFailing<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
@@ -544,27 +529,15 @@ public sealed partial class Assert
     private static bool AreEqualFailing(long expected, long actual, long delta)
         => Math.Abs(expected - actual) > delta;
 
-    private static string FormatStringComparisonMessage(string? expected, string? actual, string userMessage)
+    private static string FormatStringComparisonMessage(string? expected, string? actual, string userMessage, string expectedExpression, string actualExpression)
     {
         // Handle null cases
-        if (expected is null && actual is null)
-        {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
-        }
-
         if (expected is null || actual is null)
         {
-            return string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
+            string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
+            message += Environment.NewLine + FormatParameter(nameof(expected), expectedExpression, expected)
+                     + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
+            return message;
         }
 
         // Find the first difference
@@ -577,7 +550,7 @@ public sealed partial class Assert
         }
 
         // Format the enhanced string comparison message
-        return FormatStringDifferenceMessage(expected, actual, diffIndex, userMessage);
+        return FormatStringDifferenceMessage(expected, actual, diffIndex, userMessage, expectedExpression, actualExpression);
     }
 
     private static int FindFirstStringDifference(string expected, string actual)
@@ -596,7 +569,7 @@ public sealed partial class Assert
         return expected.Length != actual.Length ? minLength : -1;
     }
 
-    private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage)
+    private static string FormatStringDifferenceMessage(string expected, string actual, int diffIndex, string userMessage, string expectedExpression, string actualExpression)
     {
         string lengthInfo = expected.Length == actual.Length
             ? string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualStringDiffLengthBothMsg, expected.Length, diffIndex)
@@ -609,9 +582,16 @@ public sealed partial class Assert
         string actualPreview = tuple.Item2;
         int caretPosition = tuple.Item3;
 
-        // Get localized prefixes
-        string expectedPrefix = FrameworkMessages.AreEqualStringDiffExpectedPrefix;
-        string actualPrefix = FrameworkMessages.AreEqualStringDiffActualPrefix;
+        // Build parameter line prefixes with expression info
+        // Skip expression when it's redundant (equals the quoted string value)
+        string expectedQuoted = $"\"{expected}\"";
+        string actualQuoted = $"\"{actual}\"";
+        string expectedPrefix = (expectedExpression == nameof(expected) || IsExpressionRedundant(expectedExpression, expectedQuoted))
+            ? "  expected: "
+            : $"  expected ({TruncateExpression(expectedExpression)}): ";
+        string actualPrefix = (actualExpression == nameof(actual) || IsExpressionRedundant(actualExpression, actualQuoted))
+            ? "  actual: "
+            : $"  actual ({TruncateExpression(actualExpression)}): ";
 
         // Calculate the maximum prefix length to align the caret properly
         int maxPrefixLength = Math.Max(expectedPrefix.Length, actualPrefix.Length);
@@ -625,82 +605,70 @@ public sealed partial class Assert
         string actualLine = paddedActualPrefix + $"\"{actualPreview}\"";
 
         // The caret should align under the difference in the string content
-        // For localized prefixes with different lengths, we need to account for the longer prefix
-        // to ensure proper alignment. But the caret position is relative to the string content.
         int adjustedCaretPosition = maxPrefixLength + 1 + caretPosition; // +1 for the opening quote
 
-        // Format user message properly - add leading space if not empty, otherwise no extra formatting
-        string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : $" {userMessage}";
+        string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
 
-        return string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreEqualStringDiffFailMsg,
-            lengthInfo,
-            formattedUserMessage,
-            expectedLine,
-            actualLine,
-            new string('-', adjustedCaretPosition) + "^");
+        return formattedUserMessage + Environment.NewLine + lengthInfo + Environment.NewLine + expectedLine + Environment.NewLine + actualLine + Environment.NewLine + new string('-', adjustedCaretPosition) + "^";
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string userMessage)
+    private static void ThrowAssertAreEqualFailed(object? expected, object? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
-        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
-            ? string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                expected.GetType().FullName,
-                ReplaceNulls(actual),
-                actual.GetType().FullName)
-            : expected is string expectedString && actual is string actualString
-                ? FormatStringComparisonMessage(expectedString, actualString, userMessage)
-                : string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.AreEqualFailMsg,
-                    userMessage,
-                    ReplaceNulls(expected),
-                    ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+
+        if (actual is not null && expected is not null && !actual.GetType().Equals(expected.GetType()))
+        {
+            message += Environment.NewLine + FrameworkMessages.AreEqualFailNew;
+            message += $"{Environment.NewLine}{FormatParameter(nameof(expected), expectedExpression, expected)} ({expected.GetType().FullName})"
+                     + $"{Environment.NewLine}{FormatParameter(nameof(actual), actualExpression, actual)} ({actual.GetType().FullName})";
+        }
+        else if (expected is string expectedString && actual is string actualString)
+        {
+            message = FormatStringComparisonMessage(expectedString, actualString, message, expectedExpression, actualExpression);
+            ThrowAssertFailed("Assert.AreEqual", message);
+            return;
+        }
+        else
+        {
+            message += Environment.NewLine + FrameworkMessages.AreEqualFailNew;
+            message += Environment.NewLine + FormatParameter(nameof(expected), expectedExpression, expected)
+                     + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
+        }
+
+        ThrowAssertFailed("Assert.AreEqual", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertAreEqualFailed<T>(T expected, T actual, T delta, string userMessage)
+    private static void ThrowAssertAreEqualFailed<T>(T expected, T actual, T delta, string? userMessage, string expectedExpression, string actualExpression)
         where T : struct, IConvertible
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreEqualDeltaFailMsg,
-            userMessage,
-            expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreEqualDeltaNoGreaterThanFailMsg, delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+        message += Environment.NewLine + FormatParameter(nameof(expected), expectedExpression, expected)
+                 + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
+        ThrowAssertFailed("Assert.AreEqual", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string userMessage)
+    private static void ThrowAssertAreEqualFailed(string? expected, string? actual, bool ignoreCase, CultureInfo culture, string? userMessage, string expectedExpression, string actualExpression)
     {
-        string finalMessage;
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
 
         // If the user requested to match case, and the difference between expected/actual is casing only, then we use a different message.
         if (!ignoreCase && CompareInternal(expected, actual, ignoreCase: true, culture) == 0)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreEqualCaseFailMsg,
-                userMessage,
-                ReplaceNulls(expected),
-                ReplaceNulls(actual));
+            message += Environment.NewLine + FrameworkMessages.AreEqualCaseDiffersMsg;
+            message += Environment.NewLine + FormatParameter(nameof(expected), expectedExpression, expected)
+                     + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
         }
         else
         {
             // Use enhanced string comparison for string-specific failures
-            finalMessage = FormatStringComparisonMessage(expected, actual, userMessage);
+            message = FormatStringComparisonMessage(expected, actual, message, expectedExpression, actualExpression);
         }
 
-        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+        ThrowAssertFailed("Assert.AreEqual", message);
     }
 
     /// <summary>
@@ -791,8 +759,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-        ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage);
+        ThrowAssertAreNotEqualFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
     }
 
     /// <inheritdoc cref="AreEqual(float, float, float, string, string, string)"/>
@@ -837,8 +804,7 @@ public sealed partial class Assert
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ThrowAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -884,8 +850,7 @@ public sealed partial class Assert
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -952,8 +917,7 @@ public sealed partial class Assert
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ThrowAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -999,8 +963,7 @@ public sealed partial class Assert
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -1049,8 +1012,7 @@ public sealed partial class Assert
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ThrowAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -1096,8 +1058,7 @@ public sealed partial class Assert
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -1145,8 +1106,7 @@ public sealed partial class Assert
     {
         if (AreEqualFailing(expected, actual, delta))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-            ThrowAssertAreEqualFailed(expected, actual, delta, userMessage);
+            ThrowAssertAreEqualFailed(expected, actual, delta, message, expectedExpression, actualExpression);
         }
     }
 
@@ -1192,8 +1152,7 @@ public sealed partial class Assert
     {
         if (AreNotEqualFailing(notExpected, actual, delta))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, userMessage);
+            ThrowAssertAreNotEqualFailed(notExpected, actual, delta, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -1219,17 +1178,14 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string userMessage)
+    private static void ThrowAssertAreNotEqualFailed<T>(T notExpected, T actual, T delta, string? userMessage, string notExpectedExpression, string actualExpression)
     where T : struct, IConvertible
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreNotEqualDeltaFailMsg,
-            userMessage,
-            notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
-            delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreNotEqualDeltaGreaterThanFailMsg, delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+        message += Environment.NewLine + FormatParameter(nameof(notExpected), notExpectedExpression, notExpected)
+                 + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
+        ThrowAssertFailed("Assert.AreNotEqual", message);
     }
 
     /// <summary>
@@ -1322,8 +1278,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ThrowAssertAreEqualFailed(expected, actual, ignoreCase, culture, userMessage);
+        ThrowAssertAreEqualFailed(expected, actual, ignoreCase, culture, message, expectedExpression, actualExpression);
     }
 
     /// <summary>
@@ -1418,8 +1373,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression);
-        ThrowAssertAreNotEqualFailed(notExpected, actual, userMessage);
+        ThrowAssertAreNotEqualFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
     }
 
     private static bool AreNotEqualFailing(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture)
@@ -1429,15 +1383,13 @@ public sealed partial class Assert
         => (comparer ?? EqualityComparer<T>.Default).Equals(notExpected!, actual!);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreNotEqualFailed(object? notExpected, object? actual, string userMessage)
+    private static void ThrowAssertAreNotEqualFailed(object? notExpected, object? actual, string? userMessage, string notExpectedExpression, string actualExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.AreNotEqualFailMsg,
-            userMessage,
-            ReplaceNulls(notExpected),
-            ReplaceNulls(actual));
-        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.AreNotEqualFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(notExpected), notExpectedExpression, notExpected)
+                 + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
+        ThrowAssertFailed("Assert.AreNotEqual", message);
     }
 }
 

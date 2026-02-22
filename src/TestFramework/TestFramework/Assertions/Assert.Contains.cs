@@ -39,8 +39,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ThrowAssertContainsSingleFailed(_actualCount, _builder.ToString());
+                ThrowAssertContainsSingleFailed(_actualCount, _builder.ToString(), collectionExpression);
             }
 
             return _item!;
@@ -164,13 +163,11 @@ public sealed partial class Assert
 
         if (string.IsNullOrEmpty(predicateExpression))
         {
-            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-            ThrowAssertContainsSingleFailed(actualCount, userMessage);
+            ThrowAssertContainsSingleFailed(actualCount, message, collectionExpression);
         }
         else
         {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ThrowAssertSingleMatchFailed(actualCount, userMessage);
+            ThrowAssertSingleMatchFailed(actualCount, message, predicateExpression, collectionExpression);
         }
 
         // Unreachable code but compiler cannot work it out
@@ -225,13 +222,11 @@ public sealed partial class Assert
 
         if (string.IsNullOrEmpty(predicateExpression))
         {
-            string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-            ThrowAssertContainsSingleFailed(matchCount, userMessage);
+            ThrowAssertContainsSingleFailed(matchCount, message, collectionExpression);
         }
         else
         {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ThrowAssertSingleMatchFailed(matchCount, userMessage);
+            ThrowAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
         }
 
         return default;
@@ -260,8 +255,7 @@ public sealed partial class Assert
     {
         if (!collection.Contains(expected))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-            ThrowAssertContainsItemFailed(userMessage);
+            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
         }
     }
 
@@ -291,8 +285,7 @@ public sealed partial class Assert
             }
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-        ThrowAssertContainsItemFailed(userMessage);
+        ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
     }
 
     /// <summary>
@@ -315,8 +308,7 @@ public sealed partial class Assert
     {
         if (!collection.Contains(expected, comparer))
         {
-            string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-            ThrowAssertContainsItemFailed(userMessage);
+            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
         }
     }
 
@@ -348,8 +340,7 @@ public sealed partial class Assert
             }
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndCollectionExpression(message, expectedExpression, collectionExpression);
-        ThrowAssertContainsItemFailed(userMessage);
+        ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
     }
 
     /// <summary>
@@ -371,8 +362,7 @@ public sealed partial class Assert
     {
         if (!collection.Any(predicate))
         {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ThrowAssertContainsPredicateFailed(userMessage);
+            ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, collection);
         }
     }
 
@@ -403,8 +393,7 @@ public sealed partial class Assert
             }
         }
 
-        string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-        ThrowAssertContainsPredicateFailed(userMessage);
+        ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, collection);
     }
 
     /// <summary>
@@ -476,9 +465,7 @@ public sealed partial class Assert
 
         if (!value.Contains(substring, comparisonType))
         {
-            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            ThrowAssertFailed("Assert.Contains", finalMessage);
+            ThrowAssertStringContainsFailed(value, substring, message, substringExpression, valueExpression);
         }
     }
 
@@ -505,8 +492,7 @@ public sealed partial class Assert
     {
         if (collection.Contains(notExpected))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-            ThrowAssertDoesNotContainItemFailed(userMessage);
+            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
         }
     }
 
@@ -532,8 +518,7 @@ public sealed partial class Assert
         {
             if (object.Equals(notExpected, item))
             {
-                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-                ThrowAssertDoesNotContainItemFailed(userMessage);
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
             }
         }
     }
@@ -558,8 +543,7 @@ public sealed partial class Assert
     {
         if (collection.Contains(notExpected, comparer))
         {
-            string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-            ThrowAssertDoesNotContainItemFailed(userMessage);
+            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
         }
     }
 
@@ -587,8 +571,7 @@ public sealed partial class Assert
         {
             if (comparer.Equals(item, notExpected))
             {
-                string userMessage = BuildUserMessageForNotExpectedExpressionAndCollectionExpression(message, notExpectedExpression, collectionExpression);
-                ThrowAssertDoesNotContainItemFailed(userMessage);
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
             }
         }
     }
@@ -612,8 +595,7 @@ public sealed partial class Assert
     {
         if (collection.Any(predicate))
         {
-            string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-            ThrowAssertDoesNotContainPredicateFailed(userMessage);
+            ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, collection);
         }
     }
 
@@ -640,8 +622,7 @@ public sealed partial class Assert
         {
             if (predicate(item))
             {
-                string userMessage = BuildUserMessageForPredicateExpressionAndCollectionExpression(message, predicateExpression, collectionExpression);
-                ThrowAssertDoesNotContainPredicateFailed(userMessage);
+                ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, collection);
             }
         }
     }
@@ -715,9 +696,7 @@ public sealed partial class Assert
 
         if (value.Contains(substring, comparisonType))
         {
-            string userMessage = BuildUserMessageForSubstringExpressionAndValueExpression(message, substringExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotContainFail, value, substring, userMessage);
-            ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+            ThrowAssertStringDoesNotContainFailed(value, substring, message, substringExpression, valueExpression);
         }
     }
 
@@ -756,73 +735,131 @@ public sealed partial class Assert
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
-            string userMessage = BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(message, minValueExpression, maxValueExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFail, value, minValue, maxValue, userMessage);
-            ThrowAssertFailed("IsInRange", finalMessage);
+            ThrowAssertIsInRangeFailed(value, minValue, maxValue, message, minValueExpression, maxValueExpression, valueExpression);
         }
     }
 
     #endregion // IsInRange
 
     [DoesNotReturn]
-    private static void ThrowAssertSingleMatchFailed(int actualCount, string userMessage)
+    private static void ThrowAssertSingleMatchFailed(int actualCount, string? userMessage, string predicateExpression, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsSingleMatchFailMsg,
-            userMessage,
-            actualCount);
-        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsSingleMatchFailNew, actualCount);
+        message += FormatExpressionParameter("predicate", predicateExpression)
+                 + FormatExpressionParameter("collection", collectionExpression);
+        ThrowAssertFailed("Assert.ContainsSingle", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertContainsSingleFailed(int actualCount, string userMessage)
+    private static void ThrowAssertContainsSingleFailed(int actualCount, string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsSingleFailMsg,
-            userMessage,
-            actualCount);
-        ThrowAssertFailed("Assert.ContainsSingle", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsSingleFailNew, actualCount);
+        message += FormatExpressionParameter("collection", collectionExpression);
+        ThrowAssertFailed("Assert.ContainsSingle", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertContainsItemFailed(string userMessage)
+    private static void ThrowAssertContainsItemFailed(string? userMessage, string expectedExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsItemFailMsg,
-            userMessage);
-        ThrowAssertFailed("Assert.Contains", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.ContainsItemFailNew;
+        message += FormatExpressionParameter("expected", expectedExpression);
+        if (collectionValue is not null)
+        {
+            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+        }
+        else
+        {
+            message += FormatExpressionParameter("collection", collectionExpression);
+        }
+
+        ThrowAssertFailed("Assert.Contains", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertContainsPredicateFailed(string userMessage)
+    private static void ThrowAssertContainsPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.ContainsPredicateFailMsg,
-            userMessage);
-        ThrowAssertFailed("Assert.Contains", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.ContainsPredicateFailNew;
+        message += FormatExpressionParameter("predicate", predicateExpression);
+        if (collectionValue is not null)
+        {
+            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+        }
+        else
+        {
+            message += FormatExpressionParameter("collection", collectionExpression);
+        }
+
+        ThrowAssertFailed("Assert.Contains", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertDoesNotContainItemFailed(string userMessage)
+    private static void ThrowAssertDoesNotContainItemFailed(string? userMessage, string notExpectedExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DoesNotContainItemFailMsg,
-            userMessage);
-        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.DoesNotContainItemFailNew;
+        message += FormatExpressionParameter("notExpected", notExpectedExpression);
+        if (collectionValue is not null)
+        {
+            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+        }
+        else
+        {
+            message += FormatExpressionParameter("collection", collectionExpression);
+        }
+
+        ThrowAssertFailed("Assert.DoesNotContain", message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertDoesNotContainPredicateFailed(string userMessage)
+    private static void ThrowAssertDoesNotContainPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.DoesNotContainPredicateFailMsg,
-            userMessage);
-        ThrowAssertFailed("Assert.DoesNotContain", finalMessage);
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.DoesNotContainPredicateFailNew;
+        message += FormatExpressionParameter("predicate", predicateExpression);
+        if (collectionValue is not null)
+        {
+            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+        }
+        else
+        {
+            message += FormatExpressionParameter("collection", collectionExpression);
+        }
+
+        ThrowAssertFailed("Assert.DoesNotContain", message);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertStringContainsFailed(string value, string substring, string? userMessage, string substringExpression, string valueExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.ContainsStringFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(substring), substringExpression, substring)
+                 + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.Contains", message);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertStringDoesNotContainFailed(string value, string substring, string? userMessage, string substringExpression, string valueExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.DoesNotContainStringFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(substring), substringExpression, substring)
+                 + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.DoesNotContain", message);
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAssertIsInRangeFailed<T>(T value, T minValue, T maxValue, string? userMessage, string minValueExpression, string maxValueExpression, string valueExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.IsInRangeFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(minValue), minValueExpression, minValue)
+                 + Environment.NewLine + FormatParameter(nameof(maxValue), maxValueExpression, maxValue)
+                 + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsInRange", message);
     }
 }

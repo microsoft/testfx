@@ -76,9 +76,11 @@ public sealed partial class Assert
         CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
-            string userMessage = BuildUserMessageForExpectedSuffixExpressionAndValueExpression(message, expectedSuffixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, expectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.EndsWith", finalMessage);
+            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
+            msg += Environment.NewLine + FrameworkMessages.EndsWithFailNew;
+            msg += Environment.NewLine + FormatParameter(nameof(expectedSuffix), expectedSuffixExpression, expectedSuffix)
+                     + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+            ThrowAssertFailed("Assert.EndsWith", msg);
         }
     }
 
@@ -150,9 +152,11 @@ public sealed partial class Assert
         CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
-            string userMessage = BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(message, notExpectedSuffixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotEndWithFail, value, notExpectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
+            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
+            msg += Environment.NewLine + FrameworkMessages.DoesNotEndWithFailNew;
+            msg += Environment.NewLine + FormatParameter(nameof(notExpectedSuffix), notExpectedSuffixExpression, notExpectedSuffix)
+                     + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+            ThrowAssertFailed("Assert.DoesNotEndWith", msg);
         }
     }
 }

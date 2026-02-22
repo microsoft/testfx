@@ -22,9 +22,11 @@ public sealed partial class Assert
     public readonly struct AssertIsNullInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
+        private readonly object? _value;
 
         public AssertIsNullInterpolatedStringHandler(int literalLength, int formattedCount, object? value, out bool shouldAppend)
         {
+            _value = value;
             shouldAppend = IsNullFailing(value);
             if (shouldAppend)
             {
@@ -36,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNullFailed(_builder.ToString());
+                ThrowAssertIsNullFailed(_value, _builder.ToString(), valueExpression);
             }
         }
 
@@ -90,8 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotNullFailed(_builder.ToString());
+                ThrowAssertIsNotNullFailed(_builder.ToString(), valueExpression);
             }
         }
 
@@ -152,14 +152,20 @@ public sealed partial class Assert
     {
         if (IsNullFailing(value))
         {
-            ThrowAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
+            ThrowAssertIsNullFailed(value, message, valueExpression);
         }
     }
 
     private static bool IsNullFailing(object? value) => value is not null;
 
-    private static void ThrowAssertIsNullFailed(string? message)
-        => ThrowAssertFailed("Assert.IsNull", message);
+    [DoesNotReturn]
+    private static void ThrowAssertIsNullFailed(object? value, string? userMessage, string valueExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.IsNullFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        ThrowAssertFailed("Assert.IsNull", message);
+    }
 
     /// <inheritdoc cref="IsNull(object?, string, string)" />
 #pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
@@ -191,13 +197,18 @@ public sealed partial class Assert
     {
         if (IsNotNullFailing(value))
         {
-            ThrowAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
+            ThrowAssertIsNotNullFailed(message, valueExpression);
         }
     }
 
     private static bool IsNotNullFailing([NotNullWhen(false)] object? value) => value is null;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotNullFailed(string? message)
-        => ThrowAssertFailed("Assert.IsNotNull", message);
+    private static void ThrowAssertIsNotNullFailed(string? userMessage, string valueExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.IsNotNullFailNew;
+        message += Environment.NewLine + FormatParameter<object>("value", valueExpression, null);
+        ThrowAssertFailed("Assert.IsNotNull", message);
+    }
 }
