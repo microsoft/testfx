@@ -301,6 +301,7 @@ namespace MSTestSdkTest
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
                 <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
                 <TrimmerSingleWarn>false</TrimmerSingleWarn>

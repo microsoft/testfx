@@ -20,6 +20,7 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <PublishAot>true</PublishAot>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
@@ -94,6 +95,7 @@ public class UnitTest1
         <TargetFramework>$TargetFramework$</TargetFramework>
         <OutputType>Exe</OutputType>
         <PublishAot>true</PublishAot>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
@@ -135,7 +137,6 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
-        compilationResult.AssertOutputDoesNotContain("warning");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
@@ -171,7 +172,6 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
-        compilationResult.AssertOutputDoesNotContain("warning");
     }
 
     public TestContext TestContext { get; set; }
