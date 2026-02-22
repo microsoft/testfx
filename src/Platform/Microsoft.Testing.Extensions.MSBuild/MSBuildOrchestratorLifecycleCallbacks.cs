@@ -4,11 +4,11 @@
 using Microsoft.Testing.Extensions.MSBuild.Serializers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
-using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Extensions.MSBuild;
 

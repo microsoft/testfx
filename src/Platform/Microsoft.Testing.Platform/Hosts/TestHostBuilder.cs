@@ -414,7 +414,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
             // Build and register the test application lifecycle callbacks.
-            ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
+            Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
                 await ((TestHostOrchestratorManager)TestHostOrchestrator).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
             serviceProvider.AddServices(orchestratorLifetimes);
 
