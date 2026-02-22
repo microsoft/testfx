@@ -15,7 +15,7 @@ dotnet add package Microsoft.Testing.Platform.MSBuild
 This package provides:
 
 - **MSBuild integration**: generates the required build assets so that `dotnet test` can discover and run Microsoft.Testing.Platform-based tests
-- **Configuration file support**: enables auto-generation of `.testingplatformconfig.json` configuration files
+- **Configuration file support**: copies `testconfig.json` from the project into the output directory as `$(AssemblyName).testconfig.json`
 
 This package is typically **not referenced directly**. Instead, test framework packages (such as [MSTest](https://www.nuget.org/packages/MSTest)) reference it automatically.
 
