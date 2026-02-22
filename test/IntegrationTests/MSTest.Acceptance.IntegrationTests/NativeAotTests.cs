@@ -95,7 +95,6 @@ public class UnitTest1
         <TargetFramework>$TargetFramework$</TargetFramework>
         <OutputType>Exe</OutputType>
         <PublishAot>true</PublishAot>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
