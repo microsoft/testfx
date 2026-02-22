@@ -145,7 +145,7 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
     }
 
     [TestMethod]
-    [DynamicData(nameof(NativeAotTfmsForDynamicData))]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
     [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
     public async Task NativeAotPublish_ShouldNotProduceTrimWarnings(string tfm)
@@ -173,13 +173,6 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
         compilationResult.AssertOutputContains("Generating native code");
         compilationResult.AssertOutputDoesNotContain("warning");
     }
-
-    // Native AOT is supported on net8.0+. We test each supported TFM to catch
-    // framework-version-specific trim issues (e.g. the net8.0-specific IL2104 in #7153).
-    public static IEnumerable<object[]> NativeAotTfmsForDynamicData =>
-        TargetFrameworks.Net
-            .Where(tfm => tfm is not ("net6.0" or "net7.0"))
-            .Select(tfm => new object[] { tfm });
 
     public TestContext TestContext { get; set; }
 }
