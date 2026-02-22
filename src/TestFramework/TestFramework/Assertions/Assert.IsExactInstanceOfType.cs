@@ -341,6 +341,23 @@ public sealed partial class Assert
                 expectedType.ToString(),
                 value.GetType().ToString());
         }
+        else if (value is null)
+        {
+            // Ensure proper punctuation before adding the NULL message
+            string trimmedMessage = userMessage.TrimEnd();
+            if (trimmedMessage.Length > 0 && (trimmedMessage[^1] == '.' || trimmedMessage[^1] == '!' || trimmedMessage[^1] == '?'))
+            {
+                finalMessage = $"{trimmedMessage} 'value' was NULL.";
+            }
+            else if (trimmedMessage.Length > 0)
+            {
+                finalMessage = $"{trimmedMessage}. 'value' was NULL.";
+            }
+            else
+            {
+                finalMessage = "'value' was NULL.";
+            }
+        }
 
         ThrowAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
     }
