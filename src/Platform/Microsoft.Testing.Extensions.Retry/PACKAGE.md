@@ -18,7 +18,7 @@ This package extends Microsoft.Testing.Platform with:
 - **Flaky test management**: helps distinguish between genuinely failing tests and intermittently flaky tests
 - **CI resilience**: improves reliability of CI pipelines by reducing false failures caused by transient issues
 
-Enable retry via the `--retry-failed-tests` command line option, and configure the maximum number of retries with `--retry-failed-tests-max-count`.
+Configure retry using `--retry-failed-tests <retries>`, and optionally limit retries with `--retry-failed-tests-max-percentage` or `--retry-failed-tests-max-tests`.
 
 ## Documentation
 
