@@ -259,7 +259,7 @@ public sealed class TerminalTestReporterTests
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -357,7 +357,7 @@ public sealed class TerminalTestReporterTests
             ␛[m  succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -455,7 +455,7 @@ public sealed class TerminalTestReporterTests
               InProgressTest1␛[242G(1m 31s)
               InProgressTest2␛[245G(31s)
               InProgressTest3␛[246G(1s)
-            
+
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
@@ -846,6 +846,65 @@ public sealed class TerminalTestReporterTests
         Assert.AreEqual(120, terminal.Width);
     }
 
+    /// <summary>
+    /// Reproduces the bug from issue #7240: when Console.BufferWidth > Console.WindowWidth,
+    /// the ANSI cursor positioning places timings off-screen because it was using BufferWidth
+    /// (capped to 250) instead of WindowWidth.
+    ///
+    /// Before fix: cursor goes to column 242 (= MaxColumn 250 - 8), off-screen for 120-col window.
+    /// After fix:  cursor goes to column 112 (= WindowWidth 120 - 8), visible in window.
+    /// </summary>
+    [TestMethod]
+    public void AnsiTerminal_ProgressFrame_UseWindowWidthForCursorPositioning_WhenBufferWidthIsLarger()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        // Console with BufferWidth=4096 but WindowWidth=120, mimicking the bug scenario.
+        var stringBuilderConsole = new StringBuilderConsoleWithCustomWidths(bufferWidth: 4096, windowWidth: 120);
+        var stopwatchFactory = new StopwatchFactory();
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+            ShowActiveTests = true,
+            ShowProgress = () => true,
+        })
+        {
+            CreateStopwatch = stopwatchFactory.CreateStopwatch,
+        };
+
+        var startHandle = new AutoResetEvent(initialState: false);
+        var stopHandle = new AutoResetEvent(initialState: false);
+
+        terminalReporter.OnProgressStartUpdate += (sender, args) => startHandle.WaitOne();
+        terminalReporter.OnProgressStopUpdate += (sender, args) => stopHandle.Set();
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.AssemblyRunStarted();
+
+        terminalReporter.TestInProgress(testNodeUid: "Test1", displayName: "Test1");
+        stopwatchFactory.AddTime(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(31));
+
+        terminalReporter.TestCompleted(testNodeUid: "Test1", "Test1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        string output = stringBuilderConsole.Output;
+        startHandle.Set();
+        stopHandle.WaitOne();
+
+        string escapedOutput = ShowEscape(output)!;
+
+        // With WindowWidth=120, cursor for "(1m 31s)" (8 chars) should be at column 120-8=112.
+        // Before the fix, BufferWidth=4096 was capped to MaxColumn=250, giving column 250-8=242.
+        Assert.Contains("␛[112G(1m 31s)", escapedOutput,
+            "Cursor should be positioned at column 112 (WindowWidth=120 minus duration length), not at 242 (MaxColumn=250 minus duration length)");
+        Assert.DoesNotContain("␛[242G", escapedOutput,
+            "Cursor must NOT be positioned at column 242 which would happen if BufferWidth (4096, capped to 250) was used instead of WindowWidth");
+    }
+
     internal class TestConsoleWithDifferentBufferAndWindowWidth : IConsole
     {
         public int BufferHeight { get; set; } = 300;
@@ -883,5 +942,49 @@ public sealed class TerminalTestReporterTests
         public void WriteLine(string? value)
         {
         }
+    }
+
+    /// <summary>
+    /// A StringBuilderConsole variant that captures output and allows custom Buffer/Window dimensions.
+    /// </summary>
+    internal sealed class StringBuilderConsoleWithCustomWidths : IConsole
+    {
+        private readonly StringBuilder _output = new();
+
+        public StringBuilderConsoleWithCustomWidths(int bufferWidth, int windowWidth)
+        {
+            BufferWidth = bufferWidth;
+            WindowWidth = windowWidth;
+        }
+
+        public int BufferHeight => int.MaxValue;
+
+        public int BufferWidth { get; }
+
+        public int WindowHeight => int.MaxValue;
+
+        public int WindowWidth { get; }
+
+        public bool IsOutputRedirected => false;
+
+        public string Output => _output.ToString();
+
+        public event ConsoleCancelEventHandler? CancelKeyPress = (sender, e) => { };
+
+        public void Clear() => throw new NotImplementedException();
+
+        public ConsoleColor GetForegroundColor() => ConsoleColor.White;
+
+        public void SetForegroundColor(ConsoleColor color)
+        {
+        }
+
+        public void Write(string? value) => _output.Append(value);
+
+        public void Write(char value) => _output.Append(value);
+
+        public void WriteLine() => _output.AppendLine();
+
+        public void WriteLine(string? value) => _output.AppendLine(value);
     }
 }
