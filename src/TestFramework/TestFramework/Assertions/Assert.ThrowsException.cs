@@ -42,8 +42,7 @@ public sealed partial class Assert
         {
             if (_state.FailAction is not null)
             {
-                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "action", actionExpression) + " ");
-                _state.FailAction(_builder!.ToString());
+                _state.FailAction(_builder!.ToString(), actionExpression);
             }
             else
             {
@@ -113,8 +112,7 @@ public sealed partial class Assert
         {
             if (_state.FailAction is not null)
             {
-                _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "action", actionExpression) + " ");
-                _state.FailAction(_builder!.ToString());
+                _state.FailAction(_builder!.ToString(), actionExpression);
             }
             else
             {
@@ -327,7 +325,7 @@ public sealed partial class Assert
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessageForActionExpression(message, actionExpression));
+            state.FailAction(message ?? string.Empty, actionExpression);
         }
         else
         {
@@ -347,7 +345,7 @@ public sealed partial class Assert
         ThrowsExceptionState state = IsThrowsFailing<TException>(action, isStrictType, assertMethodName);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessageForActionExpression(messageBuilder(state.ExceptionThrown), actionExpression));
+            state.FailAction(messageBuilder(state.ExceptionThrown), actionExpression);
         }
         else
         {
@@ -483,7 +481,7 @@ public sealed partial class Assert
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessageForActionExpression(message, actionExpression));
+            state.FailAction(message ?? string.Empty, actionExpression);
         }
         else
         {
@@ -503,7 +501,7 @@ public sealed partial class Assert
         ThrowsExceptionState state = await IsThrowsAsyncFailingAsync<TException>(action, isStrictType, assertMethodName).ConfigureAwait(false);
         if (state.FailAction is not null)
         {
-            state.FailAction(BuildUserMessageForActionExpression(messageBuilder(state.ExceptionThrown), actionExpression));
+            state.FailAction(messageBuilder(state.ExceptionThrown), actionExpression);
         }
         else
         {
@@ -530,27 +528,25 @@ public sealed partial class Assert
             return isExceptionOfType
                 ? ThrowsExceptionState.CreateNotFailingState(ex)
                 : ThrowsExceptionState.CreateFailingState(
-                    userMessage =>
+                    (userMessage, actionExpr) =>
                     {
-                        string finalMessage = string.Format(
-                            CultureInfo.CurrentCulture,
-                            FrameworkMessages.WrongExceptionThrown,
-                            userMessage,
-                            typeof(TException),
-                            ex.GetType());
-                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
+                        msg += Environment.NewLine + FrameworkMessages.WrongExceptionThrownNew;
+                        msg += FormatExpressionParameter(nameof(action), actionExpr);
+                        msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
+                        msg += Environment.NewLine + $"  actualExceptionType: {ex.GetType()}";
+                        ThrowAssertFailed("Assert." + assertMethodName, msg);
                     }, ex);
         }
 
         return ThrowsExceptionState.CreateFailingState(
-            failAction: userMessage =>
+            failAction: (userMessage, actionExpr) =>
             {
-                string finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.NoExceptionThrown,
-                    userMessage,
-                    typeof(TException));
-                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
+                msg += Environment.NewLine + FrameworkMessages.NoExceptionThrownNew;
+                msg += FormatExpressionParameter(nameof(action), actionExpr);
+                msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
+                ThrowAssertFailed("Assert." + assertMethodName, msg);
             }, null);
     }
 
@@ -570,27 +566,25 @@ public sealed partial class Assert
             return isExceptionOfType
                 ? ThrowsExceptionState.CreateNotFailingState(ex)
                 : ThrowsExceptionState.CreateFailingState(
-                    userMessage =>
+                    (userMessage, actionExpr) =>
                     {
-                        string finalMessage = string.Format(
-                            CultureInfo.CurrentCulture,
-                            FrameworkMessages.WrongExceptionThrown,
-                            userMessage,
-                            typeof(TException),
-                            ex.GetType());
-                        ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
+                        msg += Environment.NewLine + FrameworkMessages.WrongExceptionThrownNew;
+                        msg += FormatExpressionParameter(nameof(action), actionExpr);
+                        msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
+                        msg += Environment.NewLine + $"  actualExceptionType: {ex.GetType()}";
+                        ThrowAssertFailed("Assert." + assertMethodName, msg);
                     }, ex);
         }
 
         return ThrowsExceptionState.CreateFailingState(
-            failAction: userMessage =>
+            failAction: (userMessage, actionExpr) =>
             {
-                string finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.NoExceptionThrown,
-                    userMessage,
-                    typeof(TException));
-                ThrowAssertFailed("Assert." + assertMethodName, finalMessage);
+                string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
+                msg += Environment.NewLine + FrameworkMessages.NoExceptionThrownNew;
+                msg += FormatExpressionParameter(nameof(action), actionExpr);
+                msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
+                ThrowAssertFailed("Assert." + assertMethodName, msg);
             }, null);
     }
 
@@ -598,9 +592,9 @@ public sealed partial class Assert
     {
         public Exception? ExceptionThrown { get; }
 
-        public Action<string>? FailAction { get; }
+        public Action<string, string>? FailAction { get; }
 
-        private ThrowsExceptionState(Exception? exceptionThrown, Action<string>? failAction)
+        private ThrowsExceptionState(Exception? exceptionThrown, Action<string, string>? failAction)
         {
             // If the assert is failing, failAction should be non-null, and exceptionWhenNotFailing may or may not be null.
             // If the assert is not failing, exceptionWhenNotFailing should be non-null, and failAction should be null.
@@ -608,7 +602,7 @@ public sealed partial class Assert
             FailAction = failAction;
         }
 
-        public static ThrowsExceptionState CreateFailingState(Action<string> failAction, Exception? exceptionThrown)
+        public static ThrowsExceptionState CreateFailingState(Action<string, string> failAction, Exception? exceptionThrown)
             => new(exceptionThrown, failAction);
 
         public static ThrowsExceptionState CreateNotFailingState(Exception exception)
