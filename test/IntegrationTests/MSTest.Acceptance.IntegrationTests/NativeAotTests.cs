@@ -20,6 +20,8 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <PublishAot>true</PublishAot>
+        <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -81,6 +83,33 @@ public class UnitTest1
 }
 """;
 
+    // Source code for a minimal project that deeply validates trim/AOT compatibility of
+    // Microsoft.Testing.Platform by using TrimmerRootAssembly to force the trimmer to analyze
+    // all code paths in the assembly, not just those reachable from the test entry point.
+    // See https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
+    private const string TrimAnalysisSourceCode = """
+#file TrimAnalysisTest.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <PublishAot>true</PublishAot>
+        <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    </ItemGroup>
+    <!-- Force the trimmer to analyze the full assembly surface, not just reachable code paths -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="Microsoft.Testing.Platform" />
+    </ItemGroup>
+</Project>
+
+#file Program.cs
+System.Console.WriteLine("This project validates trim/AOT compatibility via dotnet publish.");
+""";
+
     [TestMethod]
     // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
     [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
@@ -106,6 +135,7 @@ public class UnitTest1
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
+        compilationResult.AssertOutputDoesNotContain("warning");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
@@ -113,6 +143,43 @@ public class UnitTest1
         result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
         result.AssertExitCodeIs(0);
     }
+
+    [TestMethod]
+    [DynamicData(nameof(NativeAotTfmsForDynamicData))]
+    // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    public async Task NativeAotPublish_ShouldNotProduceTrimWarnings(string tfm)
+    {
+        // See https://github.com/microsoft/testfx/issues/7153
+        // This test forces deep trim analysis of Microsoft.Testing.Platform using TrimmerRootAssembly
+        // to catch trim warnings that would not be caught by only testing reachable code paths.
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"TrimAnalysisTest_{tfm}",
+            TrimAnalysisSourceCode
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm),
+            addPublicFeeds: true);
+
+        await DotnetCli.RunAsync(
+            $"restore {generator.TargetAssetPath} -r {RID}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 0,
+            cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            retryCount: 0,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
+        compilationResult.AssertOutputDoesNotContain("warning");
+    }
+
+    // Native AOT is supported on net8.0+. We test each supported TFM to catch
+    // framework-version-specific trim issues (e.g. the net8.0-specific IL2104 in #7153).
+    public static IEnumerable<object[]> NativeAotTfmsForDynamicData =>
+        TargetFrameworks.Net
+            .Where(tfm => tfm is not ("net6.0" or "net7.0"))
+            .Select(tfm => new object[] { tfm });
 
     public TestContext TestContext { get; set; }
 }
