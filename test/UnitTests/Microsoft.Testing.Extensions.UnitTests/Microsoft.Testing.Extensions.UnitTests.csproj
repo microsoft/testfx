@@ -9,6 +9,8 @@
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net472</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
+    <!-- Use full PDBs on .NET Framework so that stack traces include file paths and line numbers even on net462 -->
+    <DebugType Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETFramework'">full</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

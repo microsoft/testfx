@@ -112,7 +112,6 @@ public class MSTestSettingsTests : TestContainer
                     <MapInconclusiveToFailed>3</MapInconclusiveToFailed>
                     <MapNotRunnableToFailed>3</MapNotRunnableToFailed>
                     <TreatDiscoveryWarningsAsErrors>3</TreatDiscoveryWarningsAsErrors>
-                    <EnableBaseClassTestMethodsFromOtherAssemblies>3</EnableBaseClassTestMethodsFromOtherAssemblies>
                     <TestTimeout>timeout</TestTimeout>
                </MSTestV2>
             </RunSettings>
@@ -120,14 +119,13 @@ public class MSTestSettingsTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(15));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(14));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CooperativeCancellationTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestCleanupTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassCleanupTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyCleanupTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CaptureTraceOutput', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'MapNotRunnableToFailed', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'EnableBaseClassTestMethodsFromOtherAssemblies', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyInitializeTimeout', setting will be ignored."), Times.Once);
@@ -183,37 +181,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object)!;
 
         adapterSettings.TestSettingsFile.Should().NotBeNull();
-    }
-
-    public void EnableBaseClassTestMethodsFromOtherAssembliesIsByDefaulTrueWhenNotSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
-
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
-    }
-
-    public void EnableBaseClassTestMethodsFromOtherAssembliesShouldBeConsumedFromRunSettingsWhenSpecified()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTestV2>
-                  <EnableBaseClassTestMethodsFromOtherAssemblies>True</EnableBaseClassTestMethodsFromOtherAssemblies>
-              </MSTestV2>
-            </RunSettings>
-            """;
-
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
-
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
     }
 
     public void CaptureDebugTracesShouldBeTrueByDefault()
@@ -728,7 +695,6 @@ public class MSTestSettingsTests : TestContainer
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <UnReadableSetting>foobar</UnReadableSetting>
-                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
                 <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
               </MSTest>
@@ -770,7 +736,6 @@ public class MSTestSettingsTests : TestContainer
         dummyPlatformSpecificSetting.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().Be("DummyPath\\\\TestSettings1.testsettings");
     }
 
@@ -831,8 +796,6 @@ public class MSTestSettingsTests : TestContainer
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                <!-- Enable base class test methods from other assemblies -->
-                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTest>
               <BadElement>Bad</BadElement>
             </RunSettings>
@@ -873,7 +836,6 @@ public class MSTestSettingsTests : TestContainer
         dummyPlatformSpecificSetting.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
     }
 
     #endregion
@@ -929,7 +891,6 @@ public class MSTestSettingsTests : TestContainer
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTest>
             </RunSettings>
             """;
@@ -941,7 +902,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.CurrentSettings.CaptureDebugTraces.Should().BeFalse();
         MSTestSettings.CurrentSettings.MapInconclusiveToFailed.Should().BeTrue();
         MSTestSettings.CurrentSettings.MapNotRunnableToFailed.Should().BeTrue();
-        MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         MSTestSettings.CurrentSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
     }
 
@@ -953,7 +913,6 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
@@ -965,7 +924,6 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
@@ -978,7 +936,6 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
         adapterSettings.MapInconclusiveToFailed.Should().BeFalse();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TreatDiscoveryWarningsAsErrors.Should().BeTrue();
     }
 
@@ -1014,7 +971,6 @@ public class MSTestSettingsTests : TestContainer
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTest>
             </RunSettings>
             """;
@@ -1029,7 +985,6 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
     }
 
@@ -1042,7 +997,6 @@ public class MSTestSettingsTests : TestContainer
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTestV2>
             </RunSettings>
             """;
@@ -1057,7 +1011,6 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().NotBeNullOrEmpty();
     }
 
@@ -1069,7 +1022,6 @@ public class MSTestSettingsTests : TestContainer
               <MSTestV2>
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTestV2>
               <MSTest>
                 <CaptureDebugTraces>False</CaptureDebugTraces>
@@ -1088,7 +1040,6 @@ public class MSTestSettingsTests : TestContainer
 
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
-        adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
         adapterSettings.TestSettingsFile.Should().BeNullOrEmpty();
     }
@@ -1172,7 +1123,6 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "3" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "3" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "3" },
-            { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "3" },
         };
 
         var mockConfig = new Mock<IConfiguration>();
@@ -1182,13 +1132,12 @@ public class MSTestSettingsTests : TestContainer
         var settings = new MSTestSettings();
         MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
 
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(13));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(12));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'timeout:useCooperativeCancellation', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyInitialize', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:assemblyCleanup', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classInitialize', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapNotRunnableToFailed', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'enableBaseClassTestMethodsFromOtherAssemblies', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:classCleanup', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testInitialize', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'timeout:testCleanup', setting will be ignored."), Times.Once);
@@ -1218,7 +1167,6 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "true" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
-            { "mstest:enableBaseClassTestMethodsFromOtherAssemblies", "true" },
             { "mstest:orderTestsByNameInClass", "true" },
             { "mstest:output:captureTrace", "true" },
         };
@@ -1233,7 +1181,6 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
 
         // Assert
-        settings.EnableBaseClassTestMethodsFromOtherAssemblies.Should().BeTrue();
         settings.OrderTestsByNameInClass.Should().BeTrue();
         settings.CaptureDebugTraces.Should().BeTrue();
         settings.CooperativeCancellationTimeout.Should().BeTrue();

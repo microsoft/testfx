@@ -17,7 +17,6 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 

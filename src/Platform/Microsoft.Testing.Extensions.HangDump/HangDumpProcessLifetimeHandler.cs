@@ -113,7 +113,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new SessionEndSerializerRequestSerializer(), typeof(SessionEndSerializerRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
 
@@ -127,24 +126,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task<IResponse> CallbackAsync(IRequest request)
     {
-        if (request is SessionEndSerializerRequest)
-        {
-            await _logger.LogDebugAsync("Session end received by the test host").ConfigureAwait(false);
-
-#pragma warning disable IDE0031 // Null check can be simplified - analyzer doesn't consider multigating. But we can fix when https://github.com/dotnet/csharplang/issues/8631 is implemented.
-            if (_activityTimer is not null)
-            {
-#if NETCOREAPP
-                await _activityTimer.DisposeAsync().ConfigureAwait(false);
-#else
-                _activityTimer.Dispose();
-#endif
-            }
-
-            _namedPipeClient?.Dispose();
-            return VoidResponse.CachedInstance;
-        }
-        else if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
+        if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
         {
             await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'").ConfigureAwait(false);
             _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
@@ -175,28 +157,23 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     {
         ApplicationStateGuard.Ensure(_waitConnectionTask is not null);
         ApplicationStateGuard.Ensure(_singleConnectionNamedPipeServer is not null);
-        try
-        {
-            _testHostProcessInformation = testHostProcessInformation;
 
-            await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
-            await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-            using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
-            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
-            _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
-            ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-            await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
+        _testHostProcessInformation = testHostProcessInformation;
 
-            _activityTimer = new Timer(
-                _ => _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken),
-                null,
-                _activityTimerValue!.Value,
-                TimeSpan.FromMilliseconds(-1));
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
+        await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
+        await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+        _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
+        ApplicationStateGuard.Ensure(_namedPipeClient is not null);
+        await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+        await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
+
+        _activityTimer = new Timer(
+            _ => _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken),
+            null,
+            _activityTimerValue!.Value,
+            TimeSpan.FromMilliseconds(-1));
     }
 
     private static string GetDiskInfo()
@@ -220,9 +197,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (_activityTimer is not null)
         {
-            return;
+#if NETCOREAPP
+            await _activityTimer.DisposeAsync().ConfigureAwait(false);
+#else
+            _activityTimer.Dispose();
+#endif
         }
 
         if (!testHostProcessInformation.HasExitedGracefully)

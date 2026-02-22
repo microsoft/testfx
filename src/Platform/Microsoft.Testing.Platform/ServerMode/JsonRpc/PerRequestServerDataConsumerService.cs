@@ -85,51 +85,41 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     private async Task ProcessTestNodeUpdateAsync(TestNodeUpdateMessage update, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
+        await _nodeAggregatorSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await _nodeAggregatorSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
+            // Note: If there's no changes to aggregate kick off a background task,
+            //       that will send the updates on idle.
+            // Note: It's ok to do this before we aggregate the change, since the
+            //       SendTestNodeUpdatesIfNecessaryAsync will have to grab the semaphore
+            //       to complete and that will only happen if this method releases the semaphore.
+            if (!_nodeUpdatesAggregator.HasChanges)
             {
-                // Note: If there's no changes to aggregate kick off a background task,
-                //       that will send the updates on idle.
-                // Note: It's ok to do this before we aggregate the change, since the
-                //       SendTestNodeUpdatesIfNecessaryAsync will have to grab the semaphore
-                //       to complete and that will only happen if this method releases the semaphore.
-                if (!_nodeUpdatesAggregator.HasChanges)
+                // If idle task is not null observe it to throw in case of failed task.
+                if (_idleUpdateTask is not null)
                 {
-                    // If idle task is not null observe it to throw in case of failed task.
-                    if (_idleUpdateTask is not null)
+                    // Observe possible exceptions
+                    try
                     {
-                        // Observe possible exceptions
-                        try
-                        {
-                            await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // We cannot check the token because it's possible that we're canceled during the
-                            // send of the information and that the current cancellation token is a combined one.
-                        }
+                        await _idleUpdateTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
                     }
-
-                    _idleUpdateTask = SendTestNodeUpdatesOnIdleAsync(_nodeUpdatesAggregator.RunId);
+                    catch (OperationCanceledException)
+                    {
+                        // We cannot check the token because it's possible that we're canceled during the
+                        // send of the information and that the current cancellation token is a combined one.
+                    }
                 }
 
-                _nodeUpdatesAggregator.OnStateChange(update);
+                _idleUpdateTask = SendTestNodeUpdatesOnIdleAsync(_nodeUpdatesAggregator.RunId);
             }
-            finally
-            {
-                _nodeAggregatorSemaphore.Release();
-            }
+
+            _nodeUpdatesAggregator.OnStateChange(update);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+        finally
         {
-            // We do nothing we've been canceled.
+            _nodeAggregatorSemaphore.Release();
         }
     }
 
@@ -137,26 +127,16 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     {
         // We get the PerRequestTestApplicationCooperativeLifetime that in server mode is linked to the per-request+global cancellation token.
         CancellationToken cancellationToken = _testSessionContext.CancellationToken;
-        try
-        {
-            // We subscribe to the per request application lifetime
-            using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
+        // We subscribe to the per request application lifetime
+        using CancellationTokenRegistration registration = cancellationToken.Register(_testSessionEnd.SetCanceled);
 
-            // When batch timer expire or we're at the end of the session we can unblock the message drain
-            Ensure.NotNull(_task);
-            await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task).ConfigureAwait(false);
+        // When batch timer expire or we're at the end of the session we can unblock the message drain
+        Ensure.NotNull(_task);
+        await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task).ConfigureAwait(false);
 
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+        cancellationToken.ThrowIfCancellationRequested();
 
-            await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // We do nothing we've been canceled.
-        }
+        await SendTestNodeUpdatesIfNecessaryAsync(runId, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task SendTestNodeUpdatesIfNecessaryAsync(Guid runId, CancellationToken cancellationToken)
@@ -197,24 +177,15 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        try
-        {
-            // We signal the test session end so we can complete the flush.
-            _testSessionEnd.SetResult(true);
-            await GetIdleUpdateTaskAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // We do nothing we've been canceled.
-        }
+        cancellationToken.ThrowIfCancellationRequested();
+        // We signal the test session end so we can complete the flush.
+        _testSessionEnd.SetResult(true);
+        await GetIdleUpdateTaskAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         switch (value)
         {

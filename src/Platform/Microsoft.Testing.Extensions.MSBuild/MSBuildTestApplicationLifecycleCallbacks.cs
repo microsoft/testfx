@@ -70,5 +70,5 @@ internal sealed class MSBuildTestApplicationLifecycleCallbacks : ITestHostApplic
     public void Dispose()
         => PipeClient?.Dispose();
 
-    public Task AfterRunAsync(int exitCode, CancellationToken cancellation) => Task.CompletedTask;
+    public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
 }

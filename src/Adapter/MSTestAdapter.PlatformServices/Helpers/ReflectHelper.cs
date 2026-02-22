@@ -137,21 +137,12 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Returns true when the method is declared in the assembly where the type is declared.
-    /// </summary>
-    /// <param name="method">The method to check for.</param>
-    /// <param name="type">The type declared in the assembly to check.</param>
-    /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
-    internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.Assembly.Equals(type.Assembly); // TODO: Investigate if we rely on NRE
-
-    /// <summary>
     /// Get categories applied to the test method.
     /// </summary>
     /// <param name="categoryAttributeProvider">The member to inspect.</param>
     /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
     /// <returns>Categories defined.</returns>
-    internal virtual /* for tests, we are mocking this */ string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
+    internal string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
         IEnumerable<TestCategoryBaseAttribute> methodCategories = GetAttributes<TestCategoryBaseAttribute>(categoryAttributeProvider);
         IEnumerable<TestCategoryBaseAttribute> typeCategories = GetAttributes<TestCategoryBaseAttribute>(owningType);
@@ -199,16 +190,6 @@ internal class ReflectHelper : MarshalByRefObject
             .FirstOrDefault();
 
     /// <summary>
-    /// Get the parallelization behavior for a test method.
-    /// </summary>
-    /// <param name="testMethod">Test method.</param>
-    /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
-    /// <returns>True if test method should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-        => IsAttributeDefined<DoNotParallelizeAttribute>(testMethod)
-        || IsAttributeDefined<DoNotParallelizeAttribute>(owningType);
-
-    /// <summary>
     /// Get the parallelization behavior for a test assembly.
     /// </summary>
     /// <param name="assembly">The test assembly.</param>
@@ -216,15 +197,6 @@ internal class ReflectHelper : MarshalByRefObject
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
             .Length != 0;
-
-    /// <summary>
-    /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null.
-    /// </summary>
-    /// <param name="priorityAttributeProvider">The member to inspect.</param>
-    /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual int? GetPriority(MemberInfo priorityAttributeProvider) =>
-        GetFirstAttributeOrDefault<PriorityAttribute>(priorityAttributeProvider)?.Priority;
 
     /// <summary>
     /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.

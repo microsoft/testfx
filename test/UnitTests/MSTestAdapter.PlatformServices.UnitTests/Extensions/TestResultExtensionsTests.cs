@@ -41,14 +41,13 @@ public class TestResultExtensionsTests : TestContainer
             Duration = timespan,
             LogOutput = "logOutput",
             LogError = "logError",
-            DatarowIndex = 1,
         };
 
         var convertedResult = result.ToTestResult(new() { DisplayName = result.DisplayName }, default, default, string.Empty, new());
         VSTestTestResultMessage[] stdOutMessages = [.. convertedResult.Messages.Where(m => m.Category == VSTestTestResultMessage.StandardOutCategory)];
         stdOutMessages[0].Text.Should().Be("logOutput");
         convertedResult.Messages.Single(m => m.Category == VSTestTestResultMessage.StandardErrorCategory).Text.Should().Be("logError");
-        convertedResult.DisplayName.Should().Be("displayName (Data Row 1)");
+        convertedResult.DisplayName.Should().Be("displayName");
         stdOutMessages[1].Text.Should().Be("""
 
 
@@ -141,36 +140,21 @@ public class TestResultExtensionsTests : TestContainer
         convertedResult.DisplayName.Should().Be("displayName");
     }
 
-    public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
-    {
-        var result = new TestResult
-        {
-            DatarowIndex = 1,
-        };
-
-        var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
-
-        convertedResult.DisplayName.Should().Be(" (Data Row 1)");
-    }
-
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
     {
         var executionId = Guid.NewGuid();
         var parentExecId = Guid.NewGuid();
-        int innerResultsCount = 5;
 
         var result = new TestResult
         {
             ExecutionId = executionId,
             ParentExecId = parentExecId,
-            InnerResultsCount = innerResultsCount,
         };
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
         ((Guid)convertedResult.GetPropertyValue(EngineConstants.ExecutionIdProperty)!).Should().Be(executionId);
         ((Guid)convertedResult.GetPropertyValue(EngineConstants.ParentExecIdProperty)!).Should().Be(parentExecId);
-        ((int)convertedResult.GetPropertyValue(EngineConstants.InnerResultsCountProperty)!).Should().Be(innerResultsCount);
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()

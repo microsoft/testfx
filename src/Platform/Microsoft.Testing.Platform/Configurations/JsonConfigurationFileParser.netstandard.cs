@@ -13,8 +13,8 @@ internal sealed class JsonConfigurationFileParser
 {
     public static readonly string KeyDelimiter = ":";
 
-    private readonly Dictionary<string, string?> _singleValueData = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, string?> _propertyToAllChildren = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _singleValueData = [with(StringComparer.OrdinalIgnoreCase)];
+    private readonly Dictionary<string, string?> _propertyToAllChildren = [with(StringComparer.OrdinalIgnoreCase)];
     private readonly Stack<string> _paths = new();
     private readonly JsonSettings _settings = new()
     {

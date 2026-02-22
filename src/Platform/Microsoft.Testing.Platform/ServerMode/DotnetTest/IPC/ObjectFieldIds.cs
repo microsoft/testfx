@@ -12,7 +12,7 @@ internal static class VoidResponseFieldsId
     public const int MessagesSerializerId = 0;
 }
 
-internal static class TestHostProcessExitRequestFieldsId
+internal static class TestHostCompletedRequestFieldsId
 {
     public const int MessagesSerializerId = 1;
 }

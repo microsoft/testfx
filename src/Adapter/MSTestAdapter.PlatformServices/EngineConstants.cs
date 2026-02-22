@@ -76,8 +76,6 @@ internal static class EngineConstants
 
     internal static readonly TestProperty ParentExecIdProperty = TestProperty.Register("ParentExecId", ParentExecIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
 
-    internal static readonly TestProperty InnerResultsCountProperty = TestProperty.Register("InnerResultsCount", InnerResultsCountLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestResult));
-
     internal static readonly TestProperty TestRunIdProperty = TestProperty.Register(TestRunId, TestRunId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
     internal static readonly TestProperty TestPlanIdProperty = TestProperty.Register(TestPlanId, TestPlanId, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
@@ -138,7 +136,6 @@ internal static class EngineConstants
     private const string DoNotParallelizeLabel = "DoNotParallelize";
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
-    private const string InnerResultsCountLabel = "InnerResultsCount";
     private const string WorkItemIdsLabel = "WorkItemIds";
 
     private const string TestRunId = "__Tfs_TestRunId__";

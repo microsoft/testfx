@@ -1,19 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
+#if NETFRAMEWORK
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 /// <summary>
-/// Utility for reflection API's.
+/// This class is only intended to be used by ReflectionOperations on .NET Framework.
+/// TODO: Investigate why we need complicated logic under .NET Framework, and whether it
+/// can be simplified to have unified simple logic for .NET Core and .NET Framework.
 /// </summary>
-[SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
-internal class ReflectionUtility
+internal static class ReflectionOperationsNetFrameworkAttributeHelpers
 {
-    internal virtual IReadOnlyList<object> GetCustomAttributes(MemberInfo memberInfo, Type? type)
-        => GetCustomAttributesCore(memberInfo, type);
-
     /// <summary>
     /// Gets all the custom attributes adorned on a member.
     /// </summary>
@@ -29,10 +27,9 @@ internal class ReflectionUtility
     /// <param name="type">Type of attribute to retrieve.</param>
     /// <returns>All attributes of give type on member.</returns>
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
-    internal static IReadOnlyList<object> GetCustomAttributesCore(MemberInfo memberInfo, Type? type)
+    private static IReadOnlyList<object> GetCustomAttributesCore(MemberInfo memberInfo, Type? type)
 #pragma warning restore CA1859
     {
-#if NETFRAMEWORK
         bool shouldGetAllAttributes = type == null;
 
         if (!IsReflectionOnlyLoad(memberInfo))
@@ -108,14 +105,8 @@ internal class ReflectionUtility
             nonUniqueAttributes.AddRange(uniqueAttributes.Values);
             return nonUniqueAttributes;
         }
-#else
-        return type == null
-            ? memberInfo.GetCustomAttributes(inherit: true)
-            : memberInfo.GetCustomAttributes(type, inherit: true);
-#endif
     }
 
-#if NETFRAMEWORK
     internal static List<Attribute> GetCustomAttributes(Assembly assembly, Type type)
     {
         if (!assembly.ReflectionOnly)
@@ -276,7 +267,6 @@ internal class ReflectionUtility
 
         return false;
     }
-#endif
 }
 
 #endif

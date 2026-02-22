@@ -81,7 +81,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
-    private static UnitTestSynchronizationContext? _syncContext;
+    private static UnitTestSynchronizationContext _syncContext;
 
     [GlobalTestInitialize]
     public static void GlobalTestInit(TestContext _)

@@ -8,8 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
@@ -141,7 +139,7 @@ internal sealed class TestAssemblyInfo
                             {
                                 // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                                 // It's safer to reset it before the capture.
-                                using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                                using (TestContextImplementation.SetCurrentTestContext(testContext))
                                 {
                                     Task? task = AssemblyInitializeMethod.GetInvokeResultAsync(null, testContext);
                                     if (task is not null)
@@ -229,7 +227,7 @@ internal sealed class TestAssemblyInfo
                  {
                      // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
                      // It's safer to reset it before the capture.
-                     using (TestContextImplementation.SetCurrentTestContext(testContext as TestContextImplementation))
+                     using (TestContextImplementation.SetCurrentTestContext(testContext))
                      {
                          Task? task = AssemblyCleanupMethod.GetParameters().Length == 0
                              ? AssemblyCleanupMethod.GetInvokeResultAsync(null)

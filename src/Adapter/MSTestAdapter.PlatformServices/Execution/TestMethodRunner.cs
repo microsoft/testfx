@@ -80,13 +80,13 @@ internal sealed class TestMethodRunner
         {
             if (result == null || result.Length == 0)
             {
-                result = [new TestResult { Outcome = UTF.UnitTestOutcome.Error }];
+                result = [new TestResult { Outcome = UnitTestOutcome.Error }];
             }
 
 #pragma warning disable IDE0056 // Use index operator
             result[result.Length - 1] = new TestResult
             {
-                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                 LogOutput = result[result.Length - 1].LogOutput,
                 LogError = result[result.Length - 1].LogError,
                 DebugTrace = result[result.Length - 1].DebugTrace,
@@ -128,7 +128,7 @@ internal sealed class TestMethodRunner
         {
             if (_test.TestDataSourceIgnoreMessage is not null)
             {
-                _testContext.SetOutcome(UTF.UnitTestOutcome.Ignored);
+                _testContext.SetOutcome(UnitTestOutcome.Ignored);
                 return [TestResult.CreateIgnoredResult(_test.TestDataSourceIgnoreMessage)];
             }
 
@@ -161,7 +161,7 @@ internal sealed class TestMethodRunner
         }
 
         // Get aggregate outcome.
-        UTF.UnitTestOutcome aggregateOutcome = GetAggregateOutcome(results);
+        UnitTestOutcome aggregateOutcome = GetAggregateOutcome(results);
         _testContext.SetOutcome(aggregateOutcome);
 
         // In case of data driven, set parent info in results.
@@ -176,7 +176,7 @@ internal sealed class TestMethodRunner
             TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
-                TestFailureException = new TestFailedException(UTF.UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
             };
 
             results.Add(emptyResult);
@@ -229,7 +229,7 @@ internal sealed class TestMethodRunner
 
                 var inconclusiveResult = new TestResult
                 {
-                    Outcome = UTF.UnitTestOutcome.Inconclusive,
+                    Outcome = UnitTestOutcome.Inconclusive,
                 };
                 results.Add(inconclusiveResult);
                 continue;
@@ -265,7 +265,7 @@ internal sealed class TestMethodRunner
             {
                 var inconclusiveResult = new TestResult
                 {
-                    Outcome = UTF.UnitTestOutcome.Inconclusive,
+                    Outcome = UnitTestOutcome.Inconclusive,
                     Duration = watch.Elapsed,
                 };
                 results.Add(inconclusiveResult);
@@ -292,7 +292,7 @@ internal sealed class TestMethodRunner
         {
             var failedResult = new TestResult
             {
-                Outcome = UTF.UnitTestOutcome.Error,
+                Outcome = UnitTestOutcome.Error,
                 TestFailureException = ex,
                 Duration = watch.Elapsed,
             };
@@ -384,7 +384,6 @@ internal sealed class TestMethodRunner
         foreach (TestResult testResult in testResults)
         {
             testResult.DisplayName = displayName;
-            testResult.DatarowIndex = rowIndex;
             testResult.Duration = stopwatch.Elapsed;
         }
 
@@ -404,7 +403,7 @@ internal sealed class TestMethodRunner
                 {
                     try
                     {
-                        using (TestContextImplementation.SetCurrentTestContext(_testMethodInfo.TestContext as TestContextImplementation))
+                        using (TestContextImplementation.SetCurrentTestContext(_testContext as TestContext))
                         {
                             tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
                         }
@@ -440,16 +439,16 @@ internal sealed class TestMethodRunner
     /// </summary>
     /// <param name="results">Results.</param>
     /// <returns>Aggregate outcome.</returns>
-    private static UTF.UnitTestOutcome GetAggregateOutcome(List<TestResult> results)
+    private static UnitTestOutcome GetAggregateOutcome(List<TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
         if (results.Count == 0)
         {
-            return UTF.UnitTestOutcome.Unknown;
+            return UnitTestOutcome.Unknown;
         }
 
         // Get aggregate outcome.
-        UTF.UnitTestOutcome aggregateOutcome = results[0].Outcome;
+        UnitTestOutcome aggregateOutcome = results[0].Outcome;
         foreach (TestResult result in results)
         {
             aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(result.Outcome);

@@ -96,7 +96,7 @@ internal sealed class TrxProcessLifetimeHandler :
            && TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptions));
 #pragma warning restore SA1114 // Parameter list should follow declaration
 
-    public Task BeforeTestHostProcessStartAsync(CancellationToken cancellation)
+    public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
         // IsEnabledAsync will only return true if we are out of process.
         // If we are not out of process, then we are disabled. Hence, this won't be called.
@@ -107,7 +107,7 @@ internal sealed class TrxProcessLifetimeHandler :
         }
 
         // Note: Inlining this method produces a false positive warning for platform compatibility.
-        BeforeTestHostProcessStartCore(cancellation);
+        BeforeTestHostProcessStartCore(cancellationToken);
 
         return Task.CompletedTask;
     }
@@ -124,14 +124,14 @@ internal sealed class TrxProcessLifetimeHandler :
                 await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
             }, cancellationToken);
 
-    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         if (_waitConnectionTask is null)
         {
             throw new InvalidOperationException(ExtensionResources.TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled);
         }
 
-        await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellation).ConfigureAwait(false);
+        await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
     }
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -146,12 +146,9 @@ internal sealed class TrxProcessLifetimeHandler :
         return Task.CompletedTask;
     }
 
-    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation)
+    public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        if (cancellation.IsCancellationRequested)
-        {
-            return;
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
         Dictionary<IExtension, List<SessionFileArtifact>> artifacts = [];
 
@@ -168,6 +165,7 @@ internal sealed class TrxProcessLifetimeHandler :
         }
 
         // We create a trx with only files in case of test host process crash.
+        // TODO: Handle the case where we receive testhost complete, then a crash happens, if possible.
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
@@ -177,14 +175,14 @@ internal sealed class TrxProcessLifetimeHandler :
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                 _startTime,
                 testHostProcessInformation.ExitCode,
-                cancellation);
+                cancellationToken);
 
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
                 isTestHostCrashed: true,
                 testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
             {
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellation).ConfigureAwait(false);
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
             }
 
             await _messageBus.PublishAsync(
@@ -213,7 +211,7 @@ internal sealed class TrxProcessLifetimeHandler :
                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
                _startTime,
                testHostProcessInformation.ExitCode,
-               cancellation);
+               cancellationToken);
 
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts).ConfigureAwait(false);
         }

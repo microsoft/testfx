@@ -52,7 +52,6 @@ internal sealed class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
-        EnableBaseClassTestMethodsFromOtherAssemblies = true;
         TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
@@ -65,6 +64,7 @@ internal sealed class MSTestSettings
         TestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
+        LaunchDebuggerOnAssertionFailure = DebuggerLaunchMode.Disabled;
     }
 
     /// <summary>
@@ -111,11 +111,6 @@ internal sealed class MSTestSettings
     /// Gets a value indicating whether or not test discovery warnings should be treated as errors.
     /// </summary>
     public bool TreatDiscoveryWarningsAsErrors { get; private set; }
-
-    /// <summary>
-    /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
-    /// </summary>
-    public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
     /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.
@@ -186,6 +181,11 @@ internal sealed class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
+    /// Gets a value specifying when to launch the debugger on assertion failure.
+    /// </summary>
+    internal DebuggerLaunchMode LaunchDebuggerOnAssertionFailure { get; private set; }
+
+    /// <summary>
     /// Populate settings based on existing settings object.
     /// </summary>
     /// <param name="settings">The existing settings object.</param>
@@ -199,7 +199,6 @@ internal sealed class MSTestSettings
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
         CurrentSettings.CooperativeCancellationTimeout = settings.CooperativeCancellationTimeout;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
-        CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
@@ -210,6 +209,7 @@ internal sealed class MSTestSettings
         CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
+        CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
     }
 
 #if !WINDOWS_UWP
@@ -378,7 +378,6 @@ internal sealed class MSTestSettings
         //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
         //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
         //     <TreatDiscoveryWarningsAsErrors>true</TreatDiscoveryWarningsAsErrors>
-        //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
         //     <Parallelize>
         //        <Workers>4</Workers>
@@ -417,21 +416,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "CaptureTraceOutput"));
-                            }
-
-                            break;
-                        }
-
-                    case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
-                        {
-                            string value = reader.ReadInnerXml();
-                            if (bool.TryParse(value, out result))
-                            {
-                                settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "EnableBaseClassTestMethodsFromOtherAssemblies"));
                             }
 
                             break;
@@ -656,6 +640,21 @@ internal sealed class MSTestSettings
                             break;
                         }
 
+                    case "LAUNCHDEBUGGERONASSERTIONFAILURE":
+                        {
+                            string value = reader.ReadInnerXml();
+                            if (TryParseEnum(value, out DebuggerLaunchMode mode))
+                            {
+                                settings.LaunchDebuggerOnAssertionFailure = mode;
+                            }
+                            else
+                            {
+                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "LaunchDebuggerOnAssertionFailure"));
+                            }
+
+                            break;
+                        }
+
                     default:
                         {
                             PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());
@@ -783,6 +782,23 @@ internal sealed class MSTestSettings
         }
     }
 
+    private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        if (TryParseEnum(value, out DebuggerLaunchMode mode))
+        {
+            setSetting(mode);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
     private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -834,10 +850,10 @@ internal sealed class MSTestSettings
         //      "mapNotRunnableToFailed" : true/false
         //      "treatDiscoveryWarningsAsErrors" : true/false
         //      "considerEmptyDataSourceAsInconclusive" : true/false
+        //      "launchDebuggerOnAssertionFailure" : "disabled"/"enabled"/"enabledExcludingCI" (or true/false for backward compatibility)
         //  }
         //  ... remaining settings
         // }
-        ParseBooleanSetting(configuration, "enableBaseClassTestMethodsFromOtherAssemblies", logger, value => settings.EnableBaseClassTestMethodsFromOtherAssemblies = value);
         ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
 
         ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
@@ -848,6 +864,7 @@ internal sealed class MSTestSettings
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
+        ParseDebuggerLaunchModeSetting(configuration, "execution:launchDebuggerOnAssertionFailure", logger, value => settings.LaunchDebuggerOnAssertionFailure = value);
 
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);

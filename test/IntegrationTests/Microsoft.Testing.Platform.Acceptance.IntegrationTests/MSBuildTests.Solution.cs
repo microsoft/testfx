@@ -55,9 +55,9 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
         }
 
         // Build the solution
-        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore {solution.SolutionFile} --configfile {nugetFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         restoreResult.AssertOutputDoesNotContain("An approximate best match of");
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore -t:Test -p:UseMSBuildTestInfrastructure=true -nodeReuse:false {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"build --no-restore -t:Test -p:UseMSBuildTestInfrastructure=true {solution.SolutionFile}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath, cancellationToken: TestContext.CancellationToken);
 
         if (isMultiTfm)
         {

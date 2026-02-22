@@ -10,6 +10,13 @@ labels: [bug, need-triage]
 A clear and concise description of what the bug is and which version it impacts.
 -->
 
+## Version used
+
+<!--
+The MSTest or Microsoft.Testing.Platform version used that has the bug.
+Ensure you try the latest version before opening the bug.
+-->
+
 ## Steps To Reproduce
 
 <!--
