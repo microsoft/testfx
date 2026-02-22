@@ -60,11 +60,6 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
         <target state="translated">Tests mit Wiederholungsfehlern</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Das Wiederholen fehlerhafter Tests funktioniert nur mit Generatoren vom Typ "Microsoft.Testing.Platform.Builder.TestApplicationBuilder".</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Wiederholungsmechanismus deaktivieren, wenn der Prozentsatz fehlerhafter Tests größer als der angegebene Wert ist</target>

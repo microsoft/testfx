@@ -3,7 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
-internal interface ITestHostOrchestratorApplicationLifetime : ITestHostOrchestratorExtension
+/// <summary>
+/// Represents the application lifetime for a test host orchestrator.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface ITestHostOrchestratorApplicationLifetime : ITestHostOrchestratorExtension
 {
     /// <summary>
     /// Executes before the orchestrator runs.
