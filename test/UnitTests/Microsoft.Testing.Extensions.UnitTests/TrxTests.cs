@@ -473,11 +473,11 @@ public class TrxTests
         string trxContentsPattern = @"
     <UnitTestResult .* testName=""TestMethod"" .* outcome=""Passed"" .*>
       <ResultFiles>
-        <ResultFile path=.*fileName"" />
+        <ResultFile path=""fileName"" />
       </ResultFiles>
     </UnitTestResult>
  ";
-        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
+        Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
     }
 
     [TestMethod]

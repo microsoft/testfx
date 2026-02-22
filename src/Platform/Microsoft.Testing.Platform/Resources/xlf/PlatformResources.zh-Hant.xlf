@@ -296,6 +296,16 @@
         <target state="translated">失敗，有 {0} 個警告</target>
         <note />
       </trans-unit>
+      <trans-unit id="FileArtifactCopyDataConsumerDescription">
+        <source>Copies per-test file artifacts to the test results directory.</source>
+        <target state="new">Copies per-test file artifacts to the test results directory.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FileArtifactCopyDataConsumerDisplayName">
+        <source>File artifact copy</source>
+        <target state="new">File artifact copy</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FinishedTestSession">
         <source>Finished test session.</source>
         <target state="translated">已完成測試會話。</target>
