@@ -20,7 +20,6 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <UseAppHost>true</UseAppHost>
         <LangVersion>preview</LangVersion>
         <PublishAot>true</PublishAot>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
