@@ -1,17 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
-using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-
-namespace MSTest.Acceptance.IntegrationTests;
+namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
 public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
-    // Source code for a project that validates MSTest supporting Native AOT.
-    // Because MSTest is built on top of Microsoft.Testing.Platform, this also exercises
-    // additional MTP code paths beyond what the MTP-only NativeAOT test covers.
+    // Source code for a minimal NativeAOT test project using a locally defined test framework
+    // (not MSTest) to validate that Microsoft.Testing.Platform itself supports Native AOT.
     private const string SourceCode = """
 #file NativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -28,61 +24,51 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="MSTest.Engine" Version="$MSTestEngineVersion$" />
-        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
-        <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
 
 #file Program.cs
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using Microsoft.Testing.Framework;
-using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
-using NativeAotTests;
-
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
+builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
-#file TestClass1.cs
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace MyTests;
-
-[TestClass]
-public class UnitTest1
+internal class DummyTestFramework : ITestFramework, IDataProducer
 {
-    [TestMethod]
-    public void TestMethod1()
-    {
-    }
+    public string Uid => nameof(DummyTestFramework);
 
-    [TestMethod]
-    [DataRow(0, 1)]
-    public void TestMethod2(int a, int b)
-    {
-    }
+    public string Version => "1.0.0";
 
-    [TestMethod]
-    [DynamicData(nameof(Data))]
-    public void TestMethod3(int a, int b)
-    {
-    }
+    public string DisplayName => nameof(DummyTestFramework);
 
-    public static IEnumerable<object[]> Data { get; }
-        = new[]
+    public string Description => nameof(DummyTestFramework);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
-           new object[] { 1, 2 }
-        };
+            Uid = "Test1",
+            DisplayName = "Test1",
+            Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+        }));
+
+        context.Complete();
+    }
 }
 """;
 
@@ -95,9 +81,7 @@ public class UnitTest1
             "NativeAotTests",
             SourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestEngineVersion$", MSTestEngineVersion),
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent),
             addPublicFeeds: true);
 
         await DotnetCli.RunAsync(
@@ -112,10 +96,9 @@ public class UnitTest1
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 
-        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
         result.AssertExitCodeIs(0);
     }
 
