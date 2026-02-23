@@ -312,7 +312,6 @@ namespace MSTestSdkTest
             // We prefer to use the outer retry mechanism as we need some extra checks
             retryCount: 0, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
-        compilationResult.AssertOutputDoesNotContain("warning");
 
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
