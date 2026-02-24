@@ -28,11 +28,11 @@ public class TrimTests : AcceptanceTestBase<NopAssetFixture>
         <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestEngineVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
-    <!-- Force the trimmer to analyze the full assembly surface, not just reachable code paths -->
+    <!-- Force the trimmer to analyze the full assembly surface, not just reachable code paths.
+         MSTest.SourceGeneration is a source generator with no runtime assembly so it cannot be a trimmer root.
+         MSTest.TestFramework has known reflection-heavy code paths (DynamicData, etc.) that are not yet trim-safe. -->
     <ItemGroup>
-        <TrimmerRootAssembly Include="MSTest.TestFramework" />
         <TrimmerRootAssembly Include="MSTest.Engine" />
-        <TrimmerRootAssembly Include="MSTest.SourceGeneration" />
     </ItemGroup>
 </Project>
 

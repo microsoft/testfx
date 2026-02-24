@@ -41,7 +41,7 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
         // This test forces deep trim analysis of Microsoft.Testing.Platform using TrimmerRootAssembly
         // to catch trim warnings that would not be caught by only testing reachable code paths.
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            $"TrimAnalysisTest_{tfm}",
+            $"MTPTrimAnalysisTest_{tfm}",
             TrimAnalysisSourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm),
