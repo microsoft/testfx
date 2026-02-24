@@ -15,7 +15,7 @@ dotnet add package Microsoft.Testing.Platform.AI
 This package provides:
 
 - **IChatClientProvider abstraction**: a standardized interface for AI providers to integrate with the testing platform
-- **Unified AI access**: allows any extension (crash dump analysis, hang analysis, test failure root cause analysis, etc.) to access AI capabilities without implementing provider-specific logic
+- **Unified AI access**: allows extensions to consume AI capabilities without implementing provider-specific logic
 - **Microsoft.Extensions.AI integration**: leverages the industry-standard [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI) abstractions for broad AI provider compatibility
 
 > **Note**: This package provides the abstractions only. You need an AI provider implementation (such as [Microsoft.Testing.Extensions.AzureFoundry](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry)) to supply the actual AI capabilities.
@@ -25,6 +25,8 @@ This package provides:
 - [Microsoft.Testing.Extensions.AzureFoundry](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry): Azure AI Foundry (Azure OpenAI) provider implementation
 
 ## Documentation
+
+For this package, see <https://github.com/microsoft/testfx/blob/main/docs/microsoft.testing.platform/001-AI-Extensibility.md>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

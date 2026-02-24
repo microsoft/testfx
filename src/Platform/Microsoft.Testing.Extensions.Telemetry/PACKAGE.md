@@ -14,13 +14,15 @@ dotnet add package Microsoft.Testing.Extensions.Telemetry
 
 This package extends Microsoft.Testing.Platform with:
 
-- **Usage telemetry**: collects anonymous usage data to help the Microsoft.Testing.Platform team understand how the platform is used
+- **Usage telemetry**: collects usage data to help understand product usage and prioritize improvements
 - **Opt-out support**: telemetry can be disabled via the `TESTINGPLATFORM_TELEMETRY_OPTOUT` or `DOTNET_CLI_TELEMETRY_OPTOUT` environment variables
-- **Privacy-first**: no personally identifiable information (PII) is collected
+- **Disclosure**: telemetry information is shown on first run, with opt-out guidance
 
 This package is typically **not referenced directly**. Instead, test framework packages (such as [MSTest](https://www.nuget.org/packages/MSTest)) reference it automatically.
 
 ## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-telemetry>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

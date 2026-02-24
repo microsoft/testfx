@@ -18,12 +18,16 @@ This package provides:
 - **Extensibility**: allows third-party extensions to enrich TRX reports with additional information
 
 > **Note**: This package provides only the abstractions. To generate TRX reports, install [Microsoft.Testing.Extensions.TrxReport](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport).
+>
+> For most test projects, you should install `Microsoft.Testing.Extensions.TrxReport` instead of referencing this package directly.
 
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport): TRX report generation extension
 
 ## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-test-reports>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

@@ -16,7 +16,7 @@ This package extends Microsoft.Testing.Platform with:
 
 - **Crash dump collection**: automatically captures a memory dump when the test process crashes
 - **Post-mortem debugging**: collected dumps can be analyzed with tools like Visual Studio, WinDbg, or `dotnet-dump`
-- **CI-friendly**: crash dumps are saved to the test results directory for easy retrieval in CI pipelines
+- **Runtime behavior**: supported for .NET 6+; on .NET Framework this extension is ignored
 
 Enable crash dump collection via the `--crashdump` command line option.
 
@@ -25,6 +25,8 @@ Enable crash dump collection via the `--crashdump` command line option.
 - [Microsoft.Testing.Extensions.HangDump](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump): captures dumps when the test process hangs
 
 ## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-diagnostics#crash-dump>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

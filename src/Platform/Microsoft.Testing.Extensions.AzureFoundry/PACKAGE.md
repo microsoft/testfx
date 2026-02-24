@@ -15,8 +15,8 @@ dotnet add package Microsoft.Testing.Extensions.AzureFoundry
 This package extends Microsoft.Testing.Platform with:
 
 - **Azure AI Foundry integration**: provides an `IChatClientProvider` implementation backed by Azure OpenAI
-- **AI-powered test analysis**: enables extensions to leverage LLMs for intelligent testing activities such as crash dump analysis, hang analysis, flaky test detection and test failure root cause analysis
-- **Automatic configuration**: discovers Azure AI settings from environment variables for seamless CI integration
+- **Provider implementation**: supplies chat client capabilities to extensions using `Microsoft.Testing.Platform.AI`
+- **Environment-based configuration**: reads Azure OpenAI settings from environment variables
 
 This package is a reference implementation of the [Microsoft.Testing.Platform.AI](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI) abstractions.
 
@@ -25,6 +25,8 @@ This package is a reference implementation of the [Microsoft.Testing.Platform.AI
 - [Microsoft.Testing.Platform.AI](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI): AI extensibility abstractions for the testing platform
 
 ## Documentation
+
+For this extension, see <https://github.com/microsoft/testfx/blob/main/docs/microsoft.testing.platform/001-AI-Extensibility.md>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 
