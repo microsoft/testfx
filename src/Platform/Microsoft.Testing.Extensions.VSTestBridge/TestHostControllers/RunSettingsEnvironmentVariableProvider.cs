@@ -69,12 +69,7 @@ internal sealed class RunSettingsEnvironmentVariableProvider : ITestHostEnvironm
         if (runSettingsFilePath is not null)
         {
             using IFileStream fileStream = _fileSystem.NewFileStream(runSettingsFilePath, FileMode.Open, FileAccess.Read);
-#if NETCOREAPP
             _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
-#else
-            using StreamReader streamReader = new(fileStream.Stream);
-            _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync().ConfigureAwait(false));
-#endif
         }
         else if (!RoslynString.IsNullOrEmpty(runSettingsContent))
         {
