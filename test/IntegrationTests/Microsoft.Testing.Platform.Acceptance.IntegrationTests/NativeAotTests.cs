@@ -78,7 +78,7 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            "MTPNativeAotTests",
+            "NativeAotTests",
             SourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent),

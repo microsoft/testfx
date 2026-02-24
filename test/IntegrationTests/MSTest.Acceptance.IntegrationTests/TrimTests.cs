@@ -13,7 +13,7 @@ public class TrimTests : AcceptanceTestBase<NopAssetFixture>
     // all code paths in each assembly, not just those reachable from the test entry point.
     // See https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
     private const string TrimAnalysisSourceCode = """
-#file TrimAnalysisTest.csproj
+#file MSTestTrimAnalysisTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>$TargetFramework$</TargetFramework>
@@ -48,7 +48,7 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
         // This test forces deep trim analysis of MSTest assemblies using TrimmerRootAssembly
         // to catch trim warnings that would not be caught by only testing reachable code paths.
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            $"TrimAnalysisTest_{tfm}",
+            $"MSTestTrimAnalysisTest_{tfm}",
             TrimAnalysisSourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)

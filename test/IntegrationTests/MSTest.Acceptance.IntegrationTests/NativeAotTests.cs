@@ -13,7 +13,7 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
     // Because MSTest is built on top of Microsoft.Testing.Platform, this also exercises
     // additional MTP code paths beyond what the MTP-only NativeAOT test covers.
     private const string SourceCode = """
-#file NativeAotTests.csproj
+#file MSTestNativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>$TargetFramework$</TargetFramework>
@@ -46,7 +46,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
-using NativeAotTests;
+using MSTestNativeAotTests;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
@@ -92,7 +92,7 @@ public class UnitTest1
     public async Task NativeAotTests_WillRunWithExitCodeZero()
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            "NativeAotTests",
+            "MSTestNativeAotTests",
             SourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
@@ -112,7 +112,7 @@ public class UnitTest1
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 
-        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         result.AssertOutputContains($"MSTest.Engine v{MSTestEngineVersion}");
