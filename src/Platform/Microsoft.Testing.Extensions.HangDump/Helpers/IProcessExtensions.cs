@@ -119,7 +119,8 @@ internal static class IProcessExtensions
 
         int timeout = 5_000;
         // This will read the output streams till the end.
-        await ps.WaitForExitAsync(new CancellationTokenSource(timeout).Token).ConfigureAwait(false);
+        using var cts = new CancellationTokenSource(timeout);
+        await ps.WaitForExitAsync(cts.Token).ConfigureAwait(false);
 
         string o = output.ToString();
         string e = err.ToString();
