@@ -7,7 +7,7 @@
     <MSTestAOTVersion>2.0.0-alpha.26103.11</MSTestAOTVersion>
     <PlaywrightVersion>1.58.0</PlaywrightVersion>
     <TestingPlatformVersion>2.1.0</TestingPlatformVersion>
-    <VSTestVersion>18.0.1</VSTestVersion>
+    <VSTestVersion>18.3.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
