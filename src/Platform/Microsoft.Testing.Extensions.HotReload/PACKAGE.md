@@ -16,9 +16,13 @@ This package extends Microsoft.Testing.Platform with:
 
 - **Hot Reload integration**: apply code changes to your test project without restarting the test host
 - **Faster inner loop**: reduces the time between making a change and seeing the test results
-- **IDE integration**: works with Visual Studio and `dotnet watch` for a seamless development experience
+- **Console-mode support**: currently supported in console mode (not in Visual Studio/VS Code Test Explorer)
+
+Enable Hot Reload support by setting `TESTINGPLATFORM_HOTRELOAD_ENABLED=1`.
 
 ## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-hosting#hot-reload>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

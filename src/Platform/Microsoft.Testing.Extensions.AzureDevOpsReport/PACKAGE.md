@@ -1,6 +1,6 @@
 # Microsoft.Testing.Extensions.AzureDevOpsReport
 
-Microsoft.Testing.Extensions.AzureDevOpsReport is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that provides real-time test result reporting for Azure DevOps Pipelines.
+Microsoft.Testing.Extensions.AzureDevOpsReport is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that reports test failures and warnings in Azure DevOps CI builds, with file/line annotations when available.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.AzureDevOpsReport` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport) GitHub repository.
 
@@ -14,15 +14,19 @@ dotnet add package Microsoft.Testing.Extensions.AzureDevOpsReport
 
 This package extends Microsoft.Testing.Platform with:
 
-- **Real-time test reporting**: reports individual test results to Azure DevOps as they complete
-- **Pipeline integration**: automatically detects Azure DevOps Pipelines environments
-- **Test run summaries**: provides rich test result summaries visible in the Azure DevOps Pipeline UI
+- **Azure DevOps reporting**: emits CI errors/warnings for test failures via the Azure DevOps logging commands
+- **Configurable severity**: supports `--report-azdo-severity` (`error` or `warning`)
+- **CI auto-detection**: detects Azure DevOps environments through the `TF_BUILD` variable
+
+Enable Azure DevOps reporting with the `--report-azdo` command line option.
 
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport): TRX report generation for standardized test result files
 
 ## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-test-reports#azure-devops-reports>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

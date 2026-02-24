@@ -17,9 +17,10 @@ This package extends Microsoft.Testing.Platform with:
 - **OpenTelemetry exporter**: exports test execution data (traces, metrics) using the OpenTelemetry protocol (OTLP)
 - **Observability**: integrate test execution data into your existing observability stack (e.g. Jaeger, Prometheus, Grafana)
 - **Standards-based**: leverages the OpenTelemetry .NET SDK for broad compatibility with telemetry backends
-- **Your data, your infrastructure**: telemetry data is sent exclusively to the OTLP endpoint you configure — no data is sent to Microsoft
 
 ## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 
