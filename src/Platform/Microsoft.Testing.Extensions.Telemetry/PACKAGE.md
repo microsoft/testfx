@@ -18,7 +18,7 @@ This package extends Microsoft.Testing.Platform with:
 - **Opt-out support**: telemetry can be disabled via the `TESTINGPLATFORM_TELEMETRY_OPTOUT` or `DOTNET_CLI_TELEMETRY_OPTOUT` environment variables
 - **Disclosure**: telemetry information is shown on first run, with opt-out guidance
 
-This package is typically **not referenced directly**. Instead, test framework packages (such as [MSTest](https://www.nuget.org/packages/MSTest)) reference it automatically.
+This package is an optional, opt-in extension. To enable telemetry when using Microsoft.Testing.Platform (including when running tests with [MSTest](https://www.nuget.org/packages/MSTest)), you must explicitly reference the `Microsoft.Testing.Extensions.Telemetry` package from your test project or from your own test framework or tooling package.
 
 ## Documentation
 
