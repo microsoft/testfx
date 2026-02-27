@@ -75,13 +75,14 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
     [TestMethod]
     // The hosted AzDO agents for Mac OS don't have the required tooling for us to test Native AOT.
     [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
-    public async Task NativeAotTests_WillRunWithExitCodeZero()
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task NativeAotTests_WillRunWithExitCodeZero(string tfm)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            "NativeAotTests",
+            $"NativeAotTests_{tfm}",
             SourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent),
+            .PatchCodeWithReplace("$TargetFramework$", tfm),
             addPublicFeeds: true);
 
         await DotnetCli.RunAsync(
@@ -90,13 +91,13 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"publish {generator.TargetAssetPath} -r {RID}",
+            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", TargetFrameworks.NetCurrent, RID, Verb.publish);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, "NativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         result.AssertExitCodeIs(0);
