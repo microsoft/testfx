@@ -14,7 +14,7 @@ dotnet add package Microsoft.Testing.Extensions.HangDump
 
 This package extends Microsoft.Testing.Platform with:
 
-- **Hang detection**: monitors the test host process and detects when it exceeds a configurable timeout
+- **Hang detection**: monitors the test host process and detects when it exceeds a configurable timeout without any activity.
 - **Dump collection**: captures a memory dump of the hanging process for post-mortem analysis
 - **Deadlock investigation**: collected dumps can be analyzed with tools like Visual Studio, WinDbg, or `dotnet-dump` to diagnose deadlocks and other hang causes
 
