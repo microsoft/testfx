@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -122,7 +122,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.Contains", finalMessage);
+            Assert.ReportAssertFailed("StringAssert.Contains", finalMessage);
         }
     }
 
@@ -219,7 +219,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.StartsWith", finalMessage);
+            Assert.ReportAssertFailed("StringAssert.StartsWith", finalMessage);
         }
     }
 
@@ -316,7 +316,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.EndsWith", finalMessage);
+            Assert.ReportAssertFailed("StringAssert.EndsWith", finalMessage);
         }
     }
 
@@ -371,7 +371,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.Matches", finalMessage);
+            Assert.ReportAssertFailed("StringAssert.Matches", finalMessage);
         }
     }
 
@@ -422,7 +422,7 @@ public sealed class StringAssert
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.DoesNotMatch", finalMessage);
+            Assert.ReportAssertFailed("StringAssert.DoesNotMatch", finalMessage);
         }
     }
 

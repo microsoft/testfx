@@ -1,1 +1,2 @@
 #nullable enable
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
