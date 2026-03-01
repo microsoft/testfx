@@ -80,9 +80,13 @@ public sealed partial class Assert
     public readonly struct AssertAreNotSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
+        private readonly TArgument? _notExpected;
+        private readonly TArgument? _actual;
 
         public AssertAreNotSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend)
         {
+            _notExpected = notExpected;
+            _actual = actual;
             shouldAppend = IsAreNotSameFailing(notExpected, actual);
             if (shouldAppend)
             {
@@ -95,7 +99,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreNotSameFailed(_builder.ToString());
+                ThrowAssertAreNotSameFailed(_notExpected, _actual, _builder.ToString());
             }
         }
 
@@ -187,14 +191,22 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
     {
-        string finalMessage = userMessage;
-        if (expected is ValueType && actual is ValueType)
-        {
-            finalMessage = string.Format(
+        string finalMessage = expected is null
+            ? string.Format(
                 CultureInfo.CurrentCulture,
-                FrameworkMessages.AreSameGivenValues,
-                userMessage);
-        }
+                FrameworkMessages.AreSameExpectedIsNull,
+                userMessage)
+            : actual is null
+                ? string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreSameActualIsNull,
+                    userMessage)
+                : expected is ValueType && actual is ValueType
+                    ? string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.AreSameGivenValues,
+                        userMessage)
+                    : userMessage;
 
         ThrowAssertFailed("Assert.AreSame", finalMessage);
     }
@@ -240,7 +252,7 @@ public sealed partial class Assert
     {
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            ThrowAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
+            ThrowAssertAreNotSameFailed(notExpected, actual, BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
         }
     }
 
@@ -248,6 +260,15 @@ public sealed partial class Assert
         => object.ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreNotSameFailed(string userMessage)
-        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
+    private static void ThrowAssertAreNotSameFailed<T>(T? notExpected, T? actual, string userMessage)
+    {
+        string finalMessage = notExpected is null && actual is null
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreNotSameBothNull,
+                userMessage)
+            : userMessage;
+
+        ThrowAssertFailed("Assert.AreNotSame", finalMessage);
+    }
 }
