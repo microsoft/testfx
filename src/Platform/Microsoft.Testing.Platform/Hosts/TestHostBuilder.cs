@@ -809,12 +809,11 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
         IDataConsumer[] dataConsumerServices = [.. dataConsumersBuilder];
 
-        AsynchronousMessageBus concreteMessageBusService = new(
+        var concreteMessageBusService = new AsynchronousMessageBus(
             dataConsumerServices,
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetTask(),
-            serviceProvider.GetLoggerFactory(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetLoggerFactory());
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
 
