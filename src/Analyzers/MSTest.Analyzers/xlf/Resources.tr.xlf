@@ -642,6 +642,11 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
         <target state="translated">'{0}' test sınıfı geçerli olmalıdır</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldHaveTestMethodMessageFormat_BaseClassHasAssemblyAttributes">
+        <source>Test class '{0}' does not contain any test method (method marked with '[TestMethod]'), but base class '{1}' contains assembly-level attributes. Make the class 'static' if it is only intended to contain assembly-level initialization or cleanup methods, or add a test method.</source>
+        <target state="new">Test class '{0}' does not contain any test method (method marked with '[TestMethod]'), but base class '{1}' contains assembly-level attributes. Make the class 'static' if it is only intended to contain assembly-level initialization or cleanup methods, or add a test method.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
         <target state="translated">'TestContext' özelliği geçerli olmalıdır</target>
@@ -705,13 +710,22 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
-        <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">Test sınıfı en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır.</target>
+        <source>Test classes (classes marked with '[TestClass]' attribute) should contain at least one test method.
+
+A test method is any method marked with '[TestMethod]' or an attribute that derives from it (for example, custom test method attributes). The analyzer also considers test methods defined in base classes.
+
+Exception: A 'static' test class is valid without test methods if it contains at least one method marked with '[AssemblyInitialize]', '[AssemblyCleanup]', '[GlobalTestInitialize]', or '[GlobalTestCleanup]'.
+
+Common scenarios where this rule triggers:
+- The class was intended to be a base class containing shared test setup but was incorrectly marked with '[TestClass]'. Consider removing the '[TestClass]' attribute from base classes.
+- Test methods were accidentally removed or commented out.
+- The class contains only helper methods and should not be marked as a test class.</source>
+        <target state="needs-review-translation">Test sınıfı en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
-        <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">'{0}' test sınıfı en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır</target>
+        <source>Test class '{0}' does not contain any test method (method marked with '[TestMethod]'). Add a test method, or remove '[TestClass]' if this is a base class or not intended to be a test class.</source>
+        <target state="needs-review-translation">'{0}' test sınıfı en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
