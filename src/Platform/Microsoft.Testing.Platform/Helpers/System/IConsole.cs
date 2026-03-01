@@ -26,6 +26,18 @@ internal interface IConsole
     [UnsupportedOSPlatform("tvos")]
     int BufferWidth { get; }
 
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    int WindowHeight { get; }
+
+    [UnsupportedOSPlatform("android")]
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    int WindowWidth { get; }
+
     bool IsOutputRedirected { get; }
 
     [UnsupportedOSPlatform("android")]

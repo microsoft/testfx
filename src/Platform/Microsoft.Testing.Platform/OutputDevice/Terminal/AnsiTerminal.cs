@@ -56,12 +56,12 @@ internal sealed class AnsiTerminal : ITerminal
     public int Width
         => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
             ? int.MaxValue
-            : _console.BufferWidth;
+            : _console.WindowWidth;
 
     public int Height
         => _console.IsOutputRedirected || OperatingSystem.IsBrowser() || OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsTvOS()
             ? int.MaxValue
-            : _console.BufferHeight;
+            : _console.WindowHeight;
 
     public void Append(char value)
     {
