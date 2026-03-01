@@ -746,4 +746,10 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
   </data>
+  <data name="FileArtifactCopyDataConsumerDisplayName" xml:space="preserve">
+    <value>File artifact copy</value>
+  </data>
+  <data name="FileArtifactCopyDataConsumerDescription" xml:space="preserve">
+    <value>Copies per-test file artifacts to the test results directory.</value>
+  </data>
 </root>

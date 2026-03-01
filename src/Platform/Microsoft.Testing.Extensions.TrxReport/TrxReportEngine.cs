@@ -352,19 +352,11 @@ internal sealed partial class TrxReportEngine
         string fileName = artifact.Name;
 
         string destination = Path.Combine(artifactDirectory, fileName);
-        int nameCounter = 0;
 
         // If the file already exists, append a number to the end of the file name
-        while (true)
+        for (int nameCounter = 1; File.Exists(destination) && nameCounter <= 10; nameCounter++)
         {
-            if (File.Exists(destination))
-            {
-                nameCounter++;
-                destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
-                continue;
-            }
-
-            break;
+            destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
         }
 
         await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
@@ -536,7 +528,7 @@ internal sealed partial class TrxReportEngine
                 resultFiles ??= new XElement("ResultFiles");
                 resultFiles.Add(new XElement(
                     "ResultFile",
-                    new XAttribute("path", testFileArtifact.FileInfo.FullName)));
+                    new XAttribute("path", testFileArtifact.FileInfo.Name)));
             }
 
             if (resultFiles is not null)
