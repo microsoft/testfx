@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -42,7 +42,12 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThan failed. Actual value <5> is not greater than expected value <10>. 'lowerBound' expression: '10', 'value' expression: '5'. A Message");
+            .WithMessage("""
+                Assert.IsGreaterThan failed. A Message
+                Expected value to be greater than the specified bound.
+                  lowerBound: 10
+                  value: 5
+                """);
     }
 
     public void IsGreaterThanShouldWorkWithDoubles() =>
@@ -86,7 +91,12 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsGreaterThanOrEqualTo failed. Actual value <5> is not greater than or equal to expected value <10>. 'lowerBound' expression: '10', 'value' expression: '5'. A Message");
+            .WithMessage("""
+                Assert.IsGreaterThanOrEqualTo failed. A Message
+                Expected value to be greater than or equal to the specified bound.
+                  lowerBound: 10
+                  value: 5
+                """);
     }
 
     public void IsGreaterThanOrEqualToShouldWorkWithDoubles() =>
@@ -130,7 +140,12 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThan failed. Actual value <10> is not less than expected value <5>. 'upperBound' expression: '5', 'value' expression: '10'. A Message");
+            .WithMessage("""
+                Assert.IsLessThan failed. A Message
+                Expected value to be less than the specified bound.
+                  upperBound: 5
+                  value: 10
+                """);
     }
 
     public void IsLessThanShouldWorkWithDoubles() =>
@@ -174,7 +189,12 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsLessThanOrEqualTo failed. Actual value <10> is not less than or equal to expected value <5>. 'upperBound' expression: '5', 'value' expression: '10'. A Message");
+            .WithMessage("""
+                Assert.IsLessThanOrEqualTo failed. A Message
+                Expected value to be less than or equal to the specified bound.
+                  upperBound: 5
+                  value: 10
+                """);
     }
 
     public void IsLessThanOrEqualToShouldWorkWithDoubles() =>
@@ -233,7 +253,11 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsPositive failed. Expected value <-5> to be positive. 'value' expression: '-5'. A Message");
+            .WithMessage("""
+                Assert.IsPositive failed. A Message
+                Expected a positive value.
+                  value: -5
+                """);
     }
 
     public void IsPositiveShouldWorkWithDoubles() =>
@@ -298,7 +322,11 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNegative failed. Expected value <5> to be negative. 'value' expression: '5'. A Message");
+            .WithMessage("""
+                Assert.IsNegative failed. A Message
+                Expected a negative value.
+                  value: 5
+                """);
     }
 
     public void IsNegativeShouldWorkWithDoubles() =>
@@ -314,4 +342,232 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    #region IComparable truncation and newline escaping
+
+    public void IsGreaterThan_WithLongExpression_ShouldTruncateExpression()
+    {
+        int aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = 10;
+
+        Action action = () => Assert.IsGreaterThan(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 5);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsGreaterThan failed.
+                Expected value to be greater than the specified bound.
+                  lowerBound (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): 10
+                  value: 5
+                """);
+    }
+
+    public void IsGreaterThan_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var lowerBound = new ComparableWithLongToString(10);
+        var value = new ComparableWithLongToString(5);
+
+        Action action = () => Assert.IsGreaterThan(lowerBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsGreaterThan failed.
+                Expected value to be greater than the specified bound.
+                  lowerBound: {new string('V', 256)}... (300 chars)
+                  value: {new string('V', 256)}... (300 chars)
+                """);
+    }
+
+    public void IsGreaterThan_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var lowerBound = new ComparableWithNewlineToString(10);
+        var value = new ComparableWithNewlineToString(5);
+
+        Action action = () => Assert.IsGreaterThan(lowerBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsGreaterThan failed.
+                Expected value to be greater than the specified bound.
+                  lowerBound: line1\r\nline2
+                  value: line1\r\nline2
+                """);
+    }
+
+    public void IsGreaterThanOrEqualTo_WithLongExpression_ShouldTruncateExpression()
+    {
+        int aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = 10;
+
+        Action action = () => Assert.IsGreaterThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 5);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsGreaterThanOrEqualTo failed.
+                Expected value to be greater than or equal to the specified bound.
+                  lowerBound (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): 10
+                  value: 5
+                """);
+    }
+
+    public void IsGreaterThanOrEqualTo_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var lowerBound = new ComparableWithLongToString(10);
+        var value = new ComparableWithLongToString(5);
+
+        Action action = () => Assert.IsGreaterThanOrEqualTo(lowerBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsGreaterThanOrEqualTo failed.
+                Expected value to be greater than or equal to the specified bound.
+                  lowerBound: {new string('V', 256)}... (300 chars)
+                  value: {new string('V', 256)}... (300 chars)
+                """);
+    }
+
+    public void IsGreaterThanOrEqualTo_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var lowerBound = new ComparableWithNewlineToString(10);
+        var value = new ComparableWithNewlineToString(5);
+
+        Action action = () => Assert.IsGreaterThanOrEqualTo(lowerBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsGreaterThanOrEqualTo failed.
+                Expected value to be greater than or equal to the specified bound.
+                  lowerBound: line1\r\nline2
+                  value: line1\r\nline2
+                """);
+    }
+
+    public void IsLessThan_WithLongExpression_ShouldTruncateExpression()
+    {
+        int aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = 5;
+
+        Action action = () => Assert.IsLessThan(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 10);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsLessThan failed.
+                Expected value to be less than the specified bound.
+                  upperBound (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): 5
+                  value: 10
+                """);
+    }
+
+    public void IsLessThan_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var upperBound = new ComparableWithLongToString(5);
+        var value = new ComparableWithLongToString(10);
+
+        Action action = () => Assert.IsLessThan(upperBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsLessThan failed.
+                Expected value to be less than the specified bound.
+                  upperBound: {new string('V', 256)}... (300 chars)
+                  value: {new string('V', 256)}... (300 chars)
+                """);
+    }
+
+    public void IsLessThan_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var upperBound = new ComparableWithNewlineToString(5);
+        var value = new ComparableWithNewlineToString(10);
+
+        Action action = () => Assert.IsLessThan(upperBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsLessThan failed.
+                Expected value to be less than the specified bound.
+                  upperBound: line1\r\nline2
+                  value: line1\r\nline2
+                """);
+    }
+
+    public void IsLessThanOrEqualTo_WithLongExpression_ShouldTruncateExpression()
+    {
+        int aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = 5;
+
+        Action action = () => Assert.IsLessThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 10);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsLessThanOrEqualTo failed.
+                Expected value to be less than or equal to the specified bound.
+                  upperBound (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): 5
+                  value: 10
+                """);
+    }
+
+    public void IsLessThanOrEqualTo_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var upperBound = new ComparableWithLongToString(5);
+        var value = new ComparableWithLongToString(10);
+
+        Action action = () => Assert.IsLessThanOrEqualTo(upperBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsLessThanOrEqualTo failed.
+                Expected value to be less than or equal to the specified bound.
+                  upperBound: {new string('V', 256)}... (300 chars)
+                  value: {new string('V', 256)}... (300 chars)
+                """);
+    }
+
+    public void IsLessThanOrEqualTo_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var upperBound = new ComparableWithNewlineToString(5);
+        var value = new ComparableWithNewlineToString(10);
+
+        Action action = () => Assert.IsLessThanOrEqualTo(upperBound, value);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsLessThanOrEqualTo failed.
+                Expected value to be less than or equal to the specified bound.
+                  upperBound: line1\r\nline2
+                  value: line1\r\nline2
+                """);
+    }
+
+    public void IsPositive_WithLongExpression_ShouldTruncateExpression()
+    {
+        int aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = -5;
+
+        Action action = () => Assert.IsPositive(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsPositive failed.
+                Expected a positive value.
+                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): -5
+                """);
+    }
+
+    public void IsNegative_WithLongExpression_ShouldTruncateExpression()
+    {
+        int aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = 5;
+
+        Action action = () => Assert.IsNegative(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsNegative failed.
+                Expected a negative value.
+                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): 5
+                """);
+    }
+
+    #endregion
+
+    private sealed class ComparableWithLongToString : IComparable<ComparableWithLongToString>
+    {
+        private readonly int _value;
+
+        public ComparableWithLongToString(int value) => _value = value;
+
+        public int CompareTo(ComparableWithLongToString? other) => _value.CompareTo(other?._value ?? 0);
+
+        public override string ToString() => new string('V', 300);
+    }
+
+    private sealed class ComparableWithNewlineToString : IComparable<ComparableWithNewlineToString>
+    {
+        private readonly int _value;
+
+        public ComparableWithNewlineToString(int value) => _value = value;
+
+        public int CompareTo(ComparableWithNewlineToString? other) => _value.CompareTo(other?._value ?? 0);
+
+        public override string ToString() => "line1\r\nline2";
+    }
 }

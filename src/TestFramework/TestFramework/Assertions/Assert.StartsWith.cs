@@ -76,9 +76,11 @@ public sealed partial class Assert
         CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix");
         if (!value.StartsWith(expectedPrefix, comparisonType))
         {
-            string userMessage = BuildUserMessageForExpectedPrefixExpressionAndValueExpression(message, expectedPrefixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, expectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.StartsWith", finalMessage);
+            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
+            msg += Environment.NewLine + FrameworkMessages.StartsWithFailNew;
+            msg += Environment.NewLine + FormatParameter(nameof(expectedPrefix), expectedPrefixExpression, expectedPrefix)
+                     + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+            ThrowAssertFailed("Assert.StartsWith", msg);
         }
     }
 
@@ -148,9 +150,11 @@ public sealed partial class Assert
         CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix");
         if (value.StartsWith(notExpectedPrefix, comparisonType))
         {
-            string userMessage = BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(message, notExpectedPrefixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotStartWithFail, value, notExpectedPrefix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotStartWith", finalMessage);
+            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
+            msg += Environment.NewLine + FrameworkMessages.DoesNotStartWithFailNew;
+            msg += Environment.NewLine + FormatParameter(nameof(notExpectedPrefix), notExpectedPrefixExpression, notExpectedPrefix)
+                     + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+            ThrowAssertFailed("Assert.DoesNotStartWith", msg);
         }
     }
 }

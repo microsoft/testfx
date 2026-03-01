@@ -38,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreSameFailed(_expected, _actual, _builder.ToString());
+                ThrowAssertAreSameFailed(_expected, _actual, _builder.ToString(), expectedExpression, actualExpression);
             }
         }
 
@@ -80,9 +79,13 @@ public sealed partial class Assert
     public readonly struct AssertAreNotSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
+        private readonly TArgument? _notExpected;
+        private readonly TArgument? _actual;
 
         public AssertAreNotSameInterpolatedStringHandler(int literalLength, int formattedCount, TArgument? notExpected, TArgument? actual, out bool shouldAppend)
         {
+            _notExpected = notExpected;
+            _actual = actual;
             shouldAppend = IsAreNotSameFailing(notExpected, actual);
             if (shouldAppend)
             {
@@ -94,8 +97,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreNotSameFailed(_builder.ToString());
+                ThrowAssertAreNotSameFailed(_notExpected, _actual, _builder.ToString(), notExpectedExpression, actualExpression);
             }
         }
 
@@ -177,26 +179,44 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ThrowAssertAreSameFailed(expected, actual, userMessage);
+        ThrowAssertAreSameFailed(expected, actual, message, expectedExpression, actualExpression);
     }
 
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
         => !object.ReferenceEquals(expected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
+    private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
-        string finalMessage = userMessage;
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+
+        // When both values have the same string representation, include hash codes
+        // to help the user understand they are different object instances.
+        string expectedFormatted = FormatValue(expected);
+        string actualFormatted = FormatValue(actual);
+        bool sameToString = expected is not null && actual is not null && expectedFormatted == actualFormatted;
+        string expectedValue = sameToString
+            ? expectedFormatted + $" (HashCode={RuntimeHelpers.GetHashCode(expected!)})"
+            : expectedFormatted;
+        string actualValue = sameToString
+            ? actualFormatted + $" (HashCode={RuntimeHelpers.GetHashCode(actual!)})"
+            : actualFormatted;
+
+        // If value types, add diagnostic hint before parameter details
         if (expected is ValueType && actual is ValueType)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreSameGivenValues,
-                userMessage);
+            message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreSameGivenValues, string.Empty).TrimEnd();
+        }
+        else
+        {
+            message += Environment.NewLine + FrameworkMessages.AreSameFailNew;
         }
 
-        ThrowAssertFailed("Assert.AreSame", finalMessage);
+        // Check expression redundancy against the base formatted value (without hashcode)
+        message += Environment.NewLine + FormatParameterWithExpressionCheck(nameof(expected), expectedExpression, expectedFormatted, expectedValue)
+                 + Environment.NewLine + FormatParameterWithExpressionCheck(nameof(actual), actualExpression, actualFormatted, actualValue);
+
+        ThrowAssertFailed("Assert.AreSame", message);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
@@ -240,7 +260,7 @@ public sealed partial class Assert
     {
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            ThrowAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
+            ThrowAssertAreNotSameFailed(notExpected, actual, message, notExpectedExpression, actualExpression);
         }
     }
 
@@ -248,6 +268,12 @@ public sealed partial class Assert
         => object.ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreNotSameFailed(string userMessage)
-        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
+    private static void ThrowAssertAreNotSameFailed<T>(T? notExpected, T? actual, string? userMessage, string notExpectedExpression, string actualExpression)
+    {
+        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
+        message += Environment.NewLine + FrameworkMessages.AreNotSameFailNew;
+        message += Environment.NewLine + FormatParameter(nameof(notExpected), notExpectedExpression, notExpected)
+                 + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
+        ThrowAssertFailed("Assert.AreNotSame", message);
+    }
 }

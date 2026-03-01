@@ -17,46 +17,20 @@
         <target state="translated">Un élément dupliqué a été trouvé : &lt;{1}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreEqualFailMsg">
-        <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Attendu : &lt;{1}&gt;, Réel : &lt;{2}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualDeltaFailMsg">
-        <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Différence attendue non supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualCaseFailMsg">
-        <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Attendu :&lt;{1}&gt;. La casse est différente pour la valeur réelle :&lt;{2}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualDifferentTypesFailMsg">
-        <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="translated">Attendu : &lt;{1} ({2})&gt;, Réel : &lt;{3} ({4})&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="AreEqualStringDiffFailMsg">
-        <source>{0}{1}
-{2}
-{3}
-{4}</source>
-        <target state="translated">{0}{1}
-{2}
-{3}
-{4}</target>
+      <trans-unit id="AreEqualCaseDiffersMsg">
+        <source>Case differs.</source>
+        <target state="new">Case differs.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffExpectedPrefix">
-        <source>Expected: </source>
-        <target state="translated">Attendu : </target>
-        <note></note>
+      <trans-unit id="AreEqualDeltaNoGreaterThanFailMsg">
+        <source>Expected a difference no greater than &lt;{0}&gt;.</source>
+        <target state="new">Expected a difference no greater than &lt;{0}&gt;.</target>
+        <note />
       </trans-unit>
-      <trans-unit id="AreEqualStringDiffActualPrefix">
-        <source>But was:  </source>
-        <target state="translated">Mais c'était :  </target>
-        <note></note>
+      <trans-unit id="AreEqualFailNew">
+        <source>Expected values to be equal.</source>
+        <target state="new">Expected values to be equal.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
         <source>String lengths are both {0} but differ at index {1}.</source>
@@ -68,15 +42,25 @@
         <target state="translated">La longueur de chaîne attendue {0} mais était {1}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreNotEqualFailMsg">
-        <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Toute valeur attendue sauf :&lt;{1}&gt;. Réel :&lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualDeltaGreaterThanFailMsg">
+        <source>Expected a difference greater than &lt;{0}&gt;.</source>
+        <target state="new">Expected a difference greater than &lt;{0}&gt;.</target>
+        <note />
       </trans-unit>
-      <trans-unit id="AreNotEqualDeltaFailMsg">
-        <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Différence attendue supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="AreNotEqualFailNew">
+        <source>Expected values to differ.</source>
+        <target state="new">Expected values to differ.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreNotSameFailNew">
+        <source>Expected references to be different.</source>
+        <target state="new">Expected references to be different.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSameFailNew">
+        <source>Expected references to be the same.</source>
+        <target state="new">Expected references to be the same.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
@@ -118,21 +102,6 @@
         <target state="translated">Les deux collections contiennent les mêmes éléments. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
-        <source>'{0}' expression: '{1}'.</source>
-        <target state="translated">« {0} » expression : « {1} ».</target>
-        <note>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</note>
-      </trans-unit>
-      <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
-        <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
-        <target state="translated">expression « {0} », « {1} », expression « {2} », « {3} », expression « {4} », « {5} ».</target>
-        <note>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
-      </trans-unit>
-      <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
-        <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
-        <target state="translated">expression « {0} » : « {1} », expression « {2} » : « {3} ».</target>
-        <note>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</note>
-      </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
         <target state="translated">{0}. {1}</target>
@@ -143,39 +112,44 @@
         <target state="translated">La chaîne '{0}' ne contient pas la chaîne '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ContainsItemFailMsg">
-        <source>Expected collection to contain the specified item. {0}</source>
-        <target state="translated">Collection attendue pour contenir l’élément spécifié. {0}</target>
+      <trans-unit id="ContainsItemFailNew">
+        <source>Expected collection to contain the specified item.</source>
+        <target state="new">Expected collection to contain the specified item.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ContainsPredicateFailMsg">
-        <source>Expected at least one item to match the predicate. {0}</source>
-        <target state="translated">Au moins un élément doit correspondre au prédicat. {0}</target>
+      <trans-unit id="ContainsPredicateFailNew">
+        <source>Expected at least one item to match the predicate.</source>
+        <target state="new">Expected at least one item to match the predicate.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ContainsSingleFailMsg">
-        <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
-        <target state="translated">Collection attendue pour contenir exactement un élément mais {1} élément(s) trouvé(s). {0}</target>
+      <trans-unit id="ContainsSingleFailNew">
+        <source>Expected collection to contain exactly one element but found {0} element(s).</source>
+        <target state="new">Expected collection to contain exactly one element but found {0} element(s).</target>
         <note />
       </trans-unit>
-      <trans-unit id="ContainsSingleMatchFailMsg">
-        <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
-        <target state="translated">Un seul élément était attendu pour correspondre au prédicat, mais {1} élément(s) trouvé(s). {0}</target>
+      <trans-unit id="ContainsSingleMatchFailNew">
+        <source>Expected exactly one item to match the predicate but found {0} item(s).</source>
+        <target state="new">Expected exactly one item to match the predicate but found {0} item(s).</target>
         <note />
       </trans-unit>
-      <trans-unit id="DoesNotContainFail">
-        <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="translated">La chaîne « {0} » contient la chaîne « {1} ». {2}.</target>
+      <trans-unit id="ContainsStringFailNew">
+        <source>String does not contain the expected substring.</source>
+        <target state="new">String does not contain the expected substring.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DoesNotContainItemFailMsg">
-        <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="translated">Collection attendue pour ne pas contenir l’élément spécifié. {0}</target>
+      <trans-unit id="DoesNotContainItemFailNew">
+        <source>Expected collection to not contain the specified item.</source>
+        <target state="new">Expected collection to not contain the specified item.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DoesNotContainPredicateFailMsg">
-        <source>Expected no items to match the predicate. {0}</source>
-        <target state="translated">Aucun élément ne doit correspondre au prédicat. {0}</target>
+      <trans-unit id="DoesNotContainPredicateFailNew">
+        <source>Expected no items to match the predicate.</source>
+        <target state="new">Expected no items to match the predicate.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotContainStringFailNew">
+        <source>String contains the unexpected substring.</source>
+        <target state="new">String contains the unexpected substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -183,9 +157,24 @@
         <target state="translated">La chaîne '{0}' se termine par la chaîne '{1}'. {2}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoesNotEndWithFailNew">
+        <source>String ends with unexpected suffix.</source>
+        <target state="new">String ends with unexpected suffix.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotMatchRegexFailNew">
+        <source>String matches pattern but should not.</source>
+        <target state="new">String matches pattern but should not.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' commence par la chaîne '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoesNotStartWithFailNew">
+        <source>String starts with unexpected prefix.</source>
+        <target state="new">String starts with unexpected prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -237,9 +226,14 @@ Réel : {2}</target>
         <target state="translated">Échec de {0}. {1}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="HasCountFailMsg">
-        <source>Expected collection of size {1}. Actual: {2}. {0}</source>
-        <target state="translated">Collection de tailles attendue {1}. Réel : {2}. {0}</target>
+      <trans-unit id="EndsWithFailNew">
+        <source>String does not end with expected suffix.</source>
+        <target state="new">String does not end with expected suffix.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HasCountFailNew">
+        <source>Expected collection to have the specified number of elements.</source>
+        <target state="new">Expected collection to have the specified number of elements.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
@@ -252,9 +246,29 @@ Réel : {2}</target>
         <target state="translated">URL de ticket GitHub non valide</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInRangeFail">
-        <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="translated">La valeur « {0} » n'est pas dans la plage attendue [{1}..{2}]. {3}</target>
+      <trans-unit id="IsExactInstanceOfTypeFailNew">
+        <source>Expected value to be exactly of the specified type.</source>
+        <target state="new">Expected value to be exactly of the specified type.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsFalseFailNew">
+        <source>Expected condition to be false.</source>
+        <target state="new">Expected condition to be false.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanFailNew">
+        <source>Expected value to be greater than the specified bound.</source>
+        <target state="new">Expected value to be greater than the specified bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsGreaterThanOrEqualToFailNew">
+        <source>Expected value to be greater than or equal to the specified bound.</source>
+        <target state="new">Expected value to be greater than or equal to the specified bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsInRangeFailNew">
+        <source>Value is not within the expected range.</source>
+        <target state="new">Value is not within the expected range.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
@@ -262,39 +276,79 @@ Réel : {2}</target>
         <target state="translated">La valeur maximale doit être supérieure ou égale à la valeur minimale.</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsInstanceOfFailMsg">
-        <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="translated">{0}Type attendu :&lt;{1}&gt;. Type réel :&lt;{2}&gt;.</target>
-        <note></note>
+      <trans-unit id="IsInstanceOfTypeFailNew">
+        <source>Expected value to be of the specified type.</source>
+        <target state="new">Expected value to be of the specified type.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsLessThanFailNew">
+        <source>Expected value to be less than the specified bound.</source>
+        <target state="new">Expected value to be less than the specified bound.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsLessThanOrEqualToFailNew">
+        <source>Expected value to be less than or equal to the specified bound.</source>
+        <target state="new">Expected value to be less than or equal to the specified bound.</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' ne correspond pas au modèle '{1}'. {2}</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsNotEmptyFailMsg">
-        <source>Expected collection to contain any item but it is empty. {0}</source>
-        <target state="translated">La collection doit contenir n’importe quel élément, mais elle est vide. {0}</target>
+      <trans-unit id="IsNegativeFailNew">
+        <source>Expected a negative value.</source>
+        <target state="new">Expected a negative value.</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsNotInstanceOfFailMsg">
-        <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Type incorrect : &lt;{1}&gt;, Type réel : &lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="IsNotEmptyFailNew">
+        <source>Expected collection to contain any item but it is empty.</source>
+        <target state="new">Expected collection to contain any item but it is empty.</target>
+        <note />
       </trans-unit>
-      <trans-unit id="IsExactInstanceOfFailMsg">
-        <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="translated">{0} Type exact attendu :&lt;{1}&gt;. Type réel :&lt;{2}&gt;.</target>
-        <note></note>
+      <trans-unit id="IsNotExactInstanceOfTypeFailNew">
+        <source>Value should not be exactly of the specified type.</source>
+        <target state="new">Value should not be exactly of the specified type.</target>
+        <note />
       </trans-unit>
-      <trans-unit id="IsNotExactInstanceOfFailMsg">
-        <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Type exact incorrect :&lt;{1}&gt;. Type réel :&lt;{2}&gt;. {0}</target>
-        <note></note>
+      <trans-unit id="IsNotInstanceOfTypeFailNew">
+        <source>Value should not be of the specified type.</source>
+        <target state="new">Value should not be of the specified type.</target>
+        <note />
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
         <target state="translated">La chaîne '{0}' correspond au modèle '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNotNullFailNew">
+        <source>Expected a non-null value.</source>
+        <target state="new">Expected a non-null value.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsNullFailNew">
+        <source>Expected value to be null.</source>
+        <target state="new">Expected value to be null.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsPositiveFailNew">
+        <source>Expected a positive value.</source>
+        <target state="new">Expected a positive value.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsTrueFailNew">
+        <source>Expected condition to be true.</source>
+        <target state="new">Expected condition to be true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MatchesRegexFailNew">
+        <source>String does not match expected pattern.</source>
+        <target state="new">String does not match expected pattern.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoExceptionThrownNew">
+        <source>No exception was thrown.</source>
+        <target state="new">No exception was thrown.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -358,20 +412,15 @@ Réel : {2}</target>
         <target state="translated">(objet)</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="StartsWithFailNew">
+        <source>String does not start with expected prefix.</source>
+        <target state="new">String does not start with expected prefix.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
         <target state="translated">(Échec de la réception du message pour une exception de type {0} en raison d'une exception.)</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="NoExceptionThrown">
-        <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="translated">Type d’exception attendu :&lt;{1}&gt; mais aucune exception n’a été levée. {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WrongExceptionThrown">
-        <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Type d’exception attendu :&lt;{1}&gt;. Type d’exception réel :&lt;{2}&gt;. {0}</target>
-        <note />
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>
@@ -396,36 +445,6 @@ Réel : {2}</target>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
         <target state="translated">La propriété ou la méthode {0} sur {1} retourne un IEnumerable&lt;object[]&gt; vide.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">La valeur réelle &lt;{2}&gt; n’est pas supérieure à la valeur attendue &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsGreaterThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not greater than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">La valeur réelle &lt;{2}&gt; n’est pas supérieure ou égale à la valeur attendue &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">La valeur réelle &lt;{2}&gt; n’est pas inférieure à la valeur attendue &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsLessThanOrEqualToFailMsg">
-        <source>Actual value &lt;{2}&gt; is not less than or equal to expected value &lt;{1}&gt;. {0}</source>
-        <target state="translated">La valeur réelle &lt;{2}&gt; n’est pas inférieure ou égale à la valeur attendue &lt;{1}&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsPositiveFailMsg">
-        <source>Expected value &lt;{1}&gt; to be positive. {0}</source>
-        <target state="translated">La valeur attendue &lt;{1}&gt; doit être positive. {0}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="IsNegativeFailMsg">
-        <source>Expected value &lt;{1}&gt; to be negative. {0}</source>
-        <target state="translated">La valeur attendue &lt;{1}&gt; doit être négative. {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
@@ -457,6 +476,11 @@ Réel : {2}</target>
         <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
         <target state="translated">CollectionAssert.ReferenceEquals ne doit pas être utilisé pour les assertions. Utilisez plutôt les méthodes CollectionAssert ou Assert.AreSame &amp; overloads.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrownNew">
+        <source>Wrong exception type was thrown.</source>
+        <target state="new">Wrong exception type was thrown.</target>
+        <note />
       </trans-unit>
     </body>
   </file>

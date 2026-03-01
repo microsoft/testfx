@@ -12,6 +12,6 @@ public partial class AssertTests
     {
         Action action = () => Assert.Inconclusive("{");
         action.Should().Throw<AssertInconclusiveException>()
-            .And.Message.Should().Contain("Assert.Inconclusive failed. {");
+            .WithMessage("Assert.Inconclusive failed. {");
     }
 }
