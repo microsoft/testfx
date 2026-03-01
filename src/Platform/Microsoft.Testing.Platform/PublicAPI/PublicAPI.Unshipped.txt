@@ -5,3 +5,13 @@
 Microsoft.Testing.Platform.Extensions.TestHost.ITestHostApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator.OrchestrateTestHostExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostOrchestrator.get -> Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager!
+[TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager
+[TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestrator!>! factory) -> void
+[TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime!>! testHostOrchestratorApplicationLifetimeFactory) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime.BeforeRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorExtension

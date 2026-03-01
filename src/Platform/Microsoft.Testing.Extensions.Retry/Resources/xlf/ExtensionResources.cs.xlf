@@ -60,11 +60,6 @@ Přesouvání souborů prostředků posledního pokusu do výchozího adresáře
         <target state="translated">Opakovat neúspěšné testy</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Opakování neúspěšných testů funguje pouze s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Zakázat mechanismus opakování, pokud je procento neúspěšných testů větší než zadaná hodnota</target>

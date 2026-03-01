@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -26,6 +25,7 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
@@ -55,7 +55,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public IToolsManager Tools { get; } = new ToolsManager();
 
-    public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
+    public ITestHostOrchestratorManager TestHostOrchestrator { get; } = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
 
     public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,
@@ -407,15 +407,15 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
-        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider).ConfigureAwait(false);
+        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await ((TestHostOrchestratorManager)TestHostOrchestrator).BuildAsync(serviceProvider).ConfigureAwait(false);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
             await proxyOutputDevice.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
             // Build and register the test application lifecycle callbacks.
-            ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
-                await ((TestHostOrchestratorManager)TestHostOrchestratorManager).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
+            Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
+                await ((TestHostOrchestratorManager)TestHostOrchestrator).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
             serviceProvider.AddServices(orchestratorLifetimes);
 
             builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(TestHostOrchestratorHost));
