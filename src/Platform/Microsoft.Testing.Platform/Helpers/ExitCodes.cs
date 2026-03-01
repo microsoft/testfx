@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Helpers;
 
 /// <summary>
@@ -9,8 +11,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// </summary>
 // TODO: Consider changing this to an enum, and rename to 'ExitCode' to follow enum naming convention.
 // Being an enum makes it easier to do 'Enum.IsDefined' checks to validate if an exit code is a known MTP exit code.
-// Note: Changing this to enum is binary breaking for extensions that consume this via IVT :/
-// This should have been marked as Embedded and source-linked instead.
+[Embedded]
 internal static class ExitCodes
 {
     public const int Success = 0;
