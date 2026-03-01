@@ -169,7 +169,7 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
+            (XElement testDefinitions, XElement testEntries, string uncategorizedTestId, bool hasFailedTests) = await AddResultsAsync(testAppModule, testRun, runDeploymentRoot).ConfigureAwait(false);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun, uncategorizedTestId);
@@ -346,25 +346,40 @@ internal sealed partial class TrxReportEngine
         await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
     }
 
+    private async Task<string> CopyTestResultFileAndReturnRelativePathAsync(FileInfo artifact, string runDeploymentRoot, string executionId)
+    {
+        string testResultDirectory = Path.Combine(_configuration.GetTestResultDirectory(), runDeploymentRoot, "In", executionId, _environment.MachineName);
+        if (!Directory.Exists(testResultDirectory))
+        {
+            Directory.CreateDirectory(testResultDirectory);
+        }
+
+        string fileName = artifact.Name;
+
+        string destination = Path.Combine(testResultDirectory, fileName);
+
+        // If the file already exists, append a number to the end of the file name
+        for (int nameCounter = 1; File.Exists(destination) && nameCounter <= 10; nameCounter++)
+        {
+            destination = Path.Combine(testResultDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
+        }
+
+        await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
+
+        return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
+    }
+
     private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
     {
         string artifactDirectory = CreateOrGetTrxArtifactDirectory(runDeploymentRoot);
         string fileName = artifact.Name;
 
         string destination = Path.Combine(artifactDirectory, fileName);
-        int nameCounter = 0;
 
         // If the file already exists, append a number to the end of the file name
-        while (true)
+        for (int nameCounter = 1; File.Exists(destination) && nameCounter <= 10; nameCounter++)
         {
-            if (File.Exists(destination))
-            {
-                nameCounter++;
-                destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
-                continue;
-            }
-
-            break;
+            destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
         }
 
         await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
@@ -412,17 +427,17 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private void AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
+    private async Task<(XElement TestDefinitions, XElement TestEntries, string UncategorizedTestId, bool HasFailedTests)> AddResultsAsync(string testAppModule, XElement testRun, string runDeploymentRoot)
     {
         var results = new XElement("Results");
 
         // Duplicate test ids are not allowed inside the TestDefinitions element.
-        testDefinitions = new XElement("TestDefinitions");
+        var testDefinitions = new XElement("TestDefinitions");
         var uniqueTestDefinitionTestIds = new HashSet<string>();
 
-        testEntries = new XElement("TestEntries");
-        uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
-        hasFailedTests = false;
+        var testEntries = new XElement("TestEntries");
+        string uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
+        bool hasFailedTests = false;
         foreach (TestNodeUpdateMessage nodeMessage in _testNodeUpdatedMessages)
         {
             TestNode testNode = nodeMessage.TestNode;
@@ -534,9 +549,11 @@ internal sealed partial class TrxReportEngine
             foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
                 resultFiles ??= new XElement("ResultFiles");
+                string relativePath = await CopyTestResultFileAndReturnRelativePathAsync(
+                    testFileArtifact.FileInfo, runDeploymentRoot, executionId).ConfigureAwait(false);
                 resultFiles.Add(new XElement(
                     "ResultFile",
-                    new XAttribute("path", testFileArtifact.FileInfo.FullName)));
+                    new XAttribute("path", relativePath)));
             }
 
             if (resultFiles is not null)
@@ -666,6 +683,8 @@ internal sealed partial class TrxReportEngine
         }
 
         testRun.Add(results);
+
+        return (testDefinitions, testEntries, uncategorizedTestId, hasFailedTests);
     }
 
     private static string AddTestSettings(XElement testRun, string testRunName)
