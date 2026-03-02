@@ -213,7 +213,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
     {
         // This is only run in TestHost, and not TestHostController.
         // The current implementation tries to keep the TRX generation logic always in-process.
-        // However, in case of a crash, the TestHostController takes this responsibility over (when running in out-of-proc mode).
+        // However, in case of a crash, the TestHostController takes over this responsibility (when running in out-of-proc mode).
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
