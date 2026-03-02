@@ -137,13 +137,12 @@ internal sealed class TrxProcessLifetimeHandler :
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         // This is only run in TestHostController.
-        // We group artifacts by producers.
-        // The problem here is:
-        // 1. TestHost (in case of graceful exit), will have always written TRX file.
-        // 2. TestHost doesn't know about artifacts that are published in TestHostController.
-        // 3. The written TRX doesn't include those artifacts that are published in TestHostController.
-        // We handle this by keeping track of those artifacts that are published in TestHostController, and
-        // then we **modify** the TRX file that was already written by TestHost so that we include those artifacts.
+        // We group artifacts by producer.
+        // The scenario is:
+        // 1. On graceful exit, TestHost will already have written the TRX file.
+        // 2. The TRX written by TestHost does not include artifacts published in TestHostController.
+        // We address this by tracking those artifacts in TestHostController and then modifying the TRX file
+        // written by TestHost so that it also includes those artifacts.
         if (!_fileArtifacts.TryGetValue(dataProducer, out List<FileArtifact>? fileArtifacts))
         {
             fileArtifacts = [];
