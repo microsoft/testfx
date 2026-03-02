@@ -35,6 +35,7 @@ internal sealed class TrxProcessLifetimeHandler :
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IMessageBus _messageBus;
+    private readonly IFileSystem _fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
@@ -55,6 +56,7 @@ internal sealed class TrxProcessLifetimeHandler :
         IEnvironment environment,
         ILoggerFactory loggerFactory,
         IMessageBus messageBus,
+        IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IConfiguration configuration,
         IClock clock,
@@ -65,6 +67,7 @@ internal sealed class TrxProcessLifetimeHandler :
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _messageBus = messageBus;
+        _fileSystem = fileSystem;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _configuration = configuration;
         _clock = clock;
@@ -176,7 +179,7 @@ internal sealed class TrxProcessLifetimeHandler :
         // TODO: We should also be recording all test results prior to crash.
         if (!testHostProcessInformation.HasExitedGracefully)
         {
-            TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
+            var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
                 _clock, [], 0, 0, 0, 0,
                 artifacts,
                 adapterSupportTrxCapability: null,
@@ -212,7 +215,7 @@ internal sealed class TrxProcessLifetimeHandler :
         // Add attachments to the trx.
         if (_fileArtifacts.Count > 0)
         {
-            TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
+            var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
                _clock, [], 0, 0, 0, 0,
                artifacts,
                false,

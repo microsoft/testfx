@@ -36,6 +36,7 @@ public static class TrxReportExtensions
                 new TrxReportGenerator(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetRequiredService<IFileSystem>(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetMessageBus(),
                 serviceProvider.GetSystemClock(),
@@ -86,6 +87,7 @@ public static class TrxReportExtensions
                     serviceProvider.GetEnvironment(),
                     loggerFactory,
                     serviceProvider.GetMessageBus(),
+                    serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetSystemClock(),

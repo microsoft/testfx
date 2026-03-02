@@ -28,6 +28,7 @@ internal sealed class TrxReportGenerator :
 {
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptionsService;
+    private readonly IFileSystem _fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IMessageBus _messageBus;
     private readonly IClock _clock;
@@ -52,6 +53,7 @@ internal sealed class TrxReportGenerator :
     public TrxReportGenerator(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptionsService,
+        IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IMessageBus messageBus,
         IClock clock,
@@ -66,6 +68,7 @@ internal sealed class TrxReportGenerator :
     {
         _configuration = configuration;
         _commandLineOptionsService = commandLineOptionsService;
+        _fileSystem = fileSystem;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _messageBus = messageBus;
         _clock = clock;
@@ -227,7 +230,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
             ApplicationStateGuard.Ensure(_testStartTime is not null);
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-            TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
+            var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
                 _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
                 _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
             (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
