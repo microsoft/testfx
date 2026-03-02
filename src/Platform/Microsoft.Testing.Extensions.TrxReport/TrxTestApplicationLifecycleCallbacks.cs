@@ -62,7 +62,6 @@ internal sealed class TrxTestApplicationLifecycleCallbacks : ITestHostApplicatio
             ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable, TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME));
         NamedPipeClient = new NamedPipeClient(namedPipeName, _environment);
         NamedPipeClient.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-        NamedPipeClient.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
         NamedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
 
         // Connect to the named pipe server
