@@ -136,6 +136,13 @@ internal sealed class TrxProcessLifetimeHandler :
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
+        // This is only run in TestHostController.
+        // We group artifacts by producer.
+        // The scenario is:
+        // 1. On graceful exit, TestHost will already have written the TRX file.
+        // 2. The TRX written by TestHost does not include artifacts published in TestHostController.
+        // We address this by tracking those artifacts in TestHostController and then modifying the TRX file
+        // written by TestHost so that it also includes those artifacts.
         if (!_fileArtifacts.TryGetValue(dataProducer, out List<FileArtifact>? fileArtifacts))
         {
             fileArtifacts = [];
@@ -166,6 +173,7 @@ internal sealed class TrxProcessLifetimeHandler :
 
         // We create a trx with only files in case of test host process crash.
         // TODO: Handle the case where we receive testhost complete, then a crash happens, if possible.
+        // TODO: We should also be recording all test results prior to crash.
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             TrxReportEngine trxReportGeneratorEngine = new(_testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,

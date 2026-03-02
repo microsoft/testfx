@@ -104,6 +104,7 @@ internal sealed class TrxReportGenerator :
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
+        // This is only run in TestHost, and not TestHostController.
         cancellationToken.ThrowIfCancellationRequested();
 
         try
@@ -164,22 +165,29 @@ internal sealed class TrxReportGenerator :
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
+        // This is only run in TestHost, and not TestHostController.
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
+        bool shouldUseOutOfProcessTrxGeneration = TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService);
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             await _logger.LogDebugAsync($"""
 CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
 TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
+shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 """).ConfigureAwait(false);
         }
 
-        if (TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
+        if (shouldUseOutOfProcessTrxGeneration)
         {
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
 
+            // This tells the TestHostController process the info of the registered ITestFramework.
+            // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
+            // TODO: It's very likely that this is an unnecessary complexity and that the information is already available in TestHostController process.
+            // We should investigate if we can simplify this or not. If not, this comment should be updated to explain why.
             try
             {
                 await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
@@ -203,6 +211,9 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        // This is only run in TestHost, and not TestHostController.
+        // The current implementation tries to keep the TRX generation logic always in-process.
+        // However, in case of a crash, the TestHostController takes over this responsibility (when running in out-of-proc mode).
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -225,13 +236,17 @@ TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.Is
                 await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
-            // If crash dump is not enabled we run trx in-process only
+            // TRX can run in two modes. In-process or out-of-process.
+            // If we are already running with the in-process mode, we publish the SessionFileArtifact to the message bus directly.
+            // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
             if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
             {
                 await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
             }
             else
             {
+                // The TestHostController will receive the TRX file name.
+                // Then, it will **modify** it and add any additional artifacts that were produced by TestHostController.
                 ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
                 ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
                 await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken).ConfigureAwait(false);
