@@ -1,6 +1,6 @@
 # Microsoft.Testing.Extensions.AzureDevOpsReport
 
-Microsoft.Testing.Extensions.AzureDevOpsReport is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that reports test failures and warnings in Azure DevOps CI builds, with file/line annotations when available.
+Microsoft.Testing.Extensions.AzureDevOpsReport is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that reports individual test failures as errors or warnings in Azure DevOps CI builds, with file/line annotations when available.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.AzureDevOpsReport` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport) GitHub repository.
 
@@ -14,7 +14,7 @@ dotnet add package Microsoft.Testing.Extensions.AzureDevOpsReport
 
 This package extends Microsoft.Testing.Platform with:
 
-- **Azure DevOps reporting**: emits CI errors/warnings for test failures via the Azure DevOps logging commands
+- **Azure DevOps reporting**: emits individual CI errors/warnings for each test failure via the Azure DevOps logging commands
 - **Configurable severity**: supports `--report-azdo-severity` (`error` or `warning`)
 - **CI auto-detection**: detects Azure DevOps environments through the `TF_BUILD` variable
 
