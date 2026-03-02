@@ -13,7 +13,6 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
@@ -38,7 +37,6 @@ internal sealed class TrxReportGenerator :
     private readonly ITestFrameworkCapabilities _testFrameworkCapabilities;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly TrxTestApplicationLifecycleCallbacks? _trxTestApplicationLifecycleCallbacks;
-    private readonly ILogger<TrxReportGenerator> _logger;
     private readonly List<TestNodeUpdateMessage> _tests = [];
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
     private readonly bool _isEnabled;
@@ -63,8 +61,7 @@ internal sealed class TrxReportGenerator :
         ITestFrameworkCapabilities testFrameworkCapabilities,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         // Can be null in case of server mode
-        TrxTestApplicationLifecycleCallbacks? trxTestApplicationLifecycleCallbacks,
-        ILogger<TrxReportGenerator> logger)
+        TrxTestApplicationLifecycleCallbacks? trxTestApplicationLifecycleCallbacks)
     {
         _configuration = configuration;
         _commandLineOptionsService = commandLineOptionsService;
@@ -78,7 +75,6 @@ internal sealed class TrxReportGenerator :
         _testFrameworkCapabilities = testFrameworkCapabilities;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _trxTestApplicationLifecycleCallbacks = trxTestApplicationLifecycleCallbacks;
-        _logger = logger;
         _isEnabled = commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName);
     }
 
@@ -171,36 +167,6 @@ internal sealed class TrxReportGenerator :
         // This is only run in TestHost, and not TestHostController.
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
-
-        bool shouldUseOutOfProcessTrxGeneration = TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService);
-        if (_logger.IsEnabled(LogLevel.Debug))
-        {
-            await _logger.LogDebugAsync($"""
-CrashDumpCommandLineOptions.CrashDumpOptionName: {_commandLineOptionsService.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)}
-TrxReportGeneratorCommandLine.IsTrxReportEnabled: {_commandLineOptionsService.IsOptionSet(TrxReportGeneratorCommandLine.TrxReportOptionName)}
-shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
-""").ConfigureAwait(false);
-        }
-
-        if (shouldUseOutOfProcessTrxGeneration)
-        {
-            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
-            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
-
-            // This tells the TestHostController process the info of the registered ITestFramework.
-            // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
-            // TODO: It's very likely that this is an unnecessary complexity and that the information is already available in TestHostController process.
-            // We should investigate if we can simplify this or not. If not, this comment should be updated to explain why.
-            try
-            {
-                await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
-                    .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-            {
-                // Do nothing, we're stopping
-            }
-        }
 
         ITrxReportCapability? trxCapability = _testFrameworkCapabilities.GetCapability<ITrxReportCapability>();
         if (trxCapability is not null && trxCapability.IsSupported)

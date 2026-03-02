@@ -45,8 +45,7 @@ public static class TrxReportExtensions
                 serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestFrameworkCapabilities(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>(),
-                serviceProvider.GetLoggerFactory().CreateLogger<TrxReportGenerator>()));
+                serviceProvider.GetService<TrxTestApplicationLifecycleCallbacks>()));
 
         if (!OperatingSystem.IsBrowser())
         {
@@ -81,8 +80,9 @@ public static class TrxReportExtensions
             new CompositeExtensionFactory<TrxProcessLifetimeHandler>(serviceProvider =>
             {
                 ILoggerFactory loggerFactory = serviceProvider.GetLoggerFactory();
-                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}");
+                loggerFactory.CreateLogger<TrxProcessLifetimeHandler>().LogTrace($"TRX pipe name: '{pipeNameDescription.Name}'");
                 return new TrxProcessLifetimeHandler(
+                    serviceProvider.GetTestFramework(),
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
                     loggerFactory,

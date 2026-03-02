@@ -32,6 +32,7 @@ internal sealed class TrxProcessLifetimeHandler :
 #endif
     IDisposable
 {
+    private readonly ITestFramework _testFramework;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IMessageBus _messageBus;
@@ -49,9 +50,9 @@ internal sealed class TrxProcessLifetimeHandler :
     private NamedPipeServer? _singleConnectionNamedPipeServer;
     private Task? _waitConnectionTask;
     private ReportFileNameRequest? _fileNameRequest;
-    private TestAdapterInformationRequest? _testAdapterInformationRequest;
 
     public TrxProcessLifetimeHandler(
+        ITestFramework testFramework,
         ICommandLineOptions commandLineOptions,
         IEnvironment environment,
         ILoggerFactory loggerFactory,
@@ -64,6 +65,7 @@ internal sealed class TrxProcessLifetimeHandler :
         IOutputDevice outputDevice,
         PipeNameDescription pipeNameDescription)
     {
+        _testFramework = testFramework;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _messageBus = messageBus;
@@ -122,7 +124,6 @@ internal sealed class TrxProcessLifetimeHandler :
             {
                 _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
                 _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
                 _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                 await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
             }, cancellationToken);
@@ -183,7 +184,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 _clock, [], 0, 0, 0, 0,
                 artifacts,
                 adapterSupportTrxCapability: null,
-                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
+                new TestAdapterInfo(_testFramework.Uid, _testFramework.Version),
                 _startTime,
                 testHostProcessInformation.ExitCode,
                 cancellationToken);
@@ -219,7 +220,7 @@ internal sealed class TrxProcessLifetimeHandler :
                _clock, [], 0, 0, 0, 0,
                artifacts,
                false,
-               new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
+               new TestAdapterInfo(_testFramework.Uid, _testFramework.Version),
                _startTime,
                testHostProcessInformation.ExitCode,
                cancellationToken);
@@ -235,11 +236,6 @@ internal sealed class TrxProcessLifetimeHandler :
         if (request is ReportFileNameRequest report)
         {
             _fileNameRequest = report;
-            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
-        }
-        else if (request is TestAdapterInformationRequest testAdapterInformationRequest)
-        {
-            _testAdapterInformationRequest = testAdapterInformationRequest;
             return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
         else
