@@ -92,28 +92,6 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken)
-    : this(
-        new SystemFileSystem(),
-        testApplicationModuleInfo,
-        environment,
-        commandLineOptionsService,
-        configuration,
-        clock,
-        testNodeUpdatedMessages,
-        failedTestsCount,
-        passedTestsCount,
-        notExecutedTestsCount,
-        timeoutTestsCount,
-        artifactsByExtension,
-        adapterSupportTrxCapability,
-        testFrameworkAdapter,
-        testStartTime,
-        exitCode,
-        cancellationToken)
-    {
-    }
-
     public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
