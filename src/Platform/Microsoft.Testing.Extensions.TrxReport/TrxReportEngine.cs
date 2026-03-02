@@ -71,6 +71,8 @@ internal sealed partial class TrxReportEngine
         ' '
     ];
 
+    private static readonly XNamespace NamespaceUri = XNamespace.Get("http://microsoft.com/schemas/VisualStudio/TeamTest/2010");
+
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IEnvironment _environment;
     private readonly ICommandLineOptions _commandLineOptionsService;
@@ -87,7 +89,6 @@ internal sealed partial class TrxReportEngine
     private readonly DateTimeOffset _testStartTime;
     private readonly CancellationToken _cancellationToken;
     private readonly int _exitCode;
-    private readonly XNamespace _namespaceUri = XNamespace.Get("http://microsoft.com/schemas/VisualStudio/TeamTest/2010");
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
@@ -142,7 +143,7 @@ internal sealed partial class TrxReportEngine
 
             // create the xml doc
             var document = new XDocument(new XDeclaration("1.0", "UTF-8", null));
-            var testRun = new XElement(_namespaceUri + "TestRun");
+            var testRun = new XElement(NamespaceUri + "TestRun");
             if (!Guid.TryParse(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID), out Guid testRunId))
             {
                 testRunId = Guid.NewGuid();
@@ -238,18 +239,18 @@ internal sealed partial class TrxReportEngine
     public async Task AddArtifactsAsync(FileInfo trxFile, Dictionary<IExtension, List<SessionFileArtifact>> artifacts)
     {
         var document = XDocument.Load(trxFile.FullName);
-        XElement testRun = document.Element(_namespaceUri + "TestRun")
+        XElement testRun = document.Element(NamespaceUri + "TestRun")
             ?? throw new InvalidOperationException("TestRun element not found");
-        XElement deployment = testRun.Element(_namespaceUri + "TestSettings")?.Element(_namespaceUri + "Deployment")
+        XElement deployment = testRun.Element(NamespaceUri + "TestSettings")?.Element(NamespaceUri + "Deployment")
             ?? throw new InvalidOperationException("Deployment element not found");
         string runDeploymentRoot = deployment.Attribute("runDeploymentRoot")?.Value
             ?? throw new InvalidOperationException("Unexpected null 'runDeploymentRoot'");
-        XElement resultSummary = testRun.Element(_namespaceUri + "ResultSummary")
+        XElement resultSummary = testRun.Element(NamespaceUri + "ResultSummary")
             ?? throw new InvalidOperationException("ResultSummary element not found");
-        XElement? collectorDataEntries = resultSummary.Element(_namespaceUri + "CollectorDataEntries");
+        XElement? collectorDataEntries = resultSummary.Element(NamespaceUri + "CollectorDataEntries");
         if (collectorDataEntries is null)
         {
-            collectorDataEntries = new XElement(_namespaceUri + "CollectorDataEntries");
+            collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
             resultSummary.Add(collectorDataEntries);
         }
 
@@ -264,19 +265,19 @@ internal sealed partial class TrxReportEngine
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
             var collector = new XElement(
-                _namespaceUri + "Collector",
+                NamespaceUri + "Collector",
                 new XAttribute("agentName", _environment.MachineName),
                 new XAttribute("uri", $"datacollector://{extensionArtifacts.Key.Uid}/{extensionArtifacts.Key.Version}"),
                 new XAttribute("collectorDisplayName", extensionArtifacts.Key.DisplayName));
             collectorDataEntries.Add(collector);
 
-            var uriAttachments = new XElement(_namespaceUri + "UriAttachments");
+            var uriAttachments = new XElement(NamespaceUri + "UriAttachments");
             collector.Add(uriAttachments);
 
             foreach (SessionFileArtifact artifact in extensionArtifacts.Value)
             {
                 string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
-                uriAttachments.Add(new XElement(_namespaceUri + "UriAttachment", new XElement(_namespaceUri + "A", new XAttribute("href", href))));
+                uriAttachments.Add(new XElement(NamespaceUri + "UriAttachment", new XElement(NamespaceUri + "A", new XAttribute("href", href))));
             }
         }
     }
@@ -284,12 +285,12 @@ internal sealed partial class TrxReportEngine
     private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, bool isTestHostCrashed = false)
     {
         var resultSummary = new XElement(
-            _namespaceUri + "ResultSummary",
+            NamespaceUri + "ResultSummary",
             new XAttribute("outcome", resultSummaryOutcome));
         testRun.Add(resultSummary);
 
         var counters = new XElement(
-            _namespaceUri + "Counters",
+            NamespaceUri + "Counters",
             new XAttribute("total", _testNodeUpdatedMessages.Length),
             new XAttribute("executed", _passedTestsCount + _failedTestsCount),
             new XAttribute("passed", _passedTestsCount),
@@ -310,27 +311,27 @@ internal sealed partial class TrxReportEngine
 
         if (isTestHostCrashed)
         {
-            var runInfos = new XElement(_namespaceUri + "RunInfos");
+            var runInfos = new XElement(NamespaceUri + "RunInfos");
             resultSummary.Add(runInfos);
             var runInfo = new XElement(
-                _namespaceUri + "RunInfo",
+                NamespaceUri + "RunInfo",
                 new XAttribute("computerName", _environment.MachineName),
                 new XAttribute("outcome", "Error"),
                 new XAttribute("timestamp", _clock.UtcNow.DateTime));
-            var text = new XElement(_namespaceUri + "Text", testHostCrashInfo);
+            var text = new XElement(NamespaceUri + "Text", testHostCrashInfo);
             runInfo.Add(text);
             runInfos.Add(runInfo);
         }
         else if (exitCode != ExitCodes.Success)
         {
-            var runInfos = new XElement(_namespaceUri + "RunInfos");
+            var runInfos = new XElement(NamespaceUri + "RunInfos");
             resultSummary.Add(runInfos);
             var runInfo = new XElement(
-                _namespaceUri + "RunInfo",
+                NamespaceUri + "RunInfo",
                 new XAttribute("computerName", _environment.MachineName),
                 new XAttribute("outcome", "Error"),
                 new XAttribute("timestamp", _clock.UtcNow.DateTime));
-            var text = new XElement(_namespaceUri + "Text", $"Exit code indicates failure: '{exitCode}'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.");
+            var text = new XElement(NamespaceUri + "Text", $"Exit code indicates failure: '{exitCode}'. Please refer to https://aka.ms/testingplatform/exitcodes for more information.");
             runInfo.Add(text);
             runInfos.Add(runInfo);
         }
@@ -340,7 +341,7 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
-        var collectorDataEntries = new XElement(_namespaceUri + "CollectorDataEntries");
+        var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
         await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
