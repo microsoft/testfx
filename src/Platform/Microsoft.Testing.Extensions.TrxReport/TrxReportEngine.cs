@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -435,7 +436,16 @@ internal sealed partial class TrxReportEngine
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
             string currentTestOutcome = "Passed";
-            TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+
+            // In TrxReportGenerator.ConsumeAsync, we already filtered to only the nodes that contain TestNodeStateProperty.
+            // We also filtered out discovered and in-progress states.
+            // So the call to Single here should never fail, and should never be discovered or in-progress.
+            TestNodeStateProperty testState = testNode.Properties.Single<TestNodeStateProperty>();
+            if (testState is DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
             if (testState is SkippedTestNodeStateProperty)
             {
                 currentTestOutcome = "NotExecuted";
@@ -445,7 +455,7 @@ internal sealed partial class TrxReportEngine
             {
                 passed++;
             }
-            else
+            else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, testState.GetType()) >= 0)
             {
                 currentTestOutcome = "Failed";
                 hasFailedTests = true;
@@ -458,6 +468,11 @@ internal sealed partial class TrxReportEngine
                 {
                     failed++;
                 }
+            }
+            else
+            {
+                // Above conditions should have handled all state properties.
+                throw ApplicationStateGuard.Unreachable();
             }
 
             unitTestResult.SetAttributeValue("outcome", currentTestOutcome);
