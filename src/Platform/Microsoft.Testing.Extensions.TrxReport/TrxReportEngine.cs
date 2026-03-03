@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -79,10 +78,6 @@ internal sealed partial class TrxReportEngine
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
     private readonly TestNodeUpdateMessage[] _testNodeUpdatedMessages;
-    private readonly int _failedTestsCount;
-    private readonly int _passedTestsCount;
-    private readonly int _notExecutedTestsCount;
-    private readonly int _timeoutTestsCount;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
     private readonly bool? _adapterSupportTrxCapability;
     private readonly ITestFramework _testFrameworkAdapter;
@@ -92,7 +87,7 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -100,10 +95,6 @@ internal sealed partial class TrxReportEngine
         _configuration = configuration;
         _clock = clock;
         _testNodeUpdatedMessages = testNodeUpdatedMessages;
-        _failedTestsCount = failedTestsCount;
-        _passedTestsCount = passedTestsCount;
-        _notExecutedTestsCount = notExecutedTestsCount;
-        _timeoutTestsCount = timeoutTestsCount;
         _artifactsByExtension = artifactsByExtension;
         _adapterSupportTrxCapability = adapterSupportTrxCapability;
         _testFrameworkAdapter = testFrameworkAdapter;
@@ -148,14 +139,14 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
+            (int Passed, int Failed, int Skipped, int Timedout) summaryCounts = AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun, uncategorizedTestId);
 
             string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
-            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed).ConfigureAwait(false);
+            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed).ConfigureAwait(false);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -260,7 +251,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, bool isTestHostCrashed = false)
+    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, (int Passed, int Failed, int Skipped, int Timedout) summaryCounts, bool isTestHostCrashed = false)
     {
         var resultSummary = new XElement(
             NamespaceUri + "ResultSummary",
@@ -270,16 +261,16 @@ internal sealed partial class TrxReportEngine
         var counters = new XElement(
             NamespaceUri + "Counters",
             new XAttribute("total", _testNodeUpdatedMessages.Length),
-            new XAttribute("executed", _passedTestsCount + _failedTestsCount),
-            new XAttribute("passed", _passedTestsCount),
-            new XAttribute("failed", _failedTestsCount),
+            new XAttribute("executed", summaryCounts.Passed + summaryCounts.Failed),
+            new XAttribute("passed", summaryCounts.Passed),
+            new XAttribute("failed", summaryCounts.Failed),
             new XAttribute("error", 0),
-            new XAttribute("timeout", _timeoutTestsCount),
+            new XAttribute("timeout", summaryCounts.Timedout),
             new XAttribute("aborted", 0),
             new XAttribute("inconclusive", 0),
             new XAttribute("passedButRunAborted", 0),
             new XAttribute("notRunnable", 0),
-            new XAttribute("notExecuted", _notExecutedTestsCount),
+            new XAttribute("notExecuted", summaryCounts.Skipped),
             new XAttribute("disconnected", 0),
             new XAttribute("warning", 0),
             new XAttribute("completed", 0),
@@ -391,8 +382,12 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private void AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
+    private (int Passed, int Failed, int Skipped, int Timedout) AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
     {
+        int passed = 0;
+        int failed = 0;
+        int skipped = 0;
+        int timedout = 0;
         var results = new XElement("Results");
 
         // Duplicate test ids are not allowed inside the TestDefinitions element.
@@ -443,15 +438,28 @@ internal sealed partial class TrxReportEngine
 
             string currentTestOutcome = "Passed";
             TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-            if (testState is { } state
-                && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
+            if (testState is SkippedTestNodeStateProperty)
+            {
+                currentTestOutcome = "NotExecuted";
+                skipped++;
+            }
+            else if (testState is PassedTestNodeStateProperty)
+            {
+                passed++;
+            }
+            else
             {
                 currentTestOutcome = "Failed";
                 hasFailedTests = true;
-            }
-            else if (testState is SkippedTestNodeStateProperty)
-            {
-                currentTestOutcome = "NotExecuted";
+
+                if (testState is TimeoutTestNodeStateProperty)
+                {
+                    timedout++;
+                }
+                else
+                {
+                    failed++;
+                }
             }
 
             unitTestResult.SetAttributeValue("outcome", currentTestOutcome);
@@ -645,6 +653,8 @@ internal sealed partial class TrxReportEngine
         }
 
         testRun.Add(results);
+
+        return (passed, failed, skipped, timedout);
     }
 
     private static string AddTestSettings(XElement testRun, string testRunName)
