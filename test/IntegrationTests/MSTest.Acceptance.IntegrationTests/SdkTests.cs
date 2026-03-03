@@ -291,25 +291,25 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
-    public async Task NativeAot_Smoke_Test_Windows()
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    public async Task NativeAot_Smoke_Test()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            // temporarily set test to be on net10.0 as older TFMs are broken until https://github.com/dotnet/runtime/pull/115951 is serviced.
             .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$ExtraProperties$", """
                 <PublishAot>true</PublishAot>
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
+                <TrimmerSingleWarn>false</TrimmerSingleWarn>
                 """),
             addPublicFeeds: true);
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            // We prefer to use the outer retry mechanism as we need some extra checks
             retryCount: 0, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 

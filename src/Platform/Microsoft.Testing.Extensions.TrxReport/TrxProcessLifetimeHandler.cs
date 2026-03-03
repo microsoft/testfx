@@ -174,13 +174,11 @@ internal sealed class TrxProcessLifetimeHandler :
             artifacts.Add(extensionInfo, perProducerArtifact);
         }
 
-        // We create a trx with only files in case of test host process crash.
-        // TODO: Handle the case where we receive testhost complete, then a crash happens, if possible.
-        // TODO: We should also be recording all test results prior to crash.
-        if (!testHostProcessInformation.HasExitedGracefully)
+        // If _fileNameRequest is null, that means that the TestHost crashed before it wrote the TRX file.
+        if (_fileNameRequest is null)
         {
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-                _clock, [], 0, 0, 0, 0,
+                _clock,
                 artifacts,
                 adapterSupportTrxCapability: null,
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
@@ -189,6 +187,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 cancellationToken);
 
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
+                [],
                 isTestHostCrashed: true,
                 testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
@@ -205,18 +204,18 @@ internal sealed class TrxProcessLifetimeHandler :
             return;
         }
 
-        if (_fileNameRequest is null)
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
+        // TODO:
+        // If the current TRX file is indicating a success status while
+        // testHostProcessInformation.ExitCode indicates non-success, then that must be
+        // a crash after TRX was written.
+        // In that case, we should update the TRX file to indicate non-success.
         var trxFile = new FileInfo(_fileNameRequest.FileName);
 
         // Add attachments to the trx.
         if (_fileArtifacts.Count > 0)
         {
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-               _clock, [], 0, 0, 0, 0,
+               _clock,
                artifacts,
                false,
                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),

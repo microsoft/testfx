@@ -78,11 +78,6 @@ internal sealed partial class TrxReportEngine
     private readonly ICommandLineOptions _commandLineOptionsService;
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
-    private readonly TestNodeUpdateMessage[] _testNodeUpdatedMessages;
-    private readonly int _failedTestsCount;
-    private readonly int _passedTestsCount;
-    private readonly int _notExecutedTestsCount;
-    private readonly int _timeoutTestsCount;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
     private readonly bool? _adapterSupportTrxCapability;
     private readonly ITestFramework _testFrameworkAdapter;
@@ -92,18 +87,13 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, int failedTestsCount, int passedTestsCount, int notExecutedTestsCount, int timeoutTestsCount, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
         _commandLineOptionsService = commandLineOptionsService;
         _configuration = configuration;
         _clock = clock;
-        _testNodeUpdatedMessages = testNodeUpdatedMessages;
-        _failedTestsCount = failedTestsCount;
-        _passedTestsCount = passedTestsCount;
-        _notExecutedTestsCount = notExecutedTestsCount;
-        _timeoutTestsCount = timeoutTestsCount;
         _artifactsByExtension = artifactsByExtension;
         _adapterSupportTrxCapability = adapterSupportTrxCapability;
         _testFrameworkAdapter = testFrameworkAdapter;
@@ -114,7 +104,7 @@ internal sealed partial class TrxReportEngine
         _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
-    public async Task<(string FileName, string? Warning)> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false)
+    public async Task<(string FileName, string? Warning)> GenerateReportAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await RetryWhenIOExceptionAsync(async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -148,14 +138,14 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
+            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun, uncategorizedTestId);
 
             string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
-            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, isTestHostCrashed).ConfigureAwait(false);
+            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed).ConfigureAwait(false);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -260,7 +250,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, bool isTestHostCrashed = false)
+    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
     {
         var resultSummary = new XElement(
             NamespaceUri + "ResultSummary",
@@ -269,17 +259,17 @@ internal sealed partial class TrxReportEngine
 
         var counters = new XElement(
             NamespaceUri + "Counters",
-            new XAttribute("total", _testNodeUpdatedMessages.Length),
-            new XAttribute("executed", _passedTestsCount + _failedTestsCount),
-            new XAttribute("passed", _passedTestsCount),
-            new XAttribute("failed", _failedTestsCount),
+            new XAttribute("total", summaryCounts.Passed + summaryCounts.Failed + summaryCounts.Skipped + summaryCounts.Timedout),
+            new XAttribute("executed", summaryCounts.Passed + summaryCounts.Failed),
+            new XAttribute("passed", summaryCounts.Passed),
+            new XAttribute("failed", summaryCounts.Failed),
             new XAttribute("error", 0),
-            new XAttribute("timeout", _timeoutTestsCount),
+            new XAttribute("timeout", summaryCounts.Timedout),
             new XAttribute("aborted", 0),
             new XAttribute("inconclusive", 0),
             new XAttribute("passedButRunAborted", 0),
             new XAttribute("notRunnable", 0),
-            new XAttribute("notExecuted", _notExecutedTestsCount),
+            new XAttribute("notExecuted", summaryCounts.Skipped),
             new XAttribute("disconnected", 0),
             new XAttribute("warning", 0),
             new XAttribute("completed", 0),
@@ -391,8 +381,12 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private void AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
+    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
     {
+        int passed = 0;
+        int failed = 0;
+        int skipped = 0;
+        int timedout = 0;
         var results = new XElement("Results");
 
         // Duplicate test ids are not allowed inside the TestDefinitions element.
@@ -402,7 +396,7 @@ internal sealed partial class TrxReportEngine
         testEntries = new XElement("TestEntries");
         uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
         hasFailedTests = false;
-        foreach (TestNodeUpdateMessage nodeMessage in _testNodeUpdatedMessages)
+        foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
         {
             TestNode testNode = nodeMessage.TestNode;
 
@@ -442,16 +436,43 @@ internal sealed partial class TrxReportEngine
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
             string currentTestOutcome = "Passed";
-            TestNodeStateProperty? testState = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-            if (testState is { } state
-                && TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties.Contains(testState.GetType()))
+
+            // In TrxReportGenerator.ConsumeAsync, we already filtered to only the nodes that contain TestNodeStateProperty.
+            // We also filtered out discovered and in-progress states.
+            // So the call to Single here should never fail, and should never be discovered or in-progress.
+            TestNodeStateProperty testState = testNode.Properties.Single<TestNodeStateProperty>();
+            if (testState is DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            if (testState is SkippedTestNodeStateProperty)
+            {
+                currentTestOutcome = "NotExecuted";
+                skipped++;
+            }
+            else if (testState is PassedTestNodeStateProperty)
+            {
+                passed++;
+            }
+            else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, testState.GetType()) >= 0)
             {
                 currentTestOutcome = "Failed";
                 hasFailedTests = true;
+
+                if (testState is TimeoutTestNodeStateProperty)
+                {
+                    timedout++;
+                }
+                else
+                {
+                    failed++;
+                }
             }
-            else if (testState is SkippedTestNodeStateProperty)
+            else
             {
-                currentTestOutcome = "NotExecuted";
+                // Above conditions should have handled all state properties.
+                throw ApplicationStateGuard.Unreachable();
             }
 
             unitTestResult.SetAttributeValue("outcome", currentTestOutcome);
@@ -645,6 +666,8 @@ internal sealed partial class TrxReportEngine
         }
 
         testRun.Add(results);
+
+        return new SummaryCounts(passed, failed, skipped, timedout);
     }
 
     private static string AddTestSettings(XElement testRun, string testRunName)
@@ -741,4 +764,6 @@ internal sealed partial class TrxReportEngine
         char x = match.Value[0];
         return $@"\u{(ushort)x:x4}";
     }
+
+    private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);
 }

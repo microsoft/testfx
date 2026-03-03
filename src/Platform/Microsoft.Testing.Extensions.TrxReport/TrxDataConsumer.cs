@@ -44,10 +44,6 @@ internal sealed class TrxReportGenerator :
     private readonly bool _isEnabled;
 
     private DateTimeOffset? _testStartTime;
-    private int _failedTestsCount;
-    private int _passedTestsCount;
-    private int _notExecutedTestsCount;
-    private int _timeoutTestsCount;
     private bool _adapterSupportTrxCapability;
 
     public TrxReportGenerator(
@@ -116,31 +112,12 @@ internal sealed class TrxReportGenerator :
             {
                 case TestNodeUpdateMessage nodeChangedMessage:
                     TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-                    if (nodeState is null)
+                    if (nodeState is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
                     {
                         return Task.CompletedTask;
                     }
 
-                    if (nodeState is PassedTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _passedTestsCount++;
-                    }
-                    else if (nodeState is TimeoutTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _timeoutTestsCount++;
-                    }
-                    else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _failedTestsCount++;
-                    }
-                    else if (nodeState is SkippedTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _notExecutedTestsCount++;
-                    }
+                    _tests.Add(nodeChangedMessage);
 
                     break;
 
@@ -189,8 +166,8 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 
             // This tells the TestHostController process the info of the registered ITestFramework.
             // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
-            // TODO: It's very likely that this is an unnecessary complexity and that the information is already available in TestHostController process.
-            // We should investigate if we can simplify this or not. If not, this comment should be updated to explain why.
+            // Note: TestHostController cannot retrieve ITestFramework from service provider which is why we need the extra complexity here.
+            // TODO: Investigate if TestHostController can/should have access to ITestFramework and simplify this.
             try
             {
                 await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
@@ -231,9 +208,9 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-                _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
+                _clock, _artifactsByExtension,
                 _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
-            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
+            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
             if (warning is not null)
             {
                 await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
