@@ -44,10 +44,6 @@ internal sealed class TrxReportGenerator :
     private readonly bool _isEnabled;
 
     private DateTimeOffset? _testStartTime;
-    private int _failedTestsCount;
-    private int _passedTestsCount;
-    private int _notExecutedTestsCount;
-    private int _timeoutTestsCount;
     private bool _adapterSupportTrxCapability;
 
     public TrxReportGenerator(
@@ -116,31 +112,12 @@ internal sealed class TrxReportGenerator :
             {
                 case TestNodeUpdateMessage nodeChangedMessage:
                     TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-                    if (nodeState is null)
+                    if (nodeState is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
                     {
                         return Task.CompletedTask;
                     }
 
-                    if (nodeState is PassedTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _passedTestsCount++;
-                    }
-                    else if (nodeState is TimeoutTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _timeoutTestsCount++;
-                    }
-                    else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _failedTestsCount++;
-                    }
-                    else if (nodeState is SkippedTestNodeStateProperty)
-                    {
-                        _tests.Add(nodeChangedMessage);
-                        _notExecutedTestsCount++;
-                    }
+                    _tests.Add(nodeChangedMessage);
 
                     break;
 
@@ -231,9 +208,9 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-                _clock, [.. _tests], _failedTestsCount, _passedTestsCount, _notExecutedTestsCount, _timeoutTestsCount, _artifactsByExtension,
+                _clock, _artifactsByExtension,
                 _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
-            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
+            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
             if (warning is not null)
             {
                 await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);

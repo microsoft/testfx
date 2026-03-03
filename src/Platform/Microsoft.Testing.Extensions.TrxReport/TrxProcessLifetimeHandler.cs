@@ -178,7 +178,7 @@ internal sealed class TrxProcessLifetimeHandler :
         if (_fileNameRequest is null)
         {
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-                _clock, [], 0, 0, 0, 0,
+                _clock,
                 artifacts,
                 adapterSupportTrxCapability: null,
                 new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
@@ -187,6 +187,7 @@ internal sealed class TrxProcessLifetimeHandler :
                 cancellationToken);
 
             (string fileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync(
+                [],
                 isTestHostCrashed: true,
                 testHostCrashInfo: $"Test host process pid: {testHostProcessInformation.PID} crashed.").ConfigureAwait(false);
             if (warning is not null)
@@ -214,7 +215,7 @@ internal sealed class TrxProcessLifetimeHandler :
         if (_fileArtifacts.Count > 0)
         {
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
-               _clock, [], 0, 0, 0, 0,
+               _clock,
                artifacts,
                false,
                new TestAdapterInfo(_testAdapterInformationRequest!.TestAdapterId, _testAdapterInformationRequest.TestAdapterVersion),
