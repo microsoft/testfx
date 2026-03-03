@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Platform.AI provides the AI extensibility abstractions for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform), enabling test frameworks and extensions to leverage Large Language Models (LLMs) and AI capabilities for intelligent testing activities.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platform.AI` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Platform.AI) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platform.AI` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 
@@ -25,8 +25,6 @@ This package provides:
 - [Microsoft.Testing.Extensions.AzureFoundry](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureFoundry): Azure AI Foundry (Azure OpenAI) provider implementation
 
 ## Documentation
-
-For this package, see <https://github.com/microsoft/testfx/blob/main/docs/microsoft.testing.platform/001-AI-Extensibility.md>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

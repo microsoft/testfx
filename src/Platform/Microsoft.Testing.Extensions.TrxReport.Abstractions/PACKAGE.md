@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.TrxReport.Abstractions provides the interfaces and data objects for extensions that need to interoperate with TRX report functionality in [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform).
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.TrxReport.Abstractions` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.TrxReport.Abstractions` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 

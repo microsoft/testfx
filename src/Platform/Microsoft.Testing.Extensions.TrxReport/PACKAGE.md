@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.TrxReport is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that generates TRX (Visual Studio Test Results) report files.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.TrxReport` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.TrxReport) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.TrxReport` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 
@@ -27,7 +27,7 @@ Enable TRX report generation via the `--report-trx` command line option.
 
 ## Documentation
 
-For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-test-reports#visual-studio-test-reports>.
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-test-reports#visual-studio-test-reports-trx>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

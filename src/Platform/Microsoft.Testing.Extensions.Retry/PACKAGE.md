@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.Retry is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that provides test resilience and transient-fault handling by rerunning failed tests.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.Retry` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.Retry) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.Retry` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 
@@ -22,7 +22,7 @@ Configure retry using `--retry-failed-tests <retries>`, and optionally limit ret
 
 ## Documentation
 
-For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-policy#retry>.
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-retry>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

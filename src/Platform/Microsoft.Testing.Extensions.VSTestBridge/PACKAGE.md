@@ -4,7 +4,7 @@ Microsoft.Testing.Extensions.VSTestBridge is a **test framework author** extensi
 
 > **Note**: This package is **not intended for end-user test projects**. It is designed for framework and adapter maintainers who need compatibility with both VSTest and Microsoft.Testing.Platform.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.VSTestBridge` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.VSTestBridge) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.VSTestBridge` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 

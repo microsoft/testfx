@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.Telemetry is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that collects usage telemetry to help the Microsoft.Testing.Platform team improve the product.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.Telemetry` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.Telemetry) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.Telemetry` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 

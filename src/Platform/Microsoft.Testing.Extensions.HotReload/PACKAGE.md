@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.HotReload is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that enables Hot Reload support, allowing you to apply code changes to your running tests without restarting the test host process.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.HotReload` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.HotReload) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.HotReload` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 
@@ -22,7 +22,7 @@ Enable Hot Reload support by setting `TESTINGPLATFORM_HOTRELOAD_ENABLED=1`.
 
 ## Documentation
 
-For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-hosting#hot-reload>.
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-hot-reload>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

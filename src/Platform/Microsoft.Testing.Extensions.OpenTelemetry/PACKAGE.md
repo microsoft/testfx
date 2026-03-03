@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.OpenTelemetry is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that instruments test execution with [OpenTelemetry](https://opentelemetry.io/)-compatible traces and metrics.
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.OpenTelemetry` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.OpenTelemetry) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.OpenTelemetry` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 
@@ -20,7 +20,7 @@ This package extends Microsoft.Testing.Platform with:
 
 ## Documentation
 
-For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions>.
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-open-telemetry>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 

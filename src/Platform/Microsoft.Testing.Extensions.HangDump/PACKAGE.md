@@ -2,7 +2,7 @@
 
 Microsoft.Testing.Extensions.HangDump is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that captures a memory dump when the test host process appears to be hung (exceeds a configurable timeout).
 
-Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.HangDump` code in the [microsoft/testfx](https://github.com/microsoft/testfx/tree/main/src/Platform/Microsoft.Testing.Extensions.HangDump) GitHub repository.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.HangDump` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
 ## Install the package
 
@@ -28,7 +28,7 @@ Enable hang dump collection via the `--hangdump` command line option, and config
 
 ## Documentation
 
-For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-extensions-diagnostics#hang-dump>.
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-crash-hang-dumps#hang-dump>.
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.
 
