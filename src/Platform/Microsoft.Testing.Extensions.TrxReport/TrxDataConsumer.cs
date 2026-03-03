@@ -189,8 +189,8 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 
             // This tells the TestHostController process the info of the registered ITestFramework.
             // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
-            // TODO: It's very likely that this is an unnecessary complexity and that the information is already available in TestHostController process.
-            // We should investigate if we can simplify this or not. If not, this comment should be updated to explain why.
+            // Note: TestHostController cannot retrieve ITestFramework from service provider which is why we need the extra complexity here.
+            // TODO: Investigate if TestHostController can/should have access to ITestFramework and simplify this.
             try
             {
                 await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
