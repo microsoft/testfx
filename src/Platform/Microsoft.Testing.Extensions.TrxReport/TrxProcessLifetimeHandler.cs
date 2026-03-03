@@ -174,10 +174,8 @@ internal sealed class TrxProcessLifetimeHandler :
             artifacts.Add(extensionInfo, perProducerArtifact);
         }
 
-        // We create a trx with only files in case of test host process crash.
-        // TODO: Handle the case where we receive testhost complete, then a crash happens, if possible.
-        // TODO: We should also be recording all test results prior to crash.
-        if (!testHostProcessInformation.HasExitedGracefully)
+        // If _fileNameRequest is null, that means that the TestHost crashed before it wrote the TRX file.
+        if (_fileNameRequest is null)
         {
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptions, _configuration,
                 _clock, [], 0, 0, 0, 0,
@@ -205,11 +203,11 @@ internal sealed class TrxProcessLifetimeHandler :
             return;
         }
 
-        if (_fileNameRequest is null)
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
+        // TODO:
+        // If the current TRX file is indicating a success status while
+        // testHostProcessInformation.ExitCode indicates non-success, then that must be
+        // a crash after TRX was written.
+        // In that case, we should update the TRX file to indicate non-success.
         var trxFile = new FileInfo(_fileNameRequest.FileName);
 
         // Add attachments to the trx.
