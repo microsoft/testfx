@@ -208,9 +208,9 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
 
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
             var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-                _clock, [.. _tests], _artifactsByExtension,
+                _clock, _artifactsByExtension,
                 _adapterSupportTrxCapability, _testFramework, _testStartTime.Value, exitCode, cancellationToken);
-            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync().ConfigureAwait(false);
+            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
             if (warning is not null)
             {
                 await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);

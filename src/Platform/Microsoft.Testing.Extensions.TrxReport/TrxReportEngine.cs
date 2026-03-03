@@ -77,7 +77,6 @@ internal sealed partial class TrxReportEngine
     private readonly ICommandLineOptions _commandLineOptionsService;
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
-    private readonly TestNodeUpdateMessage[] _testNodeUpdatedMessages;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
     private readonly bool? _adapterSupportTrxCapability;
     private readonly ITestFramework _testFrameworkAdapter;
@@ -87,14 +86,13 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, TestNodeUpdateMessage[] testNodeUpdatedMessages, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
         _commandLineOptionsService = commandLineOptionsService;
         _configuration = configuration;
         _clock = clock;
-        _testNodeUpdatedMessages = testNodeUpdatedMessages;
         _artifactsByExtension = artifactsByExtension;
         _adapterSupportTrxCapability = adapterSupportTrxCapability;
         _testFrameworkAdapter = testFrameworkAdapter;
@@ -105,7 +103,7 @@ internal sealed partial class TrxReportEngine
         _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
-    public async Task<(string FileName, string? Warning)> GenerateReportAsync(string testHostCrashInfo = "", bool isTestHostCrashed = false)
+    public async Task<(string FileName, string? Warning)> GenerateReportAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await RetryWhenIOExceptionAsync(async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
@@ -139,7 +137,7 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            (int Passed, int Failed, int Skipped, int Timedout) summaryCounts = AddResults(testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
+            (int Passed, int Failed, int Skipped, int Timedout) summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun, uncategorizedTestId);
@@ -260,7 +258,7 @@ internal sealed partial class TrxReportEngine
 
         var counters = new XElement(
             NamespaceUri + "Counters",
-            new XAttribute("total", _testNodeUpdatedMessages.Length),
+            new XAttribute("total", summaryCounts.Passed + summaryCounts.Failed + summaryCounts.Skipped + summaryCounts.Timedout),
             new XAttribute("executed", summaryCounts.Passed + summaryCounts.Failed),
             new XAttribute("passed", summaryCounts.Passed),
             new XAttribute("failed", summaryCounts.Failed),
@@ -382,7 +380,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private (int Passed, int Failed, int Skipped, int Timedout) AddResults(string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
+    private (int Passed, int Failed, int Skipped, int Timedout) AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
     {
         int passed = 0;
         int failed = 0;
@@ -397,7 +395,7 @@ internal sealed partial class TrxReportEngine
         testEntries = new XElement("TestEntries");
         uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
         hasFailedTests = false;
-        foreach (TestNodeUpdateMessage nodeMessage in _testNodeUpdatedMessages)
+        foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
         {
             TestNode testNode = nodeMessage.TestNode;
 
