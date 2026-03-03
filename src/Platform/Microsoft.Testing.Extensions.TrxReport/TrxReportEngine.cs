@@ -137,7 +137,7 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            (int Passed, int Failed, int Skipped, int Timedout) summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
+            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun, uncategorizedTestId);
@@ -249,7 +249,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, (int Passed, int Failed, int Skipped, int Timedout) summaryCounts, bool isTestHostCrashed = false)
+    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
     {
         var resultSummary = new XElement(
             NamespaceUri + "ResultSummary",
@@ -380,7 +380,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private (int Passed, int Failed, int Skipped, int Timedout) AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
+    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
     {
         int passed = 0;
         int failed = 0;
@@ -652,7 +652,7 @@ internal sealed partial class TrxReportEngine
 
         testRun.Add(results);
 
-        return (passed, failed, skipped, timedout);
+        return new SummaryCounts(passed, failed, skipped, timedout);
     }
 
     private static string AddTestSettings(XElement testRun, string testRunName)
@@ -749,4 +749,6 @@ internal sealed partial class TrxReportEngine
         char x = match.Value[0];
         return $@"\u{(ushort)x:x4}";
     }
+
+    private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);
 }
