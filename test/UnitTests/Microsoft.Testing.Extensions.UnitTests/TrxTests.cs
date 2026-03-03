@@ -132,7 +132,7 @@ public class TrxTests
         AssertExpectedTrxFileName(fileName);
         Assert.IsNotNull(memoryStream.TrxContent);
         XDocument xml = memoryStream.TrxContent;
-        AssertTrxOutcome(xml, "Completed");
+        AssertTrxOutcome(xml, "Failed");
         string trxContent = xml.ToString();
         Assert.Contains(@"timeout=""1""", trxContent);
     }
