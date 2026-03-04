@@ -80,7 +80,6 @@ internal sealed partial class TrxReportEngine
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
-    private readonly bool? _adapterSupportTrxCapability;
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly DateTimeOffset _testStartTime;
     private readonly CancellationToken _cancellationToken;
@@ -88,7 +87,7 @@ internal sealed partial class TrxReportEngine
     private readonly IFileSystem _fileSystem;
     private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, bool? adapterSupportTrxCapability, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -96,7 +95,6 @@ internal sealed partial class TrxReportEngine
         _configuration = configuration;
         _clock = clock;
         _artifactsByExtension = artifactsByExtension;
-        _adapterSupportTrxCapability = adapterSupportTrxCapability;
         _testFrameworkAdapter = testFrameworkAdapter;
         _testStartTime = testStartTime;
         _cancellationToken = cancellationToken;

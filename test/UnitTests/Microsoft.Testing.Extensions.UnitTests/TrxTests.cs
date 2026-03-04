@@ -436,7 +436,7 @@ public class TrxTests
         PropertyBag propertyBag = new(
             new PassedTestNodeStateProperty(),
             new TrxFullyQualifiedTypeNameProperty("TrxFullyQualifiedTypeName"));
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, adapterSupportTrxCapability: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -538,7 +538,7 @@ public class TrxTests
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
         var trxReportEngine = new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
             _configurationMock.Object, _clockMock.Object,
-            _artifactsByExtension, true, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
+            _artifactsByExtension, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
             isCopyingFileAllowed: false);
 
         // Act
@@ -617,7 +617,7 @@ public class TrxTests
             new SessionUid("1"),
             new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });
 
-    private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool? adapterSupportTrxCapability = null, bool isExplicitFileName = false)
+    private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)
     {
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;
@@ -632,7 +632,7 @@ public class TrxTests
 
         return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
                    _configurationMock.Object, _clockMock.Object,
-                   _artifactsByExtension, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
+                   _artifactsByExtension, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
                    isCopyingFileAllowed: false);
     }
 
