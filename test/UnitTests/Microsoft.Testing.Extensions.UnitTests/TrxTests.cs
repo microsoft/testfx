@@ -653,7 +653,10 @@ public class TrxTests
             if (TrxContent is null)
             {
                 _ = Stream.Seek(0, SeekOrigin.Begin);
-                TrxContent = XDocument.Load(Stream);
+                if (Stream.Length != 0)
+                {
+                    TrxContent = XDocument.Load(Stream);
+                }
             }
         }
 
