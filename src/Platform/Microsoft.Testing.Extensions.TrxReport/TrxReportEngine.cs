@@ -576,11 +576,16 @@ internal sealed partial class TrxReportEngine
                     new XAttribute("adapterTypeName", $"executor://{_testFrameworkAdapter.Uid}/{_testFrameworkAdapter.Version}"));
 
                 // NOTE: className is required by TRX XSD.
-                string className = GetClassName(testNode);
+                (string className, string? testMethodName) = GetClassAndMethodName(testNode);
                 testMethod.SetAttributeValue("className", className);
 
-                // TODO: Looks like VSTest doesn't use displayName here, while we do.
-                testMethod.SetAttributeValue("name", displayName);
+                // NOTE: Historically, MTP used to always use displayName here.
+                // While VSTest never uses displayName.
+                // The use of displayName here is very wrong.
+                // We keep it as a fallback if we cannot determine the testMethodName (when TestMethodIdentifierProperty isn't present).
+                // This will most likely be hit for NUnit.
+                // However, this is very wrong and we probably should fail if TestMethodIdentifierProperty isn't present.
+                testMethod.SetAttributeValue("name", testMethodName ?? displayName);
 
                 unitTest.Add(testMethod);
 
@@ -607,22 +612,23 @@ internal sealed partial class TrxReportEngine
         return new SummaryCounts(passed, failed, skipped, timedout);
     }
 
-    private string GetClassName(TestNode testNode)
+    private (string ClassName, string? TestMethodName) GetClassAndMethodName(TestNode testNode)
     {
-        // We prefer TrxFullyQualifiedTypeNameProperty over everything else.
+        TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+
         if (testNode.Properties.SingleOrDefault<TrxFullyQualifiedTypeNameProperty>()?.FullyQualifiedTypeName is { } className)
         {
-            return className;
+            return (className, testMethodIdentifierProperty?.MethodName);
         }
 
-        // Next, we prefer TestMethodIdentifierProperty, and we throw if it's
-        // not there as we cannot determine the className which is required.
-        TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>()
-            ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFrameworkAdapter.DisplayName, _testFrameworkAdapter.Uid));
+        _ = testMethodIdentifierProperty ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFrameworkAdapter.DisplayName, _testFrameworkAdapter.Uid));
 
-        return RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+        string classNameFromIdentifierProperty = RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
             ? testMethodIdentifierProperty.TypeName
             : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
+
+        // TODO: Are we expected to append backtick and arity here for generic methods?
+        return (classNameFromIdentifierProperty, testMethodIdentifierProperty.MethodName);
     }
 
     private static XElement CreateUnitTestElementForTestDefinition(string displayName, string testAppModule, string id, TestNode testNode, string executionId)
