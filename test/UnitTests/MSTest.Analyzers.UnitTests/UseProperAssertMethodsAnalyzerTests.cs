@@ -4074,7 +4074,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertIsTrueWithLinqContainsOnCustomCollection_StillReports()
+    public async Task WhenAssertIsTrueWithLinqContainsOnCustomNonBCLCollection_Reports()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
