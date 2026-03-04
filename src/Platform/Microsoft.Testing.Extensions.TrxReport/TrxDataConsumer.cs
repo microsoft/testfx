@@ -197,44 +197,37 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
+        if (!_adapterSupportTrxCapability)
         {
-            if (!_adapterSupportTrxCapability)
-            {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)), testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-
-            ApplicationStateGuard.Ensure(_testStartTime is not null);
-
-            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-            var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
-                _clock, _artifactsByExtension,
-                _testFramework, _testStartTime.Value, exitCode, cancellationToken);
-            (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
-            if (warning is not null)
-            {
-                await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-
-            // TRX can run in two modes. In-process or out-of-process.
-            // If we are already running with the in-process mode, we publish the SessionFileArtifact to the message bus directly.
-            // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
-            if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
-            {
-                await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
-            }
-            else
-            {
-                // The TestHostController will receive the TRX file name.
-                // Then, it will **modify** it and add any additional artifacts that were produced by TestHostController.
-                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
-                ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
-                await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken).ConfigureAwait(false);
-            }
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFramework.DisplayName, _testFramework.Uid)), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+
+        ApplicationStateGuard.Ensure(_testStartTime is not null);
+
+        int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+        var trxReportGeneratorEngine = new TrxReportEngine(_fileSystem, _testApplicationModuleInfo, _environment, _commandLineOptionsService, _configuration,
+            _clock, _artifactsByExtension,
+            _testFramework, _testStartTime.Value, exitCode, cancellationToken);
+        (string reportFileName, string? warning) = await trxReportGeneratorEngine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
+        if (warning is not null)
         {
-            // Do nothing, we're stopping
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+
+        // TRX can run in two modes. In-process or out-of-process.
+        // If we are already running with the in-process mode, we publish the SessionFileArtifact to the message bus directly.
+        // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
+        if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
+        {
+            await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+        }
+        else
+        {
+            // The TestHostController will receive the TRX file name.
+            // Then, it will **modify** it and add any additional artifacts that were produced by TestHostController.
+            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks is not null);
+            ApplicationStateGuard.Ensure(_trxTestApplicationLifecycleCallbacks.NamedPipeClient is not null);
+            await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<ReportFileNameRequest, VoidResponse>(new ReportFileNameRequest(reportFileName), cancellationToken).ConfigureAwait(false);
         }
     }
 }
