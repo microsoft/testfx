@@ -268,6 +268,7 @@ internal sealed partial class TrxReportEngine
         // 1. timeout is always set to 0 (it seems ObjectModel doesn't have the concept of timeout at all)
         // 2. Skipped tests are not counted in VSTest implementation.
         //    An informative message is added to indicate that test was skipped.
+        // While what we have is reasonable, tooling implemented around might have been relying on VSTest implementation details.
         var counters = new XElement(
             NamespaceUri + "Counters",
             new XAttribute("total", summaryCounts.Passed + summaryCounts.Failed + summaryCounts.Skipped + summaryCounts.Timedout),
