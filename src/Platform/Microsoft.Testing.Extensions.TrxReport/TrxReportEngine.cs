@@ -419,6 +419,7 @@ internal sealed partial class TrxReportEngine
                 guid = GuidFromString(testNode.Uid.Value);
             }
 
+            // NOTE: In VSTest, MSTestDiscoverer.TmiTestId property is preferred if present.
             string id = guid.ToString();
             string displayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
             string executionId = Guid.NewGuid().ToString();
@@ -581,6 +582,7 @@ internal sealed partial class TrxReportEngine
                 }
             }
 
+            // TODO: Looks like VSTest doesn't use displayName here, while we do.
             testMethod.SetAttributeValue("name", displayName);
 
             unitTest.Add(testMethod);
@@ -634,7 +636,8 @@ internal sealed partial class TrxReportEngine
                     break;
 
                 case "Priority":
-                    if (int.TryParse(property.Value, out _))
+                    // 2147483647 (int.MaxValue) is already the default priority.
+                    if (int.TryParse(property.Value, out int priorityValue) && priorityValue != int.MaxValue)
                     {
                         unitTest.SetAttributeValue("priority", property.Value);
                     }
@@ -692,6 +695,7 @@ internal sealed partial class TrxReportEngine
             unitTest.Add(properties);
         }
 
+        // TODO: We are not adding Workitems, but VSTest does.
         return unitTest;
     }
 
