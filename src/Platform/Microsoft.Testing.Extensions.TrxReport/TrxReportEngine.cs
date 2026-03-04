@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -574,13 +575,9 @@ internal sealed partial class TrxReportEngine
                     new XAttribute("codeBase", testAppModule),
                     new XAttribute("adapterTypeName", $"executor://{_testFrameworkAdapter.Uid}/{_testFrameworkAdapter.Version}"));
 
-                // TODO: Per TRX XSD, className is required.
-                // Here we might not set it, which produces a bad TRX file.
-                string? className = testNode.Properties.SingleOrDefault<TrxFullyQualifiedTypeNameProperty>()?.FullyQualifiedTypeName;
-                if (className is not null)
-                {
-                    testMethod.SetAttributeValue("className", className);
-                }
+                // NOTE: className is required by TRX XSD.
+                string className = GetClassName(testNode);
+                testMethod.SetAttributeValue("className", className);
 
                 // TODO: Looks like VSTest doesn't use displayName here, while we do.
                 testMethod.SetAttributeValue("name", displayName);
@@ -608,6 +605,24 @@ internal sealed partial class TrxReportEngine
         testRun.Add(results);
 
         return new SummaryCounts(passed, failed, skipped, timedout);
+    }
+
+    private string GetClassName(TestNode testNode)
+    {
+        // We prefer TrxFullyQualifiedTypeNameProperty over everything else.
+        if (testNode.Properties.SingleOrDefault<TrxFullyQualifiedTypeNameProperty>()?.FullyQualifiedTypeName is { } className)
+        {
+            return className;
+        }
+
+        // Next, we prefer TestMethodIdentifierProperty, and we throw if it's
+        // not there as we cannot determine the className which is required.
+        TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>()
+            ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability, _testFrameworkAdapter.DisplayName, _testFrameworkAdapter.Uid));
+
+        return RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
+            ? testMethodIdentifierProperty.TypeName
+            : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}";
     }
 
     private static XElement CreateUnitTestElementForTestDefinition(string displayName, string testAppModule, string id, TestNode testNode, string executionId)
