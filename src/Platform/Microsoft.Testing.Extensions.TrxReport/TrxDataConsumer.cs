@@ -106,38 +106,31 @@ internal sealed class TrxReportGenerator :
         // This is only run in TestHost, and not TestHostController.
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
+        switch (value)
         {
-            switch (value)
-            {
-                case TestNodeUpdateMessage nodeChangedMessage:
-                    TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-                    if (nodeState is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
-                    {
-                        return Task.CompletedTask;
-                    }
+            case TestNodeUpdateMessage nodeChangedMessage:
+                TestNodeStateProperty? nodeState = nodeChangedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+                if (nodeState is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+                {
+                    return Task.CompletedTask;
+                }
 
-                    _tests.Add(nodeChangedMessage);
+                _tests.Add(nodeChangedMessage);
 
-                    break;
+                break;
 
-                case SessionFileArtifact fileArtifact:
-                    if (!_artifactsByExtension.TryGetValue(dataProducer, out List<SessionFileArtifact>? sessionFileArtifacts))
-                    {
-                        sessionFileArtifacts = [fileArtifact];
-                        _artifactsByExtension[dataProducer] = sessionFileArtifacts;
-                    }
-                    else
-                    {
-                        sessionFileArtifacts.Add(fileArtifact);
-                    }
+            case SessionFileArtifact fileArtifact:
+                if (!_artifactsByExtension.TryGetValue(dataProducer, out List<SessionFileArtifact>? sessionFileArtifacts))
+                {
+                    sessionFileArtifacts = [fileArtifact];
+                    _artifactsByExtension[dataProducer] = sessionFileArtifacts;
+                }
+                else
+                {
+                    sessionFileArtifacts.Add(fileArtifact);
+                }
 
-                    break;
-            }
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-        {
-            // Do nothing, we're stopping
+                break;
         }
 
         return Task.CompletedTask;
