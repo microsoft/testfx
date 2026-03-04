@@ -117,6 +117,8 @@ internal sealed partial class TrxReportEngine
                 testRunId = Guid.NewGuid();
             }
 
+            // TODO: VSTest implementation seems to also add "runUser" attribute.
+            // Revise that.
             testRun.SetAttributeValue("id", testRunId);
             string testRunName = $"{_environment.GetEnvironmentVariable("UserName")}@{_environment.MachineName} {FormatDateTimeForRunName(_clock.UtcNow)}";
             testRun.SetAttributeValue("name", testRunName);
@@ -232,6 +234,10 @@ internal sealed partial class TrxReportEngine
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
+            // TODO: VSTest seems to also add agentDisplayName
+            // agentDisplayName always matches agentName and is always MachineName.
+            // NOTE: VSTest always adds isFromRemoteAgent with value false.
+            // But this is not necessary to add as the XSD defines false as the default.
             var collector = new XElement(
                 NamespaceUri + "Collector",
                 new XAttribute("agentName", _environment.MachineName),
@@ -257,6 +263,10 @@ internal sealed partial class TrxReportEngine
             new XAttribute("outcome", resultSummaryOutcome));
         testRun.Add(resultSummary);
 
+        // NOTE: Looking at VSTest implementation:
+        // 1. timeout is always set to 0 (it seems ObjectModel doesn't have the concept of timeout at all)
+        // 2. Skipped tests are not counted in VSTest implementation.
+        //    An informative message is added to indicate that test was skipped.
         var counters = new XElement(
             NamespaceUri + "Counters",
             new XAttribute("total", summaryCounts.Passed + summaryCounts.Failed + summaryCounts.Skipped + summaryCounts.Timedout),
@@ -394,6 +404,7 @@ internal sealed partial class TrxReportEngine
         var uniqueTestDefinitionTestIds = new HashSet<string>();
 
         testEntries = new XElement("TestEntries");
+        // TODO: Extract this to a constant.
         uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
         hasFailedTests = false;
         foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
@@ -432,7 +443,10 @@ internal sealed partial class TrxReportEngine
                 "endTime",
                 timing?.GlobalTiming.EndTime.ToUniversalTime().ToString("O") ?? _clock.UtcNow.ToString("O"));
 
-            // TODO: Are there other types?
+            // In VSTest, other test types originate from adding TestProperty with
+            // Id TestType (see Constants.TestTypePropertyIdentifier).
+            // The property is only considered if it has value ec4800e8-40e5-4ab3-8510-b8bf29b1904d (OrderedTestType)
+            // In the context of MTP, we don't care.
             unitTestResult.SetAttributeValue("testType", UnitTestTypeGuid);
 
             string currentTestOutcome = "Passed";
@@ -530,6 +544,9 @@ internal sealed partial class TrxReportEngine
                 unitTestResult.Add(output);
             }
 
+            // TODO: VSTest used to store the relative paths in a sorted list (ignoring case).
+            // Here, we are not making the paths relative.
+            // And we are not sorting them.
             XElement? resultFiles = null;
             foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
