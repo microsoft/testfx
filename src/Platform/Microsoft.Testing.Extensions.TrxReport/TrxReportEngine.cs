@@ -16,6 +16,7 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 internal sealed partial class TrxReportEngine
 {
     private const string UnitTestTypeGuid = "13CDC9D9-DDB5-4fa4-A97D-D965CCFC6D4B";
+    private const string UncategorizedTestListId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
 
     private static readonly Regex ReservedFileNamesRegex = BuildReservedFileNameRegex();
     private static readonly Regex InvalidXmlCharReplace = BuildInvalidXmlCharReplace();
@@ -140,10 +141,10 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests);
+            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out bool hasFailedTests);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
-            AddTestLists(testRun, uncategorizedTestId);
+            AddTestLists(testRun);
 
             string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
@@ -374,14 +375,15 @@ internal sealed partial class TrxReportEngine
         await fileStream.CopyToAsync(destinationStream, _cancellationToken).ConfigureAwait(false);
     }
 
-    private static void AddTestLists(XElement testRun, string uncategorizedTestId)
+    private static void AddTestLists(XElement testRun)
     {
         var testLists = new XElement(
             "TestLists",
             new XElement(
                 "TestList",
+                // NOTE: VSTest localizes this string.
                 new XAttribute("name", "Results Not in a List"),
-                new XAttribute("id", uncategorizedTestId)),
+                new XAttribute("id", UncategorizedTestListId)),
             new XElement(
                 "TestList",
                 new XAttribute("name", "All Loaded Results"),
@@ -391,7 +393,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out string uncategorizedTestId, out bool hasFailedTests)
+    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out bool hasFailedTests)
     {
         int passed = 0;
         int failed = 0;
@@ -404,8 +406,6 @@ internal sealed partial class TrxReportEngine
         var uniqueTestDefinitionTestIds = new HashSet<string>();
 
         testEntries = new XElement("TestEntries");
-        // TODO: Extract this to a constant.
-        uncategorizedTestId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
         hasFailedTests = false;
         foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
         {
@@ -491,7 +491,7 @@ internal sealed partial class TrxReportEngine
 
             unitTestResult.SetAttributeValue("outcome", currentTestOutcome);
 
-            unitTestResult.SetAttributeValue("testListId", uncategorizedTestId);
+            unitTestResult.SetAttributeValue("testListId", UncategorizedTestListId);
 
             // It has the same value as executionId
             unitTestResult.SetAttributeValue("relativeResultsDirectory", executionId);
@@ -678,7 +678,7 @@ internal sealed partial class TrxReportEngine
                 "TestEntry",
                 new XAttribute("testId", id),
                 new XAttribute("executionId", executionId),
-                new XAttribute("testListId", uncategorizedTestId));
+                new XAttribute("testListId", UncategorizedTestListId));
             testEntries.Add(testEntry);
         }
 
