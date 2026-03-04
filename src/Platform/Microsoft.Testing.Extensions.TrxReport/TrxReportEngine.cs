@@ -593,6 +593,12 @@ internal sealed partial class TrxReportEngine
             }
 
             // testEntry
+            // NOTE: VSTest implementation ensures that we don't duplicate TestEntry elements with the same executionId.
+            // However, our implementation always gets a fresh Guid so we don't need that special handling.
+            // If we added the concept of "parent execution id" to MTP TRX and allow a way to
+            // specify a parent-child relationship (e.g, for parameterized tests), we will need to
+            // revise this.
+            // The way VSTest does it, it allows test frameworks to set executionId and parentExecutionId on test results.
             var testEntry = new XElement(
                 "TestEntry",
                 new XAttribute("testId", id),
