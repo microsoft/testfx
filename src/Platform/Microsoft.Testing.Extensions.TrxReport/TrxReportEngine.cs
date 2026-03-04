@@ -567,7 +567,7 @@ internal sealed partial class TrxReportEngine
 
             // TestDefinitions
             // Add the test method to the test definitions if it's not already there
-            if (!uniqueTestDefinitionTestIds.Contains(id))
+            if (uniqueTestDefinitionTestIds.Add(id))
             {
                 XElement unitTest = CreateUnitTestElementForTestDefinition(displayName, testAppModule, id, testNode, executionId);
 
@@ -576,13 +576,12 @@ internal sealed partial class TrxReportEngine
                     new XAttribute("codeBase", testAppModule),
                     new XAttribute("adapterTypeName", $"executor://{_testFrameworkAdapter.Uid}/{_testFrameworkAdapter.Version}"));
 
-                if (_adapterSupportTrxCapability == true)
+                // TODO: Per TRX XSD, className is required.
+                // Here we might not set it, which produces a bad TRX file.
+                string? className = testNode.Properties.SingleOrDefault<TrxFullyQualifiedTypeNameProperty>()?.FullyQualifiedTypeName;
+                if (className is not null)
                 {
-                    string? className = testNode.Properties.SingleOrDefault<TrxFullyQualifiedTypeNameProperty>()?.FullyQualifiedTypeName;
-                    if (className is not null)
-                    {
-                        testMethod.SetAttributeValue("className", className);
-                    }
+                    testMethod.SetAttributeValue("className", className);
                 }
 
                 // TODO: Looks like VSTest doesn't use displayName here, while we do.
@@ -591,7 +590,6 @@ internal sealed partial class TrxReportEngine
                 unitTest.Add(testMethod);
 
                 testDefinitions.Add(unitTest);
-                uniqueTestDefinitionTestIds.Add(id);
             }
 
             // testEntry
