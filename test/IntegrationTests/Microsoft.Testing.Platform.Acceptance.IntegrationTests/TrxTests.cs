@@ -349,8 +349,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Environment.FailFast("CRASHPROCESS");
         }
 
+        var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier) }));
         context.Complete();
     }
 }
