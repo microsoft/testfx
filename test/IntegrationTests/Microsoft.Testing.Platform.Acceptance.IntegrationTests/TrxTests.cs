@@ -513,6 +513,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
             new TestNode()
             {
@@ -520,6 +522,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 DisplayName = "FailingTest",
                 Properties = new PropertyBag(
                     new FailedTestNodeStateProperty("Expected 1 but got 2"),
+                    testMethodIdentifier,
                     new TrxExceptionProperty("Expected 1 but got 2", "   at DummyTestFramework.ExecuteRequestAsync() in Program.cs:line 50"))
             }));
         context.Complete();
