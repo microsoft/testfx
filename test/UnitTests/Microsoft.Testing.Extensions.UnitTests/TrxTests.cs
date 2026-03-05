@@ -27,11 +27,12 @@ public class TrxTests
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
 
     [TestMethod]
-    public async Task TrxReportEngine_GenerateReportAsyncWithNullAdapterSupportTrxCapability_TrxDoesNotContainClassName()
+    public async Task TrxReportEngine_GenerateReportAsync_TrxDoesContainClassName()
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        var propertyBag = new PropertyBag(new PassedTestNodeStateProperty());
+        propertyBag.Add(new TrxFullyQualifiedTypeNameProperty("FqnForClassNameTest"));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
@@ -44,7 +45,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.DoesNotContain(@"className=", trxContent);
+        Assert.Contains(@"className=""FqnForClassNameTest""", trxContent);
     }
 
     [TestMethod]
@@ -436,7 +437,7 @@ public class TrxTests
         PropertyBag propertyBag = new(
             new PassedTestNodeStateProperty(),
             new TrxFullyQualifiedTypeNameProperty("TrxFullyQualifiedTypeName"));
-        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream, adapterSupportTrxCapability: true);
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
         (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
@@ -538,7 +539,7 @@ public class TrxTests
         _ = _testApplicationModuleInfoMock.Setup(_ => _.GetCurrentTestApplicationFullPath()).Returns("TestAppPath");
         var trxReportEngine = new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
             _configurationMock.Object, _clockMock.Object,
-            _artifactsByExtension, true, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
+            _artifactsByExtension, _testFrameworkMock.Object, DateTime.UtcNow, 0, CancellationToken.None,
             isCopyingFileAllowed: false);
 
         // Act
@@ -591,7 +592,7 @@ public class TrxTests
           <Value>MyValue1</Value>
         </Property>
       </Properties>
-      <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" name=""TestMethod"" />
+      <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" className=""MyNamespace.MyClass"" name=""TestMethod"" />
     </UnitTest>
  ";
         Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
@@ -613,11 +614,18 @@ public class TrxTests
            => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.0000000.trx", StringComparison.Ordinal));
 
     private static TestNodeUpdateMessage CreateTestNodeUpdate(string uid, string displayName, PropertyBag propertyBag)
-        => new TestNodeUpdateMessage(
-            new SessionUid("1"),
-            new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });
+    {
+        if (!propertyBag.Any<TrxFullyQualifiedTypeNameProperty>())
+        {
+            propertyBag.Add(new TrxFullyQualifiedTypeNameProperty("MyNamespace.MyClass"));
+        }
 
-    private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool? adapterSupportTrxCapability = null, bool isExplicitFileName = false)
+        return new TestNodeUpdateMessage(
+                new SessionUid("1"),
+                new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });
+    }
+
+    private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)
     {
         DateTime testStartTime = DateTime.Now;
         CancellationToken cancellationToken = CancellationToken.None;
@@ -632,7 +640,7 @@ public class TrxTests
 
         return new TrxReportEngine(_fileSystem.Object, _testApplicationModuleInfoMock.Object, _environmentMock.Object, _commandLineOptionsMock.Object,
                    _configurationMock.Object, _clockMock.Object,
-                   _artifactsByExtension, adapterSupportTrxCapability, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
+                   _artifactsByExtension, _testFrameworkMock.Object, testStartTime, 0, cancellationToken,
                    isCopyingFileAllowed: false);
     }
 
@@ -653,7 +661,10 @@ public class TrxTests
             if (TrxContent is null)
             {
                 _ = Stream.Seek(0, SeekOrigin.Begin);
-                TrxContent = XDocument.Load(Stream);
+                if (Stream.Length != 0)
+                {
+                    TrxContent = XDocument.Load(Stream);
+                }
             }
         }
 
