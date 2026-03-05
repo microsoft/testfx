@@ -15,7 +15,7 @@ public interface ITestHostOrchestratorManager
     /// Adds a test host orchestrator.
     /// </summary>
     /// <param name="factory">The factory method for creating the test host orchestrator.</param>
-    void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory);
+    void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostExecutionOrchestrator> factory);
 
     /// <summary>
     /// Adds a test host orchestrator application lifetime.

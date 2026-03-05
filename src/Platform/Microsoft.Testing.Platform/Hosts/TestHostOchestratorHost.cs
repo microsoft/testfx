@@ -24,7 +24,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }
 
-        ITestHostOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
+        ITestHostExecutionOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
         ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
         int exitCode;
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);

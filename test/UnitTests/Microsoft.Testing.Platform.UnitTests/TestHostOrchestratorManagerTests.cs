@@ -147,7 +147,7 @@ public sealed class TestHostOrchestratorManagerTests
         Assert.AreEqual("e2e-compat", config.TestHostOrchestrators[0].Uid);
     }
 
-    private sealed class FakeOrchestrator : BackCompat.ITestHostOrchestrator
+    private sealed class FakeOrchestrator : BackCompat.ITestHostExecutionOrchestrator
     {
         public FakeOrchestrator(string uid) => Uid = uid;
 

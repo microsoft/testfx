@@ -11,16 +11,16 @@ namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Extensions.TestHostOrchestrator.ITestHostOrchestratorManager
 {
     private readonly List<Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime>> _testHostOrchestratorApplicationLifetimeFactories = [];
-    private List<Func<IServiceProvider, ITestHostOrchestrator>>? _factories;
+    private List<Func<IServiceProvider, ITestHostExecutionOrchestrator>>? _factories;
 
-    public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
+    public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostExecutionOrchestrator> factory)
     {
         Ensure.NotNull(factory);
         _factories ??= [];
         _factories.Add(factory);
     }
 
-    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostOrchestrator> factory)
+    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator> factory)
     {
         Ensure.NotNull(factory);
         _factories ??= [];
@@ -34,10 +34,10 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Exten
             return new TestHostOrchestratorConfiguration([]);
         }
 
-        List<ITestHostOrchestrator> orchestrators = [];
-        foreach (Func<IServiceProvider, ITestHostOrchestrator> factory in _factories)
+        List<ITestHostExecutionOrchestrator> orchestrators = [];
+        foreach (Func<IServiceProvider, ITestHostExecutionOrchestrator> factory in _factories)
         {
-            ITestHostOrchestrator orchestrator = factory(serviceProvider);
+            ITestHostExecutionOrchestrator orchestrator = factory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
             orchestrators.ValidateUniqueExtension(orchestrator);

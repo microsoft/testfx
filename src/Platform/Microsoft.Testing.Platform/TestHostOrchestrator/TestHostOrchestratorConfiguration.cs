@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
-internal sealed class TestHostOrchestratorConfiguration(ITestHostOrchestrator[] testHostOrchestrators)
+internal sealed class TestHostOrchestratorConfiguration(ITestHostExecutionOrchestrator[] testHostOrchestrators)
 {
-    public ITestHostOrchestrator[] TestHostOrchestrators { get; } = testHostOrchestrators;
+    public ITestHostExecutionOrchestrator[] TestHostOrchestrators { get; } = testHostOrchestrators;
 }
