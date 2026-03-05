@@ -8,7 +8,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
 internal interface ITestHostOrchestratorManager
 {
-    void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostExecutionOrchestrator> factory);
+    void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory);
+
+    void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory);
 }
 
 // Kept for binary backward compatibility with extensions that cast to this concrete type.

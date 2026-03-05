@@ -20,12 +20,15 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Exten
         _factories.Add(factory);
     }
 
-    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator> factory)
+    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostOrchestrator> factory)
     {
         Ensure.NotNull(factory);
         _factories ??= [];
         _factories.Add(sp => factory(sp));
     }
+
+    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
+        => AddTestHostOrchestratorApplicationLifetime(testHostOrchestratorApplicationLifetimeFactory);
 
     internal async Task<TestHostOrchestratorConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
