@@ -258,6 +258,10 @@ internal sealed partial class TrxReportEngine
 
     private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
     {
+        // TODO: VSTest adds Output/StdOut element to ResultSummary which we don't add.
+        // VSTest adds mainly two things in that element:
+        // 1. Skipped test messages (see AddRunLevelInformationalMessage call in HandleSkippedTest in VSTest's TrxLogger implementation)
+        // 2. Messages published with TestMessageLevel.Informational.
         var resultSummary = new XElement(
             NamespaceUri + "ResultSummary",
             new XAttribute("outcome", resultSummaryOutcome));
@@ -288,6 +292,10 @@ internal sealed partial class TrxReportEngine
             new XAttribute("pending", 0));
         resultSummary.Add(counters);
 
+        // TODO: VSTest adds two additional things to RunInfos
+        // 1. Messages published with TestMessageLevel.Warning or TestMessageLevel.Error
+        // 2. Errors when constructing result files.
+        // In addition, in these cases, it turns TRX outcome to error.
         if (isTestHostCrashed)
         {
             var runInfos = new XElement(NamespaceUri + "RunInfos");
@@ -320,6 +328,7 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
+        // TODO: VSTest seems to also add ResultFiles element, and not only CollectorDataEntries.
         var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 

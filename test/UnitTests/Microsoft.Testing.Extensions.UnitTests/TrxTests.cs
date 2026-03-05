@@ -27,7 +27,7 @@ public class TrxTests
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
 
     [TestMethod]
-    public async Task TrxReportEngine_GenerateReportAsync_TrxDoesContainsClassName()
+    public async Task TrxReportEngine_GenerateReportAsync_TrxDoesContainClassName()
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
