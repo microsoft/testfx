@@ -27,11 +27,12 @@ public class TrxTests
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension = [];
 
     [TestMethod]
-    public async Task TrxReportEngine_GenerateReportAsyncWithNullAdapterSupportTrxCapability_TrxDoesNotContainClassName()
+    public async Task TrxReportEngine_GenerateReportAsync_TrxDoesContainsClassName()
     {
         // Arrange
         using MemoryFileStream memoryStream = new();
-        PropertyBag propertyBag = new(new PassedTestNodeStateProperty());
+        var propertyBag = new PropertyBag(new PassedTestNodeStateProperty());
+        propertyBag.Add(new TrxFullyQualifiedTypeNameProperty("FqnForClassNameTest"));
         TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
 
         // Act
@@ -44,7 +45,7 @@ public class TrxTests
         XDocument xml = memoryStream.TrxContent;
         AssertTrxOutcome(xml, "Completed");
         string trxContent = xml.ToString();
-        Assert.DoesNotContain(@"className=", trxContent);
+        Assert.Contains(@"className=""FqnForClassNameTest""", trxContent);
     }
 
     [TestMethod]
@@ -591,7 +592,7 @@ public class TrxTests
           <Value>MyValue1</Value>
         </Property>
       </Properties>
-      <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" name=""TestMethod"" />
+      <TestMethod codeBase=""TestAppPath"" adapterTypeName=""executor:///"" className=""MyNamespace.MyClass"" name=""TestMethod"" />
     </UnitTest>
  ";
         Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
@@ -613,9 +614,16 @@ public class TrxTests
            => Assert.IsTrue(fileName.Equals("_MachineName_0001-01-01_00_00_00.0000000.trx", StringComparison.Ordinal));
 
     private static TestNodeUpdateMessage CreateTestNodeUpdate(string uid, string displayName, PropertyBag propertyBag)
-        => new TestNodeUpdateMessage(
-            new SessionUid("1"),
-            new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });
+    {
+        if (!propertyBag.Any<TrxFullyQualifiedTypeNameProperty>())
+        {
+            propertyBag.Add(new TrxFullyQualifiedTypeNameProperty("MyNamespace.MyClass"));
+        }
+
+        return new TestNodeUpdateMessage(
+                new SessionUid("1"),
+                new TestNode { Uid = uid, DisplayName = displayName, Properties = propertyBag });
+    }
 
     private TrxReportEngine GenerateTrxReportEngine(MemoryFileStream memoryStream, bool isExplicitFileName = false)
     {
