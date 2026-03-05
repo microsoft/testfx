@@ -329,6 +329,7 @@ internal sealed partial class TrxReportEngine
         }
 
         // TODO: VSTest seems to also add ResultFiles element, and not only CollectorDataEntries.
+        // TODO: Revise VSTest implementation for Converter.ToCollectionEntries and Converter.ToResultFiles
         var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
@@ -557,6 +558,10 @@ internal sealed partial class TrxReportEngine
             // TODO: VSTest used to store the relative paths in a sorted list (ignoring case).
             // Here, we are not making the paths relative.
             // And we are not sorting them.
+            // TODO: VSTest is able to classify per-test attachments into two categories:
+            // 1. ResultFiles
+            // 2. CollectorDataEntries
+            // So far, we only have "ResultFiles".
             XElement? resultFiles = null;
             foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
