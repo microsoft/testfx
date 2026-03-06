@@ -149,6 +149,9 @@ Moving last attempt asset files to the default result directory
   <data name="RetryFailedTestsExtensionDisplayName" xml:space="preserve">
     <value>Retry failed tests</value>
   </data>
+  <data name="RetryProviderRequiresDefaultTestHostManagerErrorMessage" xml:space="preserve">
+    <value>The retry provider requires the default TestHostManager implementation.</value>
+  </data>
   <data name="RetryExtensionNotSupportedOnBrowserErrorMessage" xml:space="preserve">
     <value>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</value>
   </data>

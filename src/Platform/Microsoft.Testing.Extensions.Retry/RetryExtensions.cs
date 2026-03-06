@@ -42,7 +42,7 @@ public static class RetryExtensions
         if (builder.TestHost is not TestHostManager testHostManager)
         {
             throw new InvalidOperationException(
-                "The retry provider requires the default TestHostManager implementation.");
+                ExtensionResources.RetryProviderRequiresDefaultTestHostManagerErrorMessage);
         }
 
         testHostManager

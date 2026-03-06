@@ -100,6 +100,11 @@ Moviendo los archivos de recursos del último intento al directorio de resultado
         <target state="translated">Las opciones '{0}' y '{1}' no se pueden usar juntas</target>
         <note />
       </trans-unit>
+      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
+        <source>The retry provider requires the default TestHostManager implementation.</source>
+        <target state="new">The retry provider requires the default TestHostManager implementation.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
         <target state="translated">El proceso de host de prueba se cerró antes de que el servicio de reintento pudiera conectarse a él. Código de salida: {0}</target>
