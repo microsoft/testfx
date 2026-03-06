@@ -14,4 +14,11 @@ internal interface ITestHostOrchestratorManager
 }
 
 // Kept for binary backward compatibility with extensions that cast to this concrete type.
-internal sealed class TestHostOrchestratorManager : global::Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager;
+internal sealed class TestHostOrchestratorManager : global::Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager
+{
+    // Old extensions call this method directly on the concrete type (not through an interface).
+    // The base class only has AddTestHostOrchestrator(Func<..., ITestHostExecutionOrchestrator>),
+    // so we need this overload to match the old signature with ITestHostOrchestrator.
+    public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
+        => base.AddTestHostOrchestrator(factory);
+}
