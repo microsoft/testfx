@@ -493,6 +493,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     private static CollectionCheckStatus RecognizeCollectionMethodCheck(
         IOperation operation,
         INamedTypeSymbol objectTypeSymbol,
+        INamedTypeSymbol? enumerableTypeSymbol,
         out SyntaxNode? collectionExpression,
         out SyntaxNode? itemExpression)
     {
@@ -526,6 +527,19 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                         return CollectionCheckStatus.Contains;
                     }
                 }
+            }
+
+            // Handle LINQ Enumerable.Contains<TSource>(this IEnumerable<TSource>, TSource)
+            // In the Roslyn operation model, LINQ extension calls appear with ContainingType == Enumerable
+            // and Arguments includes the 'this' parameter, so Arguments.Length == 2.
+            if (methodName == "Contains" &&
+                invocation.Arguments.Length == 2 &&
+                enumerableTypeSymbol is not null &&
+                SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, enumerableTypeSymbol))
+            {
+                collectionExpression = invocation.Arguments[0].Value.Syntax;
+                itemExpression = invocation.Arguments[1].Value.Syntax;
+                return CollectionCheckStatus.Contains;
             }
         }
 
@@ -748,7 +762,7 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         }
 
         // Check for collection method patterns: myCollection.Contains(...)
-        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, objectTypeSymbol, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
+        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, objectTypeSymbol, enumerableTypeSymbol, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr);
         if (collectionMethodStatus != CollectionCheckStatus.Unknown)
         {
             if (collectionMethodStatus == CollectionCheckStatus.Contains)
