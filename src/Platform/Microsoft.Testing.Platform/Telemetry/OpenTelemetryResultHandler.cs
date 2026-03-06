@@ -18,7 +18,7 @@ internal sealed class OpenTelemetryResultHandler
     private readonly ICounter<int> _totalSkippedTests;
     private readonly ICounter<int> _totalUnknownedTests;
     private readonly IHistogram<double> _totalDuration;
-    private readonly Dictionary<TestNodeUid, IPlatformActivity?> _testActivities = [];
+    private readonly Dictionary<TestNodeUid, IPlatformActivity> _testActivities = [];
 
     public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService, IEnvironment environment)
     {
@@ -61,12 +61,15 @@ internal sealed class OpenTelemetryResultHandler
     internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid)
     {
         _totalStartedTests.Add(1);
-        _testActivities.Add(
+        IPlatformActivity? activity = _otelService.StartActivity(
             testNode.Uid,
-            _otelService.StartActivity(
-                testNode.Uid,
-                parentId: _otelService.TestFrameworkActivity?.Id,
-                tags: GetTestInitialInfo(testNode, parentUid)));
+            parentId: _otelService.TestFrameworkActivity?.Id,
+            tags: GetTestInitialInfo(testNode, parentUid));
+
+        if (activity is not null)
+        {
+            _testActivities.Add(testNode.Uid, activity);
+        }
     }
 
     internal void NotifyUnknown()
@@ -122,48 +125,48 @@ internal sealed class OpenTelemetryResultHandler
             _ => ("unknown", null, null),
         };
 
-        activity?.SetTag("test.result", result);
-        activity?.SetTag("test.result.explanation", stateProperty.Explanation);
+        activity.SetTag("test.result", result);
+        activity.SetTag("test.result.explanation", stateProperty.Explanation);
         if (exception is not null)
         {
-            activity?.SetTag("test.result.exception.type", exception.GetType().FullName);
-            activity?.SetTag("test.result.exception.message", exception.Message);
-            activity?.SetTag("test.result.exception.stacktrace", exception.StackTrace);
+            activity.SetTag("test.result.exception.type", exception.GetType().FullName);
+            activity.SetTag("test.result.exception.message", exception.Message);
+            activity.SetTag("test.result.exception.stacktrace", exception.StackTrace);
         }
 
         if (timeoutTime is not null)
         {
-            activity?.SetTag("test.result.timeout.ms", timeoutTime.Value.TotalMilliseconds);
+            activity.SetTag("test.result.timeout.ms", timeoutTime.Value.TotalMilliseconds);
         }
 
         if (testNode.Properties.SingleOrDefault<TimingProperty>() is { } timingProperty)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
             _totalDuration?.Record(totalMilliseconds);
-            activity?.SetTag("test.duration.ms", totalMilliseconds);
+            activity.SetTag("test.duration.ms", totalMilliseconds);
             foreach (StepTimingInfo step in timingProperty.StepTimings)
             {
-                activity?.SetTag($"test.step{step.Id}.duration.ms", step.Timing.Duration.TotalMilliseconds);
-                activity?.SetTag($"test.step{step.Id}.description", step.Description);
+                activity.SetTag($"test.step{step.Id}.duration.ms", step.Timing.Duration.TotalMilliseconds);
+                activity.SetTag($"test.step{step.Id}.description", step.Description);
             }
         }
 
         foreach (TestMetadataProperty metadataProperty in testNode.Properties.OfType<TestMetadataProperty>())
         {
-            activity?.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
+            activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
         }
 
-        activity?.SetTag("test.stdout", string.Join(_environment.NewLine, testNode.Properties.OfType<StandardOutputProperty>().Select(x => x.StandardOutput)));
-        activity?.SetTag("test.stderr", string.Join(_environment.NewLine, testNode.Properties.OfType<StandardErrorProperty>().Select(x => x.StandardError)));
+        activity.SetTag("test.stdout", string.Join(_environment.NewLine, testNode.Properties.OfType<StandardOutputProperty>().Select(x => x.StandardOutput)));
+        activity.SetTag("test.stderr", string.Join(_environment.NewLine, testNode.Properties.OfType<StandardErrorProperty>().Select(x => x.StandardError)));
 
         int index = 0;
         foreach (FileArtifactProperty fileArtifactProperty in testNode.Properties.OfType<FileArtifactProperty>())
         {
-            activity?.SetTag($"test.artifact.file[{index}].path", fileArtifactProperty.FileInfo.FullName);
+            activity.SetTag($"test.artifact.file[{index}].path", fileArtifactProperty.FileInfo.FullName);
             index++;
         }
 
-        activity?.Dispose();
+        activity.Dispose();
         _testActivities.Remove(testNode.Uid);
     }
 }
