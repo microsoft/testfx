@@ -1,7 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using NUnit.Framework;
+
+[assembly: Parallelizable(ParallelScope.All)]
 
 namespace NUnitPlayground;
 
@@ -9,6 +11,8 @@ namespace NUnitPlayground;
 public class TestClass
 {
     [Test]
-    public void Test1()
-        => Assert.That(true, Is.True);
+    public void Test([Values("one", "one")] string value)
+    {
+        Thread.Sleep(1000);
+    }
 }

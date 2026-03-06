@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <None Update="config.runsettings">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>IfDifferent</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
