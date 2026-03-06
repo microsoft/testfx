@@ -142,7 +142,7 @@ internal sealed class OpenTelemetryResultHandler
         if (testNode.Properties.SingleOrDefault<TimingProperty>() is { } timingProperty)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
-            _totalDuration?.Record(totalMilliseconds);
+            _totalDuration.Record(totalMilliseconds);
             activity.SetTag("test.duration.ms", totalMilliseconds);
             foreach (StepTimingInfo step in timingProperty.StepTimings)
             {
