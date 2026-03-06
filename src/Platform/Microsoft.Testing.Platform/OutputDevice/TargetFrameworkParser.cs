@@ -5,6 +5,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 
 internal static class TargetFrameworkParser
 {
+    [return: NotNullIfNotNull(nameof(frameworkDescription))]
     public static string? GetShortTargetFramework(string? frameworkDescription)
     {
         if (frameworkDescription == null)
