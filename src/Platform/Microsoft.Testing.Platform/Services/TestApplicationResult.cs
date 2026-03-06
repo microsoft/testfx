@@ -37,7 +37,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _policiesService = policiesService;
         if (otelService is not null)
         {
-            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
+            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, environment);
         }
 
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
