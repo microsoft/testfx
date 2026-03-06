@@ -13,6 +13,5 @@ public class TestClass
     [Test]
     public void Test([Values("one", "one")] string value)
     {
-        Thread.Sleep(1000);
     }
 }
