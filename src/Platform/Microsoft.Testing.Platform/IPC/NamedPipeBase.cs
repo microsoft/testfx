@@ -3,7 +3,9 @@
 
 using Microsoft.CodeAnalysis;
 
-#if !TESTING_PLATFORM_SOURCE_EMBEDDED
+#if TESTING_PLATFORM_SOURCE_EMBEDDED
+using PlatformResources = Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources;
+#else
 using Microsoft.Testing.Platform.Resources;
 #endif
 
@@ -26,11 +28,7 @@ internal abstract class NamedPipeBase
             ? serializer
             : throw new ArgumentException(string.Format(
                 CultureInfo.InvariantCulture,
-#if TESTING_PLATFORM_SOURCE_EMBEDDED
-                "No serializer registered with id '{0}'",
-#else
                 PlatformResources.NoSerializerRegisteredWithIdErrorMessage,
-#endif
                 id));
 
     protected INamedPipeSerializer GetSerializer(Type type)
@@ -38,10 +36,6 @@ internal abstract class NamedPipeBase
             ? serializer
             : throw new ArgumentException(string.Format(
                 CultureInfo.InvariantCulture,
-#if TESTING_PLATFORM_SOURCE_EMBEDDED
-                "No serializer registered with type '{0}'",
-#else
                 PlatformResources.NoSerializerRegisteredWithTypeErrorMessage,
-#endif
                 type));
 }

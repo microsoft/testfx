@@ -13,6 +13,8 @@
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResourcesAccessor.cs" Link="Resources\EmbeddedPlatformResourcesAccessor.cs" />
+    <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResources.resx" Link="Resources\EmbeddedPlatformResources.resx" LogicalName="Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources.resources" GenerateSource="false" />
   </ItemGroup>
 
   <ItemGroup>

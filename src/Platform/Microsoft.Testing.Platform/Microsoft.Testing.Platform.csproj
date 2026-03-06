@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      Keep the resx excluded from this project's compilation to avoid Arcade generating
+      a class that conflicts (via IVT) with consuming projects' manual accessor.
+      The resx lives here so xlf files are co-located. Run 'msbuild /t:UpdateXlf'
+      after editing the resx (temporarily removing this line).
+    -->
+    <EmbeddedResource Remove="Resources\EmbeddedPlatformResources.resx" />
+    <Compile Remove="Resources\EmbeddedPlatformResourcesAccessor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
   </ItemGroup>
 

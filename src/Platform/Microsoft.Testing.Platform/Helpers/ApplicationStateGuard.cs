@@ -3,7 +3,9 @@
 
 using Microsoft.CodeAnalysis;
 
-#if !TESTING_PLATFORM_SOURCE_EMBEDDED
+#if TESTING_PLATFORM_SOURCE_EMBEDDED
+using PlatformResources = Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources;
+#else
 using Microsoft.Testing.Platform.Resources;
 #endif
 
@@ -26,11 +28,7 @@ internal static class ApplicationStateGuard
         {
             throw new InvalidOperationException(string.Format(
                 CultureInfo.InvariantCulture,
-#if TESTING_PLATFORM_SOURCE_EMBEDDED
-                "Unexpected state in file '{0}' at line '{1}'",
-#else
                 PlatformResources.UnexpectedStateErrorMessage,
-#endif
                 path, line));
         }
     }
@@ -38,10 +36,6 @@ internal static class ApplicationStateGuard
     public static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
         => new(string.Format(
             CultureInfo.InvariantCulture,
-#if TESTING_PLATFORM_SOURCE_EMBEDDED
-            "This program location is thought to be unreachable. File='{0}' Line={1}",
-#else
             PlatformResources.UnreachableLocationErrorMessage,
-#endif
             path, line));
 }

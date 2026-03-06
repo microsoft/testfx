@@ -25,6 +25,8 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemEnvironment.cs" Link="Helpers\SystemEnvironment.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\ITask.cs" Link="Helpers\ITask.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemTask.cs" Link="Helpers\SystemTask.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResourcesAccessor.cs" Link="Resources\EmbeddedPlatformResourcesAccessor.cs" />
+    <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResources.resx" Link="Resources\EmbeddedPlatformResources.resx" LogicalName="Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources.resources" GenerateSource="false" />
   </ItemGroup>
 
   <ItemGroup>

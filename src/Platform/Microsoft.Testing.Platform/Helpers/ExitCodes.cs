@@ -11,6 +11,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// </summary>
 // TODO: Consider changing this to an enum, and rename to 'ExitCode' to follow enum naming convention.
 // Being an enum makes it easier to do 'Enum.IsDefined' checks to validate if an exit code is a known MTP exit code.
+// Note: Changing this to enum would be binary breaking for extensions built against MTP <= 2.1 that still consume this via IVT.
 [Embedded]
 internal static class ExitCodes
 {
