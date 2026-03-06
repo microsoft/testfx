@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -23,7 +24,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }
 
-        ITestHostOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
+        ITestHostExecutionOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
         ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
         int exitCode;
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);

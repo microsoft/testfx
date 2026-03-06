@@ -60,11 +60,6 @@ Moving last attempt asset files to the default result directory
         <target state="translated">失敗したテストの再試行</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">失敗したテストの再試行は、'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 型のビルダーでのみ機能します</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">失敗したテストの割合が指定した値を超える場合は再試行メカニズムを無効にする</target>
@@ -103,6 +98,11 @@ Moving last attempt asset files to the default result directory
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
         <target state="translated">オプション '{0}' と '{1}' を一緒に使用することはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
+        <source>The retry provider requires the default TestHostManager implementation.</source>
+        <target state="new">The retry provider requires the default TestHostManager implementation.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

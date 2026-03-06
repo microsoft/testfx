@@ -60,11 +60,6 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
         <target state="translated">Ripeti i test non riusciti</target>
         <note />
       </trans-unit>
-      <trans-unit id="RetryFailedTestsInvalidTestApplicationBuilderErrorMessage">
-        <source>Retry failed tests only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">La ripetizione dei test non riusciti funziona solo con i generatori di tipo 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
         <target state="translated">Disabilita il meccanismo di ripetizione dei tentativi se la percentuale di test non riusciti è maggiore del valore specificato.</target>
@@ -103,6 +98,11 @@ Spostamento dei file di asset dell'ultimo tentativo nella directory dei risultat
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
         <target state="translated">Le opzioni '{0}' e '{1}' non possono essere usate insieme</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
+        <source>The retry provider requires the default TestHostManager implementation.</source>
+        <target state="new">The retry provider requires the default TestHostManager implementation.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
