@@ -55,7 +55,9 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
     public IToolsManager Tools { get; } = new ToolsManager();
 
-    public ITestHostOrchestratorManager TestHostOrchestrator { get; } = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
+    private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
+
+    public ITestHostOrchestratorManager TestHostOrchestrator => _testHostOrchestratorManager;
 
     public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,
@@ -407,7 +409,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
-        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await ((TestHostOrchestratorManager)TestHostOrchestrator).BuildAsync(serviceProvider).ConfigureAwait(false);
+        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(serviceProvider).ConfigureAwait(false);
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0 && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             policiesService.ProcessRole = TestProcessRole.TestHostOrchestrator;
@@ -415,7 +417,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
 
             // Build and register the test application lifecycle callbacks.
             Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime[] orchestratorLifetimes =
-                await ((TestHostOrchestratorManager)TestHostOrchestrator).BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
+                await _testHostOrchestratorManager.BuildTestHostOrchestratorApplicationLifetimesAsync(serviceProvider).ConfigureAwait(false);
             serviceProvider.AddServices(orchestratorLifetimes);
 
             builderActivity?.SetTag(BuilderHostTypeOTelKey, nameof(TestHostOrchestratorHost));

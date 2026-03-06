@@ -38,7 +38,14 @@ public static class RetryExtensions
 
         builder.TestHostOrchestrator
             .AddTestHostOrchestrator(serviceProvider => new RetryOrchestrator(serviceProvider));
-        ((TestHostManager)builder.TestHost)
+
+        if (builder.TestHost is not TestHostManager testHostManager)
+        {
+            throw new InvalidOperationException(
+                "The retry provider requires the default TestHostManager implementation.");
+        }
+
+        testHostManager
             .AddTestExecutionFilterFactory(serviceProvider => new RetryExecutionFilterFactory(serviceProvider));
     }
 }
