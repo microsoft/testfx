@@ -19,10 +19,6 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public Task<string> ReadAllTextAsync(string path) => File.ReadAllTextAsync(path);
 
-    public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => File.Copy(sourceFileName, destFileName, overwrite);
-
-    public void DeleteFile(string path) => File.Delete(path);
-
     public bool ExistDirectory(string? path) => Directory.Exists(path);
 
     public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => Directory.GetFiles(path, searchPattern, searchOption);
