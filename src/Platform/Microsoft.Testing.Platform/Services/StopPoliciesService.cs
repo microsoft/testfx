@@ -33,10 +33,6 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     {
         _lastMaxFailedTests = maxFailedTests;
         IsMaxFailedTestsTriggered = true;
-        if (_maxFailedTestsCallbacks is null)
-        {
-            return;
-        }
 
         foreach (Func<int, CancellationToken, Task> callback in _maxFailedTestsCallbacks)
         {
