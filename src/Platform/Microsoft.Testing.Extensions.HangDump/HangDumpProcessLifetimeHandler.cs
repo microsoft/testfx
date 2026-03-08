@@ -111,7 +111,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Hang dump timeout setup {_activityTimerValue}.").ConfigureAwait(false);
 
-        _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
+        _singleConnectionNamedPipeServer = new(_pipeNameDescription, Callback, _environment, _logger, _task, cancellationToken);
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
@@ -124,11 +124,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }, cancellationToken);
     }
 
-    private async Task<IResponse> CallbackAsync(IRequest request)
+    private IResponse Callback(IRequest request)
     {
         if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
         {
-            await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'").ConfigureAwait(false);
+            _logger.LogDebug($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'");
             _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));

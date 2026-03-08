@@ -22,7 +22,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     {
         _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), serviceProvider.GetEnvironment());
         logger.LogTrace($"Retry server pipe name: '{_pipeNameDescription.Name}'");
-        _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, CallbackAsync,
+        _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, Callback,
             serviceProvider.GetEnvironment(),
             serviceProvider.GetLoggerFactory().CreateLogger<RetryFailedTestsPipeServer>(),
             serviceProvider.GetTask(),
@@ -48,24 +48,24 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     public void Dispose()
         => _singleConnectionNamedPipeServer.Dispose();
 
-    private Task<IResponse> CallbackAsync(IRequest request)
+    private IResponse Callback(IRequest request)
     {
         if (request is FailedTestRequest failed)
         {
             FailedUID ??= [];
             FailedUID.Add(failed.Uid);
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return VoidResponse.CachedInstance;
         }
 
         if (request is GetListOfFailedTestsRequest)
         {
-            return Task.FromResult((IResponse)new GetListOfFailedTestsResponse(_failedTests));
+            return new GetListOfFailedTestsResponse(_failedTests);
         }
 
         if (request is TotalTestsRunRequest totalTestsRunRequest)
         {
             TotalTestRan = totalTestsRunRequest.TotalTests;
-            return Task.FromResult((IResponse)VoidResponse.CachedInstance);
+            return VoidResponse.CachedInstance;
         }
 
         throw ApplicationStateGuard.Unreachable();

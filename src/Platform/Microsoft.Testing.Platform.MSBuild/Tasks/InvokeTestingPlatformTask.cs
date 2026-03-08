@@ -348,7 +348,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             {
                 while (!_waitForConnections.IsCancellationRequested)
                 {
-                    NamedPipeServer pipeServer = new(_pipeNameDescription, HandleRequestAsync, new SystemEnvironment(), new MSBuildLogger(), new SystemTask(), maxNumberOfServerInstances: 100, CancellationToken.None);
+                    NamedPipeServer pipeServer = new(_pipeNameDescription, HandleRequest, new SystemEnvironment(), new MSBuildLogger(), new SystemTask(), maxNumberOfServerInstances: 100, CancellationToken.None);
                     pipeServer.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
                     pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
                     pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
@@ -432,7 +432,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         return false;
     }
 
-    private Task<IResponse> HandleRequestAsync(IRequest request)
+    private IResponse HandleRequest(IRequest request)
     {
         // For the case, of orchestrator (e.g, Retry), we can get ModuleInfoRequest from the orchestrator itself.
         // If there is no orchestrator or the orchestrator didn't send ModuleInfoRequest, we will get it from the first test host.
@@ -458,7 +458,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 }
             }
 
-            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+            return VoidResponse.CachedInstance;
         }
 
         if (request is FailedTestInfoRequest failedTestInfoRequest)
@@ -466,7 +466,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             // TestingPlatformShowTestsFailure is not enabled, don't write errors to output.
             if (!bool.Parse(TestingPlatformShowTestsFailure.ItemSpec))
             {
-                return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+                return VoidResponse.CachedInstance;
             }
 
             failedTestInfoRequest.FromFailedTest(outputSupportsMultiline: MSBuildCompatibilityHelper.SupportsMultiLine(), TargetPath.ItemSpec.Trim(),
@@ -477,7 +477,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 Log.LogMessage(MessageImportance.Low, lowPriorityMessage);
             }
 
-            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+            return VoidResponse.CachedInstance;
         }
 
         if (request is RunSummaryInfoRequest runSummaryInfoRequest)
@@ -515,7 +515,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 Log.LogMessage(MessageImportance.High, summary);
             }
 
-            return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+            return VoidResponse.CachedInstance;
         }
 
         throw new NotImplementedException($"Request '{request.GetType()}' not supported.");

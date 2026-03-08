@@ -103,7 +103,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             NamedPipeServer testHostControllerIpc = new(
                 $"MONITORTOHOST_{Guid.NewGuid():N}",
-                HandleRequestAsync,
+                HandleRequest,
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
                 ServiceProvider.GetTask(), cancellationToken);
@@ -406,7 +406,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         await DisposeServiceProviderAsync(ServiceProvider, alreadyDisposed: alreadyDisposed).ConfigureAwait(false);
     }
 
-    private Task<IResponse> HandleRequestAsync(IRequest request)
+    private IResponse HandleRequest(IRequest request)
     {
         try
         {
@@ -415,12 +415,12 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 case TestHostCompletedRequest testHostCompletedRequest:
                     _testHostCompletedReceived = true;
                     _testHostExitCodeReceived = testHostCompletedRequest.ExitCode;
-                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+                    return VoidResponse.CachedInstance;
 
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:
                     _testHostPID = testHostProcessPIDRequest.PID;
                     _waitForPid.Set();
-                    return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+                    return VoidResponse.CachedInstance;
 
                 default:
                     throw new NotSupportedException($"Request '{request}' not supported");

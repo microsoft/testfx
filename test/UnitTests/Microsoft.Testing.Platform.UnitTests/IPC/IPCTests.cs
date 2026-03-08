@@ -38,7 +38,7 @@ public sealed class IPCTests
                     {
                         NamedPipeServer singleConnectionNamedPipeServer = new(
                             pipeNameDescription,
-                            async _ => await Task.FromResult(VoidResponse.CachedInstance),
+                            _ => VoidResponse.CachedInstance,
                             new SystemEnvironment(),
                             new Mock<ILogger>().Object,
                             new SystemTask(),
@@ -124,7 +124,7 @@ public sealed class IPCTests
             request =>
             {
                 receivedMessages.Enqueue((BaseMessage)request);
-                return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
+                return VoidResponse.CachedInstance;
             },
             new SystemEnvironment(),
             new Mock<ILogger>().Object,
@@ -176,7 +176,7 @@ public sealed class IPCTests
         {
             pipes.Add(new(
                 pipeNameDescription,
-                async _ => await Task.FromResult(VoidResponse.CachedInstance),
+                _ => VoidResponse.CachedInstance,
                 new SystemEnvironment(),
                 new Mock<ILogger>().Object,
                 new SystemTask(),
@@ -187,7 +187,7 @@ public sealed class IPCTests
         IOException exception = Assert.ThrowsExactly<IOException>(() =>
              new NamedPipeServer(
                 pipeNameDescription,
-                async _ => await Task.FromResult(VoidResponse.CachedInstance),
+                _ => VoidResponse.CachedInstance,
                 new SystemEnvironment(),
                 new Mock<ILogger>().Object,
                 new SystemTask(),

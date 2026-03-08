@@ -93,7 +93,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             // Setup the server channel with the testhost controller
             _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"), _environment);
             _logger.LogTrace($"Hang dump pipe name: '{_pipeNameDescription.Name}'");
-            _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
+            _singleConnectionNamedPipeServer = new(_pipeNameDescription, Callback, _environment, _logger, _task, cancellationToken);
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _singleConnectionNamedPipeServer.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
             _singleConnectionNamedPipeServer.RegisterSerializer(new ExitSignalActivityIndicatorTaskRequestSerializer(), typeof(ExitSignalActivityIndicatorTaskRequest));
@@ -112,16 +112,16 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         }
     }
 
-    private async Task<IResponse> CallbackAsync(IRequest request)
+    private IResponse Callback(IRequest request)
     {
         if (request is GetInProgressTestsRequest)
         {
-            await _logger.LogDebugAsync($"Received '{nameof(GetInProgressTestsRequest)}'").ConfigureAwait(false);
+            _logger.LogDebug($"Received '{nameof(GetInProgressTestsRequest)}'");
             return new GetInProgressTestsResponse([.. _testsCurrentExecutionState.Select(x => (x.Value.Name, (int)_clock.UtcNow.Subtract(x.Value.StartTime).TotalSeconds))]);
         }
         else if (request is ExitSignalActivityIndicatorTaskRequest)
         {
-            await _logger.LogDebugAsync($"Received '{nameof(ExitSignalActivityIndicatorTaskRequest)}'").ConfigureAwait(false);
+            _logger.LogDebug($"Received '{nameof(ExitSignalActivityIndicatorTaskRequest)}'");
             _exitSignalActivityIndicatorAsync = true;
             return VoidResponse.CachedInstance;
         }

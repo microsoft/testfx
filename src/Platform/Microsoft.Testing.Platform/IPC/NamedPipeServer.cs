@@ -22,7 +22,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     private static bool IsUnix => Path.DirectorySeparatorChar == '/';
 
-    private readonly Func<IRequest, Task<IResponse>> _callback;
+    private readonly Func<IRequest, IResponse> _callback;
     private readonly IEnvironment _environment;
     private readonly NamedPipeServerStream _namedPipeServerStream;
     private readonly ILogger _logger;
@@ -39,7 +39,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public NamedPipeServer(
         string name,
-        Func<IRequest, Task<IResponse>> callback,
+        Func<IRequest, IResponse> callback,
         IEnvironment environment,
         ILogger logger,
         ITask task,
@@ -50,7 +50,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public NamedPipeServer(
         PipeNameDescription pipeNameDescription,
-        Func<IRequest, Task<IResponse>> callback,
+        Func<IRequest, IResponse> callback,
         IEnvironment environment,
         ILogger logger,
         ITask task,
@@ -61,7 +61,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public NamedPipeServer(
         PipeNameDescription pipeNameDescription,
-        Func<IRequest, Task<IResponse>> callback,
+        Func<IRequest, IResponse> callback,
         IEnvironment environment,
         ILogger logger,
         ITask task,
@@ -188,7 +188,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 var deserializedObject = (IRequest)requestNamedPipeSerializer.Deserialize(_messageBuffer);
 
                 // Call the callback
-                IResponse response = await _callback(deserializedObject).ConfigureAwait(false);
+                IResponse response = _callback(deserializedObject);
 
                 // Write the message size
                 _messageBuffer.Position = 0;
