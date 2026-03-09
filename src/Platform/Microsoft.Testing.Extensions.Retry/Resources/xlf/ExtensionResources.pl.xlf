@@ -102,7 +102,7 @@ Przeniesienie plików zasobów ostatniej próby do domyślnego katalogu wyników
       </trans-unit>
       <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
         <source>The retry provider requires the default TestHostManager implementation.</source>
-        <target state="new">The retry provider requires the default TestHostManager implementation.</target>
+        <target state="translated">Dostawca ponawiania wymaga domyślnej implementacji TestHostManager.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

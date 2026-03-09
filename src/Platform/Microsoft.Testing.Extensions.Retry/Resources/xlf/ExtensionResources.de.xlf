@@ -102,7 +102,7 @@ Medienobjektdateien des letzten Versuchs werden in das Standardergebnisverzeichn
       </trans-unit>
       <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
         <source>The retry provider requires the default TestHostManager implementation.</source>
-        <target state="new">The retry provider requires the default TestHostManager implementation.</target>
+        <target state="translated">Der Wiederholungsanbieter erfordert die standardmäßige TestHostManager-Implementierung.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">

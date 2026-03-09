@@ -102,7 +102,7 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="RetryProviderRequiresDefaultTestHostManagerErrorMessage">
         <source>The retry provider requires the default TestHostManager implementation.</source>
-        <target state="new">The retry provider requires the default TestHostManager implementation.</target>
+        <target state="translated">Le fournisseur de nouvelles tentatives requiert l'implémentation par défaut de TestHostManager.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
