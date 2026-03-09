@@ -175,8 +175,34 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             {
                 RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
                 RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
-                finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
-                finalArguments.AddRange(lastListOfFailedId);
+
+                // Estimate command line length to avoid hitting OS limits (notably ~32K on Windows).
+                const int CommandLineLengthLimit = 30_000;
+                int predictedLength = 0;
+                foreach (string arg in finalArguments)
+                {
+                    predictedLength += arg.Length + 1;
+                }
+
+                predictedLength += 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1;
+                foreach (string uid in lastListOfFailedId)
+                {
+                    predictedLength += uid.Length + 1;
+                }
+
+                if (predictedLength <= CommandLineLengthLimit)
+                {
+                    finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
+                    finalArguments.AddRange(lastListOfFailedId);
+                }
+                else
+                {
+                    // Use a response file to avoid exceeding command-line length limits.
+                    string responseFilePath = Path.Combine(currentTryResultFolder, "retry-filter-uids.rsp");
+                    _fileSystem.CreateDirectory(currentTryResultFolder);
+                    File.WriteAllText(responseFilePath, $"--{PlatformCommandLineProvider.FilterUidOptionKey} {string.Join(" ", lastListOfFailedId)}");
+                    finalArguments.Add($"@{responseFilePath}");
+                }
             }
 
 #if NET8_0_OR_GREATER
@@ -367,12 +393,20 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string shortForm = $"-{optionName}";
 
         // Remove all occurrences since options like --filter-uid can appear multiple times.
+        // Also handle --option=value and --option:value forms produced by the command-line parser.
         while (true)
         {
-            int idx = arguments.IndexOf(longForm);
-            if (idx < 0)
+            int idx = -1;
+            for (int i = 0; i < arguments.Count; i++)
             {
-                idx = arguments.IndexOf(shortForm);
+                string arg = arguments[i];
+                if (arg == longForm || arg == shortForm
+                    || arg.StartsWith(longForm + "=", StringComparison.Ordinal) || arg.StartsWith(longForm + ":", StringComparison.Ordinal)
+                    || arg.StartsWith(shortForm + "=", StringComparison.Ordinal) || arg.StartsWith(shortForm + ":", StringComparison.Ordinal))
+                {
+                    idx = i;
+                    break;
+                }
             }
 
             if (idx < 0)
@@ -380,8 +414,16 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 break;
             }
 
-            // Remove the option key and all its values
+            string found = arguments[idx];
             arguments.RemoveAt(idx);
+
+            // If the option used = or : separator, the value is inline — nothing more to remove.
+            if (found.Contains('=') || found.Contains(':'))
+            {
+                continue;
+            }
+
+            // Otherwise, remove subsequent non-option arguments (the option's values).
             while (idx < arguments.Count && !arguments[idx].StartsWith('-'))
             {
                 arguments.RemoveAt(idx);
