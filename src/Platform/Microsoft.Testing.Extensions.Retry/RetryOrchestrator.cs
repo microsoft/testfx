@@ -170,6 +170,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
+            // When retrying, replace any existing test filter with --filter-uid for the failed tests
+            if (lastListOfFailedId is { Length: > 0 })
+            {
+                RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+                RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
+                finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
+                finalArguments.AddRange(lastListOfFailedId);
+            }
+
 #if NET8_0_OR_GREATER
             // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
             // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
@@ -350,5 +359,33 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
         index = Array.IndexOf(executableArgs, "--" + optionName);
         return index >= 0 ? index : -1;
+    }
+
+    private static void RemoveOption(List<string> arguments, string optionName)
+    {
+        string longForm = $"--{optionName}";
+        string shortForm = $"-{optionName}";
+
+        // Remove all occurrences since options like --filter-uid can appear multiple times.
+        while (true)
+        {
+            int idx = arguments.IndexOf(longForm);
+            if (idx < 0)
+            {
+                idx = arguments.IndexOf(shortForm);
+            }
+
+            if (idx < 0)
+            {
+                break;
+            }
+
+            // Remove the option key and all its values
+            arguments.RemoveAt(idx);
+            while (idx < arguments.Count && !arguments[idx].StartsWith('-'))
+            {
+                arguments.RemoveAt(idx);
+            }
+        }
     }
 }
