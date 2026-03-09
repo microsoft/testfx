@@ -5,6 +5,8 @@
     <!-- Packaged as part of Microsoft.Testing.Platform.MSBuild -->
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
+    <!-- CS0436: Source-embedded types (IPC, helpers) conflict with the same types visible via IVT from Microsoft.Testing.Platform.
+         IVT is still required because this project consumes non-embedded internal types (AppVersion, TestRequestExecutionTimeInfo). -->
     <NoWarn>$(NoWarn);CS0436</NoWarn>
   </PropertyGroup>
 

@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFrameworks>$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
+    <!-- CS0436: Source-embedded types (IPC, helpers) conflict with the same types visible via IVT from Microsoft.Testing.Platform.
+         IVT is still required because source-embedded IPC code references non-embedded internal types (PlatformResources, VoidResponseFieldsId). -->
     <NoWarn>$(NoWarn);NU5100;CS0436</NoWarn>
   </PropertyGroup>
 
