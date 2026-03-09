@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer
+internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer, IDisposable
 {
     private readonly IOutputDevice _outputService;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -171,4 +171,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
+
+    public void Dispose()
+        => _openTelemetryResultHandler?.Dispose();
 }

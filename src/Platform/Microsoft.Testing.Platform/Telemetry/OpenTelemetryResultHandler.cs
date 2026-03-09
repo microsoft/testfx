@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal sealed class OpenTelemetryResultHandler
+internal sealed class OpenTelemetryResultHandler : IDisposable
 {
     private readonly IPlatformOpenTelemetryService _otelService;
     private readonly IEnvironment _environment;
@@ -16,9 +16,10 @@ internal sealed class OpenTelemetryResultHandler
     private readonly ICounter<int> _totalPassedTests;
     private readonly ICounter<int> _totalFailedTests;
     private readonly ICounter<int> _totalSkippedTests;
-    private readonly ICounter<int> _totalUnknownedTests;
+    private readonly ICounter<int> _totalUnknownTests;
     private readonly IHistogram<double> _totalDuration;
     private readonly Dictionary<TestNodeUid, IPlatformActivity> _testActivities = [];
+    private bool _disposed;
 
     public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService, IEnvironment environment)
     {
@@ -30,7 +31,7 @@ internal sealed class OpenTelemetryResultHandler
         _totalPassedTests = otelService.CreateCounter<int>("tests.passed");
         _totalFailedTests = otelService.CreateCounter<int>("tests.failed");
         _totalSkippedTests = otelService.CreateCounter<int>("tests.skipped");
-        _totalUnknownedTests = otelService.CreateCounter<int>("tests.unknown");
+        _totalUnknownTests = otelService.CreateCounter<int>("tests.unknown");
         _totalDuration = otelService.CreateHistogram<double>("tests.duration");
     }
 
@@ -40,21 +41,18 @@ internal sealed class OpenTelemetryResultHandler
     internal void NotifyPassed(TestNode testNode, TestNodeStateProperty stateProperty)
     {
         _totalPassedTests.Add(1);
-        _totalCompletedTests.Add(1);
         HandleTestResult(testNode, stateProperty);
     }
 
     internal void NotifyFailed(TestNode testNode, TestNodeStateProperty stateProperty)
     {
         _totalFailedTests.Add(1);
-        _totalCompletedTests.Add(1);
         HandleTestResult(testNode, stateProperty);
     }
 
     internal void NotifySkipped(TestNode testNode, TestNodeStateProperty stateProperty)
     {
         _totalSkippedTests.Add(1);
-        _totalCompletedTests.Add(1);
         HandleTestResult(testNode, stateProperty);
     }
 
@@ -73,7 +71,23 @@ internal sealed class OpenTelemetryResultHandler
     }
 
     internal void NotifyUnknown()
-        => _totalUnknownedTests.Add(1);
+        => _totalUnknownTests.Add(1);
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        foreach (IPlatformActivity activity in _testActivities.Values)
+        {
+            activity.Dispose();
+        }
+
+        _testActivities.Clear();
+    }
 
     private static IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
     {
@@ -107,6 +121,8 @@ internal sealed class OpenTelemetryResultHandler
 
     private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty)
     {
+        _totalCompletedTests.Add(1);
+
         if (!_testActivities.TryGetValue(testNode.Uid, out IPlatformActivity? activity))
         {
             return;
