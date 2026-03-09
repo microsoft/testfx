@@ -198,9 +198,19 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 else
                 {
                     // Use a response file to avoid exceeding command-line length limits.
-                    string responseFilePath = Path.Combine(currentTryResultFolder, "retry-filter-uids.rsp");
-                    _fileSystem.CreateDirectory(currentTryResultFolder);
-                    File.WriteAllText(responseFilePath, $"--{PlatformCommandLineProvider.FilterUidOptionKey} {string.Join(" ", lastListOfFailedId)}");
+                    // Write to retryRootFolder (not the per-attempt folder) so it won't be included
+                    // in the final results move.
+                    string responseFilePath = Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+                    using (IFileStream stream = _fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+                    using (var writer = new StreamWriter(stream.Stream))
+                    {
+                        await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
+                        foreach (string uid in lastListOfFailedId)
+                        {
+                            await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
+                        }
+                    }
+
                     finalArguments.Add($"@{responseFilePath}");
                 }
             }
@@ -414,16 +424,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 break;
             }
 
-            string found = arguments[idx];
             arguments.RemoveAt(idx);
 
-            // If the option used = or : separator, the value is inline — nothing more to remove.
-            if (found.Contains('=') || found.Contains(':'))
-            {
-                continue;
-            }
-
-            // Otherwise, remove subsequent non-option arguments (the option's values).
+            // Always remove subsequent non-option arguments (the option's values),
+            // even when the first value was provided inline with = or :, because
+            // multi-arity options (e.g. --filter-uid=1 2) can have trailing values.
             while (idx < arguments.Count && !arguments[idx].StartsWith('-'))
             {
                 arguments.RemoveAt(idx);
