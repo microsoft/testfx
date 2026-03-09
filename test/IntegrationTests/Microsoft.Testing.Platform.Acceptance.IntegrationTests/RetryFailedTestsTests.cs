@@ -231,7 +231,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         // Verify that the retry attempt only ran the failed test (UID 1).
         // The TRX from the last attempt should contain only TestMethod1 (the retried test), not TestMethod2.
         string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
-        Assert.IsTrue(trxFiles.Length >= 2, $"Expected at least 2 TRX files but found {trxFiles.Length}");
+        Assert.IsGreaterThanOrEqualTo(2, trxFiles.Length, $"Expected at least 2 TRX files but found {trxFiles.Length}");
 
         // The last TRX file (from the retry attempt) should only contain the retried test.
         string lastTrx = trxFiles.OrderBy(f => File.GetLastWriteTimeUtc(f)).Last();
