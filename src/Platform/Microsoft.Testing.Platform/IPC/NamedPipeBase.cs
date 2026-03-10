@@ -3,11 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 
-#if TESTING_PLATFORM_SOURCE_EMBEDDED
-using PlatformResources = Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources;
-#else
 using Microsoft.Testing.Platform.Resources;
-#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 

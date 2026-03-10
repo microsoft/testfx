@@ -5,7 +5,6 @@
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
-    <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
     <UseAppHost Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</UseAppHost>
   </PropertyGroup>
@@ -15,8 +14,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResourcesAccessor.cs" Link="Resources\EmbeddedPlatformResourcesAccessor.cs" />
-    <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResources.resx" Link="Resources\EmbeddedPlatformResources.resx" LogicalName="Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources.resources" GenerateSource="false" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
   </ItemGroup>
 
   <ItemGroup>
