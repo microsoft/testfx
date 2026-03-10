@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
+
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;

@@ -4,7 +4,6 @@
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
-using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Acceptance.IntegrationTests;
 

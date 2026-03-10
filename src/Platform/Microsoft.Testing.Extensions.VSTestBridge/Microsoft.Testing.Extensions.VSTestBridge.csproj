@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
