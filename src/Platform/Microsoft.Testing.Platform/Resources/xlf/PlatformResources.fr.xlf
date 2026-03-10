@@ -1022,11 +1022,6 @@ Les valeurs valides sont « Normal » et « Détaillé ». La valeur par dé
         <target state="translated">Un fournisseur de client de messagerie instantanée a déjà été enregistré.</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Les extensions IA fonctionnent uniquement avec des générateurs de type « Microsoft.Testing.Platform.Builder.TestApplicationBuilder »</target>
-        <note />
-      </trans-unit>
     </body>
   </file>
 </xliff>

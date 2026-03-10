@@ -1022,11 +1022,6 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
         <target state="translated">Ein Chatclientanbieter wurde bereits registriert.</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">KI-Erweiterungen funktionieren nur mit Generatoren vom Typ „Microsoft.Testing.Platform.Builder.TestApplicationBuilder“</target>
-        <note />
-      </trans-unit>
     </body>
   </file>
 </xliff>
