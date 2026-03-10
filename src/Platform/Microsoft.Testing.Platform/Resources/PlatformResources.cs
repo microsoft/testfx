@@ -32,10 +32,6 @@ internal static partial class PlatformResources
 
     internal static string @InvalidTestApplicationBuilderTypeForAI => GetResourceString("InvalidTestApplicationBuilderTypeForAI");
 
-    internal static string @NoSerializerRegisteredWithIdErrorMessage => GetResourceString("NoSerializerRegisteredWithIdErrorMessage");
-
-    internal static string @NoSerializerRegisteredWithTypeErrorMessage => GetResourceString("NoSerializerRegisteredWithTypeErrorMessage");
-
     internal static string @UnexpectedStateErrorMessage => GetResourceString("UnexpectedStateErrorMessage");
 
     internal static string @UnreachableLocationErrorMessage => GetResourceString("UnreachableLocationErrorMessage");

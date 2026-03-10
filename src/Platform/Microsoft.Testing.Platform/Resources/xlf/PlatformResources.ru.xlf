@@ -421,16 +421,6 @@
         <target state="translated">{0} тестов</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Не зарегистрирован сериализатор с ИД "{0}"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Не зарегистрирован сериализатор с типом "{0}"</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Недоступно</target>

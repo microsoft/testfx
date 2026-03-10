@@ -421,16 +421,6 @@
         <target state="translated">실행 중인 테스트 {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">ID '{0}'(으)로 등록된 직렬 변환기가 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">'{0}' 형식으로 등록된 직렬 변환기가 없습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">사용할 수 없음</target>

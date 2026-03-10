@@ -421,16 +421,6 @@
         <target state="translated">{0} test çalıştırılıyor</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">'{0}' kimliğiyle kayıtlı seri hale getirici yok</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">'{0}' türüyle kayıtlı seri hale getirici yok</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Kullanılamıyor</target>
