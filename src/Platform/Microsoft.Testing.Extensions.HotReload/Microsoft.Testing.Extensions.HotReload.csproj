@@ -6,7 +6,6 @@
 	<!-- Cancel default license (MIT) and set license as packaged license file -->
 	<PackageLicenseExpression />
     <PackageLicenseFile>License.txt</PackageLicenseFile>
-    <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

@@ -7,11 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
-#if TESTING_PLATFORM_SOURCE_EMBEDDED
-using PlatformResources = Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources;
-#else
 using Microsoft.Testing.Platform.Resources;
-#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 

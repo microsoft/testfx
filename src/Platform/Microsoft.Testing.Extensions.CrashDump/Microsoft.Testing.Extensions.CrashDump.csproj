@@ -1,16 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.Testing.Extensions.Diagnostics</RootNamespace>
-    <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResourcesAccessor.cs" Link="Resources\EmbeddedPlatformResourcesAccessor.cs" />
-    <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResources.resx" Link="Resources\EmbeddedPlatformResources.resx" LogicalName="Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources.resources" GenerateSource="false" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
   </ItemGroup>
 
   <!-- NuGet properties -->
