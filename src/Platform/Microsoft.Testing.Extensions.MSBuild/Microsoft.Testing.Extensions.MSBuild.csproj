@@ -5,9 +5,6 @@
     <!-- Packaged as part of Microsoft.Testing.Platform.MSBuild -->
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);TESTING_PLATFORM_SOURCE_EMBEDDED</DefineConstants>
-    <!-- CS0436: Source-embedded types (IPC, helpers) conflict with the same types visible via IVT from Microsoft.Testing.Platform.
-         IVT is still required because this project consumes non-embedded internal types (AppVersion, TestRequestExecutionTimeInfo). -->
-    <NoWarn>$(NoWarn);CS0436</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,10 +20,6 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IEnvironment.cs" Link="Helpers\IEnvironment.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemEnvironment.cs" Link="Helpers\SystemEnvironment.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\ITask.cs" Link="Helpers\ITask.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemTask.cs" Link="Helpers\SystemTask.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResourcesAccessor.cs" Link="Resources\EmbeddedPlatformResourcesAccessor.cs" />
     <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\EmbeddedPlatformResources.resx" Link="Resources\EmbeddedPlatformResources.resx" LogicalName="Microsoft.Testing.Platform.Resources.EmbeddedPlatformResources.resources" GenerateSource="false" />
   </ItemGroup>
