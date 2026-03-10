@@ -1012,11 +1012,6 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
         <target state="translated">Dostawca klienta czatu został już zarejestrowany.</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Rozszerzenia sztucznej inteligencji działają tylko z konstruktorami typu „Microsoft.Testing.Platform.Builder.TestApplicationBuilder”</target>
-        <note />
-      </trans-unit>
     </body>
   </file>
 </xliff>
