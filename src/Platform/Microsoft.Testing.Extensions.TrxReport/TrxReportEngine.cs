@@ -237,10 +237,6 @@ internal sealed partial class TrxReportEngine
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
-            // TODO: VSTest seems to also add agentDisplayName
-            // agentDisplayName always matches agentName and is always MachineName.
-            // NOTE: VSTest always adds isFromRemoteAgent with value false.
-            // But this is not necessary to add as the XSD defines false as the default.
             var collector = new XElement(
                 NamespaceUri + "Collector",
                 new XAttribute("agentName", _environment.MachineName),
