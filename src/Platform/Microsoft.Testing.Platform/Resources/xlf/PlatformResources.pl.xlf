@@ -421,16 +421,6 @@
         <target state="translated">testy {0} uruchomione</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Nie zarejestrowano serializatora z identyfikatorem „{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Nie zarejestrowano serializatora z typem „{0}”</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Niedostępne</target>

@@ -467,12 +467,6 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage" xml:space="preserve">
     <value>Method '{0}' did not exit successfully</value>
   </data>
-  <data name="NoSerializerRegisteredWithIdErrorMessage" xml:space="preserve">
-    <value>No serializer registered with ID '{0}'</value>
-  </data>
-  <data name="NoSerializerRegisteredWithTypeErrorMessage" xml:space="preserve">
-    <value>No serializer registered with type '{0}'</value>
-  </data>
   <data name="UnexpectedExceptionDuringByteConversionErrorMessage" xml:space="preserve">
     <value>An unexpected exception occurred during byte conversion</value>
   </data>
