@@ -555,8 +555,6 @@ internal sealed partial class TrxReportEngine
             }
 
             // TODO: VSTest used to store the relative paths in a sorted list (ignoring case).
-            // Here, we are not making the paths relative.
-            // And we are not sorting them.
             // TODO: VSTest is able to classify per-test attachments into two categories:
             // 1. ResultFiles
             // 2. CollectorDataEntries
