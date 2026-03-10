@@ -30,8 +30,6 @@ internal static partial class PlatformResources
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static string GetResourceString(string resourceKey) => ResourceManager.GetString(resourceKey, null)!;
 
-    internal static string @InvalidTestApplicationBuilderTypeForAI => GetResourceString("InvalidTestApplicationBuilderTypeForAI");
-
     internal static string @NoSerializerRegisteredWithIdErrorMessage => GetResourceString("NoSerializerRegisteredWithIdErrorMessage");
 
     internal static string @NoSerializerRegisteredWithTypeErrorMessage => GetResourceString("NoSerializerRegisteredWithTypeErrorMessage");
