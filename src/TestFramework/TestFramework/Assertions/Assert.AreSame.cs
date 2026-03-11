@@ -196,10 +196,10 @@ public sealed partial class Assert
         string actualFormatted = FormatValue(actual);
         bool sameToString = expected is not null && actual is not null && expectedFormatted == actualFormatted;
         string expectedValue = sameToString
-            ? expectedFormatted + $" (HashCode={RuntimeHelpers.GetHashCode(expected!)})"
+            ? expectedFormatted + $" (Hash={RuntimeHelpers.GetHashCode(expected!)})"
             : expectedFormatted;
         string actualValue = sameToString
-            ? actualFormatted + $" (HashCode={RuntimeHelpers.GetHashCode(actual!)})"
+            ? actualFormatted + $" (Hash={RuntimeHelpers.GetHashCode(actual!)})"
             : actualFormatted;
 
         // If value types, add diagnostic hint before parameter details

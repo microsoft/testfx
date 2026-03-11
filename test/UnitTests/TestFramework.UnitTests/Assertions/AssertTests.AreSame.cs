@@ -19,8 +19,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame failed.
             Expected references to be the same.
-              expected (new object()): <System.Object> (HashCode=*)
-              actual (new object()): <System.Object> (HashCode=*)
+              expected (new object()): <System.Object> (Hash=*)
+              actual (new object()): <System.Object> (Hash=*)
             """);
     }
 
@@ -36,8 +36,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame failed. User-provided message
             Expected references to be the same.
-              expected (new object()): <System.Object> (HashCode=*)
-              actual (new object()): <System.Object> (HashCode=*)
+              expected (new object()): <System.Object> (Hash=*)
+              actual (new object()): <System.Object> (Hash=*)
             """);
     }
 
@@ -56,8 +56,8 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
             Assert.AreSame failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             Expected references to be the same.
-              expected (new object()): <System.Object> (HashCode=*)
-              actual (new object()): <System.Object> (HashCode=*)
+              expected (new object()): <System.Object> (Hash=*)
+              actual (new object()): <System.Object> (Hash=*)
             """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -71,8 +71,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame failed.
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
-              expected: 1 (HashCode=*)
-              actual: 1 (HashCode=*)
+              expected: 1 (Hash=*)
+              actual: 1 (Hash=*)
             """);
     }
 
@@ -82,8 +82,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame failed. User-provided message
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
-              expected: 1 (HashCode=*)
-              actual: 1 (HashCode=*)
+              expected: 1 (Hash=*)
+              actual: 1 (Hash=*)
             """);
     }
 
@@ -93,8 +93,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame failed. User-provided message System.Object
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
-              expected: 1 (HashCode=*)
-              actual: 1 (HashCode=*)
+              expected: 1 (Hash=*)
+              actual: 1 (Hash=*)
             """);
     }
 
@@ -157,8 +157,8 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.AreSame failed.
                 Expected references to be the same.
-                  expected (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): <System.Object> (HashCode=*)
-                  actual (new object()): <System.Object> (HashCode=*)
+                  expected (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): <System.Object> (Hash=*)
+                  actual (new object()): <System.Object> (Hash=*)
                 """);
     }
 
@@ -169,8 +169,8 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.AreSame failed.
                 Expected references to be the same.
-                  expected (new ObjectWithLongToString()): {new string('L', 256)}... 44 more (HashCode=*)
-                  actual (new ObjectWithLongToString()): {new string('L', 256)}... 44 more (HashCode=*)
+                  expected (new ObjectWithLongToString()): {new string('L', 256)}... 44 more (Hash=*)
+                  actual (new ObjectWithLongToString()): {new string('L', 256)}... 44 more (Hash=*)
                 """);
     }
 
@@ -181,8 +181,8 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.AreSame failed.
                 Expected references to be the same.
-                  expected (new ObjectWithNewlineToString()): line1\r\nline2\nline3 (HashCode=*)
-                  actual (new ObjectWithNewlineToString()): line1\r\nline2\nline3 (HashCode=*)
+                  expected (new ObjectWithNewlineToString()): line1\r\nline2\nline3 (Hash=*)
+                  actual (new ObjectWithNewlineToString()): line1\r\nline2\nline3 (Hash=*)
                 """);
     }
 
