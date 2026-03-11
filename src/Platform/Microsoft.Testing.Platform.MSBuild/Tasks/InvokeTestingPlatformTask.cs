@@ -39,6 +39,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 
     private Task? _connectionLoopTask;
     private ModuleInfoRequest? _moduleInfo;
+    private bool _receivedRunSummaryInfoRequest;
     private string? _outputFileName;
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
@@ -386,7 +387,17 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         _waitForConnections.Cancel();
         Dispose();
 
-        if (returnValue)
+        if (returnValue && _moduleInfo is null)
+        {
+            returnValue = false;
+            Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.DidNotReceiveModuleInfo, TargetPath.ItemSpec.Trim());
+        }
+        else if (returnValue && !_receivedRunSummaryInfoRequest)
+        {
+            returnValue = false;
+            Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.DidNotReceiveRunSummaryInfo, TargetPath.ItemSpec.Trim());
+        }
+        else if (returnValue)
         {
             Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.TestsSucceeded, TargetPath.ItemSpec.Trim(), TargetFramework.ItemSpec, TestArchitecture.ItemSpec);
         }
@@ -514,6 +525,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 Log.LogMessage(MessageImportance.High, summary);
             }
 
+            _receivedRunSummaryInfoRequest = true;
             return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
         }
 
