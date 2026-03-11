@@ -138,11 +138,14 @@ internal sealed partial class TrxReportEngine
                 isFileNameExplicitlyProvided = false;
             }
 
-            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, out XElement testDefinitions, out XElement testEntries, out bool hasFailedTests);
+            var testDefinitions = new XElement("TestDefinitions");
+            var testEntries = new XElement("TestEntries");
+            SummaryCounts summaryCounts = await AddResultsAsync(testNodeUpdateMessages, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries).ConfigureAwait(false);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun);
 
+            bool hasFailedTests = summaryCounts.Failed > 0 || summaryCounts.Timedout > 0;
             string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
             AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed);
@@ -232,10 +235,6 @@ internal sealed partial class TrxReportEngine
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
-            // TODO: VSTest seems to also add agentDisplayName
-            // agentDisplayName always matches agentName and is always MachineName.
-            // NOTE: VSTest always adds isFromRemoteAgent with value false.
-            // But this is not necessary to add as the XSD defines false as the default.
             var collector = new XElement(
                 NamespaceUri + "Collector",
                 new XAttribute("agentName", _environment.MachineName),
@@ -389,7 +388,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, out XElement testDefinitions, out XElement testEntries, out bool hasFailedTests)
+    private async Task<SummaryCounts> AddResultsAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, string runDeploymentRoot, XElement testDefinitions, XElement testEntries)
     {
         int passed = 0;
         int failed = 0;
@@ -398,11 +397,8 @@ internal sealed partial class TrxReportEngine
         var results = new XElement("Results");
 
         // Duplicate test ids are not allowed inside the TestDefinitions element.
-        testDefinitions = new XElement("TestDefinitions");
         var uniqueTestDefinitionTestIds = new HashSet<string>();
 
-        testEntries = new XElement("TestEntries");
-        hasFailedTests = false;
         foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
         {
             TestNode testNode = nodeMessage.TestNode;
@@ -469,7 +465,6 @@ internal sealed partial class TrxReportEngine
             else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, testState.GetType()) >= 0)
             {
                 currentTestOutcome = "Failed";
-                hasFailedTests = true;
 
                 if (testState is TimeoutTestNodeStateProperty)
                 {
@@ -542,8 +537,6 @@ internal sealed partial class TrxReportEngine
             }
 
             // TODO: VSTest used to store the relative paths in a sorted list (ignoring case).
-            // Here, we are not making the paths relative.
-            // And we are not sorting them.
             // TODO: VSTest is able to classify per-test attachments into two categories:
             // 1. ResultFiles
             // 2. CollectorDataEntries
@@ -552,9 +545,11 @@ internal sealed partial class TrxReportEngine
             foreach (FileArtifactProperty testFileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
             {
                 resultFiles ??= new XElement("ResultFiles");
+
+                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(testFileArtifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
                 resultFiles.Add(new XElement(
                     "ResultFile",
-                    new XAttribute("path", testFileArtifact.FileInfo.FullName)));
+                    new XAttribute("path", href)));
             }
 
             if (resultFiles is not null)
