@@ -534,7 +534,7 @@ public sealed partial class Assert
         // Handle null cases
         if (expected is null || actual is null)
         {
-            string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
+            string message = userMessage;
             message += Environment.NewLine + FormatParameter(nameof(expected), expectedExpression, expected)
                      + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
             return message;
