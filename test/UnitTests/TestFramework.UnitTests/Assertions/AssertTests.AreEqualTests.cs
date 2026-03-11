@@ -1610,7 +1610,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4 but differ at index 0.
               expected: "baaa"
               actual:   "aaaa"
-            -------------^
+              -----------^
             """);
     }
 
@@ -1623,7 +1623,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
-            ----------------^
+              --------------^
             """);
     }
 
@@ -1636,7 +1636,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4 but differ at index 2.
               expected ("aa\ta"): "aa?a"
               actual:             "aa a"
-            -------------------------^
+              -----------------------^
             """);
     }
 
@@ -1652,7 +1652,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 201 but differ at index 100.
               expected: "...aaaaaaaaaaaaaaaaaabcccccccccccccccc..."
               actual:   "...aaaaaaaaaaaaaaaaaadcccccccccccccccc..."
-            ----------------------------------^
+              --------------------------------^
             """);
     }
 
@@ -1665,7 +1665,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
-            ----------------^
+              --------------^
             """);
     }
 
@@ -1678,7 +1678,7 @@ public partial class AssertTests : TestContainer
             Expected string length 4 but was 3.
               expected: "aaaa"
               actual:   "aaa"
-            ----------------^
+              --------------^
             """);
     }
 
@@ -1691,7 +1691,7 @@ public partial class AssertTests : TestContainer
             Expected string length 3 but was 4.
               expected: "aaa"
               actual:   "aaab"
-            ----------------^
+              --------------^
             """);
     }
 
@@ -1704,7 +1704,7 @@ public partial class AssertTests : TestContainer
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
-            ----------------^
+              --------------^
             """);
     }
 
@@ -1717,7 +1717,7 @@ public partial class AssertTests : TestContainer
             Expected string length 2 but was 4.
               expected: "??"
               actual:   "aaab"
-            -------------^
+              -----------^
             """);
     }
 
