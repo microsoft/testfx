@@ -189,11 +189,11 @@ public partial class AssertTests
 
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
+            .WithMessage($"""
                 Assert.Contains failed.
                 Expected collection to contain the specified item.
                   expected: "not-there"
-                  collection*[*...*] (20 items)
+                  collection: ["{new string('a', 30)}", "{new string('b', 30)}", "{new string('c', 30)}", "{new string('d', 30)}", "{new string('e', 30)}", "{new string('f', 30)}", "{new string('g', 30)}", ...] (13 more items)
                 """);
     }
 
@@ -248,7 +248,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull failed.
                 Expected value to be null.
-                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ...] (50 items)] (1 item)
+                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ...] (35 more items)] (1 item)
                 """);
     }
 

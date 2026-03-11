@@ -385,6 +385,7 @@ public sealed partial class Assert
         }
 
         int totalCount = knownCount ?? enumeratedCount;
+        int displayedCount = elements.Count;
 
         string elementList = string.Join(", ", elements);
         if (truncated)
@@ -392,11 +393,21 @@ public sealed partial class Assert
             elementList += ", ...";
         }
 
+        // When truncated, show remaining count (how many more are not displayed).
         // Perf: when truncated without ICollection, we don't know the real count (would require
-        // full enumeration). Show "N+ items" to indicate the count is a lower bound.
-        string countText = truncated && knownCount is null
-            ? $"{enumeratedCount}+ items"
-            : $"{totalCount} {(totalCount == 1 ? "item" : "items")}";
+        // full enumeration). Show "N+ more items" to indicate the remaining is a lower bound.
+        string countText;
+        if (truncated)
+        {
+            int remaining = totalCount - displayedCount;
+            countText = knownCount is null
+                ? $"{remaining}+ more items"
+                : $"{remaining} more {(remaining == 1 ? "item" : "items")}";
+        }
+        else
+        {
+            countText = $"{totalCount} {(totalCount == 1 ? "item" : "items")}";
+        }
 
         return $"[{elementList}] ({countText})";
     }
