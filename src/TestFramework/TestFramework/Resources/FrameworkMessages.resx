@@ -334,10 +334,10 @@ Actual: {2}</value>
     <value>Expected exactly one item to match the predicate but found {0} item(s).</value>
   </data>
   <data name="ContainsSingleFailNew" xml:space="preserve">
-    <value>Expected collection to contain exactly one element but found {0} element(s).</value>
+    <value>Expected collection to contain exactly one item but found {0} item(s).</value>
   </data>
   <data name="HasCountFailNew" xml:space="preserve">
-    <value>Expected collection to have the specified number of elements.</value>
+    <value>Expected collection to have the specified number of items.</value>
   </data>
   <data name="IsNotEmptyFailNew" xml:space="preserve">
     <value>Expected collection to contain any item but it is empty.</value>

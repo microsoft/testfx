@@ -393,10 +393,10 @@ public sealed partial class Assert
         }
 
         // Perf: when truncated without ICollection, we don't know the real count (would require
-        // full enumeration). Show "N+ elements" to indicate the count is a lower bound.
+        // full enumeration). Show "N+ items" to indicate the count is a lower bound.
         string countText = truncated && knownCount is null
-            ? $"{enumeratedCount}+ elements"
-            : $"{totalCount} {(totalCount == 1 ? "element" : "elements")}";
+            ? $"{enumeratedCount}+ items"
+            : $"{totalCount} {(totalCount == 1 ? "item" : "items")}";
 
         return $"[{elementList}] ({countText})";
     }

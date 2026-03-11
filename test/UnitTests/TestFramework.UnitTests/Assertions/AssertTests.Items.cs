@@ -27,8 +27,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.HasCount failed.
-                Expected collection to have the specified number of elements.
-                  collection: [1] (1 element)
+                Expected collection to have the specified number of items.
+                  collection: [1] (1 item)
                   expectedCount: 3
                   actualCount: 1
                 """);
@@ -42,8 +42,8 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.HasCount failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected collection to have the specified number of elements.
-                  collection (Array.Empty<int>()): [] (0 elements)
+                Expected collection to have the specified number of items.
+                  collection (Array.Empty<int>()): [] (0 items)
                   expectedCount: 1
                   actualCount: 0
                 """);
@@ -67,8 +67,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsEmpty failed.
-                Expected collection to have the specified number of elements.
-                  collection: [1] (1 element)
+                Expected collection to have the specified number of items.
+                  collection: [1] (1 item)
                   expectedCount: 0
                   actualCount: 1
                 """);
@@ -83,8 +83,8 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsEmpty failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected collection to have the specified number of elements.
-                  collection: [1] (1 element)
+                Expected collection to have the specified number of items.
+                  collection: [1] (1 item)
                   expectedCount: 0
                   actualCount: 1
                 """);
@@ -112,7 +112,7 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.ContainsSingle failed.
-                Expected collection to contain exactly one element but found 0 element(s).
+                Expected collection to contain exactly one item but found 0 item(s).
                   collection: Array.Empty<int>()
                 """);
     }
@@ -123,7 +123,7 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.ContainsSingle failed.
-                Expected collection to contain exactly one element but found 3 element(s).
+                Expected collection to contain exactly one item but found 3 item(s).
                   collection: [1, 2, 3]
                 """);
     }
@@ -136,7 +136,7 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.ContainsSingle failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected collection to contain exactly one element but found 0 element(s).
+                Expected collection to contain exactly one item but found 0 item(s).
                   collection: Array.Empty<int>()
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -150,7 +150,7 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.ContainsSingle failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected collection to contain exactly one element but found 3 element(s).
+                Expected collection to contain exactly one item but found 3 item(s).
                   collection: [1, 2, 3]
                 """);
         o.WasToStringCalled.Should().BeTrue();

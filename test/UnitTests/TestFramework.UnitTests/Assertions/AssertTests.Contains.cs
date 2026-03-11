@@ -340,7 +340,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.ContainsSingle failed.
-            Expected collection to contain exactly one element but found 3 element(s).
+            Expected collection to contain exactly one item but found 3 item(s).
             """);
     }
 
@@ -373,7 +373,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.ContainsSingle failed.
-            Expected collection to contain exactly one element but found 0 element(s).
+            Expected collection to contain exactly one item but found 0 item(s).
             """);
     }
 
@@ -391,7 +391,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.ContainsSingle failed. my custom message
-            Expected collection to contain exactly one element but found 0 element(s).
+            Expected collection to contain exactly one item but found 0 item(s).
             """);
     }
     #endregion

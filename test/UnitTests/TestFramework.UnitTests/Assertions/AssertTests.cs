@@ -171,7 +171,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull failed.
                 Expected value to be null.
-                  value (collection): [1, 2, 3] (3 elements)
+                  value (collection): [1, 2, 3] (3 items)
                 """);
     }
 
@@ -193,7 +193,7 @@ public partial class AssertTests
                 Assert.Contains failed.
                 Expected collection to contain the specified item.
                   expected: "not-there"
-                  collection*[*...*] (20 elements)
+                  collection*[*...*] (20 items)
                 """);
     }
 
@@ -209,7 +209,7 @@ public partial class AssertTests
                 Assert.Contains failed.
                 Expected collection to contain the specified item.
                   expected: "not-there"
-                  collection*[{expectedFirstElement}, "short"] (2 elements)
+                  collection*[{expectedFirstElement}, "short"] (2 items)
                 """);
     }
 
@@ -224,7 +224,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull failed.
                 Expected value to be null.
-                  value (outer): [[1, 2] (2 elements), [3, 4] (2 elements)] (2 elements)
+                  value (outer): [[1, 2] (2 items), [3, 4] (2 items)] (2 items)
                 """);
     }
 
@@ -248,7 +248,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull failed.
                 Expected value to be null.
-                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ...] (50 elements)] (1 element)
+                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ...] (50 items)] (1 item)
                 """);
     }
 
@@ -262,7 +262,7 @@ public partial class AssertTests
                 Assert.Contains failed.
                 Expected collection to contain the specified item.
                   expected: "not-there"
-                  collection*["line1\nline2", "ok"] (2 elements)
+                  collection*["line1\nline2", "ok"] (2 items)
                 """);
     }
 
@@ -276,7 +276,7 @@ public partial class AssertTests
                 Assert.Contains failed.
                 Expected collection to contain the specified item.
                   expected: 99
-                  collection*[42] (1 element)
+                  collection*[42] (1 item)
                 """);
     }
 

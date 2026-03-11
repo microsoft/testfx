@@ -123,8 +123,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleFailNew">
-        <source>Expected collection to contain exactly one element but found {0} element(s).</source>
-        <target state="new">Expected collection to contain exactly one element but found {0} element(s).</target>
+        <source>Expected collection to contain exactly one item but found {0} item(s).</source>
+        <target state="new">Expected collection to contain exactly one item but found {0} item(s).</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailNew">
@@ -232,8 +232,8 @@ Gerçekte olan: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailNew">
-        <source>Expected collection to have the specified number of elements.</source>
-        <target state="new">Expected collection to have the specified number of elements.</target>
+        <source>Expected collection to have the specified number of items.</source>
+        <target state="new">Expected collection to have the specified number of items.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
