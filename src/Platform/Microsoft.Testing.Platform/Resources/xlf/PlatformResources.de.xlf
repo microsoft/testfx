@@ -421,16 +421,6 @@
         <target state="translated">{0} ausgeführten Tests</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Es ist kein Serialisierungsmodul mit der ID "{0}" registriert</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Es ist kein Serialisierungsmodul mit dem Typ "{0}" registriert</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Nicht verfügbar</target>
@@ -1020,11 +1010,6 @@ Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Ein Chatclientanbieter wurde bereits registriert.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">KI-Erweiterungen funktionieren nur mit Generatoren vom Typ „Microsoft.Testing.Platform.Builder.TestApplicationBuilder“</target>
         <note />
       </trans-unit>
     </body>

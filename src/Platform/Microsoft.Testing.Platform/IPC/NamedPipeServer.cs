@@ -6,6 +6,7 @@ using System.IO.Pipes;
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
@@ -334,7 +335,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
+                    nameof(InternalLoopAsync)));
             }
         }
 

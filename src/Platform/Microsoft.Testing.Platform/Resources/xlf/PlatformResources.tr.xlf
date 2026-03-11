@@ -421,16 +421,6 @@
         <target state="translated">{0} test çalıştırılıyor</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">'{0}' kimliğiyle kayıtlı seri hale getirici yok</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">'{0}' türüyle kayıtlı seri hale getirici yok</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Kullanılamıyor</target>
@@ -1020,11 +1010,6 @@ Geçerli değerler: ‘Normal’, ‘Ayrıntılı’. Varsayılan değer: ‘Nor
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Bir sohbet istemcisi sağlayıcısı zaten kaydedilmiş.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Yapay zeka uzantıları yalnızca 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' türündeki oluşturucularla çalışır</target>
         <note />
       </trans-unit>
     </body>

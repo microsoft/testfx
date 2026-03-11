@@ -1,34 +1,46 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
-namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
+namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
-internal sealed class TestHostOrchestratorManager : ITestHostOrchestratorManager
+internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Extensions.TestHostOrchestrator.ITestHostOrchestratorManager
 {
     private readonly List<Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime>> _testHostOrchestratorApplicationLifetimeFactories = [];
-    private List<Func<IServiceProvider, ITestHostOrchestrator>>? _factories;
+    private List<Func<IServiceProvider, ITestHostExecutionOrchestrator>>? _factories;
 
-    public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
+    public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostExecutionOrchestrator> factory)
     {
         Ensure.NotNull(factory);
         _factories ??= [];
         _factories.Add(factory);
     }
 
-    public async Task<TestHostOrchestratorConfiguration> BuildAsync(ServiceProvider serviceProvider)
+    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(Func<IServiceProvider, Extensions.TestHostOrchestrator.ITestHostOrchestrator> factory)
+    {
+        Ensure.NotNull(factory);
+        _factories ??= [];
+        _factories.Add(sp => factory(sp));
+    }
+
+    void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
+        => AddTestHostOrchestratorApplicationLifetime(testHostOrchestratorApplicationLifetimeFactory);
+
+    internal async Task<TestHostOrchestratorConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
         if (_factories is null)
         {
             return new TestHostOrchestratorConfiguration([]);
         }
 
-        List<ITestHostOrchestrator> orchestrators = [];
-        foreach (Func<IServiceProvider, ITestHostOrchestrator> factory in _factories)
+        List<ITestHostExecutionOrchestrator> orchestrators = [];
+        foreach (Func<IServiceProvider, ITestHostExecutionOrchestrator> factory in _factories)
         {
-            ITestHostOrchestrator orchestrator = factory(serviceProvider);
+            ITestHostExecutionOrchestrator orchestrator = factory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
             orchestrators.ValidateUniqueExtension(orchestrator);

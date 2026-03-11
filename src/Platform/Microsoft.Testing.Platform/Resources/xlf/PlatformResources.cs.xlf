@@ -421,16 +421,6 @@
         <target state="translated">{0} spuštěné testy</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Není zaregistrovaný žádný serializátor s ID {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Není zaregistrovaný žádný serializátor s typem {0}.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Není k dispozici</target>
@@ -1020,11 +1010,6 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Zprostředkovatel klienta chatu již byl zaregistrován.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Rozšíření AI fungují jenom s tvůrci typu Microsoft.Testing.Platform.Builder.TestApplicationBuilder.</target>
         <note />
       </trans-unit>
     </body>

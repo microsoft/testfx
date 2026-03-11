@@ -421,16 +421,6 @@
         <target state="translated">testy {0} uruchomione</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">Nie zarejestrowano serializatora z identyfikatorem „{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">Nie zarejestrowano serializatora z typem „{0}”</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Niedostępne</target>
@@ -1020,11 +1010,6 @@ Prawidłowe wartości to „Normalne”, „Szczegółowe”. Wartość domyśln
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Dostawca klienta czatu został już zarejestrowany.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Rozszerzenia sztucznej inteligencji działają tylko z konstruktorami typu „Microsoft.Testing.Platform.Builder.TestApplicationBuilder”</target>
         <note />
       </trans-unit>
     </body>
