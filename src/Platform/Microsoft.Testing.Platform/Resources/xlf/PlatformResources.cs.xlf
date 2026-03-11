@@ -965,11 +965,6 @@ Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <target state="translated">Neočekávané volání telemetrie, telemetrie je zakázaná.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Při převodu bajtů došlo k neočekávané výjimce.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
