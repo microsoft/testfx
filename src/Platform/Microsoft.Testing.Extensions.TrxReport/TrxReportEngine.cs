@@ -140,7 +140,7 @@ internal sealed partial class TrxReportEngine
 
             var testDefinitions = new XElement("TestDefinitions");
             var testEntries = new XElement("TestEntries");
-            SummaryCounts summaryCounts = await AddResultsAsync(testNodeUpdateMessages, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries).ConfigureAwait(false);
+            SummaryCounts summaryCounts = AddResults(testNodeUpdateMessages, testAppModule, testRun, runDeploymentRoot, testDefinitions, testEntries);
             testRun.Add(testDefinitions);
             testRun.Add(testEntries);
             AddTestLists(testRun);
@@ -388,7 +388,7 @@ internal sealed partial class TrxReportEngine
         testRun.Add(testLists);
     }
 
-    private async Task<SummaryCounts> AddResultsAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, string runDeploymentRoot, XElement testDefinitions, XElement testEntries)
+    private SummaryCounts AddResults(TestNodeUpdateMessage[] testNodeUpdateMessages, string testAppModule, XElement testRun, string runDeploymentRoot, XElement testDefinitions, XElement testEntries)
     {
         int passed = 0;
         int failed = 0;
@@ -546,7 +546,7 @@ internal sealed partial class TrxReportEngine
             {
                 resultFiles ??= new XElement("ResultFiles");
 
-                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(testFileArtifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
+                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(testFileArtifact.FileInfo, runDeploymentRoot);
                 resultFiles.Add(new XElement(
                     "ResultFile",
                     new XAttribute("path", href)));
