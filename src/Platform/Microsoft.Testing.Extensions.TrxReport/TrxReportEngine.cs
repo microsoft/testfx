@@ -86,9 +86,8 @@ internal sealed partial class TrxReportEngine
     private readonly CancellationToken _cancellationToken;
     private readonly int _exitCode;
     private readonly IFileSystem _fileSystem;
-    private readonly bool _isCopyingFileAllowed;
 
-    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken, bool isCopyingFileAllowed = true)
+    public TrxReportEngine(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo, IEnvironment environment, ICommandLineOptions commandLineOptionsService, IConfiguration configuration, IClock clock, Dictionary<IExtension, List<SessionFileArtifact>> artifactsByExtension, ITestFramework testFrameworkAdapter, DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken)
     {
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _environment = environment;
@@ -101,7 +100,6 @@ internal sealed partial class TrxReportEngine
         _cancellationToken = cancellationToken;
         _exitCode = exitCode;
         _fileSystem = fileSystem;
-        _isCopyingFileAllowed = isCopyingFileAllowed;
     }
 
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(TestNodeUpdateMessage[] testNodeUpdateMessages, string testHostCrashInfo = "", bool isTestHostCrashed = false)
@@ -147,7 +145,7 @@ internal sealed partial class TrxReportEngine
 
             string trxOutcome = isTestHostCrashed || _exitCode != ExitCodes.Success || hasFailedTests ? "Failed" : "Completed";
 
-            await AddResultSummaryAsync(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed).ConfigureAwait(false);
+            AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, isTestHostCrashed);
 
             // will need catch Unauthorized access
             document.Add(testRun);
@@ -224,13 +222,13 @@ internal sealed partial class TrxReportEngine
             resultSummary.Add(collectorDataEntries);
         }
 
-        await AddArtifactsToCollectionAsync(artifacts, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
+        AddArtifactsToCollection(artifacts, collectorDataEntries, runDeploymentRoot);
 
         using FileStream fs = File.OpenWrite(trxFile.FullName);
         await document.SaveAsync(fs, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task AddArtifactsToCollectionAsync(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
+    private void AddArtifactsToCollection(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)
     {
         foreach (KeyValuePair<IExtension, List<SessionFileArtifact>> extensionArtifacts in artifacts)
         {
@@ -250,13 +248,13 @@ internal sealed partial class TrxReportEngine
 
             foreach (SessionFileArtifact artifact in extensionArtifacts.Value)
             {
-                string href = await CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(artifact.FileInfo, runDeploymentRoot).ConfigureAwait(false);
+                string href = CopyArtifactIntoTrxDirectoryAndReturnHrefValue(artifact.FileInfo, runDeploymentRoot);
                 uriAttachments.Add(new XElement(NamespaceUri + "UriAttachment", new XElement(NamespaceUri + "A", new XAttribute("href", href))));
             }
         }
     }
 
-    private async Task AddResultSummaryAsync(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
+    private void AddResultSummary(XElement testRun, string resultSummaryOutcome, string runDeploymentRoot, string testHostCrashInfo, int exitCode, SummaryCounts summaryCounts, bool isTestHostCrashed = false)
     {
         // TODO: VSTest adds Output/StdOut element to ResultSummary which we don't add.
         // VSTest adds mainly two things in that element:
@@ -333,10 +331,10 @@ internal sealed partial class TrxReportEngine
         var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
         resultSummary.Add(collectorDataEntries);
 
-        await AddArtifactsToCollectionAsync(_artifactsByExtension, collectorDataEntries, runDeploymentRoot).ConfigureAwait(false);
+        AddArtifactsToCollection(_artifactsByExtension, collectorDataEntries, runDeploymentRoot);
     }
 
-    private async Task<string> CopyArtifactIntoTrxDirectoryAndReturnHrefValueAsync(FileInfo artifact, string runDeploymentRoot)
+    private string CopyArtifactIntoTrxDirectoryAndReturnHrefValue(FileInfo artifact, string runDeploymentRoot)
     {
         string artifactDirectory = CreateOrGetTrxArtifactDirectory(runDeploymentRoot);
         string fileName = artifact.Name;
@@ -357,7 +355,7 @@ internal sealed partial class TrxReportEngine
             break;
         }
 
-        await CopyFileAsync(artifact, new FileInfo(destination)).ConfigureAwait(false);
+        _fileSystem.CopyFile(artifact.FullName, new FileInfo(destination).FullName);
 
         return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
     }
@@ -371,18 +369,6 @@ internal sealed partial class TrxReportEngine
         }
 
         return directoryName;
-    }
-
-    private async Task CopyFileAsync(FileInfo origin, FileInfo destination)
-    {
-        if (!_isCopyingFileAllowed)
-        {
-            return;
-        }
-
-        using FileStream fileStream = File.OpenRead(origin.FullName);
-        using var destinationStream = new FileStream(destination.FullName, FileMode.Create);
-        await fileStream.CopyToAsync(destinationStream, _cancellationToken).ConfigureAwait(false);
     }
 
     private static void AddTestLists(XElement testRun)
