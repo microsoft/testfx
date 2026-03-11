@@ -13,9 +13,12 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal abstract class ContextAdapterBase
 {
+    private readonly TreeNodeFilter? _treeNodeFilter;
+
     protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
     {
         RunSettings = runSettings;
+        _treeNodeFilter = filter as TreeNodeFilter;
 
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
@@ -43,19 +46,17 @@ internal abstract class ContextAdapterBase
         IEnumerable<string>? supportedProperties,
         Func<string, TestProperty?> propertyProvider)
     {
-        if (FilterExpressionWrapper is null)
+        if (FilterExpressionWrapper is null && _treeNodeFilter is null)
         {
             return null;
         }
 
-        if (!RoslynString.IsNullOrEmpty(FilterExpressionWrapper.ParseError))
+        if (!RoslynString.IsNullOrEmpty(FilterExpressionWrapper?.ParseError))
         {
             throw new TestPlatformFormatException(FilterExpressionWrapper.ParseError, FilterExpressionWrapper.FilterString);
         }
 
-        var adapterSpecificTestCaseFilter = new TestCaseFilterExpression(FilterExpressionWrapper);
-        string[]? invalidProperties = adapterSpecificTestCaseFilter.ValidForProperties(supportedProperties, propertyProvider);
-
+        string[]? invalidProperties = FilterExpressionWrapper?.ValidForProperties(supportedProperties, propertyProvider);
         if (invalidProperties != null)
         {
             string validPropertiesString = supportedProperties == null
@@ -66,7 +67,7 @@ internal abstract class ContextAdapterBase
             EqtTrace.Info($"No tests matched the filter because it contains one or more properties that are not valid ({string.Join(", ", invalidProperties)}). Specify filter expression containing valid properties ({validPropertiesString}).");
         }
 
-        return adapterSpecificTestCaseFilter;
+        return new TestCaseFilterExpression(FilterExpressionWrapper, _treeNodeFilter);
     }
 
     private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption)

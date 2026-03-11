@@ -43,6 +43,7 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.AddTestRunParametersService(extension);
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
         testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
+        testApplicationBuilder.AddTreeNodeFilterService(extension);
         testApplicationBuilder.RegisterTestFramework(
             serviceProvider => new TestFrameworkCapabilities(
                 new MSTestCapabilities(),

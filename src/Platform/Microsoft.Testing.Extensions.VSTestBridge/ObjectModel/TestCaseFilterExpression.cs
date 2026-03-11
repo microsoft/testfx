@@ -3,6 +3,7 @@
 
 // NOTE: This file is copied as-is from VSTest source code.
 using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -13,43 +14,27 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 /// </summary>
 internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
 {
-    private readonly FilterExpressionWrapper _filterWrapper;
-
-    /// <summary>
-    /// If filter Expression is valid for performing TestCase matching
-    /// (has only supported properties, syntax etc).
-    /// </summary>
-    private readonly bool _validForMatch;
+    private readonly FilterExpressionWrapper? _filterWrapper;
+    private readonly TreeNodeFilter? _treeNodeFilter;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCaseFilterExpression"/> class.
     /// Adapter specific filter expression.
     /// </summary>
-    public TestCaseFilterExpression(FilterExpressionWrapper filterWrapper)
+    public TestCaseFilterExpression(FilterExpressionWrapper? filterWrapper, TreeNodeFilter? treeNodeFilter)
     {
-        Ensure.NotNull(filterWrapper);
         _filterWrapper = filterWrapper;
-        _validForMatch = RoslynString.IsNullOrEmpty(filterWrapper.ParseError);
+        _treeNodeFilter = treeNodeFilter;
+        if (RoslynString.IsNullOrEmpty(filterWrapper?.ParseError))
+        {
+            throw new UnreachableException();
+        }
     }
 
     /// <summary>
     /// Gets user specified filter criteria.
     /// </summary>
-    public string TestCaseFilterValue => _filterWrapper.FilterString;
-
-    /// <summary>
-    /// Validate if underlying filter expression is valid for given set of supported properties.
-    /// </summary>
-    public string[]? ValidForProperties(IEnumerable<string>? supportedProperties, Func<string, TestProperty?> propertyProvider)
-    {
-        string[]? invalidProperties = null;
-        if (_validForMatch)
-        {
-            invalidProperties = _filterWrapper.ValidForProperties(supportedProperties, propertyProvider);
-        }
-
-        return invalidProperties;
-    }
+    public string TestCaseFilterValue => _filterWrapper?.FilterString ?? string.Empty;
 
     /// <summary>
     /// Match test case with filter criteria.
@@ -59,6 +44,13 @@ internal sealed class TestCaseFilterExpression : ITestCaseFilterExpression
         Ensure.NotNull(testCase);
         Ensure.NotNull(propertyValueProvider);
 
-        return _validForMatch && _filterWrapper.Evaluate(propertyValueProvider);
+        bool vstestFilterMatch = _filterWrapper is null ||
+            _filterWrapper.Evaluate(propertyValueProvider);
+
+        bool treeNodeFilterMatch = _treeNodeFilter is null ||
+            _treeNodeFilter.MatchesFilter(string.Empty /*TODO*/, new Platform.Extensions.Messages.PropertyBag() /*TODO*/);
+
+        // TODO: To be defined: Use AND or OR.
+        return vstestFilterMatch && treeNodeFilterMatch;
     }
 }
