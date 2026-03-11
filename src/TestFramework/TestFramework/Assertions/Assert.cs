@@ -54,10 +54,11 @@ public sealed partial class Assert
 
         // When there's no user message (message starts with newline for parameter details),
         // the format produces a trailing space before the newline ("failed. \\r\\n").
-        // Remove it to avoid trailing whitespace on the first line.
+        // Remove it to avoid trailing whitespace on the first line while preserving localization.
         if (message is not null && message.StartsWith(Environment.NewLine, StringComparison.Ordinal))
         {
-            formattedMessage = $"{assertionName} failed.{message}";
+            string prefix = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, string.Empty);
+            formattedMessage = prefix.TrimEnd() + message;
         }
 
         throw new AssertFailedException(formattedMessage);
@@ -125,12 +126,9 @@ public sealed partial class Assert
             return FormatCollectionPreview(enumerable);
         }
 
-        Type type = typeof(T);
-        if (type == typeof(object))
-        {
-            // If the static type is object, use the runtime type
-            type = value.GetType();
-        }
+        // Always use the runtime type for non-null values so that interface/base-class
+        // typed parameters still resolve the actual overridden ToString().
+        Type type = value.GetType();
 
         if (type.IsPrimitive || value is decimal or DateTime or DateTimeOffset
             or TimeSpan or Guid or Enum)
