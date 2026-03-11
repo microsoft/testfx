@@ -387,15 +387,15 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
         _waitForConnections.Cancel();
         Dispose();
 
-        if (returnValue && _moduleInfo is null)
+        if (_moduleInfo is null)
         {
-            returnValue = false;
-            Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.DidNotReceiveModuleInfo, TargetPath.ItemSpec.Trim());
+            Log.LogError(Resources.MSBuildResources.DidNotReceiveModuleInfo, TargetPath.ItemSpec.Trim());
+            return false;
         }
-        else if (returnValue && !_receivedRunSummaryInfoRequest)
+        else if (!_receivedRunSummaryInfoRequest)
         {
-            returnValue = false;
-            Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.DidNotReceiveRunSummaryInfo, TargetPath.ItemSpec.Trim());
+            Log.LogError(Resources.MSBuildResources.DidNotReceiveRunSummaryInfo, TargetPath.ItemSpec.Trim());
+            return false;
         }
         else if (returnValue)
         {
