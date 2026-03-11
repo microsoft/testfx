@@ -79,7 +79,7 @@ public partial class AssertTests
                 Assert.EndsWith failed.
                 String does not end with expected suffix.
                   expectedSuffix: "world"
-                  value (longValue): "{new string('x', 255)}... (302 chars)
+                  value (longValue): "{new string('x', 255)}... (46 more chars)
                 """);
     }
 
@@ -119,7 +119,7 @@ public partial class AssertTests
                 Assert.DoesNotEndWith failed.
                 String ends with unexpected suffix.
                   notExpectedSuffix: "world"
-                  value (longValue): "{new string('x', 255)}... (307 chars)
+                  value (longValue): "{new string('x', 255)}... (51 more chars)
                 """);
     }
 

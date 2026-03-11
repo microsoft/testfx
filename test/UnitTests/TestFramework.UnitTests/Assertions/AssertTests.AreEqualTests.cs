@@ -1952,8 +1952,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.AreEqual failed.
                 Expected values to be equal.
-                  expected: {new string('L', 256)}... (300 chars)
-                  actual: {new string('L', 256)}... (300 chars)
+                  expected: {new string('L', 256)}... (44 more chars)
+                  actual: {new string('L', 256)}... (44 more chars)
                 """);
     }
 
@@ -1995,8 +1995,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.AreNotEqual failed.
                 Expected values to differ.
-                  notExpected (obj): {new string('L', 256)}... (300 chars)
-                  actual (obj): {new string('L', 256)}... (300 chars)
+                  notExpected (obj): {new string('L', 256)}... (44 more chars)
+                  actual (obj): {new string('L', 256)}... (44 more chars)
                 """);
     }
 

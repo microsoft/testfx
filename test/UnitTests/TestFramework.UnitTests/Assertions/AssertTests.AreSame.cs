@@ -169,8 +169,8 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.AreSame failed.
                 Expected references to be the same.
-                  expected (new ObjectWithLongToString()): {new string('L', 256)}... (300 chars) (HashCode=*)
-                  actual (new ObjectWithLongToString()): {new string('L', 256)}... (300 chars) (HashCode=*)
+                  expected (new ObjectWithLongToString()): {new string('L', 256)}... (44 more chars) (HashCode=*)
+                  actual (new ObjectWithLongToString()): {new string('L', 256)}... (44 more chars) (HashCode=*)
                 """);
     }
 
@@ -209,8 +209,8 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.AreNotSame failed.
                 Expected references to be different.
-                  notExpected (obj): {new string('L', 256)}... (300 chars)
-                  actual (obj): {new string('L', 256)}... (300 chars)
+                  notExpected (obj): {new string('L', 256)}... (44 more chars)
+                  actual (obj): {new string('L', 256)}... (44 more chars)
                 """);
     }
 

@@ -467,9 +467,9 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.IsInRange failed.
                 Value is not within the expected range.
-                  minValue (min): {new string('R', 256)}... (300 chars)
-                  maxValue (max): {new string('R', 256)}... (300 chars)
-                  value: {new string('R', 256)}... (300 chars)
+                  minValue (min): {new string('R', 256)}... (44 more chars)
+                  maxValue (max): {new string('R', 256)}... (44 more chars)
+                  value: {new string('R', 256)}... (44 more chars)
                 """);
     }
 

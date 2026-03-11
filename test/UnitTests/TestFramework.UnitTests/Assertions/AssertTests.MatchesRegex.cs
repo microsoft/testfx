@@ -67,7 +67,7 @@ public partial class AssertTests
                 Assert.MatchesRegex failed.
                 String does not match expected pattern.
                   pattern: \d+
-                  value (longValue): "{new string('x', 255)}... (302 chars)
+                  value (longValue): "{new string('x', 255)}... (46 more chars)
                 """);
     }
 
@@ -107,7 +107,7 @@ public partial class AssertTests
                 Assert.DoesNotMatchRegex failed.
                 String matches pattern but should not.
                   pattern: \d+
-                  value (longValue): "{new string('1', 255)}... (302 chars)
+                  value (longValue): "{new string('1', 255)}... (46 more chars)
                 """);
     }
 

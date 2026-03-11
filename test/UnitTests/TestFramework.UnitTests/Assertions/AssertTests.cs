@@ -73,8 +73,8 @@ public partial class AssertTests
         // FormatValue truncation applies to non-string-diff contexts like IsNull
         // 300 'x' chars -> quoted as "xxx..." (302 chars total) -> truncated at 256 chars with ellipsis
         string longValue = new('x', 300);
-        // Truncate takes first 256 chars of quoted string: opening quote + 255 x's, then appends "... (302 chars)"
-        string expectedValue = "\"" + new string('x', 255) + "... (302 chars)";
+        // Truncate takes first 256 chars of quoted string: opening quote + 255 x's, then appends "... (46 more chars)"
+        string expectedValue = "\"" + new string('x', 255) + "... (46 more chars)";
 
         Action action = () => Assert.IsNull(longValue);
         action.Should().Throw<AssertFailedException>()
@@ -103,7 +103,7 @@ public partial class AssertTests
     {
         // Custom ToString returns 300 chars ? truncated at 256
         var obj = new ObjectWithLongToString();
-        string expectedValue = new string('L', 256) + "... (300 chars)";
+        string expectedValue = new string('L', 256) + "... (44 more chars)";
 
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
@@ -201,7 +201,7 @@ public partial class AssertTests
     {
         // Element has 80-char string ? FormatValue(maxLength:50) ? "zzz..." (82 chars quoted) ? truncated at 50
         var collection = new List<string> { new string('z', 80), "short" };
-        string expectedFirstElement = "\"" + new string('z', 49) + "... (82 chars)";
+        string expectedFirstElement = "\"" + new string('z', 49) + "... (32 more chars)";
 
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()

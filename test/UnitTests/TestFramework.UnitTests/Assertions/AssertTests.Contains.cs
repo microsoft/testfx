@@ -1978,7 +1978,7 @@ public partial class AssertTests : TestContainer
                 Assert.Contains failed.
                 String does not contain the expected substring.
                   substring: "world"
-                  value (longValue): "{new string('x', 255)}... (302 chars)
+                  value (longValue): "{new string('x', 255)}... (46 more chars)
                 """);
     }
 
@@ -2018,7 +2018,7 @@ public partial class AssertTests : TestContainer
                 Assert.DoesNotContain failed.
                 String contains the unexpected substring.
                   substring: "hello"
-                  value (longValue): "hello{new string('x', 250)}... (307 chars)
+                  value (longValue): "hello{new string('x', 250)}... (51 more chars)
                 """);
     }
 

@@ -301,7 +301,7 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.IsInstanceOfType failed.
                 Expected value to be of the specified type.
-                  value (obj): {new string('L', 256)}... (300 chars)
+                  value (obj): {new string('L', 256)}... (44 more chars)
                   expectedType: System.Int32
                   actualType: *ObjectWithLongToString
                 """);
@@ -346,7 +346,7 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.IsNotInstanceOfType failed.
                 Value should not be of the specified type.
-                  value (obj): {new string('L', 256)}... (300 chars)
+                  value (obj): {new string('L', 256)}... (44 more chars)
                   wrongType: *ObjectWithLongToString
                   actualType: *ObjectWithLongToString
                 """);

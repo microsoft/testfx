@@ -79,7 +79,7 @@ public partial class AssertTests
                 Assert.StartsWith failed.
                 String does not start with expected prefix.
                   expectedPrefix: "world"
-                  value (longValue): "{new string('x', 255)}... (302 chars)
+                  value (longValue): "{new string('x', 255)}... (46 more chars)
                 """);
     }
 
@@ -119,7 +119,7 @@ public partial class AssertTests
                 Assert.DoesNotStartWith failed.
                 String starts with unexpected prefix.
                   notExpectedPrefix: "hello"
-                  value (longValue): "hello{new string('x', 250)}... (307 chars)
+                  value (longValue): "hello{new string('x', 250)}... (51 more chars)
                 """);
     }
 

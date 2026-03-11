@@ -171,9 +171,9 @@ public sealed partial class Assert
         => value.Length <= maxLength
             ? value
 #if NETCOREAPP3_1_OR_GREATER
-            : string.Concat(value.AsSpan(0, maxLength), "... (", value.Length.ToString(CultureInfo.InvariantCulture), " chars)");
+            : string.Concat(value.AsSpan(0, maxLength), "... (", (value.Length - maxLength).ToString(CultureInfo.InvariantCulture), " more chars)");
 #else
-            : value.Substring(0, maxLength) + $"... ({value.Length} chars)";
+            : value.Substring(0, maxLength) + $"... ({value.Length - maxLength} more chars)";
 #endif
 
     private static string EscapeNewlines(string value)
