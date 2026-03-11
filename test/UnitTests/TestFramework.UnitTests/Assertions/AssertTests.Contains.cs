@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -1978,7 +1978,7 @@ public partial class AssertTests : TestContainer
                 Assert.Contains failed.
                 String does not contain the expected substring.
                   substring: "world"
-                  value (longValue): "{new string('x', 255)}... (46 more chars)
+                  value (longValue): "{new string('x', 255)}... 46 more
                 """);
     }
 
@@ -2018,7 +2018,7 @@ public partial class AssertTests : TestContainer
                 Assert.DoesNotContain failed.
                 String contains the unexpected substring.
                   substring: "hello"
-                  value (longValue): "hello{new string('x', 250)}... (51 more chars)
+                  value (longValue): "hello{new string('x', 250)}... 51 more
                 """);
     }
 

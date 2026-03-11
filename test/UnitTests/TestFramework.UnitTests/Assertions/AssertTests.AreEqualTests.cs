@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -1952,8 +1952,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.AreEqual failed.
                 Expected values to be equal.
-                  expected: {new string('L', 256)}... (44 more chars)
-                  actual: {new string('L', 256)}... (44 more chars)
+                  expected: {new string('L', 256)}... 44 more
+                  actual: {new string('L', 256)}... 44 more
                 """);
     }
 
@@ -1995,8 +1995,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.AreNotEqual failed.
                 Expected values to differ.
-                  notExpected (obj): {new string('L', 256)}... (44 more chars)
-                  actual (obj): {new string('L', 256)}... (44 more chars)
+                  notExpected (obj): {new string('L', 256)}... 44 more
+                  actual (obj): {new string('L', 256)}... 44 more
                 """);
     }
 

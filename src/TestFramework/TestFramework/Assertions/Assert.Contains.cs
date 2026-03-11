@@ -768,7 +768,7 @@ public sealed partial class Assert
         message += FormatExpressionParameter("expected", expectedExpression);
         if (collectionValue is not null)
         {
-            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+            message += FormatCollectionParameter(collectionExpression, collectionValue);
         }
         else
         {
@@ -786,7 +786,7 @@ public sealed partial class Assert
         message += FormatExpressionParameter("predicate", predicateExpression);
         if (collectionValue is not null)
         {
-            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+            message += FormatCollectionParameter(collectionExpression, collectionValue);
         }
         else
         {
@@ -804,7 +804,7 @@ public sealed partial class Assert
         message += FormatExpressionParameter("notExpected", notExpectedExpression);
         if (collectionValue is not null)
         {
-            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+            message += FormatCollectionParameter(collectionExpression, collectionValue);
         }
         else
         {
@@ -822,7 +822,7 @@ public sealed partial class Assert
         message += FormatExpressionParameter("predicate", predicateExpression);
         if (collectionValue is not null)
         {
-            message += FormatCollectionParameter("collection", collectionExpression, collectionValue);
+            message += FormatCollectionParameter(collectionExpression, collectionValue);
         }
         else
         {

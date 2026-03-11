@@ -171,9 +171,9 @@ public sealed partial class Assert
         => value.Length <= maxLength
             ? value
 #if NETCOREAPP3_1_OR_GREATER
-            : string.Concat(value.AsSpan(0, maxLength), "... (", (value.Length - maxLength).ToString(CultureInfo.InvariantCulture), " more chars)");
+            : string.Concat(value.AsSpan(0, maxLength), "... ", (value.Length - maxLength).ToString(CultureInfo.InvariantCulture), " more");
 #else
-            : value.Substring(0, maxLength) + $"... ({value.Length - maxLength} more chars)";
+            : value.Substring(0, maxLength) + $"... {value.Length - maxLength} more";
 #endif
 
     private static string EscapeNewlines(string value)
@@ -318,12 +318,13 @@ public sealed partial class Assert
     /// <summary>
     /// Formats a collection parameter line showing a preview of the collection elements.
     /// </summary>
-    internal static string FormatCollectionParameter(string paramName, string expression, IEnumerable collection)
+    internal static string FormatCollectionParameter(string expression, IEnumerable collection)
     {
         string preview = FormatCollectionPreview(collection);
-        return string.IsNullOrEmpty(expression) || expression == paramName
-            ? $"{Environment.NewLine}  {paramName}: {preview}"
-            : $"{Environment.NewLine}  {paramName} ({TruncateExpression(expression)}): {preview}";
+
+        return string.IsNullOrEmpty(expression) || expression == "collection"
+            ? $"{Environment.NewLine}  collection: {preview}"
+            : $"{Environment.NewLine}  collection ({TruncateExpression(expression)}): {preview}";
     }
 
     /// <summary>
@@ -390,26 +391,18 @@ public sealed partial class Assert
         string elementList = string.Join(", ", elements);
         if (truncated)
         {
-            elementList += ", ...";
-        }
-
-        // When truncated, show remaining count (how many more are not displayed).
-        // Perf: when truncated without ICollection, we don't know the real count (would require
-        // full enumeration). Show "N+ more items" to indicate the remaining is a lower bound.
-        string countText;
-        if (truncated)
-        {
             int remaining = totalCount - displayedCount;
-            countText = knownCount is null
-                ? $"{remaining}+ more items"
-                : $"{remaining} more {(remaining == 1 ? "item" : "items")}";
-        }
-        else
-        {
-            countText = $"{totalCount} {(totalCount == 1 ? "item" : "items")}";
+            string remainingText = knownCount is null
+                ? $"{remaining}+"
+                : $"{remaining}";
+            elementList += $", ... {remainingText} more";
         }
 
-        return $"[{elementList}] ({countText})";
+        string countText = truncated
+            ? string.Empty
+            : $" ({totalCount} {(totalCount == 1 ? "item" : "items")})";
+
+        return $"[{elementList}]{countText}";
     }
 
     internal static string FormatParameterWithValue(string paramName, string expression, string formattedValue)

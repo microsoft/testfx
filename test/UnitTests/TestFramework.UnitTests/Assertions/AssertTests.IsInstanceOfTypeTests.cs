@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -301,7 +301,7 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.IsInstanceOfType failed.
                 Expected value to be of the specified type.
-                  value (obj): {new string('L', 256)}... (44 more chars)
+                  value (obj): {new string('L', 256)}... 44 more
                   expectedType: System.Int32
                   actualType: *ObjectWithLongToString
                 """);
@@ -346,7 +346,7 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.IsNotInstanceOfType failed.
                 Value should not be of the specified type.
-                  value (obj): {new string('L', 256)}... (44 more chars)
+                  value (obj): {new string('L', 256)}... 44 more
                   wrongType: *ObjectWithLongToString
                   actualType: *ObjectWithLongToString
                 """);

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -369,8 +369,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.IsGreaterThan failed.
                 Expected value to be greater than the specified bound.
-                  lowerBound: {new string('V', 256)}... (44 more chars)
-                  value: {new string('V', 256)}... (44 more chars)
+                  lowerBound: {new string('V', 256)}... 44 more
+                  value: {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -413,8 +413,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.IsGreaterThanOrEqualTo failed.
                 Expected value to be greater than or equal to the specified bound.
-                  lowerBound: {new string('V', 256)}... (44 more chars)
-                  value: {new string('V', 256)}... (44 more chars)
+                  lowerBound: {new string('V', 256)}... 44 more
+                  value: {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -457,8 +457,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.IsLessThan failed.
                 Expected value to be less than the specified bound.
-                  upperBound: {new string('V', 256)}... (44 more chars)
-                  value: {new string('V', 256)}... (44 more chars)
+                  upperBound: {new string('V', 256)}... 44 more
+                  value: {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -501,8 +501,8 @@ public partial class AssertTests : TestContainer
             .WithMessage($"""
                 Assert.IsLessThanOrEqualTo failed.
                 Expected value to be less than or equal to the specified bound.
-                  upperBound: {new string('V', 256)}... (44 more chars)
-                  value: {new string('V', 256)}... (44 more chars)
+                  upperBound: {new string('V', 256)}... 44 more
+                  value: {new string('V', 256)}... 44 more
                 """);
     }
 

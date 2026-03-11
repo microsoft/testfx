@@ -73,8 +73,8 @@ public partial class AssertTests
         // FormatValue truncation applies to non-string-diff contexts like IsNull
         // 300 'x' chars -> quoted as "xxx..." (302 chars total) -> truncated at 256 chars with ellipsis
         string longValue = new('x', 300);
-        // Truncate takes first 256 chars of quoted string: opening quote + 255 x's, then appends "... (46 more chars)"
-        string expectedValue = "\"" + new string('x', 255) + "... (46 more chars)";
+        // Truncate takes first 256 chars of quoted string: opening quote + 255 x's, then appends "... 46 more"
+        string expectedValue = "\"" + new string('x', 255) + "... 46 more";
 
         Action action = () => Assert.IsNull(longValue);
         action.Should().Throw<AssertFailedException>()
@@ -103,7 +103,7 @@ public partial class AssertTests
     {
         // Custom ToString returns 300 chars ? truncated at 256
         var obj = new ObjectWithLongToString();
-        string expectedValue = new string('L', 256) + "... (44 more chars)";
+        string expectedValue = new string('L', 256) + "... 44 more";
 
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
@@ -193,7 +193,7 @@ public partial class AssertTests
                 Assert.Contains failed.
                 Expected collection to contain the specified item.
                   expected: "not-there"
-                  collection: ["{new string('a', 30)}", "{new string('b', 30)}", "{new string('c', 30)}", "{new string('d', 30)}", "{new string('e', 30)}", "{new string('f', 30)}", "{new string('g', 30)}", ...] (13 more items)
+                  collection: ["{new string('a', 30)}", "{new string('b', 30)}", "{new string('c', 30)}", "{new string('d', 30)}", "{new string('e', 30)}", "{new string('f', 30)}", "{new string('g', 30)}", ... 13 more]
                 """);
     }
 
@@ -201,7 +201,7 @@ public partial class AssertTests
     {
         // Element has 80-char string ? FormatValue(maxLength:50) ? "zzz..." (82 chars quoted) ? truncated at 50
         var collection = new List<string> { new string('z', 80), "short" };
-        string expectedFirstElement = "\"" + new string('z', 49) + "... (32 more chars)";
+        string expectedFirstElement = "\"" + new string('z', 49) + "... 32 more";
 
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
@@ -248,7 +248,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull failed.
                 Expected value to be null.
-                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ...] (35 more items)] (1 item)
+                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]] (1 item)
                 """);
     }
 

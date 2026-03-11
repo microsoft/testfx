@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -79,7 +79,7 @@ public partial class AssertTests
                 Assert.EndsWith failed.
                 String does not end with expected suffix.
                   expectedSuffix: "world"
-                  value (longValue): "{new string('x', 255)}... (46 more chars)
+                  value (longValue): "{new string('x', 255)}... 46 more
                 """);
     }
 
@@ -119,7 +119,7 @@ public partial class AssertTests
                 Assert.DoesNotEndWith failed.
                 String ends with unexpected suffix.
                   notExpectedSuffix: "world"
-                  value (longValue): "{new string('x', 255)}... (51 more chars)
+                  value (longValue): "{new string('x', 255)}... 51 more
                 """);
     }
 

@@ -336,7 +336,7 @@ public sealed partial class Assert
     {
         string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
         msg += Environment.NewLine + FrameworkMessages.HasCountFailNew;
-        msg += FormatCollectionParameter(nameof(collection), collectionExpression, collection);
+        msg += FormatCollectionParameter(collectionExpression, collection);
         msg += $"{Environment.NewLine}  expectedCount: {expectedCount}";
         msg += $"{Environment.NewLine}  actualCount: {actualCount}";
         ThrowAssertFailed($"Assert.{assertionName}", msg);

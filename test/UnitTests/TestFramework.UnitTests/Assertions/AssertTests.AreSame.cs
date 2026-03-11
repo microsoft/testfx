@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -169,8 +169,8 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.AreSame failed.
                 Expected references to be the same.
-                  expected (new ObjectWithLongToString()): {new string('L', 256)}... (44 more chars) (HashCode=*)
-                  actual (new ObjectWithLongToString()): {new string('L', 256)}... (44 more chars) (HashCode=*)
+                  expected (new ObjectWithLongToString()): {new string('L', 256)}... 44 more (HashCode=*)
+                  actual (new ObjectWithLongToString()): {new string('L', 256)}... 44 more (HashCode=*)
                 """);
     }
 
@@ -209,8 +209,8 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.AreNotSame failed.
                 Expected references to be different.
-                  notExpected (obj): {new string('L', 256)}... (44 more chars)
-                  actual (obj): {new string('L', 256)}... (44 more chars)
+                  notExpected (obj): {new string('L', 256)}... 44 more
+                  actual (obj): {new string('L', 256)}... 44 more
                 """);
     }
 
