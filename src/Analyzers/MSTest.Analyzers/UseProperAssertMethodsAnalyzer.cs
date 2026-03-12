@@ -1476,8 +1476,8 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 : null;
 
     /// <summary>
-    /// Returns the collection expression if the operation is a LINQ <c>Count()</c> call with no predicate;
-    /// otherwise returns <see langword="false"/>.
+    /// Sets <paramref name="collectionExpression"/> to the collection syntax node if the operation is a LINQ <c>Count()</c> call with no predicate,
+    /// and returns <see langword="true"/>; otherwise sets it to <see langword="null"/> and returns <see langword="false"/>.
     /// </summary>
     private static bool TryGetLinqCountNoPredicate(IOperation operation, INamedTypeSymbol? enumerableTypeSymbol, [NotNullWhen(true)] out SyntaxNode? collectionExpression)
     {
@@ -1498,8 +1498,8 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Returns the collection expression if the operation is a LINQ <c>Any()</c> call with no predicate;
-    /// otherwise returns <see langword="false"/>.
+    /// Sets <paramref name="collectionExpression"/> to the collection syntax node if the operation is a LINQ <c>Any()</c> call with no predicate,
+    /// and returns <see langword="true"/>; otherwise sets it to <see langword="null"/> and returns <see langword="false"/>.
     /// </summary>
     private static bool TryGetLinqAnyNoPredicate(IOperation operation, INamedTypeSymbol? enumerableTypeSymbol, [NotNullWhen(true)] out SyntaxNode? collectionExpression)
     {
