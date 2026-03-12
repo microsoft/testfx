@@ -328,6 +328,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 _terminalTestReporter.AssemblyRunCompleted();
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
+            else
+            {
+                _terminalTestReporter.PrintOutOfProcessArtifacts();
+            }
         }
     }
 
