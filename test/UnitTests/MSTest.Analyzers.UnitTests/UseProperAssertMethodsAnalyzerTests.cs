@@ -62,6 +62,56 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertUsesReversedNullComparisons()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = new object();
+                    {|#0:Assert.IsTrue(null == x)|};
+                    {|#1:Assert.IsTrue(null != x)|};
+                    {|#2:Assert.IsFalse(null == x)|};
+                    {|#3:Assert.IsFalse(null != x)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    object x = new object();
+                    Assert.IsNull(x);
+                    Assert.IsNotNull(x);
+                    Assert.IsNotNull(x);
+                    Assert.IsNull(x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNull", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsNotNull", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("IsNotNull", "IsFalse"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsNull", "IsFalse"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenPointerTypesPassedToIsTrueOrIsFalseThenNoDiagnostic()
     {
         string code = """
@@ -1740,6 +1790,47 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(
             code,
             // /0/Test0.cs(11,9): info MSTEST0037: Use 'Assert.IsGreaterThan' instead of 'Assert.IsTrue'
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithMixedNumericComparison()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    long b = 3;
+                    {|#0:Assert.IsTrue(a > b)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int a = 5;
+                    long b = 3;
+                    Assert.IsGreaterThan(b, a);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
             fixedCode);
     }
@@ -3565,6 +3656,38 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+    [TestMethod]
+    public async Task WhenAssertUsesNullableValueTypeComparisonThenNoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    TimeSpan? ts1 = TimeSpan.Zero;
+                    TimeSpan? ts2 = TimeSpan.FromSeconds(1);
+
+                    Assert.IsTrue(ts2 > ts1);
+                    Assert.IsTrue(ts2 >= ts1);
+                    Assert.IsTrue(ts1 < ts2);
+                    Assert.IsTrue(ts1 <= ts2);
+
+                    Assert.IsFalse(ts2 > ts1);
+                    Assert.IsFalse(ts2 >= ts1);
+                    Assert.IsFalse(ts1 < ts2);
+                    Assert.IsFalse(ts1 <= ts2);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     #endregion
 
     [TestMethod]
@@ -3730,4 +3853,286 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNull", "AreEqual"),
             fixedCode);
     }
+
+    #region LINQ Enumerable.Contains on interface types
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithLinqContainsOnIReadOnlyList()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyList<int> list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Contains(2))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyList<int> list = new List<int> { 1, 2, 3 };
+                    Assert.Contains(2, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsFalseWithLinqContainsOnIReadOnlyList()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyList<int> list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsFalse(list.Contains(4))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyList<int> list = new List<int> { 1, 2, 3 };
+                    Assert.DoesNotContain(4, list);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("DoesNotContain", "IsFalse"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithLinqContainsOnIEnumerable()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<string> items = new List<string> { "a", "b", "c" };
+                    {|#0:Assert.IsTrue(items.Contains("b"))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<string> items = new List<string> { "a", "b", "c" };
+                    Assert.Contains("b", items);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithLinqContainsOnIReadOnlyList_WithMessage()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyList<int> list = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(list.Contains(2),
+                        "should contain the value")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyList<int> list = new List<int> { 1, 2, 3 };
+                    Assert.Contains(2, list,
+                        "should contain the value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithLinqContainsOnIReadOnlyCollection()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyCollection<int> items = new List<int> { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(items.Contains(2))|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IReadOnlyCollection<int> items = new List<int> { 1, 2, 3 };
+                    Assert.Contains(2, items);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithLinqContainsOnCustomNonBCLCollection_Reports()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var custom = new MyCustomCollection<int>(new[] { 1, 2, 3 });
+                    {|#0:Assert.IsTrue(custom.Contains(2))|};
+                }
+
+                internal sealed class MyCustomCollection<T> : IEnumerable<T>
+                {
+                    private readonly IEnumerable<T> _items;
+                    public MyCustomCollection(IEnumerable<T> items) => _items = items;
+                    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var custom = new MyCustomCollection<int>(new[] { 1, 2, 3 });
+                    Assert.Contains(2, custom);
+                }
+
+                internal sealed class MyCustomCollection<T> : IEnumerable<T>
+                {
+                    private readonly IEnumerable<T> _items;
+                    public MyCustomCollection(IEnumerable<T> items) => _items = items;
+                    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("Contains", "IsTrue"),
+            fixedCode);
+    }
+
+    #endregion
 }

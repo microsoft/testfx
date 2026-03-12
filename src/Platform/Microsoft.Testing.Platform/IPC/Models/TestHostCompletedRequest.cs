@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.Testing.Platform.IPC.Models;
 
 [Embedded]
-internal sealed class TestHostProcessExitRequest(int returnCode) : IRequest
+internal sealed class TestHostCompletedRequest(int returnCode) : IRequest
 {
     public int ExitCode { get; } = returnCode;
 }

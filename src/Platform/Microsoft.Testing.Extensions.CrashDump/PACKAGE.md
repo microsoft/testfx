@@ -1,9 +1,36 @@
-# Microsoft.Testing
+# Microsoft.Testing.Extensions.CrashDump
 
-Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+Microsoft.Testing.Extensions.CrashDump is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that captures a crash dump of the test host process when an unhandled exception or crash occurs.
 
-Documentation can be found at <https://aka.ms/testingplatform>.
+Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.CrashDump` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
+
+## Install the package
+
+```dotnetcli
+dotnet add package Microsoft.Testing.Extensions.CrashDump
+```
 
 ## About
 
-This package extends Microsoft Testing Platform to provide a crash dump functionality.
+This package extends Microsoft.Testing.Platform with:
+
+- **Crash dump collection**: automatically captures a memory dump when the test process crashes
+- **Post-mortem debugging**: collected dumps can be analyzed with tools like Visual Studio, WinDbg, or `dotnet-dump`
+- **Cross-platform**: supported on Windows, Linux, and macOS. Note that dumps collected on macOS can only be analyzed on macOS
+- **Runtime behavior**: supported for .NET 6+; on .NET Framework this extension is ignored
+
+Enable crash dump collection via the `--crashdump` command line option.
+
+## Related packages
+
+- [Microsoft.Testing.Extensions.HangDump](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump): captures dumps when the test process hangs
+
+## Documentation
+
+For this extension, see <https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-crash-hang-dumps#crash-dump>.
+
+For comprehensive documentation, see <https://aka.ms/testingplatform>.
+
+## Feedback & contributing
+
+Microsoft.Testing.Platform is an open source project. Provide feedback or report issues in the [microsoft/testfx](https://github.com/microsoft/testfx/issues) GitHub repository.

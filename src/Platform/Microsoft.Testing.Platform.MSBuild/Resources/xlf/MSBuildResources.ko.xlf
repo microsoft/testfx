@@ -7,6 +7,16 @@
         <target state="translated">실제 값: {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="DidNotReceiveModuleInfo">
+        <source>MSBuild extension failed to receive test application information from '{0}'</source>
+        <target state="new">MSBuild extension failed to receive test application information from '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DidNotReceiveRunSummaryInfo">
+        <source>MSBuild extension failed to receive test run summary from '{0}'</source>
+        <target state="new">MSBuild extension failed to receive test run summary from '{0}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
         <target state="translated">예상 값: {0}</target>

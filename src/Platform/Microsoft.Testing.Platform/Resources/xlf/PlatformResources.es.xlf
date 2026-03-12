@@ -421,16 +421,6 @@
         <target state="translated">{0} pruebas en ejecución</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">No hay ningún serializador registrado con el id. '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">No hay ningún serializador registrado con el tipo '{0}'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">No disponible</target>
@@ -975,11 +965,6 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <target state="translated">Llamada de telemetría inesperada, la telemetría está deshabilitada.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Se ha producido una excepción inesperada durante la conversión de bytes</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1005,6 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">Ya se registró un proveedor de cliente de chat.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">Las extensiones de IA solo funcionan con generadores de tipo "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
         <note />
       </trans-unit>
     </body>

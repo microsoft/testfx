@@ -12,10 +12,12 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class TestApplicationResultTests
+public sealed class TestApplicationResultTests : IDisposable
 {
     private readonly TestApplicationResult _testApplicationResult
         = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object, null);
+
+    public void Dispose() => _testApplicationResult.Dispose();
 
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()

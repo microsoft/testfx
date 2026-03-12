@@ -157,6 +157,25 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
             """);
     }
 
+    [TestMethod]
+    public async Task HangDump_WithForegroundThreadAfterSessionFinish_CreateDump()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 8s --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "4000" },
+                { "SLEEPTIMEMS2", "4000" },
+                { "SPAWN_FOREGROUND_THREAD", "true" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string AssetName = "AssetFixture";
@@ -253,6 +272,18 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             DisplayName = "Test2",
             Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
+
+        // Spawn a foreground thread that continues running after the test session finishes
+        // to verify that hang dump triggers even after session end
+        if (Environment.GetEnvironmentVariable("SPAWN_FOREGROUND_THREAD") == "true")
+        {
+            Thread foregroundThread = new Thread(() =>
+            {
+                Thread.Sleep(600000); // Sleep for 10 minutes to trigger hang dump
+            });
+            foregroundThread.IsBackground = false; // Foreground thread to prevent process exit
+            foregroundThread.Start();
+        }
 
         context.Complete();
     }

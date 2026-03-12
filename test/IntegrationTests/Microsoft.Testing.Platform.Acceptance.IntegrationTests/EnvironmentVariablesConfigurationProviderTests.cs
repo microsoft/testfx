@@ -17,6 +17,51 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task TestHostMessesUpExitCode(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MESS_UP_TESTHOST_EXIT_CODE"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
+        testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MESS_UP_TESTHOST_EXIT_CODE"] = "100",
+            }, cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
+        testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MESS_UP_TESTHOST_EXIT_CODE"] = "1",
+                ["ZERO_TESTS"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
+        testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MESS_UP_TESTHOST_EXIT_CODE"] = "100",
+                ["ZERO_TESTS"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
+
+        testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["MESS_UP_TESTHOST_EXIT_CODE"] = "8",
+                ["ZERO_TESTS"] = "1",
+            }, cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         private const string Sources = """
@@ -56,7 +101,15 @@ public class Startup
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
         testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProviderTestClass());
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
-        return await app.RunAsync();
+        var exitCode = await app.RunAsync();
+        if (Environment.GetEnvironmentVariable("myVar") == "myValue" &&
+            Environment.GetEnvironmentVariable("MESS_UP_TESTHOST_EXIT_CODE") is { } messedUpExitCodeString)
+        {
+            // This is the TestHost, and the test requested to mess up exit code of test host.
+            return int.Parse(messedUpExitCodeString);
+        }
+
+        return exitCode;
     }
 }
 
@@ -112,6 +165,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         if (Environment.GetEnvironmentVariable("myVar") != "myValue")
         {
             throw new InvalidOperationException();
+        }
+
+        if (Environment.GetEnvironmentVariable("ZERO_TESTS") == "1")
+        {
+            context.Complete();
+            return;
         }
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 

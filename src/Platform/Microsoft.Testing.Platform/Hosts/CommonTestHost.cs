@@ -194,8 +194,9 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
     private static async Task DisplayAfterSessionEndRunAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
     {
-        // Display after session end
-        await outputDevice.DisplayAfterSessionEndRunAsync(sessionInfo.CancellationToken).ConfigureAwait(false);
+        // Display after session end even when the session cancellation token is canceled.
+        // We intentionally pass a non-cancelable token so final output/cleanup notifications are not skipped.
+        await outputDevice.DisplayAfterSessionEndRunAsync(CancellationToken.None).ConfigureAwait(false);
 
         // We want to ensure that the output service is the last one to run
         if (outputDevice.OriginalOutputDevice is ITestSessionLifetimeHandler testSessionLifetimeHandlerFinishing)
@@ -230,17 +231,62 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
         {
+            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here?
             return;
         }
 
-        foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in serviceProvider.GetRequiredService<TestSessionLifetimeHandlersContainer>().TestSessionLifetimeHandlers)
+        // First, we call OnTestSessionFinishingAsync on all non-consumers.
+        bool hasNonDataConsumers = false;
+        foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
         {
+            if (testSessionLifetimeHandler is IDataConsumer)
+            {
+                // At first, we don't call this for data consumers.
+                // We want to do this for potentially publishers-only handlers.
+                // The order here matters, because one handler can produce a message that is consumed by another.
+                // By making the consumers last, we reduce the likelihood of issues related to ordering.
+                // One case where this is important is the dependency between Code Coverage's ITestSessionLifetimeHandler and TRX's ITestSessionLifetimeHandler.
+                // We must run Code Coverage ITestSessionLifetimeHandler implementation first, as it will publish SessionFileArtifact.
+                // The SessionFileArtifact is expected to be consumed by TRX's implementation of ITestSessionLifetimeHandler.
+                // In that case, ITestSessionLifetimeHandler of CC is a producer-only handler which we will run first.
+                // Then we will drain the message bus to ensure TRX handler have consumed the SessionFileArtifact.
+                // Then we run TRX OnTestSessionFinishingAsync.
+                continue;
+            }
+
+            hasNonDataConsumers = true;
+
+            using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
+            {
+                await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
+            }
+        }
+
+        if (hasNonDataConsumers)
+        {
+            // At this point, we called all non-consumer handlers.
+            // Now, we want to make sure to drain the message bus before calling the consumer handlers.
+            // Messages produced by non-consumer handlers could be consumed by consumer handlers.
+            await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
+        }
+
+        foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
+        {
+            if (testSessionLifetimeHandler is not IDataConsumer)
+            {
+                // We already called this for non-consumers.
+                continue;
+            }
+
             using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
             {
                 await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
             }
 
             // OnTestSessionFinishingAsync could produce information that needs to be handled by others.
+            // While in many cases we already handled this by calling all non-consumers first, it's possible that
+            // two consumers might depend on each other. In that case, we solely rely on registration order.
+            // And we drain in between.
             await baseMessageBus.DrainDataAsync().ConfigureAwait(false);
         }
 

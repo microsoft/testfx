@@ -16,7 +16,6 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
 {
     private const string DisplayNameMetadataName = "DisplayName";
     private const string TypeFullNameMetadataName = "TypeFullName";
-    private const string WellKnownBuilderHookMicrosoftTestingExtensionsTrx = "2006B3F7-93D2-4D9C-9C69-F41A1F21C9C7";
     private const string CSharpLanguageSymbol = "C#";
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
@@ -117,8 +116,6 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
         if (!Log.HasLoggedErrors)
         {
-            ITaskItem[] taskItems = Reorder(SelfRegisteredExtensionsBuilderHook);
-
             if (!Language.ItemSpec.Equals(CSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(FSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase))
@@ -128,35 +125,12 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
             }
             else
             {
-                GenerateCode(Language.ItemSpec, RootNamespace, taskItems, SelfRegisteredExtensionsSourcePath, _fileSystem, Log);
+                GenerateCode(Language.ItemSpec, RootNamespace, SelfRegisteredExtensionsBuilderHook, SelfRegisteredExtensionsSourcePath, _fileSystem, Log);
                 SelfRegisteredExtensionsGeneratedFilePath = SelfRegisteredExtensionsSourcePath;
             }
         }
 
         return !Log.HasLoggedErrors;
-    }
-
-    private static ITaskItem[] Reorder(ITaskItem[] items)
-    {
-        List<ITaskItem> result = [with(items.Length)];
-        int wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index = -1;
-        for (int i = 0; i < items.Length; i++)
-        {
-            if (items[i].ItemSpec == WellKnownBuilderHookMicrosoftTestingExtensionsTrx)
-            {
-                wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index = i;
-                continue;
-            }
-
-            result.Add(items[i]);
-        }
-
-        if (wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index != -1)
-        {
-            result.Add(items[wellKnownBuilderHook_MicrosoftTestingPlatformExtensions_index]);
-        }
-
-        return [.. result];
     }
 
     private static void GenerateCode(string language, string? rootNamespace, ITaskItem[] taskItems, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
