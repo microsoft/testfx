@@ -5,7 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 internal static class DynamicDataOperations
 {
-    private const BindingFlags DeclaredOnlyLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+    private const BindingFlags MemberLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
     public static IEnumerable<object[]> GetData(Type? dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
     {
@@ -167,56 +167,11 @@ internal static class DynamicDataOperations
     }
 
     private static FieldInfo? GetFieldConsideringInheritance(Type type, string fieldName)
-    {
-        // NOTE: Don't use GetRuntimeField. It considers inheritance only for instance fields.
-        Type? currentType = type;
-        while (currentType is not null)
-        {
-            FieldInfo? field = currentType.GetField(fieldName, DeclaredOnlyLookup);
-            if (field is not null)
-            {
-                return field;
-            }
-
-            currentType = currentType.BaseType;
-        }
-
-        return null;
-    }
+        => type.GetField(fieldName, MemberLookup);
 
     private static PropertyInfo? GetPropertyConsideringInheritance(Type type, string propertyName)
-    {
-        // NOTE: Don't use GetRuntimeProperty. It considers inheritance only for instance properties.
-        Type? currentType = type;
-        while (currentType is not null)
-        {
-            PropertyInfo? property = currentType.GetProperty(propertyName, DeclaredOnlyLookup);
-            if (property is not null)
-            {
-                return property;
-            }
-
-            currentType = currentType.BaseType;
-        }
-
-        return null;
-    }
+        => type.GetProperty(propertyName, MemberLookup);
 
     private static MethodInfo? GetMethodConsideringInheritance(Type type, string methodName)
-    {
-        // NOTE: Don't use GetRuntimeMethod. It considers inheritance only for instance methods.
-        Type? currentType = type;
-        while (currentType is not null)
-        {
-            MethodInfo? method = currentType.GetMethod(methodName, DeclaredOnlyLookup);
-            if (method is not null)
-            {
-                return method;
-            }
-
-            currentType = currentType.BaseType;
-        }
-
-        return null;
-    }
+        => type.GetMethod(methodName, MemberLookup);
 }
