@@ -24,8 +24,8 @@ public class UITestMethodAttribute : TestMethodAttribute
     }
 
     /// <summary>
-    /// Gets or sets the <see cref="UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
-    /// If none is provided <see cref="UITestMethodAttribute"/> will check for <see cref="WinUITestTargetAttribute" />, if the attribute is defined it will start the App and use its <see cref="UI.Dispatching.DispatcherQueue"/>.
+    /// Gets or sets the <see cref="Microsoft.UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
+    /// If none is provided <see cref="UITestMethodAttribute"/> will check for <see cref="WinUITestTargetAttribute" />, if the attribute is defined it will start the App and use its <see cref="Microsoft.UI.Dispatching.DispatcherQueue"/>.
     /// <see cref="UITestMethodAttribute"/> will try to use <c>Microsoft.UI.Xaml.Window.Current.DispatcherQueue</c> for the last resort, but that will only work on UWP.
     /// </summary>
     public static DispatcherQueue? DispatcherQueue { get; set; }
@@ -37,7 +37,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// The test method.
     /// </param>
     /// <returns>
-    /// An array of <see cref="TestResult"/> instances.
+    /// An array of <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.TestResult"/> instances.
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>

@@ -25,7 +25,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// The test method.
     /// </param>
     /// <returns>
-    /// An array of <see cref="TestResult"/> instances.
+    /// An array of <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.TestResult"/> instances.
     /// </returns>
     public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {

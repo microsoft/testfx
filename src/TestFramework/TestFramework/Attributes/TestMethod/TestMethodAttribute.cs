@@ -66,7 +66,7 @@ public class TestMethodAttribute : Attribute
     /// Executes a test method.
     /// </summary>
     /// <param name="testMethod">The test method to execute.</param>
-    /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
+    /// <returns>An array of <see cref="TestResult"/> objects that represent the outcome(s) of the test.</returns>
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
     public virtual async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
         => [await testMethod.InvokeAsync(null).ConfigureAwait(false)];

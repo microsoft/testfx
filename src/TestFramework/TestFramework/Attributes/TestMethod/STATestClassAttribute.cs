@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class STATestClassAttribute : TestClassAttribute
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="TestClassAttribute.GetTestMethodAttribute(TestMethodAttribute)"/>
     public override TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
         => new STATestMethodAttribute(testMethodAttribute);
 }
