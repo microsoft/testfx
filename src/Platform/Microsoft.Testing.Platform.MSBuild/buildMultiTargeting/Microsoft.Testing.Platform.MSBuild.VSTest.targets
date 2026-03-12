@@ -1,6 +1,7 @@
 <Project>
   <!-- Override VSTest target for single tfm -->
   <Target Name="VSTest">
-    <CallTarget Targets="InvokeTestingPlatform" />
+    <Error Text="'TestingPlatformDotnetTestSupport' was set to true, but the project did not opt-in MTP. If this is not a test project, set 'IsTestingPlatformApplication' to false. For more information, see https://aka.ms/migrate-vstest-mtp" Condition="'$(IsTestingPlatformApplication)' != 'true'" />
+    <CallTarget Targets="InvokeTestingPlatform" Condition="'$(IsTestingPlatformApplication)' == 'true'" />
   </Target>
 </Project>
