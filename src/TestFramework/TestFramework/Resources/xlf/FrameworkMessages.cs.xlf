@@ -83,15 +83,20 @@
         <target state="translated">Nevkládejte hodnotu typů do AreSame(). Hodnoty převedené do typu Object už nebudou nikdy stejné. Zvažte použití AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AssertScopeFailure">
+        <source>{0} assertion(s) failed within the assert scope.</source>
+        <target state="new">{0} assertion(s) failed within the assert scope.</target>
+        <note>{0} is the number of assertion failures collected in the scope.</note>
+      </trans-unit>
+      <trans-unit id="AssertScopeNestedNotAllowed">
+        <source>Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</source>
+        <target state="new">Nested assert scopes are not allowed. Dispose the current scope before creating a new one.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertThatDetailsPrefix">
         <source>Details:</source>
         <target state="translated">Podrobnosti:</target>
         <note />
-      </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Assert.That({0}) se nezdařilo.</target>
-        <note>{0} is the user code expression</note>
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
@@ -233,9 +238,9 @@ Skutečnost: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
-        <source>{0} failed. {1}</source>
-        <target state="translated">{0} selhalo. {1}</target>
-        <note></note>
+        <source>{0} failed.</source>
+        <target state="new">{0} failed.</target>
+        <note />
       </trans-unit>
       <trans-unit id="HasCountFailMsg">
         <source>Expected collection of size {1}. Actual: {2}. {0}</source>

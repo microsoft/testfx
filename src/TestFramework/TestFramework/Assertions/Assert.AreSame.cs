@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -39,7 +39,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreSameFailed(_expected, _actual, _builder.ToString());
+                ReportAssertAreSameFailed(_expected, _actual, _builder.ToString());
             }
         }
 
@@ -95,7 +95,7 @@ public sealed partial class Assert
             if (_builder is not null)
             {
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
-                ThrowAssertAreNotSameFailed(_builder.ToString());
+                ReportAssertAreNotSameFailed(_builder.ToString());
             }
         }
 
@@ -178,14 +178,14 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessageForExpectedExpressionAndActualExpression(message, expectedExpression, actualExpression);
-        ThrowAssertAreSameFailed(expected, actual, userMessage);
+        ReportAssertAreSameFailed(expected, actual, userMessage);
     }
 
     private static bool IsAreSameFailing<T>(T? expected, T? actual)
         => !object.ReferenceEquals(expected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
+    private static void ReportAssertAreSameFailed<T>(T? expected, T? actual, string userMessage)
     {
         string finalMessage = userMessage;
         if (expected is ValueType && actual is ValueType)
@@ -196,7 +196,7 @@ public sealed partial class Assert
                 userMessage);
         }
 
-        ThrowAssertFailed("Assert.AreSame", finalMessage);
+        ReportAssertFailed("Assert.AreSame", finalMessage);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
@@ -240,7 +240,7 @@ public sealed partial class Assert
     {
         if (IsAreNotSameFailing(notExpected, actual))
         {
-            ThrowAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
+            ReportAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));
         }
     }
 
@@ -248,6 +248,6 @@ public sealed partial class Assert
         => object.ReferenceEquals(notExpected, actual);
 
     [DoesNotReturn]
-    private static void ThrowAssertAreNotSameFailed(string userMessage)
-        => ThrowAssertFailed("Assert.AreNotSame", userMessage);
+    private static void ReportAssertAreNotSameFailed(string userMessage)
+        => ReportAssertFailed("Assert.AreNotSame", userMessage);
 }
