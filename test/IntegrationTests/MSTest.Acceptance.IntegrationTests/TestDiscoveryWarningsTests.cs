@@ -51,13 +51,12 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string BaseTargetAssetPath => GetAssetPath(BaseClassAssetName);
-
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (BaseClassAssetName, BaseClassAssetName,
-            BaseClassSourceCode.PatchTargetFrameworks(TargetFrameworks.All));
-
+            // NOTE: The BaseClass asset is embedded as a subdirectory within the main asset to avoid
+            // parallel build conflicts. If they were separate assets, TestAssetFixtureBase would build
+            // them in parallel, but TestDiscoveryWarnings has a ProjectReference to TestDiscoveryWarningsBaseClass,
+            // causing both builds to write to the same files simultaneously (file locking errors).
             yield return (AssetName, AssetName,
             SourceCode.PatchTargetFrameworks(TargetFrameworks.All)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
@@ -75,7 +74,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
+    <ProjectReference Include="TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
@@ -129,10 +128,8 @@ public class TestClass2
     [TestMethod]
     public void Test2_1() {}
 }
-""";
 
-        private const string BaseClassSourceCode = """
-#file TestDiscoveryWarningsBaseClass.csproj
+#file TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -143,8 +140,7 @@ public class TestClass2
 
 </Project>
 
-
-#file UnitTest1.cs
+#file TestDiscoveryWarningsBaseClass/UnitTest1.cs
 namespace Base;
 
 public class BaseClass
