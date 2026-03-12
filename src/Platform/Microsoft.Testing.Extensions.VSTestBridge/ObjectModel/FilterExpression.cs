@@ -395,10 +395,10 @@ internal sealed partial class FilterExpression
     }
 
 #if NET7_0_OR_GREATER
-    [GeneratedRegex(@"\(\s*\)")]
+    [GeneratedRegex(@"(?<!\\)\(\s*\)")]
     private static partial Regex GetEmptyParenthesisPattern();
 #else
     private static Regex GetEmptyParenthesisPattern()
-        => new(@"\(\s*\)");
+        => new(@"(?<!\\)\(\s*\)");
 #endif
 }

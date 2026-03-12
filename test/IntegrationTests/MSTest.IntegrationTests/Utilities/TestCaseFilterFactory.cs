@@ -20,7 +20,7 @@ internal static class TestCaseFilterFactory
     public static ITestCaseFilterExpression ParseTestFilter(string filterString)
     {
         Ensure.NotNullOrEmpty(filterString);
-        if (Regex.IsMatch(filterString, @"\(\s*\)"))
+        if (Regex.IsMatch(filterString, @"(?<!\\)\(\s*\)"))
         {
             throw new FormatException($"Invalid filter, empty parenthesis: {filterString}");
         }
