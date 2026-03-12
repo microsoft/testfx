@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -26,7 +26,7 @@ public partial class AssertTests
         Action action = () => Assert.HasCount(3, collection);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.HasCount failed.
+                Assert.HasCount(*) failed.
                 Expected collection to have the specified number of items.
                   collection: [1] (1 item)
                   expectedCount: 3
@@ -41,9 +41,9 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.HasCount(1, Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.HasCount failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.HasCount(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to have the specified number of items.
-                  collection (Array.Empty<int>()): [] (0 items)
+                  collection: [] (0 items)
                   expectedCount: 1
                   actualCount: 0
                 """);
@@ -66,7 +66,7 @@ public partial class AssertTests
         Action action = () => Assert.IsEmpty(collection);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.IsEmpty failed.
+                Assert.IsEmpty(*) failed.
                 Expected collection to have the specified number of items.
                   collection: [1] (1 item)
                   expectedCount: 0
@@ -82,7 +82,7 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.IsEmpty(collection, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.IsEmpty failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.IsEmpty(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to have the specified number of items.
                   collection: [1] (1 item)
                   expectedCount: 0
@@ -111,9 +111,8 @@ public partial class AssertTests
         Action action = () => Assert.ContainsSingle(Array.Empty<int>());
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.ContainsSingle failed.
+                Assert.ContainsSingle(*) failed.
                 Expected collection to contain exactly one item but found 0 item(s).
-                  collection: Array.Empty<int>()
                 """);
     }
 
@@ -122,9 +121,8 @@ public partial class AssertTests
         Action action = () => Assert.ContainsSingle([1, 2, 3]);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.ContainsSingle failed.
+                Assert.ContainsSingle(*) failed.
                 Expected collection to contain exactly one item but found 3 item(s).
-                  collection: [1, 2, 3]
                 """);
     }
 
@@ -135,9 +133,8 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.ContainsSingle failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.ContainsSingle(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to contain exactly one item but found 0 item(s).
-                  collection: Array.Empty<int>()
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -149,9 +146,8 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.ContainsSingle failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.ContainsSingle(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to contain exactly one item but found 3 item(s).
-                  collection: [1, 2, 3]
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -178,9 +174,8 @@ public partial class AssertTests
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.ContainsSingle failed.
+                Assert.ContainsSingle(*) failed.
                 Expected exactly one item to match the predicate but found 0 item(s).
-                  predicate: x => x % 2 == 0
                 """);
     }
 
@@ -190,9 +185,8 @@ public partial class AssertTests
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.ContainsSingle failed.
+                Assert.ContainsSingle(*) failed.
                 Expected exactly one item to match the predicate but found 3 item(s).
-                  predicate: x => x % 2 == 0
                 """);
     }
 
@@ -202,9 +196,8 @@ public partial class AssertTests
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "No even numbers found: test");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.ContainsSingle failed. No even numbers found: test
+                Assert.ContainsSingle(*) failed. No even numbers found: test
                 Expected exactly one item to match the predicate but found 0 item(s).
-                  predicate: x => x % 2 == 0
                 """);
     }
 
@@ -214,9 +207,8 @@ public partial class AssertTests
         Action action = () => Assert.ContainsSingle(x => x % 2 == 0, collection, "Too many even numbers: test");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.ContainsSingle failed. Too many even numbers: test
+                Assert.ContainsSingle(*) failed. Too many even numbers: test
                 Expected exactly one item to match the predicate but found 3 item(s).
-                  predicate: x => x % 2 == 0
                 """);
     }
 
@@ -251,9 +243,8 @@ public partial class AssertTests
         Action action = () => Assert.IsNotEmpty(Array.Empty<int>());
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.IsNotEmpty failed.
+                Assert.IsNotEmpty(*) failed.
                 Expected collection to contain any item but it is empty.
-                  collection: Array.Empty<int>()
                 """);
     }
 
@@ -264,9 +255,8 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.IsNotEmpty(Array.Empty<string>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.IsNotEmpty failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.IsNotEmpty(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to contain any item but it is empty.
-                  collection: Array.Empty<string>()
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

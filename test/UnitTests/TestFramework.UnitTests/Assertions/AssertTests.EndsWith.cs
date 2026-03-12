@@ -17,10 +17,10 @@ public partial class AssertTests
         Action action = () => Assert.EndsWith("hello", "world");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.EndsWith failed.
+                Assert.EndsWith(*) failed.
                 String does not end with expected suffix.
                   expectedSuffix: "hello"
-                  value: "world"
+                  value:          "world"
                 """);
     }
 
@@ -29,10 +29,10 @@ public partial class AssertTests
         Action action = () => Assert.EndsWith("hello", "world", "User message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.EndsWith failed. User message
+                Assert.EndsWith(*) failed. User message
                 String does not end with expected suffix.
                   expectedSuffix: "hello"
-                  value: "world"
+                  value:          "world"
                 """);
     }
 
@@ -44,10 +44,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotEndWith("world", "hello world");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotEndWith failed.
+                Assert.DoesNotEndWith(*) failed.
                 String ends with unexpected suffix.
                   notExpectedSuffix: "world"
-                  value: "hello world"
+                  value:             "hello world"
                 """);
     }
 
@@ -62,10 +62,10 @@ public partial class AssertTests
         Action action = () => Assert.EndsWith("hello", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.EndsWith failed.
+                Assert.EndsWith(*) failed.
                 String does not end with expected suffix.
                   expectedSuffix: "hello"
-                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): "hello world"
+                  value:          "hello world"
                 """);
     }
 
@@ -76,10 +76,10 @@ public partial class AssertTests
         Action action = () => Assert.EndsWith("world", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.EndsWith failed.
+                Assert.EndsWith(*) failed.
                 String does not end with expected suffix.
                   expectedSuffix: "world"
-                  value (longValue): "{new string('x', 255)}... 46 more
+                  value:          "{new string('x', 255)}... 46 more
                 """);
     }
 
@@ -88,10 +88,10 @@ public partial class AssertTests
         Action action = () => Assert.EndsWith("world", "hello\r\nfoo");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.EndsWith failed.
+                Assert.EndsWith(*) failed.
                 String does not end with expected suffix.
                   expectedSuffix: "world"
-                  value: "hello\r\nfoo"
+                  value:          "hello\r\nfoo"
                 """);
     }
 
@@ -102,10 +102,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotEndWith("world", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotEndWith failed.
+                Assert.DoesNotEndWith(*) failed.
                 String ends with unexpected suffix.
                   notExpectedSuffix: "world"
-                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): "hello world"
+                  value:             "hello world"
                 """);
     }
 
@@ -116,10 +116,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotEndWith("world", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.DoesNotEndWith failed.
+                Assert.DoesNotEndWith(*) failed.
                 String ends with unexpected suffix.
                   notExpectedSuffix: "world"
-                  value (longValue): "{new string('x', 255)}... 51 more
+                  value:             "{new string('x', 255)}... 51 more
                 """);
     }
 
@@ -128,10 +128,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotEndWith("world", "hello\r\nworld");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotEndWith failed.
+                Assert.DoesNotEndWith(*) failed.
                 String ends with unexpected suffix.
                   notExpectedSuffix: "world"
-                  value: "hello\r\nworld"
+                  value:             "hello\r\nworld"
                 """);
     }
 

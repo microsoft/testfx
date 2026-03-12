@@ -79,9 +79,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value (longValue): {expectedValue}
+                  value: {expectedValue}
                 """);
     }
 
@@ -93,7 +93,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
                   value: {expectedFullValue}
                 """);
@@ -108,9 +108,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value (obj): {expectedValue}
+                  value: {expectedValue}
                 """);
     }
 
@@ -122,9 +122,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNotNull(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNotNull failed.
+                Assert.IsNotNull(*) failed.
                 Expected a non-null value.
-                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): (null)
+                  value: (null)
                 """);
     }
 
@@ -139,9 +139,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value (obj): line1\r\nline2\nline3
+                  value: line1\r\nline2\nline3
                 """);
     }
 
@@ -152,7 +152,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
                   value: "hello\nworld"
                 """);
@@ -169,9 +169,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value (collection): [1, 2, 3] (3 items)
+                  value: [1, 2, 3] (3 items)
                 """);
     }
 
@@ -190,9 +190,8 @@ public partial class AssertTests
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.Contains failed.
+                Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  expected: "not-there"
                   collection: ["{new string('a', 30)}", "{new string('b', 30)}", "{new string('c', 30)}", "{new string('d', 30)}", "{new string('e', 30)}", "{new string('f', 30)}", "{new string('g', 30)}", ... 13 more]
                 """);
     }
@@ -206,9 +205,8 @@ public partial class AssertTests
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.Contains failed.
+                Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  expected: "not-there"
                   collection*[{expectedFirstElement}, "short"] (2 items)
                 """);
     }
@@ -222,9 +220,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(outer);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value (outer): [[1, 2] (2 items), [3, 4] (2 items)] (2 items)
+                  value: [[1, 2] (2 items), [3, 4] (2 items)] (2 items)
                 """);
     }
 
@@ -246,9 +244,9 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(outer);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull failed.
+                Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value (outer): [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]] (1 item)
+                  value: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]] (1 item)
                 """);
     }
 
@@ -259,9 +257,8 @@ public partial class AssertTests
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains failed.
+                Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  expected: "not-there"
                   collection*["line1\nline2", "ok"] (2 items)
                 """);
     }
@@ -273,10 +270,9 @@ public partial class AssertTests
         Action action = () => Assert.Contains(99, collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains failed.
+                Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  expected: 99
-                  collection*[42] (1 item)
+                  collection: [42] (1 item)
                 """);
     }
 

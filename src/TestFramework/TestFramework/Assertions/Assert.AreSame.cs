@@ -188,6 +188,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
+        string callSite = FormatCallSite("Assert.AreSame", (nameof(expected), expectedExpression), (nameof(actual), actualExpression));
         string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
 
         // When both values have the same string representation, include hash codes
@@ -212,11 +213,11 @@ public sealed partial class Assert
             message += Environment.NewLine + FrameworkMessages.AreSameFailNew;
         }
 
-        // Check expression redundancy against the base formatted value (without hashcode)
-        message += Environment.NewLine + FormatParameterWithExpressionCheck(nameof(expected), expectedExpression, expectedFormatted, expectedValue)
-                 + Environment.NewLine + FormatParameterWithExpressionCheck(nameof(actual), actualExpression, actualFormatted, actualValue);
+        message += FormatAlignedParameters(
+            (nameof(expected), expectedValue),
+            (nameof(actual), actualValue));
 
-        ThrowAssertFailed("Assert.AreSame", message);
+        ThrowAssertFailed(callSite, message);
     }
 
     /// <inheritdoc cref="AreNotSame{T}(T, T, string?, string, string)" />
@@ -270,10 +271,12 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreNotSameFailed<T>(T? notExpected, T? actual, string? userMessage, string notExpectedExpression, string actualExpression)
     {
+        string callSite = FormatCallSite("Assert.AreNotSame", (nameof(notExpected), notExpectedExpression), (nameof(actual), actualExpression));
         string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
         message += Environment.NewLine + FrameworkMessages.AreNotSameFailNew;
-        message += Environment.NewLine + FormatParameter(nameof(notExpected), notExpectedExpression, notExpected)
-                 + Environment.NewLine + FormatParameter(nameof(actual), actualExpression, actual);
-        ThrowAssertFailed("Assert.AreNotSame", message);
+        message += FormatAlignedParameters(
+            (nameof(notExpected), FormatValue(notExpected)),
+            (nameof(actual), FormatValue(actual)));
+        ThrowAssertFailed(callSite, message);
     }
 }

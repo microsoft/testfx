@@ -286,27 +286,14 @@ public sealed partial class Assert
     {
         string formattedValue = FormatValue(value);
 
-        // If expression is a typed numeric literal more specific than the value, use it as the display
-        if (IsExpressionMoreSpecificNumericLiteral(expression, formattedValue))
-        {
-            return $"  {paramName}: {expression}";
-        }
-
-        // Skip expression when it matches the parameter name (e.g., "minValue (minValue): 5" → "minValue: 5")
-        if (expression == paramName || IsExpressionRedundant(expression, formattedValue))
-        {
-            return $"  {paramName}: {formattedValue}";
-        }
-
-        // Default case: show both expression and value
-        return $"  {paramName} ({TruncateExpression(expression)}): {formattedValue}";
+        return $"  {paramName}: {formattedValue}";
     }
 
     /// <summary>
     /// Formats a parameter line showing only the expression (no value).
-    /// Used for parameters like collections, predicates, and actions where the
+    /// Used for parameters like predicates and actions where the
     /// runtime value's ToString() is not useful.
-    /// Returns empty string if the expression is empty or matches the parameter name (nothing useful to show).
+    /// Returns empty string if the expression is empty or matches the parameter name.
     /// </summary>
     internal static string FormatExpressionParameter(string paramName, string expression)
         => string.IsNullOrEmpty(expression) || expression == paramName
@@ -320,9 +307,7 @@ public sealed partial class Assert
     {
         string preview = FormatCollectionPreview(collection);
 
-        return string.IsNullOrEmpty(expression) || expression == "collection"
-            ? $"{Environment.NewLine}  collection: {preview}"
-            : $"{Environment.NewLine}  collection ({TruncateExpression(expression)}): {preview}";
+        return $"{Environment.NewLine}  collection: {preview}";
     }
 
     /// <summary>
@@ -404,18 +389,70 @@ public sealed partial class Assert
     }
 
     internal static string FormatParameterWithValue(string paramName, string expression, string formattedValue)
-        => (expression == paramName || IsExpressionRedundant(expression, formattedValue))
-            ? $"  {paramName}: {formattedValue}"
-            : $"  {paramName} ({TruncateExpression(expression)}): {formattedValue}";
+        => $"  {paramName}: {formattedValue}";
 
     /// <summary>
     /// Formats a parameter line, checking expression redundancy against a base value
     /// while displaying a different (enriched) display value.
     /// </summary>
     internal static string FormatParameterWithExpressionCheck(string paramName, string expression, string baseValue, string displayValue)
-        => (expression == paramName || IsExpressionRedundant(expression, baseValue))
-            ? $"  {paramName}: {displayValue}"
-            : $"  {paramName} ({TruncateExpression(expression)}): {displayValue}";
+        => $"  {paramName}: {displayValue}";
+
+    /// <summary>
+    /// Builds the "Assert.Method(expr1, expr2)" call site string for the first line.
+    /// Only the primary/semantic parameters are included (not message, culture, delta, etc.).
+    /// </summary>
+    internal static string FormatCallSite(string methodName, params (string ParamName, string Expression)[] args)
+    {
+        var sb = new StringBuilder(methodName);
+        sb.Append('(');
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (i > 0)
+            {
+                sb.Append(", ");
+            }
+
+            string expression = args[i].Expression;
+            string paramName = args[i].ParamName;
+            sb.Append(string.IsNullOrEmpty(expression) || expression == paramName
+                ? paramName
+                : TruncateExpression(expression, 50));
+        }
+
+        sb.Append(')');
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Formats multiple parameter lines with aligned values.
+    /// All labels are padded so that values start at the same column.
+    /// </summary>
+    internal static string FormatAlignedParameters(params (string Label, string Value)[] parameters)
+    {
+        int maxLabelLength = 0;
+        foreach ((string label, string _) in parameters)
+        {
+            if (label.Length > maxLabelLength)
+            {
+                maxLabelLength = label.Length;
+            }
+        }
+
+        var sb = new StringBuilder();
+        foreach ((string label, string value) in parameters)
+        {
+            sb.Append(Environment.NewLine);
+            sb.Append("  ");
+            sb.Append(label);
+            sb.Append(':');
+            sb.Append(new string(' ', maxLabelLength - label.Length + 1));
+            sb.Append(value);
+        }
+
+        return sb.ToString();
+    }
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison

@@ -329,6 +329,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
+        string callSite = FormatCallSite("Assert.IsInstanceOfType", (nameof(value), valueExpression));
         string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
         if (expectedType is not null && value is not null)
         {
@@ -342,7 +343,7 @@ public sealed partial class Assert
                      + Environment.NewLine + $"  actualType: {value.GetType()}";
         }
 
-        ThrowAssertFailed("Assert.IsInstanceOfType", message);
+        ThrowAssertFailed(callSite, message);
     }
 
     /// <summary>
@@ -409,6 +410,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
+        string callSite = FormatCallSite("Assert.IsNotInstanceOfType", (nameof(value), valueExpression));
         string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
         if (wrongType is not null)
         {
@@ -422,6 +424,6 @@ public sealed partial class Assert
                      + Environment.NewLine + $"  actualType: {value!.GetType()}";
         }
 
-        ThrowAssertFailed("Assert.IsNotInstanceOfType", message);
+        ThrowAssertFailed(callSite, message);
     }
 }

@@ -76,11 +76,13 @@ public sealed partial class Assert
         CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
+            string callSite = FormatCallSite("Assert.EndsWith", (nameof(expectedSuffix), expectedSuffixExpression), (nameof(value), valueExpression));
             string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
             msg += Environment.NewLine + FrameworkMessages.EndsWithFailNew;
-            msg += Environment.NewLine + FormatParameter(nameof(expectedSuffix), expectedSuffixExpression, expectedSuffix)
-                     + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
-            ThrowAssertFailed("Assert.EndsWith", msg);
+            msg += FormatAlignedParameters(
+                (nameof(expectedSuffix), FormatValue(expectedSuffix)),
+                (nameof(value), FormatValue(value)));
+            ThrowAssertFailed(callSite, msg);
         }
     }
 
@@ -152,11 +154,13 @@ public sealed partial class Assert
         CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
+            string callSite = FormatCallSite("Assert.DoesNotEndWith", (nameof(notExpectedSuffix), notExpectedSuffixExpression), (nameof(value), valueExpression));
             string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
             msg += Environment.NewLine + FrameworkMessages.DoesNotEndWithFailNew;
-            msg += Environment.NewLine + FormatParameter(nameof(notExpectedSuffix), notExpectedSuffixExpression, notExpectedSuffix)
-                     + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
-            ThrowAssertFailed("Assert.DoesNotEndWith", msg);
+            msg += FormatAlignedParameters(
+                (nameof(notExpectedSuffix), FormatValue(notExpectedSuffix)),
+                (nameof(value), FormatValue(value)));
+            ThrowAssertFailed(callSite, msg);
         }
     }
 }

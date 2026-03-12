@@ -17,10 +17,10 @@ public partial class AssertTests
         Action action = () => Assert.MatchesRegex(@"\d+", "abc");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.MatchesRegex failed.
+                Assert.MatchesRegex(*) failed.
                 String does not match expected pattern.
                   pattern: \d+
-                  value: "abc"
+                  value:   "abc"
                 """);
     }
 
@@ -32,10 +32,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotMatchRegex(@"\d+", "abc123");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotMatchRegex failed.
+                Assert.DoesNotMatchRegex(*) failed.
                 String matches pattern but should not.
                   pattern: \d+
-                  value: "abc123"
+                  value:   "abc123"
                 """);
     }
 
@@ -50,10 +50,10 @@ public partial class AssertTests
         Action action = () => Assert.MatchesRegex(@"\d+", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.MatchesRegex failed.
+                Assert.MatchesRegex(*) failed.
                 String does not match expected pattern.
                   pattern: \d+
-                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): "hello"
+                  value:   "hello"
                 """);
     }
 
@@ -64,10 +64,10 @@ public partial class AssertTests
         Action action = () => Assert.MatchesRegex(@"\d+", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.MatchesRegex failed.
+                Assert.MatchesRegex(*) failed.
                 String does not match expected pattern.
                   pattern: \d+
-                  value (longValue): "{new string('x', 255)}... 46 more
+                  value:   "{new string('x', 255)}... 46 more
                 """);
     }
 
@@ -76,10 +76,10 @@ public partial class AssertTests
         Action action = () => Assert.MatchesRegex(@"^\d+$", "hello\r\nworld");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.MatchesRegex failed.
+                Assert.MatchesRegex(*) failed.
                 String does not match expected pattern.
                   pattern: ^\d+$
-                  value: "hello\r\nworld"
+                  value:   "hello\r\nworld"
                 """);
     }
 
@@ -90,10 +90,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotMatchRegex(@"\d+", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotMatchRegex failed.
+                Assert.DoesNotMatchRegex(*) failed.
                 String matches pattern but should not.
                   pattern: \d+
-                  value (aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisp...): "abc123"
+                  value:   "abc123"
                 """);
     }
 
@@ -104,10 +104,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotMatchRegex(@"\d+", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.DoesNotMatchRegex failed.
+                Assert.DoesNotMatchRegex(*) failed.
                 String matches pattern but should not.
                   pattern: \d+
-                  value (longValue): "{new string('1', 255)}... 46 more
+                  value:   "{new string('1', 255)}... 46 more
                 """);
     }
 
@@ -116,10 +116,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotMatchRegex(@"hello", "hello\r\nworld");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotMatchRegex failed.
+                Assert.DoesNotMatchRegex(*) failed.
                 String matches pattern but should not.
                   pattern: hello
-                  value: "hello\r\nworld"
+                  value:   "hello\r\nworld"
                 """);
     }
 

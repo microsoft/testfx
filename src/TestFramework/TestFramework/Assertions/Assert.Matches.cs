@@ -44,11 +44,13 @@ public sealed partial class Assert
 
         if (!pattern.IsMatch(value))
         {
+            string callSite = FormatCallSite("Assert.MatchesRegex", (nameof(pattern), patternExpression), (nameof(value), valueExpression));
             string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
             msg += Environment.NewLine + FrameworkMessages.MatchesRegexFailNew;
-            msg += Environment.NewLine + FormatParameter(nameof(pattern), patternExpression, pattern)
-                 + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
-            ThrowAssertFailed("Assert.MatchesRegex", msg);
+            msg += FormatAlignedParameters(
+                (nameof(pattern), FormatValue(pattern)),
+                (nameof(value), FormatValue(value)));
+            ThrowAssertFailed(callSite, msg);
         }
     }
 
@@ -122,11 +124,13 @@ public sealed partial class Assert
 
         if (pattern.IsMatch(value))
         {
+            string callSite = FormatCallSite("Assert.DoesNotMatchRegex", (nameof(pattern), patternExpression), (nameof(value), valueExpression));
             string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
             msg += Environment.NewLine + FrameworkMessages.DoesNotMatchRegexFailNew;
-            msg += Environment.NewLine + FormatParameter(nameof(pattern), patternExpression, pattern)
-                 + Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
-            ThrowAssertFailed("Assert.DoesNotMatchRegex", msg);
+            msg += FormatAlignedParameters(
+                (nameof(pattern), FormatValue(pattern)),
+                (nameof(value), FormatValue(value)));
+            ThrowAssertFailed(callSite, msg);
         }
     }
 
