@@ -44,9 +44,13 @@ public sealed partial class Assert
 
         if (!pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.MatchesRegex", finalMessage);
+            string callSite = FormatCallSite("Assert.MatchesRegex", (nameof(pattern), patternExpression), (nameof(value), valueExpression));
+            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
+            msg += Environment.NewLine + FrameworkMessages.MatchesRegexFailNew;
+            msg += FormatAlignedParameters(
+                (nameof(pattern), FormatValue(pattern)),
+                (nameof(value), FormatValue(value)));
+            ThrowAssertFailed(callSite, msg);
         }
     }
 
@@ -120,9 +124,13 @@ public sealed partial class Assert
 
         if (pattern.IsMatch(value))
         {
-            string userMessage = BuildUserMessageForPatternExpressionAndValueExpression(message, patternExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            ThrowAssertFailed("Assert.DoesNotMatchRegex", finalMessage);
+            string callSite = FormatCallSite("Assert.DoesNotMatchRegex", (nameof(pattern), patternExpression), (nameof(value), valueExpression));
+            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
+            msg += Environment.NewLine + FrameworkMessages.DoesNotMatchRegexFailNew;
+            msg += FormatAlignedParameters(
+                (nameof(pattern), FormatValue(pattern)),
+                (nameof(value), FormatValue(value)));
+            ThrowAssertFailed(callSite, msg);
         }
     }
 

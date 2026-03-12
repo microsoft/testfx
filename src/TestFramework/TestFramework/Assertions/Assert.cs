@@ -50,8 +50,18 @@ public sealed partial class Assert
             }
         }
 
-        throw new AssertFailedException(
-            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message));
+        string formattedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message);
+
+        // When there's no user message (message starts with newline for parameter details),
+        // the format produces a trailing space before the newline ("failed. \\r\\n").
+        // Remove it to avoid trailing whitespace on the first line while preserving localization.
+        if (message is not null && message.StartsWith(Environment.NewLine, StringComparison.Ordinal))
+        {
+            string prefix = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, string.Empty);
+            formattedMessage = prefix.TrimEnd() + message;
+        }
+
+        throw new AssertFailedException(formattedMessage);
     }
 
     private static bool ShouldLaunchDebugger()
@@ -74,102 +84,6 @@ public sealed partial class Assert
     internal static string BuildUserMessage(string? format)
         => format ?? string.Empty;
 
-    private static string BuildUserMessageForSingleExpression(string? format, string callerArgExpression, string parameterName)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, parameterName, callerArgExpression);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
-
-    private static string BuildUserMessageForTwoExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression1) || string.IsNullOrEmpty(callerArgExpression2))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, parameterName1, callerArgExpression1, parameterName2, callerArgExpression2);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
-
-    private static string BuildUserMessageForThreeExpressions(string? format, string callerArgExpression1, string parameterName1, string callerArgExpression2, string parameterName2, string callerArgExpression3, string parameterName3)
-    {
-        string userMessage = BuildUserMessage(format);
-        if (string.IsNullOrEmpty(callerArgExpression1) || string.IsNullOrEmpty(callerArgExpression2) || string.IsNullOrEmpty(callerArgExpression3))
-        {
-            return userMessage;
-        }
-
-        string callerArgMessagePart = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.CallerArgumentExpressionThreeParametersMessage, parameterName1, callerArgExpression1, parameterName2, callerArgExpression2, parameterName3, callerArgExpression3);
-        return string.IsNullOrEmpty(userMessage)
-            ? callerArgMessagePart
-            : $"{callerArgMessagePart} {userMessage}";
-    }
-
-    private static string BuildUserMessageForConditionExpression(string? format, string conditionExpression)
-        => BuildUserMessageForSingleExpression(format, conditionExpression, "condition");
-
-    private static string BuildUserMessageForValueExpression(string? format, string valueExpression)
-        => BuildUserMessageForSingleExpression(format, valueExpression, "value");
-
-    private static string BuildUserMessageForActionExpression(string? format, string actionExpression)
-        => BuildUserMessageForSingleExpression(format, actionExpression, "action");
-
-    private static string BuildUserMessageForCollectionExpression(string? format, string collectionExpression)
-        => BuildUserMessageForSingleExpression(format, collectionExpression, "collection");
-
-    private static string BuildUserMessageForSubstringExpressionAndValueExpression(string? format, string substringExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, substringExpression, "substring", valueExpression, "value");
-
-    private static string BuildUserMessageForExpectedSuffixExpressionAndValueExpression(string? format, string expectedSuffixExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, expectedSuffixExpression, "expectedSuffix", valueExpression, "value");
-
-    private static string BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(string? format, string notExpectedSuffixExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, notExpectedSuffixExpression, "notExpectedSuffix", valueExpression, "value");
-
-    private static string BuildUserMessageForExpectedPrefixExpressionAndValueExpression(string? format, string expectedPrefixExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, expectedPrefixExpression, "expectedPrefix", valueExpression, "value");
-
-    private static string BuildUserMessageForNotExpectedPrefixExpressionAndValueExpression(string? format, string notExpectedPrefixExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, notExpectedPrefixExpression, "notExpectedPrefix", valueExpression, "value");
-
-    private static string BuildUserMessageForPatternExpressionAndValueExpression(string? format, string patternExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, patternExpression, "pattern", valueExpression, "value");
-
-    private static string BuildUserMessageForLowerBoundExpressionAndValueExpression(string? format, string lowerBoundExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, lowerBoundExpression, "lowerBound", valueExpression, "value");
-
-    private static string BuildUserMessageForUpperBoundExpressionAndValueExpression(string? format, string upperBoundExpression, string valueExpression)
-        => BuildUserMessageForTwoExpressions(format, upperBoundExpression, "upperBound", valueExpression, "value");
-
-    private static string BuildUserMessageForExpectedExpressionAndCollectionExpression(string? format, string expectedExpression, string collectionExpression)
-        => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", collectionExpression, "collection");
-
-    private static string BuildUserMessageForNotExpectedExpressionAndCollectionExpression(string? format, string notExpectedExpression, string collectionExpression)
-        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", collectionExpression, "collection");
-
-    private static string BuildUserMessageForPredicateExpressionAndCollectionExpression(string? format, string predicateExpression, string collectionExpression)
-        => BuildUserMessageForTwoExpressions(format, predicateExpression, "predicate", collectionExpression, "collection");
-
-    private static string BuildUserMessageForExpectedExpressionAndActualExpression(string? format, string expectedExpression, string actualExpression)
-        => BuildUserMessageForTwoExpressions(format, expectedExpression, "expected", actualExpression, "actual");
-
-    private static string BuildUserMessageForNotExpectedExpressionAndActualExpression(string? format, string notExpectedExpression, string actualExpression)
-        => BuildUserMessageForTwoExpressions(format, notExpectedExpression, "notExpected", actualExpression, "actual");
-
-    private static string BuildUserMessageForMinValueExpressionAndMaxValueExpressionAndValueExpression(string? format, string minValueExpression, string maxValueExpression, string valueExpression)
-        => BuildUserMessageForThreeExpressions(format, minValueExpression, "minValue", maxValueExpression, "maxValue", valueExpression, "value");
-
     /// <summary>
     /// Checks the parameter for valid conditions.
     /// </summary>
@@ -184,7 +98,7 @@ public sealed partial class Assert
     /// </param>
     internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName)
     {
-        if (param == null)
+        if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
             ThrowAssertFailed(assertionName, finalMessage);
@@ -193,6 +107,352 @@ public sealed partial class Assert
 
     internal static string ReplaceNulls(object? input)
         => input?.ToString() ?? string.Empty;
+
+    internal static string FormatValue<T>(T? value, int maxLength = 256)
+    {
+        if (value is null)
+        {
+            return "(null)";
+        }
+
+        if (value is string s)
+        {
+            return EscapeNewlines(Truncate($"\"{s}\"", maxLength));
+        }
+
+        // For collections, show a preview with element values
+        if (value is IEnumerable enumerable)
+        {
+            return FormatCollectionPreview(enumerable);
+        }
+
+        // Always use the runtime type for non-null values so that interface/base-class
+        // typed parameters still resolve the actual overridden ToString().
+        Type type = value.GetType();
+
+        if (type.IsPrimitive || value is decimal or DateTime or DateTimeOffset
+            or TimeSpan or Guid or Enum)
+        {
+            return EscapeNewlines(Truncate(value.ToString() ?? string.Empty, maxLength));
+        }
+
+        MethodInfo? toStringMethod = type.GetMethod(nameof(ToString), BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+        if (toStringMethod is not null
+            && toStringMethod.DeclaringType != typeof(object)
+            && toStringMethod.DeclaringType != typeof(ValueType))
+        {
+            try
+            {
+                return EscapeNewlines(Truncate(value.ToString() ?? string.Empty, maxLength));
+            }
+            catch (Exception)
+            {
+                // Fall through to type name display if ToString throws
+            }
+        }
+
+        // No useful ToString - just return the type name
+        string typeName = type.FullName ?? type.Name;
+        return $"<{typeName}>";
+    }
+
+    internal static string TruncateExpression(string expression, int maxLength = 100)
+        => expression.Length <= maxLength
+            ? expression
+#if NETCOREAPP3_1_OR_GREATER
+            : string.Concat(expression.AsSpan(0, maxLength), "...");
+#else
+            : expression.Substring(0, maxLength) + "...";
+#endif
+
+    private static string Truncate(string value, int maxLength)
+        => value.Length <= maxLength
+            ? value
+#if NETCOREAPP3_1_OR_GREATER
+            : string.Concat(value.AsSpan(0, maxLength), "... ", (value.Length - maxLength).ToString(CultureInfo.InvariantCulture), " more");
+#else
+            : value.Substring(0, maxLength) + $"... {value.Length - maxLength} more";
+#endif
+
+    private static string EscapeNewlines(string value)
+        => value.Contains('\n') || value.Contains('\r')
+            ? value.Replace("\r\n", "\\r\\n").Replace("\n", "\\n").Replace("\r", "\\r")
+            : value;
+
+    private static bool IsExpressionRedundant(string expression, string formattedValue)
+    {
+        if (string.IsNullOrEmpty(expression))
+        {
+            return true;
+        }
+
+        // Exact match: expression "5" == formattedValue "5"
+        if (expression == formattedValue)
+        {
+            return true;
+        }
+
+        // Null literal: expression "null" vs formattedValue "(null)"
+        if (expression is "null" && formattedValue is "(null)")
+        {
+            return true;
+        }
+
+        // Boolean/true/false: expression "true" vs formattedValue "True"
+        if (string.Equals(expression, formattedValue, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Numeric literal in different notation (e.g., "100E-2" vs "1")
+        if (double.TryParse(expression, NumberStyles.Any, CultureInfo.InvariantCulture, out double exprNum)
+            && double.TryParse(formattedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double fmtNum)
+            && exprNum == fmtNum)
+        {
+            return true;
+        }
+
+        // C# string literal expression: @"\d+" or "\d+" vs formattedValue \d+
+        // Strip the string literal syntax and compare the inner content
+        string? innerContent = TryExtractStringLiteralContent(expression);
+        return innerContent is not null && innerContent == formattedValue;
+    }
+
+    /// <summary>
+    /// Tries to extract the string content from a C# string literal expression.
+    /// Returns the inner string value for @"..." and "..." literals, or null if not a string literal.
+    /// </summary>
+    private static string? TryExtractStringLiteralContent(string expression)
+    {
+        // Verbatim string: @"content"
+        if (expression.Length >= 3 && expression[0] == '@' && expression[1] == '"' && expression[expression.Length - 1] == '"')
+        {
+            return expression.Substring(2, expression.Length - 3).Replace("\"\"", "\"");
+        }
+
+        // Regular string: "content"
+        if (expression.Length >= 2 && expression[0] == '"' && expression[expression.Length - 1] == '"')
+        {
+            return expression.Substring(1, expression.Length - 2);
+        }
+
+        // Not a string literal
+        return null;
+    }
+
+    /// <summary>
+    /// Checks if the expression is a typed numeric literal (e.g., 1.0f, 1.1d, 0.001m, 2L)
+    /// or a well-known numeric constant (float.NaN, double.NaN) that is a more informative
+    /// representation than the plain ToString() value.
+    /// </summary>
+    private static bool IsExpressionMoreSpecificNumericLiteral(string expression, string formattedValue)
+    {
+        if (string.IsNullOrEmpty(expression) || expression.Length < 2)
+        {
+            return false;
+        }
+
+        // Well-known numeric constants: float.NaN, double.NaN, float.PositiveInfinity, etc.
+        if (expression.StartsWith("float.", StringComparison.Ordinal) || expression.StartsWith("double.", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // Check if expression ends with a numeric type suffix
+        char lastChar = expression[expression.Length - 1];
+        if (lastChar is not ('f' or 'F' or 'd' or 'D' or 'm' or 'M' or 'L' or 'l' or 'u' or 'U'))
+        {
+            return false;
+        }
+
+        // The formatted value should be the numeric part without the suffix
+        // e.g., expression "1.0d" -> formattedValue "1" or "1.0"
+        string numericPart = expression.Substring(0, expression.Length - 1);
+
+        // Handle UL/ul suffix (two chars)
+        if (numericPart.Length > 0 && numericPart[numericPart.Length - 1] is 'u' or 'U' or 'l' or 'L')
+        {
+            numericPart = numericPart.Substring(0, numericPart.Length - 1);
+        }
+
+        // Check if removing the suffix gives the formatted value, or if they represent the same number
+        return numericPart == formattedValue
+            || (double.TryParse(numericPart, NumberStyles.Any, CultureInfo.InvariantCulture, out double exprNum)
+                && double.TryParse(formattedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double valNum)
+                && exprNum == valNum);
+    }
+
+    internal static string FormatParameter<T>(string paramName, string expression, T? value)
+    {
+        string formattedValue = FormatValue(value);
+
+        return $"  {paramName}: {formattedValue}";
+    }
+
+    /// <summary>
+    /// Formats a parameter line showing only the expression (no value).
+    /// Used for parameters like predicates and actions where the
+    /// runtime value's ToString() is not useful.
+    /// Returns empty string if the expression is empty or matches the parameter name.
+    /// </summary>
+    internal static string FormatExpressionParameter(string paramName, string expression)
+        => string.IsNullOrEmpty(expression) || expression == paramName
+            ? string.Empty
+            : Environment.NewLine + $"  {paramName}: {TruncateExpression(expression)}";
+
+    /// <summary>
+    /// Formats a collection parameter line showing a preview of the collection elements.
+    /// </summary>
+    internal static string FormatCollectionParameter(string expression, IEnumerable collection)
+    {
+        string preview = FormatCollectionPreview(collection);
+
+        return $"{Environment.NewLine}  collection: {preview}";
+    }
+
+    /// <summary>
+    /// Formats a preview string for a collection, showing element values up to <paramref name="maxLength"/> characters.
+    /// <para>
+    /// Performance: We avoid enumerating the entire collection when the display is truncated.
+    /// For ICollection, we read .Count directly (O(1)) to get the total without full enumeration.
+    /// For non-ICollection enumerables (e.g. LINQ queries, infinite sequences), we stop
+    /// enumeration as soon as the display budget is exhausted and report "N+ elements" since
+    /// the true count is unknown. This prevents hangs on lazy/infinite sequences and avoids
+    /// O(n) enumeration cost when only a prefix is displayed.
+    /// </para>
+    /// </summary>
+    private static string FormatCollectionPreview(IEnumerable collection, int maxLength = 256)
+    {
+        // Perf: get count from ICollection (O(1)) to avoid full enumeration just for the count.
+        int? knownCount = collection is ICollection c ? c.Count : null;
+
+        var elements = new List<string>();
+        int enumeratedCount = 0;
+        int currentLength = 0;
+        bool truncated = false;
+
+        // Perf: wrap in try-catch so that faulting enumerators (e.g. collection modified during
+        // iteration, or user-defined iterators that throw) don't bubble up from assertion formatting.
+        try
+        {
+            foreach (object? item in collection)
+            {
+                enumeratedCount++;
+
+                string formatted = item is IEnumerable innerCollection and not string
+                    ? FormatCollectionPreview(innerCollection, maxLength: 50)
+                    : FormatValue(item, maxLength: 50);
+
+                // Account for ", " separator between elements
+                int addedLength = elements.Count > 0
+                    ? formatted.Length + 2
+                    : formatted.Length;
+
+                if (currentLength + addedLength > maxLength && elements.Count > 0)
+                {
+                    truncated = true;
+
+                    // Perf: stop enumeration immediately once the display budget is exceeded.
+                    // Without this break, we'd continue iterating potentially millions of
+                    // elements (or hang on infinite sequences) just to compute totalCount.
+                    break;
+                }
+
+                elements.Add(formatted);
+                currentLength += addedLength;
+            }
+        }
+        catch (Exception)
+        {
+            // If enumeration fails, report what we've collected so far
+            truncated = elements.Count > 0;
+        }
+
+        int totalCount = knownCount ?? enumeratedCount;
+        int displayedCount = elements.Count;
+
+        string elementList = string.Join(", ", elements);
+        if (truncated)
+        {
+            int remaining = totalCount - displayedCount;
+            string remainingText = knownCount is null
+                ? $"{remaining}+"
+                : $"{remaining}";
+            elementList += $", ... {remainingText} more";
+        }
+
+        string countText = truncated
+            ? string.Empty
+            : $" ({totalCount} {(totalCount == 1 ? "item" : "items")})";
+
+        return $"[{elementList}]{countText}";
+    }
+
+    internal static string FormatParameterWithValue(string paramName, string expression, string formattedValue)
+        => $"  {paramName}: {formattedValue}";
+
+    /// <summary>
+    /// Formats a parameter line, checking expression redundancy against a base value
+    /// while displaying a different (enriched) display value.
+    /// </summary>
+    internal static string FormatParameterWithExpressionCheck(string paramName, string expression, string baseValue, string displayValue)
+        => $"  {paramName}: {displayValue}";
+
+    /// <summary>
+    /// Builds the "Assert.Method(expr1, expr2)" call site string for the first line.
+    /// Only the primary/semantic parameters are included (not message, culture, delta, etc.).
+    /// </summary>
+    internal static string FormatCallSite(string methodName, params (string ParamName, string Expression)[] args)
+    {
+        var sb = new StringBuilder(methodName);
+        sb.Append('(');
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (i > 0)
+            {
+                sb.Append(", ");
+            }
+
+            string expression = args[i].Expression;
+            string paramName = args[i].ParamName;
+            sb.Append(string.IsNullOrEmpty(expression) || expression == paramName
+                ? paramName
+                : TruncateExpression(expression, 50));
+        }
+
+        sb.Append(')');
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Formats multiple parameter lines with aligned values.
+    /// All labels are padded so that values start at the same column.
+    /// </summary>
+    internal static string FormatAlignedParameters(params (string Label, string Value)[] parameters)
+    {
+        int maxLabelLength = 0;
+        foreach ((string label, string _) in parameters)
+        {
+            if (label.Length > maxLabelLength)
+            {
+                maxLabelLength = label.Length;
+            }
+        }
+
+        var sb = new StringBuilder();
+        foreach ((string label, string value) in parameters)
+        {
+            sb.Append(Environment.NewLine);
+            sb.Append("  ");
+            sb.Append(label);
+            sb.Append(':');
+            sb.Append(new string(' ', maxLabelLength - label.Length + 1));
+            sb.Append(value);
+        }
+
+        return sb.ToString();
+    }
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo culture)
 #pragma warning disable CA1309 // Use ordinal string comparison
