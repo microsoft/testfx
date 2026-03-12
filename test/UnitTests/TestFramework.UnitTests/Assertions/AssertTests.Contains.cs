@@ -339,7 +339,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.ContainsSingle(*) failed.
+            Assert.ContainsSingle(collection) failed.
             Expected collection to contain exactly one item but found 3 item(s).
             """);
     }
@@ -372,7 +372,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.ContainsSingle(*) failed.
+            Assert.ContainsSingle(collection) failed.
             Expected collection to contain exactly one item but found 0 item(s).
             """);
     }
@@ -390,7 +390,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.ContainsSingle(*) failed. my custom message
+            Assert.ContainsSingle(collection) failed. my custom message
             Expected collection to contain exactly one item but found 0 item(s).
             """);
     }
@@ -427,7 +427,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. Item 20 not found
+            Assert.Contains(20, collection) failed. Item 20 not found
             Expected collection to contain the specified item.*
             """);
     }
@@ -446,7 +446,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. Item 20 not found
+            Assert.Contains(expected, collection) failed. Item 20 not found
             Expected collection to contain the specified item.*
             """);
     }
@@ -495,7 +495,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. Item  not found
+            Assert.Contains(expected, collection) failed. Item  not found
             Expected collection to contain the specified item.*
             """);
     }
@@ -547,7 +547,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. Missing cherry
+            Assert.Contains("cherry", collection) failed. Missing cherry
             Expected collection to contain the specified item.*
             """);
     }
@@ -596,7 +596,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. No even number found
+            Assert.Contains(IsEven, collection) failed. No even number found
             Expected at least one item to match the predicate.*
             """);
     }
@@ -615,7 +615,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. No even number found
+            Assert.Contains(IsEven, collection) failed. No even number found
             Expected at least one item to match the predicate.*
             """);
     }
@@ -651,7 +651,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed. Missing substring
+            Assert.Contains(substring, value) failed. Missing substring
             String does not contain the expected substring.
               substring: "lazy"
               value:     "The quick brown fox"
@@ -732,7 +732,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed.
+            Assert.Contains("banana", collection) failed.
             Expected collection to contain the specified item.*
             """);
     }
@@ -870,7 +870,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.Contains(*) failed.
+            Assert.Contains(substring, value) failed.
             String does not contain the expected substring.
               substring: "test"
               value:     ""
@@ -978,7 +978,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. Item 10 should not be found
+            Assert.DoesNotContain(10, collection) failed. Item 10 should not be found
             Expected collection to not contain the specified item.*
             """);
     }
@@ -1008,12 +1008,13 @@ public partial class AssertTests : TestContainer
         var collection = new ArrayList { 5, 10, 15, "a" };
 
         // Act
-        Action action = () => Assert.DoesNotContain(10, collection, "Assert.DoesNotContain(*) failed. Expected collection to not contain the specified item. Item {0} should not be found");
+        Action action = () => Assert.DoesNotContain(10, collection, "Item 10 should not be found");
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. Assert.DoesNotContain(*) failed. Expected collection to not contain the specified item. Item {0} should not be found
-            Expected collection to not contain the specified item.*
+            Assert.DoesNotContain(10, collection) failed. Item 10 should not be found
+            Expected collection to not contain the specified item.
+              collection: [5, 10, 15, "a"] (4 items)
             """);
     }
 
@@ -1064,7 +1065,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. Unexpected "APPLE"
+            Assert.DoesNotContain("APPLE", collection) failed. Unexpected "APPLE"
             Expected collection to not contain the specified item.*
             """);
     }
@@ -1084,7 +1085,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. APPLE
+            Assert.DoesNotContain("APPLE", collection) failed. APPLE
             Expected collection to not contain the specified item.*
             """);
     }
@@ -1133,7 +1134,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. An even number exists
+            Assert.DoesNotContain(IsEven, collection) failed. An even number exists
             Expected no items to match the predicate.*
             """);
     }
@@ -1152,7 +1153,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. An even number exists
+            Assert.DoesNotContain(IsEven, collection) failed. An even number exists
             Expected no items to match the predicate.*
             """);
     }
@@ -1188,7 +1189,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. Unexpected substring
+            Assert.DoesNotContain(substring, value) failed. Unexpected substring
             String contains the unexpected substring.
               substring: "brown"
               value:     "The quick brown fox"
@@ -1228,7 +1229,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. Found unexpected substring
+            Assert.DoesNotContain(substring, value) failed. Found unexpected substring
             String contains the unexpected substring.
               substring: "BROWN"
               value:     "The quick brown fox"
@@ -1266,7 +1267,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed.
+            Assert.DoesNotContain(substring, value) failed.
             String contains the unexpected substring.
               substring: "brown"
               value:     "The quick brown fox"
@@ -1304,7 +1305,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
-            Assert.DoesNotContain(*) failed. Found unexpected substring
+            Assert.DoesNotContain(substring, value) failed. Found unexpected substring
             String contains the unexpected substring.
               substring: "brown"
               value:     "The quick brown fox"
@@ -1552,7 +1553,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed.
+                Assert.ContainsSingle(x => x % 2 == 0, collection) failed.
                 Expected exactly one item to match the predicate but found 0 item(s).
                 """);
     }
@@ -1572,7 +1573,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed.
+                Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection) failed.
                 Expected exactly one item to match the predicate but found 0 item(s).
                 """);
     }
@@ -1592,7 +1593,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed.
+                Assert.ContainsSingle(x => x % 2 == 0, collection) failed.
                 Expected exactly one item to match the predicate but found 4 item(s).
                 """);
     }
@@ -1612,7 +1613,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed.
+                Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection) failed.
                 Expected exactly one item to match the predicate but found 2 item(s).
                 """);
     }
@@ -1632,7 +1633,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed. No even numbers found in collection with 3 items
+                Assert.ContainsSingle(x => x % 2 == 0, collection) failed. No even numbers found in collection with 3 items
                 Expected exactly one item to match the predicate but found 0 item(s).
                 """);
     }
@@ -1652,7 +1653,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed. No even numbers found in collection with 3 items
+                Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection) failed. No even numbers found in collection with 3 items
                 Expected exactly one item to match the predicate but found 0 item(s).
                 """);
     }
@@ -1672,7 +1673,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed. Too many even numbers found: 3
+                Assert.ContainsSingle(x => x % 2 == 0, collection) failed. Too many even numbers found: 3
                 Expected exactly one item to match the predicate but found 3 item(s).
                 """);
     }
@@ -1692,7 +1693,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.ContainsSingle(*) failed. Too many even numbers found: 2
+                Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection) failed. Too many even numbers found: 2
                 Expected exactly one item to match the predicate but found 2 item(s).
                 """);
     }
@@ -1787,7 +1788,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains(5, collection) failed.
                 Expected collection to contain the specified item.*
                   collection: [1, 2, 3] (3 items)
                 """);
@@ -1807,7 +1808,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains(5, collection) failed.
                 Expected collection to contain the specified item.*
                   collection: [1, 2, 3] (3 items)
                 """);
@@ -1827,7 +1828,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains(x => x % 2 == 0, collection) failed.
                 Expected at least one item to match the predicate.*
                   collection: [1, 3, 5] (3 items)
                 """);
@@ -1847,7 +1848,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotContain(*) failed.
+                Assert.DoesNotContain(2, collection) failed.
                 Expected collection to not contain the specified item.*
                   collection: [1, 2, 3] (3 items)
                 """);
@@ -1867,7 +1868,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotContain(*) failed.
+                Assert.DoesNotContain(x => x % 2 == 0, collection) failed.
                 Expected no items to match the predicate.*
                   collection: [1, 2, 3] (3 items)
                 """);
@@ -1924,7 +1925,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains("world", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains("world", aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 String does not contain the expected substring.
                   substring: "world"
                   value:     "hello"
@@ -1938,7 +1939,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains("world", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.Contains(*) failed.
+                Assert.Contains("world", longValue) failed.
                 String does not contain the expected substring.
                   substring: "world"
                   value:     "{new string('x', 255)}... 46 more
@@ -1950,7 +1951,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.Contains("world", "hello\r\nfoo");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains("world", "hello\r\nfoo") failed.
                 String does not contain the expected substring.
                   substring: "world"
                   value:     "hello\r\nfoo"
@@ -1964,7 +1965,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain("hello", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotContain(*) failed.
+                Assert.DoesNotContain("hello", aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 String contains the unexpected substring.
                   substring: "hello"
                   value:     "hello world"
@@ -1978,7 +1979,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain("hello", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.DoesNotContain(*) failed.
+                Assert.DoesNotContain("hello", longValue) failed.
                 String contains the unexpected substring.
                   substring: "hello"
                   value:     "hello{new string('x', 250)}... 51 more
@@ -1990,7 +1991,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.DoesNotContain("hello", "hello\r\nworld");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotContain(*) failed.
+                Assert.DoesNotContain("hello", "hello\r\nworld") failed.
                 String contains the unexpected substring.
                   substring: "hello"
                   value:     "hello\r\nworld"

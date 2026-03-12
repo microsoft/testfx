@@ -13,7 +13,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(null) failed.
                   value: (null)
                 """);
     }
@@ -23,7 +23,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(5, null);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(5) failed.
                   value: 5
                 """);
     }
@@ -33,7 +33,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(5) failed.
                 Expected value to be of the specified type.
                   value: 5
                   expectedType: System.String
@@ -50,7 +50,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed. User-provided message
+                Assert.IsInstanceOfType(null) failed. User-provided message
                   value: (null)
                 """);
     }
@@ -60,7 +60,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(5, null, "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed. User-provided message
+                Assert.IsInstanceOfType(5) failed. User-provided message
                   value: 5
                 """);
     }
@@ -70,7 +70,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed. User-provided message
+                Assert.IsInstanceOfType(5) failed. User-provided message
                 Expected value to be of the specified type.
                   value: 5
                   expectedType: System.String
@@ -88,7 +88,7 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.IsInstanceOfType(null) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                   value: (null)
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -100,7 +100,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(5, null, $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed. User-provided message DummyClassTrackingToStringCalls
+                Assert.IsInstanceOfType(5) failed. User-provided message DummyClassTrackingToStringCalls
                   value: 5
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -112,7 +112,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed. User-provided message DummyClassTrackingToStringCalls
+                Assert.IsInstanceOfType(5) failed. User-provided message DummyClassTrackingToStringCalls
                 Expected value to be of the specified type.
                   value: 5
                   expectedType: System.String
@@ -145,7 +145,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(null) failed.
                   value: (null)
                 """);
     }
@@ -155,7 +155,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType<string>(5);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(5) failed.
                 Expected value to be of the specified type.
                   value: 5
                   expectedType: System.String
@@ -284,7 +284,7 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, typeof(int));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Expected value to be of the specified type.
                   value: "hello"
                   expectedType: System.Int32
@@ -299,11 +299,11 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(obj, typeof(int));
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(obj) failed.
                 Expected value to be of the specified type.
                   value: {new string('L', 256)}... 44 more
                   expectedType: System.Int32
-                  actualType: *ObjectWithLongToString
+                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
                 """);
     }
 
@@ -314,11 +314,11 @@ public partial class AssertTests
         Action action = () => Assert.IsInstanceOfType(obj, typeof(int));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInstanceOfType(*) failed.
+                Assert.IsInstanceOfType(obj) failed.
                 Expected value to be of the specified type.
                   value: line1\r\nline2\nline3
                   expectedType: System.Int32
-                  actualType: *ObjectWithNewlineToString
+                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
                 """);
     }
 
@@ -329,7 +329,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNotInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, typeof(string));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNotInstanceOfType(*) failed.
+                Assert.IsNotInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Value should not be of the specified type.
                   value: "hello"
                   wrongType: System.String
@@ -344,11 +344,11 @@ public partial class AssertTests
         Action action = () => Assert.IsNotInstanceOfType(obj, typeof(ObjectWithLongToString));
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNotInstanceOfType(*) failed.
+                Assert.IsNotInstanceOfType(obj) failed.
                 Value should not be of the specified type.
                   value: {new string('L', 256)}... 44 more
-                  wrongType: *ObjectWithLongToString
-                  actualType: *ObjectWithLongToString
+                  wrongType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
+                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
                 """);
     }
 
@@ -359,11 +359,11 @@ public partial class AssertTests
         Action action = () => Assert.IsNotInstanceOfType(obj, typeof(ObjectWithNewlineToString));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNotInstanceOfType(*) failed.
+                Assert.IsNotInstanceOfType(obj) failed.
                 Value should not be of the specified type.
                   value: line1\r\nline2\nline3
-                  wrongType: *ObjectWithNewlineToString
-                  actualType: *ObjectWithNewlineToString
+                  wrongType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
+                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
                 """);
     }
 

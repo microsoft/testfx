@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -20,7 +20,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(1, 1, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual(1, 1) failed. A Message
                 Expected values to differ.
                   notExpected: 1
                   actual:      1
@@ -38,7 +38,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual("A", "A", "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual("A", "A") failed. A Message
                 Expected values to differ.
                   notExpected: "A"
                   actual:      "A"
@@ -63,7 +63,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(1, 1, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual(1, 1) failed. A Message
                 Expected values to differ.
                   notExpected: 1
                   actual:      1
@@ -81,7 +81,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(1L, 1L, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual(1L, 1L) failed. A Message
                 Expected values to differ.
                   notExpected: 1
                   actual:      1
@@ -105,7 +105,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(0.1M, 0.1M, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual(0.1M, 0.1M) failed. A Message
                 Expected values to differ.
                   notExpected: 0.1
                   actual:      0.1
@@ -129,7 +129,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(0.1, 0.1, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual(0.1, 0.1) failed. A Message
                 Expected values to differ.
                   notExpected: 0.1
                   actual:      0.1
@@ -153,7 +153,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(100E-2, 100E-2, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. A Message
+                Assert.AreNotEqual(100E-2, 100E-2) failed. A Message
                 Expected values to differ.
                   notExpected: 1
                   actual:      1
@@ -177,7 +177,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(null, "string", "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreEqual(*) failed. A Message
+                Assert.AreEqual(null, "string") failed. A Message
                 Expected values to be equal.
                   expected: (null)
                   actual:   "string"
@@ -215,7 +215,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(expected, actual, false, englishCulture);
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(expected, actual) failed.
                 Case differs.
                   expected: "i"
                   actual:   "I"
@@ -257,7 +257,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(1, 2, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreEqual(*) failed. A Message
+                Assert.AreEqual(1, 2) failed. A Message
                 Expected values to be equal.
                   expected: 1
                   actual:   2
@@ -275,7 +275,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(1L, 2L, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreEqual(*) failed. A Message
+                Assert.AreEqual(1L, 2L) failed. A Message
                 Expected values to be equal.
                   expected: 1
                   actual:   2
@@ -299,7 +299,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(0.1, 0.2, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreEqual(*) failed. A Message
+                Assert.AreEqual(0.1, 0.2) failed. A Message
                 Expected values to be equal.
                   expected: 0.1
                   actual:   0.2
@@ -324,7 +324,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(0.1M, 0.2M, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreEqual(*) failed. A Message
+                Assert.AreEqual(0.1M, 0.2M) failed. A Message
                 Expected values to be equal.
                   expected: 0.1
                   actual:   0.2
@@ -348,7 +348,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(100E-2, 200E-2, "A Message");
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.AreEqual(*) failed. A Message
+                Assert.AreEqual(100E-2, 200E-2) failed. A Message
                 Expected values to be equal.
                   expected: 1
                   actual:   2
@@ -372,7 +372,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(new object(), 1);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(new object(), 1) failed.
                 Expected values to be equal.
                   expected: <System.Object> (System.Object)
                   actual:   1 (System.Int32)
@@ -448,7 +448,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreEqual(0, 1, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreEqual(0, 1) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected values to be equal.
                   expected: 0
                   actual:   1
@@ -470,7 +470,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreNotEqual(0, 0, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreNotEqual(0, 0) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected values to differ.
                   notExpected: 0
                   actual:      0
@@ -492,7 +492,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreEqual(1.0f, 1.1f, 0.001f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreEqual(1.0f, 1.1f) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than <0.001>.
                   expected: 1
                   actual:   1.1
@@ -514,7 +514,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreNotEqual(1.0f, 1.1f, 0.2f, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreNotEqual(1.0f, 1.1f) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than <0.2>.
                   notExpected: 1
                   actual:      1.1
@@ -536,7 +536,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreEqual(1.0m, 1.1m, 0.001m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreEqual(1.0m, 1.1m) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than <0.001>.
                   expected: 1.0
                   actual:   1.1
@@ -558,7 +558,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreNotEqual(1.0m, 1.1m, 0.2m, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreNotEqual(1.0m, 1.1m) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than <0.2>.
                   notExpected: 1.0
                   actual:      1.1
@@ -580,7 +580,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreEqual(1L, 2L, 0L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreEqual(1L, 2L) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than <0>.
                   expected: 1
                   actual:   2
@@ -602,7 +602,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreNotEqual(1L, 2L, 1L, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreNotEqual(1L, 2L) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than <1>.
                   notExpected: 1
                   actual:      2
@@ -624,7 +624,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreEqual(1.0d, 1.1d, 0.001d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreEqual(1.0d, 1.1d) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than <0.001>.
                   expected: 1
                   actual:   1.1
@@ -646,7 +646,7 @@ public partial class AssertTests : TestContainer
         Func<Task> action = async () => Assert.AreNotEqual(1.0d, 1.1d, 0.2d, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
-                Assert.AreNotEqual(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Assert.AreNotEqual(1.0d, 1.1d) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than <0.2>.
                   notExpected: 1
                   actual:      1.1
@@ -823,7 +823,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(5.0f, 2.0f, 2.0f); // difference is 3. Delta is 2
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(5.0f, 2.0f) failed.
                 Expected a difference no greater than <2>.
                   expected: 5
                   actual:   2
@@ -834,7 +834,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(2.0f, 5.0f, 2.0f); // difference is -3. Delta is 2
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(2.0f, 5.0f) failed.
                 Expected a difference no greater than <2>.
                   expected: 2
                   actual:   5
@@ -851,7 +851,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(5.0f, float.NaN, 2.0f);
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(5.0f, float.NaN) failed.
                 Expected a difference no greater than <2>.
                   expected: 5
                   actual:   NaN
@@ -862,7 +862,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreEqual(float.NaN, 5.0f, 2.0f);
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(float.NaN, 5.0f) failed.
                 Expected a difference no greater than <2>.
                   expected: NaN
                   actual:   5
@@ -1055,7 +1055,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(5.0f, 4.0f, 2.0f); // difference is 1. Delta is 2
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(5.0f, 4.0f) failed.
                 Expected a difference greater than <2>.
                   notExpected: 5
                   actual:      4
@@ -1066,7 +1066,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(4.0f, 5.0f, 2.0f); // difference is -1. Delta is 2
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(4.0f, 5.0f) failed.
                 Expected a difference greater than <2>.
                   notExpected: 4
                   actual:      5
@@ -1082,7 +1082,7 @@ public partial class AssertTests : TestContainer
     {
         Action action = () => Assert.AreNotEqual(float.NaN, float.NaN, 2.0f);
         action.Should().Throw<Exception>().WithMessage(""""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(float.NaN, float.NaN) failed.
                 Expected a difference greater than <2>.
                   notExpected: NaN
                   actual:      NaN
@@ -1271,7 +1271,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(5.0d, 2.0d, 2.0d); // difference is 3. Delta is 2
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(5.0d, 2.0d) failed.
                 Expected a difference no greater than <2>.
                   expected: 5
                   actual:   2
@@ -1283,7 +1283,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(2.0d, 5.0d, 2.0d); // difference is -3. Delta is 2
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(2.0d, 5.0d) failed.
                 Expected a difference no greater than <2>.
                   expected: 2
                   actual:   5
@@ -1301,7 +1301,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(5.0d, double.NaN, 2.0d);
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(5.0d, double.NaN) failed.
                 Expected a difference no greater than <2>.
                   expected: 5
                   actual:   NaN
@@ -1313,7 +1313,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(double.NaN, 5.0d, 2.0d);
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(double.NaN, 5.0d) failed.
                 Expected a difference no greater than <2>.
                   expected: NaN
                   actual:   5
@@ -1514,7 +1514,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(5.0d, 4.0d, 2.0d); // difference is 1. Delta is 2
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(5.0d, 4.0d) failed.
                 Expected a difference greater than <2>.
                   notExpected: 5
                   actual:      4
@@ -1526,7 +1526,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(4.0d, 5.0d, 2.0d); // difference is -1. Delta is 2
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(4.0d, 5.0d) failed.
                 Expected a difference greater than <2>.
                   notExpected: 4
                   actual:      5
@@ -1543,7 +1543,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(double.NaN, double.NaN, 2.0d);
         action.Should().Throw<Exception>()
             .WithMessage(""""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(double.NaN, double.NaN) failed.
                 Expected a difference greater than <2>.
                   notExpected: NaN
                   actual:      NaN
@@ -1606,7 +1606,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("baaa", "aaaa");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("baaa", "aaaa") failed.
             String lengths are both 4 but differ at index 0.
               expected: "baaa"
               actual:   "aaaa"
@@ -1619,7 +1619,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aaaa", "aaab");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("aaaa", "aaab") failed.
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
@@ -1632,7 +1632,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aa\ta", "aa a");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("aa\ta", "aa a") failed.
             String lengths are both 4 but differ at index 2.
               expected: "aa␉a"
               actual:   "aa a"
@@ -1648,7 +1648,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(expected, actual);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual(expected, actual) failed.
             String lengths are both 201 but differ at index 100.
               expected: "...aaaaaaaaaaaaaaaaaabcccccccccccccccc..."
               actual:   "...aaaaaaaaaaaaaaaaaadcccccccccccccccc..."
@@ -1661,7 +1661,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture);
         action.Should().Throw<Exception>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("aaaa", "aaab") failed.
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
@@ -1674,7 +1674,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aaaa", "aaa");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("aaaa", "aaa") failed.
             Expected string length 4 but was 3.
               expected: "aaaa"
               actual:   "aaa"
@@ -1687,7 +1687,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aaa", "aaab");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("aaa", "aaab") failed.
             Expected string length 3 but was 4.
               expected: "aaa"
               actual:   "aaab"
@@ -1700,7 +1700,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aaaa", "aaab", "My custom message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed. My custom message
+            Assert.AreEqual("aaaa", "aaab") failed. My custom message
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
@@ -1713,7 +1713,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("??", "aaab");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.AreEqual(*) failed.
+            Assert.AreEqual("??", "aaab") failed.
             Expected string length 2 but was 4.
               expected: "??"
               actual:   "aaab"
@@ -1935,7 +1935,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 2);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 2) failed.
                 Expected values to be equal.
                   expected: 1
                   actual:   2
@@ -1950,7 +1950,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(expected, actual);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(expected, actual) failed.
                 Expected values to be equal.
                   expected: {new string('L', 256)}... 44 more
                   actual:   {new string('L', 256)}... 44 more
@@ -1965,7 +1965,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual(expected, actual);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreEqual(*) failed.
+                Assert.AreEqual(expected, actual) failed.
                 Expected values to be equal.
                   expected: line1\r\nline2\nline3
                   actual:   line1\r\nline2\nline3
@@ -1979,7 +1979,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 1);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 1) failed.
                 Expected values to differ.
                   notExpected: 1
                   actual:      1
@@ -1993,7 +1993,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(obj, obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(obj, obj) failed.
                 Expected values to differ.
                   notExpected: {new string('L', 256)}... 44 more
                   actual:      {new string('L', 256)}... 44 more
@@ -2007,7 +2007,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreNotEqual(obj, obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreNotEqual(*) failed.
+                Assert.AreNotEqual(obj, obj) failed.
                 Expected values to differ.
                   notExpected: line1\r\nline2\nline3
                   actual:      line1\r\nline2\nline3

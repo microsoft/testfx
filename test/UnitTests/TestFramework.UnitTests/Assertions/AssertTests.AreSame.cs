@@ -17,7 +17,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(new object(), new object());
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreSame(*) failed.
+            Assert.AreSame(new object(), new object()) failed.
             Expected references to be the same.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
@@ -34,7 +34,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(new object(), new object(), "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreSame(*) failed. User-provided message
+            Assert.AreSame(new object(), new object()) failed. User-provided message
             Expected references to be the same.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
@@ -54,7 +54,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreSame(new object(), new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
-            Assert.AreSame(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+            Assert.AreSame(new object(), new object()) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             Expected references to be the same.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
@@ -69,7 +69,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(1, 1);
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreSame(*) failed.
+            Assert.AreSame(1, 1) failed.
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
               expected: 1 (Hash=*)
               actual:   1 (Hash=*)
@@ -80,7 +80,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(1, 1, "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreSame(*) failed. User-provided message
+            Assert.AreSame(1, 1) failed. User-provided message
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
               expected: 1 (Hash=*)
               actual:   1 (Hash=*)
@@ -91,7 +91,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.AreSame(1, 1, $"User-provided message {new object().GetType()}");
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreSame(*) failed. User-provided message System.Object
+            Assert.AreSame(1, 1) failed. User-provided message System.Object
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
               expected: 1 (Hash=*)
               actual:   1 (Hash=*)
@@ -103,7 +103,7 @@ public partial class AssertTests
         object o = new();
         Action action = () => Assert.AreNotSame(o, o);
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreNotSame(*) failed.
+            Assert.AreNotSame(o, o) failed.
             Expected references to be different.
               notExpected: <System.Object>
               actual:      <System.Object>
@@ -118,7 +118,7 @@ public partial class AssertTests
         object o = new();
         Action action = () => Assert.AreNotSame(o, o, "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
-            Assert.AreNotSame(*) failed. User-provided message
+            Assert.AreNotSame(o, o) failed. User-provided message
             Expected references to be different.
               notExpected: <System.Object>
               actual:      <System.Object>
@@ -138,7 +138,7 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.AreNotSame(o, o, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
-            Assert.AreNotSame(*) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+            Assert.AreNotSame(o, o) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             Expected references to be different.
               notExpected: DummyClassTrackingToStringCalls
               actual:      DummyClassTrackingToStringCalls
@@ -155,7 +155,7 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, new object());
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreSame(*) failed.
+                Assert.AreSame(aVeryLongVariableNameThatExceedsOneHundredCharacte..., new object()) failed.
                 Expected references to be the same.
                   expected: <System.Object> (Hash=*)
                   actual:   <System.Object> (Hash=*)
@@ -167,7 +167,7 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(new ObjectWithLongToString(), new ObjectWithLongToString());
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.AreSame(*) failed.
+                Assert.AreSame(new ObjectWithLongToString(), new ObjectWithLongToString()) failed.
                 Expected references to be the same.
                   expected: {new string('L', 256)}... 44 more (Hash=*)
                   actual:   {new string('L', 256)}... 44 more (Hash=*)
@@ -179,7 +179,7 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(new ObjectWithNewlineToString(), new ObjectWithNewlineToString());
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreSame(*) failed.
+                Assert.AreSame(new ObjectWithNewlineToString(), new ObjectWithNewlineToString()) failed.
                 Expected references to be the same.
                   expected: line1\r\nline2\nline3 (Hash=*)
                   actual:   line1\r\nline2\nline3 (Hash=*)
@@ -193,7 +193,7 @@ public partial class AssertTests
         Action action = () => Assert.AreNotSame(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreNotSame(*) failed.
+                Assert.AreNotSame(aVeryLongVariableNameThatExceedsOneHundredCharacte..., aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Expected references to be different.
                   notExpected: <System.Object>
                   actual:      <System.Object>
@@ -207,7 +207,7 @@ public partial class AssertTests
         Action action = () => Assert.AreNotSame(obj, obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.AreNotSame(*) failed.
+                Assert.AreNotSame(obj, obj) failed.
                 Expected references to be different.
                   notExpected: {new string('L', 256)}... 44 more
                   actual:      {new string('L', 256)}... 44 more
@@ -221,7 +221,7 @@ public partial class AssertTests
         Action action = () => Assert.AreNotSame(obj, obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.AreNotSame(*) failed.
+                Assert.AreNotSame(obj, obj) failed.
                 Expected references to be different.
                   notExpected: line1\r\nline2\nline3
                   actual:      line1\r\nline2\nline3

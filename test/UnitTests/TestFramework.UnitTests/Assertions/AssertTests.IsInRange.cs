@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -58,7 +58,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: 5
                   maxValue: 10
@@ -77,7 +77,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
         action.Should().Throw<Exception>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: 1
                   maxValue: 5
@@ -99,7 +99,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed. Custom error message
+                Assert.IsInRange(value) failed. Custom error message
                 Value is not within the expected range.
                   minValue: 1
                   maxValue: 5
@@ -119,7 +119,13 @@ public partial class AssertTests : TestContainer
         Assert.IsInRange(minValue, maxValue, valueInRange);
         Action action = () => Assert.IsInRange(minValue, maxValue, valueOutOfRange);
         action.Should().Throw<Exception>()
-            .WithMessage("Assert.IsInRange(*) failed.*Value is not within the expected range*");
+            .WithMessage("""
+                Assert.IsInRange(valueOutOfRange) failed.
+                Value is not within the expected range.
+                  minValue: 1.5
+                  maxValue: 5.5
+                  value:    6
+                """);
     }
 
     public void IsInRange_WithDateTimeValues_WorksCorrectly()
@@ -136,7 +142,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
-            .WithMessage("Assert.IsInRange(*) failed.*Value is not within the expected range*");
+            .WithMessage("Assert.IsInRange(valueOutOfRange) failed.*Value is not within the expected range*");
     }
 
     public void IsInRange_WithCharValues_WorksCorrectly()
@@ -153,7 +159,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
-            .WithMessage("Assert.IsInRange(*) failed.*Value is not within the expected range*");
+            .WithMessage("Assert.IsInRange(valueOutOfRange) failed.*Value is not within the expected range*");
     }
 
     public void IsInRange_WithNullMessage_DoesNotThrow()
@@ -213,7 +219,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: -10
                   maxValue: -5
@@ -234,7 +240,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: -10
                   maxValue: -5
@@ -288,7 +294,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: -5
                   maxValue: 5
@@ -309,7 +315,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: -5
                   maxValue: 5
@@ -340,7 +346,7 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<ArgumentOutOfRangeException>()
-            .WithMessage("The maximum value must be greater than or equal to the minimum value*");
+            .WithMessage("The maximum value must be greater than or equal to the minimum value. (Parameter 'maxValue')");
     }
 
     public void IsInRange_WithMaxValueEqualToMinValue_Int_ShouldPassIfValueIsEqual()
@@ -364,7 +370,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: 5
                   maxValue: 5
@@ -382,7 +388,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: 5
                   maxValue: 5
@@ -411,7 +417,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: 5
                   maxValue: 5
@@ -429,7 +435,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: 5
                   maxValue: 5
@@ -448,7 +454,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(1, 10, aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Value is not within the expected range.
                   minValue: 1
                   maxValue: 10
@@ -465,7 +471,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(min, max, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: {new string('R', 256)}... 44 more
                   maxValue: {new string('R', 256)}... 44 more
@@ -482,7 +488,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(min, max, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsInRange(*) failed.
+                Assert.IsInRange(value) failed.
                 Value is not within the expected range.
                   minValue: line1\r\nline2
                   maxValue: line1\r\nline2
