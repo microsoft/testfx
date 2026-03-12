@@ -75,6 +75,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             case UseProperAssertMethodsAnalyzer.CodeFixModeAddArgument:
                 createChangedDocument = ct => FixAssertMethodForAddArgumentModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], root, simpleNameSyntax, properAssertMethodName, ct);
                 break;
+            case UseProperAssertMethodsAnalyzer.CodeFixModeAddTwoArguments:
+                createChangedDocument = ct => FixAssertMethodForAddTwoArgumentsModeAsync(context.Document, diagnostic.AdditionalLocations[0], diagnostic.AdditionalLocations[1], diagnostic.AdditionalLocations[2], diagnostic.AdditionalLocations[3], root, simpleNameSyntax, properAssertMethodName, ct);
+                break;
             case UseProperAssertMethodsAnalyzer.CodeFixModeRemoveArgument:
                 createChangedDocument = ct => FixAssertMethodForRemoveArgumentModeAsync(context.Document, diagnostic.AdditionalLocations, root, simpleNameSyntax, properAssertMethodName, diagnostic.Properties.ContainsKey(UseProperAssertMethodsAnalyzer.NeedsNullableBooleanCastKey), ct);
                 break;
@@ -210,6 +213,80 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
 
         newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments, newSeparators));
 
+        editor.ReplaceNode(argumentList, newArgumentList);
+
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<Document> FixAssertMethodForAddTwoArgumentsModeAsync(Document document, Location conditionLocation, Location firstArgLocation, Location secondArgLocation, Location thirdArgLocation, SyntaxNode root, SimpleNameSyntax simpleNameSyntax, string properAssertMethodName, CancellationToken cancellationToken)
+    {
+        // Handle Contains with comparer: Assert.IsTrue(enumerable.Contains(item, comparer)) -> Assert.Contains(item, enumerable, comparer)
+        if (root.FindNode(conditionLocation.SourceSpan) is not ArgumentSyntax conditionNode)
+        {
+            return document;
+        }
+
+        if (conditionNode.Parent is not ArgumentListSyntax argumentList)
+        {
+            return document;
+        }
+
+        if (root.FindNode(firstArgLocation.SourceSpan) is not ExpressionSyntax firstArgNode)
+        {
+            return document;
+        }
+
+        if (root.FindNode(secondArgLocation.SourceSpan) is not ExpressionSyntax secondArgNode)
+        {
+            return document;
+        }
+
+        if (root.FindNode(thirdArgLocation.SourceSpan) is not ExpressionSyntax thirdArgNode)
+        {
+            return document;
+        }
+
+        DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+        FixInvocationMethodName(editor, simpleNameSyntax, properAssertMethodName);
+
+        int conditionIndex = argumentList.Arguments.IndexOf(conditionNode);
+
+        // Build the new arguments list: (firstArg, secondArg, thirdArg, ...remaining)
+        var newArguments = new List<ArgumentSyntax>();
+        var newSeparators = new List<SyntaxToken>();
+
+        newArguments.Add(SyntaxFactory.Argument(
+            firstArgNode
+                .WithLeadingTrivia(conditionNode.GetLeadingTrivia())
+                .WithoutTrailingTrivia()));
+
+        newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
+        newArguments.Add(SyntaxFactory.Argument(
+            secondArgNode
+                .WithoutLeadingTrivia()
+                .WithoutTrailingTrivia()
+                .WithLeadingTrivia(SyntaxFactory.Space)));
+
+        newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken));
+        newArguments.Add(SyntaxFactory.Argument(
+            thirdArgNode
+                .WithoutLeadingTrivia()
+                .WithoutTrailingTrivia()
+                .WithLeadingTrivia(SyntaxFactory.Space)));
+
+        // Add remaining arguments (e.g., message) with their original separators and trivia
+        var originalSeparators = argumentList.Arguments.GetSeparators().ToList();
+        for (int i = conditionIndex + 1; i < argumentList.Arguments.Count; i++)
+        {
+            if (i - 1 < originalSeparators.Count)
+            {
+                newSeparators.Add(originalSeparators[i - 1]);
+            }
+
+            newArguments.Add(argumentList.Arguments[i]);
+        }
+
+        ArgumentListSyntax newArgumentList = argumentList.WithArguments(SyntaxFactory.SeparatedList(newArguments, newSeparators));
         editor.ReplaceNode(argumentList, newArgumentList);
 
         return editor.GetChangedDocument();
