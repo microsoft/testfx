@@ -400,6 +400,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
                 Log.LogError(Resources.MSBuildResources.DidNotReceiveRunSummaryInfo, TargetPath.ItemSpec.Trim());
                 return false;
             }
+
             Log.LogMessage(MessageImportance.High, Resources.MSBuildResources.TestsSucceeded, TargetPath.ItemSpec.Trim(), TargetFramework.ItemSpec, TestArchitecture.ItemSpec);
         }
 
