@@ -19,15 +19,15 @@ internal static class DynamicDataOperations
         {
             case DynamicDataSourceType.AutoDetect:
 #pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
-                if (GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataPropertyInfo)
+                if (dynamicDataDeclaringType.GetProperty(dynamicDataSourceName, MemberLookup) is { } dynamicDataPropertyInfo)
                 {
                     obj = GetDataFromProperty(dynamicDataPropertyInfo);
                 }
-                else if (GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataMethodInfo)
+                else if (dynamicDataDeclaringType.GetMethod(dynamicDataSourceName, MemberLookup) is { } dynamicDataMethodInfo)
                 {
                     obj = GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments);
                 }
-                else if (GetFieldConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName) is { } dynamicDataFieldInfo)
+                else if (dynamicDataDeclaringType.GetField(dynamicDataSourceName, MemberLookup) is { } dynamicDataFieldInfo)
                 {
                     obj = GetDataFromField(dynamicDataFieldInfo);
                 }
@@ -39,21 +39,21 @@ internal static class DynamicDataOperations
 
                 break;
             case DynamicDataSourceType.Property:
-                PropertyInfo property = GetPropertyConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
+                PropertyInfo property = dynamicDataDeclaringType.GetProperty(dynamicDataSourceName, MemberLookup)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {dynamicDataSourceName}");
 
                 obj = GetDataFromProperty(property);
                 break;
 
             case DynamicDataSourceType.Method:
-                MethodInfo method = GetMethodConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
+                MethodInfo method = dynamicDataDeclaringType.GetMethod(dynamicDataSourceName, MemberLookup)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {dynamicDataSourceName}");
 
                 obj = GetDataFromMethod(method, dynamicDataSourceArguments);
                 break;
 
             case DynamicDataSourceType.Field:
-                FieldInfo field = GetFieldConsideringInheritance(dynamicDataDeclaringType, dynamicDataSourceName)
+                FieldInfo field = dynamicDataDeclaringType.GetField(dynamicDataSourceName, MemberLookup)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Field} {dynamicDataSourceName}");
 
                 obj = GetDataFromField(field);
@@ -166,12 +166,4 @@ internal static class DynamicDataOperations
         return false;
     }
 
-    private static FieldInfo? GetFieldConsideringInheritance(Type type, string fieldName)
-        => type.GetField(fieldName, MemberLookup);
-
-    private static PropertyInfo? GetPropertyConsideringInheritance(Type type, string propertyName)
-        => type.GetProperty(propertyName, MemberLookup);
-
-    private static MethodInfo? GetMethodConsideringInheritance(Type type, string methodName)
-        => type.GetMethod(methodName, MemberLookup);
 }
