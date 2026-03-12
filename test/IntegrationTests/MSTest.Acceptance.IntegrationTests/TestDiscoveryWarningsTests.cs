@@ -75,6 +75,7 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
 
   <ItemGroup>
     <ProjectReference Include="TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
+    <Compile Remove="TestDiscoveryWarningsBaseClass/**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
