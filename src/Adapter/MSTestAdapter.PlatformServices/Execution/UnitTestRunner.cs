@@ -244,15 +244,11 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
     private static async Task<TestResult> RunAssemblyInitializeIfNeededAsync(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        var result = new TestResult { Outcome = UnitTestOutcome.Passed };
+        TestResult? result = null;
 
         try
         {
-            await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
-        }
-        catch (TestFailedException ex)
-        {
-            result = new TestResult { TestFailureException = ex, Outcome = ex.Outcome };
+            result = await testMethodInfo.Parent.Parent.RunAssemblyInitializeAsync(testContext.Context).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -262,7 +258,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
         finally
         {
             var testContextImpl = testContext.Context as TestContextImplementation;
-            result.LogOutput = testContextImpl?.GetOut();
+            result!.LogOutput = testContextImpl?.GetOut();
             result.LogError = testContextImpl?.GetErr();
             result.DebugTrace = testContextImpl?.GetTrace();
             result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
