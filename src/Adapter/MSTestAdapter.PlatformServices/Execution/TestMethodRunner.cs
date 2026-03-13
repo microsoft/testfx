@@ -72,28 +72,19 @@ internal sealed class TestMethodRunner
         {
             result = await RunTestMethodAsync().ConfigureAwait(false);
         }
-        catch (TestFailedException ex)
-        {
-            result = [new TestResult { TestFailureException = ex }];
-        }
         catch (Exception ex)
         {
-            if (result == null || result.Length == 0)
-            {
-                result = [new TestResult { Outcome = UnitTestOutcome.Error }];
-            }
-
-#pragma warning disable IDE0056 // Use index operator
-            result[result.Length - 1] = new TestResult
-            {
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                LogOutput = result[result.Length - 1].LogOutput,
-                LogError = result[result.Length - 1].LogError,
-                DebugTrace = result[result.Length - 1].DebugTrace,
-                TestContextMessages = result[result.Length - 1].TestContextMessages,
-                Duration = result[result.Length - 1].Duration,
-            };
-#pragma warning restore IDE0056 // Use index operator
+            // NOTE: We intentionally don't have any special casing for TestFailedException in this code path.
+            // It's handled down by TestMethodInfo which also unwraps TargetInvocationException.
+            // RunTestMethodAsync is not supposed to throw any exceptions. So it's always an **error** if we got an exception here.
+            result =
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                },
+            ];
         }
         finally
         {
