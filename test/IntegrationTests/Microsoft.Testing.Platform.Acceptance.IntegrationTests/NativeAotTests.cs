@@ -85,13 +85,8 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             .PatchCodeWithReplace("$TargetFramework$", tfm),
             addPublicFeeds: true);
 
-        await DotnetCli.RunAsync(
-            $"restore {generator.TargetAssetPath} -r {RID}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            retryCount: 0,
-            cancellationToken: TestContext.CancellationToken);
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            $"publish {generator.TargetAssetPath} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
