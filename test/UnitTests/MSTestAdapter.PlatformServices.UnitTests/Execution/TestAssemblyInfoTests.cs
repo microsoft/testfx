@@ -126,9 +126,9 @@ public class TestAssemblyInfoTests : TestContainer
 #pragma warning restore RS0030 // Do not use banned APIs
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        Func<Task> action = () => _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
-
-        await action.Should().ThrowAsync<Exception>();
+        TestResult testResult = await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
+        testResult.Should().NotBeNull();
+        testResult.TestFailureException.Should().NotBeNull();
         _testAssemblyInfo.AssemblyInitializationException.Should().NotBeNull();
     }
 
@@ -139,7 +139,8 @@ public class TestAssemblyInfoTests : TestContainer
 #pragma warning restore RS0030 // Do not use banned APIs
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        TestFailedException exception = (await new Func<Task>(() => _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).Should().ThrowAsync<TestFailedException>()).Which;
+        var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
@@ -154,7 +155,8 @@ public class TestAssemblyInfoTests : TestContainer
 #pragma warning restore RS0030 // Do not use banned APIs
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        TestFailedException exception = (await new Func<Task>(() => _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).Should().ThrowAsync<TestFailedException>()).Which;
+        var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
         exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
@@ -167,8 +169,8 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => throw new ArgumentException("Some actualErrorMessage message", new InvalidOperationException("Inner actualErrorMessage message"));
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        TestFailedException exception = (await new Func<Task>(() => _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).Should().ThrowAsync<TestFailedException>()).Which;
-
+        var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
@@ -186,8 +188,8 @@ public class TestAssemblyInfoTests : TestContainer
             FailingStaticHelper.DoWork();
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        TestFailedException exception = (await new Func<Task>(() => _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).Should().ThrowAsync<TestFailedException>()).Which;
-
+        var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.StartsWith(
@@ -202,17 +204,24 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
         _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
 
-        TestFailedException exception = (await new Func<Task>(() => _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).Should().ThrowAsync<TestFailedException>()).Which;
+        var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
+        exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
         exception.Message.Should().Be("Cached Test failure");
     }
 
     public async Task RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => (tc == _testContext).Should().BeTrue();
+        bool hasExecuted = false;
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
+            (tc == _testContext).Should().BeTrue();
+            hasExecuted = true;
+        };
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
         await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
+        hasExecuted.Should().BeTrue();
     }
 
     #endregion
