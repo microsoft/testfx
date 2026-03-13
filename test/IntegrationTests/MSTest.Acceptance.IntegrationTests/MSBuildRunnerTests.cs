@@ -11,16 +11,8 @@ public class MSBuildRunnerTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
 
-    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> GetBuildMatrix()
-    {
-        foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
-        {
-            yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm);
-        }
-    }
-
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrixSingleAndMultiTfmBuildConfiguration))]
     public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm)
     {
         // Get the template project

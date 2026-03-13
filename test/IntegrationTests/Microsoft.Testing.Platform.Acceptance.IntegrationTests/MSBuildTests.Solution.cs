@@ -8,17 +8,7 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
 
-    internal static IEnumerable<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> GetBuildMatrix()
-    {
-        foreach ((string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm) entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
-        {
-            {
-                yield return new(entry.SingleTfmOrMultiTfm, entry.BuildConfiguration, entry.IsMultiTfm);
-            }
-        }
-    }
-
-    [DynamicData(nameof(GetBuildMatrix))]
+    [DynamicData(nameof(GetBuildMatrixSingleAndMultiTfmBuildConfiguration))]
     [TestMethod]
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm)
     {
