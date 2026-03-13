@@ -4676,6 +4676,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertIsTrueWithLinqContainsAndComparer()
     {
         string code = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
             using System.Linq;
@@ -4694,6 +4695,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             """;
 
         string fixedCode = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
             using System.Linq;
@@ -4721,6 +4723,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     public async Task WhenAssertIsFalseWithLinqContainsAndComparer()
     {
         string code = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
             using System.Linq;
@@ -4739,6 +4742,7 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             """;
 
         string fixedCode = """
+            using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
             using System.Linq;
