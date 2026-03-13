@@ -24,7 +24,6 @@ internal abstract class ContextAdapterBase
         if (commandLineOptions.TryGetOptionArgumentList(
             TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName,
             out string[]? filterExpressions)
-            && filterExpressions is not null
             && filterExpressions.Length == 1)
         {
             filterFromCommandLineOption = filterExpressions[0];

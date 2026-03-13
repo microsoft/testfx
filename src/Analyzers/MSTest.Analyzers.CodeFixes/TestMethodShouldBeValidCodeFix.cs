@@ -109,8 +109,7 @@ public sealed class TestMethodShouldBeValidCodeFixProvider : CodeFixProvider
         INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
         INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
 
-        if (newMethodDeclaration.ReturnType != null &&
-            !newMethodDeclaration.ReturnType.IsVoid() &&
+        if (!newMethodDeclaration.ReturnType.IsVoid() &&
             (taskSymbol == null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
             (valueTaskSymbol == null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
         {
