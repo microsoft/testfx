@@ -64,8 +64,10 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _TestSolutionFilter: TestFx.slnx
             Debug:
               _BuildConfig: Debug
+              _TestSolutionFilter: UnitTests.slnf
         steps:
         - task: PowerShell@2
           displayName: 'Install Windows SDK'
@@ -120,7 +122,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
+          - script: dotnet test --solution $(_TestSolutionFilter) -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
@@ -142,14 +144,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Release'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Release'))
 
           # Upload code coverage to codecov.io
           - script: dotnet msbuild -restore
@@ -203,8 +205,10 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _TestSolutionFilter: NonWindowsTests.slnf
             Debug:
               _BuildConfig: Debug
+              _TestSolutionFilter: NonWindowsUnitTests.slnf
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
@@ -226,7 +230,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
+          - script: dotnet test --solution $(_TestSolutionFilter) -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
@@ -248,14 +252,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Release'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Linux_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Release'))
 
       - job: MacOS
         timeoutInMinutes: 90
@@ -267,8 +271,10 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _TestSolutionFilter: NonWindowsTests.slnf
             Debug:
               _BuildConfig: Debug
+              _TestSolutionFilter: NonWindowsUnitTests.slnf
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
@@ -290,7 +296,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
+          - script: dotnet test --solution $(_TestSolutionFilter) -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             env:
@@ -312,11 +318,11 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Release'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_MacOS_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Release'))

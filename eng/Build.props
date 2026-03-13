@@ -5,13 +5,23 @@
   </PropertyGroup>
 
   <!-- When building all products on windows OS -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' ">
+  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' AND '$(Configuration)' != 'Debug' ">
     <ProjectToBuild  Include="$(RepoRoot)TestFx.slnx" />
   </ItemGroup>
 
+  <!-- When building all products on windows OS in Debug (no integration tests) -->
+  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' AND '$(Configuration)' == 'Debug' ">
+    <ProjectToBuild  Include="$(RepoRoot)UnitTests.slnf" />
+  </ItemGroup>
+
   <!-- When building all products on non-windows OSes -->
-  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' ">
+  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' AND '$(Configuration)' != 'Debug' ">
     <ProjectToBuild  Include="$(RepoRoot)NonWindowsTests.slnf" />
+  </ItemGroup>
+
+  <!-- When building all products on non-windows OSes in Debug (no integration tests) -->
+  <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' != 'Windows_NT' AND '$(Configuration)' == 'Debug' ">
+    <ProjectToBuild  Include="$(RepoRoot)NonWindowsUnitTests.slnf" />
   </ItemGroup>
 
   <!-- When building MSTest only on windows OS -->
