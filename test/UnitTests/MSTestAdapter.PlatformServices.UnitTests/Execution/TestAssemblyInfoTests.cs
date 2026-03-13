@@ -79,9 +79,10 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.AssemblyInitializeMethod = null;
 
-        await _testAssemblyInfo.RunAssemblyInitializeAsync(null!);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(null!);
 
         assemblyInitCallCount.Should().Be(0);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task RunAssemblyInitializeShouldNotExecuteAssemblyInitializeIfItHasAlreadyExecuted()
@@ -92,9 +93,10 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.IsAssemblyInitializeExecuted = true;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
 
         assemblyInitCallCount.Should().Be(0);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task RunAssemblyInitializeShouldExecuteAssemblyInitialize()
@@ -103,9 +105,10 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = _ => assemblyInitCallCount++;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
 
         assemblyInitCallCount.Should().Be(1);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task RunAssemblyInitializeShouldSetAssemblyInitializeExecutedFlag()
@@ -114,9 +117,10 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
 
         _testAssemblyInfo.IsAssemblyInitializeExecuted.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     public async Task RunAssemblyInitializeShouldSetAssemblyInitializationExceptionOnException()
@@ -220,8 +224,9 @@ public class TestAssemblyInfoTests : TestContainer
         };
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
 
-        await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext);
         hasExecuted.Should().BeTrue();
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
     }
 
     #endregion
