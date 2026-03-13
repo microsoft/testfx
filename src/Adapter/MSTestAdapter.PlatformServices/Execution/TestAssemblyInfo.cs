@@ -110,8 +110,12 @@ internal sealed class TestAssemblyInfo
     /// <summary>
     /// Runs assembly initialize method.
     /// </summary>
-    /// <param name="testContext"> The test context. </param>
-    /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
+    /// <param name="testContext">The test context.</param>
+    /// <returns>
+    /// A <see cref="TestResult"/> whose <see cref="TestResult.Outcome"/> is <see cref="UnitTestOutcome.Passed"/>
+    /// when the assembly initialization succeeds, or the failure outcome with
+    /// <see cref="TestResult.TestFailureException"/> set when the initialization fails.
+    /// </returns>
     public async Task<TestResult> RunAssemblyInitializeAsync(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
