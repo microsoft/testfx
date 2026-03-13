@@ -58,7 +58,7 @@ public class TestAssemblyInfoTests : TestContainer
     public void TestAssemblyHasExecutableCleanupMethodShouldReturnTrueEvenIfAssemblyInitializationThrewAnException()
     {
         _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
-        _testAssemblyInfo.AssemblyInitializationException = new NotImplementedException();
+        _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Error, "ERROR");
 
         _testAssemblyInfo.HasExecutableCleanupMethod.Should().BeTrue();
     }
