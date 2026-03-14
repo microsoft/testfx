@@ -167,7 +167,9 @@ public class DataRowTests : CLITestBase
         // Assert
         VerifyE2E.TestsDiscovered(
             testCases,
-            "DataRowNonSerializable");
+            "DataRowNonSerializable (System.String)",
+            "DataRowNonSerializable (System.Int32)",
+            "DataRowNonSerializable (DataRowTestProject.DataRowTests_DerivedClass)");
 
         VerifyE2E.TestsPassed(
             testResults,
