@@ -205,8 +205,8 @@ internal sealed class TestMethodRunner
                 continue;
             }
 
-            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-            // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
+            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.TryUnfoldITestDataSource.
+            // Any change made here should be reflected in AssemblyEnumerator.TryUnfoldITestDataSource as well.
             bool dataSourceHasData = false;
             foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
             {
