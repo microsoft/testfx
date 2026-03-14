@@ -72,29 +72,19 @@ internal sealed class TestMethodRunner
         {
             result = await RunTestMethodAsync().ConfigureAwait(false);
         }
-        catch (TestFailedException ex)
-        {
-            result = [new TestResult { TestFailureException = ex }];
-        }
         catch (Exception ex)
         {
-            if (result == null || result.Length == 0)
-            {
-                result = [new TestResult { Outcome = UnitTestOutcome.Error }];
-            }
-
-#pragma warning disable IDE0056 // Use index operator
-            TestResult lastResult = result[result.Length - 1];
-            result[result.Length - 1] = new TestResult
-            {
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                LogOutput = lastResult.LogOutput,
-                LogError = lastResult.LogError,
-                DebugTrace = lastResult.DebugTrace,
-                TestContextMessages = lastResult.TestContextMessages,
-                Duration = lastResult.Duration,
-            };
-#pragma warning restore IDE0056 // Use index operator
+            // NOTE: We intentionally don't have any special casing for TestFailedException in this code path.
+            // It's handled down by TestMethodInfo which also unwraps TargetInvocationException.
+            // RunTestMethodAsync is not supposed to throw any exceptions. So it's always an **error** if we got an exception here.
+            result =
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                },
+            ];
         }
         finally
         {
@@ -217,11 +207,23 @@ internal sealed class TestMethodRunner
 
             // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
             // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-            IReadOnlyList<object?[]> dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo) is IReadOnlyList<object?[]> dataList
-                ? dataList
-                : testDataSource.GetData(_testMethodInfo.MethodInfo).ToList();
+            bool dataSourceHasData = false;
+            foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
+            {
+                dataSourceHasData = true;
+                try
+                {
+                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
 
-            if (dataSource.Count == 0)
+                    results.AddRange(testResults);
+                }
+                finally
+                {
+                    _testMethodInfo.SetArguments(null);
+                }
+            }
+
+            if (!dataSourceHasData)
             {
                 if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                 {
@@ -233,21 +235,6 @@ internal sealed class TestMethodRunner
                     Outcome = UnitTestOutcome.Inconclusive,
                 };
                 results.Add(inconclusiveResult);
-                continue;
-            }
-
-            foreach (object?[] data in dataSource)
-            {
-                try
-                {
-                    TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
-
-                    results.AddRange(testResults);
-                }
-                finally
-                {
-                    _testMethodInfo.SetArguments(null);
-                }
             }
         }
 
@@ -458,8 +445,7 @@ internal sealed class TestMethodRunner
     }
 
     /// <summary>
-    /// Updates given results with parent info if results are greater than 1.
-    /// Add parent results as first result in updated result.
+    /// Updates each given result with new execution and parent execution identifiers.
     /// </summary>
     /// <param name="results">Results.</param>
     private static void UpdateResultsWithParentInfo(List<TestResult> results)
