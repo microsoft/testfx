@@ -231,17 +231,19 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
             return document;
         }
 
-        if (root.FindNode(firstArgLocation.SourceSpan) is not ExpressionSyntax firstArgNode)
+        // FindNode may return ArgumentSyntax (outermost for tied spans) when the expression
+        // is a direct child of an ArgumentSyntax in the inner invocation. Extract the expression.
+        if (!TryGetExpressionFromNode(root, firstArgLocation, out ExpressionSyntax? firstArgNode))
         {
             return document;
         }
 
-        if (root.FindNode(secondArgLocation.SourceSpan) is not ExpressionSyntax secondArgNode)
+        if (!TryGetExpressionFromNode(root, secondArgLocation, out ExpressionSyntax? secondArgNode))
         {
             return document;
         }
 
-        if (root.FindNode(thirdArgLocation.SourceSpan) is not ExpressionSyntax thirdArgNode)
+        if (!TryGetExpressionFromNode(root, thirdArgLocation, out ExpressionSyntax? thirdArgNode))
         {
             return document;
         }
@@ -290,6 +292,19 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         editor.ReplaceNode(argumentList, newArgumentList);
 
         return editor.GetChangedDocument();
+    }
+
+    private static bool TryGetExpressionFromNode(SyntaxNode root, Location location, [NotNullWhen(true)] out ExpressionSyntax? expression)
+    {
+        SyntaxNode? node = root.FindNode(location.SourceSpan);
+        expression = node switch
+        {
+            ArgumentSyntax argument => argument.Expression,
+            ExpressionSyntax expr => expr,
+            _ => null,
+        };
+
+        return expression is not null;
     }
 
     private static async Task<Document> FixAssertMethodForRemoveArgumentModeAsync(
