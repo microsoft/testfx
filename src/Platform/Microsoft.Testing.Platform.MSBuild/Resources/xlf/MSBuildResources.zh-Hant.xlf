@@ -9,12 +9,12 @@
       </trans-unit>
       <trans-unit id="DidNotReceiveModuleInfo">
         <source>MSBuild extension failed to receive test application information from '{0}'</source>
-        <target state="new">MSBuild extension failed to receive test application information from '{0}'</target>
+        <target state="translated">MSBuild 擴充套件未能從 '{0}' 收到測試應用程式資訊</target>
         <note />
       </trans-unit>
       <trans-unit id="DidNotReceiveRunSummaryInfo">
         <source>MSBuild extension failed to receive test run summary from '{0}'</source>
-        <target state="new">MSBuild extension failed to receive test run summary from '{0}'</target>
+        <target state="translated">MSBuild 擴充套件未能從 '{0}' 收到測試執行摘要</target>
         <note />
       </trans-unit>
       <trans-unit id="ExpectedValue">
