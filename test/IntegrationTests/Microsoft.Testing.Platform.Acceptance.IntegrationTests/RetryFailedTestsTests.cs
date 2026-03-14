@@ -205,6 +205,39 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WithPreexistingFilterUid_ReplacesFilterOnRetry(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        // Use --filter-uid to select tests 1 and 2. Test 1 will fail on first attempt, pass on second.
+        // Test 3 is not in the filter, so it should never run.
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --filter-uid 1 --filter-uid 2 --report-trx --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+        testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
+
+        // Verify that the retry attempt only ran the failed test (UID 1).
+        // The TRX in the top-level results directory (not under Retries/) is from the last attempt.
+        string[] topLevelTrxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.TopDirectoryOnly);
+        Assert.HasCount(1, topLevelTrxFiles);
+
+        string trxContent = File.ReadAllText(topLevelTrxFiles[0]);
+        Assert.Contains("TestMethod1", trxContent);
+        Assert.DoesNotContain("TestMethod2", trxContent);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
@@ -252,6 +285,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.MSBuild;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -306,45 +340,59 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         string resultDir = Environment.GetEnvironmentVariable("RESULTDIR")!;
         bool crash = Environment.GetEnvironmentVariable("CRASH") == "1";
 
+        var uidFilter = (context.Request as TestExecutionRequest)?.Filter as TestNodeUidListFilter;
+
         var testMethod1Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod1", 0, Array.Empty<string>(), string.Empty);
         var testMethod2Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod2", 0, Array.Empty<string>(), string.Empty);
         var testMethod3Identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "TestMethod3", 0, Array.Empty<string>(), string.Empty);
 
-        if (TestMethod1(fail, resultDir, crash))
+        if (IsIncluded(uidFilter, "1"))
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod1Identifier) }));
-        }
-        else
-        {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty(), testMethod1Identifier) }));
-        }
-
-        if (TestMethod2(fail, resultDir))
-        {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod2Identifier) }));
-        }
-        else
-        {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty(), testMethod2Identifier) }));
+            if (TestMethod1(fail, resultDir, crash))
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod1Identifier) }));
+            }
+            else
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new FailedTestNodeStateProperty(), testMethod1Identifier) }));
+            }
         }
 
-        if (TestMethod3(fail, resultDir))
+        if (IsIncluded(uidFilter, "2"))
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod3Identifier) }));
+            if (TestMethod2(fail, resultDir))
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod2Identifier) }));
+            }
+            else
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "2", DisplayName = "TestMethod2", Properties = new(new FailedTestNodeStateProperty(), testMethod2Identifier) }));
+            }
         }
-        else
+
+        if (IsIncluded(uidFilter, "3"))
         {
-            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-                new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty(), testMethod3Identifier) }));
+            if (TestMethod3(fail, resultDir))
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod3Identifier) }));
+            }
+            else
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "3", DisplayName = "TestMethod3", Properties = new(new FailedTestNodeStateProperty(), testMethod3Identifier) }));
+            }
         }
 
         context.Complete();
     }
+
+    private static bool IsIncluded(TestNodeUidListFilter? filter, string uid)
+        => filter is null || filter.TestNodeUids.Any(n => n.Value == uid);
 
     private bool TestMethod1(bool fail, string resultDir, bool crash)
     {
