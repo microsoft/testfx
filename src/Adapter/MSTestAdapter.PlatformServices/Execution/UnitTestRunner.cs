@@ -332,7 +332,7 @@ internal sealed class UnitTestRunner : MarshalByRefObject
 
         if (shouldIgnoreClass || shouldIgnoreMethod)
         {
-            string? ignoreMessage = StringEx.IsNullOrEmpty(ignoreMessageOnClass) ? ignoreMessageOnMethod : ignoreMessageOnClass;
+            string? ignoreMessage = shouldIgnoreMethod && StringEx.IsNullOrEmpty(ignoreMessageOnClass) ? ignoreMessageOnMethod : ignoreMessageOnClass;
             notRunnableResult =
                 [TestResult.CreateIgnoredResult(ignoreMessage)];
             return false;
