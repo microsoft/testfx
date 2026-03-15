@@ -323,12 +323,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)), cancellationToken).ConfigureAwait(false);
-#if NETCOREAPP
                 fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
-#else
-                fileSystem.CopyFile(file, finalFileLocation, overwrite: true);
-                fileSystem.DeleteFile(file);
-#endif
             }
         }
 

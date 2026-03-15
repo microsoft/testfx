@@ -21,9 +21,5 @@ internal interface IFileSystem
 
     Task<string> ReadAllTextAsync(string path);
 
-    void CopyFile(string sourceFileName, string destFileName, bool overwrite = false);
-
-    void DeleteFile(string path);
-
     string[] GetFiles(string path, string searchPattern, SearchOption searchOption);
 }
