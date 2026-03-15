@@ -158,7 +158,7 @@ internal sealed class TestMethodRunner
         // In case of data driven, set parent info in results.
         if (isDataDriven)
         {
-            results = UpdateResultsWithParentInfo(results);
+            UpdateResultsWithParentInfo(results);
         }
 
         // Set a result in case no result is present.
@@ -205,29 +205,12 @@ internal sealed class TestMethodRunner
                 continue;
             }
 
-            IEnumerable<object?[]>? dataSource;
-
-            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
-            // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
-            dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
-
-            if (!dataSource.Any())
+            // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.TryUnfoldITestDataSource.
+            // Any change made here should be reflected in AssemblyEnumerator.TryUnfoldITestDataSource as well.
+            bool dataSourceHasData = false;
+            foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
             {
-                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-                {
-                    throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
-                }
-
-                var inconclusiveResult = new TestResult
-                {
-                    Outcome = UnitTestOutcome.Inconclusive,
-                };
-                results.Add(inconclusiveResult);
-                continue;
-            }
-
-            foreach (object?[] data in dataSource)
-            {
+                dataSourceHasData = true;
                 try
                 {
                     TestResult[] testResults = await ExecuteTestWithDataSourceAsync(testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
@@ -239,6 +222,20 @@ internal sealed class TestMethodRunner
                     _testMethodInfo.SetArguments(null);
                 }
             }
+
+            if (!dataSourceHasData)
+            {
+                if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                {
+                    throw testDataSource.GetExceptionForEmptyDataSource(_testMethodInfo.MethodInfo);
+                }
+
+                var inconclusiveResult = new TestResult
+                {
+                    Outcome = UnitTestOutcome.Inconclusive,
+                };
+                results.Add(inconclusiveResult);
+            }
         }
 
         return hasTestDataSource;
@@ -246,8 +243,7 @@ internal sealed class TestMethodRunner
 
     private async Task ExecuteTestFromDataSourceAttributeAsync(List<TestResult> results)
     {
-        Stopwatch watch = new();
-        watch.Start();
+        var watch = Stopwatch.StartNew();
 
         try
         {
@@ -440,39 +436,24 @@ internal sealed class TestMethodRunner
 
         // Get aggregate outcome.
         UnitTestOutcome aggregateOutcome = results[0].Outcome;
-        foreach (TestResult result in results)
+        for (int i = 1; i < results.Count; i++)
         {
-            aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(result.Outcome);
+            aggregateOutcome = aggregateOutcome.GetMoreImportantOutcome(results[i].Outcome);
         }
 
         return aggregateOutcome;
     }
 
     /// <summary>
-    /// Updates given results with parent info if results are greater than 1.
-    /// Add parent results as first result in updated result.
+    /// Updates each given result with new execution and parent execution identifiers.
     /// </summary>
     /// <param name="results">Results.</param>
-    /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<TestResult> UpdateResultsWithParentInfo(List<TestResult> results)
+    private static void UpdateResultsWithParentInfo(List<TestResult> results)
     {
-        // Return results in case there are no results.
-        if (results.Count == 0)
-        {
-            return results;
-        }
-
-        // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        var updatedResults = new List<TestResult>();
-
         foreach (TestResult result in results)
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = Guid.NewGuid();
-
-            updatedResults.Add(result);
         }
-
-        return updatedResults;
     }
 }
