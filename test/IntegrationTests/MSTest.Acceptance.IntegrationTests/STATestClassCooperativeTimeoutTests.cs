@@ -7,14 +7,14 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class STATestClassTests : AcceptanceTestBase<STATestClassTests.TestAssetFixture>
+public sealed class STATestClassCooperativeTimeoutTests : AcceptanceTestBase<STATestClassCooperativeTimeoutTests.TestAssetFixture>
 {
-    private const string AssetName = "STATestClass";
+    private const string AssetName = "CooperativeTimeoutSTATestClass";
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task STATestClass_OnWindows_OnLifeCycleTestClass_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClass_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
@@ -36,7 +36,7 @@ public sealed class STATestClassTests : AcceptanceTestBase<STATestClassTests.Tes
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
@@ -65,7 +65,7 @@ public sealed class STATestClassTests : AcceptanceTestBase<STATestClassTests.Tes
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", AssetName)
-                .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
+                .PatchCodeWithReplace("$TimeoutAttribute$", ", Timeout(5000, CooperativeCancellation = true)")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
