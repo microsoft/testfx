@@ -37,5 +37,9 @@ internal static class HandshakeMessagePropertyNames
 
 internal static class ProtocolConstants
 {
-    internal const string Version = "1.0.0";
+    // The change between 1.0.0 and 1.0.1 is that TerminalOutputDevice is no longer plugged in.
+    // That's not really a protocol change, but we use the version to signify to SDK that it can avoid output redirection.
+    // So, when SDK declares itself as supporting 1.0.1, and MTP is also using 1.0.1, and we negotiate to that version.
+    // Then SDK can assume that MTP output doesn't interfere with SDK output, and we can safely let live output to work.
+    internal const string SupportedVersions = "1.0.0;1.0.1";
 }

@@ -20,18 +20,20 @@ internal sealed class PlatformOutputDeviceManager
         _platformOutputDeviceFactory = platformOutputDeviceFactory;
     }
 
-    internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
+    internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice, bool isPipeProtocol)
     {
         // TODO: SetPlatformOutputDevice isn't public yet.
         // Before exposing it, do we want to pass the "useServerModeOutputDevice" info to it?
-        IPlatformOutputDevice nonServerOutputDevice = _platformOutputDeviceFactory is null
-            ? GetDefaultTerminalOutputDevice(serviceProvider)
+        IPlatformOutputDevice? nonServerOutputDevice = _platformOutputDeviceFactory is null
+            ? GetDefaultTerminalOutputDevice(serviceProvider, isPipeProtocol)
             : _platformOutputDeviceFactory(serviceProvider);
 
         // If the externally provided output device is not enabled, we opt-in the default terminal output device.
-        if (_platformOutputDeviceFactory is not null && !await nonServerOutputDevice.IsEnabledAsync().ConfigureAwait(false))
+        if (_platformOutputDeviceFactory is not null
+            && nonServerOutputDevice is not null &&
+            !await nonServerOutputDevice.IsEnabledAsync().ConfigureAwait(false))
         {
-            nonServerOutputDevice = GetDefaultTerminalOutputDevice(serviceProvider);
+            nonServerOutputDevice = GetDefaultTerminalOutputDevice(serviceProvider, isPipeProtocol);
         }
 
         return new ProxyOutputDevice(
@@ -43,8 +45,13 @@ internal sealed class PlatformOutputDeviceManager
                 : null);
     }
 
-    public static IPlatformOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)
+    private static IPlatformOutputDevice? GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider, bool isPipeProtocol)
     {
+        if (isPipeProtocol)
+        {
+            return null;
+        }
+
         if (OperatingSystem.IsBrowser())
         {
 #if NET7_0_OR_GREATER
