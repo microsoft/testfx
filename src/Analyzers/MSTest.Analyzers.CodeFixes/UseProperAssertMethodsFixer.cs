@@ -294,6 +294,9 @@ public sealed class UseProperAssertMethodsFixer : CodeFixProvider
         return editor.GetChangedDocument();
     }
 
+    // FindNode may return an ArgumentSyntax when the location span coincides with
+    // the span of an argument in the inner invocation (e.g. Contains(item, comparer)).
+    // We handle this by extracting the expression from the ArgumentSyntax.
     private static bool TryGetExpressionFromNode(SyntaxNode root, Location location, [NotNullWhen(true)] out ExpressionSyntax? expression)
     {
         SyntaxNode? node = root.FindNode(location.SourceSpan);

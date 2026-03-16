@@ -1140,6 +1140,9 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 out SyntaxNode? nodeToBeReplacedNE2,
                 out _);
 
+            // We only handle IsEmpty (i.e. AreNotEqual(0, count) → IsNotEmpty).
+            // HasCount is intentionally not handled: there's no semantic equivalent for
+            // AreNotEqual(N, count) where N != 0.
             if (notEqualCountStatus == CountCheckStatus.IsEmpty)
             {
                 if (nodeToBeReplacedNE1 is null || replacementNE1 is null || nodeToBeReplacedNE2 is null)
@@ -1379,7 +1382,12 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             return CountCheckStatus.IsEmpty;
         }
 
-        // Check for enumerable.Any() (no predicate) - direct invocation
+        // Check for enumerable.Any() (no predicate) - direct invocation.
+        // NOTE: We return HasCount here because the caller (AnalyzeIsTrueOrIsFalseInvocation)
+        // maps HasCount → IsNotEmpty (for IsTrue) and HasCount → IsEmpty (for IsFalse),
+        // which is the correct behavior for Any(). This method is NOT called from the
+        // AreEqual/AreNotEqual path (which uses the two-argument overload), so the HasCount
+        // value won't be misinterpreted as suggesting Assert.HasCount for Any().
         if (TryGetLinqAnyNoPredicate(operation, enumerableTypeSymbol, out SyntaxNode? linqAnyExpr))
         {
             collectionExpression = linqAnyExpr;
