@@ -19,8 +19,8 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
             CSharpSourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.csproj ", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-        compilationResult = await DotnetCli.RunAsync(
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false,
@@ -133,7 +133,7 @@ module MicrosoftTestingPlatformEntryPoint =
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
-        await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
         SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();

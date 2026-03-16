@@ -269,34 +269,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
     {
         // Otherwise, unfold the data source and verify it can be serialized.
-        IEnumerable<object?[]>? data;
 
-        // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
-        // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
-        data = dataSource.GetData(methodInfo);
+        // This code is to discover tests. To run the tests code is in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync.
+        // Any change made here should be reflected in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync as well.
+        IEnumerable<object?[]> dataEnumerable = dataSource.GetData(methodInfo);
         string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
-        if (!data.Any())
-        {
-            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-            {
-                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
-            }
-
-            UnitTestElement discoveredTest = test.Clone();
-            // Make the test not data driven, because it had no data.
-            discoveredTest.TestMethod.DataType = DynamicDataType.None;
-            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
-            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
-            tests.Add(discoveredTest);
-
-            return true;
-        }
-
         var discoveredTests = new List<UnitTestElement>();
+        bool dataSourceHasData = false;
 
-        foreach (object?[] dataOrTestDataRow in data)
+        foreach (object?[] dataOrTestDataRow in dataEnumerable)
         {
+            dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
             if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
@@ -363,6 +347,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             discoveredTests.Add(discoveredTest);
             globalTestCaseIndex++;
+        }
+
+        if (!dataSourceHasData)
+        {
+            if (!MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            {
+                throw dataSource.GetExceptionForEmptyDataSource(methodInfo);
+            }
+
+            UnitTestElement discoveredTest = test.Clone();
+            // Make the test not data driven, because it had no data.
+            discoveredTest.TestMethod.DataType = DynamicDataType.None;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
+            discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
+            tests.Add(discoveredTest);
+
+            return true;
         }
 
         tests.AddRange(discoveredTests);
