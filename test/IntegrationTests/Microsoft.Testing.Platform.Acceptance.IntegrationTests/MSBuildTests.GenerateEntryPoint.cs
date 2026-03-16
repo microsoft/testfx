@@ -136,11 +136,11 @@ module MicrosoftTestingPlatformEntryPoint =
         await DotnetCli.RunAsync($"restore -r {RID} {testAsset.TargetAssetPath}{Path.DirectorySeparatorChar}MSBuildTests.{languageFileExtension}proj", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
         SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
-        SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();
+        SL.Target[] generateTestingPlatformEntryPointTargets = [.. binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint")];
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target");
-        SL.Task[] testingPlatformEntryPointTasks = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask").ToArray();
+        SL.Task[] testingPlatformEntryPointTasks = [.. generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask")];
         Assert.HasCount(1, testingPlatformEntryPointTasks, "Expected exactly one TestingPlatformEntryPointTask task");
-        SL.Message[] generatedSourceMessages = testingPlatformEntryPointTasks[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Entrypoint source:")).ToArray();
+        SL.Message[] generatedSourceMessages = [.. testingPlatformEntryPointTasks[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Entrypoint source:"))];
         Assert.HasCount(1, generatedSourceMessages, "Expected exactly one message containing 'Entrypoint source:'");
         Assert.AreEqual(expectedEntryPoint.ReplaceLineEndings(), generatedSourceMessages[0].Text.ReplaceLineEndings());
 

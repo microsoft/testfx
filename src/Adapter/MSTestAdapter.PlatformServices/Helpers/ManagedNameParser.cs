@@ -122,7 +122,7 @@ internal static class ManagedNameParser
                 case ')':
                     if (types.Count != 0)
                     {
-                        parameterTypes = types.ToArray();
+                        parameterTypes = [.. types];
                     }
 
                     return i + 1; // consume right parens
