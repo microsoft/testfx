@@ -504,7 +504,7 @@ public sealed class CollectionAssert
         }
 
         // If both collections are empty, they are equivalent.
-        if (expectedCollectionCount == 0)
+        if (!expected.Any())
         {
             return;
         }
@@ -661,15 +661,13 @@ public sealed class CollectionAssert
         DebugEx.Assert(notExpected is not null, "expected is not null here");
 
         // Check whether the element counts are different.
-        int notExpectedCount = notExpected.Count();
-        int actualCount = actual.Count();
-        if (notExpectedCount != actualCount)
+        if (notExpected.Count() != actual.Count())
         {
             return;
         }
 
         // If both collections are empty, they are equivalent.
-        if (notExpectedCount == 0)
+        if (!notExpected.Any())
         {
             string userMessage = Assert.BuildUserMessage(message);
             string finalMessage = string.Format(
@@ -745,8 +743,9 @@ public sealed class CollectionAssert
         int i = 0;
         foreach (object? element in collection)
         {
-            if (element?.GetType() is { } elementType
-                && !expectedType.IsAssignableFrom(elementType))
+            if (expectedType.GetTypeInfo() is { } expectedTypeInfo
+                && element?.GetType().GetTypeInfo() is { } elementTypeInfo
+                && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
                 string userMessage = Assert.BuildUserMessage(message);
                 string finalMessage = string.Format(
