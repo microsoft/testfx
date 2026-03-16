@@ -7,14 +7,14 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.TestAssetFixture>
+public sealed class STATestMethodTimeoutTests : AcceptanceTestBase<STATestMethodTimeoutTests.TestAssetFixture>
 {
-    private const string AssetName = "STATestMethodProject";
+    private const string AssetName = "TimeoutSTATestMethodProject";
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task STATestMethod_OnWindows_OnLifeCycleTestClass_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    public async Task STATestMethod_OnWindows_OnLifeCycleTestClass_WithTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
@@ -36,7 +36,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task STATestMethod_OnWindows_OnTestClassWithMultipleTests_MethodsAreOnExpectedApartmentState(string currentTfm)
+    public async Task STATestMethod_OnWindows_OnTestClassWithMultipleTests_WithTimeout_MethodsAreOnExpectedApartmentState(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
@@ -68,7 +68,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", AssetName)
-                .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
+                .PatchCodeWithReplace("$TimeoutAttribute$", ", Timeout(5000)")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
