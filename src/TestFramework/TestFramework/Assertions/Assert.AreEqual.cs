@@ -48,6 +48,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
                 ThrowAssertAreEqualFailed(_expected, _actual, _builder.ToString());
             }
@@ -115,6 +116,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
                 ThrowAssertAreNotEqualFailed(_notExpected, _actual, _builder.ToString());
             }
@@ -221,6 +223,7 @@ public sealed partial class Assert
         {
             if (_failAction is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.AreEqual");
                 _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "expected", expectedExpression, "actual", actualExpression) + " ");
                 _failAction.Invoke(_builder!.ToString());
             }
@@ -327,6 +330,7 @@ public sealed partial class Assert
         {
             if (_failAction is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.AreNotEqual");
                 _builder!.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionTwoParametersMessage, "notExpected", notExpectedExpression, "actual", actualExpression) + " ");
                 _failAction.Invoke(_builder!.ToString());
             }

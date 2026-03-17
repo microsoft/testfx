@@ -36,6 +36,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNull");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNullFailed(_builder.ToString());
             }
@@ -90,6 +91,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNotNullFailed(_builder.ToString());
             }

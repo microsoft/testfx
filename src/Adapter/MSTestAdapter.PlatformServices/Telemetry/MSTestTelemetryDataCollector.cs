@@ -34,6 +34,20 @@ internal sealed class MSTestTelemetryDataCollector
         set => Volatile.Write(ref s_current, value);
     }
 
+    internal static MSTestTelemetryDataCollector EnsureInitialized()
+    {
+        MSTestTelemetryDataCollector? collector = Current;
+        if (collector is not null)
+        {
+            return collector;
+        }
+
+        collector = new MSTestTelemetryDataCollector();
+        MSTestTelemetryDataCollector? existingCollector = Interlocked.CompareExchange(ref s_current, collector, null);
+
+        return existingCollector ?? collector;
+    }
+
     /// <summary>
     /// Gets a value indicating whether any data has been collected.
     /// </summary>
@@ -250,6 +264,7 @@ internal sealed class MSTestTelemetryDataCollector
             MSTestTelemetryDataCollector? collector = Current;
             if (collector is not { HasData: true } || telemetrySender is null)
             {
+                TelemetryCollector.DrainAssertionCallCounts();
                 return;
             }
 

@@ -47,6 +47,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertionName));
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
             }
@@ -115,6 +116,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
                 ThrowAssertIsNotEmptyFailed(_builder.ToString());
             }

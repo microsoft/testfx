@@ -54,7 +54,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         // Initialize telemetry collection if not already set (e.g. first call in the session)
         if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {
-            MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+            _ = MSTestTelemetryDataCollector.EnsureInitialized();
         }
 
         try
