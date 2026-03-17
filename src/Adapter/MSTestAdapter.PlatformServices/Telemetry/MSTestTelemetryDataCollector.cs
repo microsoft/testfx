@@ -40,6 +40,24 @@ internal sealed class MSTestTelemetryDataCollector
     internal bool HasData { get; private set; }
 
     /// <summary>
+    /// Checks whether telemetry collection is opted out via environment variables.
+    /// Mirrors the same checks as Microsoft.Testing.Platform's TelemetryManager.
+    /// </summary>
+    /// <returns><c>true</c> if telemetry is opted out; <c>false</c> otherwise.</returns>
+    internal static bool IsTelemetryOptedOut()
+    {
+        string? telemetryOptOut = Environment.GetEnvironmentVariable("TESTINGPLATFORM_TELEMETRY_OPTOUT");
+        if (telemetryOptOut is "1" or "true")
+        {
+            return true;
+        }
+
+        string? cliTelemetryOptOut = Environment.GetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT");
+
+        return cliTelemetryOptOut is "1" or "true";
+    }
+
+    /// <summary>
     /// Gets or sets the configuration source used for this session.
     /// </summary>
     internal string? ConfigurationSource { get; set; }

@@ -52,7 +52,10 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         Ensure.NotNull(discoverySink);
 
         // Initialize telemetry collection if not already set (e.g. first call in the session)
-        MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+        }
 
         try
         {

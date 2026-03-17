@@ -108,7 +108,10 @@ internal sealed class MSTestExecutor : ITestExecutor
         Ensure.NotNullOrEmpty(tests);
 
         // Initialize telemetry collection if not already set
-        MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+        }
 
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
@@ -136,7 +139,10 @@ internal sealed class MSTestExecutor : ITestExecutor
         Ensure.NotNullOrEmpty(sources);
 
         // Initialize telemetry collection if not already set
-        MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
+        {
+            MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+        }
 
         TestSourceHandler testSourceHandler = new();
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
