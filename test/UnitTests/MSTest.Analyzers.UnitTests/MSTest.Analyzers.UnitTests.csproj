@@ -12,6 +12,11 @@
     <!-- This will exclude compile and runtime assets from NuGet so that they flow via ProjectReference -->
     <UseMSTestFromSource>true</UseMSTestFromSource>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+
+    <!-- In real-world projects, this is not needed. -->
+    <!-- It's only needed here because we are using MSTest from source via ProjectReference, and so package props/targets are not imported. -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
