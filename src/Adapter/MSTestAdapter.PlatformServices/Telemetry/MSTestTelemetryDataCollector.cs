@@ -210,12 +210,12 @@ internal sealed class MSTestTelemetryDataCollector
     {
 #if NET
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        return Convert.ToHexString(hash);
 #else
         using SHA256 sha256 = SHA256.Create();
         byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(value));
+        return BitConverter.ToString(hash).Replace("-", string.Empty);
 #endif
-
-        return Convert.ToHexString(hash);
     }
 
     /// <summary>
