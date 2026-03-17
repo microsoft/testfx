@@ -965,11 +965,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">예기치 않은 원격 분석 호출로 인해 원격 분석을 사용할 수 없습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">바이트 변환 중 예기치 않은 예외 발생</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>

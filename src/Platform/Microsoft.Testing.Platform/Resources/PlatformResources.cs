@@ -34,8 +34,6 @@ internal static partial class PlatformResources
 
     internal static string @UnreachableLocationErrorMessage => GetResourceString("UnreachableLocationErrorMessage");
 
-    internal static string @UnexpectedExceptionDuringByteConversionErrorMessage => GetResourceString("UnexpectedExceptionDuringByteConversionErrorMessage");
-
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
 #if IS_MTP_UNIT_TESTS

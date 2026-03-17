@@ -186,7 +186,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"build \"{AssetFixture.TargetAssetPath}\" -t:Test -p:TestingPlatformCommandLineArguments=\"--retry-failed-tests 1 --results-directory %22{resultDirectory}%22\"",
+            $"build \"{AssetFixture.TargetAssetPath}\" -c Release -t:DispatchToInnerBuildsWithMTPTestTarget -p:TestingPlatformCommandLineArguments=\"--retry-failed-tests 1 --results-directory %22{resultDirectory}%22\"",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 

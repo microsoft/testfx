@@ -965,11 +965,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">未預期的遙測呼叫，遙測已停用。</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">位元組轉換期間發生未預期的例外狀況</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>

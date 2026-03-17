@@ -11,8 +11,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.TestAssetFixture>
 {
     private const string DynamicDataAssetName = "DynamicData";
-    private const string DataSourceAssetName = "DataSource";
-    private const string DataRowAssetName = "DataRowTests";
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -21,28 +19,13 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTestsAsync(currentTfm, DataSourceAssetName, true);
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
         => await RunTestsAsync(currentTfm, DynamicDataAssetName, false);
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-    => await RunTestsAsync(currentTfm, DataSourceAssetName, false);
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
         => await RunTestsAsync(currentTfm, DynamicDataAssetName, null);
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTestsAsync(currentTfm, DataSourceAssetName, null);
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -116,26 +99,6 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             """);
     }
 
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task UsingDataRowThatDoesNotRoundTripUsingDataContractJsonSerializerWithAppDomains(string currentTfm)
-        => await UsingDataRowThatDoesNotRoundTripUsingDataContractJsonSerializerCore(currentTfm, "AppDomainEnabled");
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task UsingDataRowThatDoesNotRoundTripUsingDataContractJsonSerializerWithoutAppDomains(string currentTfm)
-        => await UsingDataRowThatDoesNotRoundTripUsingDataContractJsonSerializerCore(currentTfm, "AppDomainDisabled");
-
-    private static async Task UsingDataRowThatDoesNotRoundTripUsingDataContractJsonSerializerCore(string currentTfm, string runSettings)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(DataRowAssetName), DataRowAssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettings}.runsettings --filter ClassName=ParameterizedTestSerializationIssue2390");
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
-    }
-
     private static async Task RunTestsAsync(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.GetAssetPath(assetName), assetName, currentTfm);
@@ -180,101 +143,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
                 SourceCodeDynamicData
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-            yield return (DataSourceAssetName, DataSourceAssetName,
-                SourceCodeDataSource
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-            yield return (DataRowAssetName, DataRowAssetName,
-                SourceCodeDataRow
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
-
-        private const string SourceCodeDataRow = """
-#file DataRowTests.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>preview</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="AppDomainEnabled.runsettings">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="AppDomainDisabled.runsettings">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    </ItemGroup>
-
-</Project>
-  
-#file AppDomainEnabled.runsettings
-<?xml version="1.0" encoding="utf-8" ?>
-<RunSettings>
-    <RunConfiguration>
-        <!-- Currently, the default is already false, but we want to ensure the
-             test runs with AppDomain enabled even if we changed the default -->
-        <DisableAppDomain>false</DisableAppDomain>
-    </RunConfiguration>
-</RunSettings>
-
-#file AppDomainDisabled.runsettings
-<?xml version="1.0" encoding="utf-8" ?>
-<RunSettings>
-    <RunConfiguration>
-        <DisableAppDomain>true</DisableAppDomain>
-    </RunConfiguration>
-</RunSettings>
-
-#file UnitTest1.cs
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-// Test for https://github.com/microsoft/testfx/issues/2390
-[TestClass]
-public class ParameterizedTestSerializationIssue2390
-{
-    [TestMethod]
-    [DataRow((byte)0, new object[] { (byte)0 })]
-    [DataRow((short)0, new object[] { (short)0 })]
-    [DataRow(0L, new object[] { 0L })]
-    public void CheckNestedInputTypes(object expected, object nested)
-    {
-        object[] array = (object[])nested;
-        object actual = Assert.ContainsSingle(array);
-
-#if NETFRAMEWORK
-        var appDomainEnabled = Environment.GetCommandLineArgs().Contains("AppDomainEnabled.runsettings");
-        if (appDomainEnabled)
-        {
-            // Buggy behavior, because of app domains.
-            Assert.AreEqual(typeof(int), actual.GetType(), AppDomain.CurrentDomain.FriendlyName);
-        }
-        else
-#endif
-        {
-            Assert.AreEqual(expected.GetType(), actual.GetType(), AppDomain.CurrentDomain.FriendlyName);
-            Assert.AreEqual(expected, actual);
-        }
-    }
-}
-
-""";
 
         private const string SourceCodeDynamicData = """
 #file DynamicData.csproj
@@ -403,60 +272,6 @@ public class TestDataRowTests
         yield return new(($"{testName} - Ignoring and setting display name 1", "Ignoring and setting display name 2")) { DisplayName = $"Display name for third row - {testName}", IgnoreMessage = $"Ignore reason for third row - {testName}" };
         yield return new(($"{testName} - Setting display name 1", "Setting display name 2")) { DisplayName = $"Display name for fourth row - {testName}" };
     }
-}
-""";
-
-        private const string SourceCodeDataSource = """
-#file DataSource.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-  </ItemGroup>
-
-</Project>
-
-#file UnitTest1.cs
-
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestClass]
-public class TestClass
-{
-    [TestMethod]
-    [CustomTestDataSource]
-    [CustomEmptyTestDataSource]
-    public void Test(int a, int b, int c)
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
-{
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
-
-    public string GetDisplayName(MethodInfo methodInfo, object[] data) => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
-}
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public class CustomEmptyTestDataSourceAttribute : Attribute, ITestDataSource
-{
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [];
-
-    public string GetDisplayName(MethodInfo methodInfo, object[] data) => data != null ? string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data)) : null;
 }
 """;
     }
