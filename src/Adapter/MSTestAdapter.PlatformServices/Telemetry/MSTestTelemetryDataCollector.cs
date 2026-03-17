@@ -20,7 +20,9 @@ internal sealed class MSTestTelemetryDataCollector
     private readonly HashSet<string> _customTestMethodTypes = [];
     private readonly HashSet<string> _customTestClassTypes = [];
 
+#pragma warning disable IDE0032 // Use auto property - Volatile.Read/Write requires a ref to a field
     private static MSTestTelemetryDataCollector? s_current;
+#pragma warning restore IDE0032 // Use auto property
 
     /// <summary>
     /// Gets or sets the current telemetry data collector for the session.
