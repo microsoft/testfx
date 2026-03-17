@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -8,93 +8,42 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class ConfigurationSettingsTests : AcceptanceTestBase<ConfigurationSettingsTests.TestAssetFixture>
+public sealed class ConfigurationMSTestSettingsTests : AcceptanceTestBase<ConfigurationMSTestSettingsTests.TestAssetFixture>
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestConfigJson_AndRunSettingsWithoutMstest_OverrideRunConfigration(string tfm)
+    public async Task TestConfigJson_AndRunSettingsHasMstest_Throws(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPathWithMSTestRunSettings, TestAssetFixture.ProjectNameWithMSTestRunSettings, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-    }
-
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestConfigJson_WithoutRunSettings_BuildSuccess(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-
-        // Assert
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-    }
-
-    [TestMethod]
-    public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsTrue()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--config-file dummyconfigfile_map.json",
-            environmentVariables: new()
-            {
-                ["TestWithConfigFromCommandLine"] = "true",
-            },
-            cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
-    }
-
-    [TestMethod]
-    public async Task TestWithConfigFromCommandLineWithMapInconclusiveToFailedIsFalse()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--config-file dummyconfigfile_doNotMap.json",
-            environmentVariables: new()
-            {
-                ["TestWithConfigFromCommandLine"] = "true",
-            },
-            cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
-    }
-
-    [TestMethod]
-    public async Task TestWithConfigFromCommandLineWithNonExistingFile()
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--config-file dummyconfigfile_not_existing_file.json",
-            environmentVariables: new()
-            {
-                ["TestWithConfigFromCommandLine"] = "true",
-            },
-            cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertStandardErrorContains("FileNotFoundException");
-        testHostResult.AssertStandardErrorContains("dummyconfigfile_not_existing_file.json");
+        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
+        testHostResult.AssertStandardErrorContains("Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public const string ProjectName = "ConfigurationSettings";
+        public const string ProjectNameWithMSTestRunSettings = "ConfigurationMSTestSettings";
 
-        public string ProjectPath => GetAssetPath(ProjectName);
+        public string ProjectPathWithMSTestRunSettings => GetAssetPath(ProjectNameWithMSTestRunSettings);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (ProjectName, ProjectName,
+            yield return (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$ProjectName$", ProjectName)
+                .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestRunSettings)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$AppendSettings$", string.Empty));
+                .PatchCodeWithReplace("$AppendSettings$", MSTestSettings));
         }
+
+        private const string MSTestSettings = """
+<mstest>
+</mstest>
+""";
 
         private const string SourceCode = """
 #file $ProjectName$.csproj
@@ -233,6 +182,4 @@ public class UnitTest1
 }
 """;
     }
-
-    public TestContext TestContext { get; set; }
 }

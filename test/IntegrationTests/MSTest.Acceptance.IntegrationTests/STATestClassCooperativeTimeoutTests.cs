@@ -7,14 +7,14 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.TestAssetFixture>
+public sealed class STATestClassCooperativeTimeoutTests : AcceptanceTestBase<STATestClassCooperativeTimeoutTests.TestAssetFixture>
 {
-    private const string AssetName = "STATestMethodProject";
+    private const string AssetName = "CooperativeTimeoutSTATestClass";
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task STATestMethod_OnWindows_OnLifeCycleTestClass_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClass_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
@@ -36,25 +36,22 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task STATestMethod_OnWindows_OnTestClassWithMultipleTests_MethodsAreOnExpectedApartmentState(string currentTfm)
+    public async Task STATestClass_OnWindows_OnLifeCycleTestClassWithLastTestSkipped_WithCooperativeTimeout_FixturesAndMethodsAreOnExpectedApartmentState(string currentTfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=TestClassWithMultipleTests", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath} --filter className=LifeCycleTestClassWithLastTestSkipped", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyInitialize");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.Constructor");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.TestInitialize");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.TestMethod1");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.TestCleanup");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.Dispose");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.Constructor");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.TestInitialize");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.TestMethod2");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.TestCleanup");
-        testHostResult.AssertOutputContains("TestClassWithMultipleTests.Dispose");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Constructor");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestInitialize");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestMethod1");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.TestCleanup");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.Dispose");
+        testHostResult.AssertOutputContains("LifeCycleTestClassWithLastTestSkipped.ClassCleanup");
         testHostResult.AssertOutputContains("LifeCycleTestClass.AssemblyCleanup");
     }
 
@@ -68,7 +65,7 @@ public sealed class STATestMethodTests : AcceptanceTestBase<STATestMethodTests.T
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", AssetName)
-                .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
+                .PatchCodeWithReplace("$TimeoutAttribute$", ", Timeout(5000, CooperativeCancellation = true)")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
@@ -113,7 +110,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
+[STATestClass]
 public class LifeCycleTestClass : IDisposable
 {
     [AssemblyInitialize$TimeoutAttribute$]
@@ -140,14 +137,14 @@ public class LifeCycleTestClass : IDisposable
     public static void ClassInitialize(TestContext context)
     {
         Console.WriteLine("LifeCycleTestClass.ClassInitialize");
-        ThreadAssert.AssertApartmentStateIsMTA();
+        ThreadAssert.AssertApartmentStateIsSTA();
     }
 
     [ClassCleanup$TimeoutAttribute$]
     public static void ClassCleanup()
     {
         Console.WriteLine("LifeCycleTestClass.ClassCleanup");
-        ThreadAssert.AssertApartmentStateIsMTA();
+        ThreadAssert.AssertApartmentStateIsSTA();
     }
 
     [TestInitialize$TimeoutAttribute$]
@@ -164,7 +161,7 @@ public class LifeCycleTestClass : IDisposable
         ThreadAssert.AssertApartmentStateIsSTA();
     }
 
-    [STATestMethod$TimeoutAttribute$]
+    [TestMethod$TimeoutAttribute$]
     public void TestMethod1()
     {
         Console.WriteLine("LifeCycleTestClass.TestMethod1");
@@ -178,69 +175,80 @@ public class LifeCycleTestClass : IDisposable
     }
 }
 
-public class DerivedSTATestMethodAttribute : STATestMethodAttribute
+[STATestClass]
+public class LifeCycleTestClassWithLastTestSkipped : IDisposable
 {
-}
-
-[TestClass]
-public class TestClassWithMultipleTests : IDisposable
-{
-    private ApartmentState _ctorApartmentState;
-
-    public TestClassWithMultipleTests()
+    public LifeCycleTestClassWithLastTestSkipped()
     {
-        _ctorApartmentState = Thread.CurrentThread.GetApartmentState();
-        Console.WriteLine("TestClassWithMultipleTests.Constructor");
-        ThreadAssert.AssertApartmentStateIs(_ctorApartmentState);
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.Constructor");
+        ThreadAssert.AssertApartmentStateIsSTA();
+    }
+
+    [ClassInitialize$TimeoutAttribute$]
+    public static void ClassInitialize(TestContext context)
+    {
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.ClassInitialize");
+        ThreadAssert.AssertApartmentStateIsSTA();
+    }
+
+    [ClassCleanup$TimeoutAttribute$]
+    public static void ClassCleanup()
+    {
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.ClassCleanup");
+        ThreadAssert.AssertApartmentStateIsSTA();
     }
 
     [TestInitialize$TimeoutAttribute$]
     public void TestInitialize()
     {
-        Console.WriteLine("TestClassWithMultipleTests.TestInitialize");
-        ThreadAssert.AssertApartmentStateIs(_ctorApartmentState);
-    }
-
-    [STATestMethod$TimeoutAttribute$]
-    public void TestMethod1()
-    {
-        Console.WriteLine("TestClassWithMultipleTests.TestMethod1");
-        ThreadAssert.AssertApartmentStateIs(_ctorApartmentState);
-        Assert.AreEqual(ApartmentState.STA, _ctorApartmentState);
-    }
-
-    [TestMethod$TimeoutAttribute$]
-    public void TestMethod2()
-    {
-        Console.WriteLine("TestClassWithMultipleTests.TestMethod2");
-        ThreadAssert.AssertApartmentStateIs(_ctorApartmentState);
-        Assert.AreNotEqual(ApartmentState.STA, _ctorApartmentState);
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.TestInitialize");
+        ThreadAssert.AssertApartmentStateIsSTA();
     }
 
     [TestCleanup$TimeoutAttribute$]
     public void TestCleanup()
     {
-        Console.WriteLine("TestClassWithMultipleTests.TestCleanup");
-        ThreadAssert.AssertApartmentStateIs(_ctorApartmentState);
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.TestCleanup");
+        ThreadAssert.AssertApartmentStateIsSTA();
+    }
+
+    [TestMethod$TimeoutAttribute$]
+    public void TestMethod1()
+    {
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.TestMethod1");
+        ThreadAssert.AssertApartmentStateIsSTA();
+    }
+
+    [TestMethod]
+    [Ignore]
+    public void TestMethod2()
+    {
+        Assert.Fail("TestMethod2 should not be executed");
     }
 
     public void Dispose()
     {
-        Console.WriteLine("TestClassWithMultipleTests.Dispose");
-        ThreadAssert.AssertApartmentStateIs(_ctorApartmentState);
+        Console.WriteLine("LifeCycleTestClassWithLastTestSkipped.Dispose");
+        ThreadAssert.AssertApartmentStateIsSTA();
     }
+}
+
+public class DerivedSTATestClass : STATestClassAttribute
+{
 }
 
 public static class ThreadAssert
 {
-    public static void AssertApartmentStateIsMTA() => AssertApartmentStateIs(ApartmentState.MTA);
-
-    public static void AssertApartmentStateIsSTA() => AssertApartmentStateIs(ApartmentState.STA);
-
-    public static void AssertApartmentStateIs(ApartmentState apartmentState)
+    public static void AssertApartmentStateIsMTA()
     {
-        var currentApartmentState = Thread.CurrentThread.GetApartmentState();
-        Assert.AreEqual(apartmentState, currentApartmentState);
+        var apartmentState = Thread.CurrentThread.GetApartmentState();
+        Assert.AreEqual(ApartmentState.MTA, apartmentState);
+    }
+
+    public static void AssertApartmentStateIsSTA()
+    {
+        var apartmentState = Thread.CurrentThread.GetApartmentState();
+        Assert.AreEqual(ApartmentState.STA, apartmentState);
     }
 }
 """;

@@ -1,34 +1,23 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAssetFixture>
+public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.TestAssetFixture>
 {
-    [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_WhenMainIsNotSTA_NoRunsettingsProvided_ThreadIsNotSTA(string tfm)
-    {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertExitCodeIs(0);
-        testHostResult.AssertOutputContains("Passed!");
-    }
-
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
+    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_NoRunsettingsProvided_ThreadIsSTA(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
-        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--settings {runSettingsFilePath}",
             environmentVariables: new()
             {
                 ["MSTEST_THREAD_STATE_IS_STA"] = "1",
@@ -40,27 +29,29 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows)]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnNonWindows_ThreadIsNotSTAAndWarningIsEmitted(string tfm)
+    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_RunsettingsAsksForSTA_ThreadIsSTA(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
-            ["MSTEST_THREAD_STATE_IS_STA"] = "0",
+            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
         }, cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
-        testHostResult.AssertOutputContains("Runsettings entry '<ExecutionApartmentState>STA</ExecutionApartmentState>' is not supported on non-Windows OSes");
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForMTA_ThreadIsNotSTA(string tfm)
+    public async Task TestMethodThreading_MainIsSTAThread_OnWindows_RunsettingsAsksForMTA_ThreadIsMTA(string tfm)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
@@ -69,22 +60,21 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
-        testHostResult.AssertOutputDoesNotContain("Runsettings entry '<ExecutionApartmentState>STA</ExecutionApartmentState>' is not supported on non-Windows OSes");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public const string ProjectName = "TestThreading";
+        public const string ProjectName = "STATestThreading";
 
-        public string ProjectPath => GetAssetPath(ProjectName);
+        public string TargetAssetPath => GetAssetPath(ProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
             yield return (ProjectName, ProjectName,
-                SourceCode
+                (SourceCode + ProgramFileSourceCode)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
-                .PatchCodeWithReplace("$GenerateEntryPoint$", "true")
+                .PatchCodeWithReplace("$GenerateEntryPoint$", "false")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
@@ -197,6 +187,26 @@ public class UnitTest1
         {
             Assert.AreNotEqual(ApartmentState.STA, apartmentState);
         }
+    }
+}
+""";
+
+        private const string ProgramFileSourceCode = """
+#file Program.cs
+using System;
+using Microsoft.Testing.Platform.Builder;
+
+public static class Program
+{
+    // Async main doesn't respect [STAThread] attribute so do a version with `GetAwaiter().GetResult()`
+    // See https://github.com/dotnet/roslyn/issues/22112
+    [STAThread]
+    public static int Main(string[] args)
+    {
+        ITestApplicationBuilder builder = TestApplication.CreateBuilderAsync(args).GetAwaiter().GetResult();
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, args);
+        using ITestApplication app = builder.BuildAsync().GetAwaiter().GetResult();
+        return app.RunAsync().GetAwaiter().GetResult();
     }
 }
 """;
