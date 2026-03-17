@@ -147,14 +147,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._ExcludeIntegrationTests, 'false'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._ExcludeIntegrationTests, 'false'))
 
           # Upload code coverage to codecov.io
           - script: dotnet msbuild -restore
@@ -258,14 +258,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._ExcludeIntegrationTests, 'false'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Linux_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._ExcludeIntegrationTests, 'false'))
 
       - job: MacOS
         timeoutInMinutes: 90
@@ -327,11 +327,11 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._ExcludeIntegrationTests, 'false'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_MacOS_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._ExcludeIntegrationTests, 'false'))
