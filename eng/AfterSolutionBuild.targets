@@ -4,4 +4,33 @@
     <Exec Command="powershell -NoProfile -NoLogo -ExecutionPolicy Bypass $(RepositoryEngineeringDir)\verify-nupkgs.ps1 -configuration $(Configuration)" />
   </Target>
 
+  <!--
+    Override the Arcade SDK's PackageReleasePackages target (from BuildReleasePackages.targets) to split
+    packages into separate batches:
+    - MTP packages (Microsoft.Testing.*): use exact version dependencies for inter-package references (IVT safety)
+    - MSTest packages (MSTest.*): keep >= version dependencies on MTP to allow users to update independently
+    The UpdatePackageVersionTask only rewrites dependency versions for packages present in the same batch,
+    so MSTest packages' deps on MTP packages will remain as >= (since MTP is in a different batch).
+  -->
+  <Target Name="PackageReleasePackages" AfterTargets="Pack" Condition="'$(DotNetFinalVersionKind)' == ''">
+    <Message Text="Building release versions of NuGet packages (split batches for MTP vs MSTest)" Importance="high" />
+
+    <Error Text="PreReleaseVersionLabel must be non-empty when using NuGet Repack tool." Condition="'$(PreReleaseVersionLabel)' == ''" />
+
+    <ItemGroup>
+      <_MTPPackages Include="$(ArtifactsShippingPackagesDir)Microsoft.Testing.*.nupkg" />
+      <_MSTestPackages Include="$(ArtifactsShippingPackagesDir)*.nupkg" Exclude="@(_MTPPackages)" />
+    </ItemGroup>
+
+    <!-- MTP packages: force exact versions for inter-package references -->
+    <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_MTPPackages)" OutputDirectory="$(ArtifactsPackagesDir)Release" AllowPreReleaseDependencies="true" ExactVersions="true" Condition="'@(_MTPPackages)' != ''" />
+    <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_MTPPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" ExactVersions="true" Condition="'@(_MTPPackages)' != ''" />
+    <Microsoft.DotNet.Tools.UpdatePackageVersionTask Packages="@(_MTPPackages)" OutputDirectory="$(ArtifactsShippingPackagesDir)" ExactVersions="true" Condition="'@(_MTPPackages)' != ''" />
+
+    <!-- MSTest packages: version translation only, MTP deps stay as >= (not in this batch) -->
+    <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsPackagesDir)Release" AllowPreReleaseDependencies="true" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
+    <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
+    <Microsoft.DotNet.Tools.UpdatePackageVersionTask Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsShippingPackagesDir)" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
+  </Target>
+
 </Project>
