@@ -27,7 +27,8 @@
     <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_MTPPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" ExactVersions="true" Condition="'@(_MTPPackages)' != ''" />
     <Microsoft.DotNet.Tools.UpdatePackageVersionTask Packages="@(_MTPPackages)" OutputDirectory="$(ArtifactsShippingPackagesDir)" ExactVersions="true" Condition="'@(_MTPPackages)' != ''" />
 
-    <!-- MSTest packages: version translation only, MTP deps stay as >= (not in this batch) -->
+    <!-- MSTest packages: ExactVersions applies only to deps on other packages in this batch (MSTest-internal),
+         so MSTest deps on MTP packages remain as >= since MTP packages are in a separate batch above -->
     <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsPackagesDir)Release" AllowPreReleaseDependencies="true" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
     <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
     <Microsoft.DotNet.Tools.UpdatePackageVersionTask Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsShippingPackagesDir)" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
