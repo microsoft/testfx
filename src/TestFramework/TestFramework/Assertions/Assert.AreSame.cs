@@ -172,6 +172,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreSame<T>(T? expected, T? actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreSame");
+
         if (!IsAreSameFailing(expected, actual))
         {
             return;
@@ -238,6 +240,8 @@ public sealed partial class Assert
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.AreNotSame");
+
         if (IsAreNotSameFailing(notExpected, actual))
         {
             ThrowAssertAreNotSameFailed(BuildUserMessageForNotExpectedExpressionAndActualExpression(message, notExpectedExpression, actualExpression));

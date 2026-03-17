@@ -19,6 +19,7 @@ internal class TypeEnumerator
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly ReflectHelper _reflectHelper;
+    private readonly MSTestTelemetryDataCollector? _telemetryDataCollector;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
@@ -28,13 +29,15 @@ internal class TypeEnumerator
     /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
+    /// <param name="telemetryDataCollector"> Optional telemetry data collector for tracking API usage. </param>
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, MSTestTelemetryDataCollector? telemetryDataCollector = null)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
+        _telemetryDataCollector = telemetryDataCollector;
     }
 
     /// <summary>
@@ -47,6 +50,13 @@ internal class TypeEnumerator
         if (!_typeValidator.IsValidTestClass(_type, warnings))
         {
             return null;
+        }
+
+        // Track class-level attributes for telemetry
+        if (_telemetryDataCollector is not null)
+        {
+            Attribute[] classAttributes = _reflectHelper.GetCustomAttributesCached(_type);
+            _telemetryDataCollector.TrackDiscoveredClass(_type, classAttributes);
         }
 
         // If test class is valid, then get the tests
@@ -143,6 +153,7 @@ internal class TypeEnumerator
         };
 
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
+        _telemetryDataCollector?.TrackDiscoveredMethod(attributes);
         TestMethodAttribute? testMethodAttribute = null;
 
         // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault

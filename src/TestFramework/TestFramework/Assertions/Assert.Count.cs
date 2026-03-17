@@ -197,6 +197,8 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty<T>(IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
         if (collection.Any())
         {
             return;
@@ -217,6 +219,8 @@ public sealed partial class Assert
     /// </param>
     public static void IsNotEmpty(IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
         if (collection.Cast<object>().Any())
         {
             return;
@@ -320,6 +324,8 @@ public sealed partial class Assert
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message, string collectionExpression)
     {
+        TelemetryCollector.TrackAssertionCall(string.Concat("Assert.", assertionName));
+
         int actualCount = collection.Count();
         if (actualCount == expected)
         {

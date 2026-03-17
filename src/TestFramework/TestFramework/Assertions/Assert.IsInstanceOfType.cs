@@ -290,6 +290,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsInstanceOfType");
+
         if (IsInstanceOfTypeFailing(value, expectedType))
         {
             ThrowAssertIsInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
@@ -374,6 +376,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotInstanceOfType");
+
         if (IsNotInstanceOfTypeFailing(value, wrongType))
         {
             ThrowAssertIsNotInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));

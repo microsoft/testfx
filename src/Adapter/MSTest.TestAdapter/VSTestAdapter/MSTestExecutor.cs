@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
+    private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
 
     /// <summary>
     /// Token for canceling the test run.
@@ -35,10 +36,11 @@ internal sealed class MSTestExecutor : ITestExecutor
         _cancellationToken = CancellationToken.None;
     }
 
-    internal MSTestExecutor(CancellationToken cancellationToken)
+    internal MSTestExecutor(CancellationToken cancellationToken, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         TestExecutionManager = new TestExecutionManager();
         _cancellationToken = cancellationToken;
+        _telemetrySender = telemetrySender;
     }
 
     /// <summary>
@@ -105,12 +107,22 @@ internal sealed class MSTestExecutor : ITestExecutor
         Ensure.NotNull(frameworkHandle);
         Ensure.NotNullOrEmpty(tests);
 
+        // Initialize telemetry collection if not already set
+        MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
             return;
         }
 
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        try
+        {
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        finally
+        {
+            await SendTelemetryAsync().ConfigureAwait(false);
+        }
     }
 
     internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
@@ -123,6 +135,9 @@ internal sealed class MSTestExecutor : ITestExecutor
         Ensure.NotNull(frameworkHandle);
         Ensure.NotNullOrEmpty(sources);
 
+        // Initialize telemetry collection if not already set
+        MSTestTelemetryDataCollector.Current ??= new MSTestTelemetryDataCollector();
+
         TestSourceHandler testSourceHandler = new();
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
         {
@@ -130,7 +145,14 @@ internal sealed class MSTestExecutor : ITestExecutor
         }
 
         sources = testSourceHandler.GetTestSources(sources);
-        await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        try
+        {
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        finally
+        {
+            await SendTelemetryAsync().ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -138,6 +160,9 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// </summary>
     public void Cancel()
         => _testRunCancellationToken?.Cancel();
+
+    private async Task SendTelemetryAsync()
+        => await MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
 
     private async Task RunTestsFromRightContextAsync(IFrameworkHandle frameworkHandle, Func<TestRunCancellationToken, Task> runTestsAction)
     {

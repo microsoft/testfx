@@ -150,6 +150,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNull(object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNull");
+
         if (IsNullFailing(value))
         {
             ThrowAssertIsNullFailed(BuildUserMessageForValueExpression(message, valueExpression));
@@ -189,6 +191,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotNull([NotNull] object? value, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotNull");
+
         if (IsNotNullFailing(value))
         {
             ThrowAssertIsNotNullFailed(BuildUserMessageForValueExpression(message, valueExpression));

@@ -289,6 +289,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsExactInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsExactInstanceOfType");
+
         if (IsExactInstanceOfTypeFailing(value, expectedType))
         {
             ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
@@ -371,6 +373,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotExactInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotExactInstanceOfType");
+
         if (IsNotExactInstanceOfTypeFailing(value, wrongType))
         {
             ThrowAssertIsNotExactInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));

@@ -148,6 +148,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+
         if (IsTrueFailing(condition))
         {
             ThrowAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
@@ -186,6 +188,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+
         if (IsFalseFailing(condition))
         {
             ThrowAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
