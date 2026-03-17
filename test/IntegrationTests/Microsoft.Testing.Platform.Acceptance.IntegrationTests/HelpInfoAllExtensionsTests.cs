@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class HelpInfoAllExtensionsTests : AcceptanceTestBase<HelpInfoAllExtensionsTests.TestAssetFixture>
+public sealed class HelpInfoAllExtensionsTests : AcceptanceTestBase<HelpInfoAllExtensionsTests.TestAssetFixture>
 {
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]

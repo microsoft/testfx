@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class ParameterizedDataRowTests : AcceptanceTestBase<ParameterizedDataRowTests.TestAssetFixture>
+public sealed class ParameterizedDataRowTests : AcceptanceTestBase<ParameterizedDataRowTests.TestAssetFixture>
 {
     private const string DataRowAssetName = "DataRowTests";
 

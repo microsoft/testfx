@@ -6,7 +6,7 @@ using System.Text;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class LocalizationFailingTests : AcceptanceTestBase<LocalizationFailingTests.TestAssetFixture>
+public sealed class LocalizationFailingTests : AcceptanceTestBase<LocalizationFailingTests.TestAssetFixture>
 {
     private const string AssetName = "LocalizationTestsFailing";
 

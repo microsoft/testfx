@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class ExecutionRequestCompleteTests : AcceptanceTestBase<ExecutionRequestCompleteTests.TestAssetFixture>
+public sealed class ExecutionRequestCompleteTests : AcceptanceTestBase<ExecutionRequestCompleteTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests2";
 

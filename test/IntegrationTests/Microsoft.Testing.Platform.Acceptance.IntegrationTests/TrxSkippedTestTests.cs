@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class TrxSkippedTestTests : AcceptanceTestBase<TrxSkippedTestTests.TestAssetFixture>
+public sealed class TrxSkippedTestTests : AcceptanceTestBase<TrxSkippedTestTests.TestAssetFixture>
 {
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]

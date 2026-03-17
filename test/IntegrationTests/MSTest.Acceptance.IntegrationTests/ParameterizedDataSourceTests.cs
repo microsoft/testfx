@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class ParameterizedDataSourceTests : AcceptanceTestBase<ParameterizedDataSourceTests.TestAssetFixture>
+public sealed class ParameterizedDataSourceTests : AcceptanceTestBase<ParameterizedDataSourceTests.TestAssetFixture>
 {
     private const string DataSourceAssetName = "DataSource";
 

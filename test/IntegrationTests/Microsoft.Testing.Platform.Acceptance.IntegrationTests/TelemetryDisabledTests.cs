@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public class TelemetryDisabledTests : AcceptanceTestBase<TelemetryDisabledTests.TestAssetFixture>
+public sealed class TelemetryDisabledTests : AcceptanceTestBase<TelemetryDisabledTests.TestAssetFixture>
 {
     private const string AssetName = "TelemetryTest";
 
