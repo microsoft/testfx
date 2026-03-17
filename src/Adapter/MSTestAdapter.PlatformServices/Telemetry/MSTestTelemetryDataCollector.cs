@@ -251,37 +251,6 @@ internal sealed class MSTestTelemetryDataCollector
         }
     }
 
-    /// <summary>
-    /// Synchronous version of <see cref="SendTelemetryAndResetAsync"/> for call sites that cannot use async.
-    /// Resets the current collector regardless of whether telemetry was sent.
-    /// </summary>
-    /// <param name="telemetrySender">Optional delegate to send telemetry. If null, telemetry is silently discarded.</param>
-    internal static void SendTelemetryAndReset(Func<string, IDictionary<string, object>, Task>? telemetrySender)
-    {
-        try
-        {
-            MSTestTelemetryDataCollector? collector = Current;
-            if (collector is not { HasData: true } || telemetrySender is null)
-            {
-                return;
-            }
-
-            Dictionary<string, object> metrics = collector.BuildMetrics();
-            if (metrics.Count > 0)
-            {
-                // Use Task.Run to avoid capturing any SynchronizationContext that could cause deadlocks
-                Task.Run(() => telemetrySender("dotnet/testingplatform/mstest/sessionexit", metrics)).GetAwaiter().GetResult();
-            }
-        }
-        catch (Exception)
-        {
-            // Telemetry should never cause test failures
-        }
-        finally
-        {
-            Current = null;
-        }
-    }
 }
 
 [JsonSerializable(typeof(Dictionary<string, long>))]

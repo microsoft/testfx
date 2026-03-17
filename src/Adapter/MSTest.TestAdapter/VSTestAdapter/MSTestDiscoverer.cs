@@ -63,7 +63,8 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         }
         finally
         {
-            MSTestTelemetryDataCollector.SendTelemetryAndReset(_telemetrySender);
+            // Use Task.Run to avoid capturing any SynchronizationContext that could cause deadlocks
+            Task.Run(() => MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender)).GetAwaiter().GetResult();
         }
     }
 }
