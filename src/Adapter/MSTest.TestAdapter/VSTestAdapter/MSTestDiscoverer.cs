@@ -29,7 +29,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     {
     }
 
-    internal /* for testing purposes */ MSTestDiscoverer(ITestSourceHandler testSourceHandler, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
+    internal MSTestDiscoverer(ITestSourceHandler testSourceHandler, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         _testSourceHandler = testSourceHandler;
 #if !WINDOWS_UWP && !WIN_UI
@@ -74,9 +74,8 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         }
         finally
         {
-            // Use Task.Run to avoid capturing any SynchronizationContext that could cause deadlocks
 #if !WINDOWS_UWP && !WIN_UI
-            Task.Run(() => MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender)).GetAwaiter().GetResult();
+            MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender).GetAwaiter().GetResult();
 #endif
         }
     }
