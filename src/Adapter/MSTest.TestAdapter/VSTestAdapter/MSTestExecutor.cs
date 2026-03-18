@@ -20,7 +20,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestExecutor : ITestExecutor
 {
     private readonly CancellationToken _cancellationToken;
+#if !WINDOWS_UWP && !WIN_UI
     private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
+#endif
 
     /// <summary>
     /// Token for canceling the test run.
@@ -40,7 +42,11 @@ internal sealed class MSTestExecutor : ITestExecutor
     {
         TestExecutionManager = new TestExecutionManager();
         _cancellationToken = cancellationToken;
+#if !WINDOWS_UWP && !WIN_UI
         _telemetrySender = telemetrySender;
+#else
+        _ = telemetrySender;
+#endif
     }
 
     /// <summary>
@@ -108,10 +114,12 @@ internal sealed class MSTestExecutor : ITestExecutor
         Ensure.NotNullOrEmpty(tests);
 
         // Initialize telemetry collection if not already set
+#if !WINDOWS_UWP && !WIN_UI
         if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {
             _ = MSTestTelemetryDataCollector.EnsureInitialized();
         }
+#endif
 
         if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
         {
@@ -139,10 +147,12 @@ internal sealed class MSTestExecutor : ITestExecutor
         Ensure.NotNullOrEmpty(sources);
 
         // Initialize telemetry collection if not already set
+#if !WINDOWS_UWP && !WIN_UI
         if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {
             _ = MSTestTelemetryDataCollector.EnsureInitialized();
         }
+#endif
 
         TestSourceHandler testSourceHandler = new();
         if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
@@ -167,8 +177,13 @@ internal sealed class MSTestExecutor : ITestExecutor
     public void Cancel()
         => _testRunCancellationToken?.Cancel();
 
-    private async Task SendTelemetryAsync()
-        => await MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
+#if !WINDOWS_UWP && !WIN_UI
+    private Task SendTelemetryAsync()
+        => MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender);
+#else
+    private static Task SendTelemetryAsync()
+        => Task.CompletedTask;
+#endif
 
     private async Task RunTestsFromRightContextAsync(IFrameworkHandle frameworkHandle, Func<TestRunCancellationToken, Task> runTestsAction)
     {

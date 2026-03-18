@@ -297,7 +297,7 @@ internal sealed class MSTestSettings
         RunConfigurationSettings = runConfigurationSettings;
 
         // Track configuration source for telemetry
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
         if (MSTestTelemetryDataCollector.Current is { } telemetry)
         {
             telemetry.ConfigurationSource = configuration?["mstest"] is not null

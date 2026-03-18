@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !WIN_UI
 using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -114,7 +112,9 @@ internal sealed class MSTestTelemetryDataCollector
                 RetryBaseAttribute => nameof(RetryBaseAttribute),
                 ConditionBaseAttribute => nameof(ConditionBaseAttribute),
                 TestCategoryAttribute => nameof(TestCategoryAttribute),
+#if !WIN_UI
                 DeploymentItemAttribute => nameof(DeploymentItemAttribute),
+#endif
                 _ => attributeName,
             };
 
@@ -127,9 +127,8 @@ internal sealed class MSTestTelemetryDataCollector
     /// <summary>
     /// Records the attributes found on a test class during discovery.
     /// </summary>
-    /// <param name="classType">The type of the test class.</param>
     /// <param name="attributes">The cached attributes from the class.</param>
-    internal void TrackDiscoveredClass(Type classType, Attribute[] attributes)
+    internal void TrackDiscoveredClass(Attribute[] attributes)
     {
         HasData = true;
 
@@ -143,12 +142,12 @@ internal sealed class MSTestTelemetryDataCollector
                 _customTestClassTypes.Add(AnonymizeString(attributeType.FullName ?? attributeType.Name));
             }
 
-            string trackingName = attribute switch
+            string? trackingName = attribute switch
             {
                 TestClassAttribute => nameof(TestClassAttribute),
                 ParallelizeAttribute => nameof(ParallelizeAttribute),
                 DoNotParallelizeAttribute => nameof(DoNotParallelizeAttribute),
-                _ => null!,
+                _ => null,
             };
 
             if (trackingName is not null)
@@ -180,28 +179,117 @@ internal sealed class MSTestTelemetryDataCollector
         // Attribute usage (aggregated counts as JSON)
         if (_attributeCounts.Count > 0)
         {
-            metrics["mstest.attribute_usage"] = JsonSerializer.Serialize(_attributeCounts, MSTestTelemetryJsonContext.Default.DictionaryStringInt64);
+            metrics["mstest.attribute_usage"] = SerializeDictionary(_attributeCounts);
         }
 
         // Custom/inherited types (anonymized names)
         if (_customTestMethodTypes.Count > 0)
         {
-            metrics["mstest.custom_test_method_types"] = JsonSerializer.Serialize(_customTestMethodTypes, MSTestTelemetryJsonContext.Default.HashSetString);
+            metrics["mstest.custom_test_method_types"] = SerializeCollection(_customTestMethodTypes);
         }
 
         if (_customTestClassTypes.Count > 0)
         {
-            metrics["mstest.custom_test_class_types"] = JsonSerializer.Serialize(_customTestClassTypes, MSTestTelemetryJsonContext.Default.HashSetString);
+            metrics["mstest.custom_test_class_types"] = SerializeCollection(_customTestClassTypes);
         }
 
         // Assertion usage (drain the static counters)
         Dictionary<string, long> assertionCounts = TelemetryCollector.DrainAssertionCallCounts();
         if (assertionCounts.Count > 0)
         {
-            metrics["mstest.assertion_usage"] = JsonSerializer.Serialize(assertionCounts, MSTestTelemetryJsonContext.Default.DictionaryStringInt64);
+            metrics["mstest.assertion_usage"] = SerializeDictionary(assertionCounts);
         }
 
         return metrics;
+    }
+
+    private static string SerializeCollection(IEnumerable<string> values)
+    {
+        System.Text.StringBuilder builder = new("[");
+        bool isFirst = true;
+
+        foreach (string value in values)
+        {
+            if (!isFirst)
+            {
+                builder.Append(',');
+            }
+
+            AppendJsonString(builder, value);
+            isFirst = false;
+        }
+
+        builder.Append(']');
+        return builder.ToString();
+    }
+
+    private static string SerializeDictionary(Dictionary<string, long> values)
+    {
+        System.Text.StringBuilder builder = new("{");
+        bool isFirst = true;
+
+        foreach (KeyValuePair<string, long> value in values)
+        {
+            if (!isFirst)
+            {
+                builder.Append(',');
+            }
+
+            AppendJsonString(builder, value.Key);
+            builder.Append(':');
+            builder.Append(value.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            isFirst = false;
+        }
+
+        builder.Append('}');
+        return builder.ToString();
+    }
+
+    private static void AppendJsonString(System.Text.StringBuilder builder, string value)
+    {
+        builder.Append('"');
+
+        foreach (char character in value)
+        {
+            switch (character)
+            {
+                case '"':
+                    builder.Append("\\\"");
+                    break;
+                case '\\':
+                    builder.Append("\\\\");
+                    break;
+                case '\b':
+                    builder.Append("\\b");
+                    break;
+                case '\f':
+                    builder.Append("\\f");
+                    break;
+                case '\n':
+                    builder.Append("\\n");
+                    break;
+                case '\r':
+                    builder.Append("\\r");
+                    break;
+                case '\t':
+                    builder.Append("\\t");
+                    break;
+                default:
+                    if (char.IsControl(character))
+                    {
+                        builder.Append("\\u");
+                        builder.Append(((int)character).ToString("x4", System.Globalization.CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        builder.Append(character);
+                    }
+
+                    break;
+            }
+        }
+
+        builder.Append('"');
     }
 
     private static void AddSettingsMetrics(Dictionary<string, object> metrics)
@@ -243,11 +331,11 @@ internal sealed class MSTestTelemetryDataCollector
     private static string AnonymizeString(string value)
     {
 #if NET
-        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        byte[] hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value));
         return Convert.ToHexString(hash);
 #else
-        using SHA256 sha256 = SHA256.Create();
-        byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(value));
+        using var sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(value));
         return BitConverter.ToString(hash).Replace("-", string.Empty);
 #endif
     }
@@ -283,10 +371,5 @@ internal sealed class MSTestTelemetryDataCollector
             Current = null;
         }
     }
-
 }
-
-[JsonSerializable(typeof(Dictionary<string, long>))]
-[JsonSerializable(typeof(HashSet<string>))]
-internal sealed partial class MSTestTelemetryJsonContext : JsonSerializerContext;
 #endif

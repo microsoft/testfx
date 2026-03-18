@@ -20,7 +20,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed class MSTestDiscoverer : ITestDiscoverer
 {
     private readonly ITestSourceHandler _testSourceHandler;
+#if !WINDOWS_UWP && !WIN_UI
     private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
+#endif
 
     public MSTestDiscoverer()
         : this(new TestSourceHandler())
@@ -30,7 +32,11 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
     internal /* for testing purposes */ MSTestDiscoverer(ITestSourceHandler testSourceHandler, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         _testSourceHandler = testSourceHandler;
+#if !WINDOWS_UWP && !WIN_UI
         _telemetrySender = telemetrySender;
+#else
+        _ = telemetrySender;
+#endif
     }
 
     /// <summary>
@@ -52,10 +58,12 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         Ensure.NotNull(discoverySink);
 
         // Initialize telemetry collection if not already set (e.g. first call in the session)
+#if !WINDOWS_UWP && !WIN_UI
         if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {
             _ = MSTestTelemetryDataCollector.EnsureInitialized();
         }
+#endif
 
         try
         {
@@ -67,7 +75,9 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         finally
         {
             // Use Task.Run to avoid capturing any SynchronizationContext that could cause deadlocks
+#if !WINDOWS_UWP && !WIN_UI
             Task.Run(() => MSTestTelemetryDataCollector.SendTelemetryAndResetAsync(_telemetrySender)).GetAwaiter().GetResult();
+#endif
         }
     }
 }

@@ -42,6 +42,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
         string content = await File.ReadAllTextAsync(diagFilePath, TestContext.CancellationToken);
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.attribute_usage"), $"Expected attribute_usage in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.config_source"), $"Expected config_source in telemetry.\n{content}");
+        Assert.IsTrue(Regex.IsMatch(content, "mstest\\.assertion_usage"), $"Expected assertion_usage in telemetry.\n{content}");
     }
 
     #endregion

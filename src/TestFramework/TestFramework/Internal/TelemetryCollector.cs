@@ -21,9 +21,11 @@ internal static class TelemetryCollector
 
     /// <summary>
     /// Gets a snapshot of all assertion call counts and resets the counters.
-    /// This is thread-safe: it atomically swaps the dictionary and drains the old one.
+    /// This is thread-safe but best-effort: it atomically swaps the dictionary and copies the old one.
+    /// In-flight calls to <see cref="TrackAssertionCall"/> that race with the swap may be lost.
+    /// This is acceptable for telemetry where approximate counts are sufficient.
     /// </summary>
-    /// <returns>A dictionary mapping assertion names to call counts.</returns>
+    /// <returns>A dictionary mapping assertion names to their (best-effort) call counts.</returns>
     internal static Dictionary<string, long> DrainAssertionCallCounts()
     {
         ConcurrentDictionary<string, long> old = Interlocked.Exchange(ref s_assertionCallCounts, new ConcurrentDictionary<string, long>());

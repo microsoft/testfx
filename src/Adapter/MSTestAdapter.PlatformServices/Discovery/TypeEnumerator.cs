@@ -19,8 +19,11 @@ internal class TypeEnumerator
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly ReflectHelper _reflectHelper;
-    private readonly MSTestTelemetryDataCollector? _telemetryDataCollector;
+#if !WINDOWS_UWP && !WIN_UI
+    private readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector? _telemetryDataCollector;
+#endif
 
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
     /// </summary>
@@ -30,14 +33,27 @@ internal class TypeEnumerator
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
     /// <param name="telemetryDataCollector"> Optional telemetry data collector for tracking API usage. </param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, MSTestTelemetryDataCollector? telemetryDataCollector = null)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector? telemetryDataCollector = null)
+#else
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
+    /// </summary>
+    /// <param name="type"> The reflected type. </param>
+    /// <param name="assemblyFilePath"> The name of the assembly being reflected. </param>
+    /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
+    /// <param name="typeValidator"> The validator for test classes. </param>
+    /// <param name="testMethodValidator"> The validator for test methods. </param>
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
+#endif
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
+#if !WINDOWS_UWP && !WIN_UI
         _telemetryDataCollector = telemetryDataCollector;
+#endif
     }
 
     /// <summary>
@@ -53,11 +69,13 @@ internal class TypeEnumerator
         }
 
         // Track class-level attributes for telemetry
+#if !WINDOWS_UWP && !WIN_UI
         if (_telemetryDataCollector is not null)
         {
             Attribute[] classAttributes = _reflectHelper.GetCustomAttributesCached(_type);
-            _telemetryDataCollector.TrackDiscoveredClass(_type, classAttributes);
+            _telemetryDataCollector.TrackDiscoveredClass(classAttributes);
         }
+#endif
 
         // If test class is valid, then get the tests
         return GetTests(warnings);
@@ -153,7 +171,9 @@ internal class TypeEnumerator
         };
 
         Attribute[] attributes = _reflectHelper.GetCustomAttributesCached(method);
+#if !WINDOWS_UWP && !WIN_UI
         _telemetryDataCollector?.TrackDiscoveredMethod(attributes);
+#endif
         TestMethodAttribute? testMethodAttribute = null;
 
         // Backward looping for backcompat. This used to be calls to _reflectHelper.GetFirstAttributeOrDefault
