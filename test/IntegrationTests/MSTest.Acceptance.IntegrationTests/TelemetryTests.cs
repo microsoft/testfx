@@ -65,8 +65,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
 
         string diagContentsPattern =
 """
-.+ Send telemetry event: dotnet/testingplatform/mstest/sessionexit
-.+mstest\.attribute_usage
+.+ Send telemetry event: dotnet/testingplatform/mstest/sessionexit[\s\S]+?mstest\.attribute_usage
 """;
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
@@ -117,6 +116,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
             $"test -c Release {AssetFixture.VSTestProjectPath} --no-build --framework {tfm}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.VSTestProjectPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
@@ -135,6 +135,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(
             $"test -c Release {AssetFixture.VSTestProjectPath} --no-build --framework {tfm} --list-tests",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            workingDirectory: AssetFixture.VSTestProjectPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
@@ -261,6 +262,13 @@ public class UnitTest1
   </ItemGroup>
 
 </Project>
+
+#file global.json
+{
+  "test": {
+    "runner": "VSTest"
+  }
+}
 
 #file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
