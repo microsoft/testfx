@@ -374,6 +374,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.ContainsSingle(collection)
             Expected collection to contain exactly one item but found 0 item(s).
+              collection: []
             """);
     }
 
@@ -392,6 +393,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.ContainsSingle(collection)
             Expected collection to contain exactly one item but found 0 item(s).
+              collection: []
             User message: my custom message
             """);
     }

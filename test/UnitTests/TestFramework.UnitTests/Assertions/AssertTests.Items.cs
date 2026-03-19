@@ -27,7 +27,7 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.HasCount(collection)
-                Expected collection to have the specified number of items.
+                Expected collection to have 3 item(s) but found 1.
                   collection: [1]
                   expected count: 3
                   actual count:   1
@@ -42,7 +42,7 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.HasCount(Array.Empty<int>())
-                Expected collection to have the specified number of items.
+                Expected collection to have 1 item(s) but found 0.
                   collection: []
                   expected count: 1
                   actual count:   0
@@ -68,7 +68,7 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsEmpty(collection)
-                Expected collection to have the specified number of items.
+                Expected collection to have 0 item(s) but found 1.
                   collection: [1]
                   expected count: 0
                   actual count:   1
@@ -84,7 +84,7 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsEmpty(collection)
-                Expected collection to have the specified number of items.
+                Expected collection to have 0 item(s) but found 1.
                   collection: [1]
                   expected count: 0
                   actual count:   1
@@ -115,6 +115,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle(Array.Empty<int>())
                 Expected collection to contain exactly one item but found 0 item(s).
+                  collection: []
                 """);
     }
 
@@ -125,6 +126,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle([1, 2, 3])
                 Expected collection to contain exactly one item but found 3 item(s).
+                  collection: [1, 2, 3]
                 """);
     }
 
@@ -137,6 +139,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle(Array.Empty<int>())
                 Expected collection to contain exactly one item but found 0 item(s).
+                  collection: []
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -151,6 +154,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle([1, 2, 3])
                 Expected collection to contain exactly one item but found 3 item(s).
+                  collection: [1, 2, 3]
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();

@@ -337,7 +337,7 @@ public sealed partial class Assert
     private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, IEnumerable collection, string? userMessage, string collectionExpression)
     {
         string callSite = FormatCallSite($"Assert.{assertionName}", ("collection", collectionExpression));
-        string msg = FrameworkMessages.HasCountFailNew;
+        string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.HasCountFailNew, expectedCount, actualCount);
         msg += FormatCollectionParameter(collectionExpression, collection);
         msg += FormatAlignedParameters(
             ("expected count", expectedCount.ToString(CultureInfo.InvariantCulture)),

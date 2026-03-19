@@ -178,11 +178,11 @@ public sealed partial class Assert
 
         if (string.IsNullOrEmpty(predicateExpression))
         {
-            ThrowAssertContainsSingleFailed(matchCount, message, collectionExpression);
+            ThrowAssertContainsSingleFailed(matchCount, message, collectionExpression, collection);
         }
         else
         {
-            ThrowAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression, collection);
         }
 
         // Unreachable code but compiler cannot work it out
@@ -237,11 +237,11 @@ public sealed partial class Assert
 
         if (string.IsNullOrEmpty(predicateExpression))
         {
-            ThrowAssertContainsSingleFailed(matchCount, message, collectionExpression);
+            ThrowAssertContainsSingleFailed(matchCount, message, collectionExpression, collection);
         }
         else
         {
-            ThrowAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression);
+            ThrowAssertSingleMatchFailed(matchCount, message, predicateExpression, collectionExpression, collection);
         }
 
         return default;
@@ -778,19 +778,29 @@ public sealed partial class Assert
     #endregion // IsInRange
 
     [DoesNotReturn]
-    private static void ThrowAssertSingleMatchFailed(int actualCount, string? userMessage, string predicateExpression, string collectionExpression)
+    private static void ThrowAssertSingleMatchFailed(int actualCount, string? userMessage, string predicateExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
         string callSite = FormatCallSite("Assert.ContainsSingle", ("predicate", predicateExpression), ("collection", collectionExpression));
         string message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsSingleMatchFailNew, actualCount);
+        if (collectionValue is not null)
+        {
+            message += FormatCollectionParameter(collectionExpression, collectionValue);
+        }
+
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertContainsSingleFailed(int actualCount, string? userMessage, string collectionExpression)
+    private static void ThrowAssertContainsSingleFailed(int actualCount, string? userMessage, string collectionExpression, IEnumerable? collectionValue = null)
     {
         string callSite = FormatCallSite("Assert.ContainsSingle", ("collection", collectionExpression));
         string message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsSingleFailNew, actualCount);
+        if (collectionValue is not null)
+        {
+            message += FormatCollectionParameter(collectionExpression, collectionValue);
+        }
+
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }

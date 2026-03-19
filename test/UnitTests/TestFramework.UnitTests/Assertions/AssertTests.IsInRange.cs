@@ -59,7 +59,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (3) to be in range [5, 10].
+                Expected value 3 to be in range [5, 10].
                   range: [5, 10]
                   value: 3
                 """);
@@ -77,7 +77,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (8) to be in range [1, 5].
+                Expected value 8 to be in range [1, 5].
                   range: [1, 5]
                   value: 8
                 """);
@@ -98,7 +98,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (10) to be in range [1, 5].
+                Expected value 10 to be in range [1, 5].
                   range: [1, 5]
                   value: 10
                 User message: Custom error message
@@ -119,7 +119,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsInRange(valueOutOfRange)
-                Expected value (6) to be in range [1.5, 5.5].
+                Expected value 6 to be in range [1.5, 5.5].
                   range: [1.5, 5.5]
                   value: 6
                 """);
@@ -217,7 +217,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (-12) to be in range [-10, -5].
+                Expected value -12 to be in range [-10, -5].
                   range: [-10, -5]
                   value: -12
                 """);
@@ -237,7 +237,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (-3) to be in range [-10, -5].
+                Expected value -3 to be in range [-10, -5].
                   range: [-10, -5]
                   value: -3
                 """);
@@ -290,7 +290,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (-7) to be in range [-5, 5].
+                Expected value -7 to be in range [-5, 5].
                   range: [-5, 5]
                   value: -7
                 """);
@@ -310,7 +310,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (7) to be in range [-5, 5].
+                Expected value 7 to be in range [-5, 5].
                   range: [-5, 5]
                   value: 7
                 """);
@@ -364,7 +364,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (4) to be in range [5, 5].
+                Expected value 4 to be in range [5, 5].
                   range: [5, 5]
                   value: 4
                 """);
@@ -381,7 +381,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (6) to be in range [5, 5].
+                Expected value 6 to be in range [5, 5].
                   range: [5, 5]
                   value: 6
                 """);
@@ -409,7 +409,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (4f) to be in range [5f, 5f].
+                Expected value 4f to be in range [5f, 5f].
                   range: [5f, 5f]
                   value: 4f
                 """);
@@ -426,7 +426,7 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (6f) to be in range [5f, 5f].
+                Expected value 6f to be in range [5f, 5f].
                   range: [5f, 5f]
                   value: 6f
                 """);
@@ -444,7 +444,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected value (20) to be in range [1, 10].
+                Expected value 20 to be in range [1, 10].
                   range: [1, 10]
                   value: 20
                 """);
@@ -460,7 +460,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsInRange(value)
-                Expected value ({new string('R', 256)}... 44 more) to be in range [{new string('R', 256)}... 44 more, {new string('R', 256)}... 44 more].
+                Expected value {new string('R', 256)}... 44 more to be in range [{new string('R', 256)}... 44 more, {new string('R', 256)}... 44 more].
                   range: [{new string('R', 256)}... 44 more, {new string('R', 256)}... 44 more]
                   value: {new string('R', 256)}... 44 more
                 """);
@@ -476,7 +476,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (line1\r\nline2) to be in range [line1\r\nline2, line1\r\nline2].
+                Expected value line1\r\nline2 to be in range [line1\r\nline2, line1\r\nline2].
                   range: [line1\r\nline2, line1\r\nline2]
                   value: line1\r\nline2
                 """);

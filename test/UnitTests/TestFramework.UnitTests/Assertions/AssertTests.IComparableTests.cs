@@ -44,7 +44,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThan(10, 5)
-                Expected value (5) to be greater than 10.
+                Expected value 5 to be greater than 10.
                   lower bound: 10
                   value:       5
                 User message: A Message
@@ -94,7 +94,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThanOrEqualTo(10, 5)
-                Expected value (5) to be greater than or equal to 10.
+                Expected value 5 to be greater than or equal to 10.
                   lower bound: 10
                   value:       5
                 User message: A Message
@@ -144,7 +144,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThan(5, 10)
-                Expected value (10) to be less than 5.
+                Expected value 10 to be less than 5.
                   upper bound: 5
                   value:       10
                 User message: A Message
@@ -194,7 +194,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThanOrEqualTo(5, 10)
-                Expected value (10) to be less than or equal to 5.
+                Expected value 10 to be less than or equal to 5.
                   upper bound: 5
                   value:       10
                 User message: A Message
@@ -359,7 +359,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThan(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 5)
-                Expected value (5) to be greater than 10.
+                Expected value 5 to be greater than 10.
                   lower bound: 10
                   value:       5
                 """);
@@ -374,7 +374,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsGreaterThan(lowerBound, value)
-                Expected value ({new string('V', 256)}... 44 more) to be greater than {new string('V', 256)}... 44 more.
+                Expected value {new string('V', 256)}... 44 more to be greater than {new string('V', 256)}... 44 more.
                   lower bound: {new string('V', 256)}... 44 more
                   value:       {new string('V', 256)}... 44 more
                 """);
@@ -389,7 +389,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThan(lowerBound, value)
-                Expected value (line1\r\nline2) to be greater than line1\r\nline2.
+                Expected value line1\r\nline2 to be greater than line1\r\nline2.
                   lower bound: line1\r\nline2
                   value:       line1\r\nline2
                 """);
@@ -403,7 +403,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 5)
-                Expected value (5) to be greater than or equal to 10.
+                Expected value 5 to be greater than or equal to 10.
                   lower bound: 10
                   value:       5
                 """);
@@ -418,7 +418,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsGreaterThanOrEqualTo(lowerBound, value)
-                Expected value ({new string('V', 256)}... 44 more) to be greater than or equal to {new string('V', 256)}... 44 more.
+                Expected value {new string('V', 256)}... 44 more to be greater than or equal to {new string('V', 256)}... 44 more.
                   lower bound: {new string('V', 256)}... 44 more
                   value:       {new string('V', 256)}... 44 more
                 """);
@@ -433,7 +433,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThanOrEqualTo(lowerBound, value)
-                Expected value (line1\r\nline2) to be greater than or equal to line1\r\nline2.
+                Expected value line1\r\nline2 to be greater than or equal to line1\r\nline2.
                   lower bound: line1\r\nline2
                   value:       line1\r\nline2
                 """);
@@ -447,7 +447,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThan(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 10)
-                Expected value (10) to be less than 5.
+                Expected value 10 to be less than 5.
                   upper bound: 5
                   value:       10
                 """);
@@ -462,7 +462,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsLessThan(upperBound, value)
-                Expected value ({new string('V', 256)}... 44 more) to be less than {new string('V', 256)}... 44 more.
+                Expected value {new string('V', 256)}... 44 more to be less than {new string('V', 256)}... 44 more.
                   upper bound: {new string('V', 256)}... 44 more
                   value:       {new string('V', 256)}... 44 more
                 """);
@@ -477,7 +477,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThan(upperBound, value)
-                Expected value (line1\r\nline2) to be less than line1\r\nline2.
+                Expected value line1\r\nline2 to be less than line1\r\nline2.
                   upper bound: line1\r\nline2
                   value:       line1\r\nline2
                 """);
@@ -491,7 +491,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 10)
-                Expected value (10) to be less than or equal to 5.
+                Expected value 10 to be less than or equal to 5.
                   upper bound: 5
                   value:       10
                 """);
@@ -506,7 +506,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsLessThanOrEqualTo(upperBound, value)
-                Expected value ({new string('V', 256)}... 44 more) to be less than or equal to {new string('V', 256)}... 44 more.
+                Expected value {new string('V', 256)}... 44 more to be less than or equal to {new string('V', 256)}... 44 more.
                   upper bound: {new string('V', 256)}... 44 more
                   value:       {new string('V', 256)}... 44 more
                 """);
@@ -521,7 +521,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThanOrEqualTo(upperBound, value)
-                Expected value (line1\r\nline2) to be less than or equal to line1\r\nline2.
+                Expected value line1\r\nline2 to be less than or equal to line1\r\nline2.
                   upper bound: line1\r\nline2
                   value:       line1\r\nline2
                 """);
