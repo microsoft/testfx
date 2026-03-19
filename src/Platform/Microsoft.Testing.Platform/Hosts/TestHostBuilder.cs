@@ -207,9 +207,12 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.AddService(policiesService);
 
         bool hasServerFlag = commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        bool isJsonRpcProtocol = protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+        bool isJsonRpcProtocol = hasServerFlag &&
+            (protocolName is null || protocolName.Length == 0 || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase));
 
-        ProxyOutputDevice proxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, hasServerFlag && isJsonRpcProtocol).ConfigureAwait(false);
+        bool isPipeProtocol = hasServerFlag && protocolName?.Length == 1 && protocolName[0].Equals(PlatformCommandLineProvider.DotnetTestCliProtocolName, StringComparison.Ordinal);
+
+        ProxyOutputDevice proxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, isJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 
         // Add FileLoggerProvider if needed
         if (loggingState.FileLoggerProvider is not null)
@@ -227,14 +230,18 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         loggerFactoryProxy.SetLoggerFactory(loggerFactory);
 
         // Initialize the output device if needed.
-        if (await proxyOutputDevice.OriginalOutputDevice.IsEnabledAsync().ConfigureAwait(false))
+        if (proxyOutputDevice.OriginalOutputDevice is { } originalOutputDevice &&
+            await originalOutputDevice.IsEnabledAsync().ConfigureAwait(false))
         {
-            await proxyOutputDevice.OriginalOutputDevice.TryInitializeAsync().ConfigureAwait(false);
+            await originalOutputDevice.TryInitializeAsync().ConfigureAwait(false);
         }
 
         // Add the platform output device to the service provider for both modes.
         serviceProvider.TryAddService(proxyOutputDevice);
-        serviceProvider.TryAddService(proxyOutputDevice.OriginalOutputDevice);
+        if (proxyOutputDevice.OriginalOutputDevice is not null)
+        {
+            serviceProvider.TryAddService(proxyOutputDevice.OriginalOutputDevice);
+        }
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
@@ -433,7 +440,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
             && !commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             PassiveNode? passiveNode = null;
-            if (hasServerFlag && isJsonRpcProtocol)
+            if (isJsonRpcProtocol)
             {
                 // Build the IMessageHandlerFactory for the PassiveNode
                 IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(serviceProvider);
@@ -507,7 +514,7 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         serviceProvider.AddServices(testApplicationLifecycleCallback);
 
         // ServerMode and Console mode uses different host
-        if (hasServerFlag && isJsonRpcProtocol)
+        if (isJsonRpcProtocol)
         {
             // Build the server mode with the user preferences
             IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(serviceProvider);
@@ -717,7 +724,11 @@ internal sealed class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature ru
         // creations and we could lose interesting diagnostic information.
         List<IDataConsumer> dataConsumersBuilder = [];
 
-        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
+        if (testFrameworkBuilderData.PlatformOutputDisplayService is not null)
+        {
+            await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
+        }
+
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
