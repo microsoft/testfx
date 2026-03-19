@@ -36,6 +36,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
                 ThrowAssertIsTrueFailed(_builder.ToString());
             }
@@ -88,6 +89,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "condition", conditionExpression) + " ");
                 ThrowAssertIsFalseFailed(_builder.ToString());
             }
@@ -148,6 +150,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsTrue");
+
         if (IsTrueFailing(condition))
         {
             ThrowAssertIsTrueFailed(BuildUserMessageForConditionExpression(message, conditionExpression));
@@ -186,6 +190,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message = "", [CallerArgumentExpression(nameof(condition))] string conditionExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsFalse");
+
         if (IsFalseFailing(condition))
         {
             ThrowAssertIsFalseFailed(BuildUserMessageForConditionExpression(message, conditionExpression));

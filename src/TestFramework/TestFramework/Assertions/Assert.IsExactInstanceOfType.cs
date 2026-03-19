@@ -38,6 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsExactInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
             }
@@ -98,6 +99,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsExactInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
@@ -160,6 +162,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotExactInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
             }
@@ -220,6 +223,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
+                TelemetryCollector.TrackAssertionCall("Assert.IsNotExactInstanceOfType");
                 _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
                 ThrowAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
             }
@@ -289,6 +293,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsExactInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsExactInstanceOfType");
+
         if (IsExactInstanceOfTypeFailing(value, expectedType))
         {
             ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
@@ -371,6 +377,8 @@ public sealed partial class Assert
     /// </exception>
     public static void IsNotExactInstanceOfType(object? value, [NotNull] Type? wrongType, string? message = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotExactInstanceOfType");
+
         if (IsNotExactInstanceOfTypeFailing(value, wrongType))
         {
             ThrowAssertIsNotExactInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));

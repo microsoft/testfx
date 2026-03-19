@@ -145,7 +145,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
+#if !WINDOWS_UWP && !WIN_UI
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestTelemetryDataCollector.Current);
+#else
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
+#endif
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
