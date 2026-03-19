@@ -30,6 +30,10 @@
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+  </ItemGroup>
+
   <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
