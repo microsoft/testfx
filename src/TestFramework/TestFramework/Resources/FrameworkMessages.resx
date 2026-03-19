@@ -340,10 +340,10 @@ Actual: {2}</value>
     <value>Expected collection to have the specified number of items.</value>
   </data>
   <data name="IsNotEmptyFailNew" xml:space="preserve">
-    <value>Expected collection to contain any item but it is empty.</value>
+    <value>Expected collection to not be empty.</value>
   </data>
   <data name="IsInRangeFailNew" xml:space="preserve">
-    <value>Value is not within the expected range.</value>
+    <value>Expected value ({0}) to be in range [{1}, {2}].</value>
   </data>
   <data name="WrongExceptionThrownNew" xml:space="preserve">
     <value>Wrong exception type was thrown.</value>
@@ -379,25 +379,25 @@ Actual: {2}</value>
     <value>Expected value to be of the specified type.</value>
   </data>
   <data name="IsNotInstanceOfTypeFailNew" xml:space="preserve">
-    <value>Value should not be of the specified type.</value>
+    <value>Expected value to not be an instance of the specified type.</value>
   </data>
   <data name="IsExactInstanceOfTypeFailNew" xml:space="preserve">
     <value>Expected value to be exactly of the specified type.</value>
   </data>
   <data name="IsNotExactInstanceOfTypeFailNew" xml:space="preserve">
-    <value>Value should not be exactly of the specified type.</value>
+    <value>Expected value to not be exactly the specified type.</value>
   </data>
   <data name="IsGreaterThanFailNew" xml:space="preserve">
-    <value>Expected value to be greater than the specified bound.</value>
+    <value>Expected value ({0}) to be greater than {1}.</value>
   </data>
   <data name="IsGreaterThanOrEqualToFailNew" xml:space="preserve">
-    <value>Expected value to be greater than or equal to the specified bound.</value>
+    <value>Expected value ({0}) to be greater than or equal to {1}.</value>
   </data>
   <data name="IsLessThanFailNew" xml:space="preserve">
-    <value>Expected value to be less than the specified bound.</value>
+    <value>Expected value ({0}) to be less than {1}.</value>
   </data>
   <data name="IsLessThanOrEqualToFailNew" xml:space="preserve">
-    <value>Expected value to be less than or equal to the specified bound.</value>
+    <value>Expected value ({0}) to be less than or equal to {1}.</value>
   </data>
   <data name="IsPositiveFailNew" xml:space="preserve">
     <value>Expected a positive value.</value>

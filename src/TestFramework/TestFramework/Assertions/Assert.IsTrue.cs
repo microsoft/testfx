@@ -163,9 +163,9 @@ public sealed partial class Assert
     private static void ThrowAssertIsTrueFailed(bool? condition, string? userMessage, string conditionExpression)
     {
         string callSite = FormatCallSite("Assert.IsTrue", (nameof(condition), conditionExpression));
-        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        message += Environment.NewLine + FrameworkMessages.IsTrueFailNew;
+        string message = FrameworkMessages.IsTrueFailNew;
         message += Environment.NewLine + FormatParameter(nameof(condition), conditionExpression, condition);
+        message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 
@@ -208,9 +208,9 @@ public sealed partial class Assert
     private static void ThrowAssertIsFalseFailed(bool? condition, string? userMessage, string conditionExpression)
     {
         string callSite = FormatCallSite("Assert.IsFalse", (nameof(condition), conditionExpression));
-        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        message += Environment.NewLine + FrameworkMessages.IsFalseFailNew;
+        string message = FrameworkMessages.IsFalseFailNew;
         message += Environment.NewLine + FormatParameter(nameof(condition), conditionExpression, condition);
+        message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 }

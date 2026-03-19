@@ -189,7 +189,6 @@ public sealed partial class Assert
     private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
         string callSite = FormatCallSite("Assert.AreSame", (nameof(expected), expectedExpression), (nameof(actual), actualExpression));
-        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
 
         // When both values have the same string representation, include hash codes
         // to help the user understand they are different object instances.
@@ -203,20 +202,22 @@ public sealed partial class Assert
             ? actualFormatted + $" (Hash={RuntimeHelpers.GetHashCode(actual!)})"
             : actualFormatted;
 
+        string message;
         // If value types, add diagnostic hint before parameter details
         if (expected is ValueType && actual is ValueType)
         {
-            message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreSameGivenValues, string.Empty).TrimEnd();
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AreSameGivenValues, string.Empty).TrimEnd();
         }
         else
         {
-            message += Environment.NewLine + FrameworkMessages.AreSameFailNew;
+            message = FrameworkMessages.AreSameFailNew;
         }
 
         message += FormatAlignedParameters(
             (nameof(expected), expectedValue),
             (nameof(actual), actualValue));
 
+        message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 
@@ -272,11 +273,11 @@ public sealed partial class Assert
     private static void ThrowAssertAreNotSameFailed<T>(T? notExpected, T? actual, string? userMessage, string notExpectedExpression, string actualExpression)
     {
         string callSite = FormatCallSite("Assert.AreNotSame", (nameof(notExpected), notExpectedExpression), (nameof(actual), actualExpression));
-        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        message += Environment.NewLine + FrameworkMessages.AreNotSameFailNew;
+        string message = FrameworkMessages.AreNotSameFailNew;
         message += FormatAlignedParameters(
-            (nameof(notExpected), FormatValue(notExpected)),
+            ("not expected", FormatValue(notExpected)),
             (nameof(actual), FormatValue(actual)));
+        message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 }

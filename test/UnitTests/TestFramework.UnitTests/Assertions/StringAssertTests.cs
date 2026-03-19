@@ -19,7 +19,7 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.Contains(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.Contains failed");
+            .And.Message.Should().StartWith("StringAssert.Contains");
     }
 
     public void StringAssertStartsWith()
@@ -28,7 +28,7 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.StartsWith(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.StartsWith failed");
+            .And.Message.Should().StartWith("StringAssert.StartsWith");
     }
 
     public void StringAssertEndsWith()
@@ -37,7 +37,7 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.EndsWith(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.EndsWith failed");
+            .And.Message.Should().StartWith("StringAssert.EndsWith");
     }
 
     public void StringAssertDoesNotMatch()
@@ -46,7 +46,7 @@ public class StringAssertTests : TestContainer
         Regex doesMatch = new("quick brown fox");
         Action action = () => StringAssert.DoesNotMatch(actual, doesMatch);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.DoesNotMatch failed");
+            .And.Message.Should().StartWith("StringAssert.DoesNotMatch");
     }
 
     public void StringAssertContainsIgnoreCase_DoesNotThrow()
@@ -75,7 +75,7 @@ public class StringAssertTests : TestContainer
     {
         Action action = () => StringAssert.Contains(":-{", "x");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.Contains failed");
+            .And.Message.Should().StartWith("StringAssert.Contains");
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
@@ -83,7 +83,7 @@ public class StringAssertTests : TestContainer
     {
         Action action = () => StringAssert.Contains("{", "x", "message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.Contains failed");
+            .And.Message.Should().StartWith("StringAssert.Contains");
     }
 
     public void StringAssertContainsNullabilitiesPostConditions()

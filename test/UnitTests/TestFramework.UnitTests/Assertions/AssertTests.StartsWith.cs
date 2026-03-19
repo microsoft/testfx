@@ -17,10 +17,10 @@ public partial class AssertTests
         Action action = () => Assert.StartsWith("world", "hello");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.StartsWith("world", "hello") failed.
+                Assert.StartsWith("world", "hello")
                 String does not start with expected prefix.
-                  expectedPrefix: "world"
-                  value:          "hello"
+                  expected prefix: "world"
+                  value:           "hello"
                 """);
     }
 
@@ -29,10 +29,11 @@ public partial class AssertTests
         Action action = () => Assert.StartsWith("world", "hello", "User message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.StartsWith("world", "hello") failed. User message
+                Assert.StartsWith("world", "hello")
                 String does not start with expected prefix.
-                  expectedPrefix: "world"
-                  value:          "hello"
+                  expected prefix: "world"
+                  value:           "hello"
+                User message: User message
                 """);
     }
 
@@ -44,10 +45,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotStartWith("hello", "hello world");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotStartWith("hello", "hello world") failed.
+                Assert.DoesNotStartWith("hello", "hello world")
                 String starts with unexpected prefix.
-                  notExpectedPrefix: "hello"
-                  value:             "hello world"
+                  unwanted prefix: "hello"
+                  value:           "hello world"
                 """);
     }
 
@@ -62,10 +63,10 @@ public partial class AssertTests
         Action action = () => Assert.StartsWith("world", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.StartsWith("world", aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
+                Assert.StartsWith("world", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
                 String does not start with expected prefix.
-                  expectedPrefix: "world"
-                  value:          "hello world"
+                  expected prefix: "world"
+                  value:           "hello world"
                 """);
     }
 
@@ -76,10 +77,10 @@ public partial class AssertTests
         Action action = () => Assert.StartsWith("world", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.StartsWith("world", longValue) failed.
+                Assert.StartsWith("world", longValue)
                 String does not start with expected prefix.
-                  expectedPrefix: "world"
-                  value:          "{new string('x', 255)}... 46 more
+                  expected prefix: "world"
+                  value:           "{new string('x', 255)}... 46 more
                 """);
     }
 
@@ -88,10 +89,10 @@ public partial class AssertTests
         Action action = () => Assert.StartsWith("world", "hello\r\nworld");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.StartsWith("world", "hello\r\nworld") failed.
+                Assert.StartsWith("world", "hello\r\nworld")
                 String does not start with expected prefix.
-                  expectedPrefix: "world"
-                  value:          "hello\r\nworld"
+                  expected prefix: "world"
+                  value:           "hello\r\nworld"
                 """);
     }
 
@@ -102,10 +103,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotStartWith("hello", aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotStartWith("hello", aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
+                Assert.DoesNotStartWith("hello", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
                 String starts with unexpected prefix.
-                  notExpectedPrefix: "hello"
-                  value:             "hello world"
+                  unwanted prefix: "hello"
+                  value:           "hello world"
                 """);
     }
 
@@ -116,10 +117,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotStartWith("hello", longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.DoesNotStartWith("hello", longValue) failed.
+                Assert.DoesNotStartWith("hello", longValue)
                 String starts with unexpected prefix.
-                  notExpectedPrefix: "hello"
-                  value:             "hello{new string('x', 250)}... 51 more
+                  unwanted prefix: "hello"
+                  value:           "hello{new string('x', 250)}... 51 more
                 """);
     }
 
@@ -128,10 +129,10 @@ public partial class AssertTests
         Action action = () => Assert.DoesNotStartWith("hello", "hello\r\nworld");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.DoesNotStartWith("hello", "hello\r\nworld") failed.
+                Assert.DoesNotStartWith("hello", "hello\r\nworld")
                 String starts with unexpected prefix.
-                  notExpectedPrefix: "hello"
-                  value:             "hello\r\nworld"
+                  unwanted prefix: "hello"
+                  value:           "hello\r\nworld"
                 """);
     }
 

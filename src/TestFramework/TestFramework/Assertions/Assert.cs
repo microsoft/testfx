@@ -50,16 +50,9 @@ public sealed partial class Assert
             }
         }
 
-        string formattedMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, message);
-
-        // When there's no user message (message starts with newline for parameter details),
-        // the format produces a trailing space before the newline ("failed. \\r\\n").
-        // Remove it to avoid trailing whitespace on the first line while preserving localization.
-        if (message is not null && message.StartsWith(Environment.NewLine, StringComparison.Ordinal))
-        {
-            string prefix = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, string.Empty);
-            formattedMessage = prefix.TrimEnd() + message;
-        }
+        string formattedMessage = string.IsNullOrEmpty(message)
+            ? assertionName
+            : assertionName + Environment.NewLine + message;
 
         throw new AssertFailedException(formattedMessage);
     }
@@ -305,6 +298,15 @@ public sealed partial class Assert
 
         return $"  {paramName}: {formattedValue}";
     }
+
+    /// <summary>
+    /// Appends the user-provided message to the end of a failure message.
+    /// Returns the message unchanged if userMessage is null or empty.
+    /// </summary>
+    internal static string AppendUserMessage(string message, string? userMessage)
+        => string.IsNullOrEmpty(userMessage)
+            ? message
+            : message + Environment.NewLine + "User message: " + userMessage;
 
     /// <summary>
     /// Formats a parameter line showing only the expression (no value).

@@ -292,11 +292,11 @@ public sealed partial class Assert
     private static void ThrowAssertIsGreaterThanFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsGreaterThan", (nameof(lowerBound), lowerBoundExpression), (nameof(value), valueExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsGreaterThanFailNew;
+        string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsGreaterThanFailNew, FormatValue(value), FormatValue(lowerBound));
         msg += FormatAlignedParameters(
-            (nameof(lowerBound), FormatValue(lowerBound)),
+            ("lower bound", FormatValue(lowerBound)),
             (nameof(value), FormatValue(value)));
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 
@@ -304,11 +304,11 @@ public sealed partial class Assert
     private static void ThrowAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsGreaterThanOrEqualTo", (nameof(lowerBound), lowerBoundExpression), (nameof(value), valueExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsGreaterThanOrEqualToFailNew;
+        string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsGreaterThanOrEqualToFailNew, FormatValue(value), FormatValue(lowerBound));
         msg += FormatAlignedParameters(
-            (nameof(lowerBound), FormatValue(lowerBound)),
+            ("lower bound", FormatValue(lowerBound)),
             (nameof(value), FormatValue(value)));
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 
@@ -316,11 +316,11 @@ public sealed partial class Assert
     private static void ThrowAssertIsLessThanFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsLessThan", (nameof(upperBound), upperBoundExpression), (nameof(value), valueExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsLessThanFailNew;
+        string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsLessThanFailNew, FormatValue(value), FormatValue(upperBound));
         msg += FormatAlignedParameters(
-            (nameof(upperBound), FormatValue(upperBound)),
+            ("upper bound", FormatValue(upperBound)),
             (nameof(value), FormatValue(value)));
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 
@@ -328,11 +328,11 @@ public sealed partial class Assert
     private static void ThrowAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsLessThanOrEqualTo", (nameof(upperBound), upperBoundExpression), (nameof(value), valueExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsLessThanOrEqualToFailNew;
+        string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsLessThanOrEqualToFailNew, FormatValue(value), FormatValue(upperBound));
         msg += FormatAlignedParameters(
-            (nameof(upperBound), FormatValue(upperBound)),
+            ("upper bound", FormatValue(upperBound)),
             (nameof(value), FormatValue(value)));
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 
@@ -340,9 +340,9 @@ public sealed partial class Assert
     private static void ThrowAssertIsPositiveFailed<T>(T value, string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsPositive", (nameof(value), valueExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsPositiveFailNew;
+        string msg = FrameworkMessages.IsPositiveFailNew;
         msg += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 
@@ -350,9 +350,9 @@ public sealed partial class Assert
     private static void ThrowAssertIsNegativeFailed<T>(T value, string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsNegative", (nameof(value), valueExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsNegativeFailNew;
+        string msg = FrameworkMessages.IsNegativeFailNew;
         msg += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 }

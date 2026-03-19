@@ -77,11 +77,11 @@ public sealed partial class Assert
         if (!value.StartsWith(expectedPrefix, comparisonType))
         {
             string callSite = FormatCallSite("Assert.StartsWith", (nameof(expectedPrefix), expectedPrefixExpression), (nameof(value), valueExpression));
-            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
-            msg += Environment.NewLine + FrameworkMessages.StartsWithFailNew;
+            string msg = FrameworkMessages.StartsWithFailNew;
             msg += FormatAlignedParameters(
-                (nameof(expectedPrefix), FormatValue(expectedPrefix)),
+                ("expected prefix", FormatValue(expectedPrefix)),
                 (nameof(value), FormatValue(value)));
+            msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
     }
@@ -153,11 +153,11 @@ public sealed partial class Assert
         if (value.StartsWith(notExpectedPrefix, comparisonType))
         {
             string callSite = FormatCallSite("Assert.DoesNotStartWith", (nameof(notExpectedPrefix), notExpectedPrefixExpression), (nameof(value), valueExpression));
-            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
-            msg += Environment.NewLine + FrameworkMessages.DoesNotStartWithFailNew;
+            string msg = FrameworkMessages.DoesNotStartWithFailNew;
             msg += FormatAlignedParameters(
-                (nameof(notExpectedPrefix), FormatValue(notExpectedPrefix)),
+                ("unwanted prefix", FormatValue(notExpectedPrefix)),
                 (nameof(value), FormatValue(value)));
+            msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
     }

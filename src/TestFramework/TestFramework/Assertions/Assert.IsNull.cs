@@ -163,12 +163,8 @@ public sealed partial class Assert
     {
         string callSite = FormatCallSite("Assert.IsNull", (nameof(value), valueExpression));
         string message = FrameworkMessages.IsNullFailNew;
-        if (!string.IsNullOrEmpty(userMessage))
-        {
-            message += Environment.NewLine + userMessage;
-        }
-
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+        message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 
@@ -213,12 +209,7 @@ public sealed partial class Assert
     {
         string callSite = FormatCallSite("Assert.IsNotNull", ("value", valueExpression));
         string message = FrameworkMessages.IsNotNullFailNew;
-        if (!string.IsNullOrEmpty(userMessage))
-        {
-            message += Environment.NewLine + userMessage;
-        }
-
-        message += Environment.NewLine + FormatParameter<object>("value", valueExpression, null);
+        message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
 }

@@ -77,11 +77,11 @@ public sealed partial class Assert
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
             string callSite = FormatCallSite("Assert.EndsWith", (nameof(expectedSuffix), expectedSuffixExpression), (nameof(value), valueExpression));
-            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
-            msg += Environment.NewLine + FrameworkMessages.EndsWithFailNew;
+            string msg = FrameworkMessages.EndsWithFailNew;
             msg += FormatAlignedParameters(
-                (nameof(expectedSuffix), FormatValue(expectedSuffix)),
+                ("expected suffix", FormatValue(expectedSuffix)),
                 (nameof(value), FormatValue(value)));
+            msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
     }
@@ -155,11 +155,11 @@ public sealed partial class Assert
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
             string callSite = FormatCallSite("Assert.DoesNotEndWith", (nameof(notExpectedSuffix), notExpectedSuffixExpression), (nameof(value), valueExpression));
-            string msg = string.IsNullOrEmpty(message) ? string.Empty : message!;
-            msg += Environment.NewLine + FrameworkMessages.DoesNotEndWithFailNew;
+            string msg = FrameworkMessages.DoesNotEndWithFailNew;
             msg += FormatAlignedParameters(
-                (nameof(notExpectedSuffix), FormatValue(notExpectedSuffix)),
+                ("unwanted suffix", FormatValue(notExpectedSuffix)),
                 (nameof(value), FormatValue(value)));
+            msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
     }

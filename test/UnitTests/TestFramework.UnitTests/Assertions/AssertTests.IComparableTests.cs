@@ -43,10 +43,11 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsGreaterThan(10, 5) failed. A Message
-                Expected value to be greater than the specified bound.
-                  lowerBound: 10
-                  value:      5
+                Assert.IsGreaterThan(10, 5)
+                Expected value (5) to be greater than 10.
+                  lower bound: 10
+                  value:       5
+                User message: A Message
                 """);
     }
 
@@ -92,10 +93,11 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsGreaterThanOrEqualTo(10, 5) failed. A Message
-                Expected value to be greater than or equal to the specified bound.
-                  lowerBound: 10
-                  value:      5
+                Assert.IsGreaterThanOrEqualTo(10, 5)
+                Expected value (5) to be greater than or equal to 10.
+                  lower bound: 10
+                  value:       5
+                User message: A Message
                 """);
     }
 
@@ -141,10 +143,11 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsLessThan(5, 10) failed. A Message
-                Expected value to be less than the specified bound.
-                  upperBound: 5
-                  value:      10
+                Assert.IsLessThan(5, 10)
+                Expected value (10) to be less than 5.
+                  upper bound: 5
+                  value:       10
+                User message: A Message
                 """);
     }
 
@@ -190,10 +193,11 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsLessThanOrEqualTo(5, 10) failed. A Message
-                Expected value to be less than or equal to the specified bound.
-                  upperBound: 5
-                  value:      10
+                Assert.IsLessThanOrEqualTo(5, 10)
+                Expected value (10) to be less than or equal to 5.
+                  upper bound: 5
+                  value:       10
+                User message: A Message
                 """);
     }
 
@@ -254,9 +258,10 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsPositive(-5) failed. A Message
+                Assert.IsPositive(-5)
                 Expected a positive value.
                   value: -5
+                User message: A Message
                 """);
     }
 
@@ -323,9 +328,10 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNegative(5) failed. A Message
+                Assert.IsNegative(5)
                 Expected a negative value.
                   value: 5
+                User message: A Message
                 """);
     }
 
@@ -352,10 +358,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsGreaterThan(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 5);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsGreaterThan(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 5) failed.
-                Expected value to be greater than the specified bound.
-                  lowerBound: 10
-                  value:      5
+                Assert.IsGreaterThan(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 5)
+                Expected value (5) to be greater than 10.
+                  lower bound: 10
+                  value:       5
                 """);
     }
 
@@ -367,10 +373,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsGreaterThan(lowerBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsGreaterThan(lowerBound, value) failed.
-                Expected value to be greater than the specified bound.
-                  lowerBound: {new string('V', 256)}... 44 more
-                  value:      {new string('V', 256)}... 44 more
+                Assert.IsGreaterThan(lowerBound, value)
+                Expected value ({new string('V', 256)}... 44 more) to be greater than {new string('V', 256)}... 44 more.
+                  lower bound: {new string('V', 256)}... 44 more
+                  value:       {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -382,10 +388,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsGreaterThan(lowerBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsGreaterThan(lowerBound, value) failed.
-                Expected value to be greater than the specified bound.
-                  lowerBound: line1\r\nline2
-                  value:      line1\r\nline2
+                Assert.IsGreaterThan(lowerBound, value)
+                Expected value (line1\r\nline2) to be greater than line1\r\nline2.
+                  lower bound: line1\r\nline2
+                  value:       line1\r\nline2
                 """);
     }
 
@@ -396,10 +402,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsGreaterThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 5);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsGreaterThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 5) failed.
-                Expected value to be greater than or equal to the specified bound.
-                  lowerBound: 10
-                  value:      5
+                Assert.IsGreaterThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 5)
+                Expected value (5) to be greater than or equal to 10.
+                  lower bound: 10
+                  value:       5
                 """);
     }
 
@@ -411,10 +417,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsGreaterThanOrEqualTo(lowerBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsGreaterThanOrEqualTo(lowerBound, value) failed.
-                Expected value to be greater than or equal to the specified bound.
-                  lowerBound: {new string('V', 256)}... 44 more
-                  value:      {new string('V', 256)}... 44 more
+                Assert.IsGreaterThanOrEqualTo(lowerBound, value)
+                Expected value ({new string('V', 256)}... 44 more) to be greater than or equal to {new string('V', 256)}... 44 more.
+                  lower bound: {new string('V', 256)}... 44 more
+                  value:       {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -426,10 +432,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsGreaterThanOrEqualTo(lowerBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsGreaterThanOrEqualTo(lowerBound, value) failed.
-                Expected value to be greater than or equal to the specified bound.
-                  lowerBound: line1\r\nline2
-                  value:      line1\r\nline2
+                Assert.IsGreaterThanOrEqualTo(lowerBound, value)
+                Expected value (line1\r\nline2) to be greater than or equal to line1\r\nline2.
+                  lower bound: line1\r\nline2
+                  value:       line1\r\nline2
                 """);
     }
 
@@ -440,10 +446,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsLessThan(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 10);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsLessThan(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 10) failed.
-                Expected value to be less than the specified bound.
-                  upperBound: 5
-                  value:      10
+                Assert.IsLessThan(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 10)
+                Expected value (10) to be less than 5.
+                  upper bound: 5
+                  value:       10
                 """);
     }
 
@@ -455,10 +461,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsLessThan(upperBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsLessThan(upperBound, value) failed.
-                Expected value to be less than the specified bound.
-                  upperBound: {new string('V', 256)}... 44 more
-                  value:      {new string('V', 256)}... 44 more
+                Assert.IsLessThan(upperBound, value)
+                Expected value ({new string('V', 256)}... 44 more) to be less than {new string('V', 256)}... 44 more.
+                  upper bound: {new string('V', 256)}... 44 more
+                  value:       {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -470,10 +476,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsLessThan(upperBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsLessThan(upperBound, value) failed.
-                Expected value to be less than the specified bound.
-                  upperBound: line1\r\nline2
-                  value:      line1\r\nline2
+                Assert.IsLessThan(upperBound, value)
+                Expected value (line1\r\nline2) to be less than line1\r\nline2.
+                  upper bound: line1\r\nline2
+                  value:       line1\r\nline2
                 """);
     }
 
@@ -484,10 +490,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsLessThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, 10);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsLessThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 10) failed.
-                Expected value to be less than or equal to the specified bound.
-                  upperBound: 5
-                  value:      10
+                Assert.IsLessThanOrEqualTo(aVeryLongVariableNameThatExceedsOneHundredCharacte..., 10)
+                Expected value (10) to be less than or equal to 5.
+                  upper bound: 5
+                  value:       10
                 """);
     }
 
@@ -499,10 +505,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsLessThanOrEqualTo(upperBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsLessThanOrEqualTo(upperBound, value) failed.
-                Expected value to be less than or equal to the specified bound.
-                  upperBound: {new string('V', 256)}... 44 more
-                  value:      {new string('V', 256)}... 44 more
+                Assert.IsLessThanOrEqualTo(upperBound, value)
+                Expected value ({new string('V', 256)}... 44 more) to be less than or equal to {new string('V', 256)}... 44 more.
+                  upper bound: {new string('V', 256)}... 44 more
+                  value:       {new string('V', 256)}... 44 more
                 """);
     }
 
@@ -514,10 +520,10 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsLessThanOrEqualTo(upperBound, value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsLessThanOrEqualTo(upperBound, value) failed.
-                Expected value to be less than or equal to the specified bound.
-                  upperBound: line1\r\nline2
-                  value:      line1\r\nline2
+                Assert.IsLessThanOrEqualTo(upperBound, value)
+                Expected value (line1\r\nline2) to be less than or equal to line1\r\nline2.
+                  upper bound: line1\r\nline2
+                  value:       line1\r\nline2
                 """);
     }
 
@@ -528,7 +534,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsPositive(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsPositive(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
+                Assert.IsPositive(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
                 Expected a positive value.
                   value: -5
                 """);
@@ -541,7 +547,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsNegative(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNegative(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
+                Assert.IsNegative(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
                 Expected a negative value.
                   value: 5
                 """);

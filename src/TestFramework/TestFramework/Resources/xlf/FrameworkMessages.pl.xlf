@@ -257,18 +257,18 @@ Rzeczywiste: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailNew">
-        <source>Expected value to be greater than the specified bound.</source>
-        <target state="new">Expected value to be greater than the specified bound.</target>
+        <source>Expected value ({0}) to be greater than {1}.</source>
+        <target state="new">Expected value ({0}) to be greater than {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailNew">
-        <source>Expected value to be greater than or equal to the specified bound.</source>
-        <target state="new">Expected value to be greater than or equal to the specified bound.</target>
+        <source>Expected value ({0}) to be greater than or equal to {1}.</source>
+        <target state="new">Expected value ({0}) to be greater than or equal to {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFailNew">
-        <source>Value is not within the expected range.</source>
-        <target state="new">Value is not within the expected range.</target>
+        <source>Expected value ({0}) to be in range [{1}, {2}].</source>
+        <target state="new">Expected value ({0}) to be in range [{1}, {2}].</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
@@ -282,13 +282,13 @@ Rzeczywiste: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanFailNew">
-        <source>Expected value to be less than the specified bound.</source>
-        <target state="new">Expected value to be less than the specified bound.</target>
+        <source>Expected value ({0}) to be less than {1}.</source>
+        <target state="new">Expected value ({0}) to be less than {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailNew">
-        <source>Expected value to be less than or equal to the specified bound.</source>
-        <target state="new">Expected value to be less than or equal to the specified bound.</target>
+        <source>Expected value ({0}) to be less than or equal to {1}.</source>
+        <target state="new">Expected value ({0}) to be less than or equal to {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
@@ -302,18 +302,18 @@ Rzeczywiste: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailNew">
-        <source>Expected collection to contain any item but it is empty.</source>
-        <target state="new">Expected collection to contain any item but it is empty.</target>
+        <source>Expected collection to not be empty.</source>
+        <target state="new">Expected collection to not be empty.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotExactInstanceOfTypeFailNew">
-        <source>Value should not be exactly of the specified type.</source>
-        <target state="new">Value should not be exactly of the specified type.</target>
+        <source>Expected value to not be exactly the specified type.</source>
+        <target state="new">Expected value to not be exactly the specified type.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfTypeFailNew">
-        <source>Value should not be of the specified type.</source>
-        <target state="new">Value should not be of the specified type.</target>
+        <source>Expected value to not be an instance of the specified type.</source>
+        <target state="new">Expected value to not be an instance of the specified type.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotMatchFail">

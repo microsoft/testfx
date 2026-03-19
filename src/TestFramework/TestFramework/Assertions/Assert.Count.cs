@@ -337,11 +337,12 @@ public sealed partial class Assert
     private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, IEnumerable collection, string? userMessage, string collectionExpression)
     {
         string callSite = FormatCallSite($"Assert.{assertionName}", ("collection", collectionExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.HasCountFailNew;
+        string msg = FrameworkMessages.HasCountFailNew;
         msg += FormatCollectionParameter(collectionExpression, collection);
-        msg += $"{Environment.NewLine}  expectedCount: {expectedCount}";
-        msg += $"{Environment.NewLine}  actualCount: {actualCount}";
+        msg += FormatAlignedParameters(
+            ("expected count", expectedCount.ToString(CultureInfo.InvariantCulture)),
+            ("actual count", actualCount.ToString(CultureInfo.InvariantCulture)));
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 
@@ -349,8 +350,8 @@ public sealed partial class Assert
     private static void ThrowAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
         string callSite = FormatCallSite("Assert.IsNotEmpty", ("collection", collectionExpression));
-        string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        msg += Environment.NewLine + FrameworkMessages.IsNotEmptyFailNew;
+        string msg = FrameworkMessages.IsNotEmptyFailNew;
+        msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
 }

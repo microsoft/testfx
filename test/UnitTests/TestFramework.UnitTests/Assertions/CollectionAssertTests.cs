@@ -103,7 +103,7 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection.");
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf\nElement(s) <iem, a, b> is/are not present in the collection.");
     }
 
     public void CollectionAssertIsSubsetOf_WithMessage_ReturnedSubsetValueMessage_ThrowExceptionMessage()
@@ -116,7 +116,7 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf failed. Element(s) <iem, a, b> is/are not present in the collection. message");
+        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf\nElement(s) <iem, a, b> is/are not present in the collection. message");
     }
 
     public void CollectionAssertIsNotSubsetOfNullabilityPostConditions()
@@ -398,7 +398,8 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 });
         action.Should().Throw<Exception>()
             .WithMessage("""
-            CollectionAssert.AreEqual failed. Element at index 1 do not match.
+            CollectionAssert.AreEqual
+            Element at index 1 do not match.
             Expected: 2
             Actual: 5
             """);
@@ -410,7 +411,8 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage(
             """
-            CollectionAssert.AreEqual failed. User-provided message. Element at index 1 do not match.
+            CollectionAssert.AreEqual
+            User-provided message. Element at index 1 do not match.
             Expected: 2
             Actual: 5
             """);
