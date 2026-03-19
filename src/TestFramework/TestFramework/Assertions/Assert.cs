@@ -161,6 +161,18 @@ public sealed partial class Assert
         return $"<{typeName}>";
     }
 
+    internal static string FormatValueWithType(object value)
+    {
+        string formattedValue = FormatValue(value);
+        string formattedType = FormatType(value.GetType());
+
+        // When FormatValue already returned the type name (e.g. <System.Object>),
+        // don't repeat it.
+        return formattedValue == formattedType
+            ? formattedValue
+            : $"{formattedValue} ({formattedType})";
+    }
+
     internal static string TruncateExpression(string expression, int maxLength = 100)
         => expression.Length <= maxLength
             ? expression
@@ -307,9 +319,20 @@ public sealed partial class Assert
 
     /// <summary>
     /// Formats a collection parameter line showing a preview of the collection elements.
+    /// Callers must ensure the collection is safe to enumerate (e.g. materialized via
+    /// snapshot at the assertion boundary). Non-ICollection enumerables are shown as their
+    /// type name as a safety net.
     /// </summary>
     internal static string FormatCollectionParameter(string expression, IEnumerable collection)
     {
+        // Safety net: callers should materialize non-ICollection enumerables before
+        // reaching here, but if they don't, fall back to the type name rather than
+        // risk re-enumerating a non-deterministic or exhausted enumerator.
+        if (collection is not ICollection)
+        {
+            return $"{Environment.NewLine}  collection: {FormatType(collection.GetType())}";
+        }
+
         string preview = FormatCollectionPreview(collection);
 
         return $"{Environment.NewLine}  collection: {preview}";

@@ -319,13 +319,15 @@ public sealed partial class Assert
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message, string collectionExpression)
     {
-        int actualCount = collection.Count();
-        if (actualCount == expected)
+        // Materialize non-ICollection enumerables to prevent multiple enumeration
+        // that could yield different results or fail on second pass.
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (snapshot.Count == expected)
         {
             return;
         }
 
-        ThrowAssertCountFailed(assertionName, expected, actualCount, collection, message, collectionExpression);
+        ThrowAssertCountFailed(assertionName, expected, snapshot.Count, snapshot, message, collectionExpression);
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)

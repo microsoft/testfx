@@ -31,7 +31,7 @@ public partial class AssertTests
         Action act = () => Assert.Equals("test", "test");
 #pragma warning restore CS0618 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
-           .WithMessage("*Assert.Equals should not be used for Assertions*");
+           .WithMessage("Assert.Fail failed. Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead.");
     }
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
@@ -41,7 +41,7 @@ public partial class AssertTests
         Action act = () => Assert.ReferenceEquals(obj, obj);
 #pragma warning restore CS0618 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
-           .WithMessage("*Assert.ReferenceEquals should not be used for Assertions*");
+           .WithMessage("Assert.Fail failed. Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead.");
     }
 #endif
     #endregion
@@ -79,7 +79,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(longValue) failed.
                 Expected value to be null.
                   value: {expectedValue}
                 """);
@@ -93,7 +93,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(value) failed.
                 Expected value to be null.
                   value: {expectedFullValue}
                 """);
@@ -108,7 +108,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(obj) failed.
                 Expected value to be null.
                   value: {expectedValue}
                 """);
@@ -122,7 +122,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNotNull(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNotNull(*) failed.
+                Assert.IsNotNull(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Expected a non-null value.
                   value: null
                 """);
@@ -139,7 +139,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(obj) failed.
                 Expected value to be null.
                   value: line1\r\nline2\nline3
                 """);
@@ -152,7 +152,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(value) failed.
                 Expected value to be null.
                   value: "hello\nworld"
                 """);
@@ -169,7 +169,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(collection) failed.
                 Expected value to be null.
                   value: [1, 2, 3]
                 """);
@@ -190,7 +190,7 @@ public partial class AssertTests
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.Contains(*) failed.
+                Assert.Contains("not-there", collection) failed.
                 Expected collection to contain the specified item.
                   collection: ["{new string('a', 30)}", "{new string('b', 30)}", "{new string('c', 30)}", "{new string('d', 30)}", "{new string('e', 30)}", "{new string('f', 30)}", "{new string('g', 30)}", ... 13 more]
                 """);
@@ -205,9 +205,9 @@ public partial class AssertTests
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.Contains(*) failed.
+                Assert.Contains("not-there", collection) failed.
                 Expected collection to contain the specified item.
-                  collection*[{expectedFirstElement}, "short"]
+                  collection: [{expectedFirstElement}, "short"]
                 """);
     }
 
@@ -220,7 +220,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(outer);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(outer) failed.
                 Expected value to be null.
                   value: [[1, 2], [3, 4]]
                 """);
@@ -244,7 +244,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(outer);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(*) failed.
+                Assert.IsNull(outer) failed.
                 Expected value to be null.
                   value: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]]
                 """);
@@ -257,9 +257,9 @@ public partial class AssertTests
         Action action = () => Assert.Contains("not-there", collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains("not-there", collection) failed.
                 Expected collection to contain the specified item.
-                  collection*["line1\nline2", "ok"]
+                  collection: ["line1\nline2", "ok"]
                 """);
     }
 
@@ -270,10 +270,48 @@ public partial class AssertTests
         Action action = () => Assert.Contains(99, collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.Contains(*) failed.
+                Assert.Contains(99, collection) failed.
                 Expected collection to contain the specified item.
                   collection: [42]
                 """);
+    }
+
+    public void FormatCollectionParameter_WhenNonICollectionEnumerable_ShouldNotReEnumerate()
+    {
+        // This enumerable yields different results on each enumeration.
+        // The assertion materializes the enumerable once at the boundary,
+        // so both the assertion check and the error message use the same snapshot.
+        int callCount = 0;
+        IEnumerable<int> NonDeterministicEnumerable()
+        {
+            callCount++;
+            if (callCount == 1)
+            {
+                // First (and only) enumeration: materialized by Assert.Contains
+                yield return 1;
+                yield return 2;
+                yield return 3;
+            }
+            else
+            {
+                // If re-enumerated, yields completely different values
+                yield return 99;
+                yield return 100;
+            }
+        }
+
+        IEnumerable<int> collection = NonDeterministicEnumerable();
+        Action action = () => Assert.Contains(42, collection);
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.Contains(42, collection) failed.
+                Expected collection to contain the specified item.
+                  collection: [1, 2, 3]
+                """);
+
+        // The enumerable should have been enumerated exactly once (materialized at assertion boundary).
+        // If this were 2, the error message could show [99, 100] instead of [1, 2, 3].
+        callCount.Should().Be(1);
     }
 
     #endregion

@@ -268,9 +268,12 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (!collection.Contains(expected))
+        // Materialize non-ICollection enumerables to prevent multiple enumeration
+        // that could yield different results or fail on second pass.
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (!snapshot.Contains(expected))
         {
-            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
+            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
         }
     }
 
@@ -292,7 +295,10 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
 
-        foreach (object? item in collection)
+        // Materialize non-ICollection enumerables to prevent multiple enumeration.
+        ICollection snapshot = collection as ICollection ?? collection.Cast<object?>().ToList();
+
+        foreach (object? item in snapshot)
         {
             if (object.Equals(item, expected))
             {
@@ -300,7 +306,7 @@ public sealed partial class Assert
             }
         }
 
-        ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
+        ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
     }
 
     /// <summary>
@@ -321,9 +327,10 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (!collection.Contains(expected, comparer))
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (!snapshot.Contains(expected, comparer))
         {
-            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
+            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
         }
     }
 
@@ -347,7 +354,9 @@ public sealed partial class Assert
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
         CheckParameterNotNull(comparer, "Assert.Contains", "comparer");
 
-        foreach (object? item in collection)
+        ICollection snapshot = collection as ICollection ?? collection.Cast<object?>().ToList();
+
+        foreach (object? item in snapshot)
         {
             if (comparer.Equals(item, expected))
             {
@@ -355,7 +364,7 @@ public sealed partial class Assert
             }
         }
 
-        ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, collection);
+        ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
     }
 
     /// <summary>
@@ -375,9 +384,10 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (!collection.Any(predicate))
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (!snapshot.Any(predicate))
         {
-            ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, collection);
+            ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, snapshot);
         }
     }
 
@@ -400,7 +410,9 @@ public sealed partial class Assert
         CheckParameterNotNull(collection, "Assert.Contains", "collection");
         CheckParameterNotNull(predicate, "Assert.Contains", "predicate");
 
-        foreach (object? item in collection)
+        ICollection snapshot = collection as ICollection ?? collection.Cast<object?>().ToList();
+
+        foreach (object? item in snapshot)
         {
             if (predicate(item))
             {
@@ -408,7 +420,7 @@ public sealed partial class Assert
             }
         }
 
-        ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, collection);
+        ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, snapshot);
     }
 
     /// <summary>
@@ -505,9 +517,10 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (collection.Contains(notExpected))
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (snapshot.Contains(notExpected))
         {
-            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
+            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
         }
     }
 
@@ -529,11 +542,13 @@ public sealed partial class Assert
     {
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
 
-        foreach (object? item in collection)
+        ICollection snapshot = collection as ICollection ?? collection.Cast<object?>().ToList();
+
+        foreach (object? item in snapshot)
         {
             if (object.Equals(notExpected, item))
             {
-                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
             }
         }
     }
@@ -556,9 +571,10 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (collection.Contains(notExpected, comparer))
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (snapshot.Contains(notExpected, comparer))
         {
-            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
+            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
         }
     }
 
@@ -582,11 +598,13 @@ public sealed partial class Assert
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
         CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
 
-        foreach (object? item in collection)
+        ICollection snapshot = collection as ICollection ?? collection.Cast<object?>().ToList();
+
+        foreach (object? item in snapshot)
         {
             if (comparer.Equals(item, notExpected))
             {
-                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, collection);
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
             }
         }
     }
@@ -608,9 +626,10 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        if (collection.Any(predicate))
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (snapshot.Any(predicate))
         {
-            ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, collection);
+            ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, snapshot);
         }
     }
 
@@ -633,11 +652,13 @@ public sealed partial class Assert
         CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
         CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
 
-        foreach (object? item in collection)
+        ICollection snapshot = collection as ICollection ?? collection.Cast<object?>().ToList();
+
+        foreach (object? item in snapshot)
         {
             if (predicate(item))
             {
-                ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, collection);
+                ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, snapshot);
             }
         }
     }
