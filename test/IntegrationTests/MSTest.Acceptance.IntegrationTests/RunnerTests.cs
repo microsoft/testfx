@@ -27,10 +27,8 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
+
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
-            $"restore {generator.TargetAssetPath} -r {RID}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
-        compilationResult = await DotnetCli.RunAsync(
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
@@ -68,7 +66,7 @@ return await app.RunAsync();
 <GenerateTestingPlatformEntryPoint>False</GenerateTestingPlatformEntryPoint>
 <LangVersion>preview</LangVersion>
 """));
-        await DotnetCli.RunAsync($"restore {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
+
         await DotnetCli.RunAsync(
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
@@ -90,7 +88,6 @@ return await app.RunAsync();
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        await DotnetCli.RunAsync($"restore {generator.TargetAssetPath} -r {RID}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, cancellationToken: TestContext.CancellationToken);
 
         if (TargetFrameworks.NetFramework.Any(x => x == tfm))
         {
