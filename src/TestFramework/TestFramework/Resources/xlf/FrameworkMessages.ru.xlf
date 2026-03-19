@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaNoGreaterThanFailMsg">
-        <source>Expected a difference no greater than &lt;{0}&gt;.</source>
-        <target state="new">Expected a difference no greater than &lt;{0}&gt;.</target>
+        <source>Expected a difference no greater than {0}.</source>
+        <target state="new">Expected a difference no greater than {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailNew">
@@ -43,8 +43,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaGreaterThanFailMsg">
-        <source>Expected a difference greater than &lt;{0}&gt;.</source>
-        <target state="new">Expected a difference greater than &lt;{0}&gt;.</target>
+        <source>Expected a difference greater than {0}.</source>
+        <target state="new">Expected a difference greater than {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailNew">

@@ -286,10 +286,10 @@ Actual: {2}</value>
     <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
   <data name="AreEqualDeltaNoGreaterThanFailMsg" xml:space="preserve">
-    <value>Expected a difference no greater than &lt;{0}&gt;.</value>
+    <value>Expected a difference no greater than {0}.</value>
   </data>
   <data name="AreNotEqualDeltaGreaterThanFailMsg" xml:space="preserve">
-    <value>Expected a difference greater than &lt;{0}&gt;.</value>
+    <value>Expected a difference greater than {0}.</value>
   </data>
   <data name="AreEqualCaseDiffersMsg" xml:space="preserve">
     <value>Case differs.</value>
