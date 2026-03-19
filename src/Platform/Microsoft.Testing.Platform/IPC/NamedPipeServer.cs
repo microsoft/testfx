@@ -210,8 +210,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the message size
 #if NET
                 byte[] bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
                 ApplicationStateGuard.Ensure(bytes.Length == sizeof(int));
+                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
+                {
+                    // TryWriteBytes only fails if the destination is too small.
+                    // Here, we are writing an int, and we already ensured that the length is correct before calling TryWriteBytes.
+                    throw ApplicationStateGuard.Unreachable();
+                }
+
                 await _messageBuffer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
 #else
                 await _messageBuffer.WriteAsync(BitConverter.GetBytes(sizeOfTheWholeMessage), 0, sizeof(int), cancellationToken).ConfigureAwait(false);
@@ -220,7 +226,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Write the serializer id
 #if NET
                 bytes = _sizeOfIntArray;
-                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+                if (!BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id))
+                {
+                    throw ApplicationStateGuard.Unreachable();
+                }
 
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
 #else

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
         <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="new">AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</target>
+        <target state="translated">Les extensions IA fonctionnent uniquement avec des générateurs de type « Microsoft.Testing.Platform.Builder.TestApplicationBuilder »</target>
         <note />
       </trans-unit>
     </body>

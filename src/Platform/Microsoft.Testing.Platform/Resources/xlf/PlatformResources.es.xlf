@@ -965,11 +965,6 @@ Los valores válidos son 'Normal', 'Detallado'. El valor predeterminado es 'Norm
         <target state="translated">Llamada de telemetría inesperada, la telemetría está deshabilitada.</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">Se ha producido una excepción inesperada durante la conversión de bytes</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
