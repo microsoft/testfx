@@ -6,16 +6,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public static class AcceptanceFixture
 {
-    public static TempDirectory NuGetGlobalPackagesFolder { get; private set; } = null!;
-
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
-    {
-        NuGetGlobalPackagesFolder = new(".packages");
-        Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
-    }
-
-    [AssemblyCleanup]
-    public static void AssemblyCleanup()
-        => NuGetGlobalPackagesFolder.Dispose();
+        => Environment.SetEnvironmentVariable("MSBUILDDISABLENODEREUSE", "1");
 }

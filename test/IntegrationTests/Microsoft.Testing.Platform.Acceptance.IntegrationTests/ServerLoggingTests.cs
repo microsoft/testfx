@@ -78,7 +78,7 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         await jsonClient.Exit();
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "AssetFixture";
 

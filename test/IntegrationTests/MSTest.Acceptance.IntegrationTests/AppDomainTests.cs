@@ -26,7 +26,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
             null => string.Empty,
         };
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Release --no-build {AssetFixture.TargetAssetPath}{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Release --no-build {AssetFixture.TargetAssetPath}{disableAppDomainCommand}", workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputContains(@"Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
@@ -45,7 +45,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
             null => string.Empty,
         };
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Release --no-build {AssetFixture.TargetAssetPath} --list-tests{disableAppDomainCommand}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Release --no-build {AssetFixture.TargetAssetPath} --list-tests{disableAppDomainCommand}", workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, compilationResult.ExitCode);
     }
 
@@ -107,7 +107,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
 
     public TestContext TestContext { get; set; }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string SingleTestSourceCode = """
 #file AppDomainTests.csproj

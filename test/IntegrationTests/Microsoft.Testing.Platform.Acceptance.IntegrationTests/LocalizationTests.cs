@@ -106,7 +106,7 @@ public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetF
         AssertOutputDoesNotContainNormalized(testHostResult, "Resumen de la serie de pruebas:");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string TestCode = """
 #file LocalizationTests.csproj

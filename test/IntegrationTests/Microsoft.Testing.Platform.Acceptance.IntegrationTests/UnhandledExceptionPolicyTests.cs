@@ -157,7 +157,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "UnhandledExceptionPolicyTests";
 

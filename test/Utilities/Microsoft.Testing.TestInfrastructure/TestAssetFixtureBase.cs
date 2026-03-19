@@ -21,11 +21,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 {
     private readonly ConcurrentDictionary<string /* asset ID */, TestAsset> _testAssets = new();
     private readonly TempDirectory _tempDirectory = new();
-    private readonly TempDirectory _nugetGlobalPackagesDirectory;
     private bool _disposedValue;
-
-    protected TestAssetFixtureBase(TempDirectory nugetGlobalPackagesDirectory)
-        => _nugetGlobalPackagesDirectory = nugetGlobalPackagesDirectory;
 
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
@@ -38,7 +34,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.ID, asset.Code, _tempDirectory);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name, cancellationToken: cancellationToken);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: asset.Name, cancellationToken: cancellationToken);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
@@ -46,7 +42,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code, _tempDirectory);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name, cancellationToken: cancellationToken);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: asset.Name, cancellationToken: cancellationToken);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         }));

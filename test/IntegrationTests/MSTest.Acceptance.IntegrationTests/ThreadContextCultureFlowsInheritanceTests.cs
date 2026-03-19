@@ -52,7 +52,7 @@ public sealed class ThreadContextCultureFlowsInheritanceTests : AcceptanceTestBa
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 16, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "CultureFlowsInheritanceThreadContextProject";
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Configurations;
@@ -55,7 +55,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         return (Regex.IsMatch(content, pattern), content);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string WithoutTelemetry = nameof(WithoutTelemetry);
 

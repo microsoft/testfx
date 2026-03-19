@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -26,7 +26,7 @@ public sealed class LifecycleWithParallelAttributesTaskThreadingTests : Acceptan
         testHostResult.AssertOutputContains("Passed!");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "LifecycleWithParallelAttributesTask";
         public const string AssemblyName = "LifecycleAttributesTask";

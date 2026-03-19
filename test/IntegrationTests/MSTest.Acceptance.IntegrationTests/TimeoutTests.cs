@@ -606,7 +606,7 @@ public class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixture>
         testHostResult.AssertOutputContains("Test 'TestMethod' timed out after 1000ms");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AssetName = "TimeoutTest";
         public const string CodeWithOneSecTimeout = nameof(CodeWithOneSecTimeout);

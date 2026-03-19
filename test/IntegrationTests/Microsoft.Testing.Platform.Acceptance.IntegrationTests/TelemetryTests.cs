@@ -111,7 +111,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         return (Regex.IsMatch(content, pattern), content);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string WithTelemetry = nameof(WithTelemetry);
 

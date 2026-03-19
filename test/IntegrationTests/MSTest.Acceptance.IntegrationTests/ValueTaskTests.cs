@@ -21,7 +21,7 @@ public sealed class ValueTaskTests : AcceptanceTestBase<ValueTaskTests.TestAsset
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 2, skipped: 1);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestValueTask";
 

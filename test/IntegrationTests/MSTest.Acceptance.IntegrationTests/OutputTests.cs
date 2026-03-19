@@ -27,7 +27,7 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
             """);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestOutput";
 

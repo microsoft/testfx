@@ -24,7 +24,7 @@ public class DeploymentItemTests : AcceptanceTestBase<DeploymentItemTests.TestAs
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file DeploymentItemTests.csproj

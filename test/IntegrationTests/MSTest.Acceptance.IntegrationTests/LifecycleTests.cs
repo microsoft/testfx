@@ -76,7 +76,7 @@ public sealed class LifecycleTests : AcceptanceTestBase<LifecycleTests.TestAsset
             """);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "LifecycleTests";
 

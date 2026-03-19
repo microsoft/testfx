@@ -29,7 +29,7 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
         testHostResult.AssertOutputContains("Test1");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetName = "AssetFixture";
 
