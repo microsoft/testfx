@@ -14,9 +14,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null)
-                Expected value to be of the specified type.
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
                 """);
     }
 
@@ -26,19 +25,20 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
+                Expected value to be an instance of null.
                   value: 5
                   expected type: null
-                "");
+                """);
+    }
+
+    public void InstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
-                  value: 5
-                  expected type: <System.String>
-                  actual type: <System.Int32>
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
                 """);
     }
 
@@ -52,9 +52,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null)
-                Expected value to be of the specified type.
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
                 User message: User-provided message
                 """);
     }
@@ -65,19 +64,21 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
+                Expected value to be an instance of null.
                   value: 5
                   expected type: null
                 User message: User-provided message
+                """);
+    }
+
+    public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
-                  value: 5
-                  expected type: <System.String>
-                  actual type: <System.Int32>
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
                 User message: User-provided message
                 """);
     }
@@ -93,9 +94,8 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsInstanceOfType(null)
-                Expected value to be of the specified type.
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -108,7 +108,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
+                Expected value to be an instance of null.
                   value: 5
                   expected type: null
                 User message: User-provided message DummyClassTrackingToStringCalls
@@ -123,10 +123,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
-                  value: 5
-                  expected type: <System.String>
-                  actual type: <System.Int32>
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
                 User message: User-provided message DummyClassTrackingToStringCalls
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -147,7 +145,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNotInstanceOfType(5)
-                Expected value to not be an instance of the specified type.
+                Expected value to not be an instance of null.
                   value: 5
                   wrong type: null
                 """);
@@ -163,9 +161,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null)
-                Expected value to be of the specified type.
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
                 """);
     }
 
@@ -175,10 +172,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
-                Expected value to be of the specified type.
-                  value: 5
-                  expected type: <System.String>
-                  actual type: <System.Int32>
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
                 """);
     }
 
@@ -304,10 +299,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected value to be of the specified type.
-                  value: "hello"
-                  expected type: <System.Int32>
-                  actual type: <System.String>
+                Expected value to be an instance of <System.Int32>.
+                  value: "hello" (<System.String>)
                 """);
     }
 
@@ -319,10 +312,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsInstanceOfType(obj)
-                Expected value to be of the specified type.
-                  value: {new string('L', 256)}... 44 more
-                  expected type: <System.Int32>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
+                Expected value to be an instance of <System.Int32>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
                 """);
     }
 
@@ -334,10 +325,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(obj)
-                Expected value to be of the specified type.
-                  value: line1\r\nline2\nline3
-                  expected type: <System.Int32>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
+                Expected value to be an instance of <System.Int32>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
                 """);
     }
 
@@ -349,10 +338,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNotInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected value to not be an instance of the specified type.
-                  value: "hello"
-                  wrong type: <System.String>
-                  actual type: <System.String>
+                Expected value to not be an instance of <System.String>.
+                  value: "hello" (<System.String>)
                 """);
     }
 
@@ -364,10 +351,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsNotInstanceOfType(obj)
-                Expected value to not be an instance of the specified type.
-                  value: {new string('L', 256)}... 44 more
-                  wrong type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
+                Expected value to not be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
                 """);
     }
 
@@ -379,10 +364,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNotInstanceOfType(obj)
-                Expected value to not be an instance of the specified type.
-                  value: line1\r\nline2\nline3
-                  wrong type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
+                Expected value to not be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
                 """);
     }
 

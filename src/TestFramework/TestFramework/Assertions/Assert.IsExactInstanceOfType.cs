@@ -323,20 +323,18 @@ public sealed partial class Assert
     private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsExactInstanceOfType", (nameof(value), valueExpression));
-        string message = FrameworkMessages.IsExactInstanceOfTypeFailNew;
+        string message;
 
-        message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         if (expectedType is null)
         {
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsExactInstanceOfTypeFailNew, "null");
+            message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
             message += Environment.NewLine + "  expected type: null";
         }
         else
         {
-            message += Environment.NewLine + $"  expected type: {FormatType(expectedType)}";
-            if (value is not null)
-            {
-                message += Environment.NewLine + $"  actual type: {FormatType(value.GetType())}";
-            }
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsExactInstanceOfTypeFailNew, FormatType(expectedType));
+            message += Environment.NewLine + $"  value: {(value is null ? "null" : FormatValueWithType(value))}";
         }
 
         message = AppendUserMessage(message, userMessage);
@@ -406,17 +404,18 @@ public sealed partial class Assert
     private static void ThrowAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsNotExactInstanceOfType", (nameof(value), valueExpression));
-        string message = FrameworkMessages.IsNotExactInstanceOfTypeFailNew;
+        string message;
 
-        message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         if (wrongType is null)
         {
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotExactInstanceOfTypeFailNew, "null");
+            message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
             message += Environment.NewLine + "  wrong type: null";
         }
         else
         {
-            message += Environment.NewLine + $"  wrong type: {FormatType(wrongType)}"
-                     + Environment.NewLine + $"  actual type: {FormatType(value!.GetType())}";
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotExactInstanceOfTypeFailNew, FormatType(wrongType));
+            message += Environment.NewLine + $"  value: {FormatValueWithType(value!)}";
         }
 
         message = AppendUserMessage(message, userMessage);

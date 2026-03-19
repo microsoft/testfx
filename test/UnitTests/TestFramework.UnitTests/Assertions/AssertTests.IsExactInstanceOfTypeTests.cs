@@ -14,9 +14,8 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null)
-Expected value to be exactly of the specified type.
+Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
   value: null
-  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
 """);
     }
 
@@ -26,19 +25,20 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
+Expected value to be exactly null.
   value: 5
   expected type: null
-"");
+""");
+    }
+
+    public void ExactInstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
-  value: 5
-  expected type: <System.String>
-  actual type: <System.Int32>
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
 """);
     }
 
@@ -50,10 +50,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
-  value: 5
-  expected type: <System.Object>
-  actual type: <System.Int32>
+Expected value to be exactly <System.Object>.
+  value: 5 (<System.Int32>)
 """);
     }
 
@@ -64,10 +62,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(x)
-Expected value to be exactly of the specified type.
+Expected value to be exactly <System.IO.Stream>.
   value: <System.IO.MemoryStream>
-  expected type: <System.IO.Stream>
-  actual type: <System.IO.MemoryStream>
 """);
     }
 
@@ -83,9 +79,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null)
-Expected value to be exactly of the specified type.
+Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
   value: null
-  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
 User message: User-provided message
 """);
     }
@@ -96,19 +91,21 @@ User message: User-provided message
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
+Expected value to be exactly null.
   value: 5
   expected type: null
 User message: User-provided message
+""");
+    }
+
+    public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
-  value: 5
-  expected type: <System.String>
-  actual type: <System.Int32>
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
 User message: User-provided message
 """);
     }
@@ -124,9 +121,8 @@ User message: User-provided message
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsExactInstanceOfType(null)
-                Expected value to be exactly of the specified type.
+                Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -139,7 +135,7 @@ User message: User-provided message
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
+Expected value to be exactly null.
   value: 5
   expected type: null
 User message: User-provided message DummyClassTrackingToStringCalls
@@ -154,10 +150,8 @@ User message: User-provided message DummyClassTrackingToStringCalls
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
-  value: 5
-  expected type: <System.String>
-  actual type: <System.Int32>
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
 User message: User-provided message DummyClassTrackingToStringCalls
 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -178,7 +172,7 @@ User message: User-provided message DummyClassTrackingToStringCalls
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsNotExactInstanceOfType(5)
-Expected value to not be exactly the specified type.
+Expected value to not be exactly null.
   value: 5
   wrong type: null
 """);
@@ -201,10 +195,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsNotExactInstanceOfType(x)
-Expected value to not be exactly the specified type.
+Expected value to not be exactly <System.IO.MemoryStream>.
   value: <System.IO.MemoryStream>
-  wrong type: <System.IO.MemoryStream>
-  actual type: <System.IO.MemoryStream>
 """);
     }
 
@@ -214,9 +206,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null)
-Expected value to be exactly of the specified type.
+Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
   value: null
-  expected type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
 """);
     }
 
@@ -226,10 +217,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
-  value: 5
-  expected type: <System.String>
-  actual type: <System.Int32>
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
 """);
     }
 
@@ -240,10 +229,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(x)
-Expected value to be exactly of the specified type.
+Expected value to be exactly <System.IO.Stream>.
   value: <System.IO.MemoryStream>
-  expected type: <System.IO.Stream>
-  actual type: <System.IO.MemoryStream>
 """);
     }
 
@@ -268,10 +255,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
-Expected value to be exactly of the specified type.
-  value: 5
-  expected type: <System.Object>
-  actual type: <System.Int32>
+Expected value to be exactly <System.Object>.
+  value: 5 (<System.Int32>)
 """);
     }
 
@@ -301,10 +286,8 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsNotExactInstanceOfType(x)
-Expected value to not be exactly the specified type.
+Expected value to not be exactly <System.IO.MemoryStream>.
   value: <System.IO.MemoryStream>
-  wrong type: <System.IO.MemoryStream>
-  actual type: <System.IO.MemoryStream>
 """);
     }
 
@@ -388,10 +371,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected value to be exactly of the specified type.
-                  value: "hello"
-                  expected type: <System.Int32>
-                  actual type: <System.String>
+                Expected value to be exactly <System.Int32>.
+                  value: "hello" (<System.String>)
                 """);
     }
 
@@ -403,10 +384,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsExactInstanceOfType(obj)
-                Expected value to be exactly of the specified type.
-                  value: {new string('L', 256)}... 44 more
-                  expected type: <System.Int32>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
+                Expected value to be exactly <System.Int32>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
                 """);
     }
 
@@ -418,10 +397,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsExactInstanceOfType(obj)
-                Expected value to be exactly of the specified type.
-                  value: line1\r\nline2\nline3
-                  expected type: <System.Int32>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
+                Expected value to be exactly <System.Int32>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
                 """);
     }
 
@@ -433,10 +410,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNotExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected value to not be exactly the specified type.
-                  value: "hello"
-                  wrong type: <System.String>
-                  actual type: <System.String>
+                Expected value to not be exactly <System.String>.
+                  value: "hello" (<System.String>)
                 """);
     }
 
@@ -448,10 +423,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.IsNotExactInstanceOfType(obj)
-                Expected value to not be exactly the specified type.
-                  value: {new string('L', 256)}... 44 more
-                  wrong type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
+                Expected value to not be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
                 """);
     }
 
@@ -463,10 +436,8 @@ Expected value to not be exactly the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNotExactInstanceOfType(obj)
-                Expected value to not be exactly the specified type.
-                  value: line1\r\nline2\nline3
-                  wrong type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
-                  actual type: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
+                Expected value to not be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
                 """);
     }
 
