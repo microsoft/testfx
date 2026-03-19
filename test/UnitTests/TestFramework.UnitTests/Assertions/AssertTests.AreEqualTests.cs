@@ -86,8 +86,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreNotEqual(1L, 1L)
                 Expected values to differ.
-                  not expected: 1
-                  actual:       1
+                  not expected: 1L
+                  actual:       1L
                 User message: A Message
                 """);
     }
@@ -111,8 +111,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreNotEqual(0.1M, 0.1M)
                 Expected values to differ.
-                  not expected: 0.1
-                  actual:       0.1
+                  not expected: 0.1m
+                  actual:       0.1m
                 User message: A Message
                 """);
     }
@@ -286,8 +286,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(1L, 2L)
                 Expected values to be equal.
-                  expected: 1
-                  actual:   2
+                  expected: 1L
+                  actual:   2L
                 User message: A Message
                 """);
     }
@@ -337,8 +337,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(0.1M, 0.2M)
                 Expected values to be equal.
-                  expected: 0.1
-                  actual:   0.2
+                  expected: 0.1m
+                  actual:   0.2m
                 User message: A Message
                 """);
     }
@@ -509,8 +509,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(1.0f, 1.1f)
                 Expected a difference no greater than 0.001.
-                  expected: 1
-                  actual:   1.1
+                  expected: 1f
+                  actual:   1.1f
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -532,8 +532,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreNotEqual(1.0f, 1.1f)
                 Expected a difference greater than 0.2.
-                  not expected: 1
-                  actual:       1.1
+                  not expected: 1f
+                  actual:       1.1f
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -555,8 +555,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(1.0m, 1.1m)
                 Expected a difference no greater than 0.001.
-                  expected: 1.0
-                  actual:   1.1
+                  expected: 1.0m
+                  actual:   1.1m
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -578,8 +578,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreNotEqual(1.0m, 1.1m)
                 Expected a difference greater than 0.2.
-                  not expected: 1.0
-                  actual:       1.1
+                  not expected: 1.0m
+                  actual:       1.1m
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -601,8 +601,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(1L, 2L)
                 Expected a difference no greater than 0.
-                  expected: 1
-                  actual:   2
+                  expected: 1L
+                  actual:   2L
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -624,8 +624,8 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreNotEqual(1L, 2L)
                 Expected a difference greater than 1.
-                  not expected: 1
-                  actual:       2
+                  not expected: 1L
+                  actual:       2L
                 User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -848,8 +848,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreEqual(5.0f, 2.0f)
                 Expected a difference no greater than 2.
-                  expected: 5
-                  actual:   2
+                  expected: 5f
+                  actual:   2f
                 """");
     }
 
@@ -859,8 +859,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreEqual(2.0f, 5.0f)
                 Expected a difference no greater than 2.
-                  expected: 2
-                  actual:   5
+                  expected: 2f
+                  actual:   5f
                 """");
     }
 
@@ -876,8 +876,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreEqual(5.0f, float.NaN)
                 Expected a difference no greater than 2.
-                  expected: 5
-                  actual:   NaN
+                  expected: 5f
+                  actual:   NaNf
                 """");
     }
 
@@ -887,8 +887,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreEqual(float.NaN, 5.0f)
                 Expected a difference no greater than 2.
-                  expected: NaN
-                  actual:   5
+                  expected: NaNf
+                  actual:   5f
                 """");
     }
 
@@ -1080,8 +1080,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreNotEqual(5.0f, 4.0f)
                 Expected a difference greater than 2.
-                  not expected: 5
-                  actual:       4
+                  not expected: 5f
+                  actual:       4f
                 """");
     }
 
@@ -1091,8 +1091,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreNotEqual(4.0f, 5.0f)
                 Expected a difference greater than 2.
-                  not expected: 4
-                  actual:       5
+                  not expected: 4f
+                  actual:       5f
                 """");
     }
 
@@ -1107,8 +1107,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>().WithMessage(""""
                 Assert.AreNotEqual(float.NaN, float.NaN)
                 Expected a difference greater than 2.
-                  not expected: NaN
-                  actual:       NaN
+                  not expected: NaNf
+                  actual:       NaNf
                 """");
     }
 

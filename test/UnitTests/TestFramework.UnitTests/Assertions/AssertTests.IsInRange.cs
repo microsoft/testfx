@@ -409,9 +409,9 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (4) to be in range [5, 5].
-                  range: [5, 5]
-                  value: 4
+                Expected value (4f) to be in range [5f, 5f].
+                  range: [5f, 5f]
+                  value: 4f
                 """);
     }
 
@@ -426,9 +426,9 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
-                Expected value (6) to be in range [5, 5].
-                  range: [5, 5]
-                  value: 6
+                Expected value (6f) to be in range [5f, 5f].
+                  range: [5f, 5f]
+                  value: 6f
                 """);
     }
 

@@ -126,7 +126,9 @@ public sealed partial class Assert
         if (type.IsPrimitive || value is decimal or DateTime or DateTimeOffset
             or TimeSpan or Guid or Enum)
         {
-            return EscapeNewlines(Truncate(value.ToString() ?? string.Empty, maxLength));
+            string formatted = EscapeNewlines(Truncate(value.ToString() ?? string.Empty, maxLength));
+            string suffix = GetNumericTypeSuffix(value);
+            return suffix.Length > 0 ? formatted + suffix : formatted;
         }
 
         MethodInfo? toStringMethod = type.GetMethod(nameof(ToString), BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
@@ -147,6 +149,22 @@ public sealed partial class Assert
         // No useful ToString - just return the type name
         return FormatType(type);
     }
+
+    /// <summary>
+    /// Returns the C# literal suffix for numeric types where the type
+    /// is not the default for its category (int for integers, double for
+    /// floating-point). Returns empty string for int, double, and
+    /// non-numeric types.
+    /// </summary>
+    private static string GetNumericTypeSuffix<T>(T value) => value switch
+    {
+        long => "L",
+        ulong => "UL",
+        uint => "U",
+        float => "f",
+        decimal => "m",
+        _ => string.Empty,
+    };
 
     internal static string FormatType(Type type)
     {
