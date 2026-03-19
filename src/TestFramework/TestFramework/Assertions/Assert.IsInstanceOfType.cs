@@ -335,7 +335,7 @@ public sealed partial class Assert
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         if (expectedType is null)
         {
-            message += Environment.NewLine + "  expected type: (null)";
+            message += Environment.NewLine + "  expected type: null";
         }
         else
         {
@@ -420,7 +420,7 @@ public sealed partial class Assert
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         if (wrongType is null)
         {
-            message += Environment.NewLine + "  wrong type: (null)";
+            message += Environment.NewLine + "  wrong type: null";
         }
         else
         {

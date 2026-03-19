@@ -28,11 +28,8 @@ Expected value to be exactly of the specified type.
 Assert.IsExactInstanceOfType(5)
 Expected value to be exactly of the specified type.
   value: 5
-  expected type: (null)
-""");
-    }
-
-    public void ExactInstanceOfTypeShouldFailWhenTypeIsMismatched()
+  expected type: null
+"");
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
@@ -101,12 +98,8 @@ User message: User-provided message
 Assert.IsExactInstanceOfType(5)
 Expected value to be exactly of the specified type.
   value: 5
-  expected type: (null)
+  expected type: null
 User message: User-provided message
-""");
-    }
-
-    public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
@@ -148,7 +141,7 @@ User message: User-provided message
 Assert.IsExactInstanceOfType(5)
 Expected value to be exactly of the specified type.
   value: 5
-  expected type: (null)
+  expected type: null
 User message: User-provided message DummyClassTrackingToStringCalls
 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -187,7 +180,7 @@ User message: User-provided message DummyClassTrackingToStringCalls
 Assert.IsNotExactInstanceOfType(5)
 Expected value to not be exactly the specified type.
   value: 5
-  wrong type: (null)
+  wrong type: null
 """);
     }
 

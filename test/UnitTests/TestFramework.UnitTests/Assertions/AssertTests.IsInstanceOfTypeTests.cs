@@ -28,11 +28,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5)
                 Expected value to be of the specified type.
                   value: 5
-                  expected type: (null)
-                """);
-    }
-
-    public void InstanceOfTypeShouldFailWhenTypeIsMismatched()
+                  expected type: null
+                "");
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
@@ -70,12 +67,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5)
                 Expected value to be of the specified type.
                   value: 5
-                  expected type: (null)
+                  expected type: null
                 User message: User-provided message
-                """);
-    }
-
-    public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
@@ -117,7 +110,7 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5)
                 Expected value to be of the specified type.
                   value: 5
-                  expected type: (null)
+                  expected type: null
                 User message: User-provided message DummyClassTrackingToStringCalls
                 """);
         o.WasToStringCalled.Should().BeTrue();
@@ -156,7 +149,7 @@ public partial class AssertTests
                 Assert.IsNotInstanceOfType(5)
                 Expected value to not be an instance of the specified type.
                   value: 5
-                  wrong type: (null)
+                  wrong type: null
                 """);
     }
 
