@@ -141,16 +141,9 @@ public class UnitTest1
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-            // Windows API because this gesture is not easy xplat.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield break;
-            }
-
-            yield return (AssetName, AssetName,
+            return (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)

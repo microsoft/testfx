@@ -90,9 +90,9 @@ public sealed class TimeoutFromRunSettingsTests : AcceptanceTestBase<TimeoutFrom
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (ProjectName, ProjectName,
+            return (ProjectName, ProjectName,
                 SourceCode
                 .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)

@@ -65,9 +65,9 @@ public sealed class ParameterizedDataSourceTests : AcceptanceTestBase<Parameteri
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (DataSourceAssetName, DataSourceAssetName,
+            return (DataSourceAssetName, DataSourceAssetName,
                 SourceCodeDataSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));

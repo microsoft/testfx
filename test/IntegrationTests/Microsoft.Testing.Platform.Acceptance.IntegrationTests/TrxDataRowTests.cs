@@ -110,9 +110,9 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
 
         public string TargetAssetPath => GetAssetPath(WithDataRow);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (WithDataRow, AssetNameUsingMSTest,
+            return (WithDataRow, AssetNameUsingMSTest,
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)

@@ -30,7 +30,7 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

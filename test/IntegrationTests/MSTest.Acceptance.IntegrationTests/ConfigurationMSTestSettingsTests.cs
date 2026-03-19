@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -30,9 +30,9 @@ public sealed class ConfigurationMSTestSettingsTests : AcceptanceTestBase<Config
 
         public string ProjectPathWithMSTestRunSettings => GetAssetPath(ProjectNameWithMSTestRunSettings);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
+            return (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestRunSettings)

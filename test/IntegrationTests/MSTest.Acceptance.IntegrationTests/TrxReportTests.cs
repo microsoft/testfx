@@ -46,7 +46,7 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
             yield return (ProjectName, ProjectName,
                 SourceCode

@@ -78,9 +78,9 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (ProjectName, ProjectName,
+            return (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)

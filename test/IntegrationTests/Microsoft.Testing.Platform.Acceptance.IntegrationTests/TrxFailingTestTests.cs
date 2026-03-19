@@ -130,9 +130,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(WithFailingTest);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (WithFailingTest, AssetName,
+            return (WithFailingTest, AssetName,
                 FailingTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));

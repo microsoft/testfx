@@ -84,9 +84,9 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (AssetName, AssetName,
+            return (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));

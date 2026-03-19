@@ -96,7 +96,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
             yield return (ProjectName, ProjectName,
                 SourceCode

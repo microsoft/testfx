@@ -116,9 +116,9 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
 
         public string TargetAssetPath => GetAssetPath(WithSkippedTest);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (WithSkippedTest, AssetNameUsingMSTest,
+            return (WithSkippedTest, AssetNameUsingMSTest,
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -68,9 +68,9 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (ProjectName, ProjectName,
+            return (ProjectName, ProjectName,
                 (SourceCode + ProgramFileSourceCode)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)

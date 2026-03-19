@@ -85,9 +85,9 @@ public class IntegrationTest1
 
         public string AspireProjectPath => GetAssetPath(AspireProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (AspireProjectName, AspireProjectName,
+            return (AspireProjectName, AspireProjectName,
                 AspireSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));

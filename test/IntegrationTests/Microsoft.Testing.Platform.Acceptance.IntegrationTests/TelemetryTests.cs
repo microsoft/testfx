@@ -172,9 +172,9 @@ public class DummyTestFramework : ITestFramework
 
         public string TargetAssetPath => GetAssetPath(WithTelemetry);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (WithTelemetry, AssetName,
+            return (WithTelemetry, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)

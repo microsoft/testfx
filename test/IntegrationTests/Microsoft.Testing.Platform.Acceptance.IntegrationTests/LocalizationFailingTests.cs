@@ -117,7 +117,7 @@ public class FailingTestFramework : ITestFramework, IDataProducer
 
         public string FailingAssetPath => GetAssetPath(FailingAssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
             yield return (FailingAssetName, FailingAssetName,
                 FailingTestCode

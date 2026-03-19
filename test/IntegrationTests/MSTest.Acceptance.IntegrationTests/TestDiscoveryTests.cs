@@ -44,9 +44,9 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (AssetName, AssetName,
+            return (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
