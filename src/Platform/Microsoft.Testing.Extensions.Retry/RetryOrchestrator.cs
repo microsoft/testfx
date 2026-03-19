@@ -170,6 +170,51 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
             finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
+            // When retrying, replace any existing test filter with --filter-uid for the failed tests
+            if (lastListOfFailedId is { Length: > 0 })
+            {
+                RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
+                RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
+
+                // Estimate command line length to avoid hitting OS limits (notably ~32K on Windows).
+                const int CommandLineLengthLimit = 30_000;
+                int predictedLength = 0;
+                foreach (string arg in finalArguments)
+                {
+                    predictedLength += arg.Length + 1;
+                }
+
+                predictedLength += 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1;
+                foreach (string uid in lastListOfFailedId)
+                {
+                    predictedLength += uid.Length + 1;
+                }
+
+                if (predictedLength <= CommandLineLengthLimit)
+                {
+                    finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
+                    finalArguments.AddRange(lastListOfFailedId);
+                }
+                else
+                {
+                    // Use a response file to avoid exceeding command-line length limits.
+                    // Write to retryRootFolder (not the per-attempt folder) so it won't be included
+                    // in the final results move.
+                    string responseFilePath = Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
+                    using (IFileStream stream = _fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+                    using (var writer = new StreamWriter(stream.Stream))
+                    {
+                        await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
+                        foreach (string uid in lastListOfFailedId)
+                        {
+                            await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
+                        }
+                    }
+
+                    finalArguments.Add($"@{responseFilePath}");
+                }
+            }
+
 #if NET8_0_OR_GREATER
             // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
             // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
@@ -350,5 +395,44 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
         index = Array.IndexOf(executableArgs, "--" + optionName);
         return index >= 0 ? index : -1;
+    }
+
+    private static void RemoveOption(List<string> arguments, string optionName)
+    {
+        string longForm = $"--{optionName}";
+        string shortForm = $"-{optionName}";
+
+        // Remove all occurrences since options like --filter-uid can appear multiple times.
+        // Also handle --option=value and --option:value forms produced by the command-line parser.
+        while (true)
+        {
+            int idx = -1;
+            for (int i = 0; i < arguments.Count; i++)
+            {
+                string arg = arguments[i];
+                if (arg == longForm || arg == shortForm
+                    || arg.StartsWith(longForm + "=", StringComparison.Ordinal) || arg.StartsWith(longForm + ":", StringComparison.Ordinal)
+                    || arg.StartsWith(shortForm + "=", StringComparison.Ordinal) || arg.StartsWith(shortForm + ":", StringComparison.Ordinal))
+                {
+                    idx = i;
+                    break;
+                }
+            }
+
+            if (idx < 0)
+            {
+                break;
+            }
+
+            arguments.RemoveAt(idx);
+
+            // Always remove subsequent non-option arguments (the option's values),
+            // even when the first value was provided inline with = or :, because
+            // multi-arity options (e.g. --filter-uid=1 2) can have trailing values.
+            while (idx < arguments.Count && !arguments[idx].StartsWith('-'))
+            {
+                arguments.RemoveAt(idx);
+            }
+        }
     }
 }
