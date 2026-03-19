@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -23,7 +23,7 @@ public sealed class CustomAttributesTests : AcceptanceTestBase<CustomAttributesT
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 1, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string DuplicateTestMethodProjectName = "DuplicateTestMethodAttribute";
 

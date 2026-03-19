@@ -83,7 +83,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 

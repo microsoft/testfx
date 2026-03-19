@@ -79,7 +79,7 @@ public sealed class TestContextTests : AcceptanceTestBase<TestContextTests.TestA
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestTestContext";
 

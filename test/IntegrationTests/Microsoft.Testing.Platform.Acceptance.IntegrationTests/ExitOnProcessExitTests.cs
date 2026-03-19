@@ -56,7 +56,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string TestCode = """
 #file ExecutionTests.csproj

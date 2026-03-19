@@ -40,7 +40,7 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
         Assert.Contains("at MSTestTrxReport.UnitTest1.FailingTest()", trxContent, trxContent);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "MSTestTrxReport";
 

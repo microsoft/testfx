@@ -106,7 +106,7 @@ public sealed class IgnoreTests : AcceptanceTestBase<IgnoreTests.TestAssetFixtur
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 6);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestIgnore";
 

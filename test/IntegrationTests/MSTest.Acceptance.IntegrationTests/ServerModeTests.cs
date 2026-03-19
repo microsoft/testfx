@@ -69,7 +69,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
         Assert.AreEqual(3, exitCode);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "MSTestProject";
 

@@ -41,7 +41,7 @@ public sealed class ThreadContextTests : AcceptanceTestBase<ThreadContextTests.T
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string InitToTestProjectName = "InitToTestThreadContextProject";
         private const string InitToTestSourceCode = """

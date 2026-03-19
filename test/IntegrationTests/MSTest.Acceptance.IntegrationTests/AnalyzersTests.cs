@@ -56,7 +56,6 @@ public class UnitTest1
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("TestForMSTEST0001", code);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build {testAsset.TargetAssetPath}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
         if (isAdapterReferenced)
@@ -113,7 +112,6 @@ public class UnitTest1
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("AnalyzersMetapackage", code);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build {testAsset.TargetAssetPath}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
         result.AssertOutputContains("MSTEST0014");
@@ -153,7 +151,6 @@ public class UnitTest1
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("AnalyzersTestFrameworkPackage", code);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build {testAsset.TargetAssetPath}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
         result.AssertOutputContains("MSTEST0014");
@@ -196,7 +193,6 @@ public class UnitTest1
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync("Analyzers", code);
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"build {testAsset.TargetAssetPath}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             environmentVariables: new()
             {
                 ["DOTNET_CLI_UI_LANGUAGE"] = "it-IT",
@@ -295,7 +291,7 @@ public class UnitTest4
 
     private static async Task AssertAnalysisModeAsync(string mode, string[] contains, string[] doesNotContain, string targetAssetPath)
     {
-        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath}", AcceptanceFixture.NuGetGlobalPackagesFolder.Path, warnAsError: false, retryCount: 0);
+        async Task<DotnetMuxerResult> BuildTaskAsync() => await DotnetCli.RunAsync($"build {targetAssetPath}", warnAsError: false, retryCount: 0);
 
         string output;
         if (mode is "Recommended" or "All")

@@ -28,7 +28,7 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
 #file FrameworkOnlyTests.csproj

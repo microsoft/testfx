@@ -90,7 +90,7 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
         }
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestRunSettings";
 

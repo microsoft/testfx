@@ -53,7 +53,7 @@ public sealed class TrxSkippedTestTests : AcceptanceTestBase<TrxSkippedTestTests
         Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern));
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AssetNameUsingMSTest = "TrxTestUsingMSTest";
         private const string WithSkippedTest = nameof(WithSkippedTest);

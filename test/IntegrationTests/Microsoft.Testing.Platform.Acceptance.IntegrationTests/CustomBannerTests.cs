@@ -64,7 +64,7 @@ public class CustomBannerTests : AcceptanceTestBase<CustomBannerTests.TestAssetF
         testHostResult.AssertOutputMatchesRegex($"{TestAssetFixture.CustomBannerPrefix} Platform info: Name: Microsoft.Testing.Platform, Version: .+?, Hash: .*?, Date: .+?");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string CustomBannerPrefix = "Custom banner |";
 

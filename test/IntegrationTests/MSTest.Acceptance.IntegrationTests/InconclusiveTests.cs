@@ -112,7 +112,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         testHostResult.AssertOutputContains("AssemblyCleanup called");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestInconclusive";
 

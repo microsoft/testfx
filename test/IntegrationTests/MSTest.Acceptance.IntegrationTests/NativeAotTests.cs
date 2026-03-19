@@ -103,12 +103,10 @@ public class UnitTest1
 
         await DotnetCli.RunAsync(
             $"restore {generator.TargetAssetPath} -r {RID}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
-            AcceptanceFixture.NuGetGlobalPackagesFolder.Path,
             retryCount: 0,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");

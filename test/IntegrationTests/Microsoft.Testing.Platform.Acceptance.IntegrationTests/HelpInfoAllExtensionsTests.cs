@@ -388,7 +388,7 @@ Registered tools:
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string AllExtensionsAssetName = "AllExtensionsInfoTest";
 

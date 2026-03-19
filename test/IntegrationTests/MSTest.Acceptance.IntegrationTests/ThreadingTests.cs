@@ -72,7 +72,7 @@ public sealed class ThreadingTests : AcceptanceTestBase<ThreadingTests.TestAsset
         testHostResult.AssertOutputDoesNotContain("Runsettings entry '<ExecutionApartmentState>STA</ExecutionApartmentState>' is not supported on non-Windows OSes");
     }
 
-    public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestThreading";
 
