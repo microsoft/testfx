@@ -88,7 +88,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsNotNull(null) failed.
                 Expected a non-null value.
-                  value: (null)
+                  value: null
                 """);
     }
 
@@ -99,7 +99,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsNotNull(null) failed. User-provided message
                 Expected a non-null value.
-                  value: (null)
+                  value: null
                 """);
     }
 
@@ -112,7 +112,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsNotNull(null) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a non-null value.
-                  value: (null)
+                  value: null
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

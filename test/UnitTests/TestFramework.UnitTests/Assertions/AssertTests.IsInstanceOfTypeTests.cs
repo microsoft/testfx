@@ -14,7 +14,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null) failed.
-                  value: (null)
+                  value: null
                 """);
     }
 
@@ -51,7 +51,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null) failed. User-provided message
-                  value: (null)
+                  value: null
                 """);
     }
 
@@ -89,7 +89,7 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsInstanceOfType(null) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                  value: (null)
+                  value: null
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -146,7 +146,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null) failed.
-                  value: (null)
+                  value: null
                 """);
     }
 

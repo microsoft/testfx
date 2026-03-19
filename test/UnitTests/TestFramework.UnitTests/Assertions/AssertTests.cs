@@ -124,7 +124,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNotNull(*) failed.
                 Expected a non-null value.
-                  value: (null)
+                  value: null
                 """);
     }
 

@@ -14,7 +14,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null) failed.
-  value: (null)
+  value: null
 """);
     }
 
@@ -82,7 +82,7 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null) failed. User-provided message
-  value: (null)
+  value: null
 """);
     }
 
@@ -120,7 +120,7 @@ Expected value to be exactly of the specified type.
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsExactInstanceOfType(null) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                  value: (null)
+                  value: null
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -197,7 +197,7 @@ Value should not be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null) failed.
-  value: (null)
+  value: null
 """);
     }
 

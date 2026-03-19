@@ -15,7 +15,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsFalse(nullBool) failed.
                 Expected condition to be false.
-                  condition: (null)
+                  condition: null
                 """);
     }
 
@@ -59,7 +59,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsFalse(nullBool) failed. User-provided message
                 Expected condition to be false.
-                  condition: (null)
+                  condition: null
                 """);
     }
 
@@ -105,7 +105,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsFalse(nullBool) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be false.
-                  condition: (null)
+                  condition: null
                 """);
     }
 
@@ -153,7 +153,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsTrue(nullBool) failed.
                 Expected condition to be true.
-                  condition: (null)
+                  condition: null
                 """);
     }
 
@@ -197,7 +197,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsTrue(nullBool) failed. User-provided message
                 Expected condition to be true.
-                  condition: (null)
+                  condition: null
                 """);
     }
 
@@ -243,7 +243,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsTrue(nullBool) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be true.
-                  condition: (null)
+                  condition: null
                 """);
     }
 

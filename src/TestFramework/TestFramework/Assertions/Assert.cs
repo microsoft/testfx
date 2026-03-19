@@ -112,7 +112,7 @@ public sealed partial class Assert
     {
         if (value is null)
         {
-            return "(null)";
+            return "null";
         }
 
         if (value is string s)
@@ -192,8 +192,8 @@ public sealed partial class Assert
             return true;
         }
 
-        // Null literal: expression "null" vs formattedValue "(null)"
-        if (expression is "null" && formattedValue is "(null)")
+        // Null literal: expression "null" vs formattedValue "null"
+        if (expression is "null" && formattedValue is "null")
         {
             return true;
         }

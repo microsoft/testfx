@@ -179,7 +179,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(null, "string") failed. A Message
                 Expected values to be equal.
-                  expected: (null)
+                  expected: null
                   actual:   "string"
                 """);
     }
