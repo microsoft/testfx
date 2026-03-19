@@ -12,7 +12,7 @@ internal interface IAsyncConsumerDataProcessor : IDisposable
 
     Task CompleteAddingAsync();
 
-    Task<long> DrainDataAsync();
+    Task DrainDataAsync();
 
     Task PublishAsync(IDataProducer dataProducer, IData data);
 }
