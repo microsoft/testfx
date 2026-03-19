@@ -152,6 +152,11 @@ public sealed partial class Assert
         }
 
         // No useful ToString - just return the type name
+        return FormatType(type);
+    }
+
+    internal static string FormatType(Type type)
+    {
         string typeName = type.FullName ?? type.Name;
         return $"<{typeName}>";
     }

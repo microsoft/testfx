@@ -36,8 +36,8 @@ Assert.IsExactInstanceOfType(5) failed.
 Assert.IsExactInstanceOfType(5) failed.
 Expected value to be exactly of the specified type.
   value: 5
-  expectedType: System.String
-  actualType: System.Int32
+  expectedType: <System.String>
+  actualType: <System.Int32>
 """);
     }
 
@@ -51,8 +51,8 @@ Expected value to be exactly of the specified type.
 Assert.IsExactInstanceOfType(5) failed.
 Expected value to be exactly of the specified type.
   value: 5
-  expectedType: System.Object
-  actualType: System.Int32
+  expectedType: <System.Object>
+  actualType: <System.Int32>
 """);
     }
 
@@ -65,8 +65,8 @@ Expected value to be exactly of the specified type.
 Assert.IsExactInstanceOfType(x) failed.
 Expected value to be exactly of the specified type.
   value: <System.IO.MemoryStream>
-  expectedType: System.IO.Stream
-  actualType: System.IO.MemoryStream
+  expectedType: <System.IO.Stream>
+  actualType: <System.IO.MemoryStream>
 """);
     }
 
@@ -104,8 +104,8 @@ Assert.IsExactInstanceOfType(5) failed. User-provided message
 Assert.IsExactInstanceOfType(5) failed. User-provided message
 Expected value to be exactly of the specified type.
   value: 5
-  expectedType: System.String
-  actualType: System.Int32
+  expectedType: <System.String>
+  actualType: <System.Int32>
 """);
     }
 
@@ -146,8 +146,8 @@ Assert.IsExactInstanceOfType(5) failed. User-provided message DummyClassTracking
 Assert.IsExactInstanceOfType(5) failed. User-provided message DummyClassTrackingToStringCalls
 Expected value to be exactly of the specified type.
   value: 5
-  expectedType: System.String
-  actualType: System.Int32
+  expectedType: <System.String>
+  actualType: <System.Int32>
 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -186,8 +186,8 @@ Expected value to be exactly of the specified type.
 Assert.IsNotExactInstanceOfType(x) failed.
 Value should not be exactly of the specified type.
   value: <System.IO.MemoryStream>
-  wrongType: System.IO.MemoryStream
-  actualType: System.IO.MemoryStream
+  wrongType: <System.IO.MemoryStream>
+  actualType: <System.IO.MemoryStream>
 """);
     }
 
@@ -209,8 +209,8 @@ Assert.IsExactInstanceOfType(null) failed.
 Assert.IsExactInstanceOfType(5) failed.
 Expected value to be exactly of the specified type.
   value: 5
-  expectedType: System.String
-  actualType: System.Int32
+  expectedType: <System.String>
+  actualType: <System.Int32>
 """);
     }
 
@@ -223,8 +223,8 @@ Expected value to be exactly of the specified type.
 Assert.IsExactInstanceOfType(x) failed.
 Expected value to be exactly of the specified type.
   value: <System.IO.MemoryStream>
-  expectedType: System.IO.Stream
-  actualType: System.IO.MemoryStream
+  expectedType: <System.IO.Stream>
+  actualType: <System.IO.MemoryStream>
 """);
     }
 
@@ -251,8 +251,8 @@ Expected value to be exactly of the specified type.
 Assert.IsExactInstanceOfType(5) failed.
 Expected value to be exactly of the specified type.
   value: 5
-  expectedType: System.Object
-  actualType: System.Int32
+  expectedType: <System.Object>
+  actualType: <System.Int32>
 """);
     }
 
@@ -284,8 +284,8 @@ Expected value to be exactly of the specified type.
 Assert.IsNotExactInstanceOfType(x) failed.
 Value should not be exactly of the specified type.
   value: <System.IO.MemoryStream>
-  wrongType: System.IO.MemoryStream
-  actualType: System.IO.MemoryStream
+  wrongType: <System.IO.MemoryStream>
+  actualType: <System.IO.MemoryStream>
 """);
     }
 
@@ -371,8 +371,8 @@ Value should not be exactly of the specified type.
                 Assert.IsExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Expected value to be exactly of the specified type.
                   value: "hello"
-                  expectedType: System.Int32
-                  actualType: System.String
+                  expectedType: <System.Int32>
+                  actualType: <System.String>
                 """);
     }
 
@@ -386,8 +386,8 @@ Value should not be exactly of the specified type.
                 Assert.IsExactInstanceOfType(obj) failed.
                 Expected value to be exactly of the specified type.
                   value: {new string('L', 256)}... 44 more
-                  expectedType: System.Int32
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
+                  expectedType: <System.Int32>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
                 """);
     }
 
@@ -401,8 +401,8 @@ Value should not be exactly of the specified type.
                 Assert.IsExactInstanceOfType(obj) failed.
                 Expected value to be exactly of the specified type.
                   value: line1\r\nline2\nline3
-                  expectedType: System.Int32
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
+                  expectedType: <System.Int32>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
                 """);
     }
 
@@ -416,8 +416,8 @@ Value should not be exactly of the specified type.
                 Assert.IsNotExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Value should not be exactly of the specified type.
                   value: "hello"
-                  wrongType: System.String
-                  actualType: System.String
+                  wrongType: <System.String>
+                  actualType: <System.String>
                 """);
     }
 
@@ -431,8 +431,8 @@ Value should not be exactly of the specified type.
                 Assert.IsNotExactInstanceOfType(obj) failed.
                 Value should not be exactly of the specified type.
                   value: {new string('L', 256)}... 44 more
-                  wrongType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
+                  wrongType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
                 """);
     }
 
@@ -446,8 +446,8 @@ Value should not be exactly of the specified type.
                 Assert.IsNotExactInstanceOfType(obj) failed.
                 Value should not be exactly of the specified type.
                   value: line1\r\nline2\nline3
-                  wrongType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
+                  wrongType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
                 """);
     }
 

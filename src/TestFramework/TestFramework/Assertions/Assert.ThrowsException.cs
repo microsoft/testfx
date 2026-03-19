@@ -533,8 +533,8 @@ public sealed partial class Assert
                         string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
                         msg += Environment.NewLine + FrameworkMessages.WrongExceptionThrownNew;
                         msg += FormatExpressionParameter(nameof(action), actionExpr);
-                        msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
-                        msg += Environment.NewLine + $"  actualExceptionType: {ex.GetType()}";
+                        msg += Environment.NewLine + $"  expectedExceptionType: {FormatType(typeof(TException))}";
+                        msg += Environment.NewLine + $"  actualExceptionType: {FormatType(ex.GetType())}";
                         ThrowAssertFailed("Assert." + assertMethodName, msg);
                     }, ex);
         }
@@ -545,7 +545,7 @@ public sealed partial class Assert
                 string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
                 msg += Environment.NewLine + FrameworkMessages.NoExceptionThrownNew;
                 msg += FormatExpressionParameter(nameof(action), actionExpr);
-                msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
+                msg += Environment.NewLine + $"  expectedExceptionType: {FormatType(typeof(TException))}";
                 ThrowAssertFailed("Assert." + assertMethodName, msg);
             }, null);
     }
@@ -571,8 +571,8 @@ public sealed partial class Assert
                         string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
                         msg += Environment.NewLine + FrameworkMessages.WrongExceptionThrownNew;
                         msg += FormatExpressionParameter(nameof(action), actionExpr);
-                        msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
-                        msg += Environment.NewLine + $"  actualExceptionType: {ex.GetType()}";
+                        msg += Environment.NewLine + $"  expectedExceptionType: {FormatType(typeof(TException))}";
+                        msg += Environment.NewLine + $"  actualExceptionType: {FormatType(ex.GetType())}";
                         ThrowAssertFailed("Assert." + assertMethodName, msg);
                     }, ex);
         }
@@ -583,7 +583,7 @@ public sealed partial class Assert
                 string msg = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
                 msg += Environment.NewLine + FrameworkMessages.NoExceptionThrownNew;
                 msg += FormatExpressionParameter(nameof(action), actionExpr);
-                msg += Environment.NewLine + $"  expectedExceptionType: {typeof(TException)}";
+                msg += Environment.NewLine + $"  expectedExceptionType: {FormatType(typeof(TException))}";
                 ThrowAssertFailed("Assert." + assertMethodName, msg);
             }, null);
     }

@@ -36,8 +36,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5) failed.
                 Expected value to be of the specified type.
                   value: 5
-                  expectedType: System.String
-                  actualType: System.Int32
+                  expectedType: <System.String>
+                  actualType: <System.Int32>
                 """);
     }
 
@@ -73,8 +73,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5) failed. User-provided message
                 Expected value to be of the specified type.
                   value: 5
-                  expectedType: System.String
-                  actualType: System.Int32
+                  expectedType: <System.String>
+                  actualType: <System.Int32>
                 """);
     }
 
@@ -115,8 +115,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5) failed. User-provided message DummyClassTrackingToStringCalls
                 Expected value to be of the specified type.
                   value: 5
-                  expectedType: System.String
-                  actualType: System.Int32
+                  expectedType: <System.String>
+                  actualType: <System.Int32>
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -158,8 +158,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(5) failed.
                 Expected value to be of the specified type.
                   value: 5
-                  expectedType: System.String
-                  actualType: System.Int32
+                  expectedType: <System.String>
+                  actualType: <System.Int32>
                 """);
     }
 
@@ -287,8 +287,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Expected value to be of the specified type.
                   value: "hello"
-                  expectedType: System.Int32
-                  actualType: System.String
+                  expectedType: <System.Int32>
+                  actualType: <System.String>
                 """);
     }
 
@@ -302,8 +302,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(obj) failed.
                 Expected value to be of the specified type.
                   value: {new string('L', 256)}... 44 more
-                  expectedType: System.Int32
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
+                  expectedType: <System.Int32>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
                 """);
     }
 
@@ -317,8 +317,8 @@ public partial class AssertTests
                 Assert.IsInstanceOfType(obj) failed.
                 Expected value to be of the specified type.
                   value: line1\r\nline2\nline3
-                  expectedType: System.Int32
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
+                  expectedType: <System.Int32>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
                 """);
     }
 
@@ -332,8 +332,8 @@ public partial class AssertTests
                 Assert.IsNotInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
                 Value should not be of the specified type.
                   value: "hello"
-                  wrongType: System.String
-                  actualType: System.String
+                  wrongType: <System.String>
+                  actualType: <System.String>
                 """);
     }
 
@@ -347,8 +347,8 @@ public partial class AssertTests
                 Assert.IsNotInstanceOfType(obj) failed.
                 Value should not be of the specified type.
                   value: {new string('L', 256)}... 44 more
-                  wrongType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString
+                  wrongType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>
                 """);
     }
 
@@ -362,8 +362,8 @@ public partial class AssertTests
                 Assert.IsNotInstanceOfType(obj) failed.
                 Value should not be of the specified type.
                   value: line1\r\nline2\nline3
-                  wrongType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
-                  actualType: Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString
+                  wrongType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
+                  actualType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>
                 """);
     }
 

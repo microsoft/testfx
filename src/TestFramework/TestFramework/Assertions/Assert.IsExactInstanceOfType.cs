@@ -332,8 +332,8 @@ public sealed partial class Assert
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         if (expectedType is not null && value is not null)
         {
-            message += Environment.NewLine + $"  expectedType: {expectedType}"
-                     + Environment.NewLine + $"  actualType: {value.GetType()}";
+            message += Environment.NewLine + $"  expectedType: {FormatType(expectedType)}"
+                     + Environment.NewLine + $"  actualType: {FormatType(value.GetType())}";
         }
 
         ThrowAssertFailed(callSite, message);
@@ -411,8 +411,8 @@ public sealed partial class Assert
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         if (wrongType is not null)
         {
-            message += Environment.NewLine + $"  wrongType: {wrongType}"
-                     + Environment.NewLine + $"  actualType: {value!.GetType()}";
+            message += Environment.NewLine + $"  wrongType: {FormatType(wrongType)}"
+                     + Environment.NewLine + $"  actualType: {FormatType(value!.GetType())}";
         }
 
         ThrowAssertFailed(callSite, message);
