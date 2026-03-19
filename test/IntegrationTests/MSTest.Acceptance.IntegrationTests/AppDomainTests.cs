@@ -103,7 +103,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
     }
 
     private static string GetTestDllPath(string assetPath, string targetFramework) =>
-        Path.Combine(assetPath, "bin", "Release", targetFramework, $"{AssetName}.dll");
+        Path.Combine(assetPath, "bin", BuildConfiguration.Release.ToString(), targetFramework, $"{AssetName}.dll");
 
     public TestContext TestContext { get; set; }
 
