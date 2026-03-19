@@ -171,7 +171,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value: [1, 2, 3] (3 items)
+                  value: [1, 2, 3]
                 """);
     }
 
@@ -207,7 +207,7 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  collection*[{expectedFirstElement}, "short"] (2 items)
+                  collection*[{expectedFirstElement}, "short"]
                 """);
     }
 
@@ -222,7 +222,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value: [[1, 2] (2 items), [3, 4] (2 items)] (2 items)
+                  value: [[1, 2], [3, 4]]
                 """);
     }
 
@@ -246,7 +246,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsNull(*) failed.
                 Expected value to be null.
-                  value: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]] (1 item)
+                  value: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]]
                 """);
     }
 
@@ -259,7 +259,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  collection*["line1\nline2", "ok"] (2 items)
+                  collection*["line1\nline2", "ok"]
                 """);
     }
 
@@ -272,7 +272,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.Contains(*) failed.
                 Expected collection to contain the specified item.
-                  collection: [42] (1 item)
+                  collection: [42]
                 """);
     }
 

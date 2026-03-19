@@ -28,7 +28,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.HasCount(collection) failed.
                 Expected collection to have the specified number of items.
-                  collection: [1] (1 item)
+                  collection: [1]
                   expectedCount: 3
                   actualCount: 1
                 """);
@@ -43,7 +43,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.HasCount(Array.Empty<int>()) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to have the specified number of items.
-                  collection: [] (0 items)
+                  collection: []
                   expectedCount: 1
                   actualCount: 0
                 """);
@@ -68,7 +68,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsEmpty(collection) failed.
                 Expected collection to have the specified number of items.
-                  collection: [1] (1 item)
+                  collection: [1]
                   expectedCount: 0
                   actualCount: 1
                 """);
@@ -84,7 +84,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.IsEmpty(collection) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to have the specified number of items.
-                  collection: [1] (1 item)
+                  collection: [1]
                   expectedCount: 0
                   actualCount: 1
                 """);

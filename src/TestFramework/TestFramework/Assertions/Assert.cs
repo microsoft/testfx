@@ -381,11 +381,7 @@ public sealed partial class Assert
             elementList += $", ... {remainingText} more";
         }
 
-        string countText = truncated
-            ? string.Empty
-            : $" ({totalCount} {(totalCount == 1 ? "item" : "items")})";
-
-        return $"[{elementList}]{countText}";
+        return $"[{elementList}]";
     }
 
     internal static string FormatParameterWithValue(string paramName, string expression, string formattedValue)

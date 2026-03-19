@@ -1014,7 +1014,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(10, collection) failed. Item 10 should not be found
             Expected collection to not contain the specified item.
-              collection: [5, 10, 15, "a"] (4 items)
+              collection: [5, 10, 15, "a"]
             """);
     }
 
@@ -1790,7 +1790,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.Contains(5, collection) failed.
                 Expected collection to contain the specified item.*
-                  collection: [1, 2, 3] (3 items)
+                  collection: [1, 2, 3]
                 """);
     }
 
@@ -1810,7 +1810,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.Contains(5, collection) failed.
                 Expected collection to contain the specified item.*
-                  collection: [1, 2, 3] (3 items)
+                  collection: [1, 2, 3]
                 """);
     }
 
@@ -1830,7 +1830,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.Contains(x => x % 2 == 0, collection) failed.
                 Expected at least one item to match the predicate.*
-                  collection: [1, 3, 5] (3 items)
+                  collection: [1, 3, 5]
                 """);
     }
 
@@ -1850,7 +1850,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.DoesNotContain(2, collection) failed.
                 Expected collection to not contain the specified item.*
-                  collection: [1, 2, 3] (3 items)
+                  collection: [1, 2, 3]
                 """);
     }
 
@@ -1870,7 +1870,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.DoesNotContain(x => x % 2 == 0, collection) failed.
                 Expected no items to match the predicate.*
-                  collection: [1, 2, 3] (3 items)
+                  collection: [1, 2, 3]
                 """);
     }
 
