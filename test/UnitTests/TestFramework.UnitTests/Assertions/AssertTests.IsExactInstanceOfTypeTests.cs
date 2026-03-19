@@ -14,7 +14,9 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null) failed.
+Expected value to be exactly of the specified type.
   value: null
+  expectedType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
 """);
     }
 
@@ -24,7 +26,9 @@ Assert.IsExactInstanceOfType(null) failed.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5) failed.
+Expected value to be exactly of the specified type.
   value: 5
+  expectedType: (null)
 """);
     }
 
@@ -82,7 +86,9 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null) failed. User-provided message
+Expected value to be exactly of the specified type.
   value: null
+  expectedType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
 """);
     }
 
@@ -92,7 +98,9 @@ Assert.IsExactInstanceOfType(null) failed. User-provided message
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5) failed. User-provided message
+Expected value to be exactly of the specified type.
   value: 5
+  expectedType: (null)
 """);
     }
 
@@ -120,7 +128,9 @@ Expected value to be exactly of the specified type.
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsExactInstanceOfType(null) failed. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Expected value to be exactly of the specified type.
                   value: null
+                  expectedType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -132,7 +142,9 @@ Expected value to be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5) failed. User-provided message DummyClassTrackingToStringCalls
+Expected value to be exactly of the specified type.
   value: 5
+  expectedType: (null)
 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -164,7 +176,13 @@ Expected value to be exactly of the specified type.
     public void ExactInstanceNotOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsNotExactInstanceOfType(5, null);
-        action.Should().Throw<AssertFailedException>();
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+Assert.IsNotExactInstanceOfType(5) failed.
+Value should not be exactly of the specified type.
+  value: 5
+  wrongType: (null)
+""");
     }
 
     public void ExactInstanceNotOfTypeShouldPassOnWrongInstance() => Assert.IsNotExactInstanceOfType(5L, typeof(int));
@@ -197,7 +215,9 @@ Value should not be exactly of the specified type.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null) failed.
+Expected value to be exactly of the specified type.
   value: null
+  expectedType: <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>
 """);
     }
 

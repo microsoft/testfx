@@ -331,16 +331,20 @@ public sealed partial class Assert
     {
         string callSite = FormatCallSite("Assert.IsInstanceOfType", (nameof(value), valueExpression));
         string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        if (expectedType is not null && value is not null)
-        {
-            message += Environment.NewLine + FrameworkMessages.IsInstanceOfTypeFailNew;
-        }
+        message += Environment.NewLine + FrameworkMessages.IsInstanceOfTypeFailNew;
 
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
-        if (expectedType is not null && value is not null)
+        if (expectedType is null)
         {
-            message += Environment.NewLine + $"  expectedType: {FormatType(expectedType)}"
-                     + Environment.NewLine + $"  actualType: {FormatType(value.GetType())}";
+            message += Environment.NewLine + "  expectedType: (null)";
+        }
+        else
+        {
+            message += Environment.NewLine + $"  expectedType: {FormatType(expectedType)}";
+            if (value is not null)
+            {
+                message += Environment.NewLine + $"  actualType: {FormatType(value.GetType())}";
+            }
         }
 
         ThrowAssertFailed(callSite, message);
@@ -412,13 +416,14 @@ public sealed partial class Assert
     {
         string callSite = FormatCallSite("Assert.IsNotInstanceOfType", (nameof(value), valueExpression));
         string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        if (wrongType is not null)
-        {
-            message += Environment.NewLine + FrameworkMessages.IsNotInstanceOfTypeFailNew;
-        }
+        message += Environment.NewLine + FrameworkMessages.IsNotInstanceOfTypeFailNew;
 
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
-        if (wrongType is not null)
+        if (wrongType is null)
+        {
+            message += Environment.NewLine + "  wrongType: (null)";
+        }
+        else
         {
             message += Environment.NewLine + $"  wrongType: {FormatType(wrongType)}"
                      + Environment.NewLine + $"  actualType: {FormatType(value!.GetType())}";

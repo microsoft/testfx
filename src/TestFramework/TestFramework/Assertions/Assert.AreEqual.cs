@@ -612,8 +612,8 @@ public sealed partial class Assert
         {
             message += Environment.NewLine + FrameworkMessages.AreEqualFailNew;
             message += FormatAlignedParameters(
-                (nameof(expected), $"{FormatValue(expected)} ({FormatType(expected.GetType())})"),
-                (nameof(actual), $"{FormatValue(actual)} ({FormatType(actual.GetType())})"));
+                (nameof(expected), FormatValueWithType(expected)),
+                (nameof(actual), FormatValueWithType(actual)));
         }
         else if (expected is string expectedString && actual is string actualString)
         {

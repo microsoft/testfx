@@ -162,8 +162,12 @@ public sealed partial class Assert
     private static void ThrowAssertIsNullFailed(object? value, string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsNull", (nameof(value), valueExpression));
-        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        message += Environment.NewLine + FrameworkMessages.IsNullFailNew;
+        string message = FrameworkMessages.IsNullFailNew;
+        if (!string.IsNullOrEmpty(userMessage))
+        {
+            message += Environment.NewLine + userMessage;
+        }
+
         message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         ThrowAssertFailed(callSite, message);
     }
@@ -208,8 +212,12 @@ public sealed partial class Assert
     private static void ThrowAssertIsNotNullFailed(string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsNotNull", ("value", valueExpression));
-        string message = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage!;
-        message += Environment.NewLine + FrameworkMessages.IsNotNullFailNew;
+        string message = FrameworkMessages.IsNotNullFailNew;
+        if (!string.IsNullOrEmpty(userMessage))
+        {
+            message += Environment.NewLine + userMessage;
+        }
+
         message += Environment.NewLine + FormatParameter<object>("value", valueExpression, null);
         ThrowAssertFailed(callSite, message);
     }

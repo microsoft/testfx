@@ -79,8 +79,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(longValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull(longValue) failed.
-                Expected value to be null.
+                Assert.IsNull(longValue) failed. Expected value to be null.
                   value: {expectedValue}
                 """);
     }
@@ -93,8 +92,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull(value) failed.
-                Expected value to be null.
+                Assert.IsNull(value) failed. Expected value to be null.
                   value: {expectedFullValue}
                 """);
     }
@@ -108,8 +106,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.IsNull(obj) failed.
-                Expected value to be null.
+                Assert.IsNull(obj) failed. Expected value to be null.
                   value: {expectedValue}
                 """);
     }
@@ -122,8 +119,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNotNull(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNotNull(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed.
-                Expected a non-null value.
+                Assert.IsNotNull(aVeryLongVariableNameThatExceedsOneHundredCharacte...) failed. Expected a non-null value.
                   value: null
                 """);
     }
@@ -139,8 +135,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(obj);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(obj) failed.
-                Expected value to be null.
+                Assert.IsNull(obj) failed. Expected value to be null.
                   value: line1\r\nline2\nline3
                 """);
     }
@@ -152,8 +147,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(value);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(value) failed.
-                Expected value to be null.
+                Assert.IsNull(value) failed. Expected value to be null.
                   value: "hello\nworld"
                 """);
     }
@@ -169,8 +163,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(collection) failed.
-                Expected value to be null.
+                Assert.IsNull(collection) failed. Expected value to be null.
                   value: [1, 2, 3]
                 """);
     }
@@ -220,8 +213,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(outer);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(outer) failed.
-                Expected value to be null.
+                Assert.IsNull(outer) failed. Expected value to be null.
                   value: [[1, 2], [3, 4]]
                 """);
     }
@@ -244,8 +236,7 @@ public partial class AssertTests
         Action action = () => Assert.IsNull(outer);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.IsNull(outer) failed.
-                Expected value to be null.
+                Assert.IsNull(outer) failed. Expected value to be null.
                   value: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ... 35 more]]
                 """);
     }

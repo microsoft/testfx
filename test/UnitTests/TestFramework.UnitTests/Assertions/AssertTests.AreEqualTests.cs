@@ -374,7 +374,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.AreEqual(new object(), 1) failed.
                 Expected values to be equal.
-                  expected: <System.Object> (<System.Object>)
+                  expected: <System.Object>
                   actual:   1 (<System.Int32>)
                 """);
     }
