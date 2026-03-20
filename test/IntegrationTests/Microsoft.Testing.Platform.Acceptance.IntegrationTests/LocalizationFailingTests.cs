@@ -119,7 +119,7 @@ public class FailingTestFramework : ITestFramework, IDataProducer
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (FailingAssetName, FailingAssetName,
+            return (FailingAssetName, FailingAssetName,
                 FailingTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));

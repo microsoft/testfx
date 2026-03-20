@@ -36,7 +36,7 @@ public sealed class ParameterizedDataRowTests : AcceptanceTestBase<Parameterized
     {
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (DataRowAssetName, DataRowAssetName,
+            return (DataRowAssetName, DataRowAssetName,
                 SourceCodeDataRow
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));

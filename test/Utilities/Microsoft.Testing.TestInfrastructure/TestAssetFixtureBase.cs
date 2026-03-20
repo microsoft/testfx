@@ -43,7 +43,7 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
     /// <summary>
     /// Returns a test asset to generate. A test asset has an id, name and code. A test asset is typically a project and all its files. Like MyTests.csproj, Program.cs, runsettings.runsettings etc.
-    /// The asset id determines the name of the sub-folder into which all those files will be placed, this id has to be unique within the collection returned by this method.
+    /// The asset id determines the name of the sub-folder into which all those files will be placed.
     /// The asset name, identifies the file that will be built within that folder, this name does not have to be unique, so you can re-use similar sources in multiple assets, e.g. when one option needs to change
     /// but rest of the project remains the same.
     /// Code is the code that is split into separate files on the #file comments in the code.

@@ -120,7 +120,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (ProjectName, ProjectName,
+            return (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));

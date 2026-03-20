@@ -34,7 +34,7 @@ public sealed class LifecycleAttributesValueTaskThreadingTests : AcceptanceTestB
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (ProjectName, ProjectName,
+            return (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.Net)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));

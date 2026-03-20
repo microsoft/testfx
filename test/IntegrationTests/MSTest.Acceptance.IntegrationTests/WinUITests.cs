@@ -32,13 +32,7 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // WinUI is Windows-only :)
-                yield break;
-            }
-
-            yield return (ProjectName, ProjectName,
+            return (ProjectName, ProjectName,
                 SourceCode
                 .PatchCodeWithReplace("$TargetFramework$", WinUITargetFramework)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));

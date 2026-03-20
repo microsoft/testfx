@@ -61,7 +61,7 @@ public sealed class STATestClassTests : AcceptanceTestBase<STATestClassTests.Tes
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (AssetName, AssetName,
+            return (AssetName, AssetName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", AssetName)

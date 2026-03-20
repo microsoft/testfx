@@ -462,7 +462,7 @@ public class DummyTestFramework : ITestFramework
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
         {
-            yield return (AllExtensionsAssetName, AllExtensionsAssetName,
+            return (AllExtensionsAssetName, AllExtensionsAssetName,
                 AllExtensionsTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
