@@ -139,19 +139,13 @@
     <value>Both collections are empty.</value>
   </data>
   <data name="BothCollectionsSameElements" xml:space="preserve">
-    <value>Both collection contain same elements.</value>
+    <value>Both collections contain the same elements.</value>
   </data>
   <data name="BothCollectionsSameReference" xml:space="preserve">
     <value>Both collection references point to the same collection object.</value>
   </data>
   <data name="BothSameElements" xml:space="preserve">
     <value>Both collections contain the same elements.</value>
-  </data>
-  <data name="CollectionEqualReason" xml:space="preserve">
-    <value>{0}. {1}</value>
-  </data>
-  <data name="ContainsFail" xml:space="preserve">
-    <value>String '{0}' does not contain string '{1}'. {2}.</value>
   </data>
   <data name="ElementNumbersDontMatch" xml:space="preserve">
     <value>Expected the same number of elements in the collections.</value>
@@ -162,17 +156,8 @@
   <data name="ElementTypesAtIndexDontMatch" xml:space="preserve">
     <value>Element at index {0} is not of the expected type.</value>
   </data>
-  <data name="EndsWithFail" xml:space="preserve">
-    <value>String '{0}' does not end with string '{1}'. {2}</value>
-  </data>
   <data name="AssertionFailed" xml:space="preserve">
     <value>{0} failed. {1}</value>
-  </data>
-  <data name="IsMatchFail" xml:space="preserve">
-    <value>String '{0}' does not match pattern '{1}'. {2}</value>
-  </data>
-  <data name="IsNotMatchFail" xml:space="preserve">
-    <value>String '{0}' matches pattern '{1}'. {2}</value>
   </data>
   <data name="PrivateAccessorMemberNotFound" xml:space="preserve">
     <value>
@@ -193,9 +178,6 @@
   </data>
   <data name="NumberOfElementsDiff" xml:space="preserve">
     <value>Different number of elements.</value>
-  </data>
-  <data name="StartsWithFail" xml:space="preserve">
-    <value>String '{0}' does not start with string '{1}'. {2}</value>
   </data>
   <data name="InvalidPropertyType" xml:space="preserve">
     <value>The property {0} has type {1}; expected type {2}.</value>
@@ -239,12 +221,6 @@
   <data name="InvalidGitHubUrl" xml:space="preserve">
     <value>Invalid GitHub ticket URL</value>
   </data>
-  <data name="DoesNotEndWithFail" xml:space="preserve">
-    <value>String '{0}' ends with string '{1}'. {2}</value>
-  </data>
-  <data name="DoesNotStartWithFail" xml:space="preserve">
-    <value>String '{0}' starts with string '{1}'. {2}</value>
-  </data>
   <data name="DoNotUseAssertEquals" xml:space="preserve">
     <value>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</value>
   </data>
@@ -265,17 +241,6 @@
   </data>
   <data name="InvalidAccessToTestContextProperty" xml:space="preserve">
     <value>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</value>
-  </data>
-  <data name="AssertThatFailedFormat" xml:space="preserve">
-    <value>Assert.That({0}) failed.</value>
-    <comment>{0} is the user code expression</comment>
-  </data>
-  <data name="AssertThatMessageFormat" xml:space="preserve">
-    <value>Message: {0}</value>
-    <comment>{0} user provided message</comment>
-  </data>
-  <data name="AssertThatDetailsPrefix" xml:space="preserve">
-    <value>Details:</value>
   </data>
   <data name="ReturnedSubsetValueMessage" xml:space="preserve">
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
@@ -321,6 +286,9 @@
   </data>
   <data name="DoesNotContainPredicateFailNew" xml:space="preserve">
     <value>Expected no items to match the predicate.</value>
+  </data>
+  <data name="AllMatchPredicateFailNew" xml:space="preserve">
+    <value>Expected all elements to match the predicate.</value>
   </data>
   <data name="ContainsStringFailNew" xml:space="preserve">
     <value>Expected string to contain the specified substring.</value>

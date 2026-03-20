@@ -283,7 +283,7 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 CollectionAssert.AreNotEqual
-                Both collection contain same elements.
+                Both collections contain the same elements.
                 """);
     }
 
@@ -303,7 +303,7 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 CollectionAssert.AreNotEqual
-                Both collection contain same elements.
+                Both collections contain the same elements.
                 """);
     }
 
@@ -316,7 +316,7 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 CollectionAssert.AreNotEqual
-                Both collection contain same elements.
+                Both collections contain the same elements.
                 """);
     }
 

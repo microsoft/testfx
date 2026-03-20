@@ -17,6 +17,11 @@
         <target state="new">Expected all items to be unique.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AllMatchPredicateFailNew">
+        <source>Expected all elements to match the predicate.</source>
+        <target state="new">Expected all elements to match the predicate.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEqualCaseDiffersMsg">
         <source>Case differs.</source>
         <target state="new">Case differs.</target>
@@ -67,30 +72,15 @@
         <target state="translated">Nevkládejte hodnotu typů do AreSame(). Hodnoty převedené do typu Object už nebudou nikdy stejné. Zvažte použití AreEqual(). {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AssertThatDetailsPrefix">
-        <source>Details:</source>
-        <target state="translated">Podrobnosti:</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertThatFailedFormat">
-        <source>Assert.That({0}) failed.</source>
-        <target state="translated">Assert.That({0}) se nezdařilo.</target>
-        <note>{0} is the user code expression</note>
-      </trans-unit>
-      <trans-unit id="AssertThatMessageFormat">
-        <source>Message: {0}</source>
-        <target state="translated">Zpráva: {0}</target>
-        <note>{0} user provided message</note>
-      </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty.</source>
         <target state="new">Both collections are empty.</target>
         <note />
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
-        <source>Both collection contain same elements.</source>
-        <target state="translated">Obě kolekce obsahují stejné elementy.</target>
-        <note></note>
+        <source>Both collections contain the same elements.</source>
+        <target state="needs-review-translation">Obě kolekce obsahují stejné elementy.</target>
+        <note />
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
         <source>Both collection references point to the same collection object.</source>
@@ -101,16 +91,6 @@
         <source>Both collections contain the same elements.</source>
         <target state="new">Both collections contain the same elements.</target>
         <note />
-      </trans-unit>
-      <trans-unit id="CollectionEqualReason">
-        <source>{0}. {1}</source>
-        <target state="translated">{0}. {1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ContainsFail">
-        <source>String '{0}' does not contain string '{1}'. {2}.</source>
-        <target state="translated">Řetězec '{0}' neobsahuje řetězec '{1}'. {2}.</target>
-        <note></note>
       </trans-unit>
       <trans-unit id="ContainsItemFailNew">
         <source>Expected collection to contain the specified item.</source>
@@ -152,11 +132,6 @@
         <target state="new">Expected string to not contain the specified substring.</target>
         <note />
       </trans-unit>
-      <trans-unit id="DoesNotEndWithFail">
-        <source>String '{0}' ends with string '{1}'. {2}</source>
-        <target state="translated">Řetězec „{0}“ končí řetězcem „{1}“. {2}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="DoesNotEndWithFailNew">
         <source>Expected string to not end with the specified suffix.</source>
         <target state="new">Expected string to not end with the specified suffix.</target>
@@ -165,11 +140,6 @@
       <trans-unit id="DoesNotMatchRegexFailNew">
         <source>Expected string to not match the specified pattern.</source>
         <target state="new">Expected string to not match the specified pattern.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoesNotStartWithFail">
-        <source>String '{0}' starts with string '{1}'. {2}</source>
-        <target state="translated">Řetězec „{0}“ začíná řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailNew">
@@ -210,11 +180,6 @@
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {0} is not of the expected type.</source>
         <target state="new">Element at index {0} is not of the expected type.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="EndsWithFail">
-        <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="translated">Řetězec „{0}“ nekončí řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionFailed">
@@ -287,11 +252,6 @@
         <target state="new">Expected value {0} to be less than or equal to {1}.</target>
         <note />
       </trans-unit>
-      <trans-unit id="IsMatchFail">
-        <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="translated">Řetězec „{0}“ neodpovídá vzoru „{1}“. {2}</target>
-        <note />
-      </trans-unit>
       <trans-unit id="IsNegativeFailNew">
         <source>Expected value to be negative.</source>
         <target state="new">Expected value to be negative.</target>
@@ -310,11 +270,6 @@
       <trans-unit id="IsNotInstanceOfTypeFailNew">
         <source>Expected value to not be an instance of {0}.</source>
         <target state="new">Expected value to not be an instance of {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="IsNotMatchFail">
-        <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="translated">Řetězec „{0}“ odpovídá vzoru „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotNullFailNew">
@@ -386,11 +341,6 @@
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
         <target state="translated">Elementy &lt;{0}&gt; se v kolekci nenachází.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StartsWithFail">
-        <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="translated">Řetězec „{0}“ nezačíná řetězcem „{1}“. {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidPropertyType">

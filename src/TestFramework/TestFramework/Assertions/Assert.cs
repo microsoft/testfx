@@ -450,18 +450,33 @@ public sealed partial class Assert
     {
         var sb = new StringBuilder(methodName);
         sb.Append('(');
+        bool hasVisibleArgs = false;
         for (int i = 0; i < args.Length; i++)
         {
-            if (i > 0)
+            string expression = args[i].Expression;
+            string paramName = args[i].ParamName;
+
+            // Sentinel "..." indicates additional parameters were omitted.
+            if (paramName == "...")
+            {
+                if (hasVisibleArgs)
+                {
+                    sb.Append(", ");
+                }
+
+                sb.Append("...");
+                continue;
+            }
+
+            if (hasVisibleArgs)
             {
                 sb.Append(", ");
             }
 
-            string expression = args[i].Expression;
-            string paramName = args[i].ParamName;
             sb.Append(string.IsNullOrEmpty(expression) || expression == paramName
                 ? paramName
                 : TruncateExpression(expression, 50));
+            hasVisibleArgs = true;
         }
 
         sb.Append(')');

@@ -115,27 +115,25 @@ public static partial class AssertExtensions
     {
         string methodName = methodCall.Method.Name;
 
+        // String-specific methods
+        if (methodCall.Object is not null && methodCall.Object.Type == typeof(string))
+        {
+            return methodName switch
+            {
+                "StartsWith" => FrameworkMessages.StartsWithFailNew,
+                "EndsWith" => FrameworkMessages.EndsWithFailNew,
+                nameof(string.Contains) => FrameworkMessages.ContainsStringFailNew,
+                _ => FrameworkMessages.IsTrueFailNew,
+            };
+        }
+
         return methodName switch
         {
-            "StartsWith" => FrameworkMessages.StartsWithFailNew,
-            "EndsWith" => FrameworkMessages.EndsWithFailNew,
-            nameof(string.Contains) => BuildContainsMessage(methodCall),
-            "All" => "Expected all elements to match the predicate.",
+            nameof(string.Contains) => FrameworkMessages.ContainsItemFailNew,
+            "All" => FrameworkMessages.AllMatchPredicateFailNew,
             "Any" => FrameworkMessages.ContainsPredicateFailNew,
             _ => FrameworkMessages.IsTrueFailNew,
         };
-    }
-
-    private static string BuildContainsMessage(MethodCallExpression methodCall)
-    {
-        // string.Contains vs collection.Contains
-        if (methodCall.Object is not null
-            && methodCall.Object.Type == typeof(string))
-        {
-            return FrameworkMessages.ContainsStringFailNew;
-        }
-
-        return FrameworkMessages.ContainsItemFailNew;
     }
 
     private static string TryEvaluateFormatted(Expression expr)
@@ -145,7 +143,7 @@ public static partial class AssertExtensions
             object? value = Expression.Lambda(expr).Compile().DynamicInvoke();
             return FormatValue(value);
         }
-        catch
+        catch (Exception)
         {
             return GetCleanMemberName(expr);
         }
