@@ -5,6 +5,8 @@
     <!-- Testing Platform version -->
     <TestingPlatformVersionPrefix>2.2.0</TestingPlatformVersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
+    <!-- Repack NuGet packages to use exact version dependencies (see https://github.com/NuGet/Home/issues/7213) -->
+    <UsingToolNuGetRepack>true</UsingToolNuGetRepack>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>11.0.0-beta.26169.3</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
