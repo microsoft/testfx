@@ -34,7 +34,6 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
     public async Task InitializeAsync(CancellationToken cancellationToken) =>
         // Generate all projects into the same temporary base folder, but separate subdirectories, so we can reference one from other.
-#if NET
         await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
             TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.ID, asset.Code, _tempDirectory);
@@ -42,15 +41,6 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
-#else
-        await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
-        {
-            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code, _tempDirectory);
-            DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: asset.Name, cancellationToken: cancellationToken);
-            testAsset.DotnetResult = result;
-            _testAssets.TryAdd(asset.ID, testAsset);
-        }));
-#endif
 
     /// <summary>
     /// Returns a list test assets to generate. A test asset has an id, name and code. A test asset is typically a project and all its files. Like MyTests.csproj, Program.cs, runsettings.runsettings etc.
