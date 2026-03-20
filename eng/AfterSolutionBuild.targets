@@ -4,37 +4,4 @@
     <Exec Command="powershell -NoProfile -NoLogo -ExecutionPolicy Bypass $(RepositoryEngineeringDir)\verify-nupkgs.ps1 -configuration $(Configuration)" />
   </Target>
 
-  <!--
-    Prevent the Arcade SDK's PackageReleasePackages target (from BuildReleasePackages.targets) from
-    applying exact version dependencies to MSTest packages' MTP references. MSTest packages should
-    keep >= deps on MTP to allow users to update MTP independently.
-
-    We temporarily rename MSTest packages before the Arcade target runs so they're excluded from
-    its *.nupkg glob, then restore and process them in a separate batch afterwards. Since
-    UpdatePackageVersionTask only rewrites deps for packages present in the same batch, MSTest deps
-    on MTP packages remain as >= while MSTest-internal deps still get exact versions.
-  -->
-  <Target Name="_HideMSTestPackagesBeforeRepack" BeforeTargets="PackageReleasePackages" Condition="'$(DotNetFinalVersionKind)' == ''">
-    <ItemGroup>
-      <_MSTestPackagesToHide Include="$(ArtifactsShippingPackagesDir)MSTest.*.nupkg" />
-    </ItemGroup>
-    <Move SourceFiles="@(_MSTestPackagesToHide)" DestinationFiles="@(_MSTestPackagesToHide->'%(FullPath).bak')" Condition="'@(_MSTestPackagesToHide)' != ''" />
-  </Target>
-
-  <Target Name="_RestoreAndProcessMSTestPackages" AfterTargets="PackageReleasePackages" Condition="'$(DotNetFinalVersionKind)' == ''">
-    <!-- Restore MSTest packages to their original names -->
-    <ItemGroup>
-      <_MSTestPackagesToRestore Include="$(ArtifactsShippingPackagesDir)MSTest.*.nupkg.bak" />
-    </ItemGroup>
-    <Move SourceFiles="@(_MSTestPackagesToRestore)" DestinationFiles="@(_MSTestPackagesToRestore->'%(RootDir)%(Directory)%(Filename)')" Condition="'@(_MSTestPackagesToRestore)' != ''" />
-
-    <!-- Process MSTest packages in their own batch so deps on MTP stay as >= -->
-    <ItemGroup>
-      <_MSTestPackages Include="$(ArtifactsShippingPackagesDir)MSTest.*.nupkg" />
-    </ItemGroup>
-    <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsPackagesDir)Release" AllowPreReleaseDependencies="true" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
-    <Microsoft.DotNet.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
-    <Microsoft.DotNet.Tools.UpdatePackageVersionTask Packages="@(_MSTestPackages)" OutputDirectory="$(ArtifactsShippingPackagesDir)" ExactVersions="true" Condition="'@(_MSTestPackages)' != ''" />
-  </Target>
-
 </Project>
