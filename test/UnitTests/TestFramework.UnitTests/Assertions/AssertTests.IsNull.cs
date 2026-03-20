@@ -32,9 +32,9 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsNull(new object())
+                User-provided message
                 Expected value to be null.
                   value: <System.Object>
-                User message: User-provided message
                 """);
     }
 
@@ -53,9 +53,9 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsNull(new object())
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected value to be null.
                   value: <System.Object>
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -99,8 +99,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsNotNull(null)
+                User-provided message
                 Expected a non-null value.
-                User message: User-provided message
                 """);
     }
 
@@ -112,8 +112,8 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsNotNull(null)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a non-null value.
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

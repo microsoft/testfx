@@ -44,10 +44,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThan(10, 5)
+                A Message
                 Expected value 5 to be greater than 10.
                   lower bound: 10
                   value:       5
-                User message: A Message
                 """);
     }
 
@@ -94,10 +94,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsGreaterThanOrEqualTo(10, 5)
+                A Message
                 Expected value 5 to be greater than or equal to 10.
                   lower bound: 10
                   value:       5
-                User message: A Message
                 """);
     }
 
@@ -144,10 +144,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThan(5, 10)
+                A Message
                 Expected value 10 to be less than 5.
                   upper bound: 5
                   value:       10
-                User message: A Message
                 """);
     }
 
@@ -194,10 +194,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsLessThanOrEqualTo(5, 10)
+                A Message
                 Expected value 10 to be less than or equal to 5.
                   upper bound: 5
                   value:       10
-                User message: A Message
                 """);
     }
 
@@ -259,9 +259,9 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsPositive(-5)
+                A Message
                 Expected a positive value.
                   value: -5
-                User message: A Message
                 """);
     }
 
@@ -329,9 +329,9 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNegative(5)
+                A Message
                 Expected a negative value.
                   value: 5
-                User message: A Message
                 """);
     }
 

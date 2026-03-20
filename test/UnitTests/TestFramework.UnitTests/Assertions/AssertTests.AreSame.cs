@@ -32,10 +32,10 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(new object(), new object(), "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame(new object(), new object())
+            User-provided message
             Expected references to be the same. Objects are not equal.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
-            User message: User-provided message
             """);
     {
         DummyClassTrackingToStringCalls o = new();
@@ -50,10 +50,10 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.AreSame(new object(), new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
             Assert.AreSame(new object(), new object())
+            User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             Expected references to be the same. Objects are not equal.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
-            User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -77,10 +77,10 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(1, 1, "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame(1, 1)
+            User-provided message
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
               expected: 1 (Hash=*)
               actual:   1 (Hash=*)
-            User message: User-provided message
             """);
     }
 
@@ -89,10 +89,10 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(1, 1, $"User-provided message {new object().GetType()}");
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame(1, 1)
+            User-provided message System.Object
             Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual().
               expected: 1 (Hash=*)
               actual:   1 (Hash=*)
-            User message: User-provided message System.Object
             """);
     }
 
@@ -117,10 +117,10 @@ public partial class AssertTests
         Action action = () => Assert.AreNotSame(o, o, "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreNotSame(o, o)
+            User-provided message
             Expected references to be different.
               not expected: <System.Object> (Hash=*)
               actual:       <System.Object> (Hash=*)
-            User message: User-provided message
             """);
     }
 
@@ -138,10 +138,10 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.AreNotSame(o, o, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
             Assert.AreNotSame(o, o)
+            User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             Expected references to be different.
               not expected: DummyClassTrackingToStringCalls (Hash=*)
               actual:       DummyClassTrackingToStringCalls (Hash=*)
-            User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -195,8 +195,8 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.AreNotSame(aVeryLongVariableNameThatExceedsOneHundredCharacte..., aVeryLongVariableNameThatExceedsOneHundredCharacte...)
                 Expected references to be different.
-              not expected: <System.Object> (Hash=*)
-              actual:       <System.Object> (Hash=*)
+                  not expected: <System.Object> (Hash=*)
+                  actual:       <System.Object> (Hash=*)
                 """);
     }
 

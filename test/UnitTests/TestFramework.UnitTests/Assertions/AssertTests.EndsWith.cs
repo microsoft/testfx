@@ -30,10 +30,10 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.EndsWith("hello", "world")
+                User message
                 String does not end with expected suffix.
                   expected suffix: "hello"
                   value:           "world"
-                User message: User message
                 """);
     }
 

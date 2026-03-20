@@ -119,10 +119,10 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.Throws
+                message constructed via builder.
                 No exception was thrown.
                   action: () => { }
                   expected exception type: <System.ArgumentNullException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -142,11 +142,11 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.Throws
+                message constructed via builder.
                 Wrong exception type was thrown.
                   action: () => throw new ArgumentOutOfRangeException("MyParamNameHere")
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -179,10 +179,10 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ThrowsExactly
+                message constructed via builder.
                 No exception was thrown.
                   action: () => { }
                   expected exception type: <System.ArgumentNullException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -202,11 +202,11 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ThrowsExactly
+                message constructed via builder.
                 Wrong exception type was thrown.
                   action: () => throw new ArgumentOutOfRangeException("MyParamNameHere")
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -239,10 +239,10 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.ThrowsAsync
+                message constructed via builder.
                 No exception was thrown.
                   action: () => Task.CompletedTask
                   expected exception type: <System.ArgumentNullException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -262,11 +262,11 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.ThrowsAsync
+                message constructed via builder.
                 Wrong exception type was thrown.
                   action: () => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere"))
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -299,10 +299,10 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.ThrowsExactlyAsync
+                message constructed via builder.
                 No exception was thrown.
                   action: () => Task.CompletedTask
                   expected exception type: <System.ArgumentNullException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();
@@ -322,11 +322,11 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.ThrowsExactlyAsync
+                message constructed via builder.
                 Wrong exception type was thrown.
                   action: () => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere"))
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
-                User message: message constructed via builder.
                 """);
 
         wasBuilderCalled.Should().BeTrue();

@@ -52,9 +52,9 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(null)
+                User-provided message
                 Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                User message: User-provided message
                 """);
     }
 
@@ -64,10 +64,10 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
+                User-provided message
                 Expected value to be an instance of null.
                   value: 5
                   expected type: null
-                User message: User-provided message
                 """);
     }
 
@@ -77,9 +77,9 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
+                User-provided message
                 Expected value to be an instance of <System.String>.
                   value: 5 (<System.Int32>)
-                User message: User-provided message
                 """);
     }
 
@@ -94,9 +94,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsInstanceOfType(null)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -108,10 +108,10 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
+                User-provided message DummyClassTrackingToStringCalls
                 Expected value to be an instance of null.
                   value: 5
                   expected type: null
-                User message: User-provided message DummyClassTrackingToStringCalls
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -123,9 +123,9 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInstanceOfType(5)
+                User-provided message DummyClassTrackingToStringCalls
                 Expected value to be an instance of <System.String>.
                   value: 5 (<System.Int32>)
-                User message: User-provided message DummyClassTrackingToStringCalls
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

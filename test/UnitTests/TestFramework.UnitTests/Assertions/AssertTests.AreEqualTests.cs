@@ -21,10 +21,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual(1, 1)
+                A Message
                 Expected values to differ.
                   not expected: 1
                   actual:       1
-                User message: A Message
                 """);
     }
 
@@ -40,10 +40,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual("A", "A")
+                A Message
                 Expected values to differ.
                   not expected: "A"
                   actual:       "A"
-                User message: A Message
                 """);
     }
 
@@ -66,10 +66,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual(1, 1)
+                A Message
                 Expected values to differ.
                   not expected: 1
                   actual:       1
-                User message: A Message
                 """);
     }
 
@@ -85,10 +85,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual(1L, 1L)
+                A Message
                 Expected values to differ.
                   not expected: 1L
                   actual:       1L
-                User message: A Message
                 """);
     }
 
@@ -110,10 +110,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual(0.1M, 0.1M)
+                A Message
                 Expected values to differ.
                   not expected: 0.1m
                   actual:       0.1m
-                User message: A Message
                 """);
     }
 
@@ -135,10 +135,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual(0.1, 0.1)
+                A Message
                 Expected values to differ.
                   not expected: 0.1
                   actual:       0.1
-                User message: A Message
                 """);
     }
 
@@ -160,10 +160,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreNotEqual(100E-2, 100E-2)
+                A Message
                 Expected values to differ.
                   not expected: 1
                   actual:       1
-                User message: A Message
                 """);
     }
 
@@ -185,10 +185,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreEqual(null, "string")
+                A Message
                 Expected values to be equal.
                   expected: null
                   actual:   "string"
-                User message: A Message
                 """);
     }
 
@@ -266,10 +266,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreEqual(1, 2)
+                A Message
                 Expected values to be equal.
                   expected: 1
                   actual:   2
-                User message: A Message
                 """);
     }
 
@@ -285,10 +285,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreEqual(1L, 2L)
+                A Message
                 Expected values to be equal.
                   expected: 1L
                   actual:   2L
-                User message: A Message
                 """);
     }
 
@@ -310,10 +310,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreEqual(0.1, 0.2)
+                A Message
                 Expected values to be equal.
                   expected: 0.1
                   actual:   0.2
-                User message: A Message
                 """);
     }
 
@@ -336,10 +336,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreEqual(0.1M, 0.2M)
+                A Message
                 Expected values to be equal.
                   expected: 0.1m
                   actual:   0.2m
-                User message: A Message
                 """);
     }
 
@@ -361,10 +361,10 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.AreEqual(100E-2, 200E-2)
+                A Message
                 Expected values to be equal.
                   expected: 1
                   actual:   2
-                User message: A Message
                 """);
     }
 
@@ -462,10 +462,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreEqual(0, 1)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected values to be equal.
                   expected: 0
                   actual:   1
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -485,10 +485,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreNotEqual(0, 0)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected values to differ.
                   not expected: 0
                   actual:       0
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -508,10 +508,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreEqual(1.0f, 1.1f)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than 0.001.
                   expected: 1f
                   actual:   1.1f
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -531,10 +531,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreNotEqual(1.0f, 1.1f)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than 0.2.
                   not expected: 1f
                   actual:       1.1f
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -554,10 +554,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreEqual(1.0m, 1.1m)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than 0.001.
                   expected: 1.0m
                   actual:   1.1m
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -577,10 +577,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreNotEqual(1.0m, 1.1m)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than 0.2.
                   not expected: 1.0m
                   actual:       1.1m
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -600,10 +600,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreEqual(1L, 2L)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than 0.
                   expected: 1L
                   actual:   2L
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -623,10 +623,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreNotEqual(1L, 2L)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than 1.
                   not expected: 1L
                   actual:       2L
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -646,10 +646,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreEqual(1.0d, 1.1d)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference no greater than 0.001.
                   expected: 1
                   actual:   1.1
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -669,10 +669,10 @@ public partial class AssertTests : TestContainer
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.AreNotEqual(1.0d, 1.1d)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected a difference greater than 0.2.
                   not expected: 1
                   actual:       1.1
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -1724,11 +1724,11 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
             Assert.AreEqual("aaaa", "aaab")
+            My custom message
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"
               --------------^
-            User message: My custom message
             """);
     }
 

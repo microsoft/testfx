@@ -98,10 +98,10 @@ public partial class AssertTests : TestContainer
         action.Should().ThrowExactly<AssertFailedException>()
             .WithMessage("""
                 Assert.IsInRange(value)
+                Custom error message
                 Expected value 10 to be in range [1, 5].
                   range: [1, 5]
                   value: 10
-                User message: Custom error message
                 """);
     }
 

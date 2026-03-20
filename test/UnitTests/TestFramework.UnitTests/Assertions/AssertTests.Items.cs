@@ -42,11 +42,11 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.HasCount(Array.Empty<int>())
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to have 1 item(s) but found 0.
                   collection: []
                   expected count: 1
                   actual count:   0
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -84,11 +84,11 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsEmpty(collection)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to have 0 item(s) but found 1.
                   collection: [1]
                   expected count: 0
                   actual count:   1
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -138,9 +138,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.ContainsSingle(Array.Empty<int>())
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to contain exactly one item but found 0 item(s).
                   collection: []
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -153,9 +153,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.ContainsSingle([1, 2, 3])
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to contain exactly one item but found 3 item(s).
                   collection: [1, 2, 3]
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -205,8 +205,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
+                No even numbers found: test
                 Expected exactly one item to match the predicate but found 0 item(s).
-                User message: No even numbers found: test
                 """);
     }
 
@@ -217,8 +217,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
+                Too many even numbers: test
                 Expected exactly one item to match the predicate but found 3 item(s).
-                User message: Too many even numbers: test
                 """);
     }
 
@@ -266,8 +266,8 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsNotEmpty(Array.Empty<string>())
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected collection to not be empty.
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

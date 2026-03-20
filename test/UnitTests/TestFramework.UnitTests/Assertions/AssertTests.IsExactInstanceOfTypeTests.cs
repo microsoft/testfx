@@ -79,9 +79,9 @@ Expected value to be exactly <System.IO.Stream>.
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(null)
+User-provided message
 Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
   value: null
-User message: User-provided message
 """);
     }
 
@@ -91,10 +91,10 @@ User message: User-provided message
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
+User-provided message
 Expected value to be exactly null.
   value: 5
   expected type: null
-User message: User-provided message
 """);
     }
 
@@ -104,9 +104,9 @@ User message: User-provided message
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
+User-provided message
 Expected value to be exactly <System.String>.
   value: 5 (<System.Int32>)
-User message: User-provided message
 """);
     }
 
@@ -121,9 +121,9 @@ User message: User-provided message
         (await action.Should().ThrowAsync<AssertFailedException>())
             .WithMessage("""
                 Assert.IsExactInstanceOfType(null)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
                   value: null
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -135,10 +135,10 @@ User message: User-provided message
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
+User-provided message DummyClassTrackingToStringCalls
 Expected value to be exactly null.
   value: 5
   expected type: null
-User message: User-provided message DummyClassTrackingToStringCalls
 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -150,9 +150,9 @@ User message: User-provided message DummyClassTrackingToStringCalls
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
 Assert.IsExactInstanceOfType(5)
+User-provided message DummyClassTrackingToStringCalls
 Expected value to be exactly <System.String>.
   value: 5 (<System.Int32>)
-User message: User-provided message DummyClassTrackingToStringCalls
 """);
         o.WasToStringCalled.Should().BeTrue();
     }

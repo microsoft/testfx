@@ -318,13 +318,13 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Appends the user-provided message to the end of a failure message.
+    /// Prepends the user-provided message before the assertion explanation.
     /// Returns the message unchanged if userMessage is null or empty.
     /// </summary>
     internal static string AppendUserMessage(string message, string? userMessage)
         => string.IsNullOrEmpty(userMessage)
             ? message
-            : message + Environment.NewLine + "User message: " + userMessage;
+            : userMessage + Environment.NewLine + message;
 
     /// <summary>
     /// Formats a parameter line showing only the expression (no value).

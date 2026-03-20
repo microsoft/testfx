@@ -392,9 +392,9 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.ContainsSingle(collection)
+            my custom message
             Expected collection to contain exactly one item but found 0 item(s).
               collection: []
-            User message: my custom message
             """);
     }
     #endregion
@@ -431,8 +431,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(20, collection)
+            Item 20 not found
             Expected collection to contain the specified item.*
-            User message: Item 20 not found
             """);
     }
 
@@ -451,8 +451,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(expected, collection)
+            Item 20 not found
             Expected collection to contain the specified item.*
-            User message: Item 20 not found
             """);
     }
 
@@ -501,8 +501,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(expected, collection)
+            Item  not found
             Expected collection to contain the specified item.*
-            User message: Item  not found
             """);
     }
 
@@ -554,8 +554,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains("cherry", collection)
+            Missing cherry
             Expected collection to contain the specified item.*
-            User message: Missing cherry
             """);
     }
 
@@ -604,8 +604,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(IsEven, collection)
+            No even number found
             Expected at least one item to match the predicate.*
-            User message: No even number found
             """);
     }
 
@@ -624,8 +624,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(IsEven, collection)
+            No even number found
             Expected at least one item to match the predicate.*
-            User message: No even number found
             """);
     }
 
@@ -661,10 +661,10 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(substring, value)
+            Missing substring
             String does not contain the expected substring.
               substring: "lazy"
               value:     "The quick brown fox"
-            User message: Missing substring
             """);
     }
 
@@ -989,8 +989,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(10, collection)
+            Item 10 should not be found
             Expected collection to not contain the specified item.*
-            User message: Item 10 should not be found
             """);
     }
 
@@ -1024,9 +1024,9 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(10, collection)
+            Item 10 should not be found
             Expected collection to not contain the specified item.
               collection: [5, 10, 15, "a"]
-            User message: Item 10 should not be found
             """);
     }
 
@@ -1078,8 +1078,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain("APPLE", collection)
+            Unexpected "APPLE"
             Expected collection to not contain the specified item.*
-            User message: Unexpected "APPLE"
             """);
     }
 
@@ -1099,8 +1099,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain("APPLE", collection)
+            APPLE
             Expected collection to not contain the specified item.*
-            User message: APPLE
             """);
     }
 
@@ -1149,8 +1149,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(IsEven, collection)
+            An even number exists
             Expected no items to match the predicate.*
-            User message: An even number exists
             """);
     }
 
@@ -1169,8 +1169,8 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(IsEven, collection)
+            An even number exists
             Expected no items to match the predicate.*
-            User message: An even number exists
             """);
     }
 
@@ -1206,10 +1206,10 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
+            Unexpected substring
             String contains the unexpected substring.
               substring: "brown"
               value:     "The quick brown fox"
-            User message: Unexpected substring
             """);
     }
 
@@ -1247,10 +1247,10 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
+            Found unexpected substring
             String contains the unexpected substring.
               substring: "BROWN"
               value:     "The quick brown fox"
-            User message: Found unexpected substring
             """);
     }
 
@@ -1324,10 +1324,10 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
+            Found unexpected substring
             String contains the unexpected substring.
               substring: "brown"
               value:     "The quick brown fox"
-            User message: Found unexpected substring
             """);
     }
 
@@ -1653,8 +1653,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
+                No even numbers found in collection with 3 items
                 Expected exactly one item to match the predicate but found 0 item(s).
-                User message: No even numbers found in collection with 3 items
                 """);
     }
 
@@ -1674,8 +1674,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)
+                No even numbers found in collection with 3 items
                 Expected exactly one item to match the predicate but found 0 item(s).
-                User message: No even numbers found in collection with 3 items
                 """);
     }
 
@@ -1695,8 +1695,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
+                Too many even numbers found: 3
                 Expected exactly one item to match the predicate but found 3 item(s).
-                User message: Too many even numbers found: 3
                 """);
     }
 
@@ -1716,8 +1716,8 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)
+                Too many even numbers found: 2
                 Expected exactly one item to match the predicate but found 2 item(s).
-                User message: Too many even numbers found: 2
                 """);
     }
 

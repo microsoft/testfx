@@ -30,10 +30,10 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.StartsWith("world", "hello")
+                User message
                 String does not start with expected prefix.
                   expected prefix: "world"
                   value:           "hello"
-                User message: User message
                 """);
     }
 

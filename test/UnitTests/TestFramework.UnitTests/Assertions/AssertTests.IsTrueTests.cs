@@ -58,9 +58,9 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsFalse(nullBool)
+                User-provided message
                 Expected condition to be false.
                   condition: null
-                User message: User-provided message
                 """);
     }
 
@@ -71,9 +71,9 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsFalse(nullBool)
+                User-provided message
                 Expected condition to be false.
                   condition: True
-                User message: User-provided message
                 """);
     }
 
@@ -89,9 +89,9 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsFalse(true)
+                User-provided message
                 Expected condition to be false.
                   condition: True
-                User message: User-provided message
                 """);
     }
 
@@ -107,9 +107,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsFalse(nullBool)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be false.
                   condition: null
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
     }
 
@@ -122,9 +122,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsFalse(nullBool)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be false.
                   condition: True
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
     }
 
@@ -142,9 +142,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsFalse(true)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be false.
                   condition: True
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
     }
 
@@ -202,9 +202,9 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsTrue(nullBool)
+                User-provided message
                 Expected condition to be true.
                   condition: null
-                User message: User-provided message
                 """);
     }
 
@@ -215,9 +215,9 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsTrue(nullBool)
+                User-provided message
                 Expected condition to be true.
                   condition: False
-                User message: User-provided message
                 """);
     }
 
@@ -233,9 +233,9 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsTrue(false)
+                User-provided message
                 Expected condition to be true.
                   condition: False
-                User message: User-provided message
                 """);
     }
 
@@ -251,9 +251,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsTrue(nullBool)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be true.
                   condition: null
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
     }
 
@@ -266,9 +266,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsTrue(nullBool)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be true.
                   condition: False
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
     }
 
@@ -286,9 +286,9 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage("""
                 Assert.IsTrue(false)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 Expected condition to be true.
                   condition: False
-                User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
                 """);
     }
 

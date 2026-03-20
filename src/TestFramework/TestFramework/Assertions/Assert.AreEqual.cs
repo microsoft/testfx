@@ -600,7 +600,7 @@ public sealed partial class Assert
         string formattedUserMessage = string.IsNullOrEmpty(userMessage) ? string.Empty : userMessage;
 
         string result = lengthInfo + Environment.NewLine + expectedLine + Environment.NewLine + actualLine + Environment.NewLine + "  " + new string('-', adjustedCaretPosition - 2) + "^";
-        return string.IsNullOrEmpty(formattedUserMessage) ? result : result + Environment.NewLine + "User message: " + formattedUserMessage;
+        return string.IsNullOrEmpty(formattedUserMessage) ? result : formattedUserMessage + Environment.NewLine + result;
     }
 
     [DoesNotReturn]
