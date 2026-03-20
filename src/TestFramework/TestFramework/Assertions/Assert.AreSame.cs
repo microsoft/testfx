@@ -210,7 +210,24 @@ public sealed partial class Assert
         }
         else
         {
-            message = FrameworkMessages.AreSameFailNew;
+            // Check equality to give a diagnostic hint about whether the objects are equal
+            // even though they are different references.
+            string equalityHint = string.Empty;
+            if (expected is not null && actual is not null)
+            {
+                try
+                {
+                    equalityHint = expected.Equals(actual)
+                        ? " Objects are equal."
+                        : " Objects are not equal.";
+                }
+                catch (Exception)
+                {
+                    // If Equals throws, skip the hint.
+                }
+            }
+
+            message = FrameworkMessages.AreSameFailNew + equalityHint;
         }
 
         message += FormatAlignedParameters(
@@ -274,9 +291,21 @@ public sealed partial class Assert
     {
         string callSite = FormatCallSite("Assert.AreNotSame", (nameof(notExpected), notExpectedExpression), (nameof(actual), actualExpression));
         string message = FrameworkMessages.AreNotSameFailNew;
+
+        string notExpectedFormatted = FormatValue(notExpected);
+        string actualFormatted = FormatValue(actual);
+
+        // Since AreNotSame failed, both references point to the same object.
+        // Show the hash to confirm it's one instance.
+        if (notExpected is not null)
+        {
+            notExpectedFormatted += $" (Hash={RuntimeHelpers.GetHashCode(notExpected!)})";
+            actualFormatted += $" (Hash={RuntimeHelpers.GetHashCode(actual!)})";
+        }
+
         message += FormatAlignedParameters(
-            ("not expected", FormatValue(notExpected)),
-            (nameof(actual), FormatValue(actual)));
+            ("not expected", notExpectedFormatted),
+            (nameof(actual), actualFormatted));
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }

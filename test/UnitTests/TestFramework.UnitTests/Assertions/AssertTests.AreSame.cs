@@ -18,13 +18,10 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(new object(), new object());
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame(new object(), new object())
-            Expected references to be the same.
+            Expected references to be the same. Objects are not equal.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
             """);
-    }
-
-    public void AreSame_StringMessage_PassSameObject_ShouldPass()
     {
         object o = new();
         Assert.AreSame(o, o, "User-provided message");
@@ -35,14 +32,11 @@ public partial class AssertTests
         Action action = () => Assert.AreSame(new object(), new object(), "User-provided message");
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreSame(new object(), new object())
-            Expected references to be the same.
+            Expected references to be the same. Objects are not equal.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
             User message: User-provided message
             """);
-    }
-
-    public void AreSame_InterpolatedString_PassSameObject_ShouldPass()
     {
         DummyClassTrackingToStringCalls o = new();
         Assert.AreSame(o, o, $"User-provided message: {o}");
@@ -56,7 +50,7 @@ public partial class AssertTests
         Func<Task> action = async () => Assert.AreSame(new object(), new object(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
             Assert.AreSame(new object(), new object())
-            Expected references to be the same.
+            Expected references to be the same. Objects are not equal.
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
             User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
@@ -109,8 +103,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreNotSame(o, o)
             Expected references to be different.
-              not expected: <System.Object>
-              actual:       <System.Object>
+              not expected: <System.Object> (Hash=*)
+              actual:       <System.Object> (Hash=*)
             """);
     }
 
@@ -124,8 +118,8 @@ public partial class AssertTests
         action.Should().Throw<Exception>().WithMessage("""
             Assert.AreNotSame(o, o)
             Expected references to be different.
-              not expected: <System.Object>
-              actual:       <System.Object>
+              not expected: <System.Object> (Hash=*)
+              actual:       <System.Object> (Hash=*)
             User message: User-provided message
             """);
     }
@@ -145,8 +139,8 @@ public partial class AssertTests
         (await action.Should().ThrowAsync<Exception>()).WithMessage("""
             Assert.AreNotSame(o, o)
             Expected references to be different.
-              not expected: DummyClassTrackingToStringCalls
-              actual:       DummyClassTrackingToStringCalls
+              not expected: DummyClassTrackingToStringCalls (Hash=*)
+              actual:       DummyClassTrackingToStringCalls (Hash=*)
             User message: User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
             """);
         o.WasToStringCalled.Should().BeTrue();
@@ -162,7 +156,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.AreSame(aVeryLongVariableNameThatExceedsOneHundredCharacte..., new object())
-                Expected references to be the same.
+                Expected references to be the same. Objects are not equal.
                   expected: <System.Object> (Hash=*)
                   actual:   <System.Object> (Hash=*)
                 """);
@@ -174,7 +168,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.AreSame(new ObjectWithLongToString(), new ObjectWithLongToString())
-                Expected references to be the same.
+                Expected references to be the same. Objects are not equal.
                   expected: {new string('L', 256)}... 44 more (Hash=*)
                   actual:   {new string('L', 256)}... 44 more (Hash=*)
                 """);
@@ -186,7 +180,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.AreSame(new ObjectWithNewlineToString(), new ObjectWithNewlineToString())
-                Expected references to be the same.
+                Expected references to be the same. Objects are not equal.
                   expected: line1\r\nline2\nline3 (Hash=*)
                   actual:   line1\r\nline2\nline3 (Hash=*)
                 """);
@@ -201,8 +195,8 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.AreNotSame(aVeryLongVariableNameThatExceedsOneHundredCharacte..., aVeryLongVariableNameThatExceedsOneHundredCharacte...)
                 Expected references to be different.
-                  not expected: <System.Object>
-                  actual:       <System.Object>
+              not expected: <System.Object> (Hash=*)
+              actual:       <System.Object> (Hash=*)
                 """);
     }
 
@@ -215,8 +209,8 @@ public partial class AssertTests
             .WithMessage($"""
                 Assert.AreNotSame(obj, obj)
                 Expected references to be different.
-                  not expected: {new string('L', 256)}... 44 more
-                  actual:       {new string('L', 256)}... 44 more
+                  not expected: {new string('L', 256)}... 44 more (Hash=*)
+                  actual:       {new string('L', 256)}... 44 more (Hash=*)
                 """);
     }
 
@@ -229,8 +223,8 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.AreNotSame(obj, obj)
                 Expected references to be different.
-                  not expected: line1\r\nline2\nline3
-                  actual:       line1\r\nline2\nline3
+                  not expected: line1\r\nline2\nline3 (Hash=*)
+                  actual:       line1\r\nline2\nline3 (Hash=*)
                 """);
     }
 
