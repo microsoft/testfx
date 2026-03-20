@@ -120,9 +120,12 @@ public sealed class StringAssert
         Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring");
         if (value.IndexOf(substring, comparisonType) < 0)
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.Contains", finalMessage);
+            string msg = FrameworkMessages.ContainsStringFailNew;
+            msg += Assert.FormatAlignedParameters(
+                (nameof(substring), Assert.FormatValue(substring)),
+                (nameof(value), Assert.FormatValue(value)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("StringAssert.Contains", msg);
         }
     }
 
@@ -217,9 +220,12 @@ public sealed class StringAssert
         Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring");
         if (!value.StartsWith(substring, comparisonType))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.StartsWith", finalMessage);
+            string msg = FrameworkMessages.StartsWithFailNew;
+            msg += Assert.FormatAlignedParameters(
+                ("expected prefix", Assert.FormatValue(substring)),
+                (nameof(value), Assert.FormatValue(value)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("StringAssert.StartsWith", msg);
         }
     }
 
@@ -314,9 +320,12 @@ public sealed class StringAssert
         Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring");
         if (!value.EndsWith(substring, comparisonType))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.EndsWith", finalMessage);
+            string msg = FrameworkMessages.EndsWithFailNew;
+            msg += Assert.FormatAlignedParameters(
+                ("expected suffix", Assert.FormatValue(substring)),
+                (nameof(value), Assert.FormatValue(value)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("StringAssert.EndsWith", msg);
         }
     }
 
@@ -369,9 +378,12 @@ public sealed class StringAssert
 
         if (!pattern.IsMatch(value))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.Matches", finalMessage);
+            string msg = FrameworkMessages.MatchesRegexFailNew;
+            msg += Assert.FormatAlignedParameters(
+                (nameof(pattern), Assert.FormatValue(pattern)),
+                (nameof(value), Assert.FormatValue(value)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("StringAssert.Matches", msg);
         }
     }
 
@@ -420,9 +432,12 @@ public sealed class StringAssert
 
         if (pattern.IsMatch(value))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            Assert.ThrowAssertFailed("StringAssert.DoesNotMatch", finalMessage);
+            string msg = FrameworkMessages.DoesNotMatchRegexFailNew;
+            msg += Assert.FormatAlignedParameters(
+                (nameof(pattern), Assert.FormatValue(pattern)),
+                (nameof(value), Assert.FormatValue(value)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("StringAssert.DoesNotMatch", msg);
         }
     }
 

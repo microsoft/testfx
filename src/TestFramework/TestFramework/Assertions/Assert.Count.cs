@@ -20,6 +20,7 @@ public sealed partial class Assert
         private readonly StringBuilder? _builder;
         private readonly int _expectedCount;
         private readonly int _actualCount;
+        private readonly IEnumerable<TItem>? _collection;
 
         public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, IEnumerable<TItem> collection, out bool shouldAppend)
         {
@@ -29,6 +30,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _collection = collection;
             }
         }
 
@@ -40,6 +42,7 @@ public sealed partial class Assert
             if (shouldAppend)
             {
                 _builder = new StringBuilder(literalLength + formattedCount);
+                _collection = collection;
             }
         }
 
@@ -47,8 +50,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _builder.ToString());
+                ThrowAssertCountFailed(assertionName, _expectedCount, _actualCount, _collection!, _builder.ToString(), collectionExpression);
             }
         }
 
@@ -115,8 +117,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "collection", collectionExpression) + " ");
-                ThrowAssertIsNotEmptyFailed(_builder.ToString());
+                ThrowAssertIsNotEmptyFailed(_builder.ToString(), collectionExpression);
             }
         }
 
@@ -202,8 +203,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertIsNotEmptyFailed(userMessage);
+        ThrowAssertIsNotEmptyFailed(message, collectionExpression);
     }
 
     /// <summary>
@@ -222,8 +222,7 @@ public sealed partial class Assert
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertIsNotEmptyFailed(userMessage);
+        ThrowAssertIsNotEmptyFailed(message, collectionExpression);
     }
     #endregion // IsNotEmpty
 
@@ -320,38 +319,39 @@ public sealed partial class Assert
 
     private static void HasCount<T>(string assertionName, int expected, IEnumerable<T> collection, string? message, string collectionExpression)
     {
-        int actualCount = collection.Count();
-        if (actualCount == expected)
+        // Materialize non-ICollection enumerables to prevent multiple enumeration
+        // that could yield different results or fail on second pass.
+        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        if (snapshot.Count == expected)
         {
             return;
         }
 
-        string userMessage = BuildUserMessageForCollectionExpression(message, collectionExpression);
-        ThrowAssertCountFailed(assertionName, expected, actualCount, userMessage);
+        ThrowAssertCountFailed(assertionName, expected, snapshot.Count, snapshot, message, collectionExpression);
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
         => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
 
     [DoesNotReturn]
-    private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, string userMessage)
+    private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, IEnumerable collection, string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.HasCountFailMsg,
-            userMessage,
-            expectedCount,
-            actualCount);
-        ThrowAssertFailed($"Assert.{assertionName}", finalMessage);
+        string callSite = FormatCallSite($"Assert.{assertionName}", ("collection", collectionExpression));
+        string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.HasCountFailNew, expectedCount, actualCount);
+        msg += FormatCollectionParameter(collectionExpression, collection);
+        msg += FormatAlignedParameters(
+            ("expected count", expectedCount.ToString(CultureInfo.InvariantCulture)),
+            ("actual count", actualCount.ToString(CultureInfo.InvariantCulture)));
+        msg = AppendUserMessage(msg, userMessage);
+        ThrowAssertFailed(callSite, msg);
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotEmptyFailed(string userMessage)
+    private static void ThrowAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
-        string finalMessage = string.Format(
-            CultureInfo.CurrentCulture,
-            FrameworkMessages.IsNotEmptyFailMsg,
-            userMessage);
-        ThrowAssertFailed("Assert.IsNotEmpty", finalMessage);
+        string callSite = FormatCallSite("Assert.IsNotEmpty", ("collection", collectionExpression));
+        string msg = FrameworkMessages.IsNotEmptyFailNew;
+        msg = AppendUserMessage(msg, userMessage);
+        ThrowAssertFailed(callSite, msg);
     }
 }

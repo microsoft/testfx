@@ -12,21 +12,34 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(null)
+Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+  value: null
+""");
     }
 
     public void ExactInstanceOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+Expected value to be exactly null.
+  value: 5
+  expected type: null
+""");
     }
 
     public void ExactInstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
+""");
     }
 
     public void ExactInstanceOfTypeShouldPassOnSameInstance() => Assert.IsExactInstanceOfType(5, typeof(int));
@@ -35,7 +48,11 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(object));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.Object>. Actual type:<System.Int32>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+Expected value to be exactly <System.Object>.
+  value: 5 (<System.Int32>)
+""");
     }
 
     public void ExactInstanceOfTypeShouldFailOnDerivedType()
@@ -43,7 +60,11 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsExactInstanceOfType(x, typeof(Stream));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'x'. Expected exact type:<System.IO.Stream>. Actual type:<System.IO.MemoryStream>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(x)
+Expected value to be exactly <System.IO.Stream>.
+  value: <System.IO.MemoryStream>
+""");
     }
 
     public void ExactInstanceOfTypeShouldPassOnExactType()
@@ -56,21 +77,37 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(null)
+User-provided message
+Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+  value: null
+""");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, null, "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+User-provided message
+Expected value to be exactly null.
+  value: 5
+  expected type: null
+""");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+User-provided message
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
+""");
     }
 
     public void ExactInstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
@@ -82,7 +119,12 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsExactInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .WithMessage($"Assert.IsExactInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage("""
+                Assert.IsExactInstanceOfType(null)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+                  value: null
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -91,7 +133,13 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsExactInstanceOfType(5, null, $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+User-provided message DummyClassTrackingToStringCalls
+Expected value to be exactly null.
+  value: 5
+  expected type: null
+""");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -100,7 +148,12 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsExactInstanceOfType(5, typeof(string), $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+User-provided message DummyClassTrackingToStringCalls
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
+""");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -116,7 +169,13 @@ public partial class AssertTests
     public void ExactInstanceNotOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsNotExactInstanceOfType(5, null);
-        action.Should().Throw<AssertFailedException>();
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+Assert.IsNotExactInstanceOfType(5)
+Expected value to not be exactly null.
+  value: 5
+  wrong type: null
+""");
     }
 
     public void ExactInstanceNotOfTypeShouldPassOnWrongInstance() => Assert.IsNotExactInstanceOfType(5L, typeof(int));
@@ -134,21 +193,33 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsNotExactInstanceOfType(x, typeof(MemoryStream));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotExactInstanceOfType failed. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>. 'value' expression: 'x'.");
+            .WithMessage("""
+Assert.IsNotExactInstanceOfType(x)
+Expected value to not be exactly <System.IO.MemoryStream>.
+  value: <System.IO.MemoryStream>
+""");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
         Action action = () => Assert.IsExactInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(null)
+Expected value to be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+  value: null
+""");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()
     {
         Action action = () => Assert.IsExactInstanceOfType<string>(5);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+Expected value to be exactly <System.String>.
+  value: 5 (<System.Int32>)
+""");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_WhenDerivedType_Fails()
@@ -156,7 +227,11 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsExactInstanceOfType<Stream>(x);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: 'x'. Expected exact type:<System.IO.Stream>. Actual type:<System.IO.MemoryStream>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(x)
+Expected value to be exactly <System.IO.Stream>.
+  value: <System.IO.MemoryStream>
+""");
     }
 
     public void IsExactInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow() => Assert.IsExactInstanceOfType<int>(5);
@@ -178,7 +253,11 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsExactInstanceOfType<object>(5);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsExactInstanceOfType failed. 'value' expression: '5'. Expected exact type:<System.Object>. Actual type:<System.Int32>.");
+            .WithMessage("""
+Assert.IsExactInstanceOfType(5)
+Expected value to be exactly <System.Object>.
+  value: 5 (<System.Int32>)
+""");
     }
 
     public void IsExactInstanceOfTypeUsingGenericTypeWithReturn_OnExactType_DoesNotThrow()
@@ -205,7 +284,11 @@ public partial class AssertTests
         object x = new MemoryStream();
         Action action = () => Assert.IsNotExactInstanceOfType<MemoryStream>(x);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsNotExactInstanceOfType failed. Wrong exact Type:<System.IO.MemoryStream>. Actual type:<System.IO.MemoryStream>. 'value' expression: 'x'.");
+            .WithMessage("""
+Assert.IsNotExactInstanceOfType(x)
+Expected value to not be exactly <System.IO.MemoryStream>.
+  value: <System.IO.MemoryStream>
+""");
     }
 
     public void IsExactInstanceOfType_WhenNonNullNullableValue_LearnNonNull()
@@ -277,4 +360,86 @@ public partial class AssertTests
         Assert.IsNotExactInstanceOfType(new object(), intType, "my message");
         _ = intType.ToString(); // no warning about possible null
     }
+
+    #region IsExactInstanceOfType/IsNotExactInstanceOfType truncation and newline escaping
+
+    public void IsExactInstanceOfType_WithLongExpression_ShouldTruncateExpression()
+    {
+        object aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = "hello";
+
+        Action action = () => Assert.IsExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
+                Expected value to be exactly <System.Int32>.
+                  value: "hello" (<System.String>)
+                """);
+    }
+
+    public void IsExactInstanceOfType_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var obj = new ObjectWithLongToString();
+
+        Action action = () => Assert.IsExactInstanceOfType(obj, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsExactInstanceOfType(obj)
+                Expected value to be exactly <System.Int32>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
+                """);
+    }
+
+    public void IsExactInstanceOfType_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var obj = new ObjectWithNewlineToString();
+
+        Action action = () => Assert.IsExactInstanceOfType(obj, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsExactInstanceOfType(obj)
+                Expected value to be exactly <System.Int32>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
+                """);
+    }
+
+    public void IsNotExactInstanceOfType_WithLongExpression_ShouldTruncateExpression()
+    {
+        string aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = "hello";
+
+        Action action = () => Assert.IsNotExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, typeof(string));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsNotExactInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
+                Expected value to not be exactly <System.String>.
+                  value: "hello" (<System.String>)
+                """);
+    }
+
+    public void IsNotExactInstanceOfType_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var obj = new ObjectWithLongToString();
+
+        Action action = () => Assert.IsNotExactInstanceOfType(obj, typeof(ObjectWithLongToString));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsNotExactInstanceOfType(obj)
+                Expected value to not be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
+                """);
+    }
+
+    public void IsNotExactInstanceOfType_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var obj = new ObjectWithNewlineToString();
+
+        Action action = () => Assert.IsNotExactInstanceOfType(obj, typeof(ObjectWithNewlineToString));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsNotExactInstanceOfType(obj)
+                Expected value to not be exactly <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
+                """);
+    }
+
+    #endregion
 }

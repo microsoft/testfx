@@ -76,9 +76,13 @@ public sealed partial class Assert
         CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
-            string userMessage = BuildUserMessageForExpectedSuffixExpressionAndValueExpression(message, expectedSuffixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, expectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.EndsWith", finalMessage);
+            string callSite = FormatCallSite("Assert.EndsWith", (nameof(expectedSuffix), expectedSuffixExpression), (nameof(value), valueExpression));
+            string msg = FrameworkMessages.EndsWithFailNew;
+            msg += FormatAlignedParameters(
+                ("expected suffix", FormatValue(expectedSuffix)),
+                (nameof(value), FormatValue(value)));
+            msg = AppendUserMessage(msg, message);
+            ThrowAssertFailed(callSite, msg);
         }
     }
 
@@ -150,9 +154,13 @@ public sealed partial class Assert
         CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
-            string userMessage = BuildUserMessageForNotExpectedSuffixExpressionAndValueExpression(message, notExpectedSuffixExpression, valueExpression);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DoesNotEndWithFail, value, notExpectedSuffix, userMessage);
-            ThrowAssertFailed("Assert.DoesNotEndWith", finalMessage);
+            string callSite = FormatCallSite("Assert.DoesNotEndWith", (nameof(notExpectedSuffix), notExpectedSuffixExpression), (nameof(value), valueExpression));
+            string msg = FrameworkMessages.DoesNotEndWithFailNew;
+            msg += FormatAlignedParameters(
+                ("unwanted suffix", FormatValue(notExpectedSuffix)),
+                (nameof(value), FormatValue(value)));
+            msg = AppendUserMessage(msg, message);
+            ThrowAssertFailed(callSite, msg);
         }
     }
 }

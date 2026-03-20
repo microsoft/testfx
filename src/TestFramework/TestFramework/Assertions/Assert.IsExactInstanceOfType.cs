@@ -38,8 +38,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString());
+                ThrowAssertIsExactInstanceOfTypeFailed(_value, _expectedType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -50,16 +49,11 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+#pragma warning disable RS0027
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+#pragma warning restore RS0027
 #endif
 
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
         public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
 
         public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
@@ -68,13 +62,13 @@ public sealed partial class Assert
 
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+#pragma warning disable RS0026
+#pragma warning disable RS0027
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+#pragma warning restore RS0026
+#pragma warning restore RS0027
     }
 
     [InterpolatedStringHandler]
@@ -98,8 +92,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ThrowAssertIsExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -160,8 +153,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString());
+                ThrowAssertIsNotExactInstanceOfTypeFailed(_value, _wrongType, _builder.ToString(), valueExpression);
             }
         }
 
@@ -220,8 +212,7 @@ public sealed partial class Assert
         {
             if (_builder is not null)
             {
-                _builder.Insert(0, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CallerArgumentExpressionSingleParameterMessage, "value", valueExpression) + " ");
-                ThrowAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString());
+                ThrowAssertIsNotExactInstanceOfTypeFailed(_value, typeof(TArg), _builder.ToString(), valueExpression);
             }
         }
 
@@ -291,7 +282,7 @@ public sealed partial class Assert
     {
         if (IsExactInstanceOfTypeFailing(value, expectedType))
         {
-            ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, BuildUserMessageForValueExpression(message, valueExpression));
+            ThrowAssertIsExactInstanceOfTypeFailed(value, expectedType, message, valueExpression);
         }
     }
 
@@ -329,20 +320,25 @@ public sealed partial class Assert
         => expectedType is null || value is null || value.GetType() != expectedType;
 
     [DoesNotReturn]
-    private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string userMessage)
+    private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
-        if (expectedType is not null && value is not null)
+        string callSite = FormatCallSite("Assert.IsExactInstanceOfType", (nameof(value), valueExpression));
+        string message;
+
+        if (expectedType is null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsExactInstanceOfFailMsg,
-                userMessage,
-                expectedType.ToString(),
-                value.GetType().ToString());
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsExactInstanceOfTypeFailNew, "null");
+            message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+            message += Environment.NewLine + "  expected type: null";
+        }
+        else
+        {
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsExactInstanceOfTypeFailNew, FormatType(expectedType));
+            message += Environment.NewLine + $"  value: {(value is null ? "null" : FormatValueWithType(value))}";
         }
 
-        ThrowAssertFailed("Assert.IsExactInstanceOfType", finalMessage);
+        message = AppendUserMessage(message, userMessage);
+        ThrowAssertFailed(callSite, message);
     }
 
     /// <summary>
@@ -373,7 +369,7 @@ public sealed partial class Assert
     {
         if (IsNotExactInstanceOfTypeFailing(value, wrongType))
         {
-            ThrowAssertIsNotExactInstanceOfTypeFailed(value, wrongType, BuildUserMessageForValueExpression(message, valueExpression));
+            ThrowAssertIsNotExactInstanceOfTypeFailed(value, wrongType, message, valueExpression);
         }
     }
 
@@ -405,19 +401,24 @@ public sealed partial class Assert
             (value is not null && value.GetType() == wrongType);
 
     [DoesNotReturn]
-    private static void ThrowAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string userMessage)
+    private static void ThrowAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string finalMessage = userMessage;
-        if (wrongType is not null)
+        string callSite = FormatCallSite("Assert.IsNotExactInstanceOfType", (nameof(value), valueExpression));
+        string message;
+
+        if (wrongType is null)
         {
-            finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.IsNotExactInstanceOfFailMsg,
-                userMessage,
-                wrongType.ToString(),
-                value!.GetType().ToString());
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotExactInstanceOfTypeFailNew, "null");
+            message += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
+            message += Environment.NewLine + "  wrong type: null";
+        }
+        else
+        {
+            message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotExactInstanceOfTypeFailNew, FormatType(wrongType));
+            message += Environment.NewLine + $"  value: {FormatValueWithType(value!)}";
         }
 
-        ThrowAssertFailed("Assert.IsNotExactInstanceOfType", finalMessage);
+        message = AppendUserMessage(message, userMessage);
+        ThrowAssertFailed(callSite, message);
     }
 }

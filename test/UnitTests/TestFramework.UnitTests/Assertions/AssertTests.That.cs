@@ -31,8 +31,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => False) failed.
-                Message: Boolean condition failed
+                Assert.That(False)
+                Boolean condition failed
+                Expected condition to be true.
                 """);
     }
 
@@ -45,9 +46,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => x > 10) failed.
-                Message: x should be greater than 10
-                Details:
+                Assert.That(x > 10)
+                x should be greater than 10
+                Expected 5 to be greater than 10.
                   x = 5
                 """);
     }
@@ -61,9 +62,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => s == "world") failed.
-                Message: String equality failed
-                Details:
+                Assert.That(s == "world")
+                String equality failed
+                Expected "hello" to equal "world".
                   s = "hello"
                 """);
     }
@@ -77,9 +78,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => s != null) failed.
-                Message: String should not be null
-                Details:
+                Assert.That(s != null)
+                String should not be null
+                Expected null to not equal null.
                   s = null
                 """);
     }
@@ -94,9 +95,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => a && b) failed.
-                Message: Both should be true
-                Details:
+                Assert.That(a && b)
+                Both should be true
+                Expected condition to be true.
                   a = True
                   b = False
                 """);
@@ -111,9 +112,9 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => nested.Any(arr => arr.Length > 3)) failed.
-                Message: Check nested arrays
-                Details:
+                Assert.That(nested.Any(arr => arr.Length > 3))
+                Check nested arrays
+                Expected at least one item to match the predicate.
                   nested = [[1, 2], [3]]
                 """);
     }
@@ -127,9 +128,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => person.Age > 30) failed.
-            Message: Age should be greater than 30
-            Details:
+            Assert.That(person.Age > 30)
+            Age should be greater than 30
+            Expected 25 to be greater than 30.
               person.Age = 25
             """);
     }
@@ -143,9 +144,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => text.StartsWith("world")) failed.
-            Message: Text should start with 'world'
-            Details:
+            Assert.That(text.StartsWith("world"))
+            Text should start with 'world'
+            Expected string to start with the specified prefix.
               text = "hello"
             """);
     }
@@ -159,9 +160,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => user.Profile.IsActive) failed.
-            Message: User profile should be active
-            Details:
+            Assert.That(user.Profile.IsActive)
+            User profile should be active
+            Expected user.Profile.IsActive to be true.
               user.Profile.IsActive = False
             """);
     }
@@ -175,9 +176,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => numbers[1] == 5) failed.
-            Message: Second element should be 5
-            Details:
+            Assert.That(numbers[1] == 5)
+            Second element should be 5
+            Expected 2 to equal 5.
               numbers[1] = 2
             """);
     }
@@ -191,9 +192,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => nullableValue.HasValue) failed.
-            Message: Nullable should have value
-            Details:
+            Assert.That(nullableValue.HasValue)
+            Nullable should have value
+            Expected nullableValue.HasValue to be true.
               nullableValue.HasValue = False
             """);
     }
@@ -208,9 +209,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => condition1 || condition2) failed.
-            Message: At least one should be true
-            Details:
+            Assert.That(condition1 || condition2)
+            At least one should be true
+            Expected condition to be true.
               condition1 = False
               condition2 = False
             """);
@@ -227,9 +228,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => (x + y) * 2 > z * 3) failed.
-            Message: Complex calculation should be greater
-            Details:
+            Assert.That((x + y) * 2 > z * 3)
+            Complex calculation should be greater
+            Expected 30 to be greater than 45.
               x = 5
               y = 10
               z = 15
@@ -245,9 +246,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => numbers.All(n => n > 5)) failed.
-            Message: All numbers should be greater than 5
-            Details:
+            Assert.That(numbers.All(n => n > 5))
+            All numbers should be greater than 5
+            Expected all elements to match the predicate.
               numbers = [1, 2, 3, 4]
             """);
     }
@@ -261,9 +262,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => obj is int) failed.
-            Message: Object should be an integer
-            Details:
+            Assert.That(obj is int)
+            Object should be an integer
+            Expected condition to be true.
               obj = "hello"
             """);
     }
@@ -277,9 +278,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => value != "test") failed.
-            Message: Value should not be 'test'
-            Details:
+            Assert.That(value != "test")
+            Value should not be 'test'
+            Expected "test" to not equal "test".
               value = "test"
             """);
     }
@@ -295,9 +296,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => current >= min && current <= max) failed.
-            Message: Value should be within range
-            Details:
+            Assert.That(current >= min && current <= max)
+            Value should be within range
+            Expected condition to be true.
               current = 25
               max = 20
               min = 10
@@ -313,9 +314,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => dict["key1"] > 15) failed.
-            Message: Dictionary value should be greater than 15
-            Details:
+            Assert.That(dict["key1"] > 15)
+            Dictionary value should be greater than 15
+            Expected 10 to be greater than 15.
               dict["key1"] = 10
             """);
     }
@@ -329,9 +330,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => text.Substring(6).StartsWith("Universe")) failed.
-            Message: Substring should start with 'Universe'
-            Details:
+            Assert.That(text.Substring(6).StartsWith("Universe"))
+            Substring should start with 'Universe'
+            Expected string to start with the specified prefix.
               text.Substring(6) = "World"
             """);
     }
@@ -343,9 +344,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 $"""
-            Assert.That(() => DateTime.Now.Year < 2000) failed.
-            Message: Current year should be before 2000
-            Details:
+            Assert.That(DateTime.Now.Year < 2000)
+            Current year should be before 2000
+            Expected {year} to be less than 2000.
               DateTime.Now.Year = {year}
             """);
     }
@@ -359,9 +360,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => list.Contains("d")) failed.
-            Message: List should contain 'd'
-            Details:
+            Assert.That(list.Contains("d"))
+            List should contain 'd'
+            Expected collection to contain the specified item.
               list = ["a", "b", "c"]
             """);
     }
@@ -377,9 +378,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-            Assert.That(() => (flag ? value1 : value2) > 15) failed.
-            Message: Conditional result should be greater than 15
-            Details:
+            Assert.That((flag ? value1 : value2) > 15)
+            Conditional result should be greater than 15
+            Expected 5 to be greater than 15.
               flag = True
               value1 = 5
               value2 = 10
@@ -395,9 +396,9 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
-                Assert.That(() => numbers.Length > 10) failed.
-                Message: Array should have more than 10 elements
-                Details:
+                Assert.That(numbers.Length > 10)
+                Array should have more than 10 elements
+                Expected 5 to be greater than 10.
                   numbers.Length = 5
                 """);
     }
@@ -411,8 +412,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => !Convert.ToBoolean(value));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => !Convert.ToBoolean(value)) failed.
-                Details:
+                Assert.That(!Convert.ToBoolean(value))
+                Expected condition to be true.
                   value = 5
                 """);
     }
@@ -426,8 +427,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => !flag);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => !flag) failed.
-                Details:
+                Assert.That(!flag)
+                Expected flag to be false.
                   flag = True
                 """);
     }
@@ -442,8 +443,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => predicate(testValue));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => predicate(testValue)) failed.
-                Details:
+                Assert.That(predicate(testValue))
+                Expected condition to be true.
                   testValue = 5
                 """);
     }
@@ -459,8 +460,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => complexFunc(text, expectedLength));
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => complexFunc(text, expectedLength)) failed.
-                Details:
+                Assert.That(complexFunc(text, expectedLength))
+                Expected condition to be true.
                   expectedLength = 3
                   text = "hello"
                 """);
@@ -477,8 +478,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
-                Assert.That(() => new DateTime(year, month, day) == DateTime.MinValue) failed.
-                Details:
+                Assert.That(new DateTime(year, month, day) == DateTime.MinValue)
+                Expected {new DateTime(year, month, day).ToString(CultureInfo.CurrentCulture)} to equal {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}.
                   DateTime.MinValue = {DateTime.MinValue.ToString(CultureInfo.CurrentCulture)}
                   day = 25
                   month = 12
@@ -497,8 +498,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => new { Name = firstName + " " + lastName }.Name == "Jane Doe");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => new { Name = firstName + " " + lastName }.Name == "Jane Doe") failed.
-                Details:
+                Assert.That(new { Name = firstName + " " + lastName }.Name == "Jane Doe")
+                Expected "John Doe" to equal "Jane Doe".
                   firstName = "John"
                   lastName = "Doe"
                   new { Name = ((firstName + " ") + lastName) }.Name = "John Doe"
@@ -516,8 +517,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => new List<int> { first, second, third }.Count == 5);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => new List<int> { first, second, third }.Count == 5) failed.
-                Details:
+                Assert.That(new List<int> { first, second, third }.Count == 5)
+                Expected 3 to equal 5.
                   first = 1
                   new List<int> { first, second, third }.Count = 3
                   second = 2
@@ -537,8 +538,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => new List<object> { new { Name = name1, Age = age1 }, new { Name = name2, Age = age2 } }.Count == 1);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => new List<object> { new { Name = name1, Age = age1 }, new { Name = name2, Age = age2 } }.Count == 1) failed.
-                Details:
+                Assert.That(new List<object> { new { Name = name1, Age = age1 }, new { Name = name2, Age = age2 } }.Count == 1)
+                Expected 2 to equal 1.
                   age1 = 25
                   age2 = 30
                   name1 = "Alice"
@@ -558,8 +559,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => new[] { x, y, z }.Length == 5);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => new[] { x, y, z }.Length == 5) failed.
-                Details:
+                Assert.That(new[] { x, y, z }.Length == 5)
+                Expected 3 to equal 5.
                   new [] {x, y, z}.Length = 3
                   x = 10
                   y = 20
@@ -577,8 +578,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => new[] { baseValue * multiplier, baseValue + multiplier }.Length == 1);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => new[] { baseValue * multiplier, baseValue + multiplier }.Length == 1) failed.
-                Details:
+                Assert.That(new[] { baseValue * multiplier, baseValue + multiplier }.Length == 1)
+                Expected 2 to equal 1.
                   baseValue = 3
                   multiplier = 5
                   new [] {(baseValue * multiplier), (baseValue + multiplier)}.Length = 2
@@ -596,8 +597,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => dict[key] == expectedValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => dict[key] == expectedValue) failed.
-                Details:
+                Assert.That(dict[key] == expectedValue)
+                Expected 100 to equal 150.
                   dict[key] = 100
                   expectedValue = 150
                   key = "key1"
@@ -621,8 +622,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => matrix[row, col] == expectedValue);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => matrix[row, col] == expectedValue) failed.
-                Details:
+                Assert.That(matrix[row, col] == expectedValue)
+                Expected 6 to equal 10.
                   col = 2
                   expectedValue = 10
                   matrix[row, col] = 6
@@ -641,8 +642,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => array[start + offset] == 100);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => array[start + offset] == 100) failed.
-                Details:
+                Assert.That(array[start + offset] == 100)
+                Expected 40 to equal 100.
                   array[start + offset] = 40
                   offset = 2
                   start = 1
@@ -658,9 +659,9 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => nonGenericCollection.Count == 10, "Collection should have 10 items");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => nonGenericCollection.Count == 10) failed.
-                Message: Collection should have 10 items
-                Details:
+                Assert.That(nonGenericCollection.Count == 10)
+                Collection should have 10 items
+                Expected 4 to equal 10.
                   nonGenericCollection.Count = 4
                 """);
     }
@@ -675,9 +676,9 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => arrayList.Count == expectedItems.Length, "Collections should have same count");
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-                Assert.That(() => arrayList.Count == expectedItems.Length) failed.
-                Message: Collections should have same count
-                Details:
+                Assert.That(arrayList.Count == expectedItems.Length)
+                Collections should have same count
+                Expected 3 to equal 4.
                   arrayList.Count = 3
                   expectedItems.Length = 4
                 """);
@@ -692,8 +693,8 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.That(() => arrayParam[arrayParam.Length - 2] == 999);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => arrayParam[arrayParam.Length - 2] == 999) failed.
-            Details:
+            Assert.That(arrayParam[arrayParam.Length - 2] == 999)
+            Expected 20 to equal 999.
               arrayParam.Length = 3
               arrayParam[arrayParam.Length - 2] = 20
             """);
@@ -709,8 +710,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => captured == "wrong_value" && capturedNumber > 50) failed.
-            Details:
+            Assert.That(captured == "wrong_value" && capturedNumber > 50)
+            Expected condition to be true.
               captured = "captured_value"
               capturedNumber = 42
             """);
@@ -725,9 +726,9 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => testVar == "expected") failed.
-            Message: Values should match
-            Details:
+            Assert.That(testVar == "expected")
+            Values should match
+            Expected "actual" to equal "expected".
               testVar = "actual"
             """);
     }
@@ -744,8 +745,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => value == 10 && doubleValue == 2.71 && floatValue == 1.5f && decimalValue == 200.75m) failed.
-            Details:
+            Assert.That(value == 10 && doubleValue == 2.71 && floatValue == 1.5f && decimalValue == 200.75m)
+            Expected condition to be true.
               decimalValue = 100.50
               doubleValue = 3.14
               floatValue = 2.5
@@ -763,8 +764,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => condition == True) failed.
-            Details:
+            Assert.That(condition == True)
+            Expected False to equal True.
               condition = False
             """);
     }
@@ -778,8 +779,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => letter == 'b') failed.
-            Details:
+            Assert.That(letter == 'b')
+            Expected a to equal b.
               letter = a
             """);
     }
@@ -793,8 +794,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => nullableString == null) failed.
-            Details:
+            Assert.That(nullableString == null)
+            Expected "not null" to equal null.
               nullableString = "not null"
             """);
     }
@@ -809,8 +810,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => predicate(value)) failed.
-            Details:
+            Assert.That(predicate(value))
+            Expected condition to be true.
               value = -1
             """);
     }
@@ -825,8 +826,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => shouldExecute && action != null) failed.
-            Details:
+            Assert.That(shouldExecute && action != null)
+            Expected condition to be true.
               shouldExecute = False
             """);
     }
@@ -842,8 +843,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => complexFunc(text, threshold)) failed.
-            Details:
+            Assert.That(complexFunc(text, threshold))
+            Expected condition to be true.
               text = "hi"
               threshold = 5
             """);
@@ -861,8 +862,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => dynamicValue.Length == ConstValue && flag == True) failed.
-            Details:
+            Assert.That(dynamicValue.Length == ConstValue && flag == True)
+            Expected condition to be true.
               dynamicValue.Length = 7
               flag = False
             """);
@@ -878,8 +879,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => value == "") failed.
-            Details:
+            Assert.That(value == "")
+            Expected "non-empty" to equal "".
               value = "non-empty"
             """);
     }
@@ -893,8 +894,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => positiveValue == -10) failed.
-            Details:
+            Assert.That(positiveValue == -10)
+            Expected 5 to equal -10.
               positiveValue = 5
             """);
     }
@@ -908,8 +909,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => value == 2.5d && value != 3.14f) failed.
-            Details:
+            Assert.That(value == 2.5d && value != 3.14f)
+            Expected condition to be true.
               value = 1
             """);
     }
@@ -925,8 +926,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => @null == null && @true == "true" && @false == 0) failed.
-            Details:
+            Assert.That(@null == null && @true == "true" && @false == 0)
+            Expected condition to be true.
               false = 1
               null = System.Object
               true = "false"
@@ -944,8 +945,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => array[Index] == 5 && array[dynamicIndex] == 10) failed.
-            Details:
+            Assert.That(array[Index] == 5 && array[dynamicIndex] == 10)
+            Expected condition to be true.
               array[0] = 1
               array[dynamicIndex] = 2
               dynamicIndex = 1
@@ -962,8 +963,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => firstName == "Jane" && lastName == "Smith") failed.
-            Details:
+            Assert.That(firstName == "Jane" && lastName == "Smith")
+            Expected condition to be true.
               firstName = "John"
               lastName = "Doe"
             """);
@@ -982,8 +983,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => name == "Admin" && age == 30 && isActive == False && grade == 'A') failed.
-            Details:
+            Assert.That(name == "Admin" && age == 30 && isActive == False && grade == 'A')
+            Expected condition to be true.
               age = 25
               grade = B
               isActive = True
@@ -1001,9 +1002,9 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => count > 5 && status == "completed") failed.
-            Message: Operation should be ready
-            Details:
+            Assert.That(count > 5 && status == "completed")
+            Operation should be ready
+            Expected condition to be true.
               count = 3
               status = "pending"
             """);
@@ -1019,8 +1020,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => price + tax == 25.00m) failed.
-            Details:
+            Assert.That(price + tax == 25.00m)
+            Expected 22.49 to equal 25.00.
               price = 19.99
               tax = 2.50
             """);
@@ -1036,8 +1037,8 @@ public partial class AssertTests : TestContainer
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(() => nullVariable != null && nonNullVariable == null) failed.
-            Details:
+            Assert.That(nullVariable != null && nonNullVariable == null)
+            Expected condition to be true.
               nonNullVariable = "value"
               nullVariable = null
             """);

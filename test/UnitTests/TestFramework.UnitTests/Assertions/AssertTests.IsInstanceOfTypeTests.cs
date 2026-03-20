@@ -12,21 +12,34 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(null)
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+                  value: null
+                """);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(5, null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                Expected value to be an instance of null.
+                  value: 5
+                  expected type: null
+                """);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string));
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
+                """);
     }
 
     public void InstanceOfTypeShouldPassOnSameInstance() => Assert.IsInstanceOfType(5, typeof(int));
@@ -37,21 +50,37 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'null'. User-provided message");
+            .WithMessage("""
+                Assert.IsInstanceOfType(null)
+                User-provided message
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+                  value: null
+                """);
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(5, null, "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                User-provided message
+                Expected value to be an instance of null.
+                  value: 5
+                  expected type: null
+                """);
     }
 
     public void InstanceOfType_WithStringMessage_ShouldFailWhenTypeIsMismatched()
     {
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), "User-provided message");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                User-provided message
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
+                """);
     }
 
     public void InstanceOfType_WithStringMessage_ShouldPassWhenTypeIsCorrect()
@@ -63,7 +92,12 @@ public partial class AssertTests
         DateTime dateTime = DateTime.Now;
         Func<Task> action = async () => Assert.IsInstanceOfType(null, typeof(AssertTests), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<AssertFailedException>())
-            .WithMessage($"Assert.IsInstanceOfType failed. 'value' expression: 'null'. User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}");
+            .WithMessage("""
+                Assert.IsInstanceOfType(null)
+                User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+                  value: null
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -72,7 +106,13 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsInstanceOfType(5, null, $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                User-provided message DummyClassTrackingToStringCalls
+                Expected value to be an instance of null.
+                  value: 5
+                  expected type: null
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -81,7 +121,12 @@ public partial class AssertTests
         DummyClassTrackingToStringCalls o = new();
         Action action = () => Assert.IsInstanceOfType(5, typeof(string), $"User-provided message {o}");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. User-provided message DummyClassTrackingToStringCalls Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                User-provided message DummyClassTrackingToStringCalls
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
+                """);
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -97,7 +142,13 @@ public partial class AssertTests
     public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
     {
         Action action = () => Assert.IsNotInstanceOfType(5, null);
-        action.Should().Throw<AssertFailedException>();
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsNotInstanceOfType(5)
+                Expected value to not be an instance of null.
+                  value: 5
+                  wrong type: null
+                """);
     }
 
     public void InstanceNotOfTypeShouldPassOnWrongInstance() => Assert.IsNotInstanceOfType(5L, typeof(int));
@@ -108,14 +159,22 @@ public partial class AssertTests
     {
         Action action = () => Assert.IsInstanceOfType<AssertTests>(null);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: 'null'.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(null)
+                Expected value to be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.AssertTests>.
+                  value: null
+                """);
     }
 
     public void IsInstanceOfTypeUsingGenericType_WhenTypeMismatch_Fails()
     {
         Action action = () => Assert.IsInstanceOfType<string>(5);
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("Assert.IsInstanceOfType failed. 'value' expression: '5'. Expected type:<System.String>. Actual type:<System.Int32>.");
+            .WithMessage("""
+                Assert.IsInstanceOfType(5)
+                Expected value to be an instance of <System.String>.
+                  value: 5 (<System.Int32>)
+                """);
     }
 
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenValueIsNull_Fails()
@@ -148,11 +207,14 @@ public partial class AssertTests
         instance.Should().BeSameAs(testInstance);
     }
 
-    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow() => Assert.IsNotInstanceOfType<object>(null);
+    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow() 
+        => Assert.IsNotInstanceOfType<object>(null);
 
-    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow() => Assert.IsNotInstanceOfType<int>(5L);
+    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow()
+        => Assert.IsNotInstanceOfType<int>(5L);
 
-    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow() => Assert.IsNotInstanceOfType<int>(new object());
+    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow() 
+        => Assert.IsNotInstanceOfType<int>(new object());
 
     public void IsInstanceOfType_WhenNonNullNullableValue_LearnNonNull()
     {
@@ -229,4 +291,86 @@ public partial class AssertTests
     private Type? GetObjType() => typeof(object);
 
     private Type? GetIntType() => typeof(int);
+
+    #region IsInstanceOfType/IsNotInstanceOfType truncation and newline escaping
+
+    public void IsInstanceOfType_WithLongExpression_ShouldTruncateExpression()
+    {
+        object aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = "hello";
+
+        Action action = () => Assert.IsInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
+                Expected value to be an instance of <System.Int32>.
+                  value: "hello" (<System.String>)
+                """);
+    }
+
+    public void IsInstanceOfType_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var obj = new ObjectWithLongToString();
+
+        Action action = () => Assert.IsInstanceOfType(obj, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsInstanceOfType(obj)
+                Expected value to be an instance of <System.Int32>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
+                """);
+    }
+
+    public void IsInstanceOfType_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var obj = new ObjectWithNewlineToString();
+
+        Action action = () => Assert.IsInstanceOfType(obj, typeof(int));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsInstanceOfType(obj)
+                Expected value to be an instance of <System.Int32>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
+                """);
+    }
+
+    public void IsNotInstanceOfType_WithLongExpression_ShouldTruncateExpression()
+    {
+        string aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ = "hello";
+
+        Action action = () => Assert.IsNotInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharactersInLengthToTestTruncationBehaviorOfExpressionDisplayXYZ, typeof(string));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsNotInstanceOfType(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
+                Expected value to not be an instance of <System.String>.
+                  value: "hello" (<System.String>)
+                """);
+    }
+
+    public void IsNotInstanceOfType_WithLongToStringValue_ShouldTruncateValue()
+    {
+        var obj = new ObjectWithLongToString();
+
+        Action action = () => Assert.IsNotInstanceOfType(obj, typeof(ObjectWithLongToString));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage($"""
+                Assert.IsNotInstanceOfType(obj)
+                Expected value to not be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>.
+                  value: {new string('L', 256)}... 44 more (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithLongToString>)
+                """);
+    }
+
+    public void IsNotInstanceOfType_WithNewlineInToString_ShouldEscapeNewlines()
+    {
+        var obj = new ObjectWithNewlineToString();
+
+        Action action = () => Assert.IsNotInstanceOfType(obj, typeof(ObjectWithNewlineToString));
+        action.Should().Throw<AssertFailedException>()
+            .WithMessage("""
+                Assert.IsNotInstanceOfType(obj)
+                Expected value to not be an instance of <Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>.
+                  value: line1\r\nline2\nline3 (<Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.ObjectWithNewlineToString>)
+                """);
+    }
+
+    #endregion
 }

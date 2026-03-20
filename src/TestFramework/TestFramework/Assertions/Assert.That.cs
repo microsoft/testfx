@@ -36,23 +36,116 @@ public static partial class AssertExtensions
                 return;
             }
 
-            var sb = new StringBuilder();
             string expressionText = conditionExpression
                 ?? throw new ArgumentNullException(nameof(conditionExpression));
-            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatFailedFormat, expressionText));
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatMessageFormat, message));
-            }
+
+            // Strip the lambda wrapper "() => " since CallerArgumentExpression captures
+            // the full argument including the lambda syntax, but the user only cares about
+            // the condition expression itself.
+            string displayExpression = expressionText.StartsWith("() => ", StringComparison.Ordinal)
+                ? expressionText.Substring(6)
+                : expressionText;
+
+            string callSite = $"Assert.That({Assert.TruncateExpression(displayExpression)})";
+            string msg = BuildExpressionAwareMessage(condition.Body);
 
             string details = ExtractDetails(condition.Body);
             if (!string.IsNullOrWhiteSpace(details))
             {
-                sb.AppendLine(FrameworkMessages.AssertThatDetailsPrefix);
-                sb.AppendLine(details);
+                msg += Environment.NewLine + details.TrimEnd();
             }
 
-            throw new AssertFailedException(sb.ToString().TrimEnd());
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed(callSite, msg);
+        }
+    }
+
+    private static string BuildExpressionAwareMessage(Expression body)
+    {
+        switch (body)
+        {
+            // Binary comparisons: x == y, x != y, x > y, etc.
+            case BinaryExpression binary when body.NodeType
+                is ExpressionType.Equal
+                or ExpressionType.NotEqual
+                or ExpressionType.GreaterThan
+                or ExpressionType.GreaterThanOrEqual
+                or ExpressionType.LessThan
+                or ExpressionType.LessThanOrEqual:
+                return BuildComparisonMessage(binary);
+
+            // Negation: !flag, !condition
+            case UnaryExpression unary when body.NodeType == ExpressionType.Not
+                && unary.Operand is not MethodCallExpression:
+                string innerName = GetCleanMemberName(unary.Operand);
+                return $"Expected {innerName} to be false.";
+
+            // Method calls: text.StartsWith("x"), list.Contains(item), etc.
+            case MethodCallExpression methodCall:
+                return BuildMethodCallMessage(methodCall);
+
+            // Bool member access: user.IsActive, flag
+            case MemberExpression:
+                string memberName = GetCleanMemberName(body);
+                return $"Expected {memberName} to be true.";
+
+            default:
+                return FrameworkMessages.IsTrueFailNew;
+        }
+    }
+
+    private static string BuildComparisonMessage(BinaryExpression binary)
+    {
+        string leftValue = TryEvaluateFormatted(binary.Left);
+        string rightValue = TryEvaluateFormatted(binary.Right);
+
+        return binary.NodeType switch
+        {
+            ExpressionType.Equal => $"Expected {leftValue} to equal {rightValue}.",
+            ExpressionType.NotEqual => $"Expected {leftValue} to not equal {rightValue}.",
+            ExpressionType.GreaterThan => $"Expected {leftValue} to be greater than {rightValue}.",
+            ExpressionType.GreaterThanOrEqual => $"Expected {leftValue} to be greater than or equal to {rightValue}.",
+            ExpressionType.LessThan => $"Expected {leftValue} to be less than {rightValue}.",
+            ExpressionType.LessThanOrEqual => $"Expected {leftValue} to be less than or equal to {rightValue}.",
+            _ => FrameworkMessages.IsTrueFailNew,
+        };
+    }
+
+    private static string BuildMethodCallMessage(MethodCallExpression methodCall)
+    {
+        string methodName = methodCall.Method.Name;
+
+        // String-specific methods
+        if (methodCall.Object is not null && methodCall.Object.Type == typeof(string))
+        {
+            return methodName switch
+            {
+                "StartsWith" => FrameworkMessages.StartsWithFailNew,
+                "EndsWith" => FrameworkMessages.EndsWithFailNew,
+                nameof(string.Contains) => FrameworkMessages.ContainsStringFailNew,
+                _ => FrameworkMessages.IsTrueFailNew,
+            };
+        }
+
+        return methodName switch
+        {
+            nameof(string.Contains) => FrameworkMessages.ContainsItemFailNew,
+            "All" => FrameworkMessages.AllMatchPredicateFailNew,
+            "Any" => FrameworkMessages.ContainsPredicateFailNew,
+            _ => FrameworkMessages.IsTrueFailNew,
+        };
+    }
+
+    private static string TryEvaluateFormatted(Expression expr)
+    {
+        try
+        {
+            object? value = Expression.Lambda(expr).Compile().DynamicInvoke();
+            return FormatValue(value);
+        }
+        catch (Exception)
+        {
+            return GetCleanMemberName(expr);
         }
     }
 
