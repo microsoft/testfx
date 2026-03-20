@@ -79,7 +79,9 @@ public sealed class CollectionAssert
             }
         }
 
-        Assert.ThrowAssertFailed("CollectionAssert.Contains", Assert.BuildUserMessage(message));
+        string msg = FrameworkMessages.ContainsItemFailNew;
+        msg = Assert.AppendUserMessage(msg, message);
+        Assert.ThrowAssertFailed("CollectionAssert.Contains", msg);
     }
 
     /// <summary>
@@ -126,7 +128,9 @@ public sealed class CollectionAssert
         {
             if (object.Equals(current, element))
             {
-                Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message));
+                string msg = FrameworkMessages.DoesNotContainItemFailNew;
+                msg = Assert.AppendUserMessage(msg, message);
+                Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", msg);
             }
         }
     }
@@ -165,7 +169,9 @@ public sealed class CollectionAssert
         {
             if (current == null)
             {
-                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message));
+                string msg = FrameworkMessages.IsNotNullFailNew;
+                msg = Assert.AppendUserMessage(msg, message);
+                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreNotNull", msg);
             }
         }
     }
@@ -204,8 +210,6 @@ public sealed class CollectionAssert
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection");
 
-        message = Assert.ReplaceNulls(message);
-
         bool foundNull = false;
         Dictionary<object, bool> table = [];
         foreach (object? current in collection)
@@ -219,28 +223,22 @@ public sealed class CollectionAssert
                 else
                 {
                     // Found a second occurrence of null.
-                    string userMessage = Assert.BuildUserMessage(message);
-                    string finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.AllItemsAreUniqueFailMsg,
-                        userMessage,
-                        FrameworkMessages.Common_NullInMessages);
-
-                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
+                    string msg = FrameworkMessages.AllItemsAreUniqueFailMsg;
+                    msg += Assert.FormatAlignedParameters(
+                        ("duplicate", FrameworkMessages.Common_NullInMessages));
+                    msg = Assert.AppendUserMessage(msg, message);
+                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", msg);
                 }
             }
             else
             {
                 if (!table.TryAdd(current, true))
                 {
-                    string userMessage = Assert.BuildUserMessage(message);
-                    string finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.AllItemsAreUniqueFailMsg,
-                        userMessage,
-                        Assert.ReplaceNulls(current));
-
-                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
+                    string msg = FrameworkMessages.AllItemsAreUniqueFailMsg;
+                    msg += Assert.FormatAlignedParameters(
+                        ("duplicate", Assert.ReplaceNulls(current)));
+                    msg = Assert.AppendUserMessage(msg, message);
+                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", msg);
                 }
             }
         }
@@ -297,18 +295,10 @@ public sealed class CollectionAssert
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (!isSubsetValue.Item1)
         {
-            string returnedSubsetValueMessage = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
-
-            returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage);
-            string userMessage = Assert.BuildUserMessage(message);
-            if (string.IsNullOrEmpty(userMessage))
-            {
-                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", returnedSubsetValueMessage);
-            }
-            else
-            {
-                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", $"{returnedSubsetValueMessage} {userMessage}");
-            }
+            string missingElements = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
+            string msg = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, missingElements);
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", msg);
         }
     }
 
@@ -357,7 +347,9 @@ public sealed class CollectionAssert
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (isSubsetValue.Item1)
         {
-            Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message));
+            string msg = FrameworkMessages.BothSameElements;
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", msg);
         }
     }
 
@@ -476,7 +468,9 @@ public sealed class CollectionAssert
         // Check whether one is null while the other is not.
         if (expected == null != (actual == null))
         {
-            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message));
+            string msg = FrameworkMessages.AreEqualFailNew;
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", msg);
         }
 
         // If the references are the same or both collections are null, they are equivalent.
@@ -493,14 +487,12 @@ public sealed class CollectionAssert
         // Check whether the element counts are different.
         if (expectedCollectionCount != actualCollectionCount)
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.ElementNumbersDontMatch,
-                userMessage,
-                expectedCollectionCount,
-                actualCollectionCount);
-            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", finalMessage);
+            string msg = FrameworkMessages.ElementNumbersDontMatch;
+            msg += Assert.FormatAlignedParameters(
+                ("expected count", expectedCollectionCount.ToString(CultureInfo.CurrentCulture)),
+                ("actual count", actualCollectionCount.ToString(CultureInfo.CurrentCulture)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", msg);
         }
 
         // If both collections are empty, they are equivalent.
@@ -512,15 +504,13 @@ public sealed class CollectionAssert
         // Search for a mismatched element.
         if (FindMismatchedElement(expected, actual, comparer, out int expectedCount, out int actualCount, out object? mismatchedElement))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.ActualHasMismatchedElements,
-                userMessage,
-                expectedCount.ToString(CultureInfo.CurrentCulture.NumberFormat),
-                Assert.ReplaceNulls(mismatchedElement),
-                actualCount.ToString(CultureInfo.CurrentCulture.NumberFormat));
-            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", finalMessage);
+            string msg = FrameworkMessages.ActualHasMismatchedElements;
+            msg += Assert.FormatAlignedParameters(
+                ("element", Assert.ReplaceNulls(mismatchedElement)),
+                ("expected occurrences", expectedCount.ToString(CultureInfo.CurrentCulture)),
+                ("actual occurrences", actualCount.ToString(CultureInfo.CurrentCulture)));
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", msg);
         }
 
         // All the elements and counts matched.
@@ -649,12 +639,9 @@ public sealed class CollectionAssert
         // are equivalent. object.ReferenceEquals will handle case where both are null.
         if (object.ReferenceEquals(notExpected, actual))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.BothCollectionsSameReference,
-                userMessage);
-            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
+            string msg = FrameworkMessages.BothCollectionsSameReference;
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", msg);
         }
 
         DebugEx.Assert(actual is not null, "actual is not null here");
@@ -671,23 +658,17 @@ public sealed class CollectionAssert
         // If both collections are empty, they are equivalent.
         if (notExpectedCount == 0)
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.BothCollectionsEmpty,
-                userMessage);
-            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
+            string msg = FrameworkMessages.BothCollectionsEmpty;
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", msg);
         }
 
         // Search for a mismatched element.
         if (!FindMismatchedElement(notExpected, actual, comparer, out _, out _, out _))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.BothSameElements,
-                userMessage);
-            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
+            string msg = FrameworkMessages.BothSameElements;
+            msg = Assert.AppendUserMessage(msg, message);
+            Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", msg);
         }
     }
 
@@ -748,15 +729,15 @@ public sealed class CollectionAssert
             if (element?.GetType() is { } elementType
                 && !expectedType.IsAssignableFrom(elementType))
             {
-                string userMessage = Assert.BuildUserMessage(message);
-                string finalMessage = string.Format(
+                string msg = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.ElementTypesAtIndexDontMatch,
-                    userMessage,
-                    i,
-                    expectedType.ToString(),
-                    element.GetType().ToString());
-                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", finalMessage);
+                    i);
+                msg += Assert.FormatAlignedParameters(
+                    ("expected type", Assert.FormatType(expectedType)),
+                    ("actual type", Assert.FormatType(element.GetType())));
+                msg = Assert.AppendUserMessage(msg, message);
+                Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", msg);
             }
 
             i++;
@@ -1181,7 +1162,7 @@ public sealed class CollectionAssert
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
         if (object.ReferenceEquals(expected, actual))
         {
-            reason = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.BothCollectionsSameReference, string.Empty);
+            reason = FrameworkMessages.BothCollectionsSameReference;
             return true;
         }
 
@@ -1229,9 +1210,10 @@ public sealed class CollectionAssert
                     reason = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.ElementsAtIndexDontMatch,
-                        position,
-                        Assert.ReplaceNulls(curExpected),
-                        Assert.ReplaceNulls(curActual));
+                        position)
+                        + Assert.FormatAlignedParameters(
+                            ("expected", Assert.ReplaceNulls(curExpected)),
+                            ("actual", Assert.ReplaceNulls(curActual)));
                     return false;
                 }
             }
@@ -1250,12 +1232,7 @@ public sealed class CollectionAssert
     private static string ConstructFinalMessage(
         string reason,
         string? message)
-    {
-        string userMessage = Assert.BuildUserMessage(message);
-        return userMessage.Length == 0
-            ? reason
-            : string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
-    }
+        => Assert.AppendUserMessage(reason, message);
 
     /// <summary>
     /// compares the objects using object.Equals.

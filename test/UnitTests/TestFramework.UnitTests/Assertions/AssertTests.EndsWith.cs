@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -18,7 +18,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.EndsWith("hello", "world")
-                String does not end with expected suffix.
+                Expected string to end with the specified suffix.
                   expected suffix: "hello"
                   value:           "world"
                 """);
@@ -31,7 +31,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.EndsWith("hello", "world")
                 User message
-                String does not end with expected suffix.
+                Expected string to end with the specified suffix.
                   expected suffix: "hello"
                   value:           "world"
                 """);
@@ -46,7 +46,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotEndWith("world", "hello world")
-                String ends with unexpected suffix.
+                Expected string to not end with the specified suffix.
                   unwanted suffix: "world"
                   value:           "hello world"
                 """);
@@ -64,7 +64,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.EndsWith("hello", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String does not end with expected suffix.
+                Expected string to end with the specified suffix.
                   expected suffix: "hello"
                   value:           "hello world"
                 """);
@@ -78,7 +78,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.EndsWith("world", longValue)
-                String does not end with expected suffix.
+                Expected string to end with the specified suffix.
                   expected suffix: "world"
                   value:           "{new string('x', 255)}... 46 more
                 """);
@@ -90,7 +90,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.EndsWith("world", "hello\r\nfoo")
-                String does not end with expected suffix.
+                Expected string to end with the specified suffix.
                   expected suffix: "world"
                   value:           "hello\r\nfoo"
                 """);
@@ -104,7 +104,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotEndWith("world", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String ends with unexpected suffix.
+                Expected string to not end with the specified suffix.
                   unwanted suffix: "world"
                   value:           "hello world"
                 """);
@@ -118,7 +118,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.DoesNotEndWith("world", longValue)
-                String ends with unexpected suffix.
+                Expected string to not end with the specified suffix.
                   unwanted suffix: "world"
                   value:           "{new string('x', 255)}... 51 more
                 """);
@@ -130,7 +130,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotEndWith("world", "hello\r\nworld")
-                String ends with unexpected suffix.
+                Expected string to not end with the specified suffix.
                   unwanted suffix: "world"
                   value:           "hello\r\nworld"
                 """);

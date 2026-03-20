@@ -8,14 +8,14 @@
         <note></note>
       </trans-unit>
       <trans-unit id="ActualHasMismatchedElements">
-        <source>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</source>
-        <target state="translated">予期されたコレクションでは、&lt;{2}&gt; が {1} 回発生します。実際のコレクションでは、{3} 回発生します。{0}</target>
-        <note></note>
+        <source>Expected collections to have matching element occurrences.</source>
+        <target state="new">Expected collections to have matching element occurrences.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
-        <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
-        <target state="translated">重複する項目が見つかりました:&lt;{1}&gt;。{0}</target>
-        <note></note>
+        <source>Expected all items to be unique.</source>
+        <target state="new">Expected all items to be unique.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AreEqualCaseDiffersMsg">
         <source>Case differs.</source>
@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AreEqualDeltaNoGreaterThanFailMsg">
-        <source>Expected a difference no greater than {0}.</source>
-        <target state="new">Expected a difference no greater than {0}.</target>
+        <source>Expected difference to be no greater than {0}.</source>
+        <target state="new">Expected difference to be no greater than {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailNew">
@@ -43,13 +43,13 @@
         <note></note>
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaGreaterThanFailMsg">
-        <source>Expected a difference greater than {0}.</source>
-        <target state="new">Expected a difference greater than {0}.</target>
+        <source>Expected difference to be greater than {0}.</source>
+        <target state="new">Expected difference to be greater than {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEqualFailNew">
-        <source>Expected values to differ.</source>
-        <target state="new">Expected values to differ.</target>
+        <source>Expected values to not be equal.</source>
+        <target state="new">Expected values to not be equal.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotSameFailNew">
@@ -83,9 +83,9 @@
         <note>{0} user provided message</note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
-        <source>Both collections are empty. {0}</source>
-        <target state="translated">両方のコレクションが空です。{0}</target>
-        <note></note>
+        <source>Both collections are empty.</source>
+        <target state="new">Both collections are empty.</target>
+        <note />
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
         <source>Both collection contain same elements.</source>
@@ -93,14 +93,14 @@
         <note></note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
-        <source>Both collection references point to the same collection object. {0}</source>
-        <target state="translated">両方のコレクションの参照が、同じコレクション オブジェクトにポイントしています。{0}</target>
-        <note></note>
+        <source>Both collection references point to the same collection object.</source>
+        <target state="new">Both collection references point to the same collection object.</target>
+        <note />
       </trans-unit>
       <trans-unit id="BothSameElements">
-        <source>Both collections contain the same elements. {0}</source>
-        <target state="translated">両方のコレクションが同じ要素を含んでいます。{0}</target>
-        <note></note>
+        <source>Both collections contain the same elements.</source>
+        <target state="new">Both collections contain the same elements.</target>
+        <note />
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
@@ -133,8 +133,8 @@
         <note />
       </trans-unit>
       <trans-unit id="ContainsStringFailNew">
-        <source>String does not contain the expected substring.</source>
-        <target state="new">String does not contain the expected substring.</target>
+        <source>Expected string to contain the specified substring.</source>
+        <target state="new">Expected string to contain the specified substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailNew">
@@ -148,8 +148,8 @@
         <note />
       </trans-unit>
       <trans-unit id="DoesNotContainStringFailNew">
-        <source>String contains the unexpected substring.</source>
-        <target state="new">String contains the unexpected substring.</target>
+        <source>Expected string to not contain the specified substring.</source>
+        <target state="new">Expected string to not contain the specified substring.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
@@ -158,13 +158,13 @@
         <note />
       </trans-unit>
       <trans-unit id="DoesNotEndWithFailNew">
-        <source>String ends with unexpected suffix.</source>
-        <target state="new">String ends with unexpected suffix.</target>
+        <source>Expected string to not end with the specified suffix.</source>
+        <target state="new">Expected string to not end with the specified suffix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotMatchRegexFailNew">
-        <source>String matches pattern but should not.</source>
-        <target state="new">String matches pattern but should not.</target>
+        <source>Expected string to not match the specified pattern.</source>
+        <target state="new">Expected string to not match the specified pattern.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
@@ -173,8 +173,8 @@
         <note />
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailNew">
-        <source>String starts with unexpected prefix.</source>
-        <target state="new">String starts with unexpected prefix.</target>
+        <source>Expected string to not start with the specified prefix.</source>
+        <target state="new">Expected string to not start with the specified prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
@@ -198,23 +198,19 @@
         <note />
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
-        <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
-        <target state="translated">コレクション内の要素数が一致しません。&lt;{1}&gt; が必要ですが &lt;{2}&gt; が指定されています。{0}</target>
-        <note></note>
+        <source>Expected the same number of elements in the collections.</source>
+        <target state="new">Expected the same number of elements in the collections.</target>
+        <note />
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
-        <source>Element at index {0} do not match.
-Expected: {1}
-Actual: {2}</source>
-        <target state="translated">インデックス {0} の要素が一致しません。
-予想: {1}
-実際: {2}</target>
+        <source>Element at index {0} do not match.</source>
+        <target state="new">Element at index {0} do not match.</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
-        <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
-        <target state="translated">インデックス {1} の要素は、必要な型ではありません。&lt;{2}&gt; が必要ですが、&lt;{3}&gt; が指定されています。{0}</target>
-        <note></note>
+        <source>Element at index {0} is not of the expected type.</source>
+        <target state="new">Element at index {0} is not of the expected type.</target>
+        <note />
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
@@ -227,13 +223,13 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="EndsWithFailNew">
-        <source>String does not end with expected suffix.</source>
-        <target state="new">String does not end with expected suffix.</target>
+        <source>Expected string to end with the specified suffix.</source>
+        <target state="new">Expected string to end with the specified suffix.</target>
         <note />
       </trans-unit>
       <trans-unit id="HasCountFailNew">
-        <source>Expected collection to have the specified number of items.</source>
-        <target state="new">Expected collection to have the specified number of items.</target>
+        <source>Expected collection to have {0} item(s) but found {1}.</source>
+        <target state="new">Expected collection to have {0} item(s) but found {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
@@ -247,8 +243,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsExactInstanceOfTypeFailNew">
-        <source>Expected value to be exactly of the specified type.</source>
-        <target state="new">Expected value to be exactly of the specified type.</target>
+        <source>Expected value to be exactly {0}.</source>
+        <target state="new">Expected value to be exactly {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsFalseFailNew">
@@ -257,18 +253,18 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanFailNew">
-        <source>Expected value ({0}) to be greater than {1}.</source>
-        <target state="new">Expected value ({0}) to be greater than {1}.</target>
+        <source>Expected value {0} to be greater than {1}.</source>
+        <target state="new">Expected value {0} to be greater than {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsGreaterThanOrEqualToFailNew">
-        <source>Expected value ({0}) to be greater than or equal to {1}.</source>
-        <target state="new">Expected value ({0}) to be greater than or equal to {1}.</target>
+        <source>Expected value {0} to be greater than or equal to {1}.</source>
+        <target state="new">Expected value {0} to be greater than or equal to {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeFailNew">
-        <source>Expected value ({0}) to be in range [{1}, {2}].</source>
-        <target state="new">Expected value ({0}) to be in range [{1}, {2}].</target>
+        <source>Expected value {0} to be in range [{1}, {2}].</source>
+        <target state="new">Expected value {0} to be in range [{1}, {2}].</target>
         <note />
       </trans-unit>
       <trans-unit id="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue">
@@ -277,18 +273,18 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsInstanceOfTypeFailNew">
-        <source>Expected value to be of the specified type.</source>
-        <target state="new">Expected value to be of the specified type.</target>
+        <source>Expected value to be an instance of {0}.</source>
+        <target state="new">Expected value to be an instance of {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanFailNew">
-        <source>Expected value ({0}) to be less than {1}.</source>
-        <target state="new">Expected value ({0}) to be less than {1}.</target>
+        <source>Expected value {0} to be less than {1}.</source>
+        <target state="new">Expected value {0} to be less than {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsLessThanOrEqualToFailNew">
-        <source>Expected value ({0}) to be less than or equal to {1}.</source>
-        <target state="new">Expected value ({0}) to be less than or equal to {1}.</target>
+        <source>Expected value {0} to be less than or equal to {1}.</source>
+        <target state="new">Expected value {0} to be less than or equal to {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsMatchFail">
@@ -297,8 +293,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsNegativeFailNew">
-        <source>Expected a negative value.</source>
-        <target state="new">Expected a negative value.</target>
+        <source>Expected value to be negative.</source>
+        <target state="new">Expected value to be negative.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotEmptyFailNew">
@@ -307,13 +303,13 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsNotExactInstanceOfTypeFailNew">
-        <source>Expected value to not be exactly the specified type.</source>
-        <target state="new">Expected value to not be exactly the specified type.</target>
+        <source>Expected value to not be exactly {0}.</source>
+        <target state="new">Expected value to not be exactly {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotInstanceOfTypeFailNew">
-        <source>Expected value to not be an instance of the specified type.</source>
-        <target state="new">Expected value to not be an instance of the specified type.</target>
+        <source>Expected value to not be an instance of {0}.</source>
+        <target state="new">Expected value to not be an instance of {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
@@ -322,8 +318,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsNotNullFailNew">
-        <source>Expected a non-null value.</source>
-        <target state="new">Expected a non-null value.</target>
+        <source>Expected value to not be null.</source>
+        <target state="new">Expected value to not be null.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsNullFailNew">
@@ -332,8 +328,8 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="IsPositiveFailNew">
-        <source>Expected a positive value.</source>
-        <target state="new">Expected a positive value.</target>
+        <source>Expected value to be positive.</source>
+        <target state="new">Expected value to be positive.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailNew">
@@ -342,13 +338,13 @@ Actual: {2}</source>
         <note />
       </trans-unit>
       <trans-unit id="MatchesRegexFailNew">
-        <source>String does not match expected pattern.</source>
-        <target state="new">String does not match expected pattern.</target>
+        <source>Expected string to match the specified pattern.</source>
+        <target state="new">Expected string to match the specified pattern.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoExceptionThrownNew">
-        <source>No exception was thrown.</source>
-        <target state="new">No exception was thrown.</target>
+        <source>Expected an exception to be thrown.</source>
+        <target state="new">Expected an exception to be thrown.</target>
         <note />
       </trans-unit>
       <trans-unit id="PrivateAccessorMemberNotFound">
@@ -413,8 +409,8 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="StartsWithFailNew">
-        <source>String does not start with expected prefix.</source>
-        <target state="new">String does not start with expected prefix.</target>
+        <source>Expected string to start with the specified prefix.</source>
+        <target state="new">Expected string to start with the specified prefix.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
@@ -478,8 +474,8 @@ Actual: {2}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="WrongExceptionThrownNew">
-        <source>Wrong exception type was thrown.</source>
-        <target state="new">Wrong exception type was thrown.</target>
+        <source>Expected the specified exception type to be thrown.</source>
+        <target state="new">Expected the specified exception type to be thrown.</target>
         <note />
       </trans-unit>
     </body>

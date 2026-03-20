@@ -103,7 +103,10 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset);
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf\nElement(s) <iem, a, b> is/are not present in the collection.");
+        action.Should().Throw<AssertFailedException>().WithMessage("""
+            CollectionAssert.IsSubsetOf
+            Element(s) <iem, a, b> is/are not present in the collection.
+            """);
     }
 
     public void CollectionAssertIsSubsetOf_WithMessage_ReturnedSubsetValueMessage_ThrowExceptionMessage()
@@ -116,7 +119,11 @@ public class CollectionAssertTests : TestContainer
         Action action = () => CollectionAssert.IsSubsetOf(collection, superset, "message");
 
         // Assert
-        action.Should().Throw<AssertFailedException>().WithMessage("CollectionAssert.IsSubsetOf\nElement(s) <iem, a, b> is/are not present in the collection. message");
+        action.Should().Throw<AssertFailedException>().WithMessage("""
+            CollectionAssert.IsSubsetOf
+            message
+            Element(s) <iem, a, b> is/are not present in the collection.
+            """);
     }
 
     public void CollectionAssertIsNotSubsetOfNullabilityPostConditions()
@@ -176,7 +183,11 @@ public class CollectionAssertTests : TestContainer
         int[][] expected = [[1, 2], [3, 4], [5, 6], [7, 8], [9]];
         int[][] actual = [[1, 2], [999, 999, 999, 999, 999], [5, 6], [], [9]];
         Action action = () => CollectionAssert.AreEqual(expected, actual);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreEqual
+                Different number of elements.
+                """);
     }
 
     public void CollectionAssertAreEqual_WithCaseSensetiveComparer_Fails()
@@ -184,7 +195,13 @@ public class CollectionAssertTests : TestContainer
         List<string> expected = ["one", "two"];
         List<string> actual = ["ONE", "tWo"];
         Action action = () => CollectionAssert.AreEqual(expected, actual, StringComparer.Ordinal);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreEqual
+                Element at index 1 do not match.
+                  expected: w
+                  actual:   W
+                """);
     }
 
     public void CollectionAssertAreEqualComparerMessageNullabilityPostConditions()
@@ -218,7 +235,13 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetNotMatchingNestedLists();
 
         Action action = () => CollectionAssert.AreEqual(collection1, collection2);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreEqual
+                Element at index 0 do not match.
+                  expected: 4
+                  actual:   1
+                """);
     }
 
     public void CollectionAssertAreEqual_EqualNonICollectionInnerCollection_Passes()
@@ -235,7 +258,13 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetNotMatchingGetNonICollectionInnerCollection();
 
         Action action = () => CollectionAssert.AreEqual(collection1, collection2);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreEqual
+                Element at index 0 do not match.
+                  expected: 1
+                  actual:   6
+                """);
     }
 
     public void CollectionAssertAreNotEqual_NotEqualNestedLists_Passes()
@@ -251,7 +280,11 @@ public class CollectionAssertTests : TestContainer
         List<string> expected = ["one", "two"];
         List<string> actual = ["ONE", "tWo"];
         Action action = () => CollectionAssert.AreNotEqual(expected, actual, StringComparer.OrdinalIgnoreCase);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreNotEqual
+                Both collection contain same elements.
+                """);
     }
 
     public void CollectionAssertAreNotEqual_WithCaseSensitiveComparer_Passes()
@@ -267,7 +300,11 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetNestedLists();
 
         Action action = () => CollectionAssert.AreNotEqual(collection1, collection2);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreNotEqual
+                Both collection contain same elements.
+                """);
     }
 
     public void CollectionAssertAreNotEqual_EqualNonICollectionInnerCollection_Fails()
@@ -276,7 +313,11 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetNonICollectionInnerCollection();
 
         Action action = () => CollectionAssert.AreNotEqual(collection1, collection2);
-        action.Should().Throw<Exception>();
+        action.Should().Throw<Exception>()
+            .WithMessage("""
+                CollectionAssert.AreNotEqual
+                Both collection contain same elements.
+                """);
     }
 
     public void CollectionAssertAreNotEqual_NotEqualNonICollectionInnerCollection_Passes()
@@ -335,7 +376,13 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetMatchingSuperset();
         Action action = () => CollectionAssert.AreEquivalent(collection1, collection2, "message");
         action.Should().Throw<Exception>()
-            .WithMessage("*message*");
+            .WithMessage("""
+                CollectionAssert.AreEquivalent
+                message
+                Expected the same number of elements in the collections.
+                  expected count: 1
+                  actual count:   2
+                """);
     }
 
     public void CollectionAssertAreEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
@@ -351,7 +398,13 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetLettersCaseMismatchingSuperset();
         Action action = () => CollectionAssert.AreEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveEqualityComparer(), "message");
         action.Should().Throw<Exception>()
-            .WithMessage("*message*");
+            .WithMessage("""
+                CollectionAssert.AreEquivalent
+                message
+                Expected the same number of elements in the collections.
+                  expected count: 1
+                  actual count:   2
+                """);
     }
 
     public void CollectionAssertAreNotEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()
@@ -367,7 +420,11 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetMatchingSuperset();
         Action action = () => CollectionAssert.AreNotEquivalent(collection1, collection2, "message");
         action.Should().Throw<Exception>()
-            .WithMessage("*message*");
+            .WithMessage("""
+                CollectionAssert.AreNotEquivalent
+                message
+                Both collections contain the same elements.
+                """);
     }
 
     public void CollectionAssertAreNotEquivalent_WithInsensitiveCaseComparer_DoesNotThrow()
@@ -383,14 +440,22 @@ public class CollectionAssertTests : TestContainer
         ICollection? collection2 = GetLettersCaseMismatchingSuperset();
         Action action = () => CollectionAssert.AreNotEquivalent(collection1?.Cast<string>(), collection2?.Cast<string>(), new CaseInsensitiveNotEqualityComparer(), "message");
         action.Should().Throw<Exception>()
-            .WithMessage("*message*");
+            .WithMessage("""
+                CollectionAssert.AreNotEquivalent
+                message
+                Both collections contain the same elements.
+                """);
     }
 
     public void CollectionAssertAreNotEquivalent_FailsWithTwoNullsAndComparer_WithMessageAndParams()
     {
         Action action = () => CollectionAssert.AreNotEquivalent(null, null, new CaseInsensitiveNotEqualityComparer(), "message format");
         action.Should().Throw<Exception>()
-            .WithMessage("*message*");
+            .WithMessage("""
+                CollectionAssert.AreNotEquivalent
+                message format
+                Both collection references point to the same collection object.
+                """);
     }
 
     public void CollectionAssertAreEqualWithoutUserMessage_FailsWithGoodMessage()
@@ -400,8 +465,8 @@ public class CollectionAssertTests : TestContainer
             .WithMessage("""
             CollectionAssert.AreEqual
             Element at index 1 do not match.
-            Expected: 2
-            Actual: 5
+              expected: 2
+              actual:   5
             """);
     }
 
@@ -409,12 +474,12 @@ public class CollectionAssertTests : TestContainer
     {
         Action action = () => CollectionAssert.AreEqual(new[] { 1, 2, 3 }, new[] { 1, 5, 3 }, "User-provided message");
         action.Should().Throw<Exception>()
-            .WithMessage(
-            """
+            .WithMessage("""
             CollectionAssert.AreEqual
-            User-provided message. Element at index 1 do not match.
-            Expected: 2
-            Actual: 5
+            User-provided message
+            Element at index 1 do not match.
+              expected: 2
+              actual:   5
             """);
     }
 

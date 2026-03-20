@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -18,7 +18,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.StartsWith("world", "hello")
-                String does not start with expected prefix.
+                Expected string to start with the specified prefix.
                   expected prefix: "world"
                   value:           "hello"
                 """);
@@ -31,7 +31,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.StartsWith("world", "hello")
                 User message
-                String does not start with expected prefix.
+                Expected string to start with the specified prefix.
                   expected prefix: "world"
                   value:           "hello"
                 """);
@@ -46,7 +46,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotStartWith("hello", "hello world")
-                String starts with unexpected prefix.
+                Expected string to not start with the specified prefix.
                   unwanted prefix: "hello"
                   value:           "hello world"
                 """);
@@ -64,7 +64,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.StartsWith("world", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String does not start with expected prefix.
+                Expected string to start with the specified prefix.
                   expected prefix: "world"
                   value:           "hello world"
                 """);
@@ -78,7 +78,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.StartsWith("world", longValue)
-                String does not start with expected prefix.
+                Expected string to start with the specified prefix.
                   expected prefix: "world"
                   value:           "{new string('x', 255)}... 46 more
                 """);
@@ -90,7 +90,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.StartsWith("world", "hello\r\nworld")
-                String does not start with expected prefix.
+                Expected string to start with the specified prefix.
                   expected prefix: "world"
                   value:           "hello\r\nworld"
                 """);
@@ -104,7 +104,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotStartWith("hello", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String starts with unexpected prefix.
+                Expected string to not start with the specified prefix.
                   unwanted prefix: "hello"
                   value:           "hello world"
                 """);
@@ -118,7 +118,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.DoesNotStartWith("hello", longValue)
-                String starts with unexpected prefix.
+                Expected string to not start with the specified prefix.
                   unwanted prefix: "hello"
                   value:           "hello{new string('x', 250)}... 51 more
                 """);
@@ -130,7 +130,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotStartWith("hello", "hello\r\nworld")
-                String starts with unexpected prefix.
+                Expected string to not start with the specified prefix.
                   unwanted prefix: "hello"
                   value:           "hello\r\nworld"
                 """);

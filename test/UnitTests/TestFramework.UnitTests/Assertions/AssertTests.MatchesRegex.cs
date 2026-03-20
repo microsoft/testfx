@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -18,7 +18,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.MatchesRegex(@"\d+", "abc")
-                String does not match expected pattern.
+                Expected string to match the specified pattern.
                   pattern: \d+
                   value:   "abc"
                 """);
@@ -33,7 +33,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotMatchRegex(@"\d+", "abc123")
-                String matches pattern but should not.
+                Expected string to not match the specified pattern.
                   pattern: \d+
                   value:   "abc123"
                 """);
@@ -51,7 +51,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.MatchesRegex(@"\d+", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String does not match expected pattern.
+                Expected string to match the specified pattern.
                   pattern: \d+
                   value:   "hello"
                 """);
@@ -65,7 +65,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.MatchesRegex(@"\d+", longValue)
-                String does not match expected pattern.
+                Expected string to match the specified pattern.
                   pattern: \d+
                   value:   "{new string('x', 255)}... 46 more
                 """);
@@ -77,7 +77,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.MatchesRegex(@"^\d+$", "hello\r\nworld")
-                String does not match expected pattern.
+                Expected string to match the specified pattern.
                   pattern: ^\d+$
                   value:   "hello\r\nworld"
                 """);
@@ -91,7 +91,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotMatchRegex(@"\d+", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String matches pattern but should not.
+                Expected string to not match the specified pattern.
                   pattern: \d+
                   value:   "abc123"
                 """);
@@ -105,7 +105,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.DoesNotMatchRegex(@"\d+", longValue)
-                String matches pattern but should not.
+                Expected string to not match the specified pattern.
                   pattern: \d+
                   value:   "{new string('1', 255)}... 46 more
                 """);
@@ -117,7 +117,7 @@ public partial class AssertTests
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotMatchRegex(@"hello", "hello\r\nworld")
-                String matches pattern but should not.
+                Expected string to not match the specified pattern.
                   pattern: hello
                   value:   "hello\r\nworld"
                 """);

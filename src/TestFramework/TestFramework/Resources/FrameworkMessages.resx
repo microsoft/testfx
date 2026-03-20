@@ -121,10 +121,10 @@
     <value>Access string has invalid syntax.</value>
   </data>
   <data name="ActualHasMismatchedElements" xml:space="preserve">
-    <value>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</value>
+    <value>Expected collections to have matching element occurrences.</value>
   </data>
   <data name="AllItemsAreUniqueFailMsg" xml:space="preserve">
-    <value>Duplicate item found:&lt;{1}&gt;. {0}</value>
+    <value>Expected all items to be unique.</value>
   </data>
   <data name="AreEqualStringDiffLengthBothMsg" xml:space="preserve">
     <value>String lengths are both {0} but differ at index {1}.</value>
@@ -136,16 +136,16 @@
     <value>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</value>
   </data>
   <data name="BothCollectionsEmpty" xml:space="preserve">
-    <value>Both collections are empty. {0}</value>
+    <value>Both collections are empty.</value>
   </data>
   <data name="BothCollectionsSameElements" xml:space="preserve">
     <value>Both collection contain same elements.</value>
   </data>
   <data name="BothCollectionsSameReference" xml:space="preserve">
-    <value>Both collection references point to the same collection object. {0}</value>
+    <value>Both collection references point to the same collection object.</value>
   </data>
   <data name="BothSameElements" xml:space="preserve">
-    <value>Both collections contain the same elements. {0}</value>
+    <value>Both collections contain the same elements.</value>
   </data>
   <data name="CollectionEqualReason" xml:space="preserve">
     <value>{0}. {1}</value>
@@ -154,15 +154,13 @@
     <value>String '{0}' does not contain string '{1}'. {2}.</value>
   </data>
   <data name="ElementNumbersDontMatch" xml:space="preserve">
-    <value>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</value>
+    <value>Expected the same number of elements in the collections.</value>
   </data>
   <data name="ElementsAtIndexDontMatch" xml:space="preserve">
-    <value>Element at index {0} do not match.
-Expected: {1}
-Actual: {2}</value>
+    <value>Element at index {0} do not match.</value>
   </data>
   <data name="ElementTypesAtIndexDontMatch" xml:space="preserve">
-    <value>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</value>
+    <value>Element at index {0} is not of the expected type.</value>
   </data>
   <data name="EndsWithFail" xml:space="preserve">
     <value>String '{0}' does not end with string '{1}'. {2}</value>
@@ -286,31 +284,31 @@ Actual: {2}</value>
     <value>The maximum value must be greater than or equal to the minimum value.</value>
   </data>
   <data name="AreEqualDeltaNoGreaterThanFailMsg" xml:space="preserve">
-    <value>Expected a difference no greater than {0}.</value>
+    <value>Expected difference to be no greater than {0}.</value>
   </data>
   <data name="AreNotEqualDeltaGreaterThanFailMsg" xml:space="preserve">
-    <value>Expected a difference greater than {0}.</value>
+    <value>Expected difference to be greater than {0}.</value>
   </data>
   <data name="AreEqualCaseDiffersMsg" xml:space="preserve">
     <value>Case differs.</value>
   </data>
   <data name="StartsWithFailNew" xml:space="preserve">
-    <value>String does not start with expected prefix.</value>
+    <value>Expected string to start with the specified prefix.</value>
   </data>
   <data name="DoesNotStartWithFailNew" xml:space="preserve">
-    <value>String starts with unexpected prefix.</value>
+    <value>Expected string to not start with the specified prefix.</value>
   </data>
   <data name="EndsWithFailNew" xml:space="preserve">
-    <value>String does not end with expected suffix.</value>
+    <value>Expected string to end with the specified suffix.</value>
   </data>
   <data name="DoesNotEndWithFailNew" xml:space="preserve">
-    <value>String ends with unexpected suffix.</value>
+    <value>Expected string to not end with the specified suffix.</value>
   </data>
   <data name="MatchesRegexFailNew" xml:space="preserve">
-    <value>String does not match expected pattern.</value>
+    <value>Expected string to match the specified pattern.</value>
   </data>
   <data name="DoesNotMatchRegexFailNew" xml:space="preserve">
-    <value>String matches pattern but should not.</value>
+    <value>Expected string to not match the specified pattern.</value>
   </data>
   <data name="ContainsItemFailNew" xml:space="preserve">
     <value>Expected collection to contain the specified item.</value>
@@ -325,10 +323,10 @@ Actual: {2}</value>
     <value>Expected no items to match the predicate.</value>
   </data>
   <data name="ContainsStringFailNew" xml:space="preserve">
-    <value>String does not contain the expected substring.</value>
+    <value>Expected string to contain the specified substring.</value>
   </data>
   <data name="DoesNotContainStringFailNew" xml:space="preserve">
-    <value>String contains the unexpected substring.</value>
+    <value>Expected string to not contain the specified substring.</value>
   </data>
   <data name="ContainsSingleMatchFailNew" xml:space="preserve">
     <value>Expected exactly one item to match the predicate but found {0} item(s).</value>
@@ -346,16 +344,16 @@ Actual: {2}</value>
     <value>Expected value {0} to be in range [{1}, {2}].</value>
   </data>
   <data name="WrongExceptionThrownNew" xml:space="preserve">
-    <value>Wrong exception type was thrown.</value>
+    <value>Expected the specified exception type to be thrown.</value>
   </data>
   <data name="NoExceptionThrownNew" xml:space="preserve">
-    <value>No exception was thrown.</value>
+    <value>Expected an exception to be thrown.</value>
   </data>
   <data name="AreEqualFailNew" xml:space="preserve">
     <value>Expected values to be equal.</value>
   </data>
   <data name="AreNotEqualFailNew" xml:space="preserve">
-    <value>Expected values to differ.</value>
+    <value>Expected values to not be equal.</value>
   </data>
   <data name="AreSameFailNew" xml:space="preserve">
     <value>Expected references to be the same.</value>
@@ -373,7 +371,7 @@ Actual: {2}</value>
     <value>Expected value to be null.</value>
   </data>
   <data name="IsNotNullFailNew" xml:space="preserve">
-    <value>Expected a non-null value.</value>
+    <value>Expected value to not be null.</value>
   </data>
   <data name="IsInstanceOfTypeFailNew" xml:space="preserve">
     <value>Expected value to be an instance of {0}.</value>
@@ -400,9 +398,9 @@ Actual: {2}</value>
     <value>Expected value {0} to be less than or equal to {1}.</value>
   </data>
   <data name="IsPositiveFailNew" xml:space="preserve">
-    <value>Expected a positive value.</value>
+    <value>Expected value to be positive.</value>
   </data>
   <data name="IsNegativeFailNew" xml:space="preserve">
-    <value>Expected a negative value.</value>
+    <value>Expected value to be negative.</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -662,7 +662,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(substring, value)
             Missing substring
-            String does not contain the expected substring.
+            Expected string to contain the specified substring.
               substring: "lazy"
               value:     "The quick brown fox"
             """);
@@ -881,7 +881,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.Contains(substring, value)
-            String does not contain the expected substring.
+            Expected string to contain the specified substring.
               substring: "test"
               value:     ""
             """);
@@ -1207,7 +1207,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
             Unexpected substring
-            String contains the unexpected substring.
+            Expected string to not contain the specified substring.
               substring: "brown"
               value:     "The quick brown fox"
             """);
@@ -1248,7 +1248,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
             Found unexpected substring
-            String contains the unexpected substring.
+            Expected string to not contain the specified substring.
               substring: "BROWN"
               value:     "The quick brown fox"
             """);
@@ -1286,7 +1286,7 @@ public partial class AssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
-            String contains the unexpected substring.
+            Expected string to not contain the specified substring.
               substring: "brown"
               value:     "The quick brown fox"
             """);
@@ -1325,7 +1325,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             Assert.DoesNotContain(substring, value)
             Found unexpected substring
-            String contains the unexpected substring.
+            Expected string to not contain the specified substring.
               substring: "brown"
               value:     "The quick brown fox"
             """);
@@ -1949,7 +1949,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.Contains("world", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String does not contain the expected substring.
+                Expected string to contain the specified substring.
                   substring: "world"
                   value:     "hello"
                 """);
@@ -1963,7 +1963,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.Contains("world", longValue)
-                String does not contain the expected substring.
+                Expected string to contain the specified substring.
                   substring: "world"
                   value:     "{new string('x', 255)}... 46 more
                 """);
@@ -1975,7 +1975,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.Contains("world", "hello\r\nfoo")
-                String does not contain the expected substring.
+                Expected string to contain the specified substring.
                   substring: "world"
                   value:     "hello\r\nfoo"
                 """);
@@ -1989,7 +1989,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotContain("hello", aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                String contains the unexpected substring.
+                Expected string to not contain the specified substring.
                   substring: "hello"
                   value:     "hello world"
                 """);
@@ -2003,7 +2003,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage($"""
                 Assert.DoesNotContain("hello", longValue)
-                String contains the unexpected substring.
+                Expected string to not contain the specified substring.
                   substring: "hello"
                   value:     "hello{new string('x', 250)}... 51 more
                 """);
@@ -2015,7 +2015,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.DoesNotContain("hello", "hello\r\nworld")
-                String contains the unexpected substring.
+                Expected string to not contain the specified substring.
                   substring: "hello"
                   value:     "hello\r\nworld"
                 """);

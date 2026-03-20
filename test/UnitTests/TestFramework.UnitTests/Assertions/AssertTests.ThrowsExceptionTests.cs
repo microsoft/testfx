@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -72,7 +72,7 @@ public partial class AssertTests
             .WithInnerException<AssertFailedException>()
             .WithMessage("""
                 Assert.ThrowsAsync
-                Wrong exception type was thrown.
+                Expected the specified exception type to be thrown.
                   action: () => throw new Exception()
                   expected exception type: <System.ArgumentException>
                   actual exception type: <System.Exception>
@@ -87,7 +87,7 @@ public partial class AssertTests
             .WithInnerException<AssertFailedException>()
             .WithMessage("""
                 Assert.ThrowsExactlyAsync
-                Wrong exception type was thrown.
+                Expected the specified exception type to be thrown.
                   action: () => throw new ArgumentNullException()
                   expected exception type: <System.ArgumentException>
                   actual exception type: <System.ArgumentNullException>
@@ -120,7 +120,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.Throws
                 message constructed via builder.
-                No exception was thrown.
+                Expected an exception to be thrown.
                   action: () => { }
                   expected exception type: <System.ArgumentNullException>
                 """);
@@ -143,7 +143,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.Throws
                 message constructed via builder.
-                Wrong exception type was thrown.
+                Expected the specified exception type to be thrown.
                   action: () => throw new ArgumentOutOfRangeException("MyParamNameHere")
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
@@ -180,7 +180,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ThrowsExactly
                 message constructed via builder.
-                No exception was thrown.
+                Expected an exception to be thrown.
                   action: () => { }
                   expected exception type: <System.ArgumentNullException>
                 """);
@@ -203,7 +203,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ThrowsExactly
                 message constructed via builder.
-                Wrong exception type was thrown.
+                Expected the specified exception type to be thrown.
                   action: () => throw new ArgumentOutOfRangeException("MyParamNameHere")
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
@@ -240,7 +240,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ThrowsAsync
                 message constructed via builder.
-                No exception was thrown.
+                Expected an exception to be thrown.
                   action: () => Task.CompletedTask
                   expected exception type: <System.ArgumentNullException>
                 """);
@@ -263,7 +263,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ThrowsAsync
                 message constructed via builder.
-                Wrong exception type was thrown.
+                Expected the specified exception type to be thrown.
                   action: () => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere"))
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>
@@ -300,7 +300,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ThrowsExactlyAsync
                 message constructed via builder.
-                No exception was thrown.
+                Expected an exception to be thrown.
                   action: () => Task.CompletedTask
                   expected exception type: <System.ArgumentNullException>
                 """);
@@ -323,7 +323,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ThrowsExactlyAsync
                 message constructed via builder.
-                Wrong exception type was thrown.
+                Expected the specified exception type to be thrown.
                   action: () => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere"))
                   expected exception type: <System.ArgumentNullException>
                   actual exception type: <System.ArgumentOutOfRangeException>

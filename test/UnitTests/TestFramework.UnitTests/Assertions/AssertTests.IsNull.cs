@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -89,7 +89,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.IsNotNull(null)
-                Expected a non-null value.
+                Expected value to not be null.
                 """);
     }
 
@@ -100,7 +100,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsNotNull(null)
                 User-provided message
-                Expected a non-null value.
+                Expected value to not be null.
                 """);
     }
 
@@ -113,7 +113,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsNotNull(null)
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected a non-null value.
+                Expected value to not be null.
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

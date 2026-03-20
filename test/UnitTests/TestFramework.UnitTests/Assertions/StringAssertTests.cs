@@ -19,7 +19,12 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.Contains(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().StartWith("StringAssert.Contains");
+            .WithMessage("""
+                StringAssert.Contains
+                Expected string to contain the specified substring.
+                  substring: "I'm not in the string above"
+                  value:     "The quick brown fox jumps over the lazy dog."
+                """);
     }
 
     public void StringAssertStartsWith()
@@ -28,7 +33,12 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.StartsWith(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().StartWith("StringAssert.StartsWith");
+            .WithMessage("""
+                StringAssert.StartsWith
+                Expected string to start with the specified prefix.
+                  expected prefix: "I'm not in the string above"
+                  value:           "The quick brown fox jumps over the lazy dog."
+                """);
     }
 
     public void StringAssertEndsWith()
@@ -37,7 +47,12 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.EndsWith(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().StartWith("StringAssert.EndsWith");
+            .WithMessage("""
+                StringAssert.EndsWith
+                Expected string to end with the specified suffix.
+                  expected suffix: "I'm not in the string above"
+                  value:           "The quick brown fox jumps over the lazy dog."
+                """);
     }
 
     public void StringAssertDoesNotMatch()
@@ -46,7 +61,12 @@ public class StringAssertTests : TestContainer
         Regex doesMatch = new("quick brown fox");
         Action action = () => StringAssert.DoesNotMatch(actual, doesMatch);
         action.Should().Throw<Exception>()
-            .And.Message.Should().StartWith("StringAssert.DoesNotMatch");
+            .WithMessage("""
+                StringAssert.DoesNotMatch
+                Expected string to not match the specified pattern.
+                  pattern: quick brown fox
+                  value:   "The quick brown fox jumps over the lazy dog."
+                """);
     }
 
     public void StringAssertContainsIgnoreCase_DoesNotThrow()
@@ -75,7 +95,12 @@ public class StringAssertTests : TestContainer
     {
         Action action = () => StringAssert.Contains(":-{", "x");
         action.Should().Throw<Exception>()
-            .And.Message.Should().StartWith("StringAssert.Contains");
+            .WithMessage("""
+                StringAssert.Contains
+                Expected string to contain the specified substring.
+                  substring: "x"
+                  value:     ":-{"
+                """);
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
@@ -83,7 +108,13 @@ public class StringAssertTests : TestContainer
     {
         Action action = () => StringAssert.Contains("{", "x", "message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().StartWith("StringAssert.Contains");
+            .WithMessage("""
+                StringAssert.Contains
+                message
+                Expected string to contain the specified substring.
+                  substring: "x"
+                  value:     "{"
+                """);
     }
 
     public void StringAssertContainsNullabilitiesPostConditions()

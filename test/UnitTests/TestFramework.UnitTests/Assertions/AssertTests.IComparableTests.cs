@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -260,7 +260,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsPositive(-5)
                 A Message
-                Expected a positive value.
+                Expected value to be positive.
                   value: -5
                 """);
     }
@@ -330,7 +330,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.IsNegative(5)
                 A Message
-                Expected a negative value.
+                Expected value to be negative.
                   value: 5
                 """);
     }
@@ -535,7 +535,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsPositive(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected a positive value.
+                Expected value to be positive.
                   value: -5
                 """);
     }
@@ -548,7 +548,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.IsNegative(aVeryLongVariableNameThatExceedsOneHundredCharacte...)
-                Expected a negative value.
+                Expected value to be negative.
                   value: 5
                 """);
     }
