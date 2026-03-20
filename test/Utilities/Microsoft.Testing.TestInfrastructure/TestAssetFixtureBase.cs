@@ -34,11 +34,11 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        var (assetId, assetName, assetCode) = GetAssetsToGenerate();
+        (string assetId, string assetName, string assetCode) = GetAssetsToGenerate();
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetId, assetCode, _tempDirectory);
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path, callerMemberName: assetName, cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
-        _testAssets.TryAdd(asset.ID, testAsset);
+        _testAssets.TryAdd(assetId, testAsset);
     }
 
     /// <summary>
