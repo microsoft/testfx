@@ -207,11 +207,14 @@ public partial class AssertTests
         instance.Should().BeSameAs(testInstance);
     }
 
-    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow() => Assert.IsNotInstanceOfType<object>(null);
+    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow() 
+        => Assert.IsNotInstanceOfType<object>(null);
 
-    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow() => Assert.IsNotInstanceOfType<int>(5L);
+    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow()
+        => Assert.IsNotInstanceOfType<int>(5L);
 
-    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow() => Assert.IsNotInstanceOfType<int>(new object());
+    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow() 
+        => Assert.IsNotInstanceOfType<int>(new object());
 
     public void IsInstanceOfType_WhenNonNullNullableValue_LearnNonNull()
     {

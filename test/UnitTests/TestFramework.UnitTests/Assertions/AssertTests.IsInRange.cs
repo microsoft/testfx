@@ -139,7 +139,12 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
-            .WithMessage("Assert.IsInRange(valueOutOfRange)*Expected value*to be in range*");
+            .WithMessage($"""
+                Assert.IsInRange(valueOutOfRange)
+                Expected value {valueOutOfRange} to be in range [{minValue}, {maxValue}].
+                  range: [{minValue}, {maxValue}]
+                  value: {valueOutOfRange}
+                """);
     }
 
     public void IsInRange_WithCharValues_WorksCorrectly()
@@ -156,7 +161,12 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
-            .WithMessage("Assert.IsInRange(valueOutOfRange)*Expected value*to be in range*");
+            .WithMessage("""
+                Assert.IsInRange(valueOutOfRange)
+                Expected value a to be in range [A, Z].
+                  range: [A, Z]
+                  value: a
+                """);
     }
 
     public void IsInRange_WithNullMessage_DoesNotThrow()
