@@ -47,9 +47,12 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             const int AnsiUpdateCadenceInMs = 500;
             while (!_cts.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
             {
+                // Note: OnProgressStartUpdate is invoked outside the lock to avoid a deadlock where
+                // a test subscriber blocks the event handler (e.g. with WaitOne) while the lock is held,
+                // preventing other callers (e.g. WriteToTerminal) from acquiring the lock.
+                OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
                 lock (_lock)
                 {
-                    OnProgressStartUpdate?.Invoke(this, EventArgs.Empty);
                     _terminal.StartUpdate();
                     try
                     {
