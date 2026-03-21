@@ -123,14 +123,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 ForwardCompatibilityTestCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$PreviousExtensionVersion$", PreviousExtensionVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

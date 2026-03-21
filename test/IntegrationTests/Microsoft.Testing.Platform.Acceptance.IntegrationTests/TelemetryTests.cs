@@ -172,14 +172,11 @@ public class DummyTestFramework : ITestFramework
 
         public string TargetAssetPath => GetAssetPath(WithTelemetry);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (WithTelemetry, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (WithTelemetry, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$TelemetryArg$", string.Empty));
-        }
     }
 
     public TestContext TestContext { get; set; }

@@ -116,15 +116,12 @@ global using Microsoft.VisualStudio.TestTools.UnitTesting;
 
         public string TargetAssetPath => GetAssetPath(WithSkippedTest);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (WithSkippedTest, AssetNameUsingMSTest,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (WithSkippedTest, AssetNameUsingMSTest,
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", "[Ignore]"));
-        }
     }
 
     public TestContext TestContext { get; set; }

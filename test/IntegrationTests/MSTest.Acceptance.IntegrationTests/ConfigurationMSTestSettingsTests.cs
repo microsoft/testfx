@@ -30,15 +30,12 @@ public sealed class ConfigurationMSTestSettingsTests : AcceptanceTestBase<Config
 
         public string ProjectPathWithMSTestRunSettings => GetAssetPath(ProjectNameWithMSTestRunSettings);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectNameWithMSTestRunSettings, ProjectNameWithMSTestRunSettings,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestRunSettings)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$AppendSettings$", MSTestSettings));
-        }
 
         private const string MSTestSettings = """
 <mstest>

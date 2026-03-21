@@ -90,15 +90,12 @@ public sealed class TimeoutFromRunSettingsTests : AcceptanceTestBase<TimeoutFrom
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchCodeWithReplace("$TimeoutAttribute$", string.Empty)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file $ProjectName$.csproj

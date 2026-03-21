@@ -51,12 +51,9 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
             SourceCode.PatchTargetFrameworks(TargetFrameworks.All)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestDiscoveryWarnings.csproj

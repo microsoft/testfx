@@ -46,14 +46,11 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file MSTestTrxReport.csproj

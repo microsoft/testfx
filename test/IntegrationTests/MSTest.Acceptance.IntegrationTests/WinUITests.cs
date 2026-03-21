@@ -30,13 +30,10 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchCodeWithReplace("$TargetFramework$", WinUITargetFramework)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file WinUITests.csproj

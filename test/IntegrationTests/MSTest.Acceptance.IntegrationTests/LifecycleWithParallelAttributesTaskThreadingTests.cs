@@ -33,14 +33,11 @@ public sealed class LifecycleWithParallelAttributesTaskThreadingTests : Acceptan
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (ProjectName, AssemblyName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, AssemblyName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ParallelAttribute$", "[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file sta.runsettings

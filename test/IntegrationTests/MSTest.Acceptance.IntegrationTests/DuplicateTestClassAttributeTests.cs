@@ -29,13 +29,10 @@ public sealed class DuplicateTestClassAttributeTests : AcceptanceTestBase<Duplic
 
         public string DuplicateTestClassProjectPath => GetAssetPath(DuplicateTestClassProjectName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (DuplicateTestClassProjectName, DuplicateTestClassProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DuplicateTestClassProjectName, DuplicateTestClassProjectName,
                 DuplicateTestClassSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string DuplicateTestClassSourceCode = """
 #file DuplicateTestClassAttribute.csproj

@@ -68,15 +68,12 @@ public sealed class STAThreadingTests : AcceptanceTestBase<STAThreadingTests.Tes
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 (SourceCode + ProgramFileSourceCode)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchCodeWithReplace("$GenerateEntryPoint$", "false")
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file sta.runsettings

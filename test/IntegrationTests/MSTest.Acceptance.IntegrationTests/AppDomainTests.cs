@@ -174,12 +174,9 @@ namespace AppDomainTests
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 SingleTestSourceCode
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetFramework[0])
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 }

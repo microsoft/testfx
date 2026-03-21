@@ -65,13 +65,10 @@ public sealed class ParameterizedDataSourceTests : AcceptanceTestBase<Parameteri
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public override (string ID, string Name, string Code) GetAssetsToGenerate()
-        {
-            return (DataSourceAssetName, DataSourceAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DataSourceAssetName, DataSourceAssetName,
                 SourceCodeDataSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCodeDataSource = """
 #file DataSource.csproj
