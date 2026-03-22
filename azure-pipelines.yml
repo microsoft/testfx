@@ -123,6 +123,18 @@ stages:
           - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
+
+          # Integration tests are redundant in Release—they spawn child processes that already cover
+          # both Debug and Release configurations. Use --test-modules to run only unit tests.
+          - script: dotnet test --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/net4*/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
+            name: TestRelease
+            displayName: Test (unit tests only)
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
@@ -142,14 +154,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
           # Upload code coverage to codecov.io
           - script: dotnet msbuild -restore
@@ -229,6 +241,18 @@ stages:
           - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
+
+          # Integration tests are redundant in Release—they spawn child processes that already cover
+          # both Debug and Release configurations. Use --test-modules to run only unit tests.
+          - script: dotnet test --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
+            name: TestRelease
+            displayName: Test (unit tests only)
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
@@ -248,14 +272,14 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Linux_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
       - job: MacOS
         timeoutInMinutes: 90
@@ -293,6 +317,18 @@ stages:
           - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
             name: Test
             displayName: Test
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+            env:
+              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
+              DOTNET_CLI_CONTEXT_VERBOSE: 1
+
+          # Integration tests are redundant in Release—they spawn child processes that already cover
+          # both Debug and Release configurations. Use --test-modules to run only unit tests.
+          - script: dotnet test --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
+            name: TestRelease
+            displayName: Test (unit tests only)
+            condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
             env:
               DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
               NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
@@ -312,11 +348,11 @@ stages:
               Contents: |
                 **/*.binlog
               TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish integration tests binlogs'
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_MacOS_Binlogs_$(_BuildConfig)
-            condition: always()
+            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
