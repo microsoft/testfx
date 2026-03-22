@@ -34,13 +34,10 @@ public sealed class ParameterizedDataRowTests : AcceptanceTestBase<Parameterized
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase(AcceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (DataRowAssetName, DataRowAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (DataRowAssetName, DataRowAssetName,
                 SourceCodeDataRow
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCodeDataRow = """
 #file DataRowTests.csproj
