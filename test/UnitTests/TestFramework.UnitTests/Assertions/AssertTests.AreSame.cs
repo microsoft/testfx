@@ -22,6 +22,9 @@ public partial class AssertTests
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
             """);
+    }
+
+    public void AreSame_StringMessage_PassSameObject_ShouldPass()
     {
         object o = new();
         Assert.AreSame(o, o, "User-provided message");
@@ -37,6 +40,9 @@ public partial class AssertTests
               expected: <System.Object> (Hash=*)
               actual:   <System.Object> (Hash=*)
             """);
+    }
+
+    public void AreSame_InterpolatedString_PassSameObject_ShouldPass()
     {
         DummyClassTrackingToStringCalls o = new();
         Assert.AreSame(o, o, $"User-provided message: {o}");
