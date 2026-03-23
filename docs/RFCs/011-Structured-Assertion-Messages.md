@@ -17,7 +17,7 @@ Before this change, assertion failure messages used inconsistent formats across 
 - **User message embedding**: User-provided messages were sometimes embedded inside the framework message via `string.Format` positional placeholders (`{0}`), making them hard to visually separate from the diagnostic information.
 - **No structured parameters**: Values like `expected`, `actual`, and `delta` were inlined into prose sentences with inconsistent formatting (angle brackets `<>`, single quotes, or no decoration).
 - **No call site**: The old format started with `Assert.AreEqual failed.` — telling the user *what* failed but not *what was passed*.
-- **`Assert.That`**: Used a different layout entirely (`Assert.That(...) failed.` / `Message: ...` / `Details:` / `  x = 5`).
+- **`Assert.That`**: Used a different layout entirely (`Assert.That(...) failed.` / `Message: ...` / `Details:` / `x = 5`).
 - **`CollectionAssert`/`StringAssert`**: Used legacy `string.Format` with positional placeholders for both user messages and values, making the output hard to parse visually.
 
 These inconsistencies made it harder for users to quickly scan failure output and understand what went wrong.
@@ -35,7 +35,7 @@ These inconsistencies made it harder for users to quickly scan failure output an
 
 Every assertion failure message follows this structure:
 
-```
+```text
 <CallSite>
 [<UserMessage>]
 <FrameworkMessage>
@@ -47,7 +47,7 @@ Every assertion failure message follows this structure:
 
 The first line identifies which assertion failed and what expressions were passed:
 
-```
+```text
 Assert.AreEqual(expectedVar, actualVar)
 Assert.IsTrue(result.IsValid)
 Assert.That(x > 10)
@@ -61,7 +61,7 @@ For `Assert.*` methods, expressions are captured via `[CallerArgumentExpression]
 
 When overloads accept additional parameters not captured by `CallerArgumentExpression` (such as `delta`, `ignoreCase`, `culture`), the call site uses a trailing `...` to signal that the displayed signature is abbreviated:
 
-```
+```text
 Assert.AreEqual(1.0m, 1.1m, ...)     // delta overload
 Assert.AreEqual(expected, actual, ...) // culture overload
 ```
@@ -70,9 +70,9 @@ This avoids mixing runtime values with source expressions in the call site.
 
 #### Lambda Stripping
 
-For `Assert.That`, the `() => ` lambda wrapper is stripped from the call site since it is syntactic noise:
+For `Assert.That`, the `() =>` lambda wrapper is stripped from the call site since it is syntactic noise:
 
-```
+```text
 // Source code: Assert.That(() => x > 10)
 // Call site:   Assert.That(x > 10)
 ```
@@ -81,7 +81,7 @@ For `Assert.That`, the `() => ` lambda wrapper is stripped from the call site si
 
 If the user provided a custom message, it appears on its own line immediately after the call site, without any prefix:
 
-```
+```text
 Assert.AreEqual(result, 42)
 The calculation returned an unexpected value
 Expected values to be equal.
@@ -95,7 +95,7 @@ This was a deliberate choice. Earlier iterations prefixed user messages with `Me
 
 The framework's explanation of what was expected. All messages follow the tone **"Expected [subject] to [verb phrase]."**:
 
-```
+```text
 Expected values to be equal.
 Expected string to start with the specified prefix.
 Expected collection to contain the specified item.
@@ -106,7 +106,7 @@ Expected condition to be true.
 This tone was chosen after evaluating several alternatives:
 
 | Style | Example | Verdict |
-|-------|---------|---------|
+| ----- | ------- | ------- |
 | Passive: "String does not match..." | `String does not contain the expected substring.` | Rejected — describes outcome, not expectation |
 | Factual: "Wrong exception type was thrown." | `No exception was thrown.` | Rejected — not actionable |
 | Active nominal: "Expected a non-null value." | `Expected a positive value.` | Rejected — inconsistent structure with parameterized variants |
@@ -118,21 +118,21 @@ The verbal form scales naturally to parameterized messages like `Expected value 
 
 Diagnostic values are shown as indented, colon-separated, column-aligned pairs:
 
-```
+```text
   expected: 42
   actual:   37
 ```
 
 The alignment padding ensures all values start at the same column, making it easy to compare expected vs actual at a glance. When labels have different lengths, the shorter ones are padded:
 
-```
+```text
   expected prefix: "Hello"
   value:           "World"
 ```
 
 Additional contextual parameters like `delta`, `ignore case`, and `culture` appear when relevant:
 
-```
+```text
   expected:    "i"
   actual:      "I"
   ignore case: False
@@ -141,7 +141,7 @@ Additional contextual parameters like `delta`, `ignore case`, and `culture` appe
 
 Collection previews are shown inline with truncation:
 
-```
+```text
   collection: [1, 2, 3, ... 97 more]
 ```
 
@@ -150,7 +150,7 @@ Collection previews are shown inline with truncation:
 `Assert.That` accepts an `Expression<Func<bool>>` and uses the expression tree to generate context-specific failure messages instead of a generic "Expected condition to be true."
 
 | Expression Type | Example | Message |
-|----------------|---------|---------|
+| --------------- | ------- | ------- |
 | `==` | `x == 5` | `Expected 3 to equal 5.` |
 | `!=` | `s != "test"` | `Expected "test" to not equal "test".` |
 | `>` | `x > 10` | `Expected 5 to be greater than 10.` |
@@ -170,7 +170,7 @@ For binary comparisons, both sides of the expression are evaluated at runtime an
 
 Variable details are extracted from the expression tree and displayed below the message:
 
-```
+```text
 Assert.That(x > 10)
 Expected 5 to be greater than 10.
   x = 5
@@ -180,7 +180,7 @@ Expected 5 to be greater than 10.
 
 These legacy APIs follow the same structural pattern but without `CallerArgumentExpression` (since they predate it):
 
-```
+```text
 CollectionAssert.AreEqual
 User-provided message
 Element at index 1 do not match.
@@ -188,7 +188,7 @@ Element at index 1 do not match.
   actual:   5
 ```
 
-```
+```text
 StringAssert.Contains
 Expected string to contain the specified substring.
   substring: "xyz"
@@ -202,7 +202,7 @@ User messages are positioned using `AppendUserMessage` (before the framework mes
 All values are formatted through a unified `FormatValue<T>` method that applies consistent rules:
 
 | Type | Format | Example |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | `null` | `null` | `null` |
 | `string` | Quoted, escaped, truncated at 256 chars | `"hello\r\nworld"` |
 | `int` | Plain | `42` |
@@ -243,7 +243,7 @@ Collection parameters are materialized at the assertion boundary (via `as IColle
 
 ### `Assert.AreEqual` (generic)
 
-```
+```text
 Assert.AreEqual(expected, actual)
 Expected values to be equal.
   expected: 42
@@ -252,7 +252,7 @@ Expected values to be equal.
 
 ### `Assert.AreEqual` (delta overload)
 
-```
+```text
 Assert.AreEqual(1.0m, 1.1m, ...)
 Expected difference to be no greater than 0.001.
   expected: 1.0m
@@ -262,7 +262,7 @@ Expected difference to be no greater than 0.001.
 
 ### `Assert.AreEqual` (string with culture)
 
-```
+```text
 Assert.AreEqual(expected, actual, ...)
 Case differs.
   expected:    "i"
@@ -273,7 +273,7 @@ Case differs.
 
 ### `Assert.IsNull`
 
-```
+```text
 Assert.IsNull(result)
 Expected value to be null.
   value: 42
@@ -281,7 +281,7 @@ Expected value to be null.
 
 ### `Assert.Throws`
 
-```
+```text
 Assert.Throws(action)
 Expected the specified exception type to be thrown.
   action: () => service.Process()
@@ -291,7 +291,7 @@ Expected the specified exception type to be thrown.
 
 ### `Assert.That` (comparison)
 
-```
+```text
 Assert.That(x > 10)
 x should be greater than 10
 Expected 5 to be greater than 10.
@@ -300,7 +300,7 @@ Expected 5 to be greater than 10.
 
 ### `CollectionAssert.AreEqual`
 
-```
+```text
 CollectionAssert.AreEqual
 Element at index 1 do not match.
   expected: 2
@@ -309,7 +309,7 @@ Element at index 1 do not match.
 
 ### `StringAssert.StartsWith`
 
-```
+```text
 StringAssert.StartsWith
 Expected string to start with the specified prefix.
   expected prefix: "Hello"
