@@ -412,7 +412,8 @@ internal sealed partial class TrxReportEngine
 
             // NOTE: In VSTest, MSTestDiscoverer.TmiTestId property is preferred if present.
             string id = guid.ToString();
-            string displayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
+            string testNodeDisplayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
+            string testResultDisplayName = RemoveInvalidXmlChar(nodeMessage.DisplayName)!;
             string executionId = Guid.NewGuid().ToString();
 
             // Results
@@ -420,7 +421,7 @@ internal sealed partial class TrxReportEngine
                 "UnitTestResult",
                 new XAttribute("executionId", executionId),
                 new XAttribute("testId", id),
-                new XAttribute("testName", displayName),
+                new XAttribute("testName", testResultDisplayName),
                 new XAttribute("computerName", _environment.MachineName));
 
             TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
@@ -563,7 +564,7 @@ internal sealed partial class TrxReportEngine
             // Add the test method to the test definitions if it's not already there
             if (uniqueTestDefinitionTestIds.Add(id))
             {
-                XElement unitTest = CreateUnitTestElementForTestDefinition(displayName, testAppModule, id, testNode, executionId);
+                XElement unitTest = CreateUnitTestElementForTestDefinition(testNodeDisplayName, testAppModule, id, testNode, executionId);
 
                 var testMethod = new XElement(
                     "TestMethod",
@@ -574,13 +575,13 @@ internal sealed partial class TrxReportEngine
                 (string className, string? testMethodName) = GetClassAndMethodName(testNode);
                 testMethod.SetAttributeValue("className", className);
 
-                // NOTE: Historically, MTP used to always use displayName here.
-                // While VSTest never uses displayName.
-                // The use of displayName here is very wrong.
+                // NOTE: Historically, MTP used to always use testNodeDisplayName here.
+                // While VSTest never uses testNodeDisplayName.
+                // The use of testNodeDisplayName here is very wrong.
                 // We keep it as a fallback if we cannot determine the testMethodName (when TestMethodIdentifierProperty isn't present).
                 // This will most likely be hit for NUnit.
                 // However, this is very wrong and we probably should fail if TestMethodIdentifierProperty isn't present.
-                testMethod.SetAttributeValue("name", testMethodName ?? displayName);
+                testMethod.SetAttributeValue("name", testMethodName ?? testNodeDisplayName);
 
                 unitTest.Add(testMethod);
 
