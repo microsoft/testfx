@@ -27,13 +27,16 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
               The generic test method 'NonParameterizedTestMethod' doesn't have arguments, so the generic parameter cannot be inferred\.
                 .+?
             failed ParameterizedMethodSimple \(1\) \((\d+s )?\d+ms\)
-              Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '1' and type 'System\.Byte'\.
+              Assert\.Fail
+              Test method 'ParameterizedMethodSimple' did run with parameter '1' and type 'System\.Byte'\.
                 .+?
             failed ParameterizedMethodSimple \(2\) \((\d+s )?\d+ms\)
-              Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter '2' and type 'System\.Int32'\.
+              Assert\.Fail
+              Test method 'ParameterizedMethodSimple' did run with parameter '2' and type 'System\.Int32'\.
                 .+?
             failed ParameterizedMethodSimple \("Hello world"\) \((\d+s )?\d+ms\)
-              Assert\.Fail failed\. Test method 'ParameterizedMethodSimple' did run with parameter 'Hello world' and type 'System\.String'\.
+              Assert\.Fail
+              Test method 'ParameterizedMethodSimple' did run with parameter 'Hello world' and type 'System\.String'\.
                 .+?
             failed ParameterizedMethodSimple \(null\) \((\d+s )?\d+ms\)
               Test method TestClass\.ParameterizedMethodSimple threw exception:
@@ -44,7 +47,8 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
               System\.InvalidOperationException: Found two conflicting types for generic parameter 'T2'\. The conflicting types are 'System\.Byte' and 'System\.Int32'\.
                 .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \(null,"Hello world","Hello again",3\) \((\d+s )?\d+ms\)
-              Assert\.Fail failed\. Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '<null>', 'Hello world', 'Hello again', '3' and generic types 'System\.Int32', 'System\.String'\.
+              Assert\.Fail
+              Test method 'ParameterizedMethodTwoGenericParametersAndFourMethodParameters' did run with parameters '<null>', 'Hello world', 'Hello again', '3' and generic types 'System\.Int32', 'System\.String'\.
                 .+?
             failed ParameterizedMethodTwoGenericParametersAndFourMethodParameters \("Hello hello","Hello world",null,null\) \((\d+s )?\d+ms\)
               Test method TestClass\.ParameterizedMethodTwoGenericParametersAndFourMethodParameters threw exception:
@@ -70,10 +74,12 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
               Cannot create an instance of T\[] because Type\.ContainsGenericParameters is true\.
                 .+?
             failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.String],System\.Collections\.Generic\.List`1\[System.String]\) \((\d+s )?\d+ms\)
-              Assert\.Fail failed\. Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[Hello, World] and second list \[Unit, Testing]
+              Assert\.Fail
+              Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[Hello, World] and second list \[Unit, Testing]
                 .+?
             failed ParameterizedMethodWithNestedGeneric \(System\.Collections\.Generic\.List`1\[System.Int32],System\.Collections\.Generic\.List`1\[System.Int32]\) \((\d+s )?\d+ms\)
-              Assert\.Fail failed\. Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[0, 1] and second list \[2, 3]
+              Assert\.Fail
+              Test method 'ParameterizedMethodWithNestedGeneric' did run with first list \[0, 1] and second list \[2, 3]
                 .+?
             """, RegexOptions.Singleline);
     }

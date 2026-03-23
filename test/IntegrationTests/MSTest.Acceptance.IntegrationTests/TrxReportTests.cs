@@ -35,10 +35,10 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
         Assert.Contains(@"<Message>", trxContent, trxContent);
         Assert.Contains(
             """
-            Assert.AreEqual failed.
+            Assert.AreEqual(1, 2)
             Expected values to be equal.
               expected: 1
-              actual: 2
+              actual:   2
             """,
             trxContent,
             trxContent);

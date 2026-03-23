@@ -18,10 +18,10 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
 
         // Assert
         testHostResult.AssertOutputContains("""
-              Assert.AreEqual failed.
+              Assert.AreEqual(1, 2)
               Expected values to be equal.
                 expected: 1
-                actual: 2
+                actual:   2
             """);
         testHostResult.AssertOutputContains("""
               Standard output
