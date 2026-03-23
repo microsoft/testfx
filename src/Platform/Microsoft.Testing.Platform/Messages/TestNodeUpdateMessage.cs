@@ -10,10 +10,24 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 /// </summary>
 /// <param name="sessionUid">The session UID.</param>
 /// <param name="testNode">The test node.</param>
+/// <param name="displayName">The display name for the test update.</param>
 /// <param name="parentTestNodeUid">The test node parent UID.</param>
-public sealed class TestNodeUpdateMessage(SessionUid sessionUid, TestNode testNode, TestNodeUid? parentTestNodeUid = null)
-    : DataWithSessionUid("TestNode update", "This data is used to report a TestNode state change.", sessionUid)
+#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
+public sealed class TestNodeUpdateMessage(SessionUid sessionUid, string displayName, TestNode testNode, TestNodeUid? parentTestNodeUid = null) :
+#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
+    DataWithSessionUid(displayName, "This data is used to report a TestNode state change.", sessionUid)
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestNodeUpdateMessage"/> class.
+    /// </summary>
+    /// <param name="sessionUid">The session UID.</param>
+    /// <param name="testNode">The test node.</param>
+    /// <param name="parentTestNodeUid">The test node parent UID.</param>
+    public TestNodeUpdateMessage(SessionUid sessionUid, TestNode testNode, TestNodeUid? parentTestNodeUid = null)
+        : this(sessionUid, testNode.DisplayName, testNode, parentTestNodeUid)
+    {
+    }
+
     /// <summary>
     /// Gets the test node.
     /// </summary>

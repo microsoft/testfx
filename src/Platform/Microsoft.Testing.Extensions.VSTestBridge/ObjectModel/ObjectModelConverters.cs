@@ -33,15 +33,14 @@ internal static class ObjectModelConverters
         Action<TestNode, TestCase> addAdditionalProperties,
         INamedFeatureCapability? namedFeatureCapability,
         ICommandLineOptions commandLineOptions,
-        IClientInfo clientInfo,
-        string? displayNameFromTestResult = null)
+        IClientInfo clientInfo)
     {
         string testNodeUid = useFullyQualifiedNameAsUid ? testCase.FullyQualifiedName : testCase.Id.ToString();
 
         TestNode testNode = new()
         {
             Uid = new TestNodeUid(testNodeUid),
-            DisplayName = displayNameFromTestResult ?? testCase.DisplayName ?? testCase.FullyQualifiedName,
+            DisplayName = testCase.DisplayName ?? testCase.FullyQualifiedName,
         };
 
         CopyCategoryAndTraits(testCase, testNode, isTrxEnabled);
@@ -132,7 +131,7 @@ internal static class ObjectModelConverters
         ICommandLineOptions commandLineOptions,
         IClientInfo clientInfo)
     {
-        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, addAdditionalProperties, namedFeatureCapability, commandLineOptions, clientInfo, testResult.DisplayName);
+        var testNode = testResult.TestCase.ToTestNode(isTrxEnabled, useFullyQualifiedNameAsUid, addAdditionalProperties, namedFeatureCapability, commandLineOptions, clientInfo);
 
         CopyCategoryAndTraits(testResult, testNode, isTrxEnabled);
 

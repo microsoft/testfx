@@ -135,7 +135,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
         // Publish node state change to Microsoft Testing Platform
         var testNode = testResult.ToTestNode(_isTrxEnabled, _adapterExtensionBase.UseFullyQualifiedNameAsTestNodeUid, _adapterExtensionBase.AddAdditionalProperties, _namedFeatureCapability, _commandLineOptions, _clientInfo);
 
-        var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testNode);
+        var testNodeChange = new TestNodeUpdateMessage(_session.SessionUid, testResult.DisplayName ?? testNode.DisplayName, testNode);
         _messageBus.PublishAsync(_adapterExtensionBase, testNodeChange).Await();
     }
 
