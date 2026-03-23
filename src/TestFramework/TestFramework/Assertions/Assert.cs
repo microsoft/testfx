@@ -126,7 +126,8 @@ public sealed partial class Assert
         if (type.IsPrimitive || value is decimal or DateTime or DateTimeOffset
             or TimeSpan or Guid or Enum)
         {
-            string formatted = EscapeNewlines(Truncate(value.ToString() ?? string.Empty, maxLength));
+            string formatted = EscapeNewlines(Truncate(
+                Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty, maxLength));
             string suffix = GetNumericTypeSuffix(value);
             return suffix.Length > 0 ? formatted + suffix : formatted;
         }
@@ -275,6 +276,7 @@ public sealed partial class Assert
         int enumeratedCount = 0;
         int currentLength = 0;
         bool truncated = false;
+        bool failedEnumeration = false;
 
         // Perf: wrap in try-catch so that faulting enumerators (e.g. collection modified during
         // iteration, or user-defined iterators that throw) don't bubble up from assertion formatting.
@@ -309,21 +311,30 @@ public sealed partial class Assert
         }
         catch (Exception)
         {
-            // If enumeration fails, report what we've collected so far
-            truncated = elements.Count > 0;
+            // If enumeration fails, report what we've collected so far.
+            // Only mark as truncated if we actually collected some elements,
+            // and rely on the failedEnumeration flag to handle the suffix.
+            failedEnumeration = true;
         }
 
         int totalCount = knownCount ?? enumeratedCount;
         int displayedCount = elements.Count;
 
         string elementList = string.Join(", ", elements);
-        if (truncated)
+        if (truncated || (failedEnumeration && displayedCount > 0))
         {
             int remaining = totalCount - displayedCount;
-            string remainingText = knownCount is null
-                ? $"{remaining}+"
-                : $"{remaining}";
-            elementList += $", ... {remainingText} more";
+            if (failedEnumeration)
+            {
+                elementList += ", ...";
+            }
+            else if (remaining > 0)
+            {
+                string remainingText = knownCount is null
+                    ? $"{remaining}+"
+                    : $"{remaining}";
+                elementList += $", ... {remainingText} more";
+            }
         }
 
         return $"[{elementList}]";
