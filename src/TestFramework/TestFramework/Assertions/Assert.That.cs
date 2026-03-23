@@ -78,7 +78,7 @@ public static partial class AssertExtensions
             case UnaryExpression unary when body.NodeType == ExpressionType.Not
                 && unary.Operand is not MethodCallExpression:
                 string innerName = GetCleanMemberName(unary.Operand);
-                return $"Expected {innerName} to be false.";
+                return string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatExpectedFalseFailNew, innerName);
 
             // Method calls: text.StartsWith("x"), list.Contains(item), etc.
             case MethodCallExpression methodCall:
@@ -87,7 +87,7 @@ public static partial class AssertExtensions
             // Bool member access: user.IsActive, flag
             case MemberExpression:
                 string memberName = GetCleanMemberName(body);
-                return $"Expected {memberName} to be true.";
+                return string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatExpectedTrueFailNew, memberName);
 
             default:
                 return FrameworkMessages.IsTrueFailNew;
@@ -101,12 +101,12 @@ public static partial class AssertExtensions
 
         return binary.NodeType switch
         {
-            ExpressionType.Equal => $"Expected {leftValue} to equal {rightValue}.",
-            ExpressionType.NotEqual => $"Expected {leftValue} to not equal {rightValue}.",
-            ExpressionType.GreaterThan => $"Expected {leftValue} to be greater than {rightValue}.",
-            ExpressionType.GreaterThanOrEqual => $"Expected {leftValue} to be greater than or equal to {rightValue}.",
-            ExpressionType.LessThan => $"Expected {leftValue} to be less than {rightValue}.",
-            ExpressionType.LessThanOrEqual => $"Expected {leftValue} to be less than or equal to {rightValue}.",
+            ExpressionType.Equal => string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatEqualFailNew, leftValue, rightValue),
+            ExpressionType.NotEqual => string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatNotEqualFailNew, leftValue, rightValue),
+            ExpressionType.GreaterThan => string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatGreaterThanFailNew, leftValue, rightValue),
+            ExpressionType.GreaterThanOrEqual => string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatGreaterThanOrEqualFailNew, leftValue, rightValue),
+            ExpressionType.LessThan => string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatLessThanFailNew, leftValue, rightValue),
+            ExpressionType.LessThanOrEqual => string.Format(CultureInfo.InvariantCulture, FrameworkMessages.AssertThatLessThanOrEqualFailNew, leftValue, rightValue),
             _ => FrameworkMessages.IsTrueFailNew,
         };
     }

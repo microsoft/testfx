@@ -218,8 +218,8 @@ public sealed partial class Assert
                 try
                 {
                     equalityHint = expected.Equals(actual)
-                        ? " Objects are equal."
-                        : " Objects are not equal.";
+                        ? FrameworkMessages.AreSameObjectsAreEqualHint
+                        : FrameworkMessages.AreSameObjectsAreNotEqualHint;
                 }
                 catch (Exception)
                 {

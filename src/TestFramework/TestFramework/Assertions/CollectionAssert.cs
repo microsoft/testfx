@@ -468,7 +468,7 @@ public sealed class CollectionAssert
         // Check whether one is null while the other is not.
         if (expected == null != (actual == null))
         {
-            string msg = "Expected collections to be equivalent.";
+            string msg = FrameworkMessages.AreEquivalentNullMismatchFailNew;
             msg += Assert.FormatAlignedParameters(
                 new Assert.StringPair("expected", expected is null ? "null" : "not null"),
                 new Assert.StringPair("actual", actual is null ? "null" : "not null"));

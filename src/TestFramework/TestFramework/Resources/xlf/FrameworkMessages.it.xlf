@@ -47,6 +47,11 @@
         <target state="translated">La lunghezza della stringa prevista è {0} ma era {1}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="AreEquivalentNullMismatchFailNew">
+        <source>Expected collections to be equivalent.</source>
+        <target state="new">Expected collections to be equivalent.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreNotEqualDeltaGreaterThanFailMsg">
         <source>Expected difference to be greater than {0}.</source>
         <target state="new">Expected difference to be greater than {0}.</target>
@@ -71,6 +76,56 @@
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
         <target state="translated">Non passare tipi valore a AreSame(). I valori convertiti in Object non saranno mai uguali. Usare AreEqual(). {0}</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameObjectsAreEqualHint">
+        <source> Objects are equal.</source>
+        <target state="new"> Objects are equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AreSameObjectsAreNotEqualHint">
+        <source> Objects are not equal.</source>
+        <target state="new"> Objects are not equal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatEqualFailNew">
+        <source>Expected {0} to equal {1}.</source>
+        <target state="new">Expected {0} to equal {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatExpectedFalseFailNew">
+        <source>Expected {0} to be false.</source>
+        <target state="new">Expected {0} to be false.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatExpectedTrueFailNew">
+        <source>Expected {0} to be true.</source>
+        <target state="new">Expected {0} to be true.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatGreaterThanFailNew">
+        <source>Expected {0} to be greater than {1}.</source>
+        <target state="new">Expected {0} to be greater than {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatGreaterThanOrEqualFailNew">
+        <source>Expected {0} to be greater than or equal to {1}.</source>
+        <target state="new">Expected {0} to be greater than or equal to {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatLessThanFailNew">
+        <source>Expected {0} to be less than {1}.</source>
+        <target state="new">Expected {0} to be less than {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatLessThanOrEqualFailNew">
+        <source>Expected {0} to be less than or equal to {1}.</source>
+        <target state="new">Expected {0} to be less than or equal to {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertThatNotEqualFailNew">
+        <source>Expected {0} to not equal {1}.</source>
+        <target state="new">Expected {0} to not equal {1}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty.</source>

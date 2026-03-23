@@ -371,4 +371,37 @@
   <data name="IsNegativeFailNew" xml:space="preserve">
     <value>Expected value to be negative.</value>
   </data>
+  <data name="AreSameObjectsAreEqualHint" xml:space="preserve">
+    <value> Objects are equal.</value>
+  </data>
+  <data name="AreSameObjectsAreNotEqualHint" xml:space="preserve">
+    <value> Objects are not equal.</value>
+  </data>
+  <data name="AreEquivalentNullMismatchFailNew" xml:space="preserve">
+    <value>Expected collections to be equivalent.</value>
+  </data>
+  <data name="AssertThatEqualFailNew" xml:space="preserve">
+    <value>Expected {0} to equal {1}.</value>
+  </data>
+  <data name="AssertThatNotEqualFailNew" xml:space="preserve">
+    <value>Expected {0} to not equal {1}.</value>
+  </data>
+  <data name="AssertThatGreaterThanFailNew" xml:space="preserve">
+    <value>Expected {0} to be greater than {1}.</value>
+  </data>
+  <data name="AssertThatGreaterThanOrEqualFailNew" xml:space="preserve">
+    <value>Expected {0} to be greater than or equal to {1}.</value>
+  </data>
+  <data name="AssertThatLessThanFailNew" xml:space="preserve">
+    <value>Expected {0} to be less than {1}.</value>
+  </data>
+  <data name="AssertThatLessThanOrEqualFailNew" xml:space="preserve">
+    <value>Expected {0} to be less than or equal to {1}.</value>
+  </data>
+  <data name="AssertThatExpectedTrueFailNew" xml:space="preserve">
+    <value>Expected {0} to be true.</value>
+  </data>
+  <data name="AssertThatExpectedFalseFailNew" xml:space="preserve">
+    <value>Expected {0} to be false.</value>
+  </data>
 </root>

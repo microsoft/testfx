@@ -99,7 +99,7 @@ public sealed partial class Assert
     }
 
     internal static string ReplaceNulls(object? input)
-        => input?.ToString() ?? string.Empty;
+        => input?.ToString() ?? "null";
 
     internal static string FormatValue<T>(T? value, int maxLength = 256)
     {
