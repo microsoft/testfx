@@ -122,8 +122,8 @@ public sealed class StringAssert
         {
             string msg = FrameworkMessages.ContainsStringFailNew;
             msg += Assert.FormatAlignedParameters(
-                (nameof(substring), Assert.FormatValue(substring)),
-                (nameof(value), Assert.FormatValue(value)));
+                new Assert.StringPair(nameof(substring), Assert.FormatValue(substring)),
+                new Assert.StringPair(nameof(value), Assert.FormatValue(value)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("StringAssert.Contains", msg);
         }
@@ -222,8 +222,8 @@ public sealed class StringAssert
         {
             string msg = FrameworkMessages.StartsWithFailNew;
             msg += Assert.FormatAlignedParameters(
-                ("expected prefix", Assert.FormatValue(substring)),
-                (nameof(value), Assert.FormatValue(value)));
+                new Assert.StringPair("expected prefix", Assert.FormatValue(substring)),
+                new Assert.StringPair(nameof(value), Assert.FormatValue(value)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("StringAssert.StartsWith", msg);
         }
@@ -322,8 +322,8 @@ public sealed class StringAssert
         {
             string msg = FrameworkMessages.EndsWithFailNew;
             msg += Assert.FormatAlignedParameters(
-                ("expected suffix", Assert.FormatValue(substring)),
-                (nameof(value), Assert.FormatValue(value)));
+                new Assert.StringPair("expected suffix", Assert.FormatValue(substring)),
+                new Assert.StringPair(nameof(value), Assert.FormatValue(value)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("StringAssert.EndsWith", msg);
         }
@@ -380,8 +380,8 @@ public sealed class StringAssert
         {
             string msg = FrameworkMessages.MatchesRegexFailNew;
             msg += Assert.FormatAlignedParameters(
-                (nameof(pattern), Assert.FormatValue(pattern)),
-                (nameof(value), Assert.FormatValue(value)));
+                new Assert.StringPair(nameof(pattern), Assert.FormatValue(pattern)),
+                new Assert.StringPair(nameof(value), Assert.FormatValue(value)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("StringAssert.Matches", msg);
         }
@@ -434,8 +434,8 @@ public sealed class StringAssert
         {
             string msg = FrameworkMessages.DoesNotMatchRegexFailNew;
             msg += Assert.FormatAlignedParameters(
-                (nameof(pattern), Assert.FormatValue(pattern)),
-                (nameof(value), Assert.FormatValue(value)));
+                new Assert.StringPair(nameof(pattern), Assert.FormatValue(pattern)),
+                new Assert.StringPair(nameof(value), Assert.FormatValue(value)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("StringAssert.DoesNotMatch", msg);
         }

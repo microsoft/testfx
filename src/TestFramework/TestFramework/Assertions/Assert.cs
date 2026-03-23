@@ -207,109 +207,6 @@ public sealed partial class Assert
             ? value.Replace("\r\n", "\\r\\n").Replace("\n", "\\n").Replace("\r", "\\r")
             : value;
 
-    private static bool IsExpressionRedundant(string expression, string formattedValue)
-    {
-        if (string.IsNullOrEmpty(expression))
-        {
-            return true;
-        }
-
-        // Exact match: expression "5" == formattedValue "5"
-        if (expression == formattedValue)
-        {
-            return true;
-        }
-
-        // Null literal: expression "null" vs formattedValue "null"
-        if (expression is "null" && formattedValue is "null")
-        {
-            return true;
-        }
-
-        // Boolean/true/false: expression "true" vs formattedValue "True"
-        if (string.Equals(expression, formattedValue, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        // Numeric literal in different notation (e.g., "100E-2" vs "1")
-        if (double.TryParse(expression, NumberStyles.Any, CultureInfo.InvariantCulture, out double exprNum)
-            && double.TryParse(formattedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double fmtNum)
-            && exprNum == fmtNum)
-        {
-            return true;
-        }
-
-        // C# string literal expression: @"\d+" or "\d+" vs formattedValue \d+
-        // Strip the string literal syntax and compare the inner content
-        string? innerContent = TryExtractStringLiteralContent(expression);
-        return innerContent is not null && innerContent == formattedValue;
-    }
-
-    /// <summary>
-    /// Tries to extract the string content from a C# string literal expression.
-    /// Returns the inner string value for @"..." and "..." literals, or null if not a string literal.
-    /// </summary>
-    private static string? TryExtractStringLiteralContent(string expression)
-    {
-        // Verbatim string: @"content"
-        if (expression.Length >= 3 && expression[0] == '@' && expression[1] == '"' && expression[expression.Length - 1] == '"')
-        {
-            return expression.Substring(2, expression.Length - 3).Replace("\"\"", "\"");
-        }
-
-        // Regular string: "content"
-        if (expression.Length >= 2 && expression[0] == '"' && expression[expression.Length - 1] == '"')
-        {
-            return expression.Substring(1, expression.Length - 2);
-        }
-
-        // Not a string literal
-        return null;
-    }
-
-    /// <summary>
-    /// Checks if the expression is a typed numeric literal (e.g., 1.0f, 1.1d, 0.001m, 2L)
-    /// or a well-known numeric constant (float.NaN, double.NaN) that is a more informative
-    /// representation than the plain ToString() value.
-    /// </summary>
-    private static bool IsExpressionMoreSpecificNumericLiteral(string expression, string formattedValue)
-    {
-        if (string.IsNullOrEmpty(expression) || expression.Length < 2)
-        {
-            return false;
-        }
-
-        // Well-known numeric constants: float.NaN, double.NaN, float.PositiveInfinity, etc.
-        if (expression.StartsWith("float.", StringComparison.Ordinal) || expression.StartsWith("double.", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        // Check if expression ends with a numeric type suffix
-        char lastChar = expression[expression.Length - 1];
-        if (lastChar is not ('f' or 'F' or 'd' or 'D' or 'm' or 'M' or 'L' or 'l' or 'u' or 'U'))
-        {
-            return false;
-        }
-
-        // The formatted value should be the numeric part without the suffix
-        // e.g., expression "1.0d" -> formattedValue "1" or "1.0"
-        string numericPart = expression.Substring(0, expression.Length - 1);
-
-        // Handle UL/ul suffix (two chars)
-        if (numericPart.Length > 0 && numericPart[numericPart.Length - 1] is 'u' or 'U' or 'l' or 'L')
-        {
-            numericPart = numericPart.Substring(0, numericPart.Length - 1);
-        }
-
-        // Check if removing the suffix gives the formatted value, or if they represent the same number
-        return numericPart == formattedValue
-            || (double.TryParse(numericPart, NumberStyles.Any, CultureInfo.InvariantCulture, out double exprNum)
-                && double.TryParse(formattedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double valNum)
-                && exprNum == valNum);
-    }
-
     internal static string FormatParameter<T>(string paramName, string expression, T? value)
     {
         string formattedValue = FormatValue(value);
@@ -432,29 +329,36 @@ public sealed partial class Assert
         return $"[{elementList}]";
     }
 
-    internal static string FormatParameterWithValue(string paramName, string expression, string formattedValue)
-        => $"  {paramName}: {formattedValue}";
-
     /// <summary>
-    /// Formats a parameter line, checking expression redundancy against a base value
-    /// while displaying a different (enriched) display value.
+    /// A simple name-value pair used by <see cref="FormatCallSite"/> and <see cref="FormatAlignedParameters"/>
+    /// to avoid relying on System.ValueTuple which is not available on net462.
     /// </summary>
-    internal static string FormatParameterWithExpressionCheck(string paramName, string expression, string baseValue, string displayValue)
-        => $"  {paramName}: {displayValue}";
+    internal readonly struct StringPair
+    {
+        public StringPair(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
+
+        public string Name { get; }
+
+        public string Value { get; }
+    }
 
     /// <summary>
     /// Builds the "Assert.Method(expr1, expr2)" call site string for the first line.
     /// Only the primary/semantic parameters are included (not message, culture, delta, etc.).
     /// </summary>
-    internal static string FormatCallSite(string methodName, params (string ParamName, string Expression)[] args)
+    internal static string FormatCallSite(string methodName, params StringPair[] args)
     {
         var sb = new StringBuilder(methodName);
         sb.Append('(');
         bool hasVisibleArgs = false;
         for (int i = 0; i < args.Length; i++)
         {
-            string expression = args[i].Expression;
-            string paramName = args[i].ParamName;
+            string expression = args[i].Value;
+            string paramName = args[i].Name;
 
             // Sentinel "..." indicates additional parameters were omitted.
             if (paramName == "...")
@@ -488,26 +392,26 @@ public sealed partial class Assert
     /// Formats multiple parameter lines with aligned values.
     /// All labels are padded so that values start at the same column.
     /// </summary>
-    internal static string FormatAlignedParameters(params (string Label, string Value)[] parameters)
+    internal static string FormatAlignedParameters(params StringPair[] parameters)
     {
         int maxLabelLength = 0;
-        foreach ((string label, string _) in parameters)
+        for (int i = 0; i < parameters.Length; i++)
         {
-            if (label.Length > maxLabelLength)
+            if (parameters[i].Name.Length > maxLabelLength)
             {
-                maxLabelLength = label.Length;
+                maxLabelLength = parameters[i].Name.Length;
             }
         }
 
         var sb = new StringBuilder();
-        foreach ((string label, string value) in parameters)
+        for (int i = 0; i < parameters.Length; i++)
         {
             sb.Append(Environment.NewLine);
             sb.Append("  ");
-            sb.Append(label);
+            sb.Append(parameters[i].Name);
             sb.Append(':');
-            sb.Append(new string(' ', maxLabelLength - label.Length + 1));
-            sb.Append(value);
+            sb.Append(new string(' ', maxLabelLength - parameters[i].Name.Length + 1));
+            sb.Append(parameters[i].Value);
         }
 
         return sb.ToString();

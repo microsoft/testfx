@@ -44,11 +44,11 @@ public sealed partial class Assert
 
         if (!pattern.IsMatch(value))
         {
-            string callSite = FormatCallSite("Assert.MatchesRegex", (nameof(pattern), patternExpression), (nameof(value), valueExpression));
+            string callSite = FormatCallSite("Assert.MatchesRegex", new StringPair(nameof(pattern), patternExpression), new StringPair(nameof(value), valueExpression));
             string msg = FrameworkMessages.MatchesRegexFailNew;
             msg += FormatAlignedParameters(
-                (nameof(pattern), FormatValue(pattern)),
-                (nameof(value), FormatValue(value)));
+                new StringPair(nameof(pattern), FormatValue(pattern)),
+                new StringPair(nameof(value), FormatValue(value)));
             msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
@@ -124,11 +124,11 @@ public sealed partial class Assert
 
         if (pattern.IsMatch(value))
         {
-            string callSite = FormatCallSite("Assert.DoesNotMatchRegex", (nameof(pattern), patternExpression), (nameof(value), valueExpression));
+            string callSite = FormatCallSite("Assert.DoesNotMatchRegex", new StringPair(nameof(pattern), patternExpression), new StringPair(nameof(value), valueExpression));
             string msg = FrameworkMessages.DoesNotMatchRegexFailNew;
             msg += FormatAlignedParameters(
-                (nameof(pattern), FormatValue(pattern)),
-                (nameof(value), FormatValue(value)));
+                new StringPair(nameof(pattern), FormatValue(pattern)),
+                new StringPair(nameof(value), FormatValue(value)));
             msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }

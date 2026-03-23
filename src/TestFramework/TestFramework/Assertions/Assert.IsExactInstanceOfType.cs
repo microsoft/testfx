@@ -322,7 +322,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsExactInstanceOfType", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsExactInstanceOfType", new StringPair(nameof(value), valueExpression));
         string message;
 
         if (expectedType is null)
@@ -403,7 +403,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsNotExactInstanceOfType", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsNotExactInstanceOfType", new StringPair(nameof(value), valueExpression));
         string message;
 
         if (wrongType is null)

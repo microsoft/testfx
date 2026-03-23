@@ -225,7 +225,7 @@ public sealed class CollectionAssert
                     // Found a second occurrence of null.
                     string msg = FrameworkMessages.AllItemsAreUniqueFailMsg;
                     msg += Assert.FormatAlignedParameters(
-                        ("duplicate", FrameworkMessages.Common_NullInMessages));
+                        new Assert.StringPair("duplicate", FrameworkMessages.Common_NullInMessages));
                     msg = Assert.AppendUserMessage(msg, message);
                     Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", msg);
                 }
@@ -236,7 +236,7 @@ public sealed class CollectionAssert
                 {
                     string msg = FrameworkMessages.AllItemsAreUniqueFailMsg;
                     msg += Assert.FormatAlignedParameters(
-                        ("duplicate", Assert.ReplaceNulls(current)));
+                        new Assert.StringPair("duplicate", Assert.ReplaceNulls(current)));
                     msg = Assert.AppendUserMessage(msg, message);
                     Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", msg);
                 }
@@ -489,8 +489,8 @@ public sealed class CollectionAssert
         {
             string msg = FrameworkMessages.ElementNumbersDontMatch;
             msg += Assert.FormatAlignedParameters(
-                ("expected count", expectedCollectionCount.ToString(CultureInfo.CurrentCulture)),
-                ("actual count", actualCollectionCount.ToString(CultureInfo.CurrentCulture)));
+                new Assert.StringPair("expected count", expectedCollectionCount.ToString(CultureInfo.CurrentCulture)),
+                new Assert.StringPair("actual count", actualCollectionCount.ToString(CultureInfo.CurrentCulture)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", msg);
         }
@@ -506,9 +506,9 @@ public sealed class CollectionAssert
         {
             string msg = FrameworkMessages.ActualHasMismatchedElements;
             msg += Assert.FormatAlignedParameters(
-                ("element", Assert.ReplaceNulls(mismatchedElement)),
-                ("expected occurrences", expectedCount.ToString(CultureInfo.CurrentCulture)),
-                ("actual occurrences", actualCount.ToString(CultureInfo.CurrentCulture)));
+                new Assert.StringPair("element", Assert.ReplaceNulls(mismatchedElement)),
+                new Assert.StringPair("expected occurrences", expectedCount.ToString(CultureInfo.CurrentCulture)),
+                new Assert.StringPair("actual occurrences", actualCount.ToString(CultureInfo.CurrentCulture)));
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", msg);
         }
@@ -734,8 +734,8 @@ public sealed class CollectionAssert
                     FrameworkMessages.ElementTypesAtIndexDontMatch,
                     i);
                 msg += Assert.FormatAlignedParameters(
-                    ("expected type", Assert.FormatType(expectedType)),
-                    ("actual type", Assert.FormatType(element.GetType())));
+                    new Assert.StringPair("expected type", Assert.FormatType(expectedType)),
+                    new Assert.StringPair("actual type", Assert.FormatType(element.GetType())));
                 msg = Assert.AppendUserMessage(msg, message);
                 Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", msg);
             }
@@ -1212,8 +1212,8 @@ public sealed class CollectionAssert
                         FrameworkMessages.ElementsAtIndexDontMatch,
                         position)
                         + Assert.FormatAlignedParameters(
-                            ("expected", Assert.ReplaceNulls(curExpected)),
-                            ("actual", Assert.ReplaceNulls(curActual)));
+                            new Assert.StringPair("expected", Assert.ReplaceNulls(curExpected)),
+                            new Assert.StringPair("actual", Assert.ReplaceNulls(curActual)));
                     return false;
                 }
             }

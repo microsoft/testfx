@@ -321,7 +321,7 @@ public sealed partial class Assert
     {
         // Materialize non-ICollection enumerables to prevent multiple enumeration
         // that could yield different results or fail on second pass.
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (snapshot.Count == expected)
         {
             return;
@@ -336,12 +336,12 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertCountFailed(string assertionName, int expectedCount, int actualCount, IEnumerable collection, string? userMessage, string collectionExpression)
     {
-        string callSite = FormatCallSite($"Assert.{assertionName}", ("collection", collectionExpression));
+        string callSite = FormatCallSite($"Assert.{assertionName}", new StringPair("collection", collectionExpression));
         string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.HasCountFailNew, expectedCount, actualCount);
         msg += FormatCollectionParameter(collectionExpression, collection);
         msg += FormatAlignedParameters(
-            ("expected count", expectedCount.ToString(CultureInfo.InvariantCulture)),
-            ("actual count", actualCount.ToString(CultureInfo.InvariantCulture)));
+            new StringPair("expected count", expectedCount.ToString(CultureInfo.InvariantCulture)),
+            new StringPair("actual count", actualCount.ToString(CultureInfo.InvariantCulture)));
         msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
@@ -349,7 +349,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
-        string callSite = FormatCallSite("Assert.IsNotEmpty", ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.IsNotEmpty", new StringPair("collection", collectionExpression));
         string msg = FrameworkMessages.IsNotEmptyFailNew;
         msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);

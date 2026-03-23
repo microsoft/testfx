@@ -76,11 +76,11 @@ public sealed partial class Assert
         CheckParameterNotNull(expectedPrefix, "Assert.StartsWith", "expectedPrefix");
         if (!value.StartsWith(expectedPrefix, comparisonType))
         {
-            string callSite = FormatCallSite("Assert.StartsWith", (nameof(expectedPrefix), expectedPrefixExpression), (nameof(value), valueExpression));
+            string callSite = FormatCallSite("Assert.StartsWith", new StringPair(nameof(expectedPrefix), expectedPrefixExpression), new StringPair(nameof(value), valueExpression));
             string msg = FrameworkMessages.StartsWithFailNew;
             msg += FormatAlignedParameters(
-                ("expected prefix", FormatValue(expectedPrefix)),
-                (nameof(value), FormatValue(value)));
+                new StringPair("expected prefix", FormatValue(expectedPrefix)),
+                new StringPair(nameof(value), FormatValue(value)));
             msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
@@ -152,11 +152,11 @@ public sealed partial class Assert
         CheckParameterNotNull(notExpectedPrefix, "Assert.DoesNotStartWith", "notExpectedPrefix");
         if (value.StartsWith(notExpectedPrefix, comparisonType))
         {
-            string callSite = FormatCallSite("Assert.DoesNotStartWith", (nameof(notExpectedPrefix), notExpectedPrefixExpression), (nameof(value), valueExpression));
+            string callSite = FormatCallSite("Assert.DoesNotStartWith", new StringPair(nameof(notExpectedPrefix), notExpectedPrefixExpression), new StringPair(nameof(value), valueExpression));
             string msg = FrameworkMessages.DoesNotStartWithFailNew;
             msg += FormatAlignedParameters(
-                ("unwanted prefix", FormatValue(notExpectedPrefix)),
-                (nameof(value), FormatValue(value)));
+                new StringPair("unwanted prefix", FormatValue(notExpectedPrefix)),
+                new StringPair(nameof(value), FormatValue(value)));
             msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }

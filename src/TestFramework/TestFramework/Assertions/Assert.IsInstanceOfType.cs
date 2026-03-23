@@ -329,7 +329,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsInstanceOfType", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsInstanceOfType", new StringPair(nameof(value), valueExpression));
         string message;
 
         if (expectedType is null)
@@ -412,7 +412,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsNotInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsNotInstanceOfType", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsNotInstanceOfType", new StringPair(nameof(value), valueExpression));
         string message;
 
         if (wrongType is null)

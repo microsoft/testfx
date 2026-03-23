@@ -291,11 +291,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsGreaterThanFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsGreaterThan", (nameof(lowerBound), lowerBoundExpression), (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsGreaterThan", new StringPair(nameof(lowerBound), lowerBoundExpression), new StringPair(nameof(value), valueExpression));
         string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsGreaterThanFailNew, FormatValue(value), FormatValue(lowerBound));
         msg += FormatAlignedParameters(
-            ("lower bound", FormatValue(lowerBound)),
-            (nameof(value), FormatValue(value)));
+            new StringPair("lower bound", FormatValue(lowerBound)),
+            new StringPair(nameof(value), FormatValue(value)));
         msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
@@ -303,11 +303,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsGreaterThanOrEqualToFailed<T>(T lowerBound, T value, string? userMessage, string lowerBoundExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsGreaterThanOrEqualTo", (nameof(lowerBound), lowerBoundExpression), (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsGreaterThanOrEqualTo", new StringPair(nameof(lowerBound), lowerBoundExpression), new StringPair(nameof(value), valueExpression));
         string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsGreaterThanOrEqualToFailNew, FormatValue(value), FormatValue(lowerBound));
         msg += FormatAlignedParameters(
-            ("lower bound", FormatValue(lowerBound)),
-            (nameof(value), FormatValue(value)));
+            new StringPair("lower bound", FormatValue(lowerBound)),
+            new StringPair(nameof(value), FormatValue(value)));
         msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
@@ -315,11 +315,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsLessThanFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsLessThan", (nameof(upperBound), upperBoundExpression), (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsLessThan", new StringPair(nameof(upperBound), upperBoundExpression), new StringPair(nameof(value), valueExpression));
         string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsLessThanFailNew, FormatValue(value), FormatValue(upperBound));
         msg += FormatAlignedParameters(
-            ("upper bound", FormatValue(upperBound)),
-            (nameof(value), FormatValue(value)));
+            new StringPair("upper bound", FormatValue(upperBound)),
+            new StringPair(nameof(value), FormatValue(value)));
         msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
@@ -327,11 +327,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsLessThanOrEqualToFailed<T>(T upperBound, T value, string? userMessage, string upperBoundExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsLessThanOrEqualTo", (nameof(upperBound), upperBoundExpression), (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsLessThanOrEqualTo", new StringPair(nameof(upperBound), upperBoundExpression), new StringPair(nameof(value), valueExpression));
         string msg = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsLessThanOrEqualToFailNew, FormatValue(value), FormatValue(upperBound));
         msg += FormatAlignedParameters(
-            ("upper bound", FormatValue(upperBound)),
-            (nameof(value), FormatValue(value)));
+            new StringPair("upper bound", FormatValue(upperBound)),
+            new StringPair(nameof(value), FormatValue(value)));
         msg = AppendUserMessage(msg, userMessage);
         ThrowAssertFailed(callSite, msg);
     }
@@ -339,7 +339,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsPositiveFailed<T>(T value, string? userMessage, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsPositive", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsPositive", new StringPair(nameof(value), valueExpression));
         string msg = FrameworkMessages.IsPositiveFailNew;
         msg += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         msg = AppendUserMessage(msg, userMessage);
@@ -349,7 +349,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsNegativeFailed<T>(T value, string? userMessage, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsNegative", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsNegative", new StringPair(nameof(value), valueExpression));
         string msg = FrameworkMessages.IsNegativeFailNew;
         msg += Environment.NewLine + FormatParameter(nameof(value), valueExpression, value);
         msg = AppendUserMessage(msg, userMessage);

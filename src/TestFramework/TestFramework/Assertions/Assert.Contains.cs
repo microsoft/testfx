@@ -270,7 +270,7 @@ public sealed partial class Assert
     {
         // Materialize non-ICollection enumerables to prevent multiple enumeration
         // that could yield different results or fail on second pass.
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (!snapshot.Contains(expected))
         {
             ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
@@ -327,7 +327,7 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (!snapshot.Contains(expected, comparer))
         {
             ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
@@ -384,7 +384,7 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (!snapshot.Any(predicate))
         {
             ThrowAssertContainsPredicateFailed(message, predicateExpression, collectionExpression, snapshot);
@@ -517,7 +517,7 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (snapshot.Contains(notExpected))
         {
             ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
@@ -571,7 +571,7 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (snapshot.Contains(notExpected, comparer))
         {
             ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
@@ -626,7 +626,7 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? new List<T>(collection);
+        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
         if (snapshot.Any(predicate))
         {
             ThrowAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression, snapshot);
@@ -780,7 +780,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertSingleMatchFailed(int actualCount, string? userMessage, string predicateExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string callSite = FormatCallSite("Assert.ContainsSingle", ("predicate", predicateExpression), ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.ContainsSingle", new StringPair("predicate", predicateExpression), new StringPair("collection", collectionExpression));
         string message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsSingleMatchFailNew, actualCount);
         if (collectionValue is not null)
         {
@@ -794,7 +794,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertContainsSingleFailed(int actualCount, string? userMessage, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string callSite = FormatCallSite("Assert.ContainsSingle", ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.ContainsSingle", new StringPair("collection", collectionExpression));
         string message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsSingleFailNew, actualCount);
         if (collectionValue is not null)
         {
@@ -808,7 +808,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertContainsItemFailed(string? userMessage, string expectedExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string callSite = FormatCallSite("Assert.Contains", ("expected", expectedExpression), ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.Contains", new StringPair("expected", expectedExpression), new StringPair("collection", collectionExpression));
         string message = FrameworkMessages.ContainsItemFailNew;
         if (collectionValue is not null)
         {
@@ -822,7 +822,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertContainsPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string callSite = FormatCallSite("Assert.Contains", ("predicate", predicateExpression), ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.Contains", new StringPair("predicate", predicateExpression), new StringPair("collection", collectionExpression));
         string message = FrameworkMessages.ContainsPredicateFailNew;
         if (collectionValue is not null)
         {
@@ -836,7 +836,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertDoesNotContainItemFailed(string? userMessage, string notExpectedExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string callSite = FormatCallSite("Assert.DoesNotContain", ("notExpected", notExpectedExpression), ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.DoesNotContain", new StringPair("notExpected", notExpectedExpression), new StringPair("collection", collectionExpression));
         string message = FrameworkMessages.DoesNotContainItemFailNew;
         if (collectionValue is not null)
         {
@@ -850,7 +850,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertDoesNotContainPredicateFailed(string? userMessage, string predicateExpression, string collectionExpression, IEnumerable? collectionValue = null)
     {
-        string callSite = FormatCallSite("Assert.DoesNotContain", ("predicate", predicateExpression), ("collection", collectionExpression));
+        string callSite = FormatCallSite("Assert.DoesNotContain", new StringPair("predicate", predicateExpression), new StringPair("collection", collectionExpression));
         string message = FrameworkMessages.DoesNotContainPredicateFailNew;
         if (collectionValue is not null)
         {
@@ -864,11 +864,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertStringContainsFailed(string value, string substring, string? userMessage, string substringExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.Contains", (nameof(substring), substringExpression), (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.Contains", new StringPair(nameof(substring), substringExpression), new StringPair(nameof(value), valueExpression));
         string message = FrameworkMessages.ContainsStringFailNew;
         message += FormatAlignedParameters(
-            (nameof(substring), FormatValue(substring)),
-            (nameof(value), FormatValue(value)));
+            new StringPair(nameof(substring), FormatValue(substring)),
+            new StringPair(nameof(value), FormatValue(value)));
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
@@ -876,11 +876,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertStringDoesNotContainFailed(string value, string substring, string? userMessage, string substringExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.DoesNotContain", (nameof(substring), substringExpression), (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.DoesNotContain", new StringPair(nameof(substring), substringExpression), new StringPair(nameof(value), valueExpression));
         string message = FrameworkMessages.DoesNotContainStringFailNew;
         message += FormatAlignedParameters(
-            (nameof(substring), FormatValue(substring)),
-            (nameof(value), FormatValue(value)));
+            new StringPair(nameof(substring), FormatValue(substring)),
+            new StringPair(nameof(value), FormatValue(value)));
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
@@ -888,11 +888,11 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertIsInRangeFailed<T>(T value, T minValue, T maxValue, string? userMessage, string minValueExpression, string maxValueExpression, string valueExpression)
     {
-        string callSite = FormatCallSite("Assert.IsInRange", (nameof(value), valueExpression));
+        string callSite = FormatCallSite("Assert.IsInRange", new StringPair(nameof(value), valueExpression));
         string message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFailNew, FormatValue(value), FormatValue(minValue), FormatValue(maxValue));
         message += FormatAlignedParameters(
-            ("range", $"[{FormatValue(minValue)}, {FormatValue(maxValue)}]"),
-            (nameof(value), FormatValue(value)));
+            new StringPair("range", $"[{FormatValue(minValue)}, {FormatValue(maxValue)}]"),
+            new StringPair(nameof(value), FormatValue(value)));
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }

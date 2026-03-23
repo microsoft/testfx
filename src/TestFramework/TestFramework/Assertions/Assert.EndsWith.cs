@@ -76,11 +76,11 @@ public sealed partial class Assert
         CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
         if (!value.EndsWith(expectedSuffix, comparisonType))
         {
-            string callSite = FormatCallSite("Assert.EndsWith", (nameof(expectedSuffix), expectedSuffixExpression), (nameof(value), valueExpression));
+            string callSite = FormatCallSite("Assert.EndsWith", new StringPair(nameof(expectedSuffix), expectedSuffixExpression), new StringPair(nameof(value), valueExpression));
             string msg = FrameworkMessages.EndsWithFailNew;
             msg += FormatAlignedParameters(
-                ("expected suffix", FormatValue(expectedSuffix)),
-                (nameof(value), FormatValue(value)));
+                new StringPair("expected suffix", FormatValue(expectedSuffix)),
+                new StringPair(nameof(value), FormatValue(value)));
             msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }
@@ -154,11 +154,11 @@ public sealed partial class Assert
         CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
         if (value.EndsWith(notExpectedSuffix, comparisonType))
         {
-            string callSite = FormatCallSite("Assert.DoesNotEndWith", (nameof(notExpectedSuffix), notExpectedSuffixExpression), (nameof(value), valueExpression));
+            string callSite = FormatCallSite("Assert.DoesNotEndWith", new StringPair(nameof(notExpectedSuffix), notExpectedSuffixExpression), new StringPair(nameof(value), valueExpression));
             string msg = FrameworkMessages.DoesNotEndWithFailNew;
             msg += FormatAlignedParameters(
-                ("unwanted suffix", FormatValue(notExpectedSuffix)),
-                (nameof(value), FormatValue(value)));
+                new StringPair("unwanted suffix", FormatValue(notExpectedSuffix)),
+                new StringPair(nameof(value), FormatValue(value)));
             msg = AppendUserMessage(msg, message);
             ThrowAssertFailed(callSite, msg);
         }

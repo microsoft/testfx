@@ -116,24 +116,21 @@ public static partial class AssertExtensions
         string methodName = methodCall.Method.Name;
 
         // String-specific methods
-        if (methodCall.Object is not null && methodCall.Object.Type == typeof(string))
-        {
-            return methodName switch
+        return methodCall.Object is not null && methodCall.Object.Type == typeof(string)
+            ? methodName switch
             {
                 "StartsWith" => FrameworkMessages.StartsWithFailNew,
                 "EndsWith" => FrameworkMessages.EndsWithFailNew,
                 nameof(string.Contains) => FrameworkMessages.ContainsStringFailNew,
                 _ => FrameworkMessages.IsTrueFailNew,
+            }
+            : methodName switch
+            {
+                nameof(string.Contains) => FrameworkMessages.ContainsItemFailNew,
+                "All" => FrameworkMessages.AllMatchPredicateFailNew,
+                "Any" => FrameworkMessages.ContainsPredicateFailNew,
+                _ => FrameworkMessages.IsTrueFailNew,
             };
-        }
-
-        return methodName switch
-        {
-            nameof(string.Contains) => FrameworkMessages.ContainsItemFailNew,
-            "All" => FrameworkMessages.AllMatchPredicateFailNew,
-            "Any" => FrameworkMessages.ContainsPredicateFailNew,
-            _ => FrameworkMessages.IsTrueFailNew,
-        };
     }
 
     private static string TryEvaluateFormatted(Expression expr)

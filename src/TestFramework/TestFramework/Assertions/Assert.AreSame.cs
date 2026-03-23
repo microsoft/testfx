@@ -188,7 +188,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreSameFailed<T>(T? expected, T? actual, string? userMessage, string expectedExpression, string actualExpression)
     {
-        string callSite = FormatCallSite("Assert.AreSame", (nameof(expected), expectedExpression), (nameof(actual), actualExpression));
+        string callSite = FormatCallSite("Assert.AreSame", new StringPair(nameof(expected), expectedExpression), new StringPair(nameof(actual), actualExpression));
 
         // When both values have the same string representation, include hash codes
         // to help the user understand they are different object instances.
@@ -231,8 +231,8 @@ public sealed partial class Assert
         }
 
         message += FormatAlignedParameters(
-            (nameof(expected), expectedValue),
-            (nameof(actual), actualValue));
+            new StringPair(nameof(expected), expectedValue),
+            new StringPair(nameof(actual), actualValue));
 
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
@@ -289,7 +289,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ThrowAssertAreNotSameFailed<T>(T? notExpected, T? actual, string? userMessage, string notExpectedExpression, string actualExpression)
     {
-        string callSite = FormatCallSite("Assert.AreNotSame", (nameof(notExpected), notExpectedExpression), (nameof(actual), actualExpression));
+        string callSite = FormatCallSite("Assert.AreNotSame", new StringPair(nameof(notExpected), notExpectedExpression), new StringPair(nameof(actual), actualExpression));
         string message = FrameworkMessages.AreNotSameFailNew;
 
         string notExpectedFormatted = FormatValue(notExpected);
@@ -304,8 +304,8 @@ public sealed partial class Assert
         }
 
         message += FormatAlignedParameters(
-            ("not expected", notExpectedFormatted),
-            (nameof(actual), actualFormatted));
+            new StringPair("not expected", notExpectedFormatted),
+            new StringPair(nameof(actual), actualFormatted));
         message = AppendUserMessage(message, userMessage);
         ThrowAssertFailed(callSite, message);
     }
