@@ -137,6 +137,9 @@ public static partial class AssertExtensions
     {
         try
         {
+            // Note: This re-evaluates the sub-expression, which can re-run user code.
+            // This is acceptable because we only reach this path when the assertion has
+            // already failed, and the values are used solely for diagnostic display.
             object? value = Expression.Lambda(expr).Compile().DynamicInvoke();
             return FormatValue(value);
         }

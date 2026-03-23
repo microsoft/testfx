@@ -116,7 +116,7 @@ public sealed partial class Assert
         // For collections, show a preview with element values
         if (value is IEnumerable enumerable)
         {
-            return FormatCollectionPreview(enumerable);
+            return FormatCollectionPreview(enumerable, maxLength);
         }
 
         // Always use the runtime type for non-null values so that interface/base-class

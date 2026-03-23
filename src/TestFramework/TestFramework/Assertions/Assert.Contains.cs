@@ -268,12 +268,22 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        // Materialize non-ICollection enumerables to prevent multiple enumeration
-        // that could yield different results or fail on second pass.
-        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
-        if (!snapshot.Contains(expected))
+        if (collection is ICollection<T> col)
         {
-            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
+            if (!col.Contains(expected))
+            {
+                ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, col);
+            }
+        }
+        else
+        {
+            // Materialize to prevent multiple enumeration and to provide
+            // the collection preview in the failure message.
+            ICollection<T> snapshot = [.. collection];
+            if (!snapshot.Contains(expected))
+            {
+                ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
+            }
         }
     }
 
@@ -327,10 +337,20 @@ public sealed partial class Assert
     /// </param>
     public static void Contains<T>(T expected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
-        if (!snapshot.Contains(expected, comparer))
+        if (collection is ICollection<T> col)
         {
-            ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
+            if (!col.Contains(expected, comparer))
+            {
+                ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, col);
+            }
+        }
+        else
+        {
+            ICollection<T> snapshot = [.. collection];
+            if (!snapshot.Contains(expected, comparer))
+            {
+                ThrowAssertContainsItemFailed(message, expectedExpression, collectionExpression, snapshot);
+            }
         }
     }
 
@@ -517,10 +537,20 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
-        if (snapshot.Contains(notExpected))
+        if (collection is ICollection<T> col)
         {
-            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
+            if (col.Contains(notExpected))
+            {
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, col);
+            }
+        }
+        else
+        {
+            ICollection<T> snapshot = [.. collection];
+            if (snapshot.Contains(notExpected))
+            {
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
+            }
         }
     }
 
@@ -571,10 +601,20 @@ public sealed partial class Assert
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
     {
-        ICollection<T> snapshot = collection as ICollection<T> ?? [.. collection];
-        if (snapshot.Contains(notExpected, comparer))
+        if (collection is ICollection<T> col)
         {
-            ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
+            if (col.Contains(notExpected, comparer))
+            {
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, col);
+            }
+        }
+        else
+        {
+            ICollection<T> snapshot = [.. collection];
+            if (snapshot.Contains(notExpected, comparer))
+            {
+                ThrowAssertDoesNotContainItemFailed(message, notExpectedExpression, collectionExpression, snapshot);
+            }
         }
     }
 
@@ -771,7 +811,7 @@ public sealed partial class Assert
 
         if (value.CompareTo(minValue) < 0 || value.CompareTo(maxValue) > 0)
         {
-            ThrowAssertIsInRangeFailed(value, minValue, maxValue, message, minValueExpression, maxValueExpression, valueExpression);
+            ThrowAssertIsInRangeFailed(value, minValue, maxValue, message, valueExpression);
         }
     }
 
@@ -886,7 +926,7 @@ public sealed partial class Assert
     }
 
     [DoesNotReturn]
-    private static void ThrowAssertIsInRangeFailed<T>(T value, T minValue, T maxValue, string? userMessage, string minValueExpression, string maxValueExpression, string valueExpression)
+    private static void ThrowAssertIsInRangeFailed<T>(T value, T minValue, T maxValue, string? userMessage, string valueExpression)
     {
         string callSite = FormatCallSite("Assert.IsInRange", new StringPair(nameof(value), valueExpression));
         string message = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsInRangeFailNew, FormatValue(value), FormatValue(minValue), FormatValue(maxValue));

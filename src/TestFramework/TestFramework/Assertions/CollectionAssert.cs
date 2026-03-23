@@ -236,7 +236,7 @@ public sealed class CollectionAssert
                 {
                     string msg = FrameworkMessages.AllItemsAreUniqueFailMsg;
                     msg += Assert.FormatAlignedParameters(
-                        new Assert.StringPair("duplicate", Assert.ReplaceNulls(current)));
+                        new Assert.StringPair("duplicate", Assert.FormatValue(current)));
                     msg = Assert.AppendUserMessage(msg, message);
                     Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", msg);
                 }
@@ -295,7 +295,7 @@ public sealed class CollectionAssert
         Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
         if (!isSubsetValue.Item1)
         {
-            string missingElements = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
+            string missingElements = string.Join(", ", isSubsetValue.Item2.Select(item => Assert.FormatValue(item)));
             string msg = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, missingElements);
             msg = Assert.AppendUserMessage(msg, message);
             Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", msg);

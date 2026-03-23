@@ -105,7 +105,7 @@ public class CollectionAssertTests : TestContainer
         // Assert
         action.Should().Throw<AssertFailedException>().WithMessage("""
             CollectionAssert.IsSubsetOf
-            Element(s) <iem, a, b> is/are not present in the collection.
+            Element(s) <"iem", "a", "b"> is/are not present in the collection.
             """);
     }
 
@@ -122,7 +122,7 @@ public class CollectionAssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("""
             CollectionAssert.IsSubsetOf
             message
-            Element(s) <iem, a, b> is/are not present in the collection.
+            Element(s) <"iem", "a", "b"> is/are not present in the collection.
             """);
     }
 
