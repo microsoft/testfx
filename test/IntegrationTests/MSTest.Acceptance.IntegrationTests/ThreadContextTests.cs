@@ -125,13 +125,10 @@ public class UnitTest1
 
         public string InitToTestProjectPath => GetAssetPath(InitToTestProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (InitToTestProjectName, InitToTestProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (InitToTestProjectName, InitToTestProjectName,
                 InitToTestSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

@@ -117,13 +117,10 @@ public class FailingTestFramework : ITestFramework, IDataProducer
 
         public string FailingAssetPath => GetAssetPath(FailingAssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (FailingAssetName, FailingAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (FailingAssetName, FailingAssetName,
                 FailingTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

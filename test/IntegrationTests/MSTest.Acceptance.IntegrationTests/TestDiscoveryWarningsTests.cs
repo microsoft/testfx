@@ -51,16 +51,9 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            // NOTE: The BaseClass asset is embedded as a subdirectory within the main asset to avoid
-            // parallel build conflicts. If they were separate assets, TestAssetFixtureBase would build
-            // them in parallel, but TestDiscoveryWarnings has a ProjectReference to TestDiscoveryWarningsBaseClass,
-            // causing both builds to write to the same files simultaneously (file locking errors).
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
             SourceCode.PatchTargetFrameworks(TargetFrameworks.All)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestDiscoveryWarnings.csproj

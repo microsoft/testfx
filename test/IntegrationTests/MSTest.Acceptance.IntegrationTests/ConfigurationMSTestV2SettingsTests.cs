@@ -30,15 +30,12 @@ public sealed class ConfigurationMSTestV2SettingsTests : AcceptanceTestBase<Conf
 
         public string ProjectPathWithMSTestV2RunSettings => GetAssetPath(ProjectNameWithMSTestV2RunSettings);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectNameWithMSTestV2RunSettings, ProjectNameWithMSTestV2RunSettings,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectNameWithMSTestV2RunSettings, ProjectNameWithMSTestV2RunSettings,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", ProjectNameWithMSTestV2RunSettings)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$AppendSettings$", MSTestV2Settings));
-        }
 
         private const string MSTestV2Settings = """
 <mstestv2>

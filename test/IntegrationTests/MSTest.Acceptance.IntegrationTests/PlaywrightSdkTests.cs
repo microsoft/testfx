@@ -135,12 +135,9 @@ public class UnitTest1 : PageTest
 
         public string PlaywrightProjectPath => GetAssetPath(PlaywrightProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (PlaywrightProjectName, PlaywrightProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (PlaywrightProjectName, PlaywrightProjectName,
                 PlaywrightSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
     }
 }

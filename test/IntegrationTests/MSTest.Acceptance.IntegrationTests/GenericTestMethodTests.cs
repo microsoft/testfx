@@ -80,13 +80,10 @@ public class GenericTestMethodTests : AcceptanceTestBase<GenericTestMethodTests.
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return ("GenericTestMethodTests", "GenericTestMethodTests",
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => ("GenericTestMethodTests", "GenericTestMethodTests",
                 SourceGenericTestMethod
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceGenericTestMethod = """
 #file GenericTestMethodTests.csproj

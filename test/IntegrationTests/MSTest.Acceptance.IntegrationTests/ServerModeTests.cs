@@ -75,9 +75,7 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 CurrentMSTestSourceCode
                 .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{TargetFrameworks.All.ToMSBuildTargetFrameworks()}</TargetFrameworks>")
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
@@ -85,6 +83,5 @@ public sealed class ServerModeTests : ServerModeTestsBase<ServerModeTests.TestAs
                 .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
                 .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
                 .PatchCodeWithReplace("$Extra$", string.Empty));
-        }
     }
 }
