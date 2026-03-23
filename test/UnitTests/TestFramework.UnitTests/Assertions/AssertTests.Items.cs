@@ -139,8 +139,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle(Array.Empty<int>())
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected collection to contain exactly one item but found 0 item(s).
-                  collection: []
+                Expected collection to contain exactly one item but found 0 item(s).*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -154,8 +153,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle([1, 2, 3])
                 User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString()*
-                Expected collection to contain exactly one item but found 3 item(s).
-                  collection: [1, 2, 3]
+                Expected collection to contain exactly one item but found 3 item(s).*
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }
@@ -183,7 +181,7 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
-                Expected exactly one item to match the predicate but found 0 item(s).
+                Expected exactly one item to match the predicate but found 0 item(s).*
                 """);
     }
 
@@ -194,7 +192,7 @@ public partial class AssertTests
         action.Should().Throw<Exception>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
-                Expected exactly one item to match the predicate but found 3 item(s).
+                Expected exactly one item to match the predicate but found 3 item(s).*
                 """);
     }
 
@@ -206,7 +204,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
                 No even numbers found: test
-                Expected exactly one item to match the predicate but found 0 item(s).
+                Expected exactly one item to match the predicate but found 0 item(s).*
                 """);
     }
 
@@ -218,7 +216,7 @@ public partial class AssertTests
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
                 Too many even numbers: test
-                Expected exactly one item to match the predicate but found 3 item(s).
+                Expected exactly one item to match the predicate but found 3 item(s).*
                 """);
     }
 

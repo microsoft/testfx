@@ -1708,7 +1708,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.AreEqual("aaaa", "aaab", false, CultureInfo.InvariantCulture);
         action.Should().Throw<Exception>()
             .WithMessage("""
-            Assert.AreEqual("aaaa", "aaab")
+            Assert.AreEqual("aaaa", "aaab", ...)
             String lengths are both 4 but differ at index 3.
               expected: "aaaa"
               actual:   "aaab"

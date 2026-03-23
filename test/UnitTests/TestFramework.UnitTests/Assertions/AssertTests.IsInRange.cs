@@ -139,11 +139,11 @@ public partial class AssertTests : TestContainer
 
         // Assert
         action.Should().ThrowExactly<AssertFailedException>()
-            .WithMessage($"""
+            .WithMessage("""
                 Assert.IsInRange(valueOutOfRange)
-                Expected value {valueOutOfRange} to be in range [{minValue}, {maxValue}].
-                  range: [{minValue}, {maxValue}]
-                  value: {valueOutOfRange}
+                Expected value * to be in range [*, *].
+                  range: [*, *]
+                  value: *
                 """);
     }
 

@@ -780,7 +780,7 @@ public partial class AssertTests : TestContainer
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
             Assert.That(letter == 'b')
-            Expected a to equal b.
+            Expected 97 to equal 98.
               letter = a
             """);
     }

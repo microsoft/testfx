@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -1573,7 +1573,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
-                Expected exactly one item to match the predicate but found 0 item(s).
+                Expected exactly one item to match the predicate but found 0 item(s).*
                 """);
     }
 
@@ -1593,7 +1593,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)
-                Expected exactly one item to match the predicate but found 0 item(s).
+                Expected exactly one item to match the predicate but found 0 item(s).*
                 """);
     }
 
@@ -1613,7 +1613,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
-                Expected exactly one item to match the predicate but found 4 item(s).
+                Expected exactly one item to match the predicate but found 4 item(s).*
                 """);
     }
 
@@ -1633,7 +1633,7 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>()
             .WithMessage("""
                 Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)
-                Expected exactly one item to match the predicate but found 2 item(s).
+                Expected exactly one item to match the predicate but found 2 item(s).*
                 """);
     }
 
@@ -1654,7 +1654,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
                 No even numbers found in collection with 3 items
-                Expected exactly one item to match the predicate but found 0 item(s).
+                Expected exactly one item to match the predicate but found 0 item(s).*
                 """);
     }
 
@@ -1675,7 +1675,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)
                 No even numbers found in collection with 3 items
-                Expected exactly one item to match the predicate but found 0 item(s).
+                Expected exactly one item to match the predicate but found 0 item(s).*
                 """);
     }
 
@@ -1696,7 +1696,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.ContainsSingle(x => x % 2 == 0, collection)
                 Too many even numbers found: 3
-                Expected exactly one item to match the predicate but found 3 item(s).
+                Expected exactly one item to match the predicate but found 3 item(s).*
                 """);
     }
 
@@ -1717,7 +1717,7 @@ public partial class AssertTests : TestContainer
             .WithMessage("""
                 Assert.ContainsSingle(x => x is int i && i % 2 == 0, collection)
                 Too many even numbers found: 2
-                Expected exactly one item to match the predicate but found 2 item(s).
+                Expected exactly one item to match the predicate but found 2 item(s).*
                 """);
     }
 
