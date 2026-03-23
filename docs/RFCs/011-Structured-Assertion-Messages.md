@@ -216,6 +216,26 @@ All values are formatted through a unified `FormatValue<T>` method that applies 
 
 Numeric primitives are formatted using `CultureInfo.InvariantCulture` to ensure consistent output across locales. Collections are safe-enumerated with budget-based truncation to avoid hanging on infinite sequences.
 
+### ToString Handling
+
+For non-primitive, non-collection types, `FormatValue` checks whether the runtime type has a meaningful `ToString()` override:
+
+1. If `ToString()` is overridden (i.e., declared on a type other than `System.Object` or `System.ValueType`), its result is used, escaped, and truncated.
+2. If `ToString()` throws an exception, the exception is caught and the type name is displayed instead (e.g., `<MyNamespace.MyType>`).
+3. If `ToString()` is not overridden (inherited from `Object`), the type name is displayed directly — this avoids showing the unhelpful default `"MyNamespace.MyType"` as if it were a meaningful value.
+
+This ensures that types with useful `ToString()` (like `DateTime`, records, or custom domain objects) show their value, while types without it show their type name in angle brackets.
+
+### Size Limits
+
+| Element | Limit | Behavior when exceeded |
+| ------- | ----- | ---------------------- |
+| Expression in call site | 50 characters | Truncated with `...` suffix |
+| Formatted value (string, ToString) | 256 characters | Truncated with `... N more` suffix |
+| Collection preview | 256 characters total | Elements stop being added; remaining count shown as `... N more` (or `N+` for non-ICollection) |
+| Collection element value | 50 characters | Each element individually truncated |
+| Newlines in values | N/A | Escaped as `\r\n`, `\n`, `\r` — never produce actual line breaks |
+
 ## Implementation Details
 
 ### `StringPair` struct
