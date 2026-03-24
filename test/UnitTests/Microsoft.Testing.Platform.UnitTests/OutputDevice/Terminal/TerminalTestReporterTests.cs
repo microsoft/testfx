@@ -226,7 +226,7 @@ public sealed class TerminalTestReporterTests
             ␛[31m  Actual
             ␛[31m    DEF
             ␛[m␛[90m    at FailingTest() in {folder}codefile.cs:10␛[90m
-
+            ␛[m
               Out of process file artifacts produced:
                 - {folder}artifact1.txt
               In process file artifacts produced:
@@ -301,7 +301,7 @@ public sealed class TerminalTestReporterTests
               Actual
                 DEF
             ␛[m␛[90m    at FailingTest() in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m␛[90m
-
+            ␛[m
               Out of process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
               In process file artifacts produced:
