@@ -146,7 +146,7 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = (await _testAssemblyInfo.RunAssemblyInitializeAsync(_testContext)).TestFailureException as TestFailedException;
         exception.Should().NotBeNull();
         exception.Outcome.Should().Be(UnitTestOutcome.Failed);
-        exception.Message.Should().Be("Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
+        exception.Message.Should().Be($"Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail{Environment.NewLine}Test failure. Aborting test execution.");
         exception.StackTraceInformation!.ErrorStackTrace.Should().Contain(
             "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.DummyTestClass.AssemblyInitializeMethod");
         exception.InnerException.Should().BeOfType<AssertFailedException>();
@@ -264,7 +264,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod")!;
         string? actualErrorMessage = (await _testAssemblyInfo.ExecuteAssemblyCleanupAsync(GetTestContext()))?.Message;
         actualErrorMessage!.StartsWith(
-            "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure..", StringComparison.Ordinal).Should().BeTrue($"Value: {actualErrorMessage}");
+            $"Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail{Environment.NewLine}Test Failure..", StringComparison.Ordinal).Should().BeTrue($"Value: {actualErrorMessage}");
     }
 
     public async Task RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()

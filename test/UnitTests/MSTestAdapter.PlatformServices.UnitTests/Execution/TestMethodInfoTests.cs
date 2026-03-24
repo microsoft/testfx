@@ -715,7 +715,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod!.Name,
-            "Assert.Fail failed. dummyFailMessage");
+            $"Assert.Fail{Environment.NewLine}dummyFailMessage");
 
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo)
         {
@@ -989,7 +989,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod!.Name,
-            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failed");
+            $"Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail{Environment.NewLine}Test failed");
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 

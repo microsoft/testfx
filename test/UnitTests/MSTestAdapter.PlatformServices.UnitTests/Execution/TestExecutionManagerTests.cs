@@ -159,7 +159,7 @@ public class TestExecutionManagerTests : TestContainer
 
         List<string> expectedTestCaseStartList = ["PassingTest", "FailingTest"];
         List<string> expectedTestCaseEndList = ["PassingTest:Passed", "FailingTest:Failed"];
-        List<string> expectedResultList = ["PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed."];
+        List<string> expectedResultList = ["PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail"];
 
         expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList).Should().BeTrue();
         expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList).Should().BeTrue();
