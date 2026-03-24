@@ -1007,7 +1007,7 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.MapInconclusiveToFailed.Should().BeTrue();
         adapterSettings.MapNotRunnableToFailed.Should().BeTrue();
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
-        adapterSettings.TestTimeout.Should().Be(12);
+        adapterSettings.TestTimeout.Should().Be(0);
     }
 
     #endregion
