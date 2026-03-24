@@ -106,7 +106,6 @@ public class MSTestSettingsTests : TestContainer
                     <AssemblyInitializeTimeout>timeout</AssemblyInitializeTimeout>
                     <ConsiderEmptyDataSourceAsInconclusive>3</ConsiderEmptyDataSourceAsInconclusive>
                     <AssemblyCleanupTimeout>timeout</AssemblyCleanupTimeout>
-                    <SettingsFile></SettingsFile>
                     <CaptureTraceOutput>3</CaptureTraceOutput>
                     <MapInconclusiveToFailed>3</MapInconclusiveToFailed>
                     <MapNotRunnableToFailed>3</MapNotRunnableToFailed>
@@ -118,7 +117,7 @@ public class MSTestSettingsTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object);
 
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(14));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(13));
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'CooperativeCancellationTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestCleanupTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassCleanupTimeout', setting will be ignored."), Times.Once);
@@ -129,7 +128,6 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'ClassInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'AssemblyInitializeTimeout', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'timeout' for runsettings entry 'TestTimeout', setting will be ignored."), Times.Once);
-        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '' for runsettings entry 'SettingsFile', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'TreatDiscoveryWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'MapInconclusiveToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'ConsiderEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
@@ -913,7 +911,7 @@ public class MSTestSettingsTests : TestContainer
             """
             <RunSettings>
               <FooUnit>
-               <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+               <TestTimeout>12</TestTimeout>
               </FooUnit>
             </RunSettings>
             """;
@@ -964,7 +962,7 @@ public class MSTestSettingsTests : TestContainer
               <MSTestV2>
                 <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                 <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTestV2>
             </RunSettings>
             """;
@@ -993,7 +991,7 @@ public class MSTestSettingsTests : TestContainer
               </MSTestV2>
               <MSTest>
                 <CaptureDebugTraces>False</CaptureDebugTraces>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
