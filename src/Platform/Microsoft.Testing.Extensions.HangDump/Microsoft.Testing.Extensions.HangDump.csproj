@@ -5,10 +5,6 @@
     <RootNamespace>Microsoft.Testing.Extensions.Diagnostics</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-  </ItemGroup>
-
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>

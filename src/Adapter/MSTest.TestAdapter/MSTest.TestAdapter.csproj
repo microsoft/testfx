@@ -65,10 +65,6 @@
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-  </ItemGroup>
-
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
     <NuspecProperty Include="Configuration=$(Configuration)" />
@@ -90,7 +86,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Polyfills" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope" Alias="ExecutionScope" />
   </ItemGroup>
 

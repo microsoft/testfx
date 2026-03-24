@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 

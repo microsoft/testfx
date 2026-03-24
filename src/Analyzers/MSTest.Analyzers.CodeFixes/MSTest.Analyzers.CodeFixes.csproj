@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

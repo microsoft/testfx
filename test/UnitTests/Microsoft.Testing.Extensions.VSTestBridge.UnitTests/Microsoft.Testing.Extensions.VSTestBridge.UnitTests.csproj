@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <PackageReference Include="Moq" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

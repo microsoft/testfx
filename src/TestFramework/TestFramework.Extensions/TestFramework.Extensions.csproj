@@ -56,8 +56,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
 
@@ -81,7 +79,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Polyfills" />
     <Using Include="$(RootNamespace).Resources" />
   </ItemGroup>
 

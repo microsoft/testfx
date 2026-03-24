@@ -15,7 +15,16 @@ internal static class Sha256Hasher
     public static string HashWithNormalizedCasing(string text)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(text.ToUpperInvariant());
+#if NET9_0_OR_GREATER
         byte[] hash = SHA256.HashData(bytes);
         return Convert.ToHexStringLower(hash);
+#elif NETCOREAPP
+        byte[] hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash).ToLowerInvariant();
+#else
+        using SHA256 sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(bytes);
+        return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+#endif
     }
 }

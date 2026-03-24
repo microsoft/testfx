@@ -44,7 +44,13 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
             await LogAsync(message, serverTestHost.ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
         }
 
+#if NETCOREAPP
         _messages.Clear();
+#else
+        while (_messages.TryTake(out _))
+        {
+        }
+#endif
     }
 
     public string Uid => nameof(ServerModePerCallOutputDevice);

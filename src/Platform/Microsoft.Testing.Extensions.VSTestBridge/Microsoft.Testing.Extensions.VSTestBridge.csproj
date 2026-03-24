@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,10 +38,6 @@ This package provides a bridge integration for test adapters wanting to target b
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Polyfills" />
   </ItemGroup>
 
 </Project>

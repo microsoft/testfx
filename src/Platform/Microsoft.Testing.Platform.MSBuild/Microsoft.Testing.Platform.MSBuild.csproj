@@ -29,7 +29,6 @@
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="All" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -104,9 +103,6 @@ This package provides MSBuild integration of the platform, its extensions and co
     <Copy SourceFiles="@(MSBuildTaskLib)" DestinationFiles="@(MSBuildTaskLib->'$(ArtifactsDir)tests/nugetPackageFolder/$(AssemblyName)/_MSBuildTasks/netstandard2.0/%(RecursiveDir)%(Filename)%(Extension)')" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
   </Target>
 
-  <ItemGroup>
-    <Using Include="Polyfills" />
-  </ItemGroup>
 
   <ItemGroup>
     <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->

@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.AI" />
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

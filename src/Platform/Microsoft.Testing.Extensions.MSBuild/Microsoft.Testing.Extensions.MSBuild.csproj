@@ -28,10 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

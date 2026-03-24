@@ -15,12 +15,6 @@
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Polyfill" PrivateAssets="all" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Polyfills" />
-  </ItemGroup>
 
 </Project>

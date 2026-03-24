@@ -9,7 +9,19 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;
 
+#if NET5_0_OR_GREATER
     public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => File.Move(sourceFileName, destFileName, overwrite);
+#else
+    public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false)
+    {
+        if (overwrite && File.Exists(destFileName))
+        {
+            File.Delete(destFileName);
+        }
+
+        File.Move(sourceFileName, destFileName);
+    }
+#endif
 
     public IFileStream NewFileStream(string path, FileMode mode) => new SystemFileStream(path, mode);
 
@@ -17,7 +29,11 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public string ReadAllText(string path) => File.ReadAllText(path);
 
+#if NETCOREAPP
     public Task<string> ReadAllTextAsync(string path) => File.ReadAllTextAsync(path);
+#else
+    public Task<string> ReadAllTextAsync(string path) => Task.FromResult(File.ReadAllText(path));
+#endif
 
     public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => File.Copy(sourceFileName, destFileName, overwrite);
 

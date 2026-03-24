@@ -174,7 +174,12 @@ internal sealed partial class TrxReportEngine
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
             using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+#if NETCOREAPP
             await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+#else
+            document.Save(stream.Stream, SaveOptions.None);
+            await Task.CompletedTask.ConfigureAwait(false);
+#endif
             return isFileNameExplicitlyProvidedAndFileExists
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
@@ -228,7 +233,12 @@ internal sealed partial class TrxReportEngine
         AddArtifactsToCollection(artifacts, collectorDataEntries, runDeploymentRoot);
 
         using FileStream fs = File.OpenWrite(trxFile.FullName);
+#if NETCOREAPP
         await document.SaveAsync(fs, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+#else
+        document.Save(fs, SaveOptions.None);
+        await Task.CompletedTask.ConfigureAwait(false);
+#endif
     }
 
     private void AddArtifactsToCollection(Dictionary<IExtension, List<SessionFileArtifact>> artifacts, XElement collectorDataEntries, string runDeploymentRoot)

@@ -199,7 +199,11 @@ internal static class MethodInfoExtensions
 
     private static void InferGenerics(Type parameterType, Type argumentType, List<(Type ParameterType, Type Substitution)> result)
     {
-        if (parameterType.IsGenericMethodParameter())
+#if NET5_0_OR_GREATER
+        if (parameterType.IsGenericMethodParameter)
+#else
+        if (parameterType.IsGenericParameter && parameterType.DeclaringMethod is not null)
+#endif
         {
             // We found a generic parameter. The argument type should be the substitution for it.
             result.Add((parameterType, argumentType));

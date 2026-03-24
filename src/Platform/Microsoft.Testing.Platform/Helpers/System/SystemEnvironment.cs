@@ -12,7 +12,11 @@ internal sealed class SystemEnvironment : IEnvironment
 
     public string NewLine => Environment.NewLine;
 
+#if NET5_0_OR_GREATER
     public int ProcessId => Environment.ProcessId;
+#else
+    public int ProcessId => Process.GetCurrentProcess().Id;
+#endif
 
     public string OsVersion => Environment.OSVersion.ToString();
 

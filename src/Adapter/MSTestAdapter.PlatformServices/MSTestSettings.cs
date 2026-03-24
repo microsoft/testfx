@@ -713,7 +713,7 @@ internal sealed class MSTestSettings
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
-                                        string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                                        string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
 
                             break;
                         }
@@ -740,7 +740,7 @@ internal sealed class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
         => Enum.TryParse(value, true, out result)
-        && Enum.IsDefined(result);
+        && Enum.IsDefined(typeof(T), result);
 
     private static void SetGlobalSettings(
         [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
@@ -902,7 +902,7 @@ internal sealed class MSTestSettings
                     CultureInfo.CurrentCulture,
                     Resource.InvalidParallelScopeValue,
                     value,
-                    string.Join(", ", Enum.GetNames<ExecutionScope>())));
+                    string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
             }
 
             settings.ParallelizationScope = scope;
