@@ -202,6 +202,7 @@ public class UnitTestElementTests : TestContainer
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]"],
                     TestCaseIndex = 0,
+                    DataType = DynamicDataType.ITestDataSource,
                 })
             .ToTestCase(),
             new UnitTestElement(
@@ -209,6 +210,7 @@ public class UnitTestElementTests : TestContainer
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]"],
                     TestCaseIndex = 1,
+                    DataType = DynamicDataType.ITestDataSource,
                 })
             .ToTestCase(),
             new UnitTestElement(
@@ -216,6 +218,7 @@ public class UnitTestElementTests : TestContainer
                 {
                     SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]"],
                     TestCaseIndex = 2,
+                    DataType = DynamicDataType.ITestDataSource,
                 })
             .ToTestCase()
         ];
