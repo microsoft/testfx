@@ -365,7 +365,6 @@ internal sealed class MSTestSettings
         // (or)
         //
         // <MSTest>
-        //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         // </MSTest>
         MSTestSettings settings = new();

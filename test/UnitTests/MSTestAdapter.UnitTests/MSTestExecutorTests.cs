@@ -38,27 +38,6 @@ public class MSTestExecutorTests : TestContainer
         extensionUriString.ExtensionUri.Should().Be(EngineConstants.ExecutorUriString);
     }
 
-    public async Task RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
-    {
-        var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v4"), Assembly.GetExecutingAssembly().Location);
-        TestCase[] tests = [testCase];
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <IgnoreTestImpact>true</IgnoreTestImpact>
-              </MSTest>
-            </RunSettings>
-            """;
-        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        await _mstestExecutor.RunTestsAsync(tests, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
-
-        // Test should not start if TestSettings is given.
-        _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
-    }
-
     public async Task RunTestsShouldReportErrorAndBailOutOnSettingsException()
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v4"), Assembly.GetExecutingAssembly().Location);
@@ -82,26 +61,6 @@ public class MSTestExecutorTests : TestContainer
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
         _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
-    }
-
-    public async Task RunTestsWithSourcesShouldNotExecuteTestsIfTestSettingsIsGiven()
-    {
-        var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                <IgnoreTestImpact>true</IgnoreTestImpact>
-              </MSTest>
-            </RunSettings>
-            """;
-        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
-
-        // Test should not start if TestSettings is given.
-        _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
     }
 
     public async Task RunTestsWithSourcesShouldReportErrorAndBailOutOnSettingsException()
