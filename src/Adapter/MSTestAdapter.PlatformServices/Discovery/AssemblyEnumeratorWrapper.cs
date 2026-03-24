@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -111,7 +112,8 @@ internal sealed class AssemblyEnumeratorWrapper
         // Be careful how you pass data from the method. We were previously passing in a collection
         // of strings normally (by reference), and we were mutating that collection in the appdomain.
         // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, isMTP);
+        bool mustSerialize = !isMTP || isolationHost is TestSourceHost { UsesAppDomain: true };
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize);
     }
 
     private static bool IsManagedAssembly(string fileName)
