@@ -87,7 +87,7 @@ internal sealed class AssemblyEnumeratorWrapper
 
     private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings)
     {
-        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;
