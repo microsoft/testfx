@@ -6,6 +6,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public static class AcceptanceFixture
 {
+    private static string? s_nugetCache;
+
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
     {
@@ -17,8 +19,23 @@ public static class AcceptanceFixture
         // packages should be picked.
         // If we restore to the same place (whether or not it is the machine-wide cache), NuGet will consider restore up-to-date and
         // will use stale packages.
-        string directoryPath = Path.Combine(TempDirectory.TestSuiteDirectory, RandomId.Next(), ".packages");
-        Directory.CreateDirectory(directoryPath);
-        Environment.SetEnvironmentVariable("NUGET_PACKAGES", directoryPath);
+        s_nugetCache = Path.Combine(TempDirectory.TestSuiteDirectory, RandomId.Next(), ".packages");
+        Directory.CreateDirectory(s_nugetCache);
+        Environment.SetEnvironmentVariable("NUGET_PACKAGES", s_nugetCache);
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup(TestContext context)
+    {
+        if (s_nugetCache is not null)
+        {
+            try
+            {
+                Directory.Delete(s_nugetCache, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 }
