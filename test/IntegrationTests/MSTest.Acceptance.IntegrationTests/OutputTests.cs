@@ -17,12 +17,13 @@ public sealed class OutputTests : AcceptanceTestBase<OutputTests.TestAssetFixtur
         TestHostResult testHostResult = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
 
         // Assert
-        testHostResult.AssertOutputContains("""
+        testHostResult.AssertOutputContains(
+            """
               Assert.AreEqual(1, 2)
               Expected values to be equal.
                 expected: 1
                 actual:   2
-            """);
+            """.ReplaceLineEndings());
         testHostResult.AssertOutputContains("""
               Standard output
                 Console message

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -13,7 +13,10 @@ public partial class AssertTests
     {
         Action action = () => Assert.ThrowAssertFailed("name", "{");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("name\n{");
+            .WithMessage("""
+            name
+            {
+            """);
     }
     #endregion
 

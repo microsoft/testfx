@@ -1013,17 +1013,19 @@ public partial class AssertTests : TestContainer
     public void That_WithCapturedDecimalLiteral_SkipsInDetails()
     {
         // Test decimal literals with 'm' suffix
+        // Use values that don't produce trailing zeros in arithmetic to avoid
+        // differences between .NET Framework (strips trailing zeros) and .NET Core (preserves them).
         decimal price = 19.99m;
-        decimal tax = 2.50m;
+        decimal tax = 3.02m;
 
-        Action act = () => Assert.That(() => price + tax == 25.00m);
+        Action act = () => Assert.That(() => price + tax == 25.01m);
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
-            Assert.That(price + tax == 25.00m)
-            Expected 22.49 to equal 25.00.
+            Assert.That(price + tax == 25.01m)
+            Expected 23.01 to equal 25.01.
               price = 19.99
-              tax = 2.50
+              tax = 3.02
             """);
     }
 

@@ -39,7 +39,7 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
             Expected values to be equal.
               expected: 1
               actual:   2
-            """,
+            """.ReplaceLineEndings(),
             trxContent,
             trxContent);
 

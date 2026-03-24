@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -31,7 +31,10 @@ public partial class AssertTests
         Action act = () => Assert.Equals("test", "test");
 #pragma warning restore CS0618 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
-           .WithMessage("Assert.Fail\nAssert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead.");
+           .WithMessage("""
+            Assert.Fail
+            Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead.
+            """);
     }
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
@@ -41,7 +44,10 @@ public partial class AssertTests
         Action act = () => Assert.ReferenceEquals(obj, obj);
 #pragma warning restore CS0618 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
-           .WithMessage("Assert.Fail\nAssert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead.");
+           .WithMessage("""
+            Assert.Fail
+            Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead.
+            """);
     }
 #endif
     #endregion
