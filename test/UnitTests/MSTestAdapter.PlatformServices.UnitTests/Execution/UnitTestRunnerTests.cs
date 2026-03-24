@@ -53,7 +53,7 @@ public sealed class UnitTestRunnerTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                <TestTimeout>12</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
