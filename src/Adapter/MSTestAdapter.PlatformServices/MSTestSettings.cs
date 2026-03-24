@@ -52,7 +52,6 @@ internal sealed class MSTestSettings
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
-        TestSettingsFile = null;
         DisableParallelization = false;
         ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
@@ -206,7 +205,6 @@ internal sealed class MSTestSettings
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
-        CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
@@ -295,22 +293,6 @@ internal sealed class MSTestSettings
 
         CurrentSettings = settings;
         RunConfigurationSettings = runConfigurationSettings;
-    }
-
-    /// <summary>
-    /// Get the MSTestV1 adapter settings from the context.
-    /// </summary>
-    /// <param name="logger"> The logger for messages. </param>
-    /// <returns> Returns true if test settings is provided.. </returns>
-    public static bool IsLegacyScenario(IMessageLogger logger)
-    {
-        if (!StringEx.IsNullOrEmpty(CurrentSettings.TestSettingsFile))
-        {
-            logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning);
-            return true;
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -461,22 +443,6 @@ internal sealed class MSTestSettings
                             else
                             {
                                 logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, "TreatDiscoveryWarningsAsErrors"));
-                            }
-
-                            break;
-                        }
-
-                    case "SETTINGSFILE":
-                        {
-                            string fileName = reader.ReadInnerXml();
-
-                            if (!StringEx.IsNullOrEmpty(fileName))
-                            {
-                                settings.TestSettingsFile = fileName;
-                            }
-                            else
-                            {
-                                logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, fileName, "SettingsFile"));
                             }
 
                             break;
