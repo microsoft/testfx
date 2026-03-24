@@ -1046,65 +1046,6 @@ public class MSTestSettingsTests : TestContainer
 
     #endregion
 
-    #region IsLegacyScenario tests
-
-    public void IsLegacyScenarioReturnsFalseWhenDiscoveryContextIsNull()
-    {
-        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(null!).Should().BeFalse();
-    }
-
-    public void IsLegacyScenarioReturnsFalseWhenTestSettingsFileIsNotGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-               </MSTest>
-            </RunSettings>
-            """;
-
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeFalse();
-    }
-
-    public void IsLegacyScenarioReturnsTrueWhenTestSettingsFileIsGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-               </MSTest>
-            </RunSettings>
-            """;
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeTrue();
-    }
-
-    public void LegacyScenariosNotSupportedWarningIsPrintedWhenVsmdiFileIsGiven()
-    {
-        string runSettingsXml =
-            """
-            <RunSettings>
-               <MSTest>
-                <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile>
-               </MSTest>
-            </RunSettings>
-            """;
-        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object).Should().BeTrue();
-        _mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
-    }
-
-    #endregion
-
     #region ConfigJson
     public void ConfigJson_WithInvalidValues_GettingAWarningForEachInvalidSetting()
     {
