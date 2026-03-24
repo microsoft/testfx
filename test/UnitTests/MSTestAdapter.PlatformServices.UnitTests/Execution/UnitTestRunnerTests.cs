@@ -53,7 +53,7 @@ public sealed class UnitTestRunnerTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</SettingsFile>
               </MSTest>
             </RunSettings>
             """;
@@ -69,7 +69,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         adapterSettings.Should().NotBeNull();
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
-        MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
+        MSTestSettings.CurrentSettings.TestTimeout.Should().Be(12);
     }
 
     #endregion

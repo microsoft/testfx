@@ -92,11 +92,6 @@ internal sealed class MSTestSettings
     public bool CaptureDebugTraces { get; private set; }
 
     /// <summary>
-    /// Gets the path to settings file.
-    /// </summary>
-    public string? TestSettingsFile { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
     /// </summary>
     public bool MapInconclusiveToFailed { get; private set; }

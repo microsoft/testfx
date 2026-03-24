@@ -52,7 +52,7 @@ public class AssemblyEnumeratorTests : TestContainer
             """
             <RunSettings>
               <MSTest>
-                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+                <TestTimeout>12</TestTimeout>
               </MSTest>
             </RunSettings>
             """;
@@ -70,7 +70,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Constructor has the side effect of populating the passed settings to MSTestSettings.CurrentSettings
         _ = new AssemblyEnumerator(adapterSettings);
 
-        MSTestSettings.CurrentSettings.TestSettingsFile.Should().Be("DummyPath\\TestSettings1.testsettings");
+        MSTestSettings.CurrentSettings.TestTimeout.Should().Be(12);
     }
 
     #endregion
