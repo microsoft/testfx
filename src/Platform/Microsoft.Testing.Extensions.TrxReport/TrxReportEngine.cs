@@ -417,7 +417,7 @@ internal sealed partial class TrxReportEngine
             string id = guid.ToString();
             string testResultDisplayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
             (string testDefinitionName, bool isExplicitlyProvided) = testNode.Properties.SingleOrDefault<TrxTestDefinitionName>() is { } trxTestDefinitionName
-                ? (trxTestDefinitionName.TestDefinitionName, true)
+                ? (RemoveInvalidXmlChar(trxTestDefinitionName.TestDefinitionName), true)
                 : (testResultDisplayName, false);
 
             string executionId = Guid.NewGuid().ToString();
@@ -833,7 +833,7 @@ internal sealed partial class TrxReportEngine
     private static Regex BuildInvalidXmlCharReplace() => new(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]");
 #endif
 
-    private static string? RemoveInvalidXmlChar(string? str) => str is null ? null : InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
+    private static string RemoveInvalidXmlChar(string str) => InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
 
     private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(Match match)
     {
