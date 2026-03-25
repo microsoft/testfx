@@ -285,7 +285,7 @@ internal class TestExecutionManager
         }
 #endif
 
-        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
