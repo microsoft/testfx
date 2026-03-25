@@ -57,10 +57,10 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
                 return;
             }
 
-            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqExpressionsLambdaExpression, out INamedTypeSymbol? lambdaExpressionSymbol);
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqExpressionsExpression1, out INamedTypeSymbol? linqExpressionType);
 
             context.RegisterOperationAction(
-                context => AnalyzeInvocation(context, cancellationTokenSymbol, testContextSymbol, classCleanupAttributeSymbol, assemblyCleanupAttributeSymbol, testMethodAttributeSymbol, lambdaExpressionSymbol),
+                context => AnalyzeInvocation(context, cancellationTokenSymbol, testContextSymbol, classCleanupAttributeSymbol, assemblyCleanupAttributeSymbol, testMethodAttributeSymbol, linqExpressionType),
                 OperationKind.Invocation);
         });
     }
@@ -72,7 +72,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         INamedTypeSymbol classCleanupAttributeSymbol,
         INamedTypeSymbol assemblyCleanupAttributeSymbol,
         INamedTypeSymbol testMethodAttributeSymbol,
-        INamedTypeSymbol? lambdaExpressionSymbol)
+        INamedTypeSymbol? linqExpressionType)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
         IMethodSymbol method = invocationOperation.TargetMethod;
@@ -106,7 +106,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             }
 
             // Skip diagnostics inside expression trees where the code fix cannot be applied.
-            if (IsInsideExpressionTree(invocationOperation, lambdaExpressionSymbol))
+            if (IsInsideExpressionTree(invocationOperation, linqExpressionType))
             {
                 return;
             }
@@ -129,7 +129,7 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             }
 
             // Skip diagnostics inside expression trees where the code fix cannot be applied.
-            if (IsInsideExpressionTree(invocationOperation, lambdaExpressionSymbol))
+            if (IsInsideExpressionTree(invocationOperation, linqExpressionType))
             {
                 return;
             }
@@ -153,9 +153,9 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         }
     }
 
-    private static bool IsInsideExpressionTree(IOperation operation, INamedTypeSymbol? lambdaExpressionSymbol)
+    private static bool IsInsideExpressionTree(IOperation operation, INamedTypeSymbol? linqExpressionType)
     {
-        if (lambdaExpressionSymbol is null)
+        if (linqExpressionType is null)
         {
             return false;
         }
@@ -163,15 +163,10 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         IOperation? current = operation.Parent;
         while (current is not null)
         {
-            if (current is IAnonymousFunctionOperation)
+            if (current is IAnonymousFunctionOperation or ILocalFunctionOperation)
             {
-                // Check if the parent converts this lambda to an Expression<T>.
-                if (current.Parent is IConversionOperation conversion &&
-                    conversion.Type is INamedTypeSymbol namedType &&
-                    namedType.Inherits(lambdaExpressionSymbol))
-                {
-                    return true;
-                }
+                return SymbolEqualityComparer.Default.Equals(
+                    current.Parent?.Type?.OriginalDefinition, linqExpressionType);
             }
 
             current = current.Parent;
