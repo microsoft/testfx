@@ -40,7 +40,7 @@ public class Adapter_ExecuteRequestAsyncTests : TestBase
 
         // Assert
         IEnumerable<TestNodeUpdateMessage> nodeStateChanges = services.MessageBus.Messages.OfType<TestNodeUpdateMessage>();
-        Assert.IsTrue(nodeStateChanges.Any(), $"{nameof(nodeStateChanges)} should have at least 1 item.");
+        Assert.IsNotEmpty(nodeStateChanges, $"{nameof(nodeStateChanges)} should have at least 1 item.");
         Platform.Extensions.Messages.TestNode lastNode = nodeStateChanges.Last().TestNode;
         _ = lastNode.Properties.Single<PassedTestNodeStateProperty>();
     }
