@@ -17,7 +17,13 @@
 #pragma warning disable IDE0280 // Use 'nameof'
 #pragma warning disable SA1512 // Single-line comments should not be followed by blank line
 
-#if !NET5_0_OR_GREATER
+// On TFMs where IsExternalInit is provided by the BCL, add a TypeForwardedTo so that
+// assemblies compiled against the netstandard2.0 version (which had the polyfill type)
+// can resolve the type at runtime on net5+.
+// See https://github.com/SimonCropp/Polyfill/issues/290
+#if NET5_0_OR_GREATER
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+#else
 
 namespace System.Runtime.CompilerServices
 {
