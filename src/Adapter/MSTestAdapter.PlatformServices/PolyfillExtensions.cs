@@ -55,9 +55,6 @@ internal static class AdapterPolyfillExtensions
 
     public static string[] Split(this string s, char separator, System.StringSplitOptions options) =>
         s.Split(new[] { separator }, options);
-
-    public static string Join(this string separator, char c, System.Collections.Generic.IEnumerable<string> values) =>
-        string.Join(separator, values);
 }
 
 #endif

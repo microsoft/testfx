@@ -1,10 +1,4 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-namespace Microsoft.CodeAnalysis;
-
-internal sealed partial class EmbeddedAttribute : Attribute
-{
-}
-#endif
+// EmbeddedAttribute is now provided by eng/Polyfills.cs.

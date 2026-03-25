@@ -453,7 +453,12 @@ internal static class Ensure
 
     public static string NotNullOrEmpty([global::System.Diagnostics.CodeAnalysis.NotNull] string? argument, [global::System.Runtime.CompilerServices.CallerArgumentExpression("argument")] string? paramName = null)
     {
-        if (string.IsNullOrEmpty(argument))
+        if (argument is null)
+        {
+            throw new global::System.ArgumentNullException(paramName);
+        }
+
+        if (argument.Length == 0)
         {
             throw new global::System.ArgumentException("Value cannot be null or empty.", paramName);
         }
@@ -487,6 +492,11 @@ internal static class Ensure
 
     public static string NotNullOrWhiteSpace([global::System.Diagnostics.CodeAnalysis.NotNull] string? argument, [global::System.Runtime.CompilerServices.CallerArgumentExpression("argument")] string? paramName = null)
     {
+        if (argument is null)
+        {
+            throw new global::System.ArgumentNullException(paramName);
+        }
+
         if (string.IsNullOrWhiteSpace(argument))
         {
             throw new global::System.ArgumentException("Value cannot be null or whitespace.", paramName);
@@ -684,13 +694,32 @@ internal static class PolyfillProcessExtensions
 
         var tcs = new global::System.Threading.Tasks.TaskCompletionSource<bool>(global::System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
         process.EnableRaisingEvents = true;
-        process.Exited += (_, _) => tcs.TrySetResult(true);
-        if (cancellationToken != default)
+
+        global::System.EventHandler handler = (_, _) => tcs.TrySetResult(true);
+        process.Exited += handler;
+
+        global::System.Threading.CancellationTokenRegistration cancellationRegistration = default;
+        if (cancellationToken.CanBeCanceled)
         {
-            cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
+            cancellationRegistration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
         }
 
-        return process.HasExited ? global::System.Threading.Tasks.Task.CompletedTask : tcs.Task;
+        if (process.HasExited)
+        {
+            process.Exited -= handler;
+            cancellationRegistration.Dispose();
+            return global::System.Threading.Tasks.Task.CompletedTask;
+        }
+
+        return tcs.Task.ContinueWith(
+            _ =>
+            {
+                process.Exited -= handler;
+                cancellationRegistration.Dispose();
+            },
+            global::System.Threading.CancellationToken.None,
+            global::System.Threading.Tasks.TaskContinuationOptions.ExecuteSynchronously,
+            global::System.Threading.Tasks.TaskScheduler.Default);
     }
 
     public static void Kill(this global::System.Diagnostics.Process process, bool entireProcessTree)

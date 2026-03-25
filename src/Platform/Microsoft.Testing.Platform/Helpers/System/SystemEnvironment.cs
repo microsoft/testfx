@@ -15,7 +15,14 @@ internal sealed class SystemEnvironment : IEnvironment
 #if NET5_0_OR_GREATER
     public int ProcessId => Environment.ProcessId;
 #else
-    public int ProcessId => Process.GetCurrentProcess().Id;
+    public int ProcessId
+    {
+        get
+        {
+            using Process process = Process.GetCurrentProcess();
+            return process.Id;
+        }
+    }
 #endif
 
     public string OsVersion => Environment.OSVersion.ToString();

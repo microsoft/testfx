@@ -64,7 +64,8 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
     /// <returns>Root deployment directory.</returns>
     public override string GetRootDeploymentDirectory(string baseDirectory)
     {
-        string dateTimeSuffix = $"{DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo)}_{Process.GetCurrentProcess().Id}";
+        using Process currentProcess = Process.GetCurrentProcess();
+        string dateTimeSuffix = $"{DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo)}_{currentProcess.Id}";
         string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix,
 #if NETFRAMEWORK
             Environment.UserName,
