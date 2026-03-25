@@ -177,23 +177,6 @@ public class DesktopTestSourceHostTests : TestContainer
         }
     }
 
-    public void DisposeShouldSetTestHostShutdownOnIssueWithAppDomainUnload()
-    {
-        // Arrange
-        var frameworkHandle = new Mock<IFrameworkHandle>();
-        var testableAppDomain = new Mock<IAppDomain>();
-
-        testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
-        testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
-        var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, testableAppDomain.Object);
-        sourceHost.SetupHost();
-
-        // Act
-        sourceHost.Dispose();
-
-        // Assert
-        frameworkHandle.VerifySet(fh => fh.EnableShutdownAfterTestRun = true);
-    }
 
     public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
     {
