@@ -177,7 +177,6 @@ public class DesktopTestSourceHostTests : TestContainer
         }
     }
 
-
     public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
     {
         // Arrange
