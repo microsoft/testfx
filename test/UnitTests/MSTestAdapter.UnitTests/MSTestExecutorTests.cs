@@ -98,7 +98,7 @@ public class MSTestExecutorTests : TestContainer
             """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null, isMTP: false);
 
         // Test should not start if TestSettings is given.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
@@ -121,7 +121,7 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         // Act.
-        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null, isMTP: false);
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);

@@ -51,17 +51,9 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string BaseTargetAssetPath => GetAssetPath(BaseClassAssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (BaseClassAssetName, BaseClassAssetName,
-            BaseClassSourceCode.PatchTargetFrameworks(TargetFrameworks.All));
-
-            yield return (AssetName, AssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
             SourceCode.PatchTargetFrameworks(TargetFrameworks.All)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file TestDiscoveryWarnings.csproj
@@ -75,7 +67,8 @@ public class TestDiscoveryWarningsTests : AcceptanceTestBase<TestDiscoveryWarnin
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
+    <ProjectReference Include="TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj" />
+    <Compile Remove="TestDiscoveryWarningsBaseClass/**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
@@ -129,10 +122,8 @@ public class TestClass2
     [TestMethod]
     public void Test2_1() {}
 }
-""";
 
-        private const string BaseClassSourceCode = """
-#file TestDiscoveryWarningsBaseClass.csproj
+#file TestDiscoveryWarningsBaseClass/TestDiscoveryWarningsBaseClass.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -143,8 +134,7 @@ public class TestClass2
 
 </Project>
 
-
-#file UnitTest1.cs
+#file TestDiscoveryWarningsBaseClass/UnitTest1.cs
 namespace Base;
 
 public class BaseClass

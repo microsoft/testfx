@@ -5,7 +5,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -22,7 +21,6 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
-    ITestSessionLifetimeHandler,
     IDisposable,
     IAsyncInitializableExtension
 {
@@ -55,11 +53,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly string _assemblyName;
 
     private TerminalTestReporter? _terminalTestReporter;
-    private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private bool _isListTests;
     private bool _isServerMode;
     private ILogger? _logger;
+    private TestProcessRole? _processRole;
 
     public TerminalOutputDevice(
         IConsole console,
@@ -325,34 +323,16 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            if (!_firstCallTo_OnSessionStartingAsync)
+            if (_processRole == TestProcessRole.TestHost)
             {
                 _terminalTestReporter.AssemblyRunCompleted();
                 _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
             }
+            else
+            {
+                _terminalTestReporter.PrintOutOfProcessArtifacts();
+            }
         }
-    }
-
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
-
-    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
-    {
-        CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        cancellationToken.ThrowIfCancellationRequested();
-        if (_isServerMode)
-        {
-            return Task.CompletedTask;
-        }
-
-        // We implement IDataConsumerService and IOutputDisplayService.
-        // So the engine is calling us before as IDataConsumerService and after as IOutputDisplayService.
-        // The engine look for the ITestSessionLifetimeHandler in both case and call it.
-        if (_firstCallTo_OnSessionStartingAsync)
-        {
-            _firstCallTo_OnSessionStartingAsync = false;
-        }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -416,9 +396,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
                 foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
+                        outOfProcess: _processRole != TestProcessRole.TestHost,
                         testNodeStateChanged.TestNode.DisplayName,
                         artifact.FileInfo.FullName);
                 }
@@ -532,9 +511,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
             case SessionFileArtifact artifact:
                 {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
+                        outOfProcess: _processRole != TestProcessRole.TestHost,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -542,9 +520,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 break;
             case FileArtifact artifact:
                 {
-                    bool isOutOfProcessArtifact = _firstCallTo_OnSessionStartingAsync;
                     _terminalTestReporter.ArtifactAdded(
-                        isOutOfProcessArtifact,
+                        outOfProcess: _processRole != TestProcessRole.TestHost,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -560,6 +537,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
+        _processRole = processRole;
         if (processRole == TestProcessRole.TestHost)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(

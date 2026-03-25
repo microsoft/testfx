@@ -70,16 +70,12 @@ internal interface IPlatformServiceProvider
     /// <param name="runSettings">
     /// The run Settings for the session.
     /// </param>
-    /// <param name="frameworkHandle">
-    /// The handle to the test platform.
-    /// </param>
     /// <returns>
     /// Returns the host for the source provided.
     /// </returns>
     ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
-        TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle);
+        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings);
 
     /// <summary>
     /// Gets the TestContext object for a platform.

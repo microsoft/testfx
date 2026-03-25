@@ -31,7 +31,7 @@ public static class MSBuildExtensions
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions()));
 
-        ((TestApplicationBuilder)builder).TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
+        builder.TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(
             serviceProvider => new MSBuildOrchestratorLifetime(
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions()));

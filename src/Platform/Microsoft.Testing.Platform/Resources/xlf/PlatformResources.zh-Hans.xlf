@@ -421,16 +421,6 @@
         <target state="translated">正在运行 {0} 测试</target>
         <note />
       </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
-        <source>No serializer registered with ID '{0}'</source>
-        <target state="translated">没有使用 ID“{0}”注册序列化程序</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
-        <source>No serializer registered with type '{0}'</source>
-        <target state="translated">没有使用类型“{0}”注册序列化程序</target>
-        <note />
-      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">不可用</target>
@@ -975,11 +965,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">意外的遥测调用，遥测功能已被禁用。</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
-        <source>An unexpected exception occurred during byte conversion</source>
-        <target state="translated">字节转换期间出现意外异常</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
@@ -1020,11 +1005,6 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
       <trans-unit id="ChatClientProviderAlreadyRegistered">
         <source>A chat client provider has already been registered.</source>
         <target state="translated">聊天客户端提供程序已被注册。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="InvalidTestApplicationBuilderTypeForAI">
-        <source>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">AI 扩展仅适用于 "Microsoft.Testing.Platform.Builder.TestApplicationBuilder" 类型的生成器</target>
         <note />
       </trans-unit>
     </body>

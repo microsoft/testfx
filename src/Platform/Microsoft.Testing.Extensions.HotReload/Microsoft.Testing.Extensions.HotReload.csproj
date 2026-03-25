@@ -8,6 +8,11 @@
     <PackageLicenseFile>License.txt</PackageLicenseFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Embedded helpers from Microsoft.Testing.Platform -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
+  </ItemGroup>
+
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>

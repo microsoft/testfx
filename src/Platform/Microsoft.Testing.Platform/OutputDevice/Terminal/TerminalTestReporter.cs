@@ -149,6 +149,30 @@ internal sealed partial class TerminalTestReporter : IDisposable
         }
     }
 
+    public void PrintOutOfProcessArtifacts()
+    {
+        if (_artifacts.Count == 0)
+        {
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.Append(SingleIndentation);
+            terminal.AppendLine(PlatformResources.OutOfProcessArtifactsProduced);
+
+            foreach (TestRunArtifact artifact in _artifacts)
+            {
+                terminal.Append(DoubleIndentation);
+                terminal.Append("- ");
+                terminal.AppendLink(artifact.Path, lineNumber: null);
+                terminal.AppendLine();
+            }
+
+            terminal.AppendLine();
+        });
+    }
+
     public void TestExecutionCompleted(DateTimeOffset endTime)
     {
         _testExecutionEndTime = endTime;

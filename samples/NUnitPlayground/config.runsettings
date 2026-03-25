@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#runconfiguration-element -->
+  <RunConfiguration>
+  </RunConfiguration>
+  <!-- https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#nunit-element -->
+  <NUnit>
+  </NUnit>
+</RunSettings>
