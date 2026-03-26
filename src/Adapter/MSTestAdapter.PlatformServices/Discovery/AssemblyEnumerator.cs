@@ -61,8 +61,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Enumerates through all types in the assembly in search of valid test methods.
     /// </summary>
     /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <returns>A collection of Test Elements.</returns>
-    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName)
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -90,7 +91,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (Type type in types)
         {
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy);
+                dataSourcesUnfoldingStrategy, mustSerialize);
             tests.AddRange(testsInType);
         }
 
@@ -153,7 +154,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Type type,
         List<string> warningMessages,
         bool discoverInternals,
-        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy)
+        TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
+        bool mustSerialize)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -170,7 +172,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (_typeCache.GetTestMethodInfoForDiscovery(test.TestMethod) is { } testMethodInfo)
                     {
-                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests))
+                        if (TryUnfoldITestDataSources(test, testMethodInfo, dataSourcesUnfoldingStrategy, tests, mustSerialize))
                         {
                             continue;
                         }
@@ -196,7 +198,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests)
+    private static bool TryUnfoldITestDataSources(UnitTestElement test, DiscoveryTestMethodInfo testMethodInfo, TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy, List<UnitTestElement> tests, bool mustSerialize)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -233,7 +235,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             foreach (ITestDataSource dataSource in testDataSources)
             {
                 isDataDriven = true;
-                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex))
+                if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
                     // TODO: Improve multi-source design!
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
@@ -266,7 +268,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex)
+    private static bool TryUnfoldITestDataSource(ITestDataSource dataSource, UnitTestElement test, ReflectionTestMethodInfo methodInfo, List<UnitTestElement> tests, ref int globalTestCaseIndex, bool mustSerialize)
     {
         // Otherwise, unfold the data source and verify it can be serialized.
 
@@ -324,7 +326,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             try
             {
-                discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                if (mustSerialize)
+                {
+                    discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                }
+
                 discoveredTest.TestMethod.ActualData = d;
                 discoveredTest.TestMethod.TestCaseIndex = globalTestCaseIndex;
                 discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;

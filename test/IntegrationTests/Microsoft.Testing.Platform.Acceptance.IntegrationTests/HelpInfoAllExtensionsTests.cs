@@ -460,13 +460,10 @@ public class DummyTestFramework : ITestFramework
 
         public string AllExtensionsTargetAssetPath => GetAssetPath(AllExtensionsAssetName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AllExtensionsAssetName, AllExtensionsAssetName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AllExtensionsAssetName, AllExtensionsAssetName,
                 AllExtensionsTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
     }
 
     public TestContext TestContext { get; set; }

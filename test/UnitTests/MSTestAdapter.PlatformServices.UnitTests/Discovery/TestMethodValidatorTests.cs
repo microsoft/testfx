@@ -23,36 +23,25 @@ public class TestMethodValidatorTests : TestContainer
 
     public TestMethodValidatorTests()
     {
-        _mockReflectHelper = new Mock<ReflectHelper>();
+        _mockReflectHelper = new Mock<ReflectHelper>(MockBehavior.Strict);
         _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, discoverInternals: false);
         _warnings = [];
 
-        _mockMethodInfo = new Mock<MethodInfo>();
+        _mockMethodInfo = new Mock<MethodInfo>(MockBehavior.Strict);
         _type = typeof(TestMethodValidatorTests);
     }
 
     public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
     {
+        var declaringType = new Mock<Type>(MockBehavior.Strict);
+        _mockMethodInfo.Setup(x => x.DeclaringType).Returns(declaringType.Object);
+
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<TestMethodAttribute>(It.IsAny<MemberInfo>())).Returns(false);
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings).Should().BeFalse();
     }
 
-    // TODO: Fix this test. It should be returning true, but we get false for a different reason (IsPublic is false)
-    // https://github.com/microsoft/testfx/issues/4207
-    public void IsValidTestMethodShouldReturnFalseForGenericTestMethodDefinitions()
-    {
-        SetupTestMethod();
-        _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
-        _mockMethodInfo.Setup(mi => mi.DeclaringType!.FullName).Returns("DummyTestClass");
-        _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
-
-        _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings).Should().BeFalse();
-    }
-
-    // TODO: Fix this test. It should be returning true, but we get false for a different reason (IsPublic is false)
-    // https://github.com/microsoft/testfx/issues/4207
-    public void IsValidTestMethodShouldNotReportWarningsForGenericTestMethodDefinitions()
+    public void IsValidTestMethodShouldReturnTrueForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
 
@@ -65,8 +54,9 @@ public class TestMethodValidatorTests : TestContainer
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
         _mockMethodInfo.Setup(mi => mi.Attributes).Returns(MethodAttributes.Public);
         _mockMethodInfo.Setup(mi => mi.ReturnType).Returns(typeof(void));
-        _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
+        _mockMethodInfo.Setup(mi => mi.GetParameters()).Returns([]);
 
+        _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings).Should().BeTrue();
         _warnings.Count.Should().Be(0);
     }
 
@@ -153,9 +143,14 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnTrueForMethodsWithVoidReturnType()
     {
         SetupTestMethod();
+
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public)!;
+
+        _mockReflectHelper
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns(default(AsyncStateMachineAttribute?));
 
         _testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings).Should().BeTrue();
     }
@@ -165,9 +160,14 @@ public class TestMethodValidatorTests : TestContainer
     public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnTrueForInternalMethods()
     {
         SetupTestMethod();
+
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        _mockReflectHelper
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns(default(AsyncStateMachineAttribute?));
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 

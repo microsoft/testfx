@@ -14,7 +14,7 @@ public class VSInstallationUtilitiesTests : TestContainer
 {
     public void CheckResolutionPathsDoNotContainPrivateAssembliesPathTest()
     {
-        TestSourceHost isolatedHost = new(null!, null, null);
+        TestSourceHost isolatedHost = new(null!, null);
         List<string> paths = isolatedHost.GetResolutionPaths(Assembly.GetExecutingAssembly().FullName, true);
         (!paths.Contains(EngineConstants.PublicAssemblies) || paths.Contains(EngineConstants.PrivateAssemblies)).Should().BeTrue();
     }

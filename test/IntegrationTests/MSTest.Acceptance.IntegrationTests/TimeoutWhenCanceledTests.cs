@@ -44,15 +44,12 @@ public sealed class TimeoutWhenCanceledTests : AcceptanceTestBase<TimeoutWhenCan
 
         public string TargetAssetPath => GetAssetPath(ProjectName);
 
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (ProjectName, ProjectName,
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchCodeWithReplace("$TimeoutAttribute$", "[Timeout(60000)]")
                 .PatchCodeWithReplace("$ProjectName$", ProjectName)
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string SourceCode = """
 #file $ProjectName$.csproj

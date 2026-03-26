@@ -49,8 +49,6 @@ internal class TestSourceHost : ITestSourceHost
     private readonly bool _isAppDomainCreationDisabled;
 #pragma warning restore SA1214 // Readonly fields should appear before non-readonly fields
 
-    private readonly IRunSettings? _runSettings;
-    private readonly IFrameworkHandle? _frameworkHandle;
     private readonly IAppDomain _appDomain;
 
     private string? _targetFrameworkVersion;
@@ -66,10 +64,9 @@ internal class TestSourceHost : ITestSourceHost
     /// </summary>
     /// <param name="sourceFileName"> The source file name. </param>
     /// <param name="runSettings"> The run-settings provided for this session. </param>
-    /// <param name="frameworkHandle"> The handle to the test platform. </param>
-    public TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle)
+    public TestSourceHost(string sourceFileName, IRunSettings? runSettings)
 #if NETFRAMEWORK
-        : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
+        : this(sourceFileName, runSettings, new AppDomainWrapper())
 #endif
     {
 #if !WINDOWS_UWP && !NETFRAMEWORK
@@ -81,18 +78,16 @@ internal class TestSourceHost : ITestSourceHost
     }
 
 #if NETFRAMEWORK
-    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle, IAppDomain appDomain)
+    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IAppDomain appDomain)
     {
         _sourceFileName = sourceFileName;
-        _runSettings = runSettings;
-        _frameworkHandle = frameworkHandle;
         _appDomain = appDomain;
 
         // Set the environment context.
         SetContext(sourceFileName);
 
         // Set isAppDomainCreationDisabled flag
-        _isAppDomainCreationDisabled = _runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings.SettingsXml);
+        _isAppDomainCreationDisabled = runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runSettings.SettingsXml);
     }
 
     /// <summary>
@@ -238,15 +233,6 @@ internal class TestSourceHost : ITestSourceHost
             {
                 // This happens usually when a test spawns off a thread and fails to clean it up.
                 PlatformServiceProvider.Instance.AdapterTraceLogger.Error("DesktopTestSourceHost.Dispose(): The app domain running tests could not be unloaded. Exception: {0}", exception);
-
-                if (_frameworkHandle != null)
-                {
-                    // Let the test platform know that it should tear down the test host process
-                    // since we have issues in unloading appdomain. We do so to avoid any assembly locking issues.
-                    _frameworkHandle.EnableShutdownAfterTestRun = true;
-
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Verbose("DesktopTestSourceHost.Dispose(): Notifying the test platform that the test host process should be shut down because the app domain running tests could not be unloaded successfully.");
-                }
             }
 
             AppDomain = null;

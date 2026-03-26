@@ -28,15 +28,17 @@ internal class UnitTestDiscoverer
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
     /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal void DiscoverTests(
         IEnumerable<string> sources,
         IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink,
-        IDiscoveryContext discoveryContext)
+        IDiscoveryContext discoveryContext,
+        bool isMTP)
     {
         foreach (string source in sources)
         {
-            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
+            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext, isMTP);
         }
     }
 
@@ -47,13 +49,15 @@ internal class UnitTestDiscoverer
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
     /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal virtual void DiscoverTestsInSource(
         string source,
         IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink,
-        IDiscoveryContext? discoveryContext)
+        IDiscoveryContext? discoveryContext,
+        bool isMTP)
     {
-        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, isMTP, out List<string> warnings);
 
         if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {

@@ -77,7 +77,6 @@ namespace MSTestSdkTest
 
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net9\.0\)");
         compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
 #endif
 
@@ -103,7 +102,6 @@ namespace MSTestSdkTest
 
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net10\.0\|x64\) passed");
 #if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net9\.0\|x64\) passed");
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net8\.0\|x64\) passed");
 #endif
 
