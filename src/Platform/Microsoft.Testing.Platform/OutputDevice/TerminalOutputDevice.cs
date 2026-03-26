@@ -391,8 +391,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             case TestNodeUpdateMessage testNodeStateChanged:
 
                 TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
-                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
 
                 foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
                 {
@@ -420,9 +418,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             errorState.Explanation,
                             errorState.Exception,
                             expected: null,
-                            actual: null,
-                            standardOutput,
-                            standardError);
+                            actual: null);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
@@ -435,9 +431,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              failedState.Explanation,
                              failedState.Exception,
                              expected: failedState.Exception?.Data["assert.expected"] as string,
-                             actual: failedState.Exception?.Data["assert.actual"] as string,
-                             standardOutput,
-                             standardError);
+                             actual: failedState.Exception?.Data["assert.actual"] as string);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
@@ -450,9 +444,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              timeoutState.Explanation,
                              timeoutState.Exception,
                              expected: null,
-                             actual: null,
-                             standardOutput,
-                             standardError);
+                             actual: null);
                         break;
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -467,9 +459,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                              cancelledState.Explanation,
                              cancelledState.Exception,
                              expected: null,
-                             actual: null,
-                             standardOutput,
-                             standardError);
+                             actual: null);
                         break;
 
                     case PassedTestNodeStateProperty:
@@ -482,9 +472,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             errorMessage: null,
                             exception: null,
                             expected: null,
-                            actual: null,
-                            standardOutput,
-                            standardError);
+                            actual: null);
                         break;
 
                     case SkippedTestNodeStateProperty skippedState:
@@ -497,9 +485,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                             errorMessage: null,
                             exception: null,
                             expected: null,
-                            actual: null,
-                            standardOutput,
-                            standardError);
+                            actual: null);
                         break;
 
                     case DiscoveredTestNodeStateProperty:

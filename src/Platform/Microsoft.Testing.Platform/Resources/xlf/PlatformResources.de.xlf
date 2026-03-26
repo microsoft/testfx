@@ -743,16 +743,6 @@ Nimmt ein Argument als Zeichenfolge im Format &lt;value&gt;[h|m|s], wobei "value
         <target state="translated">Stapelüberwachung</target>
         <note />
       </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">Fehlerausgabe</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">Standardausgabe</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Die Testsitzung wird gestartet.</target>
