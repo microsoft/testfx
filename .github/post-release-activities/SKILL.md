@@ -52,9 +52,9 @@ Note that in this step, both `TestingPlatformVersionPrefix` and `VersionPrefix` 
 
 Open a PR to the main branch to update the product versions of public samples to latest. Public samples are present in `samples/public` directory.
 
-### Step 8: Move Unshipped to Shipped
+### Step 8: Mark APIs and analyzers as shipped
 
 1. Run `eng/mark-shipped.ps1` (requires PowerShell 7.0).
-2. Move `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md` to `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Shipped.md`.
+2. Move the contents of `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md` (except the first two lines that start with `;`) to `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Shipped.md`.
 
 Create a PR to main with these changes.
