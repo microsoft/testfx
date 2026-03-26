@@ -57,8 +57,10 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
                 return;
             }
 
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqExpressionsExpression1, out INamedTypeSymbol? linqExpressionType);
+
             context.RegisterOperationAction(
-                context => AnalyzeInvocation(context, cancellationTokenSymbol, testContextSymbol, classCleanupAttributeSymbol, assemblyCleanupAttributeSymbol, testMethodAttributeSymbol),
+                context => AnalyzeInvocation(context, cancellationTokenSymbol, testContextSymbol, classCleanupAttributeSymbol, assemblyCleanupAttributeSymbol, testMethodAttributeSymbol, linqExpressionType),
                 OperationKind.Invocation);
         });
     }
@@ -69,7 +71,8 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
         INamedTypeSymbol testContextSymbol,
         INamedTypeSymbol classCleanupAttributeSymbol,
         INamedTypeSymbol assemblyCleanupAttributeSymbol,
-        INamedTypeSymbol testMethodAttributeSymbol)
+        INamedTypeSymbol testMethodAttributeSymbol,
+        INamedTypeSymbol? linqExpressionType)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
         IMethodSymbol method = invocationOperation.TargetMethod;
@@ -102,6 +105,12 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
                 cancellationTokenParameterName = cancellationTokenParameter.Name;
             }
 
+            // Skip diagnostics inside expression trees where the code fix cannot be applied.
+            if (IsInsideExpressionTree(invocationOperation, linqExpressionType))
+            {
+                return;
+            }
+
             context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState, cancellationTokenParameterName)));
             return;
         }
@@ -117,6 +126,12 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
             if (cancellationTokenParameterFromDifferentOverload.Ordinal != indexOfParameterCorrespondingToLastExplicitArgument + 1)
             {
                 cancellationTokenParameterName = cancellationTokenParameterFromDifferentOverload.Name;
+            }
+
+            // Skip diagnostics inside expression trees where the code fix cannot be applied.
+            if (IsInsideExpressionTree(invocationOperation, linqExpressionType))
+            {
+                return;
             }
 
             context.ReportDiagnostic(invocationOperation.Syntax.CreateDiagnostic(FlowTestContextCancellationTokenRule, properties: GetPropertiesBag(testContextMemberNameInScope, testContextState, cancellationTokenParameterName)));
@@ -136,6 +151,28 @@ public sealed class FlowTestContextCancellationTokenAnalyzer : DiagnosticAnalyze
 
             return properties;
         }
+    }
+
+    private static bool IsInsideExpressionTree(IOperation operation, INamedTypeSymbol? linqExpressionType)
+    {
+        if (linqExpressionType is null)
+        {
+            return false;
+        }
+
+        IOperation? current = operation.Parent;
+        while (current is not null)
+        {
+            if (current is IAnonymousFunctionOperation or ILocalFunctionOperation)
+            {
+                return SymbolEqualityComparer.Default.Equals(
+                    current.Parent?.Type?.OriginalDefinition, linqExpressionType);
+            }
+
+            current = current.Parent;
+        }
+
+        return false;
     }
 
     private static IParameterSymbol? GetCancellationTokenParameterOfOverloadWithCancellationToken(IMethodSymbol method, INamedTypeSymbol cancellationTokenSymbol)

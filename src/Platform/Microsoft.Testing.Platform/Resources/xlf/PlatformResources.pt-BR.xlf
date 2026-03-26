@@ -743,16 +743,6 @@ Recebe um argumento como cadeia de caracteres no formato &lt;valor&gt;[h|m|s] em
         <target state="translated">Rastreamento de Pilha</target>
         <note />
       </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">Saída de erros</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">Saída padrão</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Iniciando sessão de teste.</target>

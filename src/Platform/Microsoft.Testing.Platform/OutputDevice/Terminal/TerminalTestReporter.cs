@@ -332,9 +332,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
        string? errorMessage,
        Exception? exception,
        string? expected,
-       string? actual,
-       string? standardOutput,
-       string? errorOutput)
+       string? actual)
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
@@ -345,9 +343,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             informativeMessage,
             flatExceptions,
             expected,
-            actual,
-            standardOutput,
-            errorOutput);
+            actual);
     }
 
     private void TestCompleted(
@@ -358,9 +354,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? informativeMessage,
         FlatException[] exceptions,
         string? expected,
-        string? actual,
-        string? standardOutput,
-        string? errorOutput)
+        string? actual)
     {
         if (_testProgressState is null)
         {
@@ -404,9 +398,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
                 informativeMessage,
                 exceptions,
                 expected,
-                actual,
-                standardOutput,
-                errorOutput));
+                actual));
         }
     }
 
@@ -424,9 +416,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? informativeMessage,
         FlatException[] flatExceptions,
         string? expected,
-        string? actual,
-        string? standardOutput,
-        string? errorOutput)
+        string? actual)
     {
         if (outcome == TestOutcome.Passed && !GetShowPassedTests())
         {
@@ -468,7 +458,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         FormatExpectedAndActual(terminal, expected, actual);
         FormatStackTrace(terminal, flatExceptions, 0);
         FormatInnerExceptions(terminal, flatExceptions);
-        FormatStandardAndErrorOutput(terminal, standardOutput, errorOutput);
     }
 
     private static void FormatInnerExceptions(ITerminal terminal, FlatException[] exceptions)
@@ -553,25 +542,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
             AppendStackFrame(terminal, line);
         }
 
-        terminal.ResetColor();
-    }
-
-    private static void FormatStandardAndErrorOutput(ITerminal terminal, string? standardOutput, string? standardError)
-    {
-        if (RoslynString.IsNullOrWhiteSpace(standardOutput) && RoslynString.IsNullOrWhiteSpace(standardError))
-        {
-            return;
-        }
-
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardOutput);
-        string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
-        terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.StandardError);
-        string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(standardError, normalizeWhitespaceCharacters: false);
-        AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         terminal.ResetColor();
     }
 

@@ -743,16 +743,6 @@ Acquisisce un argomento come stringa nel formato &lt;value&gt;[h|m|s] dove 'valu
         <target state="translated">Analisi dello stack</target>
         <note />
       </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">Output errori</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">Output standard</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Avvio della sessione di test.</target>

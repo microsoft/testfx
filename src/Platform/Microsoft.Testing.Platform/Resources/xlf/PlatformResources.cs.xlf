@@ -743,16 +743,6 @@ Může mít jenom jeden argument jako řetězec ve formátu &lt;value&gt;[h|m|s]
         <target state="translated">Trasování zásobníku</target>
         <note />
       </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">Chybový výstup</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">Standardní výstup</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Spouští se testovací relace.</target>
