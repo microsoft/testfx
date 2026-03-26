@@ -51,6 +51,6 @@ Open a PR to the main branch to update the product versions of public samples to
 ### Step 8: Move Unshipped to Shipped
 
 1. Run `eng/mark-shipped.ps1` (requires PowerShell 7.0).
-2. Move `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.txt` to `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Shipped.txt`.
+2. Move `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Unshipped.md` to `src/Analyzers/MSTest.Analyzers/AnalyzerReleases.Shipped.md`.
 
 Create a PR to main with these changes.
