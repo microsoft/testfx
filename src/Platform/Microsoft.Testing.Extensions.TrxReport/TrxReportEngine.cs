@@ -101,6 +101,8 @@ internal sealed partial class TrxReportEngine
         _testStartTime = testStartTime;
 #if NETCOREAPP
         _cancellationToken = cancellationToken;
+#else
+        _ = cancellationToken;
 #endif
         _exitCode = exitCode;
         _fileSystem = fileSystem;

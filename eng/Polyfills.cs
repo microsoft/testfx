@@ -516,6 +516,172 @@ internal static class Ensure
     }
 }
 
+// Backward-compatible stubs for Polyfills.Guard and Polyfills.Ensure types.
+// The old Polyfill NuGet package generated these types into the Microsoft.Testing.Platform assembly;
+// old extension packages (compiled against the previous platform version with InternalsVisibleTo)
+// may reference these types at runtime. Providing them here prevents TypeLoadExceptions.
+#if IS_CORE_MTP
+namespace Polyfills
+{
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    [global::System.Diagnostics.DebuggerNonUserCode]
+    internal static class Guard
+    {
+        [return: global::System.Diagnostics.CodeAnalysis.NotNull]
+        public static T NotNull<T>([global::System.Diagnostics.CodeAnalysis.NotNull] T? argument, [global::System.Runtime.CompilerServices.CallerArgumentExpression("argument")] string? name = null)
+            where T : class
+        {
+            if (argument is null)
+            {
+                throw new global::System.ArgumentNullException(name);
+            }
+
+            return argument;
+        }
+
+        [return: global::System.Diagnostics.CodeAnalysis.NotNull]
+        public static string NotNull([global::System.Diagnostics.CodeAnalysis.NotNull] string? argument, [global::System.Runtime.CompilerServices.CallerArgumentExpression("argument")] string? name = null)
+        {
+            if (argument is null)
+            {
+                throw new global::System.ArgumentNullException(name);
+            }
+
+            return argument;
+        }
+
+        public static string NotNullOrEmpty([global::System.Diagnostics.CodeAnalysis.NotNull] string? value, [global::System.Runtime.CompilerServices.CallerArgumentExpression("value")] string? name = null)
+            => Ensure.NotNullOrEmpty(value, name);
+
+        public static T NotNullOrEmpty<T>([global::System.Diagnostics.CodeAnalysis.NotNull] T? value, [global::System.Runtime.CompilerServices.CallerArgumentExpression("value")] string? name = null)
+            where T : global::System.Collections.IEnumerable
+            => Ensure.NotNullOrEmpty(value, name);
+
+        public static string NotNullOrWhiteSpace([global::System.Diagnostics.CodeAnalysis.NotNull] string? value, [global::System.Runtime.CompilerServices.CallerArgumentExpression("value")] string? name = null)
+            => Ensure.NotNullOrWhiteSpace(value, name);
+
+        public static void FileExists(string path, [global::System.Runtime.CompilerServices.CallerArgumentExpression("path")] string? name = null)
+            => Ensure.FileExists(path, name);
+
+        public static void DirectoryExists(string path, [global::System.Runtime.CompilerServices.CallerArgumentExpression("path")] string? name = null)
+            => Ensure.DirectoryExists(path, name);
+    }
+
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    [global::System.Diagnostics.DebuggerNonUserCode]
+    internal static class Ensure
+    {
+        [return: global::System.Diagnostics.CodeAnalysis.NotNull]
+        public static T NotNull<T>([global::System.Diagnostics.CodeAnalysis.NotNull] T? argument, [global::System.Runtime.CompilerServices.CallerArgumentExpression("argument")] string? name = null)
+            where T : class
+        {
+            if (argument is null)
+            {
+                throw new global::System.ArgumentNullException(name);
+            }
+
+            return argument;
+        }
+
+        [return: global::System.Diagnostics.CodeAnalysis.NotNull]
+        public static string NotNull([global::System.Diagnostics.CodeAnalysis.NotNull] string? argument, [global::System.Runtime.CompilerServices.CallerArgumentExpression("argument")] string? name = null)
+        {
+            if (argument is null)
+            {
+                throw new global::System.ArgumentNullException(name);
+            }
+
+            return argument;
+        }
+
+        public static string NotNullOrEmpty([global::System.Diagnostics.CodeAnalysis.NotNull] string? value, [global::System.Runtime.CompilerServices.CallerArgumentExpression("value")] string? name = null)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new global::System.ArgumentException("Must not be null or empty.", name);
+            }
+
+            return value;
+        }
+
+        [return: global::System.Diagnostics.CodeAnalysis.NotNull]
+        public static T NotNullOrEmpty<T>([global::System.Diagnostics.CodeAnalysis.NotNull] T? value, [global::System.Runtime.CompilerServices.CallerArgumentExpression("value")] string? name = null)
+            where T : global::System.Collections.IEnumerable
+        {
+            if (value is null)
+            {
+                throw new global::System.ArgumentNullException(name);
+            }
+
+            global::System.Collections.IEnumerator enumerator = value.GetEnumerator();
+            try
+            {
+                if (!enumerator.MoveNext())
+                {
+                    throw new global::System.ArgumentException("Must not be empty.", name);
+                }
+            }
+            finally
+            {
+                (enumerator as global::System.IDisposable)?.Dispose();
+            }
+
+            return value;
+        }
+
+        public static string NotNullOrWhiteSpace([global::System.Diagnostics.CodeAnalysis.NotNull] string? value, [global::System.Runtime.CompilerServices.CallerArgumentExpression("value")] string? name = null)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new global::System.ArgumentException("Must not be null or whitespace.", name);
+            }
+
+            return value;
+        }
+
+        public static void FileExists(string path, [global::System.Runtime.CompilerServices.CallerArgumentExpression("path")] string? name = null)
+        {
+            if (!global::System.IO.File.Exists(path))
+            {
+                throw new global::System.ArgumentException($"File not found. Path: {path}", name);
+            }
+        }
+
+        public static void DirectoryExists(string path, [global::System.Runtime.CompilerServices.CallerArgumentExpression("path")] string? name = null)
+        {
+            if (!global::System.IO.Directory.Exists(path))
+            {
+                throw new global::System.ArgumentException($"Directory not found. Path: {path}", name);
+            }
+        }
+    }
+
+    // Polyfills.Polyfill stub: The old Polyfill NuGet package generated this type into every assembly.
+    // Old extensions (compiled with InternalsVisibleTo to the platform) may reference methods on
+    // this type from the platform assembly. We need to provide it for backward compatibility.
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    [global::System.Diagnostics.DebuggerNonUserCode]
+    internal static class Polyfill
+    {
+#if NETCOREAPP
+        public static bool Contains<T>(global::System.ReadOnlySpan<T> span, T value, global::System.Collections.Generic.IEqualityComparer<T>? comparer = null)
+        {
+            comparer ??= global::System.Collections.Generic.EqualityComparer<T>.Default;
+            foreach (T item in span)
+            {
+                if (comparer.Equals(item, value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+#endif
+    }
+}
+#endif
+
 // All extension method polyfills are guarded with IS_CORE_MTP to avoid ambiguity when
 // projects reference Microsoft.Testing.Platform with InternalsVisibleTo. Projects that
 // do not reference Platform and need these extensions should provide their own copies.
