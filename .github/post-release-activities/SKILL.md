@@ -30,7 +30,7 @@ Create a tag for the branch using the version you found in Step 1. The tag name 
 ### Step 4: Open a PR to main updating the change log files
 
 1. Run the following command to get markdown of the changelog: `gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/microsoft/testfx/releases/generate-notes -f 'tag_name=v{version}'` (replace `{version}` with the version you found in Step 1).
-2. Classify everything whether it's MSTest change or Microsoft.Testing.Platform change.
+2. Classify each entry as either an MSTest change or a Microsoft.Testing.Platform change.
 3. MSTest changes go to `docs/Changelog.md` and Microsoft.Testing.Platform changes go to `docs/Changelog-Platform.md`.
 4. Classify further the changes of each product into categories like "Added", "Changed", "Fixed", etc.
 5. Update the changelog markdown files using the above instructions and following the existing format of those files.
