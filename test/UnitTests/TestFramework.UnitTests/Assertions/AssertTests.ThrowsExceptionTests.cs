@@ -13,10 +13,7 @@ public partial class AssertTests
     {
         Action action = () => Assert.ThrowAssertFailed("name", "{");
         action.Should().Throw<AssertFailedException>()
-            .WithMessage("""
-            name
-            {
-            """);
+            .WithMessage("name" + Environment.NewLine + "{");
     }
     #endregion
 

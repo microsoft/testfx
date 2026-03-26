@@ -31,10 +31,9 @@ public partial class AssertTests
         Action act = () => Assert.Equals("test", "test");
 #pragma warning restore CS0618 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
-           .WithMessage("""
-            Assert.Fail
-            Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead.
-            """);
+           .WithMessage(
+                "Assert.Fail" + Environment.NewLine +
+                "Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead.");
     }
 
     public void ObsoleteReferenceEqualsMethodThrowsAssertFailedException()
@@ -44,10 +43,9 @@ public partial class AssertTests
         Action act = () => Assert.ReferenceEquals(obj, obj);
 #pragma warning restore CS0618 // Type or member is obsolete
         act.Should().Throw<AssertFailedException>()
-           .WithMessage("""
-            Assert.Fail
-            Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead.
-            """);
+           .WithMessage(
+                "Assert.Fail" + Environment.NewLine +
+                "Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead.");
     }
 #endif
     #endregion
