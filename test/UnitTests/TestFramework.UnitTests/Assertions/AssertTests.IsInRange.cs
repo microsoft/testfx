@@ -348,7 +348,7 @@ public partial class AssertTests : TestContainer
         Action action = () => Assert.IsInRange(minValue, maxValue, value);
 
         // Assert
-        var ex = action.Should().ThrowExactly<ArgumentOutOfRangeException>().Which;
+        ArgumentOutOfRangeException ex = action.Should().ThrowExactly<ArgumentOutOfRangeException>().Which;
         ex.ParamName.Should().Be("maxValue");
         ex.Message.Should().Contain("The maximum value must be greater than or equal to the minimum value.");
     }
