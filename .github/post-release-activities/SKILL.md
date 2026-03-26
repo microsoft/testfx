@@ -40,9 +40,13 @@ Create a tag for the branch using the version you found in Step 1. The tag name 
 
 Open a PR to the release branch to update the patch version in `eng/Versions.props` file. The new patch version should be one more than the patch version you found in Step 1.
 
+Note that in this step, both `TestingPlatformVersionPrefix` and `VersionPrefix` must be updated.
+
 ### Step 6: Create a PR to main to update minor version
 
 Open a PR to the main branch to update the minor version in `eng/Versions.props` file. The new minor version should be one more than the minor version you found in Step 1, and the patch version should be reset to 0.
+
+Note that in this step, both `TestingPlatformVersionPrefix` and `VersionPrefix` must be updated.
 
 ### Step 7: Update public samples
 
