@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias SourceGen;
+
 using AwesomeAssertions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.Testing.Framework.SourceGeneration.UnitTests.Helpers;
 using Microsoft.Testing.Framework.SourceGeneration.UnitTests.TestUtilities;
+
+using TestNodesGenerator = SourceGen::Microsoft.Testing.Framework.SourceGeneration.TestNodesGenerator;
 
 namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.Generators;
 

@@ -83,7 +83,9 @@ internal sealed partial class TrxReportEngine
     private readonly Dictionary<IExtension, List<SessionFileArtifact>> _artifactsByExtension;
     private readonly ITestFramework _testFrameworkAdapter;
     private readonly DateTimeOffset _testStartTime;
+#if NETCOREAPP
     private readonly CancellationToken _cancellationToken;
+#endif
     private readonly int _exitCode;
     private readonly IFileSystem _fileSystem;
 
@@ -97,7 +99,9 @@ internal sealed partial class TrxReportEngine
         _artifactsByExtension = artifactsByExtension;
         _testFrameworkAdapter = testFrameworkAdapter;
         _testStartTime = testStartTime;
+#if NETCOREAPP
         _cancellationToken = cancellationToken;
+#endif
         _exitCode = exitCode;
         _fileSystem = fileSystem;
     }

@@ -19,7 +19,7 @@ internal sealed class SystemEnvironment : IEnvironment
     {
         get
         {
-            using Process process = Process.GetCurrentProcess();
+            using var process = Process.GetCurrentProcess();
             return process.Id;
         }
     }

@@ -22,7 +22,9 @@
 // can resolve the type at runtime on net5+.
 // See https://github.com/SimonCropp/Polyfill/issues/290
 #if NET5_0_OR_GREATER
+#pragma warning disable RS0016 // Symbol is not part of the declared public API - compiler support type forwarding
 [assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.IsExternalInit))]
+#pragma warning restore RS0016
 #else
 
 namespace System.Runtime.CompilerServices
@@ -424,6 +426,7 @@ namespace System.Runtime.CompilerServices
     internal static class RuntimeHelpers
     {
         /// <summary>Slices the specified array using the specified range.</summary>
+        /// <typeparam name="T">The type of the array elements.</typeparam>
         public static T[] GetSubArray<T>(T[] array, Range range)
         {
             range.GetOffsetAndLength(array.Length, out int offset, out int length);
@@ -444,6 +447,7 @@ namespace Microsoft.CodeAnalysis
 
 #pragma warning disable CS8603 // Possible null reference return
 #pragma warning disable CS8777 // Parameter must have a non-null value when exiting
+#pragma warning disable RS0030 // Banned API - Ensure is the guard implementation itself
 internal static class Ensure
 {
     [return: global::System.Diagnostics.CodeAnalysis.NotNull]
@@ -503,7 +507,7 @@ internal static class Ensure
             throw new global::System.ArgumentNullException(paramName);
         }
 
-        if (string.IsNullOrWhiteSpace(argument))
+        if (argument.Trim().Length == 0)
         {
             throw new global::System.ArgumentException("Value cannot be null or whitespace.", paramName);
         }
@@ -541,10 +545,10 @@ internal static class PolyfillStringExtensions
     public static bool EndsWith(this string s, char c) => s.Length > 0 && s[s.Length - 1] == c;
 
     public static string[] Split(this string s, char separator, global::System.StringSplitOptions options = global::System.StringSplitOptions.None) =>
-        s.Split(new[] { separator }, options);
+        s.Split([separator], options);
 
     public static string[] Split(this string s, char separator, int count, global::System.StringSplitOptions options = global::System.StringSplitOptions.None) =>
-        s.Split(new[] { separator }, count, options);
+        s.Split([separator], count, options);
 
     public static string Replace(this string s, string oldValue, string? newValue, global::System.StringComparison comparisonType)
     {
@@ -671,7 +675,14 @@ internal static class PolyfillTaskExtensions
     {
         using var cts = global::System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(timeout);
-        await task.WaitAsync(cts.Token).ConfigureAwait(false);
+        try
+        {
+            await task.WaitAsync(cts.Token).ConfigureAwait(false);
+        }
+        catch (global::System.OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new global::System.TimeoutException();
+        }
     }
 
     public static async global::System.Threading.Tasks.Task<T> WaitAsync<T>(this global::System.Threading.Tasks.Task<T> task, global::System.Threading.CancellationToken cancellationToken)
@@ -728,11 +739,9 @@ internal static class PolyfillProcessExtensions
             global::System.Threading.Tasks.TaskScheduler.Default);
     }
 
-    public static void Kill(this global::System.Diagnostics.Process process, bool entireProcessTree)
-    {
+    public static void Kill(this global::System.Diagnostics.Process process, bool entireProcessTree) =>
         // entireProcessTree not supported on netstandard2.0 - just kill the process
         process.Kill();
-    }
 }
 
 #endif // !NET5_0_OR_GREATER

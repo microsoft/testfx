@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias SourceGen;
+
 using System.Collections.Immutable;
 
 using AwesomeAssertions;
@@ -12,6 +14,8 @@ using Microsoft.CodeAnalysis.Testing;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+
+using TestNodesGenerator = SourceGen::Microsoft.Testing.Framework.SourceGeneration.TestNodesGenerator;
 
 namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests.TestUtilities;
 

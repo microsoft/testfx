@@ -3,7 +3,6 @@
 
 // Polyfill extension methods for the Adapter projects which target
 // net462 and need APIs not available on .NET Framework.
-
 #if !NET5_0_OR_GREATER
 
 internal static class AdapterPolyfillExtensions
@@ -54,7 +53,7 @@ internal static class AdapterPolyfillExtensions
         => dictionary.GetOrAdd(key, k => valueFactory(k, factoryArgument));
 
     public static string[] Split(this string s, char separator, System.StringSplitOptions options) =>
-        s.Split(new[] { separator }, options);
+        s.Split([separator], options);
 }
 
 #endif

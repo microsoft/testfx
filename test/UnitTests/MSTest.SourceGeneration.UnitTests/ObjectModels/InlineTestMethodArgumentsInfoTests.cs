@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
+extern alias SourceGen;
+
+using SourceGen::Microsoft.Testing.Framework.SourceGeneration.ObjectModels;
 
 namespace Microsoft.Testing.Framework.SourceGeneration.UnitTests;
 

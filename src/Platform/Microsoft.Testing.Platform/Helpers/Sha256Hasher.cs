@@ -22,7 +22,7 @@ internal static class Sha256Hasher
         byte[] hash = SHA256.HashData(bytes);
         return Convert.ToHexString(hash).ToLowerInvariant();
 #else
-        using SHA256 sha256 = SHA256.Create();
+        using var sha256 = SHA256.Create();
         byte[] hash = sha256.ComputeHash(bytes);
         return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
 #endif

@@ -3,7 +3,6 @@
 
 // Polyfill extension methods for the TestFramework project which targets
 // netstandard2.0, net462, and does not have IVT from Microsoft.Testing.Platform.
-
 #if !NET5_0_OR_GREATER
 
 internal static class TestFrameworkPolyfillExtensions

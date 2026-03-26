@@ -208,7 +208,7 @@ public class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
             }
 
             Log.LogMessage(MessageImportance.Low, $"Current process architecture '{_currentProcessArchitecture}'. Requested test architecture '{TestArchitecture.ItemSpec}'");
-            PlatformArchitecture targetArchitecture = (PlatformArchitecture)Enum.Parse(typeof(PlatformArchitecture), TestArchitecture.ItemSpec, ignoreCase: true);
+            var targetArchitecture = (PlatformArchitecture)Enum.Parse(typeof(PlatformArchitecture), TestArchitecture.ItemSpec, ignoreCase: true);
             StringBuilder resolutionLog = new();
             DotnetMuxerLocator dotnetMuxerLocator = new(log => resolutionLog.AppendLine(log));
             if (dotnetMuxerLocator.TryGetDotnetPathByArchitecture(targetArchitecture, out string? dotnetPath))

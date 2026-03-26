@@ -93,7 +93,12 @@
     <Using Include="System.Xml.XPath" />
   </ItemGroup>
 
-  <!-- Shared polyfills for older target frameworks -->
+  <!-- Shared polyfills for older target frameworks.
+       CS0436 is suppressed because InternalsVisibleTo causes the same internal polyfill types
+       to be visible from referenced assemblies; the local copy is intentionally preferred. -->
+  <PropertyGroup Condition="'$(Language)' != 'F#'">
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+  </PropertyGroup>
   <ItemGroup Condition="'$(Language)' != 'F#'">
     <Compile Include="$(MSBuildThisFileDirectory)eng\Polyfills.cs" Link="Polyfills.cs" />
   </ItemGroup>
