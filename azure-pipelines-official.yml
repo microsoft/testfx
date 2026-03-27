@@ -253,4 +253,7 @@ extends:
             LclSource: lclFilesfromPackage
             LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
-    - template: eng\common\templates-official\post-build\post-build.yml@self
+    - template: eng/common/templates-official/post-build/post-build.yml@self
+      parameters:
+        # Temporary skip validation until infra issues are resolved, based on advice from Arcade.
+        enableSigningValidation: false
