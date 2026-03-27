@@ -743,16 +743,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">Трассировка стека</target>
         <note />
       </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">Вывод ошибок</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">Стандартный вывод</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">Запуск тестового сеанса.</target>

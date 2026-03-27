@@ -743,16 +743,6 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
         <target state="translated">堆栈跟踪</target>
         <note />
       </trans-unit>
-      <trans-unit id="StandardError">
-        <source>Error output</source>
-        <target state="translated">错误输出</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StandardOutput">
-        <source>Standard output</source>
-        <target state="translated">标准输出</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StartingTestSession">
         <source>Starting test session.</source>
         <target state="translated">正在启动测试会话。</target>

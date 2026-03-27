@@ -22,7 +22,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null);
 
         // Execute
         // It should return public and private path if it is not running in portable mode.
@@ -43,7 +43,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null);
 
         // Execute
         // It should not return public and private path if it is running in portable mode.
@@ -57,7 +57,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddAdapterFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -69,7 +69,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void GetResolutionPathsShouldAddTestPlatformFolderPath()
     {
         // Setup
-        TestSourceHost sut = new(null!, null, null);
+        TestSourceHost sut = new(null!, null);
 
         // Execute
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -84,7 +84,7 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
         int currentAppDomainId = dummyClass.AppDomainId;
 
-        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null);
+        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null);
         sut.SetupHost();
 
         // Execute
@@ -104,7 +104,7 @@ public class DesktopTestSourceHostTests : TestContainer
         _ = new DummyClass();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null) { CallBase = true };
 
         try
         {
@@ -138,7 +138,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        TestSourceHost sourceHost = new(location, mockRunSettings.Object, null);
+        TestSourceHost sourceHost = new(location, mockRunSettings.Object);
 
         try
         {
@@ -161,7 +161,7 @@ public class DesktopTestSourceHostTests : TestContainer
         DummyClass dummyClass = new();
 
         string location = typeof(TestSourceHost).Assembly.Location;
-        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null) { CallBase = true };
 
         try
         {
@@ -175,24 +175,6 @@ public class DesktopTestSourceHostTests : TestContainer
         {
             sourceHost.Object.Dispose();
         }
-    }
-
-    public void DisposeShouldSetTestHostShutdownOnIssueWithAppDomainUnload()
-    {
-        // Arrange
-        var frameworkHandle = new Mock<IFrameworkHandle>();
-        var testableAppDomain = new Mock<IAppDomain>();
-
-        testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
-        testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
-        var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object);
-        sourceHost.SetupHost();
-
-        // Act
-        sourceHost.Dispose();
-
-        // Assert
-        frameworkHandle.VerifySet(fh => fh.EnableShutdownAfterTestRun = true);
     }
 
     public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
@@ -210,7 +192,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object) { CallBase = true };
 
         try
         {
@@ -241,7 +223,7 @@ public class DesktopTestSourceHostTests : TestContainer
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object) { CallBase = true };
 
         try
         {

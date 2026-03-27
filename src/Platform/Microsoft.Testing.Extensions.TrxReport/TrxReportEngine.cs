@@ -397,7 +397,10 @@ internal sealed partial class TrxReportEngine
         var results = new XElement("Results");
 
         // Duplicate test ids are not allowed inside the TestDefinitions element.
-        var uniqueTestDefinitionTestIds = new HashSet<string>();
+        // We create a dictionary to map test id to test definition name.
+        // It's not expected to get the same test id twice but with different test definition name.
+        // However, due to backcompat concerns, we will disallow this only for frameworks that start using TrxTestDefinitionName property.
+        var uniqueTestDefinitionTestIds = new Dictionary<string, (string TestDefinitionName, bool IsExplicitlyProvided)>();
 
         foreach (TestNodeUpdateMessage nodeMessage in testNodeUpdateMessages)
         {
@@ -412,7 +415,11 @@ internal sealed partial class TrxReportEngine
 
             // NOTE: In VSTest, MSTestDiscoverer.TmiTestId property is preferred if present.
             string id = guid.ToString();
-            string displayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
+            string testResultDisplayName = RemoveInvalidXmlChar(testNode.DisplayName)!;
+            (string testDefinitionName, bool isExplicitlyProvided) = testNode.Properties.SingleOrDefault<TrxTestDefinitionName>() is { } trxTestDefinitionName
+                ? (RemoveInvalidXmlChar(trxTestDefinitionName.TestDefinitionName), true)
+                : (testResultDisplayName, false);
+
             string executionId = Guid.NewGuid().ToString();
 
             // Results
@@ -420,7 +427,7 @@ internal sealed partial class TrxReportEngine
                 "UnitTestResult",
                 new XAttribute("executionId", executionId),
                 new XAttribute("testId", id),
-                new XAttribute("testName", displayName),
+                new XAttribute("testName", testResultDisplayName),
                 new XAttribute("computerName", _environment.MachineName));
 
             TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
@@ -561,9 +568,31 @@ internal sealed partial class TrxReportEngine
 
             // TestDefinitions
             // Add the test method to the test definitions if it's not already there
-            if (uniqueTestDefinitionTestIds.Add(id))
+            if (uniqueTestDefinitionTestIds.TryGetValue(id, out (string ExistingTestDefinitionName, bool ExistingIsExplicitlyProvided) existing))
             {
-                XElement unitTest = CreateUnitTestElementForTestDefinition(displayName, testAppModule, id, testNode, executionId);
+                // Value already exists. We only do a validation.
+                // Owner, Description, Priority, and TestCategory are also part of the test definition.
+                // Unfortunately, MSTest allows TestCategories via TestDataRow, which is one case where
+                // we might receive the same test id and same test definition name, but different categories.
+                // It's probably best if TRX is able to "merge" categories in this case (which we don't do yet).
+                // For Owner, Description, Priority, this needs investigation whether or not it's expected to be different,
+                // and what should we do in this case.
+                if ((isExplicitlyProvided || existing.ExistingIsExplicitlyProvided) &&
+                    existing.ExistingTestDefinitionName != testDefinitionName)
+                {
+                    throw new InvalidOperationException($"Received two different test definition names ('{existing.ExistingTestDefinitionName}' and '{testDefinitionName}') for the same test id '{id}'.");
+                }
+
+                if (!existing.ExistingIsExplicitlyProvided && isExplicitlyProvided)
+                {
+                    // We got a first result that didn't have explicit test definition name, but a second result that has an explicit test definition name.
+                    uniqueTestDefinitionTestIds[id] = (testDefinitionName, true);
+                }
+            }
+            else
+            {
+                uniqueTestDefinitionTestIds.Add(id, (testDefinitionName, isExplicitlyProvided));
+                XElement unitTest = CreateUnitTestElementForTestDefinition(testDefinitionName, testAppModule, id, testNode, executionId);
 
                 var testMethod = new XElement(
                     "TestMethod",
@@ -574,13 +603,13 @@ internal sealed partial class TrxReportEngine
                 (string className, string? testMethodName) = GetClassAndMethodName(testNode);
                 testMethod.SetAttributeValue("className", className);
 
-                // NOTE: Historically, MTP used to always use displayName here.
-                // While VSTest never uses displayName.
-                // The use of displayName here is very wrong.
+                // NOTE: Historically, MTP used to always use testResultDisplayName here.
+                // While VSTest never uses testResultDisplayName.
+                // The use of testResultDisplayName here is very wrong.
                 // We keep it as a fallback if we cannot determine the testMethodName (when TestMethodIdentifierProperty isn't present).
                 // This will most likely be hit for NUnit.
                 // However, this is very wrong and we probably should fail if TestMethodIdentifierProperty isn't present.
-                testMethod.SetAttributeValue("name", testMethodName ?? displayName);
+                testMethod.SetAttributeValue("name", testMethodName ?? testResultDisplayName);
 
                 unitTest.Add(testMethod);
 
@@ -626,11 +655,11 @@ internal sealed partial class TrxReportEngine
         return (classNameFromIdentifierProperty, testMethodIdentifierProperty.MethodName);
     }
 
-    private static XElement CreateUnitTestElementForTestDefinition(string displayName, string testAppModule, string id, TestNode testNode, string executionId)
+    private static XElement CreateUnitTestElementForTestDefinition(string testDefinitionName, string testAppModule, string id, TestNode testNode, string executionId)
     {
         var unitTest = new XElement(
             "UnitTest",
-            new XAttribute("name", displayName),
+            new XAttribute("name", testDefinitionName),
             new XAttribute("storage", testAppModule.ToLowerInvariant()),
             new XAttribute("id", id));
 
@@ -804,7 +833,7 @@ internal sealed partial class TrxReportEngine
     private static Regex BuildInvalidXmlCharReplace() => new(@"[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD]");
 #endif
 
-    private static string? RemoveInvalidXmlChar(string? str) => str is null ? null : InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
+    private static string RemoveInvalidXmlChar(string str) => InvalidXmlCharReplace.Replace(str, InvalidXmlEvaluator);
 
     private static string ReplaceInvalidCharacterWithUniCodeEscapeSequence(Match match)
     {

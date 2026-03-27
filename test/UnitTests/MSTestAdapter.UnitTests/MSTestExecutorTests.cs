@@ -80,7 +80,7 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         // Act.
-        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
+        await _mstestExecutor.RunTestsAsync(sources, _mockRunContext.Object, _mockFrameworkHandle.Object, null, isMTP: false);
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
