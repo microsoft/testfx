@@ -2087,6 +2087,32 @@ public sealed class UseProperAssertMethodsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertAreEqualWithCollectionCountNonZeroNullableExpected()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+            using System.Linq;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    int? count = 3;
+                    var list = new List<int> { 1, 2, 3 };
+                    Assert.AreEqual(count, list.Count);
+                    Assert.AreEqual(count, list.AsEnumerable().Count());
+                }
+            }
+            """;
+
+        // Should not trigger MSTEST0037 because Assert.HasCount takes int, not int?
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreNotEqualWithCollectionCountZero()
     {
         string code = """
