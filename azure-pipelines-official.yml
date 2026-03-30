@@ -254,6 +254,3 @@ extends:
             LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
     - template: eng/common/templates-official/post-build/post-build.yml@self
-      parameters:
-        # Temporarily disable signing validation until infra issues are resolved, based on advice from Arcade.
-        enableSigningValidation: False
