@@ -989,6 +989,39 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests
     }
 
     [TestMethod]
+    public async Task UserDefinedConversionOperator_ShouldNotFlag()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private sealed class Foo : IEquatable<Foo>
+                {
+                    private readonly string _value;
+                    public Foo(string value) { _value = value; }
+                    public static explicit operator Foo(string s) => new Foo(s);
+                    public override bool Equals(object? obj) => Equals(obj as Foo);
+                    public bool Equals(Foo? other) => other is not null && _value.Equals(other._value);
+                    public override int GetHashCode() => HashCode.Combine(_value);
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    // User-defined conversion operator should not be treated as a constant
+                    Assert.AreEqual(new Foo("Hello"), (Foo)"Hello");
+                    Assert.AreNotEqual(new Foo("Hello"), (Foo)"World");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenUsingLiterals_MultiLineWithDifferentIndentation()
     {
         string code = """
