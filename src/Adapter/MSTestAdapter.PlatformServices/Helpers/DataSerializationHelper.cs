@@ -21,7 +21,7 @@ internal static class DataSerializationHelper
 #if NETFRAMEWORK
         DataContractSurrogate = SerializationSurrogateProvider.Instance,
 #endif
-        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly), typeof(SurrogatedSystemType)],
+        KnownTypes = [typeof(SurrogatedDateOnly), typeof(SurrogatedTimeOnly)],
     };
 
     /// <summary>
@@ -50,22 +50,7 @@ internal static class DataSerializationHelper
                 continue;
             }
 
-            object valueToSerialize = data[i]!;
-            Type type = valueToSerialize.GetType();
-
-            if (valueToSerialize is Type serializableType)
-            {
-                string assemblyQualifiedName = serializableType.AssemblyQualifiedName
-                    ?? throw new SerializationException($"Cannot serialize '{serializableType}' because it does not have an assembly-qualified name.");
-
-                valueToSerialize = new SurrogatedSystemType
-                {
-                    AssemblyQualifiedName = assemblyQualifiedName,
-                };
-
-                type = typeof(SurrogatedSystemType);
-            }
-
+            Type type = data[i]!.GetType();
             string? typeName = type.AssemblyQualifiedName;
 
             serializedData[typeIndex] = typeName;
@@ -81,7 +66,7 @@ internal static class DataSerializationHelper
             // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
 #pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
-            serializer.WriteObject(memoryStream, valueToSerialize);
+            serializer.WriteObject(memoryStream, data[i]);
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             byte[] serializerData = memoryStream.ToArray();
@@ -150,7 +135,7 @@ internal static class DataSerializationHelper
             // Not the best solution, maybe we can replace this with System.Text.Json, but the we need one generator calling the other.
 #pragma warning disable IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
-            _ => new DataContractJsonSerializer(GetSerializationType(assemblyQualifiedName), SerializerSettings));
+            _ => new DataContractJsonSerializer(PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
 #pragma warning restore IL3050 // IL3050: Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT
 #pragma warning restore IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
 
@@ -164,19 +149,6 @@ internal static class DataSerializationHelper
 #pragma warning disable IL2026 // IL2026: Members attributed with RequiresUnreferencedCode may break when trimming
             _ => new DataContractJsonSerializer(type, SerializerSettings));
 
-    private static Type GetSerializationType(string assemblyQualifiedName)
-    {
-        Type? serializedType = PlatformServiceProvider.Instance.ReflectionOperations.GetType(assemblyQualifiedName);
-        return serializedType
-            ?? assemblyQualifiedName switch
-            {
-                var name when name.StartsWith(typeof(SurrogatedSystemType).FullName + ",", StringComparison.Ordinal) => typeof(SurrogatedSystemType),
-                var name when name.StartsWith(typeof(SurrogatedDateOnly).FullName + ",", StringComparison.Ordinal) => typeof(SurrogatedDateOnly),
-                var name when name.StartsWith(typeof(SurrogatedTimeOnly).FullName + ",", StringComparison.Ordinal) => typeof(SurrogatedTimeOnly),
-                _ => typeof(object),
-            };
-    }
-
     [DataContract]
     private sealed class SurrogatedDateOnly
     {
@@ -189,13 +161,6 @@ internal static class DataSerializationHelper
     {
         [DataMember]
         public long Ticks { get; set; }
-    }
-
-    [DataContract]
-    private sealed class SurrogatedSystemType
-    {
-        [DataMember]
-        public string AssemblyQualifiedName { get; set; } = null!;
     }
 
     private sealed class SerializationSurrogateProvider
@@ -236,10 +201,8 @@ internal static class DataSerializationHelper
                 return new TimeOnly(surrogatedTimeOnly.Ticks);
             }
 #endif
-            return obj is SurrogatedSystemType surrogatedSystemType
-                ? PlatformServiceProvider.Instance.ReflectionOperations.GetType(surrogatedSystemType.AssemblyQualifiedName)
-                    ?? throw new SerializationException($"Cannot deserialize type '{surrogatedSystemType.AssemblyQualifiedName}'.")
-                : obj;
+
+            return obj;
         }
 
         public object GetObjectToSerialize(object obj, Type targetType)
