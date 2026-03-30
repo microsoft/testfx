@@ -3,6 +3,10 @@ trigger:
     include:
     - main
     - rel/*
+  paths:
+    exclude:
+      - .github/**
+      - .gitignore
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
@@ -11,7 +15,8 @@ pr:
     - "*"
   paths:
     exclude:
-      - .github/*
+      - .github/**
+      - .gitignore
       - .devcontainer/*
       - docs/*
       - .vscode/*
