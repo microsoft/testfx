@@ -1430,8 +1430,8 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             {
                 // We have Assert.AreEqual(expectedCount, collection.Count/Length)
                 // We want Assert.HasCount(expectedCount, collection)
-                // Assert.HasCount takes int, not int?, so skip if expectedCount is a nullable value type.
-                if (expectedArgument.Type.IsNullableValueType())
+                // Assert.HasCount takes int, so skip if expectedCount is not an int (e.g. int?, long, uint, decimal).
+                if (expectedArgument.Type?.SpecialType != SpecialType.System_Int32)
                 {
                     nodeToBeReplaced1 = null;
                     replacement1 = null;
@@ -1471,8 +1471,8 @@ public sealed class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             {
                 // We have Assert.AreEqual(expectedCount, enumerable.Count())
                 // We want Assert.HasCount(expectedCount, enumerable)
-                // Assert.HasCount takes int, not int?, so skip if expectedCount is a nullable value type.
-                if (expectedArgument.Type.IsNullableValueType())
+                // Assert.HasCount takes int, so skip if expectedCount is not an int (e.g. int?, long, uint, decimal).
+                if (expectedArgument.Type?.SpecialType != SpecialType.System_Int32)
                 {
                     nodeToBeReplaced1 = null;
                     replacement1 = null;
