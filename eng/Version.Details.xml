@@ -13,9 +13,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>b02e7ea7be8bf285419a0b16fed5cd6a966447d2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.6.0-preview.26175.1">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.7.0-preview.26180.5">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>413a357aba09b9199f81be9336422ea30bd8082c</Sha>
+      <Sha>0b3d3ecc07f69b4b14961fb4faca8898481331e6</Sha>
     </Dependency>
     <Dependency Name="MSTest" Version="4.2.1-preview.26180.5">
       <Uri>https://github.com/microsoft/testfx</Uri>
