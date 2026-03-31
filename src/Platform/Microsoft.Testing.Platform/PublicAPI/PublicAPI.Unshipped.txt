@@ -10,9 +10,29 @@
 *REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? other) -> bool
 *REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.get -> string!
 *REMOVED*[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(string! standardError) -> void
+*REMOVED*[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(object? obj) -> bool
+*REMOVED*[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.GetHashCode() -> int
+*REMOVED*[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.ToString() -> string!
+*REMOVED*[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(object? obj) -> bool
+*REMOVED*[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.GetHashCode() -> int
+*REMOVED*[TPEXP]override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.ToString() -> string!
+Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty
+Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(string! standardError) -> void
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
 Microsoft.Testing.Platform.Extensions.TestHost.ITestHostApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.ToString() -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator.OrchestrateTestHostExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostOrchestrator.get -> Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager!
@@ -23,11 +43,3 @@ Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostOrchestrator.
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime.BeforeRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorExtension
-Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty
-Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutput.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty.StandardOutputProperty(string! standardOutput) -> void
-Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty
-Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? other) -> bool
-Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardError.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty.StandardErrorProperty(string! standardError) -> void
