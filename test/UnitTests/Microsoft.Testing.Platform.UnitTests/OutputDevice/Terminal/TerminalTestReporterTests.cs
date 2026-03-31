@@ -121,18 +121,20 @@ public sealed class TerminalTestReporterTests
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
 
         terminalReporter.AssemblyRunStarted();
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
 
         terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
         terminalReporter.TestCompleted(testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF");
+            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted();
@@ -142,9 +144,25 @@ public sealed class TerminalTestReporterTests
 
         string expected = $"""
             passed PassedTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
             skipped SkippedTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
             failed (canceled) TimedoutTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
             failed (canceled) CanceledTest1 (10s 000ms)
+              Standard output
+                Hello!
+              Error output
+                Oh no!
             failed FailedTest1 (10s 000ms)
               Tests failed
               Expected
@@ -152,6 +170,10 @@ public sealed class TerminalTestReporterTests
               Actual
                 DEF
                 at FailingTest() in {folder}codefile.cs:10
+              Standard output
+                Hello!
+              Error output
+                Oh no!
 
               Out of process file artifacts produced:
                 - {folder}artifact1.txt
@@ -195,18 +217,20 @@ public sealed class TerminalTestReporterTests
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
 
         terminalReporter.AssemblyRunStarted();
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
 
         terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
         terminalReporter.TestCompleted(testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF");
+            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted();
@@ -216,16 +240,36 @@ public sealed class TerminalTestReporterTests
 
         string expected = $"""
             ␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
-            ␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
-            ␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
-            ␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
-            ␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
+            ␛[m␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
             ␛[31m  Tests failed
             ␛[m␛[31m  Expected
             ␛[31m    ABC
             ␛[31m  Actual
             ␛[31m    DEF
             ␛[m␛[90m    at FailingTest() in {folder}codefile.cs:10␛[90m
+            ␛[m␛[90m  Standard output
+            ␛[90m    Hello!
+            ␛[90m  Error output
+            ␛[90m    Oh no!
             ␛[m
               Out of process file artifacts produced:
                 - {folder}artifact1.txt
@@ -270,18 +314,20 @@ public sealed class TerminalTestReporterTests
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
         terminalReporter.AssemblyRunStarted();
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
 
         terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
         terminalReporter.TestCompleted(testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF");
+            informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
         terminalReporter.ArtifactAdded(outOfProcess: true, testName: null, @$"{folder}artifact1.txt");
         terminalReporter.ArtifactAdded(outOfProcess: false, testName: null, @$"{folder}artifact2.txt");
         terminalReporter.AssemblyRunCompleted();
@@ -291,16 +337,36 @@ public sealed class TerminalTestReporterTests
 
         string expected = $"""
             ␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
-            ␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
-            ␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
-            ␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
-            ␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[31mfailed (canceled)␛[m TimedoutTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[31mfailed (canceled)␛[m CanceledTest1 ␛[90m(10s 000ms)␛[m
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m␛[31mfailed␛[m FailedTest1 ␛[90m(10s 000ms)␛[m
             ␛[31m  Tests failed
             ␛[m␛[31m  Expected
                 ABC
               Actual
                 DEF
             ␛[m␛[90m    at FailingTest() in ␛[90m␛]8;;file:///{folderLink}codefile.cs␛\{folder}codefile.cs:10␛]8;;␛\␛[m␛[90m
+            ␛[m␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
             ␛[m
               Out of process file artifacts produced:
                 - ␛[90m␛]8;;file:///{folderLink}artifact1.txt␛\{folder}artifact1.txt␛]8;;␛\␛[m
@@ -355,6 +421,8 @@ public sealed class TerminalTestReporterTests
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
 
         terminalReporter.AssemblyRunStarted();
+        string standardOutput = "Hello!";
+        string errorOutput = "Oh no!";
 
         // Note: Add 1ms to make the order of the progress frame deterministic.
         // Otherwise all tests that run for 1m31s could show in any order.
@@ -370,9 +438,9 @@ public sealed class TerminalTestReporterTests
         stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
 
         terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
 
         string output = stringBuilderConsole.Output;
         startHandle.Set();
@@ -385,7 +453,11 @@ public sealed class TerminalTestReporterTests
         // Note: The progress is drawn after each completed event.
         string expected = $"""
             {busyIndicatorString}␛[?25l␛[32mpassed␛[m PassedTest1 ␛[90m(10s 000ms)␛[m
-
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m
             [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓0␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
               SkippedTest1␛[242G(1m 31s)
               InProgressTest1␛[242G(1m 31s)
@@ -393,7 +465,11 @@ public sealed class TerminalTestReporterTests
               InProgressTest3␛[246G(1s)
             ␛[7F
             ␛[J␛[33mskipped␛[m SkippedTest1 ␛[90m(10s 000ms)␛[m
-
+            ␛[90m  Standard output
+                Hello!
+              Error output
+                Oh no!
+            ␛[m
             [␛[32m✓1␛[m/␛[31mx0␛[m/␛[33m↓1␛[m] assembly.dll (net8.0|x64)␛[242G(1m 31s)
               InProgressTest1␛[242G(1m 31s)
               InProgressTest2␛[245G(31s)
@@ -672,7 +748,7 @@ public sealed class TerminalTestReporterTests
         // Test display name with the specific control character
         string testDisplayName = $"Test{controlChar}Name";
         terminalReporter.TestCompleted(testNodeUid: "Test1", testDisplayName, TestOutcome.Passed, TimeSpan.FromSeconds(1),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
 
         terminalReporter.AssemblyRunCompleted();
         terminalReporter.TestExecutionCompleted(endTime);
@@ -907,7 +983,7 @@ public sealed class TerminalTestReporterTests
         stopwatchFactory.AddTime(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(31));
 
         terminalReporter.TestCompleted(testNodeUid: "Test1", "Test1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
-            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null);
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
 
         string output = stringBuilderConsole.Output;
         startHandle.Set();
